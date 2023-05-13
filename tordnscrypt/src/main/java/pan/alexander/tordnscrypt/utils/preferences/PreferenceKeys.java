@@ -22,8 +22,6 @@ package pan.alexander.tordnscrypt.utils.preferences;
 public interface PreferenceKeys {
     String WIFI_ACCESS_POINT_IS_ON = "APisON";
     String USB_MODEM_IS_ON = "ModemIsON";
-    String IGNORE_SYSTEM_DNS = "ignore_system_dns";
-    String HTTP3_QUIC = "http3";
     String DO_NOT_SHOW_IGNORE_BATTERY_OPTIMIZATION_DIALOG = "DoNotShowIgnoreBatteryOptimizationDialog";
 
     String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
@@ -104,12 +102,27 @@ public interface PreferenceKeys {
     String WAIT_IPTABLES = "pref_common_wait_iptables";
 
     //DNSCrypt Settings
-    String BLOCK_IPv6 = "block_ipv6";
+    String DNSCRYPT_BLOCK_IPv6 = "block_ipv6";
+    String DNSCRYPT_LISTEN_PORT = "listen_port";
+
+    String IGNORE_SYSTEM_DNS = "ignore_system_dns";
+
+    String HTTP3_QUIC = "http3";
+
+    String DNSCRYPT_BOOTSTRAP_RESOLVERS = "bootstrap_resolvers";
+
+    String DNSCRYPT_NETPROBE_ADDRESS = "netprobe_address";
+
+    String DNSCRYPT_DNS64 = "dns64";
+
+    String DNSCRYPT_DNS64_PREFIX = "dns64_prefix";
 
     //Tor Settings
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
+
+    String TOR_USE_IPV6 = "ClientUseIPv6";
 
     //Firewall Settings
     String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";

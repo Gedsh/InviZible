@@ -23,13 +23,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
-import androidx.preference.PreferenceManager;
-
 import android.os.Handler;
-import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -43,16 +39,23 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET_TETHER;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK_TETHER;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class TorRefreshIPsWork {
 
@@ -61,13 +64,17 @@ public class TorRefreshIPsWork {
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    Lazy<SharedPreferences> defaultPreferences;
+    @Inject
     public Lazy<DnsInteractor> dnsInteractor;
     @Inject
     public Lazy<Handler> handler;
     @Inject
     public CachedExecutor cachedExecutor;
 
-    private final Pattern IP_PATTERN = Pattern.compile(IPv4_REGEX);
+    private final Pattern ipv4Pattern = Pattern.compile(IPv4_REGEX);
+    private final Pattern ipv6Pattern = Pattern.compile(IPv6_REGEX);
 
     private final Context context;
     private final GetIPsJobService getIPsJobService;
@@ -83,13 +90,12 @@ public class TorRefreshIPsWork {
     public void refreshIPs() {
         cachedExecutor.submit(() -> {
 
-            Log.i(LOG_TAG, "TorRefreshIPsWork refreshIPs");
+            logi("TorRefreshIPsWork refreshIPs");
 
             try {
                 updateData();
             } catch (Exception e) {
-                Log.e(LOG_TAG, "TorRefreshIPsWork performBackgroundWork exception " + e.getMessage()
-                        + " " + e.getCause() + "\n" + Arrays.toString(e.getStackTrace()));
+                loge("TorRefreshIPsWork performBackgroundWork", e, true);
             }
 
         });
@@ -101,16 +107,12 @@ public class TorRefreshIPsWork {
             return;
         }
 
-        SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences shPref = defaultPreferences.get();
         boolean torTethering = shPref.getBoolean(TOR_TETHERING, false);
         boolean routeAllThroughTorDevice = shPref.getBoolean(ALL_THROUGH_TOR, true);
         boolean routeAllThroughTorTether = shPref.getBoolean("pref_common_tor_route_all", false);
 
-        boolean settingsChanged = false;
-
-        if (updateDeviceData(routeAllThroughTorDevice)) {
-            settingsChanged = true;
-        }
+        boolean settingsChanged = updateDeviceData(routeAllThroughTorDevice);
 
         if (torTethering && updateTetheringData(routeAllThroughTorTether)) {
             settingsChanged = true;
@@ -143,9 +145,19 @@ public class TorRefreshIPsWork {
             return false;
         }
 
+        SharedPreferences prefs = defaultPreferences.get();
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
+        boolean includeIPv6 = ModulesStatus.getInstance().getMode() != ROOT_MODE
+                && (!blockIPv6DnsCrypt || useIPv6Tor);
+
         boolean settingsChanged;
 
-        Set<String> unlockIPsReadyDevice = universalGetIPs(setUnlockHostsDevice, setUnlockIPsDevice);
+        Set<String> unlockIPsReadyDevice = universalGetIPs(
+                setUnlockHostsDevice,
+                setUnlockIPsDevice,
+                includeIPv6
+        );
 
         if (unlockIPsReadyDevice.isEmpty()) {
             return false;
@@ -178,7 +190,7 @@ public class TorRefreshIPsWork {
 
         boolean settingsChanged;
 
-        Set<String> unlockIPsReadyTether = universalGetIPs(setUnlockHostsTether, setUnlockIPsTether);
+        Set<String> unlockIPsReadyTether = universalGetIPs(setUnlockHostsTether, setUnlockIPsTether, false);
 
         if (unlockIPsReadyTether.isEmpty()) {
             return false;
@@ -193,7 +205,7 @@ public class TorRefreshIPsWork {
         return settingsChanged;
     }
 
-    private Set<String> universalGetIPs(Set<String> hosts, Set<String> ips) {
+    private Set<String> universalGetIPs(Set<String> hosts, Set<String> ips, boolean includeIPv6) {
 
 
         Set<String> unlockIPsPrepared = new HashSet<>();
@@ -202,13 +214,19 @@ public class TorRefreshIPsWork {
         if (hosts != null) {
             for (String host : hosts) {
                 if (!host.startsWith("#")) {
-                    ArrayList<String> preparedIPs = handleActionGetIP(host);
+                    ArrayList<String> preparedIPs = handleActionGetIP(host, includeIPv6);
                     unlockIPsPrepared.addAll(preparedIPs);
                 }
             }
 
             for (String unlockIPPrepared : unlockIPsPrepared) {
-                Matcher matcher = IP_PATTERN.matcher(unlockIPPrepared);
+                Matcher matcher;
+                if (includeIPv6 && isIPv6Address(unlockIPPrepared)) {
+                    matcher = ipv6Pattern.matcher(unlockIPPrepared);
+                } else {
+                    matcher = ipv4Pattern.matcher(unlockIPPrepared);
+                }
+
                 if (matcher.find()) {
                     IPsReady.add(unlockIPPrepared);
                 }
@@ -217,7 +235,13 @@ public class TorRefreshIPsWork {
 
         if (ips != null) {
             for (String unlockIP : ips) {
-                Matcher matcher = IP_PATTERN.matcher(unlockIP);
+                Matcher matcher;
+                if (includeIPv6 && isIPv6Address(unlockIP)) {
+                    matcher = ipv6Pattern.matcher(unlockIP);
+                } else {
+                    matcher = ipv4Pattern.matcher(unlockIP);
+                }
+
                 if (matcher.find()) {
                     IPsReady.add(unlockIP);
                 }
@@ -228,18 +252,21 @@ public class TorRefreshIPsWork {
         return IPsReady;
     }
 
-    private ArrayList<String> handleActionGetIP(String host) {
+    private boolean isIPv6Address(String ip) {
+        return ip.contains(":");
+    }
+
+    private ArrayList<String> handleActionGetIP(String host, boolean includeIPv6) {
         ArrayList<String> preparedIPs = new ArrayList<>();
         try {
-            preparedIPs.addAll(dnsInteractor.get().resolveDomain(host));
+            preparedIPs.addAll(dnsInteractor.get().resolveDomain(host, includeIPv6));
         } catch (Exception ignored) {
             try {
                 TimeUnit.MILLISECONDS.sleep(DELAY_ERROR_RETRY_MSEC);
-                preparedIPs.addAll(dnsInteractor.get().resolveDomain(host));
+                preparedIPs.addAll(dnsInteractor.get().resolveDomain(host, includeIPv6));
             } catch (Exception e) {
                 exceptionWhenResolvingHost = true;
-                Log.e(LOG_TAG, "TorRefreshIPsWork get " + host + " exception "
-                        + e.getMessage() + "\n" + e.getCause());
+                loge("TorRefreshIPsWork get " + host, e);
             }
         }
         return preparedIPs;

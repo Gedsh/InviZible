@@ -29,6 +29,7 @@ sealed class DialogsFlowState {
 
     data class CaptchaDialog(
         val transport: String,
+        val ipv6: Boolean,
         val captcha: Bitmap,
         val secretCode: String
     ) : DialogsFlowState()

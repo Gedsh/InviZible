@@ -62,7 +62,7 @@
     <string name="pref_fast_tor_autostart">"Starte Tor beim Booten"</string>
     <string name="pref_fast_itpd_autostart">"Starte I2P beim Booten"</string>
     <string name="pref_fast_autostart_delay">"Verzögerung"</string>
-    <string name="pref_fast_autostart_delay_summ">"Nutze die Verzögerung (in Sek) nur, wenn der Autostart nicht korrekt funktioniert"</string>
+    <string name="pref_fast_autostart_delay_summ">"Verzögerung (Sek.) nur verwenden, wenn der Autostart nicht korrekt funktioniert"</string>
     <string name="pref_fast_dns_server">"DNSCrypt Server"</string>
     <string name="pref_fast_select_dns_server">"Wähle die DNSCrypt Server"</string>
     <string name="pref_fast_tor">"Tor Einstellungen"</string>
@@ -143,7 +143,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_restart_dnscrypt">"Bitte starte DNSCrypt neu"</string>
     <string name="pref_common_restart_tor">"Bitte starte Tor neu"</string>
     <string name="pref_common_restart_itpd">"Bitte starte I2P neu"</string>
-    <string name="pref_common_use_iptables">iptables auswählen</string>
+    <string name="pref_common_use_iptables">"iptables auswählen"</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
     <string name="notification_temp_text">"Diese Benachrichtigung verschwindet gleich"</string>
@@ -548,4 +548,11 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="connectivity_check">"Überprüfung auf Internetverbindung"</string>
     <string name="pref_fast_logs">"Echtzeit Logs"</string>
     <string name="pref_fast_logs_summ">"Zeige Programmverbindungslogs im DNS Reiter"</string>
+    <string name="pref_dnscrypt_http3_summ">"Unterstützung für HTTP/3 aktivieren (DoH3, HTTP über QUIK). Beachte, dass hierbei normalerweise im Gegensatz zu anderen HTTP Versionen (aber analog zu DNSCrypt) UDP und Port 443 anstelle von TCP benutzt wird."</string>
+    <string name="pref_itpd_com_ssu2_summ">"SSU2 Transport protokoll aktivieren (Benutze UDP)."</string>
+    <string name="ask_later">"Später nachfragen"</string>
+    <string name="notifications_permission_rationale_message">"Benachrichtigungen sind essentiell, um wichtige Informationen über InviZibles Vorgänge, Status und entdeckte Angriffe anzuzeigen. Möchtest du Benachrichtigungen für InviZible erlauben?"</string>
+    <string name="pref_dnscrypt_dns64_summ">"Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don't enable it otherwise, or you won't be able to connect to anything at all."</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">"Set of used static IPv6 prefixes."</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">"IPv6 bridges"</string>
 </resources>

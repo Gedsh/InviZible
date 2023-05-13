@@ -31,8 +31,6 @@ import androidx.preference.PreferenceManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
@@ -44,7 +42,12 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_WITH_MASK;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -88,21 +91,29 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                 }
 
                 if (key.equals("listen_addresses")) {
-                    key = "listen_port";
+                    key = DNSCRYPT_LISTEN_PORT;
                     if (val.contains("\"") && val.contains(":")) {
-                        val = val.substring(val.indexOf(":") + 1, val.indexOf("\"", 3)).trim();
+                        val = val.substring(val.lastIndexOf(":") + 1, val.lastIndexOf("\"")).trim();
                     } else if (val.contains("'") && val.contains(":")) {
-                        val = val.substring(val.indexOf(":") + 1, val.indexOf("'", 3)).trim();
+                        val = val.substring(val.lastIndexOf(":") + 1, val.lastIndexOf("'")).trim();
                     }
-                } else if (key.equals("bootstrap_resolvers")) {
-                    Pattern pattern =
-                            Pattern.compile("((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)");
-                    Matcher matcher = pattern.matcher(val);
-                    String fallbackResolver = QUAD_DNS_41;
-                    if (matcher.find()) {
-                        fallbackResolver = matcher.group();
+                } else if (key.equals(DNSCRYPT_BOOTSTRAP_RESOLVERS)) {
+                    StringBuilder fallbackResolvers = new StringBuilder();
+                    for (String resolver: val.split(", ?")) {
+                        resolver = resolver
+                                .replace("[", "").replace("]", "")
+                                .replace("'", "").replace("\"", "");
+                        if (resolver.endsWith(":53")) {
+                            resolver = resolver.substring(0, resolver.lastIndexOf(":53"));
+                        }
+                        if (resolver.matches(IPv4_REGEX) || resolver.matches(IPv6_REGEX)) {
+                            if (fallbackResolvers.length() != 0) {
+                                fallbackResolvers.append(", ");
+                            }
+                            fallbackResolvers.append(resolver);
+                        }
                     }
-                    val = fallbackResolver;
+                    val = fallbackResolvers.toString();
                 } else if (key.equals("proxy")) {
                     key = "proxy_port";
                     if (val.contains("\"") && val.contains(":")) {
@@ -110,13 +121,29 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     } else if (val.contains("'") && val.contains(":")) {
                         val = val.substring(val.indexOf(":", 10) + 1, val.indexOf("'", 10)).trim();
                     }
-                } else if (header.equals("[sources.public-resolvers]") && key.equals("urls")) {
+                } else if (header.matches("\\[sources\\.'?public-resolvers'?]") && key.equals("urls")) {
                     key = "Sources";
+                } else if (header.matches("\\[sources\\.'?relays'?]") && key.equals("urls")) {
+                    key = "Relays";
+                } else if (header.matches("\\[sources\\.'?relays'?]") && key.equals("refresh_delay")) {
+                    key = "refresh_delay_relays";
+                } else if (header.equals("[dns64]") && key.equals("prefix")) {
+                    key = DNSCRYPT_DNS64_PREFIX;
+                    StringBuilder dns64Prefixes = new StringBuilder();
+                    for (String dns64Prefix: val.split(", ?")) {
+                        dns64Prefix = dns64Prefix
+                                .replace("[", "").replace("]", "")
+                                .replace("'", "").replace("\"", "");
+                        if (dns64Prefix.matches(IPv6_REGEX_WITH_MASK)) {
+                            if (dns64Prefixes.length() != 0) {
+                                dns64Prefixes.append(", ");
+                            }
+                            dns64Prefixes.append(dns64Prefix);
+                        }
+                    }
+                    val = dns64Prefixes.toString();
                 }
 
-                if (header.matches("\\[sources\\.'?relays'?]") && key.equals("urls")) key = "Relays";
-                if (header.matches("\\[sources\\.'?relays'?]") && key.equals("refresh_delay"))
-                    key = "refresh_delay_relays";
 
 
                 String val_saved_str = "";
@@ -198,8 +225,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     val_tor.add(val);
                 }
 
-                if (key.equals("SOCKSPort") || key.equals("HTTPTunnelPort") || key.equals("TransPort")) {
-                    val = val.split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
+                if (key.equals("SOCKSPort")
+                        || key.equals("HTTPTunnelPort")
+                        || key.equals("TransPort")
+                        || key.equals("DNSPort")) {
+                    val = val.split(" ")[0]
+                            .replaceAll(".+:", "")
+                            .replaceAll("\\D+", "");
                 }
 
                 String val_saved_str = "";

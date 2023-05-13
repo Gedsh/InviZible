@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.settings.firewall
 
 import android.annotation.SuppressLint
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -36,6 +37,7 @@ import com.google.android.material.chip.ChipGroup
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.OnBackPressListener
@@ -46,6 +48,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 import javax.inject.Inject
+import javax.inject.Named
 
 @SuppressLint("NotifyDataSetChanged")
 class FirewallFragment : Fragment(),
@@ -56,12 +59,16 @@ class FirewallFragment : Fragment(),
     OnBackPressListener {
 
     @Inject
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    lateinit var defaultPreferences: dagger.Lazy<SharedPreferences>
+
+    @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
     val viewModel by lazy {
-        ViewModelProvider(this, viewModelFactory).get(FirewallViewModel::class.java)
+        ViewModelProvider(this, viewModelFactory)[FirewallViewModel::class.java]
     }
 
     @Inject
@@ -110,6 +117,7 @@ class FirewallFragment : Fragment(),
 
         firewallAdapter = FirewallAdapter(
             requireContext(),
+            defaultPreferences.get(),
             preferenceRepository.get(),
             ::allowLan,
             ::allowWifi,

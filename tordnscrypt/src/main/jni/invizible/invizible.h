@@ -93,6 +93,9 @@
 #define SOCKS5_CONNECT 4
 #define SOCKS5_CONNECTED 5
 
+#define LOOPBACK_ADDRESS "127.0.0.1"
+#define LOOPBACK_ADDRESS_IPv6 "::1"
+
 struct context {
     pthread_mutex_t lock;
     int pipefds[2];
@@ -447,7 +450,7 @@ int open_udp_socket(const struct arguments *args,
                     const struct udp_session *cur, const struct allowed *redirect);
 
 int open_tcp_socket(const struct arguments *args,
-                    const struct tcp_session *cur, const struct allowed *redirect);
+                    const struct tcp_session *cur, struct allowed *redirect);
 
 int32_t get_local_port(const int sock);
 

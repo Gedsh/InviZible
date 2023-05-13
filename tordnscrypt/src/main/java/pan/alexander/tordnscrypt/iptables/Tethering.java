@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -45,6 +46,8 @@ import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_FORWAR
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.FILTER_OUTPUT_CORE;
 import static pan.alexander.tordnscrypt.iptables.IptablesConstants.NAT_PREROUTING_CORE;
 import static pan.alexander.tordnscrypt.utils.Constants.HTTP_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
@@ -122,6 +125,8 @@ public class Tethering {
         Set<String> ipsToUnlockTether = preferences.getStringSetPreference(IPS_TO_UNLOCK_TETHER);
         Set<String> ipsForClearNetTether = preferences.getStringSetPreference(IPS_FOR_CLEARNET_TETHER);
 
+        Pattern ipv4Pattern = Pattern.compile(IPv4_REGEX);
+
         setInterfaceNames();
 
         String bypassLanPrerouting = "";
@@ -159,6 +164,11 @@ public class Tethering {
             StringBuilder torSitesBypassForwardBuilder = new StringBuilder();
 
             for (String ipForClearNetTether : ipsForClearNetTether) {
+
+                if (!ipForClearNetTether.matches(IPv4_REGEX)) {
+                    continue;
+                }
+
                 torSitesBypassPreroutingBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
                 torSitesBypassForwardBuilder.append(iptables).append("-A " + FILTER_FORWARD_CORE + " -p all -d ").append(ipForClearNetTether).append(" -j ACCEPT; ");
             }
@@ -179,6 +189,11 @@ public class Tethering {
             StringBuilder torSitesRejectNonTCPForwardEthernetBuilder = new StringBuilder();
 
             for (String ipToUnlockTether : ipsToUnlockTether) {
+
+                if (!ipToUnlockTether.matches(IPv4_REGEX)) {
+                    continue;
+                }
+
                 torSitesRedirectPreroutingWiFiBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -i ").append(wifiAPInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
                 torSitesRedirectPreroutingUSBModemBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -i ").append(usbModemInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
                 torSitesRedirectPreroutingEthernetBuilder.append(iptables).append("-t nat -A " + NAT_PREROUTING_CORE + " -i ").append(ethernetInterfaceName).append(" -p tcp -d ").append(ipToUnlockTether).append(" -j REDIRECT --to-port ").append(pathVars.getTorTransPort()).append(" || true; ");
@@ -770,6 +785,14 @@ public class Tethering {
 
         preferenceRepository.get().setBoolPreference("TTLisFixed", true);
 
+        String dnscryptBootstrapResolver = QUAD_DNS_41;
+        for (String resolver: pathVars.getDNSCryptFallbackRes().split(", ?")) {
+            if (resolver.matches(IPv4_REGEX)) {
+                dnscryptBootstrapResolver = resolver;
+                break;
+            }
+        }
+
         List<String> commands = new ArrayList<>(Arrays.asList(
                 iptables + "-D FORWARD -j DROP 2> /dev/null || true",
                 iptables + "-I FORWARD -j DROP",
@@ -788,18 +811,18 @@ public class Tethering {
                 "ip route delete broadcast 255.255.255.255 dev " + ethernetInterfaceName + " scope link table 64 2> /dev/null || true",
                 iptables + "-D FORWARD -j " + FILTER_FORWARD_CORE + " 2> /dev/null || true",
                 //iptables + "-t nat -D POSTROUTING -o " + vpnInterfaceName + " -j MASQUERADE || true",
-                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
-                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
-                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
-                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
-                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
-                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes() + " 2> /dev/null || true",
-                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
-                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
-                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
-                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
-                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
-                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + pathVars.getDNSCryptFallbackRes(),
+                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver + " 2> /dev/null || true",
+                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver + " 2> /dev/null || true",
+                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver + " 2> /dev/null || true",
+                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver + " 2> /dev/null || true",
+                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver + " 2> /dev/null || true",
+                iptables + "-t nat -D " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver + " 2> /dev/null || true",
+                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver,
+                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + wifiAPInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver,
+                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver,
+                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + usbModemInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver,
+                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p tcp -m tcp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver,
+                iptables + "-t nat -I " + NAT_PREROUTING_CORE + " -i " + ethernetInterfaceName + " -p udp -m udp --dport 53 -j DNAT --to-destination " + dnscryptBootstrapResolver,
                 iptables + "-D " + FILTER_FORWARD_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN 2> /dev/null && "
                         + iptables + "-I " + FILTER_FORWARD_CORE + " -m state --state ESTABLISHED,RELATED -j ACCEPT 2> /dev/null || true",
                 iptables + "-D " + FILTER_FORWARD_CORE + " -o !" + vpnInterfaceName + " -j REJECT 2> /dev/null || "

@@ -243,9 +243,22 @@ object NetworkChecker {
         try {
             val connectivityManager = context.getConnectivityManager()
 
-            connectivityManager?.let {
-                ConnectivityManagerCompat.isActiveNetworkMetered(it)
-            } ?: true
+            var capabilities: NetworkCapabilities? = null
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
+                capabilities = connectivityManager.getNetworkCapabilities(
+                    connectivityManager.activeNetwork
+                )
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                capabilities?.let {
+                    !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+                } ?: isCellularActive(context)
+            } else if (connectivityManager != null) {
+                ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager)
+            } else {
+                true
+            }
         } catch (e: Exception) {
             loge("NetworkChecker isMeteredNetwork", e)
             true

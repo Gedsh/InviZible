@@ -166,9 +166,9 @@
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_require_nofilter_summ">O servidor não deve forçar sua própria lista negra (para controle parental, bloqueio de propaganda…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Sempre usar TCP para conectar com os servidores upstream."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Isso pode ser útil se você precisar rotear tudo através do Tor.
-Caso contrário, deixe como false, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só pode aumentar a latência."</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy HTTP/SOCKS"</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Isso pode ser útil se você precisar rotear tudo através do Tor..
+\n Caso contrário, deixe como falso, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só aumentará a latência.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS Proxy.</string>
     <string name="pref_dnscrypt_use_proxy">"Ativar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Roteie todas as conexões TCP para um nó Tor local. Tor não suporta UDP, então defina force_tcp como true também."</string>
     <string name="pref_dnscrypt_proxy">"Porta de Proxy"</string>
@@ -178,11 +178,11 @@ Caso contrário, deixe como false, pois isso não melhora a segurança (dnscrypt
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Nunca deixe dnscrypt-proxy tentar usar as configurações de DNS do sistema. Use incondicionalmente o resolvedor de fallback."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTROS"</string>
     <!-- Regras de encaminhamento -->
-    <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">Regras de encaminhamento</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Roteie as consultas de domínios específicos para um conjunto dedicado de servidores."</string>
-    <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking retorna um endereço predefinido para um nome específico.
-Além de atuar como um arquivo HOSTS, ele também pode retornar o endereço IP de um nome diferente. Ele também fará o nivelamento de CNAME."</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">Regras de camuflagem</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking retorna um endereço predefinido para um nome específico.
+\n Além de atuar como um arquivo HOSTS, ele também pode retornar o endereço IP de um nome diferente. Ele também fará o nivelamento de CNAME.</string>
     <string name="pref_dnscrypt_query_log_categ">"Log de consulta."</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_query_log_summ">Salvar logs das queries do cliente para um arquivo.</string>
@@ -208,7 +208,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_dnscrypt_ipblacklist_summ">"A lista negra de IP é composta de uma regra por linha."</string>
     <string name="pref_dnscrypt_whitelist_categ">"Lista de permissões baseada em padrões (ignorar listas negras)."</string>
     <!-- Fuzzy -->
-    <string name="pref_dnscrypt_whitelist">"Whitelist"</string>
+    <string name="pref_dnscrypt_whitelist">Lista branca</string>
     <string name="pref_dnscrypt_whitelist_summ">"A lista branca suporta os mesmos padrões das listas negras. Se um nome corresponder a uma entrada da lista de permissões, a sessão correspondente irá ignorar nomes e filtros de IP."</string>
     <string name="pref_dnscrypt_sources_categ">"Servidores"</string>
     <string name="pref_dnscrypt_sources">"Fontes"</string>
@@ -230,7 +230,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_tor_connections_padding_summ">"Esta opção rege o uso de preenchimento do Tor para se defender contra algumas formas de análise de tráfego. Desative para economizar dados moveis."</string>
     <string name="pref_tor_reduced_connections_padding_summ">"Se ativado, o Tor não manterá as conexões abertas ou por muito tempo e enviará menos preenchimento nessas conexões. Ative para economizar largura de banda."</string>
     <string name="pref_tor_exclude_exit_nodes_summ">"Uma lista de códigos de país que nunca devem ser usados ao escolher um nó de saída, que fornece tráfego para você fora da rede Tor."</string>
-    <string name="pref_tor_exit_nodes_summ">"Uma lista de códigos de país para usar como nó de saída - ou seja, um nó que entrega tráfego para você fora da rede Tor"</string>
+    <string name="pref_tor_exit_nodes_summ">Uma lista de códigos de países para usar como nó de saída - ou seja, um nó que entrega tráfego para você fora da rede Tor.</string>
     <string name="pref_tor_exclude_nodes_summ">"Uma lista de códigos de países para evitar quando estiver construindo um circuito."</string>
     <string name="pref_tor_entry_nodes_summ">"Uma lista de códigos de país de nós a serem usados para o primeiro salto em seus circuitos normais."</string>
     <string name="pref_tor_strict_nodes_summ">"Se StrictNodes estiver, Tor tratará apenas a opção ExcludeNodes como um requisito a seguir para todos os circuitos que você gerar, mesmo que isso interrompa a funcionalidade para você."</string>
@@ -239,7 +239,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_tor_max_circuit_dirtiness_summ">"Sinta-se à vontade para reutilizar um circuito que foi usado pela primeira vez no máximo NUM segundos atrás, mas nunca conecte um novo fluxo a um circuito que seja muito antigo."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Se habilitado, o Tor não colocará dois servidores cujos endereços IP estão muito próximos no mesmo circuito. Atualmente, dois endereços estão muito próximos se estiverem no mesmo intervalo / 16."</string>
     <string name="pref_tor_enable_SOCKS_proxy">"Ativar SOCKS proxy"</string>
-    <string name="pref_tor_SOCKS_port_summ">"Abra esta porta para ouvir conexões de aplicativos de fala SOCKS. "</string>
+    <string name="pref_tor_SOCKS_port_summ">Abra esta porta para ouvir conexões de aplicativos de fala SOCKS.</string>
     <string name="pref_tor_enable_HTTPTunnel_proxy">"Ativar HTTPTunnel"</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Abra esta porta para ouvir conexões de aplicativos de fala SOCKS."</string>
     <string name="pref_tor_enable_transparent_proxy">"Ativar proxy transparente"</string>
@@ -365,7 +365,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="buy_premium_gp">"O Projeto InviZible Pro precisa de sua ajuda. Pressione OK para adquirir recursos premium."</string>
     <string name="wrong_purchase_signature_gp">"Desculpe, mas é impossível confirmar sua compra. Você receberá um reembolso após 3 dias."</string>
     <string name="only_premium_feature">"Infelizmente, esse recurso está disponível apenas para a versão premium."</string>
-    <string name="pref_itpd_use_HTTP_outproxy">"HTTP outproxy"</string>
+    <string name="pref_itpd_use_HTTP_outproxy">Outproxy HTTP</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Endereço HTTP outproxy"</string>
     <string name="pref_itpd_use_Socks_outproxy">"SOCKS outproxy"</string>
     <string name="pref_itpd_Socks_outproxy_address">"Endereço SOCKS outproxy"</string>
@@ -404,14 +404,14 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_tor_snowflake_stun">"Servidores STUN para pontes SnowFlake"</string>
     <string name="pref_tor_isolate_dest_address_summ">"Não compartilhe circuitos com streams que visam um endereço de destino diferente."</string>
     <string name="pref_tor_isolate_dest_port_summ">"Não compartilhe circuitos com streams que visam uma porta de destino diferente."</string>
-    <string name="dialog_new_tor_default_bridges_available">"New default Tor bridges are available. Do you want to update them?"</string>
+    <string name="dialog_new_tor_default_bridges_available">Novas pontes Tor padrão estão disponíveis. Você deseja atualizá-las\?</string>
     <string name="pref_common_mitm_categ">"Detecção de ataque MITM"</string>
     <string name="pref_common_arp_spoofing_detection">"Detecção de spoofing de ARP"</string>
     <string name="pref_common_arp_spoofing_detection_summ">"Detecte spoofing de ARP man-in-the-middle e ataques DHCP desonestos em redes Wi-Fi."</string>
     <string name="pref_common_arp_block_internet">"Bloquear internet quando um ataque for detectado"</string>
     <string name="pref_common_arp_block_internet_summ">"A conexão com a Internet será bloqueada durante o ataque"</string>
     <string name="pref_common_proxy_categ">"Proxy"</string>
-    <string name="pref_common_proxy">"Use socks5 proxy"</string>
+    <string name="pref_common_proxy">Usar proxy socks5</string>
     <string name="pref_common_proxy_summ">"InviZible Pro fará todas as conexões através do proxy SOCKS5"</string>
     <string name="pref_common_compatibility_mode">"Modo de compatibilidade"</string>
     <string name="pref_common_compatibility_mode_summ">"Ative se o seu dispositivo com uma ROM personalizada e a conexão for perdida quando você pressiona o botão INICIAR"</string>
@@ -458,7 +458,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="firewall_user_apps">"Usuário"</string>
     <string name="firewall_sort_by_name">"Ordene por Nome"</string>
     <string name="firewall_sort_by_uid">"Ordene por UID"</string>
-    <string name="firewall_switch">"Firewall On/Off"</string>
+    <string name="firewall_switch">Firewall ligado/desligado</string>
     <string name="ask_save_changes">Você deseja salva as alterações\?</string>
     <string name="firewall_warning_enable_module">"Para ativar o firewall, você deve iniciar, pelo menos, DNSCrypt ou Tor."</string>
     <string name="firewall_notification_allow_app_title">"%s instalado"</string>
@@ -498,7 +498,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="notification_waiting_network">"Aguardando rede…"</string>
     <string name="tile_change_tor_ip">"Alterar IP Tor"</string>
     <string name="tile_changing_tor_ip">"Alterando IP Tor"</string>
-    <string name="tile_dialog_over_three_tiles_message">"You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control."</string>
+    <string name="tile_dialog_over_three_tiles_message">Você adicionou mais de 3 blocos às Configurações Rápidas. Por favor, deixe apenas 3. Adicionar mais de 3 blocos pode causar problemas com o controle de aplicativos.</string>
     <string name="pref_common_rogue_dhcp_detection">"Detecção de DHCP desonesto"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">"Detectar os ataques Man-in-the-middle de falso DHCP em redes Wi-Fi."</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>

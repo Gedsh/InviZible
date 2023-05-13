@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -42,6 +43,7 @@ import com.github.angads25.filepicker.view.FilePickerDialog;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -65,16 +67,30 @@ import pan.alexander.tordnscrypt.vpn.service.VpnBuilder;
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.DNSCRYPT_RELAYS_SOURCE_IPV6;
+import static pan.alexander.tordnscrypt.utils.Constants.DNSCRYPT_RESOLVERS_SOURCE_IPV6;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_61;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_NETPROBE_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.HTTP3_QUIC;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class PreferencesDNSFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener,
@@ -90,8 +106,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
-
-    private final static String ipv4Regex = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public SharedPreferences defaultPreferences;
 
     private ArrayList<String> key_toml;
     private ArrayList<String> val_toml;
@@ -118,7 +135,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         ArrayList<Preference> preferences = new ArrayList<>();
 
-        preferences.add(findPreference("listen_port"));
+        preferences.add(findPreference(DNSCRYPT_LISTEN_PORT));
         preferences.add(findPreference("dnscrypt_servers"));
         preferences.add(findPreference("doh_servers"));
         preferences.add(findPreference("require_dnssec"));
@@ -129,7 +146,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("force_tcp"));
         preferences.add(findPreference("Enable proxy"));
         preferences.add(findPreference("proxy_port"));
-        preferences.add(findPreference("bootstrap_resolvers"));
+        preferences.add(findPreference(DNSCRYPT_BOOTSTRAP_RESOLVERS));
         preferences.add(findPreference(IGNORE_SYSTEM_DNS));
         preferences.add(findPreference(HTTP3_QUIC));
         preferences.add(findPreference("Enable Query logging"));
@@ -141,7 +158,9 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("refresh_delay_relays"));
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
-        preferences.add(findPreference(BLOCK_IPv6));
+        preferences.add(findPreference(DNSCRYPT_BLOCK_IPv6));
+        preferences.add(findPreference(DNSCRYPT_DNS64));
+        preferences.add(findPreference(DNSCRYPT_DNS64_PREFIX));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -309,31 +328,35 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
 
         try {
-            boolean invalidFallbackResolver = !newValue.toString().matches(ipv4Regex)
-                    || newValue.toString().equals(LOOPBACK_ADDRESS) || newValue.toString().equals(META_ADDRESS);
 
-            if (Objects.equals(preference.getKey(), "listen_port")) {
+            if (Objects.equals(preference.getKey(), DNSCRYPT_LISTEN_PORT)) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
                 if (!newValue.toString().matches("\\d+")
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }
-                String val = "['127.0.0.1:" + newValue + "']";
+
+                String val = "['127.0.0.1:" + newValue;
+                if (defaultPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, true)) {
+                    val += "']";
+                } else {
+                    val += "', '[::1]:" + newValue + "']";
+                }
+
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
-            } else if (Objects.equals(preference.getKey(), "bootstrap_resolvers")) {
+            } else if (Objects.equals(preference.getKey(), DNSCRYPT_BOOTSTRAP_RESOLVERS)) {
 
-                if (invalidFallbackResolver) {
+                List<String> resolvers = getDNSCryptBootstrapResolvers(newValue.toString());
+
+                if (resolvers.isEmpty()) {
                     return false;
                 }
 
-                String val = "['" + newValue + ":53']";
-                val_toml.set(key_toml.indexOf("bootstrap_resolvers"), val);
-                val = "'" + newValue + ":53'";
-                if (key_toml.indexOf("netprobe_address") > 0) {
-                    val_toml.set(key_toml.indexOf("netprobe_address"), val);
-                }
+                changeDNSCryptBootstrapResolvers(resolvers);
+
+                changeDNSCryptNetprobeAddress(resolvers);
 
                 if (VpnBuilder.vpnDnsSet != null) {
                     VpnBuilder.vpnDnsSet.clear();
@@ -416,12 +439,91 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     }
                 }
                 return true;
-            } else if (Objects.equals(preference.getKey().trim(), "http3")) {
+            } else if (Objects.equals(preference.getKey().trim(), HTTP3_QUIC)) {
                 int position = key_toml.indexOf("ignore_system_dns");
                 if (!key_toml.contains("http3") && position >= 0) {
                     key_toml.add(position + 1, "http3");
                     val_toml.add(position + 1, "false");
                 }
+            } else if (Objects.equals(preference.getKey().trim(), DNSCRYPT_DNS64)) {
+
+                addDNS64SectionForIPv6();
+
+                boolean locked = false;
+                for (int i = 0; i < key_toml.size(); i++) {
+                    String key = key_toml.get(i);
+                    if (key.equals("[dns64]")) {
+                        locked = true;
+                    } else if (key.contains("[")) {
+                        locked = false;
+                    }
+                    if (locked && key.equals("#prefix")
+                            && Boolean.parseBoolean(newValue.toString())) {
+                        key_toml.set(i, "prefix");
+                        break;
+                    } else if (locked && key.equals("prefix")
+                            && !Boolean.parseBoolean(newValue.toString())) {
+                        key_toml.set(i, "#prefix");
+                        break;
+                    }
+                }
+                return true;
+            } else if (Objects.equals(preference.getKey().trim(), DNSCRYPT_DNS64_PREFIX)) {
+                StringBuilder dns64Prefixes = new StringBuilder("[");
+                for (String dns64Prefix: newValue.toString().split(", ?")) {
+                    if (dns64Prefix.matches(IPv6_REGEX_WITH_MASK)) {
+                        if (!dns64Prefixes.toString().equals("[")) {
+                            dns64Prefixes.append(", ");
+                        }
+                        dns64Prefixes.append("'").append(dns64Prefix).append("'");
+                    }
+                }
+                dns64Prefixes.append("]");
+
+                if (dns64Prefixes.toString().equals("[]")) {
+                    return false;
+                }
+
+                boolean locked = false;
+                for (int i = 0; i < key_toml.size(); i++) {
+                    String key = key_toml.get(i);
+                    if (key.equals("[dns64]")) {
+                        locked = true;
+                    } else if (key.contains("[")) {
+                        locked = false;
+                    }
+                    if (locked && key.equals("prefix")) {
+                        val_toml.set(i, dns64Prefixes.toString());
+                        return true;
+                    }
+                }
+                return false;
+            } else if (Objects.equals(preference.getKey().trim(), DNSCRYPT_BLOCK_IPv6)) {
+
+                changeDNSCryptListenAddressForIPv6(Boolean.parseBoolean(newValue.toString()));
+
+                List<String> resolvers = new ArrayList<>(
+                        Arrays.asList(pathVars.get().getDNSCryptFallbackRes().split(", ?"))
+                );
+                if (Boolean.parseBoolean(newValue.toString()) && resolvers.remove(QUAD_DNS_61)) {
+                    changeDNSCryptBootstrapResolvers(resolvers);
+                } else if (!Boolean.parseBoolean(newValue.toString())) {
+                    boolean containsIPv6Resolver = false;
+                    for (String resolver: resolvers) {
+                        if (resolver.matches(IPv6_REGEX)) {
+                            containsIPv6Resolver = true;
+                            break;
+                        }
+                    }
+                    if (!containsIPv6Resolver) {
+                        resolvers.add(QUAD_DNS_61);
+                        changeDNSCryptBootstrapResolvers(resolvers);
+                    }
+                }
+
+                addDNS64SectionForIPv6();
+
+                changeDNSCryptSourcesForIPv6(Boolean.parseBoolean(newValue.toString()));
             }
 
             if (key_toml.contains(preference.getKey().trim()) && !newValue.toString().isEmpty()) {
@@ -436,6 +538,182 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
 
         return false;
+    }
+
+    private List<String> getDNSCryptBootstrapResolvers(String newValue) {
+        List<String> resolvers = new ArrayList<>();
+        for (String resolver: newValue.split(", ?")) {
+            if ((resolver.matches(IPv4_REGEX) || resolver.matches(IPv6_REGEX))
+                    && !resolver.equals(LOOPBACK_ADDRESS) && !resolver.equals(META_ADDRESS)) {
+                resolvers.add(resolver);
+            }
+        }
+        return resolvers;
+    }
+
+    private void changeDNSCryptBootstrapResolvers(List<String> resolvers) {
+        StringBuilder val = new StringBuilder("[");
+        for (String ip : resolvers) {
+            if (ip.matches(IPv4_REGEX)) {
+                if (!val.toString().equals("[")) {
+                    val.append(", ");
+                }
+                val.append("'").append(ip).append(":53'");
+            } else if (ip.matches(IPv6_REGEX)) {
+                if (!val.toString().equals("[")) {
+                    val.append(", ");
+                }
+                val.append("'[").append(ip).append("]:53'");
+            }
+        }
+        val.append("]");
+        val_toml.set(key_toml.indexOf(DNSCRYPT_BOOTSTRAP_RESOLVERS), val.toString());
+    }
+
+    private void changeDNSCryptNetprobeAddress(List<String> resolvers) {
+        String ipv4address = "";
+        for (String ip : resolvers) {
+            if (ip.matches(IPv4_REGEX)) {
+                ipv4address = ip;
+                break;
+            }
+        }
+        if (ipv4address.isEmpty()) {
+            ipv4address = QUAD_DNS_41;
+        }
+        StringBuilder val = new StringBuilder();
+        val.append("'").append(ipv4address).append( ":53'");
+        if (key_toml.indexOf(DNSCRYPT_NETPROBE_ADDRESS) > 0) {
+            val_toml.set(key_toml.indexOf(DNSCRYPT_NETPROBE_ADDRESS), val.toString());
+        }
+    }
+
+    private void changeDNSCryptListenAddressForIPv6(boolean newValue) {
+        String dnsCryptPort = pathVars.get().getDNSCryptPort();
+
+        String val = "['127.0.0.1:" + dnsCryptPort;
+        if (newValue) {
+            val += "']";
+        } else {
+            val += "', '[::1]:" + dnsCryptPort + "']";
+        }
+
+        val_toml.set(key_toml.indexOf("listen_addresses"), val);
+    }
+
+    private void addDNS64SectionForIPv6() {
+        int position = key_toml.indexOf("map_file");
+        if (!key_toml.contains("[dns64]")
+                && position >= 0
+                && position < key_toml.size() - 1) {
+            key_toml.add(position + 1, "[dns64]");
+            val_toml.add(position + 1, "");
+            key_toml.add(position + 2, "#prefix");
+            val_toml.add(position + 2, "['64:ff9b::/96']");
+        }
+    }
+
+    private void changeDNSCryptSourcesForIPv6(boolean newValue) {
+        boolean resolversLocked = false;
+        boolean relaysLocked = false;
+        for (int i = 0; i < key_toml.size(); i++) {
+            String key = key_toml.get(i);
+            if (key.equals("[sources.'public-resolvers']")) {
+                resolversLocked = true;
+                relaysLocked = false;
+            } else if (key.equals("[sources.'relays']")) {
+                resolversLocked = false;
+                relaysLocked = true;
+            } else if (key.contains("[")) {
+                resolversLocked = false;
+                relaysLocked = false;
+            }
+
+            StringBuilder urls = new StringBuilder();
+            if (newValue
+                    && resolversLocked
+                    && key.equals("urls")
+                    && val_toml.get(i).contains(DNSCRYPT_RESOLVERS_SOURCE_IPV6)) {
+                urls.setLength(0);
+                String resolvers = clearUrlsLine(val_toml.get(i));
+                for (String resolver: resolvers.split(", ?")) {
+                    if (!resolver.equals(DNSCRYPT_RESOLVERS_SOURCE_IPV6)) {
+                        if (urls.length() == 0) {
+                            urls.append("[");
+                        } else {
+                            urls.append(", ");
+                        }
+                        urls.append("'").append(resolver).append("'");
+                    }
+                }
+                if (urls.length() > 0) {
+                    urls.append("]");
+                }
+                val_toml.set(i, urls.toString());
+            } else if (!newValue
+                    && resolversLocked
+                    && key.equals("urls")
+                    && !val_toml.get(i).contains(DNSCRYPT_RESOLVERS_SOURCE_IPV6)) {
+                urls.setLength(0);
+                String resolvers = clearUrlsLine(val_toml.get(i));
+                for (String resolver: resolvers.split(", ?")) {
+                    if (urls.length() == 0) {
+                        urls.append("[");
+                    } else {
+                        urls.append(", ");
+                    }
+                    urls.append("'").append(resolver).append("'");
+                }
+                urls.append(", '").append(DNSCRYPT_RESOLVERS_SOURCE_IPV6).append("'");
+                urls.append("]");
+                val_toml.set(i, urls.toString());
+            } else if (newValue
+                    && relaysLocked
+                    && key.equals("urls")
+                    && val_toml.get(i).contains(DNSCRYPT_RELAYS_SOURCE_IPV6)) {
+                urls.setLength(0);
+                String relays = clearUrlsLine(val_toml.get(i));
+                for (String relay: relays.split(", ?")) {
+                    if (!relay.equals(DNSCRYPT_RELAYS_SOURCE_IPV6)) {
+                        if (urls.length() == 0) {
+                            urls.append("[");
+                        } else {
+                            urls.append(", ");
+                        }
+                        urls.append("'").append(relay).append("'");
+                    }
+                }
+                if (urls.length() > 0) {
+                    urls.append("]");
+                }
+                val_toml.set(i, urls.toString());
+            } else if (!newValue
+                    && relaysLocked
+                    && key.equals("urls")
+                    && !val_toml.get(i).contains(DNSCRYPT_RELAYS_SOURCE_IPV6)) {
+                urls.setLength(0);
+                String relays = clearUrlsLine(val_toml.get(i));
+                for (String relay: relays.split(", ?")) {
+                    if (urls.length() == 0) {
+                        urls.append("[");
+                    } else {
+                        urls.append(", ");
+                    }
+                    urls.append("'").append(relay).append("'");
+                }
+                urls.append(", '").append(DNSCRYPT_RELAYS_SOURCE_IPV6).append("'");
+                urls.append("]");
+                val_toml.set(i, urls.toString());
+            }
+        }
+    }
+
+    private String clearUrlsLine(String urls) {
+        return urls
+                .replace("[", "")
+                .replace("]", "")
+                .replace("'", "")
+                .replace("\"", "");
     }
 
     @Override

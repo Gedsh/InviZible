@@ -24,12 +24,14 @@ import pan.alexander.tordnscrypt.utils.dns.Record
 interface DnsDataSource {
     fun resolveDomainUDP(
         domain: String,
+        includeIPv6: Boolean,
         port: Int,
         timeout: Int
     ): Array<Record>?
 
     fun resolveDomainDOH(
         domain: String,
+        includeIPv6: Boolean,
         timeout: Int
     ): Array<Record>?
 

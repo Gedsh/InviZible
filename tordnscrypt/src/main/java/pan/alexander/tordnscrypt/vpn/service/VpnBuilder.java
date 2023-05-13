@@ -24,6 +24,8 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_61;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_62;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_42;
@@ -33,16 +35,18 @@ import static pan.alexander.tordnscrypt.utils.Constants.VPN_DNS_2;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_IPv6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 
 import android.annotation.SuppressLint;
@@ -106,7 +110,8 @@ public class VpnBuilder {
     BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = defaultPreferences.get();
         boolean lan = prefs.getBoolean(BYPASS_LAN, true);
-        boolean blockIPv6 = prefs.getBoolean(BLOCK_IPv6, true);
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
         boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
         boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
@@ -206,8 +211,11 @@ public class VpnBuilder {
             builder.addRoute(META_ADDRESS, 0);
         }
 
-        if (lan && !blockIPv6) {
-            builder.addRoute("2000::", 3); // unicast
+        if (lan && (!(blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED)
+                || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED
+                && modulesStatus.getTorState() != STOPPED)) {
+            //TODO bypass lan addresses
+            builder.addRoute("::", 0);
         } else {
             builder.addRoute("::", 0);
         }
@@ -266,10 +274,31 @@ public class VpnBuilder {
         List<InetAddress> listDns = new ArrayList<>();
         List<String> sysDns = VpnUtils.getDefaultDNS(context);
 
+        SharedPreferences prefs = defaultPreferences.get();
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, false);
+
+        boolean ip6 = (!blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED
+                || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED
+                && modulesStatus.getTorState() != STOPPED);
+
         // Get custom DNS servers
-        boolean ip6 = defaultPreferences.get().getBoolean("ipv6", false);
-        vpnDns1 = App.getInstance().getDaggerComponent().getPathVars().get().getDNSCryptFallbackRes();
-        logi("VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + VPN_DNS_2);
+        List<String> dnscryptBootstrapResolversIPv4 = new ArrayList<>();
+        List<String> dnscryptBootstrapResolversIPv6 = new ArrayList<>();
+        String resolvers = App.getInstance().getDaggerComponent().getPathVars().get().getDNSCryptFallbackRes();
+        for (String resolver: resolvers.split(", ?")) {
+            if (resolver.matches(IPv4_REGEX)) {
+                dnscryptBootstrapResolversIPv4.add(resolver);
+            } else if (resolver.matches(IPv6_REGEX)) {
+                dnscryptBootstrapResolversIPv6.add(resolver);
+            }
+        }
+
+        if (dnscryptBootstrapResolversIPv4.isEmpty()) {
+            vpnDns1 = QUAD_DNS_41;
+        } else {
+            vpnDns1 = dnscryptBootstrapResolversIPv4.get(0);
+        }
 
         if (vpnDns1 != null) {
             try {
@@ -288,7 +317,7 @@ public class VpnBuilder {
                 if (vpnDns1 != null) {
                     String name = dnsInteractor.get().reverseResolve(vpnDns1);
                     if (!name.isEmpty()) {
-                        vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name));
+                        vpnDnsSet.addAll(dnsInteractor.get().resolveDomain("https://" + name, ip6));
                     }
                 }
                 logi("VPNBuilder vpnDnsSet " + vpnDnsSet);
@@ -297,8 +326,15 @@ public class VpnBuilder {
             }
         }
 
+        String vpnDns2 = VPN_DNS_2;
+        if (ip6 && !dnscryptBootstrapResolversIPv6.isEmpty()) {
+            vpnDns2 = dnscryptBootstrapResolversIPv6.get(0);
+        } else if (dnscryptBootstrapResolversIPv4.size() > 1) {
+            vpnDns2 = dnscryptBootstrapResolversIPv4.get(1);
+        }
+
         try {
-            InetAddress dns = InetAddress.getByName(VPN_DNS_2);
+            InetAddress dns = InetAddress.getByName(vpnDns2);
             if (!(dns.isLoopbackAddress() || dns.isAnyLocalAddress()) &&
                     (ip6 || dns instanceof Inet4Address)) {
                 listDns.add(dns);
@@ -323,6 +359,8 @@ public class VpnBuilder {
             vpnDnsSet.add(QUAD_DNS_61);
             vpnDnsSet.add(QUAD_DNS_62);
         }
+
+        logi("VPN DNS system=" + TextUtils.join(",", sysDns) + " config=" + vpnDns1 + "," + vpnDns2);
 
         if (listDns.size() == 2) {
             return listDns;

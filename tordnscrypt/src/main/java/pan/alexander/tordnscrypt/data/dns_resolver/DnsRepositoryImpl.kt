@@ -27,26 +27,44 @@ class DnsRepositoryImpl @Inject constructor(
     private val dnsDataSource: DnsDataSource
 ) : DnsRepository {
 
-    override fun resolveDomainUDP(domain: String, port: Int, timeout: Int): Set<String> {
-        return dnsDataSource.resolveDomainUDP(domain, port, timeout)
+    override fun resolveDomainUDP(
+        domain: String,
+        includeIPv6: Boolean,
+        port: Int,
+        timeout: Int
+    ): Set<String> {
+        return dnsDataSource.resolveDomainUDP(domain, includeIPv6, port, timeout)
             ?.filter { isRecordValid(it) }
             ?.flatMap {
                 when {
                     it.isA || it.isAAAA -> listOf(it.value.trim())
-                    it.isCname -> resolveDomainUDP("https://${it.value}", port, timeout)
+                    it.isCname -> resolveDomainUDP(
+                        "https://${it.value}",
+                        includeIPv6,
+                        port,
+                        timeout
+                    )
                     else -> emptyList()
                 }
             }
             ?.toHashSet() ?: emptySet()
     }
 
-    override fun resolveDomainDOH(domain: String, timeout: Int): Set<String> {
-        return dnsDataSource.resolveDomainDOH(domain, timeout)
+    override fun resolveDomainDOH(
+        domain: String,
+        includeIPv6: Boolean,
+        timeout: Int
+    ): Set<String> {
+        return dnsDataSource.resolveDomainDOH(domain, includeIPv6, timeout)
             ?.filter { isRecordValid(it) }
             ?.flatMap {
                 when {
                     it.isA || it.isAAAA -> listOf(it.value.trim())
-                    it.isCname -> resolveDomainDOH("https://${it.value}", timeout)
+                    it.isCname -> resolveDomainDOH(
+                        "https://${it.value}",
+                        includeIPv6,
+                        timeout
+                    )
                     else -> emptyList()
                 }
             }
@@ -60,7 +78,7 @@ class DnsRepositoryImpl @Inject constructor(
 
     override fun reverseResolveDomainDOH(ip: String, timeout: Int): String {
         return dnsDataSource.reverseResolveDOH(ip, timeout)
-        ?.getOrNull(0)?.value ?: ""
+            ?.getOrNull(0)?.value ?: ""
     }
 
     private fun isRecordValid(record: Record?): Boolean {

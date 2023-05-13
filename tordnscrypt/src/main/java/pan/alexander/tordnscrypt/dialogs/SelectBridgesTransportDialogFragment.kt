@@ -22,19 +22,28 @@ package pan.alexander.tordnscrypt.dialogs
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
+import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.widget.CheckBox
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6
 import javax.inject.Inject
+import javax.inject.Named
 
 @ExperimentalCoroutinesApi
 class SelectBridgesTransportDialogFragment @Inject constructor(
+    @Named(DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences,
     private val viewModelFactory: ViewModelProvider.Factory
 ) : ExtendedDialogFragment() {
 
@@ -54,6 +63,13 @@ class SelectBridgesTransportDialogFragment @Inject constructor(
             val view: View = layoutInflater.inflate(R.layout.select_tor_transport, null)
 
             val rbgTorTransport = view.findViewById<RadioGroup>(R.id.rbgTorTransport)
+            val chbRequestIPv6Bridges = view.findViewById<CheckBox>(R.id.chbRequestIPv6Bridges)
+
+            if (defaultPreferences.getBoolean(TOR_USE_IPV6, false)) {
+                chbRequestIPv6Bridges.visibility = VISIBLE
+            } else {
+                chbRequestIPv6Bridges.visibility = GONE
+            }
 
             setView(view)
 
@@ -63,11 +79,19 @@ class SelectBridgesTransportDialogFragment @Inject constructor(
 
                 okButtonPressed = true
 
+                val ipv6Bridges = chbRequestIPv6Bridges.isChecked
+
                 when (rbgTorTransport.checkedRadioButtonId) {
                     R.id.rbObfsNone ->
-                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge("0")
+                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
+                            "0",
+                            ipv6Bridges
+                        )
                     R.id.rbObfs4 ->
-                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge("obfs4")
+                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
+                            "obfs4",
+                            ipv6Bridges
+                        )
                 }
             }
 

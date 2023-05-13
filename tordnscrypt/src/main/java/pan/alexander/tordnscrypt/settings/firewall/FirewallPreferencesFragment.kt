@@ -45,7 +45,6 @@ class FirewallPreferencesFragment : PreferenceFragmentCompat(),
         if (preference.key == FIREWALL_SHOWS_ALL_APPS) {
             (parentFragmentManager.findFragmentByTag(FirewallFragment.TAG) as? FirewallFragment)
                 ?.apply {
-                    viewModel.showAllApps = newValue?.toString()?.toBoolean()
                     viewModel.getDeviceApps()
                 }
 

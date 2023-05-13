@@ -19,14 +19,19 @@
 
 package pan.alexander.tordnscrypt.utils.connectivitycheck
 
+import android.content.SharedPreferences
 import kotlinx.coroutines.*
-import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_IO
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceScope
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
+import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
@@ -39,15 +44,18 @@ private const val ANDROID_CONNECTIVITY_CHECK_URL = "connectivitycheck.android.co
 private const val ANDROID_CONNECTIVITY_CHECK_DEFAULT_IPS =
     "64.233.162.102, 64.233.162.113, 64.233.162.101, 142.250.180.238, 64.233.162.100, 142.250.180.206, 142.251.39.46, 64.233.162.139, 64.233.162.138, 172.217.20.14"
 private const val GET_CONNECTIVITY_CHECK_IPS_TIME_INTERVAL_HRS = 1
-private const val ATTEMPTS_RESOLVE_DOMAIN = 3
+private const val ATTEMPTS_RESOLVE_DOMAIN = 5
 private const val RESOLVE_TIMEOUT_SEC = 10
 
 @ModulesServiceScope
 class ConnectivityCheckManager @Inject constructor(
     private val pathVars: PathVars,
     private val dnsInteractor: DnsInteractor,
-    @Named(CoroutinesModule.DISPATCHER_IO)
+    @Named(DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: dagger.Lazy<SharedPreferences>,
+    @Named(DISPATCHER_IO)
     dispatcherIo: CoroutineDispatcher
+
 ) {
 
     private val coroutineScope = CoroutineScope(
@@ -118,6 +126,12 @@ class ConnectivityCheckManager @Inject constructor(
         return connectivityCheckIps
     }
 
+    fun refreshConnectivityCheckIPs() {
+        if (updatingInProgress.compareAndSet(false, true)) {
+            coroutineScope.launch { updateCaptivePortalsFile() }
+        }
+    }
+
     private suspend fun updateCaptivePortalsFile() {
         try {
 
@@ -127,14 +141,21 @@ class ConnectivityCheckManager @Inject constructor(
                 return
             }
 
+            val prefs = defaultPreferences.get()
+            val blockIPv6DnsCrypt: Boolean =
+                prefs.getBoolean(PreferenceKeys.DNSCRYPT_BLOCK_IPv6, true)
+            val useIPv6Tor: Boolean = prefs.getBoolean(PreferenceKeys.TOR_USE_IPV6, true)
+            val includeIPv6 = (ModulesStatus.getInstance().mode != OperationMode.ROOT_MODE
+                    && (!blockIPv6DnsCrypt || useIPv6Tor))
+
             val fileNewLines = mutableListOf<String>()
             for (line in lines) {
                 if (!line.startsWith("#") && line.contains(GSTATIC_CONNECTIVITY_CHECK_URL)) {
-                    getGstaticConnectivityCheckIpsLine(line).also {
+                    getGstaticConnectivityCheckIpsLine(line, includeIPv6).also {
                         fileNewLines.add(it)
                     }
                 } else if (!line.startsWith("#") && line.contains(ANDROID_CONNECTIVITY_CHECK_URL)) {
-                    getLineAndUpdateAndroidConnectivityCheckIps(line).also {
+                    getLineAndUpdateAndroidConnectivityCheckIps(line, includeIPv6).also {
                         fileNewLines.add(it)
                     }
                 } else {
@@ -153,9 +174,12 @@ class ConnectivityCheckManager @Inject constructor(
         }
     }
 
-    private suspend fun getGstaticConnectivityCheckIpsLine(line: String): String {
+    private suspend fun getGstaticConnectivityCheckIpsLine(
+        line: String,
+        includeIPv6: Boolean
+    ): String {
 
-        val ips = resolveIps("https://$GSTATIC_CONNECTIVITY_CHECK_URL")
+        val ips = resolveIps("https://$GSTATIC_CONNECTIVITY_CHECK_URL", includeIPv6)
 
         return when {
             ips.size == 1 -> {
@@ -174,9 +198,12 @@ class ConnectivityCheckManager @Inject constructor(
         }
     }
 
-    private suspend fun getLineAndUpdateAndroidConnectivityCheckIps(line: String): String {
+    private suspend fun getLineAndUpdateAndroidConnectivityCheckIps(
+        line: String,
+        includeIPv6: Boolean
+    ): String {
 
-        val ips = resolveIps("https://$ANDROID_CONNECTIVITY_CHECK_URL")
+        val ips = resolveIps("https://$ANDROID_CONNECTIVITY_CHECK_URL", includeIPv6)
 
         return when {
             ips.size == 1 -> {
@@ -236,19 +263,20 @@ class ConnectivityCheckManager @Inject constructor(
 
     private suspend fun resolveIps(
         url: String,
+        includeIPv6: Boolean,
         attempt: Int = 0
     ): Set<String> = try {
         if (attempt < ATTEMPTS_RESOLVE_DOMAIN) {
             if (attempt > 0) {
-                delay(attempt * 1000L)
+                delay(attempt * 3000L)
             }
-            dnsInteractor.resolveDomain(url, RESOLVE_TIMEOUT_SEC)
+            dnsInteractor.resolveDomain(url, false, RESOLVE_TIMEOUT_SEC)
         } else {
             emptySet()
         }
     } catch (e: Exception) {
-        loge("IptablesFirewall resolveIps $url attempt:${attempt + 1}", e)
-        resolveIps(url, attempt + 1)
+        loge("ConnectivityCheckManager resolveIps $url attempt:${attempt + 1}", e)
+        resolveIps(url, includeIPv6, attempt + 1)
     }
 
 }

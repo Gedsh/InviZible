@@ -303,10 +303,15 @@ jboolean handle_udp(const struct arguments *args,
         s->udp.version = version;
 
         int rversion;
-        if (redirect == NULL)
+        if (redirect == NULL) {
             rversion = s->udp.version;
-        else
+        } else if (s->udp.version == 6 && strcmp(redirect->raddr, LOOPBACK_ADDRESS) == 0) {
+            strcpy(redirect->raddr, LOOPBACK_ADDRESS_IPv6);
+            rversion = 6;
+        } else {
             rversion = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
+        }
+
         s->udp.mss = (uint16_t) (rversion == 4 ? UDP4_MAXMSG : UDP6_MAXMSG);
 
         s->udp.sent = 0;
@@ -410,7 +415,13 @@ jboolean handle_udp(const struct arguments *args,
             addr6.sin6_port = cur->udp.dest;
         }
     } else {
-        rversion = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
+
+        if (strstr(redirect->raddr, ":") == NULL) {
+            rversion = 4;
+        } else {
+            rversion = 6;
+        }
+
         log_android(ANDROID_LOG_INFO, "UDP%d redirect to %s/%u",
                     rversion, redirect->raddr, redirect->rport);
 

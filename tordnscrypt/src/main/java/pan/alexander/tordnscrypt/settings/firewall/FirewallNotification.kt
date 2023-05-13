@@ -135,12 +135,28 @@ class FirewallNotification : BroadcastReceiver() {
 
 
         try {
-            val applicationInfo = packageManager.getPackageInfo(packages[0], 0).applicationInfo
+            val applicationInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                    packages[0],
+                    PackageManager.PackageInfoFlags.of(0)
+                ).applicationInfo
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packages[0], 0).applicationInfo
+            }
             system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-            val pInfo: PackageInfo = packageManager.getPackageInfo(
-                applicationInfo.packageName,
-                PackageManager.GET_PERMISSIONS
-            )
+            val pInfo: PackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                    applicationInfo.packageName,
+                    PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(
+                    applicationInfo.packageName,
+                    PackageManager.GET_PERMISSIONS
+                )
+            }
             if (pInfo.requestedPermissions != null) {
                 for (permInfo in pInfo.requestedPermissions) {
                     if (permInfo == Manifest.permission.INTERNET) {
@@ -214,7 +230,7 @@ class FirewallNotification : BroadcastReceiver() {
             val appsAllowLan = preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF)
             val appsAllowWifi = preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
             val appsAllowGsm = preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)
-            val appsAllowRoaming =preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
+            val appsAllowRoaming = preferences.getStringSetPreference(APPS_ALLOW_ROAMING)
             val appsAllowVpn = preferences.getStringSetPreference(APPS_ALLOW_VPN)
 
 
@@ -382,12 +398,12 @@ class FirewallNotification : BroadcastReceiver() {
             .setChannelId(FIREWALL_CHANNEL_ID)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .addAction(
-                R.drawable.ic_done_white_24dp,
+                R.drawable.ic_done_white,
                 context.getText(R.string.allow),
                 allowPendingIntent
             )
             .addAction(
-                R.drawable.ic_baseline_close_24,
+                R.drawable.ic_close_white,
                 context.getText(R.string.deny),
                 denyPendingIntent
             )

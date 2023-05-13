@@ -55,10 +55,17 @@ import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_MASK;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
+import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -135,7 +142,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("Enable DNS"));
         preferences.add(findPreference("DNSPort"));
         preferences.add(findPreference("ClientUseIPv4"));
-        preferences.add(findPreference("ClientUseIPv6"));
+        preferences.add(findPreference(TOR_USE_IPV6));
         preferences.add(findPreference("pref_tor_snowflake_stun"));
         preferences.add(findPreference(TOR_OUTBOUND_PROXY));
         preferences.add(findPreference(TOR_OUTBOUND_PROXY_ADDRESS));
@@ -263,9 +270,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 isChanged = true;
             }
 
-            if (val_tor.get(i).isEmpty()) {
+            if (!key_tor.get(i).isEmpty() && val_tor.get(i).isEmpty()) {
                 tor_conf.add(key_tor.get(i));
-            } else {
+            } else if (!key_tor.get(i).isEmpty()) {
                 String val = val_tor.get(i);
                 if (val.equals("true")) val = "1";
                 if (val.equals("false")) val = "0";
@@ -341,45 +348,75 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 val_tor.add(key_tor.indexOf("HardwareAccel"), newValue.toString());
             }
         } else if (Objects.equals(preference.getKey(), "Enable SOCKS proxy")) {
-            if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#SOCKSPort")) {
-                key_tor.set(key_tor.indexOf("#SOCKSPort"), "SOCKSPort");
-            } else if (key_tor.contains("SOCKSPort")) {
-                key_tor.set(key_tor.indexOf("SOCKSPort"), "#SOCKSPort");
+            boolean enable = Boolean.parseBoolean(newValue.toString());
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                if (enable && key.equals("#SOCKSPort")) {
+                    key_tor.set(i, "SOCKSPort");
+                } else if (!enable && key.equals("SOCKSPort")) {
+                    key_tor.set(i, "#SOCKSPort");
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "Enable HTTPTunnel")) {
-            if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#HTTPTunnelPort")) {
-                key_tor.set(key_tor.indexOf("#HTTPTunnelPort"), "HTTPTunnelPort");
-            } else if (key_tor.contains("HTTPTunnelPort")) {
-                key_tor.set(key_tor.indexOf("HTTPTunnelPort"), "#HTTPTunnelPort");
+            boolean enable = Boolean.parseBoolean(newValue.toString());
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                if (enable && key.equals("#HTTPTunnelPort")) {
+                    key_tor.set(i, "HTTPTunnelPort");
+                } else if (!enable && key.equals("HTTPTunnelPort")) {
+                    key_tor.set(i, "#HTTPTunnelPort");
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "Enable Transparent proxy")) {
-            if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#TransPort")) {
-                key_tor.set(key_tor.indexOf("#TransPort"), "TransPort");
-            } else if (key_tor.contains("TransPort")) {
-                key_tor.set(key_tor.indexOf("TransPort"), "#TransPort");
+            boolean enable = Boolean.parseBoolean(newValue.toString());
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                if (enable && key.equals("#TransPort")) {
+                    key_tor.set(i, "TransPort");
+                } else if (!enable && key.equals("TransPort")) {
+                    key_tor.set(i, "#TransPort");
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "Enable DNS")) {
-            if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#DNSPort")) {
-                key_tor.set(key_tor.indexOf("#DNSPort"), "DNSPort");
-            } else if (key_tor.contains("DNSPort")) {
-                key_tor.set(key_tor.indexOf("DNSPort"), "#DNSPort");
+            boolean enable = Boolean.parseBoolean(newValue.toString());
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                if (enable && key.equals("#DNSPort")) {
+                    key_tor.set(i, "DNSPort");
+                } else if (!enable && key.equals("DNSPort")) {
+                    key_tor.set(i, "#DNSPort");
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "DNSPort")) {
+            String dnsPort = newValue.toString();
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                     && ModulesStatus.getInstance().isUseModulesWithRoot();
-            if (!newValue.toString().matches("\\d+")
+            if (!dnsPort.matches("\\d+")
                     || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                 return false;
             }
 
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                String val = val_tor.get(i);
+                if (key.equals("DNSPort") && val.contains(LOOPBACK_ADDRESS)) {
+                    val_tor.set(i, LOOPBACK_ADDRESS + ":" + dnsPort);
+                } else if (key.equals("DNSPort") && val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    val_tor.set(i, "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + dnsPort);
+                } else if (key.equals("DNSPort")) {
+                    val_tor.set(i, dnsPort);
+                }
+            }
+
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
-                    "onion 127.0.0.1:" + newValue.toString().trim());
+                    "onion 127.0.0.1:" + dnsPort.trim());
             cachedExecutor.submit(modifyForwardingRules.getRunnable());
+            return true;
         } else if (Objects.equals(preference.getKey(), SNOWFLAKE_RENDEZVOUS)) {
 
             if (!key_tor.contains("ClientTransportPlugin")) {
@@ -423,56 +460,150 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 || Objects.equals(preference.getKey(), "HTTPTunnelPort")
                 || Objects.equals(preference.getKey(), "TransPort")) {
 
+            String proxyPort = newValue.toString();
+            String proxyType = preference.getKey();
+
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                     && ModulesStatus.getInstance().isUseModulesWithRoot();
-            if (!newValue.toString().matches("\\d+")
-                    || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
+            if (!proxyPort.matches("\\d+")
+                    || (!useModulesWithRoot && Integer.parseInt(proxyPort) < 1024)) {
                 return false;
             }
 
-            newValue = addIsolateFlags(newValue, allowTorTethering, isolateDestAddress, isolateDestPort);
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                String val = val_tor.get(i);
+
+                if (key.equals(proxyType) && val.contains(LOOPBACK_ADDRESS)) {
+                    String proxyLine = LOOPBACK_ADDRESS + ":" + proxyPort;
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolateDestPort));
+                } else if (key.equals(proxyType) && val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    String proxyLine = "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + proxyPort;
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolateDestPort));
+                } else if (key.equals(proxyType)) {
+                    val_tor.set(i, addIsolateFlags(
+                            proxyPort,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolateDestPort));
+                }
+            }
+
+            return true;
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_address")) {
-            if (key_tor.contains("SOCKSPort")) {
-                int index = key_tor.indexOf("SOCKSPort");
-                String val = val_tor.get(index).split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
-                val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
-                val_tor.set(index, val);
-            }
-            if (key_tor.contains("HTTPTunnelPort")) {
-                int index = key_tor.indexOf("HTTPTunnelPort");
-                String val = val_tor.get(index).split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
-                val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
-                val_tor.set(index, val);
-            }
-            if (key_tor.contains("TransPort")) {
-                int index = key_tor.indexOf("TransPort");
-                String val = val_tor.get(index).split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
-                val = addIsolateFlags(val, allowTorTethering, Boolean.parseBoolean(newValue.toString()), isolateDestPort);
-                val_tor.set(index, val);
+
+            boolean isolate = Boolean.parseBoolean(newValue.toString());
+
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                String val = val_tor.get(i);
+
+                String proxyType = "";
+                switch (key) {
+                    case "SOCKSPort":
+                        proxyType = "SOCKSPort";
+                        break;
+                    case "HTTPTunnelPort":
+                        proxyType = "HTTPTunnelPort";
+                        break;
+                    case "TransPort":
+                        proxyType = "TransPort";
+                        break;
+                }
+
+                if (proxyType.isEmpty()) {
+                    continue;
+                }
+
+                String proxyPort = val.split(" ")[0]
+                        .replaceAll(".+:", "")
+                        .replaceAll("\\D+", "");
+
+                if (val.contains(LOOPBACK_ADDRESS)) {
+                    String proxyLine = LOOPBACK_ADDRESS + ":" + proxyPort;
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolate,
+                            isolateDestPort));
+                } else if (val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    String proxyLine = "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + proxyPort;
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolate,
+                            isolateDestPort));
+                } else {
+                    val_tor.set(i, addIsolateFlags(
+                            proxyPort,
+                            allowTorTethering,
+                            isolate,
+                            isolateDestPort));
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_port")) {
-            if (key_tor.contains("SOCKSPort")) {
-                int index = key_tor.indexOf("SOCKSPort");
-                String val = val_tor.get(index).split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
-                val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
-                val_tor.set(index, val);
-            }
-            if (key_tor.contains("HTTPTunnelPort")) {
-                int index = key_tor.indexOf("HTTPTunnelPort");
-                String val = val_tor.get(index).split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
-                val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
-                val_tor.set(index, val);
-            }
-            if (key_tor.contains("TransPort")) {
-                int index = key_tor.indexOf("TransPort");
-                String val = val_tor.get(index).split(" ")[0].replaceAll(".+:", "").replaceAll("\\D+", "");
-                val = addIsolateFlags(val, allowTorTethering, isolateDestAddress, Boolean.parseBoolean(newValue.toString()));
-                val_tor.set(index, val);
+
+            boolean isolate = Boolean.parseBoolean(newValue.toString());
+
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                String val = val_tor.get(i);
+
+                String proxyType = "";
+                switch (key) {
+                    case "SOCKSPort":
+                        proxyType = "SOCKSPort";
+                        break;
+                    case "HTTPTunnelPort":
+                        proxyType = "HTTPTunnelPort";
+                        break;
+                    case "TransPort":
+                        proxyType = "TransPort";
+                        break;
+                }
+
+                if (proxyType.isEmpty()) {
+                    continue;
+                }
+
+                String proxyPort = val.split(" ")[0]
+                        .replaceAll(".+:", "")
+                        .replaceAll("\\D+", "");
+
+                if (val.contains(LOOPBACK_ADDRESS)) {
+                    String proxyLine = LOOPBACK_ADDRESS + ":" + proxyPort;
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolate));
+                } else if (val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    String proxyLine = "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + proxyPort;
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolate));
+                } else {
+                    val_tor.set(i, addIsolateFlags(
+                            proxyPort,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolate));
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "VirtualAddrNetwork")
-                && !newValue.toString().matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/\\d+$")) {
+                && !newValue.toString().matches(IPv4_REGEX_WITH_MASK)) {
             return false;
         } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
                 && !newValue.toString().matches("\\d+")) {
@@ -491,8 +622,61 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "Socks5Proxy")
-                && !newValue.toString().matches("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(:\\d+)?$")) {
+                && !newValue.toString().matches(IPv4_REGEX_WITH_PORT)) {
             return false;
+        } else if (Objects.equals(preference.getKey(), TOR_USE_IPV6)) {
+
+            boolean useIPv6 = Boolean.parseBoolean(newValue.toString());
+
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                String val = val_tor.get(i);
+
+                if (useIPv6 && key.equals("SOCKSPort") && !val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    String proxyLine = LOOPBACK_ADDRESS + ":" + pathVars.get().getTorSOCKSPort();
+                    val_tor.set(i, addIsolateFlags(
+                            proxyLine,
+                            allowTorTethering,
+                            isolateDestAddress,
+                            isolateDestPort));
+                    if (i < key_tor.size() -1 && !key_tor.get(i + 1).equals("SOCKSPort")) {
+                        key_tor.add(i + 1, "SOCKSPort");
+                        proxyLine = "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + pathVars.get().getTorSOCKSPort();
+                        val_tor.add(i + 1, addIsolateFlags(
+                                proxyLine,
+                                allowTorTethering,
+                                isolateDestAddress,
+                                isolateDestPort));
+                    }
+                } else if (!useIPv6 && key.equals("SOCKSPort") && val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                   key_tor.set(i, "");
+                   val_tor.set(i, "");
+                } else if (useIPv6 && key.equals("DNSPort") && !val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    val_tor.set(i, LOOPBACK_ADDRESS + ":" + pathVars.get().getTorDNSPort());
+                    if (i < key_tor.size() -1 && !key_tor.get(i + 1).equals("DNSPort")) {
+                        key_tor.add(i + 1, "DNSPort");
+                        val_tor.add(
+                                i + 1,
+                                "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + pathVars.get().getTorDNSPort()
+                        );
+                    }
+                } else if (!useIPv6 && key.equals("DNSPort") && val.contains(LOOPBACK_ADDRESS_IPv6)) {
+                    key_tor.set(i, "");
+                    val_tor.set(i, "");
+                }
+            }
+
+            if (useIPv6
+                    && key_tor.contains("VirtualAddrNetwork")
+                    && !key_tor.contains("VirtualAddrNetworkIPv6")) {
+                int index = key_tor.indexOf("VirtualAddrNetwork");
+                key_tor.add(index + 1, "VirtualAddrNetworkIPv6");
+                val_tor.add(index + 1, TOR_VIRTUAL_ADDR_NETWORK_IPV6);
+            } else if (!useIPv6 && key_tor.contains("VirtualAddrNetworkIPv6")) {
+                int index = key_tor.indexOf("VirtualAddrNetworkIPv6");
+                key_tor.set(index, "");
+                val_tor.set(index, "");
+            }
         }
 
         if (key_tor.contains(preference.getKey().trim())) {
@@ -508,7 +692,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
     private String addIsolateFlags(Object val, boolean allowTorTethering, boolean isolateDestinationAddress, boolean isolateDestinationPort) {
         String value = val.toString();
-        if (allowTorTethering) {
+        if (allowTorTethering && value.contains(LOOPBACK_ADDRESS)) {
+            value = value.replace(LOOPBACK_ADDRESS, META_ADDRESS);
+        } else if (allowTorTethering && !value.contains(LOOPBACK_ADDRESS_IPv6)) {
             value = "0.0.0.0:" + value;
         }
         if (isolateDestinationAddress) {

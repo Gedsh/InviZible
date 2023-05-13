@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 
@@ -86,11 +87,14 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -105,6 +109,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readT
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 @SuppressLint("UnsafeOptInUsageWarning")
@@ -153,6 +158,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
@@ -476,6 +484,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else if (dialogsState instanceof DialogsFlowState.CaptchaDialog) {
                 showCaptchaDialog(
                         ((DialogsFlowState.CaptchaDialog) dialogsState).getTransport(),
+                        ((DialogsFlowState.CaptchaDialog) dialogsState).getIpv6(),
                         ((DialogsFlowState.CaptchaDialog) dialogsState).getCaptcha(),
                         ((DialogsFlowState.CaptchaDialog) dialogsState).getSecretCode()
                 );
@@ -509,13 +518,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         }
     }
 
-    private void showCaptchaDialog(String transport, Bitmap captcha, String secretCode) {
+    private void showCaptchaDialog(String transport, boolean ipv6, Bitmap captcha, String secretCode) {
         String tag = BridgesCaptchaDialogFragment.class.getCanonicalName();
         BridgesCaptchaDialogFragment dialog =
                 (BridgesCaptchaDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
             dialog = bridgesCaptchaDialogFragment.get();
             dialog.setTransport(transport);
+            dialog.setIpv6(ipv6);
             dialog.setCaptcha(captcha);
             dialog.setSecretCode(secretCode);
             dialog.show(getChildFragmentManager(), tag);
@@ -635,34 +645,49 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setView(inputView);
 
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
+            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+";
+            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+ +\\w+";
             List<String> bridgesListNew = new ArrayList<>();
 
             String inputLinesStr = input.getText().toString().trim();
 
+            String bridgeBase;
+            if (inputLinesStr.contains("[") && inputLinesStr.contains("]")) {
+                bridgeBase = ipv6BridgeBase;
+            } else {
+                bridgeBase = ipv4BridgeBase;
+            }
+
             String inputBridgesType = "";
-            Pattern pattern = Pattern.compile("^(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+");
+            Pattern pattern;
             if (inputLinesStr.contains(obfs4.toString())) {
                 inputBridgesType = obfs4.toString();
-                pattern = Pattern.compile("^obfs4 +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+ +cert=.+ +iat-mode=\\d");
+                pattern = Pattern.compile("^obfs4 +" + bridgeBase + " +cert=.+ +iat-mode=\\d");
             } else if (inputLinesStr.contains(obfs3.toString())) {
                 inputBridgesType = obfs3.toString();
-                pattern = Pattern.compile("^obfs3 +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+");
+                pattern = Pattern.compile("^obfs3 +" + bridgeBase);
             } else if (inputLinesStr.contains(scramblesuit.toString())) {
                 inputBridgesType = scramblesuit.toString();
-                pattern = Pattern.compile("^scramblesuit +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+( +password=\\w+)?");
+                pattern = Pattern.compile("^scramblesuit +" + bridgeBase + "( +password=\\w+)?");
             } else if (inputLinesStr.contains(meek_lite.toString())) {
                 inputBridgesType = meek_lite.toString();
-                pattern = Pattern.compile("^meek_lite +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+ +url=https://[\\w./]+ +front=[\\w./]+");
+                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./]+ +front=[\\w./]+");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+");
+                pattern = Pattern.compile("^snowflake +" + bridgeBase);
+            } else {
+                pattern = Pattern.compile(bridgeBase);
             }
 
             String[] bridgesArrNew;
             if (inputBridgesType.isEmpty()) {
-                bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\n:+=/. -]", " ").replaceAll(" +", " ").split("\n");
+                bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\n\\[\\]:+=/. -]", " ")
+                        .replaceAll(" +", " ")
+                        .split("\n");
             } else {
-                bridgesArrNew = inputLinesStr.replaceAll("[^\\w:+=/. -]", " ").replaceAll(" +", " ").split(inputBridgesType);
+                bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\[\\]:+=/. -]", " ")
+                        .replaceAll(" +", " ")
+                        .split(inputBridgesType);
             }
 
             if (bridgesArrNew.length != 0) {
@@ -1223,7 +1248,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         doActionAndUpdateRecycler(() -> {
             bridgesToDisplay.clear();
-            viewModel.requestRelayBridges();
+            viewModel.requestRelayBridges(
+                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, false)
+            );
         });
 
     }

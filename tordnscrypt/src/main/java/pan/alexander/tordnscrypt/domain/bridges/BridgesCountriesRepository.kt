@@ -23,4 +23,5 @@ import java.io.File
 
 interface BridgesCountriesRepository {
     fun getGeoipFile(): File
+    fun getGeoip6File(): File
 }

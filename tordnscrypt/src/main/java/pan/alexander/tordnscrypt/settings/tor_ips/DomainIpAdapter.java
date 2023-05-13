@@ -90,7 +90,8 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
 
         DomainIpEntity domainIp = getItem(position);
         unlockTorIpsFragment.viewModel.deleteDomainIpFromPreferences(domainIp);
-        unlockTorIpsFragment.viewModel.removeDomainIp(domainIp);
+        boolean includeIPv6 = unlockTorIpsFragment.isIncludeIPv6Addresses();
+        unlockTorIpsFragment.viewModel.removeDomainIp(domainIp, includeIPv6);
     }
 
     private void setActive(int position, boolean active) {
@@ -196,7 +197,8 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
                         isChecked
                 );
             }
-            unlockTorIpsFragment.viewModel.addDomainIp(domainIp);
+            boolean includeIPv6 = unlockTorIpsFragment.isIncludeIPv6Addresses();
+            unlockTorIpsFragment.viewModel.addDomainIp(domainIp, includeIPv6);
         }
 
         private void setItemIpText(DomainIpEntity domainIp) {

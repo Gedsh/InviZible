@@ -135,7 +135,8 @@ public class DialogEditDomainIp extends DialogDomainIp {
 
         UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
         if (fragment != null) {
-            fragment.viewModel.updateDomainIp(domainIp, oldDomainIp);
+            boolean includeIPv6 = fragment.isIncludeIPv6Addresses();
+            fragment.viewModel.updateDomainIp(domainIp, oldDomainIp, includeIPv6);
             fragment.viewModel.replaceDomainInPreferences(host, oldHost);
         }
 
@@ -149,7 +150,8 @@ public class DialogEditDomainIp extends DialogDomainIp {
 
         UnlockTorIpsFragment fragment = unlockTorIpsFragment.get();
         if (fragment != null) {
-            fragment.viewModel.updateDomainIp(domainIp, oldDomainIp);
+            boolean includeIPv6 = fragment.isIncludeIPv6Addresses();
+            fragment.viewModel.updateDomainIp(domainIp, oldDomainIp, includeIPv6);
             fragment.viewModel.replaceIpInPreferences(ip, oldIP);
         }
 

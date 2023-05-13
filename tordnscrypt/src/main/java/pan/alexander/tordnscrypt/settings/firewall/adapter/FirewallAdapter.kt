@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.settings.firewall.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
 import android.graphics.drawable.Drawable
 import android.text.Html
 import android.view.LayoutInflater
@@ -41,9 +42,11 @@ import pan.alexander.tordnscrypt.settings.firewall.toIntSet
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_NEWLY_INSTALLED
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
 
 class FirewallAdapter(
     context: Context,
+    defaultPreferences: SharedPreferences,
     preferences: PreferenceRepository,
     private val onLanClicked: (uid: Int) -> Unit,
     private val onWiFiClicked: (uid: Int) -> Unit,
@@ -63,6 +66,7 @@ class FirewallAdapter(
     private val appsNewlyInstalledSavedSet =
         preferences.getStringSetPreference(APPS_NEWLY_INSTALLED).toIntSet()
             .also { preferences.setStringSetPreference(APPS_NEWLY_INSTALLED, setOf()) }
+    private val showAllApps = defaultPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
 
     private val comparatorByName: Comparator<AdapterItem> = compareBy(
         { !it.newlyInstalled },
@@ -85,6 +89,7 @@ class FirewallAdapter(
                     label = it.applicationData.toString(),
                     icon = it.applicationData.icon,
                     system = it.applicationData.system,
+                    hasInternetPermission = it.applicationData.hasInternetPermission,
                     lan = it.allowLan,
                     wifi = it.allowWifi,
                     gsm = it.allowGsm,
@@ -92,6 +97,12 @@ class FirewallAdapter(
                     vpn = it.allowVPN,
                     newlyInstalled = appsNewlyInstalledSavedSet.contains(it.applicationData.uid)
                 )
+            }.filter {
+                if (showAllApps) {
+                    true
+                } else {
+                    it.hasInternetPermission || it.system
+                }
             }.sortedWith(
                 when (sortMethod) {
                     SortMethod.BY_NAME -> comparatorByName
@@ -158,6 +169,8 @@ class FirewallAdapter(
         context,
         R.color.textModuleStatusColorStopped
     )
+    private val colorGreen = ContextCompat.getColor(context, R.color.userAppWithoutInternetPermission)
+    private val colorBrown = ContextCompat.getColor(context, R.color.systemAppWithoutInternetPermission)
 
     inner class FirewallViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
         View.OnClickListener {
@@ -198,10 +211,13 @@ class FirewallAdapter(
                 @Suppress("DEPRECATION")
                 tvAppName.text = Html.fromHtml(description.toString())
             }
-            if (appFirewall.system) {
-                tvAppName.setTextColor(colorRed)
-            } else {
-                tvAppName.setTextColor(colorBlack)
+            when {
+                appFirewall.system && appFirewall.hasInternetPermission ->
+                    tvAppName.setTextColor(colorRed)
+                appFirewall.system -> tvAppName.setTextColor(colorBrown)
+                !appFirewall.hasInternetPermission ->
+                    tvAppName.setTextColor(colorGreen)
+                else -> tvAppName.setTextColor(colorBlack)
             }
 
             btnLanFirewall.setImageDrawable(
@@ -290,6 +306,7 @@ class FirewallAdapter(
         val label: String,
         val icon: Drawable?,
         val system: Boolean,
+        val hasInternetPermission: Boolean,
         var lan: Boolean,
         var wifi: Boolean,
         var gsm: Boolean,

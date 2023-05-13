@@ -1056,17 +1056,17 @@ void queue_tcp(const struct arguments *args,
 }
 
 int open_tcp_socket(const struct arguments *args,
-                    const struct tcp_session *cur, const struct allowed *redirect) {
+                    const struct tcp_session *cur, struct allowed *redirect) {
     int sock;
     int version;
     if (redirect == NULL) {
-        //bypass dns addresses and own uid from socks proxy
-        if (*tor_socks5_addr && tor_socks5_port && cur->uid != own_uid)
-            version = (strstr(tor_socks5_addr, ":") == NULL ? 4 : 6);
-        else
-            version = cur->version;
-    } else
+        version = cur->version;
+    } else if (cur->version == 6 && strcmp(redirect->raddr, LOOPBACK_ADDRESS) == 0) {
+        strcpy(redirect->raddr, LOOPBACK_ADDRESS_IPv6);
+        version = 6;
+    } else {
         version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
+    }
 
     // Get TCP socket
     if ((sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
@@ -1122,6 +1122,10 @@ int open_tcp_socket(const struct arguments *args,
                 addr4.sin_family = AF_INET;
                 inet_pton(AF_INET, tor_socks5_addr, &addr4.sin_addr);
                 addr4.sin_port = htons(tor_socks5_port);
+            } else if (strcmp(tor_socks5_addr, LOOPBACK_ADDRESS) == 0) {
+                addr6.sin6_family = AF_INET6;
+                inet_pton(AF_INET6, LOOPBACK_ADDRESS_IPv6, &addr6.sin6_addr);
+                addr6.sin6_port = htons(tor_socks5_port);
             } else {
                 addr6.sin6_family = AF_INET6;
                 inet_pton(AF_INET6, tor_socks5_addr, &addr6.sin6_addr);

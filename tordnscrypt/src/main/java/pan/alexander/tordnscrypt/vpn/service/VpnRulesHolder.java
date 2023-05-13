@@ -34,6 +34,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.PLAINTEXT_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
@@ -191,9 +192,14 @@ public class VpnRulesHolder {
         } else if (vpn.reloading) {
             // Reload service
             logi("Block due to reloading " + packet);
-        } else if ((vpnPreferences.getBlockIPv6() || fixTTLForPacket
-                || packet.dport == PLAINTEXT_DNS_PORT
-                || (torIsRunning && redirectToTor)
+        } else if ((modulesStatus.getDnsCryptState() != STOPPED &&
+                vpnPreferences.getBlockIPv6DnsCrypt()
+                || modulesStatus.getDnsCryptState() == STOPPED &&
+                modulesStatus.getTorState() != STOPPED &&
+                !vpnPreferences.getUseIPv6Tor()
+                || fixTTLForPacket
+                //|| packet.dport == PLAINTEXT_DNS_PORT
+                //|| (torIsRunning && redirectToTor)
                 || (vpnPreferences.getUseProxy() && redirectToProxy))
                 && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             logi("Block ipv6 " + packet);

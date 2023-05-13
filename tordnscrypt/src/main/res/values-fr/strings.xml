@@ -535,4 +535,11 @@
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
+    <string name="pref_dnscrypt_http3_summ">"Activer la prise en charge de HTTP/3 (DoH3, HTTP sur QUIC). Notez que, comme DNSCrypt mais contrairement à d'autres versions de HTTP, ceci utilise UDP et (habituellement) le port 443 au lieu de TCP."</string>
+    <string name="pref_itpd_com_ssu2_summ">"Activer le protocole de transport SSU2 (utilise l'UDP)."</string>
+    <string name="ask_later">"Demandez plus tard"</string>
+    <string name="notifications_permission_rationale_message">"Les notifications sont essentielles pour afficher des informations importantes sur le fonctionnement de l'application, son contrôle et les attaques détectées. Voulez-vous autoriser les notifications pour InviZible?"</string>
+    <string name="pref_dnscrypt_dns64_summ">"Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don't enable it otherwise, or you won't be able to connect to anything at all."</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">"Set of used static IPv6 prefixes."</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">"IPv6 bridges"</string>
 </resources>

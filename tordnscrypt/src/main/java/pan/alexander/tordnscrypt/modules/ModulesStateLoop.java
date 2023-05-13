@@ -48,6 +48,7 @@ import pan.alexander.tordnscrypt.iptables.IptablesRules;
 import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
 import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -103,6 +104,8 @@ public class ModulesStateLoop implements Runnable,
     public Lazy<PathVars> pathVars;
     @Inject
     public Lazy<NflogManager> nflogManager;
+    @Inject
+    public Lazy<ConnectivityCheckManager> connectivityCheckManager;
 
     private boolean iptablesUpdateTemporaryBlocked;
 
@@ -561,6 +564,10 @@ public class ModulesStateLoop implements Runnable,
 
         preferenceRepository.get().setBoolPreference(DNSCRYPT_READY_PREF, ready);
         modulesStatus.setDnsCryptReady(ready);
+
+        if (ready && !savedReady) {
+            connectivityCheckManager.get().refreshConnectivityCheckIPs();
+        }
 
         //If DNSCrypt is ready, app will use DNSCrypt DNS instead of Tor Exit node DNS in VPN mode
         if (ready && !savedReady && modulesStatus.isTorReady()

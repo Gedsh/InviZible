@@ -96,13 +96,19 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
-    fun requestRelayBridges() {
+    fun requestRelayBridges(allowIPv6Relays: Boolean) {
         relayBridgesRequestJob?.cancel()
         relayBridgesRequestJob = viewModelScope.launch {
             try {
                 defaultVanillaBridgesMutableLiveData.value =
-                    defaultVanillaBridgeInteractor.requestRelays()
-                        .map { "${it.address}:${it.port} ${it.fingerprint}" }
+                    defaultVanillaBridgeInteractor.requestRelays(allowIPv6Relays)
+                        .map {
+                            if (it.address.isIPv6Address()) {
+                                "[${it.address}]:${it.port} ${it.fingerprint}"
+                            } else {
+                                "${it.address}:${it.port} ${it.fingerprint}"
+                            }
+                        }
             } catch (ignored: CancellationException) {
             } catch (e: Exception) {
                 e.message?.let {
@@ -112,6 +118,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             }
         }
     }
+
+    private fun String.isIPv6Address() = contains(":")
 
     fun cancelRequestingRelayBridges() {
         relayBridgesRequestJob?.cancel()
@@ -130,16 +138,16 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         dialogsFlowMutableLiveData.value = DialogsFlowState.SelectBridgesTransportDialog
     }
 
-    fun requestTorBridgesCaptchaChallenge(transport: String) {
+    fun requestTorBridgesCaptchaChallenge(transport: String, ipv6Bridges: Boolean) {
 
         showPleaseWaitDialog()
 
         torBridgesRequestJob?.cancel()
         torBridgesRequestJob = viewModelScope.launch {
             try {
-                val result = requestBridgesInteractor.requestCaptchaChallenge(transport)
+                val result = requestBridgesInteractor.requestCaptchaChallenge(transport, ipv6Bridges)
                 dismissRequestBridgesDialogs()
-                showCaptchaDialog(transport, result.first, result.second)
+                showCaptchaDialog(transport, ipv6Bridges, result.first, result.second)
             } catch (e: CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
             } catch (e: java.util.concurrent.CancellationException) {
@@ -151,12 +159,17 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
-    private fun showCaptchaDialog(transport: String, captcha: Bitmap, secretCode: String) {
+    private fun showCaptchaDialog(transport: String, ipv6Bridges: Boolean, captcha: Bitmap, secretCode: String) {
         dialogsFlowMutableLiveData.value =
-            DialogsFlowState.CaptchaDialog(transport, captcha, secretCode)
+            DialogsFlowState.CaptchaDialog(transport, ipv6Bridges, captcha, secretCode)
     }
 
-    fun requestTorBridges(transport: String, captchaText: String, secretCode: String) {
+    fun requestTorBridges(
+        transport: String,
+        ipv6Bridges: Boolean,
+        captchaText: String,
+        secretCode: String
+    ) {
 
         showPleaseWaitDialog()
 
@@ -165,6 +178,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             try {
                 val result = requestBridgesInteractor.requestBridges(
                     transport,
+                    ipv6Bridges,
                     captchaText,
                     secretCode
                 )
@@ -175,7 +189,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                     is ParseBridgesResult.BridgesReady ->
                         showBridgesReadyDialog(result.bridges)
                     is ParseBridgesResult.RecaptchaChallenge ->
-                        showCaptchaDialog(transport, result.captcha, result.secretCode)
+                        showCaptchaDialog(transport, ipv6Bridges, result.captcha, result.secretCode)
                 }
             } catch (e: CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridges", e)
@@ -208,9 +222,9 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private fun initBridgeCountriesObserver() {
         bridgeCountriesObserveJob = viewModelScope.launch {
             bridgesCountriesInteractor.observeBridgeCountries()
-               .onEach {
-                   bridgeCountries.add(it)
-                   bridgeCountriesMutableLiveData.value = bridgeCountries
+                .onEach {
+                    bridgeCountries.add(it)
+                    bridgeCountriesMutableLiveData.value = bridgeCountries
                 }.collect()
         }
     }
