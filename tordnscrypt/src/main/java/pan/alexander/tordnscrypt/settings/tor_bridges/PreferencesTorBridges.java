@@ -392,6 +392,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                                     "Bridge " + currentBridge
                                             + " utls-imitate="
                                             + snowflakeConfigurator.get().getUtlsClientID()
+                                            + " utls-nosni=true"
 
                             );
                         } else {
@@ -966,10 +967,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         if (!line.contains("#") && line.contains("Bridge ")) {
 
                             if (line.contains(snowflake.toString())) {
-                                line = line.replaceAll("utls-imitate.+?( |\\z)", "");
+                                line = extractSnowflakeBridgeBaseFromLine(line);
+                            } else {
+                                line = line.replace("Bridge ", "");
                             }
 
-                            bridgesInUse.add(line.replace("Bridge ", "").trim());
+                            bridgesInUse.add(line.trim());
                         }
                     }
 
@@ -1027,6 +1030,20 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }
             }
         }
+    }
+
+    private String extractSnowflakeBridgeBaseFromLine(String line) {
+        String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+";
+        Pattern pattern = Pattern.compile("Bridge (snowflake " + ipv4BridgeBase + ")");
+        Matcher matcher = pattern.matcher(line);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+
+        loge("PreferencesTorBridges extractSnowflakeBridgeBaseFromLine fault. " + line);
+
+        return "";
     }
 
     @Override
@@ -1249,7 +1266,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         doActionAndUpdateRecycler(() -> {
             bridgesToDisplay.clear();
             viewModel.requestRelayBridges(
-                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, false)
+                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, true)
             );
         });
 
