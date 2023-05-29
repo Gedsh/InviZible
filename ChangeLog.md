@@ -901,3 +901,8 @@
 * Fixed requesting for new Tor bridges.
 * Updated Tor.
 * Updated DNSCrypt.
+
+**InviZible Pro beta 1.8.6**
+* Updated built-in snowflake and meek_lite Tor bridges.
+* IPv6 is enabled by default for app modules.
+* Fixes and optimizations.
