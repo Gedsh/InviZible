@@ -57,7 +57,7 @@ class ConnectionRecordsConverter @Inject constructor(
 
     private val sharedPreferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(context)
-    private val blockIPv6: Boolean = sharedPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, true)
+    private val blockIPv6: Boolean = sharedPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, false)
     private val meteredNetwork = NetworkChecker.isMeteredNetwork(context)
     private val vpnDNS = VpnBuilder.vpnDnsSet
     private val modulesStatus = ModulesStatus.getInstance()

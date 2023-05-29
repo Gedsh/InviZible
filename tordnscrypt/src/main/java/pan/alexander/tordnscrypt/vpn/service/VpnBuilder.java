@@ -110,7 +110,7 @@ public class VpnBuilder {
     BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = defaultPreferences.get();
         boolean lan = prefs.getBoolean(BYPASS_LAN, true);
-        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
         boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
         boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
@@ -275,8 +275,8 @@ public class VpnBuilder {
         List<String> sysDns = VpnUtils.getDefaultDNS(context);
 
         SharedPreferences prefs = defaultPreferences.get();
-        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
-        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, false);
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
 
         boolean ip6 = (!blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED
                 || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED

@@ -338,7 +338,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 }
 
                 String val = "['127.0.0.1:" + newValue;
-                if (defaultPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, true)) {
+                if (defaultPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, false)) {
                     val += "']";
                 } else {
                     val += "', '[::1]:" + newValue + "']";
@@ -443,7 +443,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 int position = key_toml.indexOf("ignore_system_dns");
                 if (!key_toml.contains("http3") && position >= 0) {
                     key_toml.add(position + 1, "http3");
-                    val_toml.add(position + 1, "false");
+                    val_toml.add(position + 1, "true");
                 }
             } else if (Objects.equals(preference.getKey().trim(), DNSCRYPT_DNS64)) {
 

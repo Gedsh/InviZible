@@ -226,7 +226,7 @@ public class UnlockTorIpsFragment extends Fragment {
 
     public boolean isIncludeIPv6Addresses() {
         SharedPreferences prefs = defaultPreferences.get();
-        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
         boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
         return ModulesStatus.getInstance().getMode() != ROOT_MODE
                 && (!blockIPv6DnsCrypt || useIPv6Tor);
