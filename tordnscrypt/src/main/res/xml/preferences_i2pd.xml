@@ -40,7 +40,7 @@
             android:title="@string/pref_itpd_com_ipv4" />
         <CheckBoxPreference
             android:id="@+id/pref_itpd_com_ipv6"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:enabled="true"
             android:key="ipv6"
             android:summary="@string/pref_itpd_com_ipv6_summ"
