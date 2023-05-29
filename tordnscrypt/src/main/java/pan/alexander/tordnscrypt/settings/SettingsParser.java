@@ -232,6 +232,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     val = val.split(" ")[0]
                             .replaceAll(".+:", "")
                             .replaceAll("\\D+", "");
+                } else if (key.equals("VirtualAddrNetworkIPv4")) {
+                    key = "VirtualAddrNetwork";
                 }
 
                 String val_saved_str = "";
