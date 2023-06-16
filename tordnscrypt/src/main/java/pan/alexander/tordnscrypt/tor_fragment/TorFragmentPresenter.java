@@ -457,16 +457,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
         Log.e(LOG_TAG, "Problem bootstrapping Tor: " + logData.getLines());
 
-        int percents = logData.getPercents();
-
         NotificationHelper notificationHelper;
-        if (percents < 5) {
-            notificationHelper = NotificationHelper.setHelperMessage(
-                    context, context.getString(R.string.helper_dnscrypt_no_internet), "helper_dnscrypt_no_internet");
-        } else {
-            notificationHelper = NotificationHelper.setHelperMessage(
-                    context, context.getString(R.string.helper_tor_use_bridges), "helper_tor_use_bridges");
-        }
+        notificationHelper = NotificationHelper.setHelperMessage(
+                context, context.getString(R.string.helper_tor_use_bridges), "helper_tor_use_bridges");
         if (notificationHelper != null) {
             notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
         }
