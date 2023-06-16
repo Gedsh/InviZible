@@ -77,7 +77,7 @@ class TorRestarterReconnector @Inject constructor(
                 if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady
                     && isNetworkAvailable()
                 ) {
-                    FileManager.deleteDirSynchronous(context, pathVars.appDataDir + "/tor_data")
+                    deleteTorCachedFiles()
                     ModulesRestarter.restartTor(context)
                     lockCounter()
                     logi("Restart Tor to re-establish a connection")
@@ -90,6 +90,14 @@ class TorRestarterReconnector @Inject constructor(
                 resetCounter()
             }
         }
+    }
+
+    private fun deleteTorCachedFiles() {
+        //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-descriptors")
+        //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-descriptors.new")
+        FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdesc-consensus")
+        //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdescs")
+        //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdescs.new")
     }
 
     fun stopRestarterCounter() {
