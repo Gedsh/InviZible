@@ -284,7 +284,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="helper_dnscrypt_stopped">"Wyglada na to ze system android wylaczyl DNSCrypt. Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!"</string>
     <string name="helper_tor_stopped">"Wyglada na to ze system android wylaczyl Tor. Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!"</string>
     <string name="helper_itpd_stopped">"Wyglada ze system android wylaczyl I2P. sprawdz ustawienia urzadzenia!"</string>
-    <string name="helper_dnscrypt_no_internet">"Wyglada ze InviZible Pro NIE MOZE polaczyc sie z siecia. Prosze sprawdzic reguly FIREWALLa. Prosze zzwolic na polaczenie InviZible Pro oraz aplikacji z uprawnieniami ROOTa."</string>
+    <string name="helper_dnscrypt_no_internet">"Wyglada ze DNSCrypt NIE MOZE polaczyc sie z siecia."</string>
     <string name="helper_tor_use_bridges">"Wyglada ze Tor NIE MOZE polaczyc sie z siecia. Twoj ISP moze blokowac polaczenie. Mozesz sprobowac uzyc mostka. Ustawienia w MENU -&gt; Szybkie ustawienia -&gt; Mostki"</string>
     <string name="action_mode_child_lock">"Child Lock"</string>
     <string name="action_mode_dialog_message_lock">"Mozesz zablokowac dostep do ustawien aplikacji. Wprowadz haslo lub uzyj poprzedniego."</string>

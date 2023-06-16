@@ -242,7 +242,7 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_tor_clearnet">"Host oder IP Umgehung"</string>
     <string name="pref_tor_unlock_edit">"Bearbeite Host oder IP"</string>
     <string name="pref_tor_unlock_disabled">"Deaktiviert"</string>
-    <string name="pref_tor_clean_module_folder">"Clean module folder"</string>
+    <string name="pref_tor_clean_module_folder">"Clear cache"</string>
     <string name="pref_routing_unlock_app">"Apps zur Benutzung von InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps zur Umgehung InviZible"</string>
     <string name="country_select_select_all">"Wähle alle"</string>
@@ -293,8 +293,7 @@ Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Gerät
     <string name="helper_tor_stopped">"Es sieht aus, als wäre Tor vom System beendet worden.
 Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_itpd_stopped">"Es sieht aus, als wäre I2P vom System beendet worden. Bitte überprüfe deine Geräteeinstellungen!"</string>
-    <string name="helper_dnscrypt_no_internet">"Es sieht aus, als könnte InviZible Pro NICHT ins INTERNET verbinden.
-Bitte überprüfe deine FIREWALL Regeln. Erlaube Verbindungen für InviZible Pro und für ROOT Applikationen."</string>
+    <string name="helper_dnscrypt_no_internet">"Es sieht aus, als könnte DNSCrypt NICHT ins INTERNET verbinden."</string>
     <string name="helper_tor_use_bridges">"Es sieht aus, als könnte Tor NICHT ins INTERNET verbinden.
 Dein ISP könnte Tor Verbindungen blockieren. Du kannst versuchen Tor Bridges zu verwenden. Du findest diese in  MENÜ -&gt; Schnelleinstellungen -&gt; Bridges"</string>
     <string name="action_mode_child_lock">"Kindersicherung"</string>

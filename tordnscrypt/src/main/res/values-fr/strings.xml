@@ -295,8 +295,7 @@
     <string name="helper_tor_stopped">"On dirait que Tor a été tué par le système Android.
          Votre connexion Internet a été rétablie. Vérifiez les paramètres de l'appareil!"</string>
     <string name="helper_itpd_stopped">"On dirait qu'I2P a été tué par le système Android. Vérifiez les paramètres de l'appareil!"</string>
-    <string name="helper_dnscrypt_no_internet">"On dirait qu'InviZible Pro NE PEUT PAS se connecter à INTERNET.
-         Veuillez vérifier les règles du Pare-feu. Autorisez la connexion pour InviZible Pro et pour les applications utilisant les privilèges Administrateur."</string>
+    <string name="helper_dnscrypt_no_internet">"On dirait qu'DNSCrypt NE PEUT PAS se connecter à INTERNET."</string>
     <string name="helper_tor_use_bridges">"On dirait que Tor NE PEUT PAS se connecter à INTERNET.
          Le FAI peut bloquer les connexions Tor. Vous pouvez essayer d'utiliser les Ponts tor. Veuillez les trouver dans MENU -&gt; Paramètres Rapides -&gt; Ponts"</string>
     <string name="action_mode_child_lock">"Sécurité Enfant"</string>

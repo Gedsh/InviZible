@@ -297,8 +297,7 @@
     <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in.
         Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
     <string name="helper_itpd_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki I2P:n. Tarkista laitteen asetukset!"</string>
-    <string name="helper_dnscrypt_no_internet">"Näyttää siltä, ​​että InviZible Pro EI voi muodostaa yhteyttä Internetiin.
-        Tarkista palomuurin säännöt. Salli yhteys InviZible Prolle ja ROOT-sovelluksille."</string>
+    <string name="helper_dnscrypt_no_internet">"Näyttää siltä, ​​että DNSCrypt EI voi muodostaa yhteyttä Internetiin."</string>
     <string name="helper_tor_use_bridges">"Näyttää siltä, ​​että Tor EI voi muodostaa yhteyttä Internetiin.
         Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat"</string>
     <string name="action_mode_child_lock">"Lapsilukko"</string>

@@ -286,7 +286,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="helper_dnscrypt_stopped">"Parece que Android paró DNSCrypt. Tu conexión a Internet fue restablecida. ¡Comprueba la configuración del dispositivo!"</string>
     <string name="helper_tor_stopped">"Parece que Android paró Tor. Tu conexión a Internet fue restablecida. ¡Comprueba la configuración del dispositivo!"</string>
     <string name="helper_itpd_stopped">"Parece que Android paró I2P. ¡Comprueba la configuración del dispositivo!"</string>
-    <string name="helper_dnscrypt_no_internet">"Parece que InviZible Pro no puede conectarse a Internet. Por favor, comprueba configuraciones de FIREWALLS. Activa conectividad para InviZible Pro y para apps que usen privilegios de SuperUsuario (Root)."</string>
+    <string name="helper_dnscrypt_no_internet">"Parece que DNSCrypt no puede conectarse a Internet."</string>
     <string name="helper_tor_use_bridges">"Parece que Tor no puede conectarse a Internet. Puede que tu operador esté bloqueando las conexiones de Tor. Puedes intentar usar Puentes. Los encontrará en Menú -&gt; Configuración rápida -&gt; Puentes"</string>
     <string name="action_mode_child_lock">"Bloquear configuración"</string>
     <string name="action_mode_dialog_message_lock">"Bloquea el control de la aplicación. Por favor, proporcione una contraseña o usa ya una proporcionada."</string>

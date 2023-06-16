@@ -362,7 +362,7 @@
     <string name="helper_dnscrypt_stopped">DNSCrypt Android sistemi tarafından sonlandırıldı gibi görünüyor. İnternet bağlantınız geri yüklendi. Aygıt ayarlarına bakın!</string>
     <string name="helper_tor_stopped">Tor Android sistemi tarafından sonlandırıldı gibi görünüyor. İnternet bağlantınız geri yüklendi. Aygıt ayarlarına bakın!</string>
     <string name="helper_itpd_stopped">I2P Android sistemi tarafından sonlandırıldı gibi görünüyor. Aygıt ayarlarına bakın!</string>
-    <string name="helper_dnscrypt_no_internet">InviZible Pro internete bağlanamıyor gibi görünüyor. Lütfen GÜVENLİK DUVARI kurallarını gözden geçirin. InviZible Pro ve ROOT uygulamaları için bağlantıya izin verin.</string>
+    <string name="helper_dnscrypt_no_internet">DNSCrypt internete bağlanamıyor gibi görünüyor.</string>
     <string name="helper_tor_use_bridges">Tor internete bağlanamıyor gibi görünüyor. İnternet sağlayıcı Tor bağlantılarını engelleyebilir. Tor köprüleri kullanmayı deneyebilirsiniz. Lütfen MENÜ -&gt; Hızlı Ayarlar -&gt; Köprüler bölümüne bakın.</string>
     <string name="action_mode_child_lock">Çocuk Kilidi</string>
     <string name="action_mode_dialog_message_lock">Bu uygulamanın denetimini kilitleyebilirsiniz. Lütfen parolayı girin veya öncekini kullanın.</string>
