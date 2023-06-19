@@ -31,7 +31,6 @@ import android.os.Build
 import android.os.Environment
 import android.os.Process
 import android.util.Base64
-import android.util.Log
 import android.view.Display
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
@@ -46,12 +45,12 @@ import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.File
 import java.io.PrintWriter
 import java.net.Inet4Address
@@ -103,7 +102,7 @@ object Utils {
                 }
             }
         } catch (e: SocketException) {
-            Log.e(LOG_TAG, "Utils SocketException " + e.message + " " + e.cause)
+            loge("Utils SocketException", e)
         }
 
         return ""
@@ -129,7 +128,7 @@ object Utils {
 
             }
         } catch (e: SocketException) {
-            Log.e(LOG_TAG, "Util SocketException " + e.message + " " + e.cause)
+            loge("Util SocketException", e)
         }
 
         return result
@@ -148,10 +147,7 @@ object Utils {
                 }
             }
         } catch (exception: Exception) {
-            Log.e(
-                LOG_TAG,
-                "Utils isServiceRunning exception " + exception.message + " " + exception.cause
-            )
+            loge("Utils isServiceRunning exception", exception)
         }
 
         return result
@@ -169,7 +165,7 @@ object Utils {
             if (dir != null && dir.isDirectory) {
                 result = dir.list()?.isNotEmpty() ?: false
             } else {
-                Log.w(LOG_TAG, "Root Dir is not read accessible!")
+                logw("Root Dir is not read accessible!")
             }
 
             var rootDirPath = "/storage/emulated/0"
@@ -180,7 +176,7 @@ object Utils {
             val saveDir = File(saveDirPath)
             if (result && !saveDir.isDirectory && !saveDir.mkdir()) {
                 result = false
-                Log.w(LOG_TAG, "Root Dir is not write accessible!")
+                logw("Root Dir is not write accessible!")
             }
 
             if (result) {
@@ -189,13 +185,13 @@ object Utils {
                 PrintWriter(testFile).print("")
                 if (!testFile.isFile || !testFile.delete()) {
                     result = false
-                    Log.w(LOG_TAG, "Root Dir is not write accessible!")
+                    logw("Root Dir is not write accessible!")
                 }
             }
 
         } catch (e: Exception) {
             result = false
-            Log.w(LOG_TAG, "Download Dir is not accessible " + e.message + e.cause)
+            logw("Download Dir is not accessible", e)
         }
         return result
     }
@@ -208,7 +204,7 @@ object Utils {
                 Base64.decode(preferenceRepository.getStringPreference(CHILD_LOCK_PASSWORD), 16)
             ).contains("-l-o-c-k-e-d")
         } catch (e: IllegalArgumentException) {
-            Log.e(LOG_TAG, "Decode child password exception ${e.message}")
+            loge("Decode child password exception ${e.message}")
         }
         return locked
     }
@@ -218,10 +214,10 @@ object Utils {
         try {
             Intent(context, AppExitDetectService::class.java).apply {
                 context.startService(this)
-                Log.i(LOG_TAG, "Start app exit detect service")
+                logi("Start app exit detect service")
             }
         } catch (e: java.lang.Exception) {
-            Log.e(LOG_TAG, "Start app exit detect service exception + ${e.message} ${e.cause}")
+            loge("Start app exit detect service exception", e)
         }
     }
 
@@ -243,7 +239,29 @@ object Utils {
                 FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Snowflake.log")
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ShortenTooLongSnowflakeLog exception ${e.message} ${e.cause}")
+            loge("ShortenTooLongSnowflakeLog exception", e)
+        }
+    }
+
+    @JvmStatic
+    fun shortenTooLongConjureLog(
+        context: Context,
+        preferences: PreferenceRepository,
+        pathVars: PathVars
+    ) {
+        try {
+            val bridgesConjureDefault =
+                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.CONJURE_BRIDGES_DEFAULT
+            val bridgesConjureOwn =
+                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.CONJURE_BRIDGES_OWN
+            val shPref = PreferenceManager.getDefaultSharedPreferences(context)
+            val showHelperMessages =
+                shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
+            if (showHelperMessages && (bridgesConjureDefault || bridgesConjureOwn)) {
+                FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Conjure.log")
+            }
+        } catch (e: Exception) {
+            loge("ShortenTooLongConjureLog exception", e)
         }
     }
 

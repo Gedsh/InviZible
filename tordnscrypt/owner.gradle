@@ -154,6 +154,7 @@ android {
         doNotStrip '*/*/libdnscrypt-proxy.so'
         doNotStrip '*/*/libobfs4proxy.so'
         doNotStrip '*/*/libsnowflake.so'
+        doNotStrip '*/*/libconjure.so'
     }
 
     applicationVariants.all { variant ->

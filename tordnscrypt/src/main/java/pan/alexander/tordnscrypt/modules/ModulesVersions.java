@@ -70,7 +70,7 @@ public class ModulesVersions {
             PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
 
             //checkModulesVersions(pathVars);
-            checkModulesVersionsModern(pathVars);
+            checkModulesVersionsModern(context, pathVars);
 
             if (isBinaryFileAccessible(pathVars.getDNSCryptPath()) && !dnsCryptVersion.isEmpty()) {
                 sendResult(context, dnsCryptVersion, DNSCRYPT_RUN_FRAGMENT_MARK);
@@ -127,19 +127,22 @@ public class ModulesVersions {
                 .getStdout();
     }
 
-    private void checkModulesVersionsModern(PathVars pathVars) {
+    private void checkModulesVersionsModern(Context context, PathVars pathVars) {
 
-        List<String> dnsCryptOutput = new ProcessStarter().startProcess(pathVars.getDNSCryptPath() + " --version").stdout;
+        List<String> dnsCryptOutput = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
+                .startProcess(pathVars.getDNSCryptPath() + " --version").stdout;
         if (!dnsCryptOutput.isEmpty()) {
             dnsCryptVersion = "DNSCrypt_version " + dnsCryptOutput.get(0);
         }
 
-        List<String> torOutput = new ProcessStarter().startProcess(pathVars.getTorPath() + " --version").stdout;
+        List<String> torOutput = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
+                .startProcess(pathVars.getTorPath() + " --version").stdout;
         if (!torOutput.isEmpty()) {
             torVersion = "Tor_version " + torOutput.get(0);
         }
 
-        List<String> itpdOutput = new ProcessStarter().startProcess(pathVars.getITPDPath() + " --version").stdout;
+        List<String> itpdOutput = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
+                .startProcess(pathVars.getITPDPath() + " --version").stdout;
         if (!itpdOutput.isEmpty()) {
             itpdVersion = "ITPD_version " + itpdOutput.get(0);
         }

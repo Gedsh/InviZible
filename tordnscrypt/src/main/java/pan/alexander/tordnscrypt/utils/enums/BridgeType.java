@@ -26,5 +26,6 @@ public enum BridgeType {
     meek_lite,
     vanilla,
     snowflake,
+    conjure,
     undefined
 }

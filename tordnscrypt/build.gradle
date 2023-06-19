@@ -110,10 +110,9 @@ android {
         jniLibs.useLegacyPackaging = true
 
         doNotStrip '*/*/libdnscrypt-proxy.so'
-        doNotStrip '*/*/libi2pd.so'
         doNotStrip '*/*/libobfs4proxy.so'
         doNotStrip '*/*/libsnowflake.so'
-        doNotStrip '*/*/libtor.so'
+        doNotStrip '*/*/libconjure.so'
     }
 
     applicationVariants.all { variant ->

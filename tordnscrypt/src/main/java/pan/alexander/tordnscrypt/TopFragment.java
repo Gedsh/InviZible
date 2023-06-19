@@ -88,6 +88,7 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionDialog
 import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManager;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -408,6 +409,7 @@ public class TopFragment extends Fragment {
             PreferenceRepository preferences = topFragment.preferenceRepository.get();
 
             shortenTooLongSnowflakeLog(context, preferences, topFragment.pathVars.get());
+            shortenTooLongConjureLog(context, preferences, topFragment.pathVars.get());
 
             if (topFragment.handler != null) {
                 topFragment.handler.postDelayed(() -> {

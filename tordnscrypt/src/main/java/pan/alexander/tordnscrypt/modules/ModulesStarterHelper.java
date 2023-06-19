@@ -130,7 +130,8 @@ public class ModulesStarterHelper {
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + appDataDir + "/dnscrypt-proxy.pid";
                 preferenceRepository.get().setBoolPreference("DNSCryptStartedWithRoot", false);
 
-                shellResult = new ProcessStarter().startProcess(dnsCmdString);
+                shellResult = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
+                        .startProcess(dnsCmdString);
             }
 
             if (!shellResult.isSuccessful()) {
@@ -215,7 +216,8 @@ public class ModulesStarterHelper {
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
                 preferenceRepository.get().setBoolPreference("TorStartedWithRoot", false);
 
-                shellResult = new ProcessStarter().startProcess(torCmdString);
+                shellResult = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
+                        .startProcess(torCmdString);
             }
 
             if (!shellResult.isSuccessful()) {
@@ -306,7 +308,8 @@ public class ModulesStarterHelper {
                         + "/i2pd_data --pidfile " + appDataDir + "/i2pd.pid";
                 preferenceRepository.get().setBoolPreference("ITPDStartedWithRoot", false);
 
-                shellResult = new ProcessStarter().startProcess(itpdCmdString);
+                shellResult = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
+                        .startProcess(itpdCmdString);
             }
 
             if (!shellResult.isSuccessful()) {
@@ -408,6 +411,9 @@ public class ModulesStarterHelper {
                         lines.set(i, line);
                     } else if (line.contains("ClientTransportPlugin ") && line.contains("/libsnowflake.so")) {
                         line = line.replaceAll("/.+?/libsnowflake.so", context.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so");
+                        lines.set(i, line);
+                    } else if (line.contains("ClientTransportPlugin ") && line.contains("/libconjure.so")) {
+                        line = line.replaceAll("/.+?/libconjure.so", context.getApplicationInfo().nativeLibraryDir + "/libconjure.so");
                         lines.set(i, line);
                     }
                 }

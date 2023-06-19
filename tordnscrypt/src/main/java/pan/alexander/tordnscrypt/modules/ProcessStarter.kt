@@ -23,17 +23,18 @@ import com.jrummyapps.android.shell.CommandResult
 import com.jrummyapps.android.shell.ShellExitCode
 import java.io.*
 
-class ProcessStarter {
+class ProcessStarter(private val libraryDir: String) {
 
     fun startProcess(startCommand: String): CommandResult {
 
         val stdout = mutableListOf<String>()
         val stderr = mutableListOf<String>()
-        var exitCode:Int
+        var exitCode: Int
 
         try {
 
-            val process = Runtime.getRuntime().exec(startCommand)
+            val env = Array(1) { "LD_LIBRARY_PATH=$libraryDir" }
+            val process = Runtime.getRuntime().exec(startCommand, env)
 
             BufferedReader(InputStreamReader(process.inputStream)).use { bufferedReader ->
                 var line = bufferedReader.readLine()

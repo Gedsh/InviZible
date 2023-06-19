@@ -89,6 +89,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
@@ -117,7 +118,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener,
         OnTextFileOperationsCompleteListener, PreferencesBridges, SwipeRefreshLayout.OnRefreshListener {
     public final static String SNOWFLAKE_BRIDGES_DEFAULT = "3";
+    public final static String CONJURE_BRIDGES_DEFAULT = "4";
     public final static String SNOWFLAKE_BRIDGES_OWN = "4";
+    public final static String CONJURE_BRIDGES_OWN = "5";
 
     private final static int DEFAULT_VANILLA_BRIDGES_DISPLAY_COUNT = 5;
 
@@ -144,6 +147,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private String appDataDir;
     private String obfsPath;
+
+    private String conjurePath;
     private String currentBridgesFilePath;
     private String bridgesDefaultFilePath;
     private String bridgesCustomFilePath;
@@ -193,6 +198,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         appDataDir = pathVars.get().getAppDataDir();
         obfsPath = pathVars.get().getObfsPath();
+        conjurePath = pathVars.get().getConjurePath();
 
         currentBridgesFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesDefaultFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
@@ -369,6 +375,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 String clientTransportPlugin;
                 if (currentBridgesType.equals(snowflake)) {
                     clientTransportPlugin = snowflakeConfigurator.get().getConfiguration();
+                } else if (currentBridgesType.equals(conjure)) {
+                    String saveLogsString = " -log " + appDataDir + "/logs/Conjure.log -unsafe-logging";
+                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
+                            + conjurePath + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
@@ -380,9 +390,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             for (String currentBridge : bridgesInUse) {
 
                 if (currentBridgesType == vanilla) {
-                    if (!currentBridge.isEmpty() && !currentBridge.contains(obfs4.toString())
-                            && !currentBridge.contains(obfs3.toString()) && !currentBridge.contains(scramblesuit.toString())
-                            && !currentBridge.contains(meek_lite.toString()) && !currentBridge.contains(snowflake.toString())) {
+                    if (isBridgeVanilla(currentBridge)) {
                         torConfCleaned.add("Bridge " + currentBridge);
                     }
                 } else {
@@ -392,7 +400,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                                     "Bridge " + currentBridge
                                             + " utls-imitate="
                                             + snowflakeConfigurator.get().getUtlsClientID()
-                                            + " utls-nosni=true"
+                                            //+ " utls-nosni=true"
 
                             );
                         } else {
@@ -676,6 +684,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
                 pattern = Pattern.compile("^snowflake +" + bridgeBase);
+            } else if (inputLinesStr.contains(conjure.toString())) {
+                inputBridgesType = conjure.toString();
+                pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
             } else {
                 pattern = Pattern.compile(bridgeBase);
             }
@@ -792,9 +803,15 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
+                } else if (bridgesToAdd.contains(conjure.toString())) {
+                    if (!spOwnBridges.getSelectedItem().toString().equals(conjure.toString())) {
+                        spOwnBridges.setSelection(5);
+                    } else {
+                        ownBridgesOperation(bridgesListNew);
+                    }
                 } else {
                     if (!spOwnBridges.getSelectedItem().toString().equals(vanilla.toString())) {
-                        spOwnBridges.setSelection(5);
+                        spOwnBridges.setSelection(6);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
@@ -988,6 +1005,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                             currentBridgesType = meek_lite;
                         } else if (testBridge.contains(snowflake.toString())) {
                             currentBridgesType = snowflake;
+                        } else if (testBridge.contains(conjure.toString())) {
+                            currentBridgesType = conjure;
                         } else {
                             currentBridgesType = vanilla;
                         }
@@ -1296,6 +1315,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 && !bridgeLine.contains(scramblesuit.toString())
                 && !bridgeLine.contains(meek_lite.toString())
                 && !bridgeLine.contains(snowflake.toString())
+                && !bridgeLine.contains(conjure.toString())
                 && !bridgeLine.isEmpty();
     }
 
