@@ -147,7 +147,7 @@
     <string name="pref_common_restart_dnscrypt">"Silahkan mulai ulang DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Silahkan mulai ulang Tor"</string>
     <string name="pref_common_restart_itpd">"Silahkan mulai ulang I2P"</string>
-    <string name="pref_common_use_iptables">"Pilih Iptables"</string>
+    <string name="pref_common_use_iptables">Pilih iptables</string>
     <string name="pref_common_log_root_commands">"Simpan perintah Root untuk Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P dilindungi. Jangan disembunyikan."</string>
     <string name="notification_temp_text">Menjalankan perintah Root…</string>
