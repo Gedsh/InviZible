@@ -122,9 +122,7 @@
     <string name="pref_common_wakelock_summ">"Añade una protección adicional que previene la parada súbita de la aplicación por Android en modos no Root. Puede gastar batería."</string>
     <string name="pref_common_show_help">"Mensajes de ayuda"</string>
     <string name="pref_common_show_help_summ">"Muestra siempre los mensajes de ayuda."</string>
-    <string name="pref_common_notification_helper">"Por favor, desactiva para InviZible Pro la optimización de bateria de Android.
-De otra manera Android parará los procesos de DNSCrypt, Tor e I2P en cualquier momento.
-En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
+    <string name="pref_common_notification_helper">Desactive la optimización de la batería de Android para InviZible Pro. De lo contrario, Android eliminará DNSCrypt, Tor o I2P en cualquier momento. En ciertos sistemas, como MIUI, se requieren algunos pasos adicionales.</string>
     <string name="pref_common_use_busybox">"Seleccionar binario BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Compartir Internet-En pruebas"</string>
     <string name="pref_common_tethering_autostart">"Arrancar Compartir Internet al inicio del dispositivo"</string>
@@ -174,15 +172,16 @@ Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejora
     <string name="pref_dnscrypt_forwarding_rules_categ">"Reglas de reenvío"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Redirige peticiones para dominios específicos a un conjunto determinado de servidores."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Reglas de encubrimiento"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Las reglas de encubrimiento proveen direcciones predefinidas para un nombre determinado. Además de actuar como un archivo HOSTS, también pueden devolver la dirección IP de un nombre diferente. También realizan tratamientos CNAME especiales…"</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">El encubrimiento devuelve una dirección predefinida para un nombre específico.
+\n Además de actuar como un archivo HOSTS, también puede devolver la dirección IP de un nombre diferente. También hará el aplanamiento de CNAME.</string>
     <string name="pref_dnscrypt_query_log_categ">"Registro de peticiones"</string>
     <string name="pref_dnscrypt_query_log_summ">"Registra las peticiones de cliente a fichero."</string>
     <string name="pref_dnscrypt_query_log">"Activar el registro de peticiones"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Tipos de peticiones a omitir, para reducir ruido, en los registros. Un valor vacío indica registrar todo."</string>
     <string name="open_query_log">"Abrir registro de peticiones"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Registro de peticiones de dudosa naturaleza."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Registrar peticiones para zonas inexistentes.
-Con estas peticiones se puede descubrir la presencia de malware, aplicaciones defectuosas u obsoletas, y dispositivos revelando señales de presencia a terceros…"</string>
+    <string name="pref_dnscrypt_nx_log_summ">Registro de consultas para zonas inexistentes.
+\n Estas consultas pueden revelar la presencia de malware, aplicaciones rotas u obsoletas y dispositivos que señalan su presencia a terceros.</string>
     <string name="pref_dnscrypt_nx_log">"Activar registro dudoso"</string>
     <string name="open_nx_log">"Abrir registro dudoso"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista de bloqueo)."</string>
@@ -237,7 +236,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="pref_tor_clearnet">"Nombre de hosts o IPs para excluir de Tor"</string>
     <string name="pref_tor_unlock_edit">"Editar nombres de hosts o IPs"</string>
     <string name="pref_tor_unlock_disabled">"Desactivado"</string>
-    <string name="pref_tor_clean_module_folder">"Limpiar directorio del módulo"</string>
+    <string name="pref_tor_clean_module_folder">Limpiar la cache</string>
     <string name="pref_routing_unlock_app">"Apps a usar con InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps a excluir de InviZible"</string>
     <string name="country_select_select_all">"Seleccionar todo"</string>
@@ -287,7 +286,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="helper_tor_stopped">"Parece que Android paró Tor. Tu conexión a Internet fue restablecida. ¡Comprueba la configuración del dispositivo!"</string>
     <string name="helper_itpd_stopped">"Parece que Android paró I2P. ¡Comprueba la configuración del dispositivo!"</string>
     <string name="helper_dnscrypt_no_internet">"Parece que DNSCrypt no puede conectarse a Internet."</string>
-    <string name="helper_tor_use_bridges">"Parece que Tor no puede conectarse a Internet. Puede que tu operador esté bloqueando las conexiones de Tor. Puedes intentar usar Puentes. Los encontrará en Menú -&gt; Configuración rápida -&gt; Puentes"</string>
+    <string name="helper_tor_use_bridges">Parece que Tor no puede conectarse a Internet. El ISP puede bloquear las conexiones de Tor. Puedes intentar usar Tor Bridges. Encuéntrelos en MENÚ -&gt; Configuración rápida -&gt; Puentes</string>
     <string name="action_mode_child_lock">"Bloquear configuración"</string>
     <string name="action_mode_dialog_message_lock">"Bloquea el control de la aplicación. Por favor, proporcione una contraseña o usa ya una proporcionada."</string>
     <string name="action_mode_dialog_message_unlock">"Por favor, introduzca contraseña."</string>
@@ -324,7 +323,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="update_over_three_activations">"Has activado 3 copias de InviZible con éste código. Si consideras éste mensaje como erróneo, por favor contacta al desarrollador."</string>
     <string name="update_wrong_code">"Código PRO erroneo. Por favor, contacta al desarrollador."</string>
     <string name="update_over_five_times">"Comprobaste hoy más de 5 veces si había actualizaciones. Por favor, inténtalo de nuevo pasado un tiempo."</string>
-    <string name="verifier_error">"¡Cuidado! Esta versión de InviZible no es la original."</string>
+    <string name="verifier_error">Esto parece una versión no oficial de InviZible. ¡Por favor tenga cuidado!</string>
     <string name="only_for_pro">"Solo versión PRO"</string>
     <string name="donate">"Donaciones"</string>
     <string name="donate_project">"El proyecto InviZible Pro necesita de tu ayuda. Por favor, visita la página para donaciones o introduce el código de registro recibido."</string>
@@ -338,8 +337,8 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="vpn_mode_error">"¡Fallo detectado en modo VPN!"</string>
     <string name="vpn_tor_tether_summ">"Por favor, configura el uso de un servidor de proxy en la configuración del dispositivo. Configuración por defecto: IP: 10.1.10.1 Puerto:8118"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP con TOR"</string>
-    <string name="main_fragment_protect_dns">"Proteger DNS con DNSCRYPT"</string>
-    <string name="main_fragment_access_i2p">"Acceso a sitios I2P con I2Pd"</string>
+    <string name="main_fragment_protect_dns">Protégete con DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Acceder a la red I2P con Purple I2P</string>
     <string name="ask_force_close_title">"Atención"</string>
     <string name="ask_force_close_text">"¡InviZible Pro no puede arrancar %1$s! Por favor, comprueba la configuración de %2$s o intenta un Cierre Forzado de la aplicación. Si esto no ayuda, por favor, reinicia tu dispositivo."</string>
     <string name="ask_force_close_btn">"Forzar Cierre"</string>
@@ -413,8 +412,7 @@ invizible.net/en/privacy"</string>
     <string name="pref_common_compatibility_mode">"Modo de compatibilidad"</string>
     <string name="pref_common_compatibility_mode_summ">"Activalo si la conectividad se pierde en tu dispositivo con una ROM personal cuando inicias el programa."</string>
     <string name="pref_common_shell_control">"Activar control de scripts"</string>
-    <string name="pref_common_shell_control_summ">"Utiliza éste comando para controlar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\".
-Donde 1 - arranca el módulo, y 0 - lo para."</string>
+    <string name="pref_common_shell_control_summ">Utiliza el siguiente comando para administrar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Donde 1 - inicia, 0 - detiene el módulo.</string>
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %1$s, y como servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Modo Multi-usuario"</string>
@@ -444,7 +442,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="notification_arp_spoofing">"¡Envenenamiento ARP detectado!"</string>
     <string name="notification_rogue_dhcp">"¡Suplantación DHCP detectada!"</string>
     <string name="notification_mitm">"¡Ataque de secuestro de la conexión detectado! ¡Tu tráfico podría estar siendo interceptado por otro dispositivo en tu red local!. ¡Por favor, desactive el Wi-Fi, seguir utilizando éste punto de acceso Wi-Fi podría ser peligroso para usted y sus datos!"</string>
-    <string name="toast_arp_detection_not_supported">"Tu dispositivo no es compatible con la detección de ataques de envenenamiento de tablas ARP."</string>
+    <string name="toast_arp_detection_not_supported">¡La detección de suplantación de la identidad ARP no es compatible con tu dispositivo!</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Por favor, desactiva el elemento Nodos de entrada (EntryNodes) en la configuración de Tor, de otra manera no podrá usar los puentes con Tor."</string>
     <string name="pref_fast_tor_bypass_lan">"Excluir direcciones LAN"</string>
     <string name="pref_fast_tor_bypass_lan_summ">"Excluye de las reglas de redireccionamiento las direcciones IP reservadas para rangos IANA y LAN."</string>
@@ -490,7 +488,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="btnResetSettings">"Reiniciar configuración"</string>
     <string name="backupSaved">"Copia guardada"</string>
     <string name="backupRestored">"Copia restaurada"</string>
-    <string name="thanks_for_donate_gp">"La comunidad del proyecto InviZible Pro y su desarrollador expresan sus agradecimientos por la ayuda."</string>
+    <string name="thanks_for_donate_gp">¡El proyecto InviZible Pro y sus autores agradecen tu ayuda!</string>
     <string name="pref_tor_hardware_accel_summ">"Intentar usar la aceleración de hardware de cifrado incorporada cuando esté disponible."</string>
     <string name="notification_connecting">"Conectando…"</string>
     <string name="notification_waiting_network">"Esperando red…"</string>
