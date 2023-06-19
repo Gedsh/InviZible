@@ -906,3 +906,10 @@
 * Updated built-in snowflake and meek_lite Tor bridges.
 * IPv6 is enabled by default for app modules.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.8.7**
+* Updated Purple I2P to version 2.48.0.
+* Added support for the Tor Conjure bridge.
+* Fixed using Fastly server with Snowflake on Android versions below 8.
+* DNSCrypt shows that it is running if at least one server is ready.
+* Fixes and optimizations.
