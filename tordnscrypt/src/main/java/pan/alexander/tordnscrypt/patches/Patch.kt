@@ -72,6 +72,7 @@ class Patch(private val context: Context) {
                 fallbackResolverToBootstrapResolvers()
                 removeDNSCryptDaemonize()
                 enableDNSCryptRequireNoFilterByDefault(currentVersionSaved)
+                clearFlagDoNotUpdateTorDefaultBridges()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -259,6 +260,10 @@ class Patch(private val context: Context) {
                 )
             )
         }
+    }
+
+    private fun clearFlagDoNotUpdateTorDefaultBridges() {
+        preferenceRepository.get().setBoolPreference("doNotShowNewDefaultBridgesDialog", false)
     }
 
 }
