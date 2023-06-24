@@ -913,3 +913,8 @@
 * Fixed using Fastly server with Snowflake on Android versions below 8.
 * DNSCrypt shows that it is running if at least one server is ready.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.8.8**
+* Updated Tor Snowflake bridge to version 2.6.0.
+* Improved Tor Conjure bridge connection stability.
+* Fixes and optimizations.
