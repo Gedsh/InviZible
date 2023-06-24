@@ -254,6 +254,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
             List<ObfsBridge> bridgesToDisplay = new ArrayList<>(preferencesBridges.getBridgesToDisplay());
             Collections.sort(bridgesToDisplay, new BridgePingComparator());
+            Collections.reverse(bridgesToDisplay);
 
             for (ObfsBridge bridge : bridgesToDisplay) {
                 if (bridge.active) {
