@@ -238,7 +238,7 @@
     <string name="pref_tor_clearnet">"绕过的的主机或 IP"</string>
     <string name="pref_tor_unlock_edit">"编辑主机或 IP"</string>
     <string name="pref_tor_unlock_disabled">"已禁用"</string>
-    <string name="pref_tor_clean_module_folder">"清除模块文件夹"</string>
+    <string name="pref_tor_clean_module_folder">清除缓存</string>
     <string name="pref_routing_unlock_app">"使用 InviZible 的应用"</string>
     <string name="pref_routing_clearnet_app">"绕过 InviZible 的应用"</string>
     <string name="country_select_select_all">"选择全部"</string>
@@ -288,7 +288,7 @@
     <string name="helper_tor_stopped">"似乎 Tor 被 Android 系统杀死了。 您的互联网连接已恢复。检查设备设置!"</string>
     <string name="helper_itpd_stopped">"似乎 I2P 被 Android 系统杀死了。检查设备设置!"</string>
     <string name="helper_dnscrypt_no_internet">"似乎 DNSCrypt 无法连接到互联网。 "</string>
-    <string name="helper_tor_use_bridges">"似乎 Tor 无法连接到互联网。 ISP 可能阻止 Tor 连接。您可以尝试使用网桥。请前往菜单 -&gt; 快速设置 -&gt; 网桥设置"</string>
+    <string name="helper_tor_use_bridges">似乎 Tor 无法连接到互联网。 ISP 可能阻止 Tor 连接。您可以尝试使用网桥。请前往菜单 -&gt; 快速设置 -&gt; 网桥设置</string>
     <string name="action_mode_child_lock">"儿童锁"</string>
     <string name="action_mode_dialog_message_lock">"您可以锁定此应用控制。请输入密码或使用先前的。"</string>
     <string name="action_mode_dialog_message_unlock">"请输入密码。"</string>
@@ -339,8 +339,8 @@
     <string name="vpn_mode_error">"VPN 模式错误！"</string>
     <string name="vpn_tor_tether_summ">"请再已连接设备中配置代理服务器。默认值：IP:10.1.10.1 端口:8118"</string>
     <string name="main_fragment_hide_ip">"使用 TOR 隐藏 IP"</string>
-    <string name="main_fragment_protect_dns">"使用 DNSCRYPT 保护 DNS"</string>
-    <string name="main_fragment_access_i2p">"使用 Purple I2P 访问 I2P 站点"</string>
+    <string name="main_fragment_protect_dns">使用 DNSCRYPT 防护</string>
+    <string name="main_fragment_access_i2p">使用 Purple I2P 访问 I2P 网络</string>
     <string name="ask_force_close_title">"注意"</string>
     <string name="ask_force_close_text">"InviZible Pro 无法启动 %1$s！请检查 %2$s 设置或尝试强制关闭应用。 如果不起作用，请重启您的设备。"</string>
     <string name="ask_force_close_btn">"强制关闭"</string>
