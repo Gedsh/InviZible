@@ -40,29 +40,40 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.settings.SettingsActivity
+import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_I2PD
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_TOR
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
 import javax.inject.Inject
 
 const val CLEARNET_APPS_FOR_PROXY = "clearnetAppsForProxy"
-private val IP_REGEX = Regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
+private val IP_REGEX =
+    Regex("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$")
 private val PORT_REGEX = Regex("^\\d+$")
 
 class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
+
     @Inject
     lateinit var cachedExecutor: CachedExecutor
+
     @Inject
     lateinit var handler: dagger.Lazy<Handler>
+
     @Inject
     lateinit var proxyHelper: ProxyHelper
 
@@ -90,8 +101,10 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentProxyBinding.inflate(inflater, container, false)
 
         val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()
@@ -102,26 +115,26 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         (binding.chbProxyDNSCrypt as CompoundButton).apply {
             isEnabled = passAndNameIsEmpty
-            isChecked = getBoolFromSharedPreferences("ProxifyDNSCrypt")
+            isChecked = getBoolFromSharedPreferences(PROXIFY_DNSCRYPT)
         }
         (binding.chbProxyTor as CompoundButton).apply {
             isEnabled = passAndNameIsEmpty
-            isChecked = getBoolFromSharedPreferences("ProxifyTor")
+            isChecked = getBoolFromSharedPreferences(PROXIFY_TOR)
         }
         (binding.chbProxyITPD as CompoundButton).apply {
             isEnabled = passAndNameIsEmpty
-            isChecked = getBoolFromSharedPreferences("ProxifyITPD")
+            isChecked = getBoolFromSharedPreferences(PROXIFY_I2PD)
         }
 
-        binding.etProxyServer.setText(getTextFromSharedPreferences(PROXY_ADDRESS))
-        binding.etProxyPort.setText(getTextFromSharedPreferences(PROXY_PORT))
+        binding.etProxyServer.setText(sharedPreferences?.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS))
+        binding.etProxyPort.setText(sharedPreferences?.getString(PROXY_PORT, DEFAULT_PROXY_PORT))
 
         binding.etProxyUserName.apply {
-            setText(getTextFromSharedPreferences("ProxyUserName"))
+            setText(getTextFromSharedPreferences(PROXY_USER))
             addTextChangedListener(this@ProxyFragment)
         }
         binding.etProxyPass.apply {
-            setText(getTextFromSharedPreferences("ProxyPass"))
+            setText(getTextFromSharedPreferences(PROXY_PASS))
             addTextChangedListener(this@ProxyFragment)
         }
 
@@ -135,40 +148,84 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         val context = activity ?: return
 
+        var settingsChanged = false
+
         var serverOrPortChanged = false
 
-        val activateDNSCryptProxy = binding.chbProxyDNSCrypt.isEnabled && binding.chbProxyDNSCrypt.isChecked
+        val activateDNSCryptProxy =
+            binding.chbProxyDNSCrypt.isEnabled && binding.chbProxyDNSCrypt.isChecked
         val activateTorProxy = binding.chbProxyTor.isEnabled && binding.chbProxyTor.isChecked
         val activateITPDProxy = binding.chbProxyITPD.isEnabled && binding.chbProxyITPD.isChecked
 
-        saveToSharedPreferences("ProxifyDNSCrypt", activateDNSCryptProxy)
-        saveToSharedPreferences("ProxifyTor", activateTorProxy)
-        saveToSharedPreferences("ProxifyITPD", activateITPDProxy)
-
-        val proxyServer = binding.etProxyServer.text.toString().trim()
-        val proxyPort = binding.etProxyPort.text.toString().trim()
-        val proxyUserName = binding.etProxyUserName.text.toString().trim()
-        val proxyPass = binding.etProxyPass.text.toString().trim()
-
-        if (proxyServer != getTextFromSharedPreferences(PROXY_ADDRESS)
-                || proxyPort != getTextFromSharedPreferences(PROXY_PORT)) {
-            serverOrPortChanged = true
+        if (getBoolFromSharedPreferences(PROXIFY_DNSCRYPT) != activateDNSCryptProxy) {
+            saveToSharedPreferences(PROXIFY_DNSCRYPT, activateDNSCryptProxy)
+            settingsChanged = true
+        }
+        if (getBoolFromSharedPreferences(PROXIFY_TOR) != activateTorProxy) {
+            saveToSharedPreferences(PROXIFY_TOR, activateTorProxy)
+            settingsChanged = true
+        }
+        if (getBoolFromSharedPreferences(PROXIFY_I2PD) != activateITPDProxy) {
+            saveToSharedPreferences(PROXIFY_I2PD, activateITPDProxy)
+            settingsChanged = true
         }
 
+        val proxyServer = binding.etProxyServer.text.toString().trim().let {
+            it.ifEmpty {
+                LOOPBACK_ADDRESS
+            }
+        }
+        val proxyPort = binding.etProxyPort.text.toString().trim().let {
+            it.ifEmpty {
+                DEFAULT_PROXY_PORT
+            }
+        }
+        if (proxyServer != sharedPreferences?.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)
+            || proxyPort != sharedPreferences?.getString(PROXY_PORT, DEFAULT_PROXY_PORT)
+        ) {
+            serverOrPortChanged = true
+            settingsChanged = true
+        }
         saveToSharedPreferences(PROXY_ADDRESS, proxyServer)
         saveToSharedPreferences(PROXY_PORT, proxyPort)
-        saveToSharedPreferences("ProxyUserName", proxyUserName)
-        saveToSharedPreferences("ProxyPass", proxyPass)
 
-        val setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
+        val proxyUserName = binding.etProxyUserName.text.toString().trim()
+        val proxyPass = binding.etProxyPass.text.toString().trim()
+        if (getTextFromSharedPreferences(PROXY_USER) != proxyUserName) {
+            saveToSharedPreferences(PROXY_USER, proxyUserName)
+            settingsChanged = true
+        }
+        if (getTextFromSharedPreferences(PROXY_PASS) != proxyPass) {
+            saveToSharedPreferences(PROXY_PASS, proxyPass)
+            settingsChanged = true
+        }
 
-        if (proxyServer.isNotEmpty() && proxyPort.isNotEmpty()
-                && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
-            proxyHelper.manageProxy(proxyServer, proxyPort, serverOrPortChanged,
-                    activateDNSCryptProxy, activateTorProxy, activateITPDProxy)
+        if (!settingsChanged) {
+            return
+        }
+
+        val swUseProxy = sharedPreferences?.getBoolean(USE_PROXY, false) ?: false
+        val setBypassProxy =
+            preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
+
+        if (swUseProxy && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
+            proxyHelper.manageProxy(
+                proxyServer,
+                proxyPort,
+                serverOrPortChanged,
+                activateDNSCryptProxy,
+                activateTorProxy,
+                activateITPDProxy
+            )
         } else {
-            proxyHelper.manageProxy(proxyServer, proxyPort, false,
-                    enableDNSCryptProxy = false, enableTorProxy = false, enableItpdProxy = false)
+            proxyHelper.manageProxy(
+                proxyServer,
+                proxyPort,
+                serverOrPortChanged = false,
+                enableDNSCryptProxy = false,
+                enableTorProxy = false,
+                enableItpdProxy = false
+            )
         }
 
         Toast.makeText(context, R.string.toastSettings_saved, Toast.LENGTH_SHORT).show()
@@ -217,28 +274,41 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             binding.etProxyPort.background = it
         }
 
-        binding.btnSelectWoProxyApps.setTextColor(ContextCompat.getColor(context, R.color.buttonTextColor))
+        binding.btnSelectWoProxyApps.setTextColor(
+            ContextCompat.getColor(
+                context,
+                R.color.buttonTextColor
+            )
+        )
 
 
         val server = binding.etProxyServer.text?.toString()?.trim() ?: ""
         val port = binding.etProxyPort.text?.toString()?.trim() ?: ""
 
         if (server.isEmpty() || !server.matches(IP_REGEX)) {
-            binding.etProxyServer.background = ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
+            binding.etProxyServer.background =
+                ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return
         } else if (server == LOOPBACK_ADDRESS && preferenceRepository.get()
-                .getStringSetPreference(CLEARNET_APPS_FOR_PROXY).isEmpty()) {
+                .getStringSetPreference(CLEARNET_APPS_FOR_PROXY).isEmpty()
+        ) {
             binding.tvProxyHint.apply {
                 setText(R.string.proxy_select_proxy_app)
                 setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))
                 binding.scrollProxy.scrollToBottom()
-                binding.btnSelectWoProxyApps.setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))
+                binding.btnSelectWoProxyApps.setTextColor(
+                    ContextCompat.getColor(
+                        context,
+                        R.color.textModuleStatusColorAlert
+                    )
+                )
             }
             return
         }
 
         if (port.isEmpty() || !port.matches(PORT_REGEX)) {
-            binding.etProxyPort.background = ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
+            binding.etProxyPort.background =
+                ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return
         }
 
@@ -250,16 +320,30 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
                     if (result.matches(Regex("\\d+"))) {
                         handler.get().post {
                             binding.tvProxyHint.apply {
-                                text = String.format(getString(R.string.proxy_successful_connection), result)
-                                setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorRunning))
+                                text = String.format(
+                                    getString(R.string.proxy_successful_connection),
+                                    result
+                                )
+                                setTextColor(
+                                    ContextCompat.getColor(
+                                        context,
+                                        R.color.textModuleStatusColorRunning
+                                    )
+                                )
                                 binding.scrollProxy.scrollToBottom()
                             }
                         }
                     } else {
                         handler.get().post {
                             binding.tvProxyHint.apply {
-                                text = String.format(getString(R.string.proxy_no_connection), result)
-                                setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorAlert))
+                                text =
+                                    String.format(getString(R.string.proxy_no_connection), result)
+                                setTextColor(
+                                    ContextCompat.getColor(
+                                        context,
+                                        R.color.textModuleStatusColorAlert
+                                    )
+                                )
                                 binding.scrollProxy.scrollToBottom()
                             }
                         }

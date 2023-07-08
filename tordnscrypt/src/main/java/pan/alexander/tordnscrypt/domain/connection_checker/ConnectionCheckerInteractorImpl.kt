@@ -218,12 +218,12 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
             }
             Via.DIRECT -> {
                 val proxyAddress =
-                    defaultPreferences.getString(PROXY_ADDRESS, "") ?: ""
-                val proxyPort = defaultPreferences.getString(PROXY_PORT, "").let {
+                    defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS) ?: LOOPBACK_ADDRESS
+                val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
                     if (it?.matches(Regex(NUMBER_REGEX)) == true) {
                         it.toInt()
                     } else {
-                        1080
+                        DEFAULT_PROXY_PORT.toInt()
                     }
                 }
                 val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
