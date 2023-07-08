@@ -494,18 +494,6 @@
     <string name="pref_itpd_com_floodfill_summ">Router will be floodfill.</string>
     <string name="pref_itpd_com_bandwidth" translatable="false">bandwidth</string>
     <string name="pref_itpd_com_bandwidth_summ">Bandwidth limit in KBps.</string>
-    <string-array name="itpd_com_bandwidth_title">
-        <item>32</item>
-        <item>256</item>
-        <item>2048</item>
-        <item>>9000</item>
-    </string-array>
-    <string-array name="itpd_com_bandwidth_value">
-        <item>L</item>
-        <item>O</item>
-        <item>P</item>
-        <item>>X</item>
-    </string-array>
     <string name="pref_itpd_com_share" translatable="false">share</string>
     <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
     <string name="pref_itpd_com_ssu" translatable="false">ssu</string>

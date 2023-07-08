@@ -553,4 +553,16 @@
         <item>conjure</item>
         <item>vanilla</item>
     </string-array>
+    <string-array name="itpd_com_bandwidth_title">
+        <item>32</item>
+        <item>256</item>
+        <item>2048</item>
+        <item>>9000</item>
+    </string-array>
+    <string-array name="itpd_com_bandwidth_value">
+        <item>L</item>
+        <item>O</item>
+        <item>P</item>
+        <item>X</item>
+    </string-array>
 </resources>
