@@ -48,6 +48,8 @@ import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -168,11 +170,11 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     editor.putBoolean(key, Boolean.parseBoolean(val));
                 }
 
-                if (key.equals("#proxy") && sp.getBoolean("Enable proxy", false)) {
-                    editor.putBoolean("Enable proxy", false);
+                if (key.equals("#proxy") && sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
+                    editor.putBoolean(DNSCRYPT_OUTBOUND_PROXY, false);
                 }
-                if (key.equals("proxy_port") && !sp.getBoolean("Enable proxy", false)) {
-                    editor.putBoolean("Enable proxy", true);
+                if (key.equals("proxy_port") && !sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
+                    editor.putBoolean(DNSCRYPT_OUTBOUND_PROXY, true);
                 }
                 if (val.contains(appDataDir + "/cache/query.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Query logging", true);
@@ -429,10 +431,10 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                         editor.putBoolean("Allow incoming connections", false);
                         break;
                     case "ntcpproxy":
-                        editor.putBoolean("Enable ntcpproxy", true);
+                        editor.putBoolean(I2PD_OUTBOUND_PROXY, true);
                         break;
                     case "#ntcpproxy":
-                        editor.putBoolean("Enable ntcpproxy", false);
+                        editor.putBoolean(I2PD_OUTBOUND_PROXY, false);
                         break;
                 }
             }

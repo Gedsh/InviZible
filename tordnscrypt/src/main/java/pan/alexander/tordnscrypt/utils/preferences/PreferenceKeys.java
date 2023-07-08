@@ -95,6 +95,8 @@ public interface PreferenceKeys {
     String USE_PROXY = "swUseProxy";
     String PROXY_ADDRESS = "ProxyServer";
     String PROXY_PORT = "ProxyPort";
+    String PROXY_USER = "ProxyUserName";
+    String PROXY_PASS = "ProxyPass";
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
@@ -117,6 +119,8 @@ public interface PreferenceKeys {
 
     String DNSCRYPT_DNS64_PREFIX = "dns64_prefix";
 
+    String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
+
     //Tor Settings
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
@@ -124,9 +128,17 @@ public interface PreferenceKeys {
 
     String TOR_USE_IPV6 = "ClientUseIPv6";
 
+    //I2PD Settings
+    String I2PD_OUTBOUND_PROXY = "Enable ntcpproxy";
+
     //Firewall Settings
     String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";
 
     //Logs
     String SAVE_ROOT_LOGS = "swRootCommandsLog";
+
+    //Proxifier
+    String PROXIFY_DNSCRYPT = "ProxifyDNSCrypt";
+    String PROXIFY_TOR = "ProxifyTor";
+    String PROXIFY_I2PD = "ProxifyITPD";
 }

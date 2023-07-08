@@ -50,6 +50,7 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
 
 import javax.inject.Inject;
 
@@ -91,7 +92,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("floodfill"));
         preferences.add(findPreference("bandwidth"));
         preferences.add(findPreference("share"));
-        preferences.add(findPreference("Enable ntcpproxy"));
+        preferences.add(findPreference(I2PD_OUTBOUND_PROXY));
         preferences.add(findPreference("ntcpproxy"));
         preferences.add(findPreference("HTTP proxy"));
         preferences.add(findPreference("HTTP proxy port"));
@@ -272,7 +273,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     key_itpd.set(key_itpd.indexOf("incoming port"), "#port");
                 }
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Enable ntcpproxy")) {
+            } else if (Objects.equals(preference.getKey(), I2PD_OUTBOUND_PROXY)) {
                 enableProxy(Boolean.parseBoolean(newValue.toString()));
                 return true;
             } else if (Objects.equals(preference.getKey(), "ntcpproxy")) {

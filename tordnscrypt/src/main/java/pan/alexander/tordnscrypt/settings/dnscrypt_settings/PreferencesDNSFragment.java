@@ -84,6 +84,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_NETPROBE_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.HTTP3_QUIC;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -144,7 +145,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("ipv4_servers"));
         preferences.add(findPreference("ipv6_servers"));
         preferences.add(findPreference("force_tcp"));
-        preferences.add(findPreference("Enable proxy"));
+        preferences.add(findPreference(DNSCRYPT_OUTBOUND_PROXY));
         preferences.add(findPreference("proxy_port"));
         preferences.add(findPreference(DNSCRYPT_BOOTSTRAP_RESOLVERS));
         preferences.add(findPreference(IGNORE_SYSTEM_DNS));
@@ -394,7 +395,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 }
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
                 return true;
-            } else if (Objects.equals(preference.getKey(), "Enable proxy")) {
+            } else if (Objects.equals(preference.getKey(), DNSCRYPT_OUTBOUND_PROXY)) {
                 if (Boolean.parseBoolean(newValue.toString())
                         && key_toml.contains("#proxy") && key_toml.contains("force_tcp")) {
                     key_toml.set(key_toml.indexOf("#proxy"), "proxy");
