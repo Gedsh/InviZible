@@ -654,8 +654,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setView(inputView);
 
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
-            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+";
-            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+ +\\w+";
+            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
+            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
             List<String> bridgesListNew = new ArrayList<>();
 
             String inputLinesStr = input.getText().toString().trim();
