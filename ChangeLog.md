@@ -918,3 +918,9 @@
 * Updated Tor Snowflake bridge to version 2.6.0.
 * Improved Tor Conjure bridge connection stability.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.8.9**
+* Updated Tor Conjure bridge.
+* Added option to separately activate and configure socks5 proxy.
+* Fixed adding Tor bridges without fingerprint.
+* Fixed using X bandwidth with Purple I2P.

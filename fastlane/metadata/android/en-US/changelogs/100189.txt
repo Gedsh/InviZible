@@ -1,0 +1,5 @@
+**InviZible Pro beta 1.8.9**
+* Updated Tor Conjure bridge.
+* Added option to separately activate and configure socks5 proxy.
+* Fixed adding Tor bridges without fingerprint.
+* Fixed using X bandwidth with Purple I2P.
