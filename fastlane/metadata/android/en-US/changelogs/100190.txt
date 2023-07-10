@@ -1,0 +1,2 @@
+**InviZible Pro beta 1.9.0**
+* Fixed Tor Snowflake bridge failure on Android 11 and above.

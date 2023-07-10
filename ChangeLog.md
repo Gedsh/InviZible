@@ -924,3 +924,6 @@
 * Added option to separately activate and configure socks5 proxy.
 * Fixed adding Tor bridges without fingerprint.
 * Fixed using X bandwidth with Purple I2P.
+
+**InviZible Pro beta 1.9.0**
+* Fixed Tor Snowflake bridge failure on Android 11 and above.
