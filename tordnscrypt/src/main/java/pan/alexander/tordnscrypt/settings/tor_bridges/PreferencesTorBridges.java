@@ -680,7 +680,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^scramblesuit +" + bridgeBase + "( +password=\\w+)?");
             } else if (inputLinesStr.contains(meek_lite.toString())) {
                 inputBridgesType = meek_lite.toString();
-                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./]+ +front=[\\w./]+");
+                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./-]+ +front=[\\w./-]+");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
                 pattern = Pattern.compile("^snowflake +" + bridgeBase);
