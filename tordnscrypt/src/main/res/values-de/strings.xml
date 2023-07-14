@@ -110,7 +110,7 @@
     <string name="pref_fast_through_tor_update_summ">"Updateprüfung nur mit Tor und wenn Tor läuft"</string>
     <string name="pref_common_categ_run_with_root">"Benutze Root Rechte"</string>
     <string name="pref_common_run_with_root">"Führe Module mit Root aus"</string>
-    <string name="pref_common_run_with_root_summ">Benutze Root Rechte für DNSCrypt, Tor und I2P Module. Durch Aktivierung dieser Funktion bleiben die Module unverwaltet, dies kann zu Verbindungsproblemen führen!</string>
+    <string name="pref_common_run_with_root_summ">"Benutze Root Rechte für DNSCrypt, Tor und I2P Module. Durch Aktivierung dieser Funktion bleiben die Module unverwaltet, dies kann zu Verbindungsproblemen führen!"</string>
     <string name="pref_common_categ_other">"Diverses"</string>
     <string name="pref_common_block_http">"Blockiere HOTSPOT http"</string>
     <string name="pref_common_block_http_summ">"Verbindung zu http Port 80 im HOTSPOT Modus verweigern"</string>
@@ -161,8 +161,8 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Server darf Useranfragen nicht speichern(deklarativ)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server darf keine eigene Blacklist erzwingen (Elterliche Kontrolle, Blockieren von Werbung…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Dies kann nützlich sein, wenn jeglicher Datenverkehr durch Tor geleitet werden soll.
-\nAndernfalls sollte dies nicht aktiviert werden, da die Sicherheit dadurch nicht verbessert, die Latenz jedoch erhöht wird (DNSCrypt-Proxy wird immer alles verschlüsseln, auch wenn UDP verwendet wird).</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Dies kann nützlich sein, wenn jeglicher Datenverkehr durch Tor geleitet werden soll.
+Andernfalls sollte dies nicht aktiviert werden, da die Sicherheit dadurch nicht verbessert, die Latenz jedoch erhöht wird (DNSCrypt-Proxy wird immer alles verschlüsseln, auch wenn UDP verwendet wird)."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS Proxy."</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
     <string name="pref_dnscrypt_proxy_summ">"Route alle TCP Verbindungen zu einem lokalen Tor Knoten.
@@ -242,7 +242,7 @@ Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder 
     <string name="pref_tor_clearnet">"Host oder IP Umgehung"</string>
     <string name="pref_tor_unlock_edit">"Bearbeite Host oder IP"</string>
     <string name="pref_tor_unlock_disabled">"Deaktiviert"</string>
-    <string name="pref_tor_clean_module_folder">"Clear cache"</string>
+    <string name="pref_tor_clean_module_folder">"Cache leeren"</string>
     <string name="pref_routing_unlock_app">"Apps zur Benutzung von InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps zur Umgehung InviZible"</string>
     <string name="country_select_select_all">"Wähle alle"</string>
@@ -293,7 +293,7 @@ Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Gerät
     <string name="helper_tor_stopped">"Es sieht aus, als wäre Tor vom System beendet worden.
 Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_itpd_stopped">"Es sieht aus, als wäre I2P vom System beendet worden. Bitte überprüfe deine Geräteeinstellungen!"</string>
-    <string name="helper_dnscrypt_no_internet">"Es sieht aus, als könnte DNSCrypt NICHT ins INTERNET verbinden."</string>
+    <string name="helper_dnscrypt_no_internet">"Es sieht aus, als könnte sich DNSCrypt NICHT in das Internet verbinden. Du kannst versuchen einen anderen DNSCrypt Server auszuwählen. Die betreffende Auswahl findest du unter Menü-&gt;Schnelleinstellungen-&gt;DNSCrypt Server"</string>
     <string name="helper_tor_use_bridges">"Es sieht aus, als könnte Tor NICHT ins INTERNET verbinden.
 Dein ISP könnte Tor Verbindungen blockieren. Du kannst versuchen Tor Bridges zu verwenden. Du findest diese in  MENÜ -&gt; Schnelleinstellungen -&gt; Bridges"</string>
     <string name="action_mode_child_lock">"Kindersicherung"</string>
@@ -548,10 +548,10 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="pref_fast_logs">"Echtzeit Logs"</string>
     <string name="pref_fast_logs_summ">"Zeige Programmverbindungslogs im DNS Reiter"</string>
     <string name="pref_dnscrypt_http3_summ">"Unterstützung für HTTP/3 aktivieren (DoH3, HTTP über QUIK). Beachte, dass hierbei normalerweise im Gegensatz zu anderen HTTP Versionen (aber analog zu DNSCrypt) UDP und Port 443 anstelle von TCP benutzt wird."</string>
-    <string name="pref_itpd_com_ssu2_summ">"SSU2 Transport protokoll aktivieren (Benutze UDP)."</string>
+    <string name="pref_itpd_com_ssu2_summ">"SSU2 Transport Protokoll aktivieren (Benutze UDP)."</string>
     <string name="ask_later">"Später nachfragen"</string>
     <string name="notifications_permission_rationale_message">"Benachrichtigungen sind essentiell, um wichtige Informationen über InviZibles Vorgänge, Status und entdeckte Angriffe anzuzeigen. Möchtest du Benachrichtigungen für InviZible erlauben?"</string>
-    <string name="pref_dnscrypt_dns64_summ">"Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don't enable it otherwise, or you won't be able to connect to anything at all."</string>
-    <string name="pref_dnscrypt_dns64_prefix_summ">"Set of used static IPv6 prefixes."</string>
+    <string name="pref_dnscrypt_dns64_summ">"Aktiviere diese Option nur, wenn du dich in einem IPv6 Netzwerk befindest und IPv4 Adressen nicht mehr erreichbar sind.  Andernfalls wirst du keinerlei Verbindungen mehr aufbauen können."</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">"Verwendete statische IPv6 Präfixe."</string>
     <string name="pref_fast_use_tor_bridges_ipv6">"IPv6 bridges"</string>
 </resources>
