@@ -927,3 +927,7 @@
 
 **InviZible Pro beta 1.9.0**
 * Fixed Tor Snowflake bridge failure on Android 11 and above.
+
+**InviZible Pro beta 1.9.1**
+* Improved Tor Conjure bridge connection stability.
+* Fixed adding meek_lite bridges with a domain that contains a hyphen.
