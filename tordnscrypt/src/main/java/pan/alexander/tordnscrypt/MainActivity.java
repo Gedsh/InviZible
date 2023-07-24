@@ -1017,17 +1017,20 @@ public class MainActivity extends LangAppCompatActivity
             ModulesAux.stopModulesService(this);
         }
 
-        clearViews();
+        if (isChangingConfigurations()) {
+            clearViews();
+        }
     }
 
     private void clearViews() {
 
         if (viewPager != null) {
             viewPagerPosition = viewPager.getCurrentItem();
+            viewPager.setAdapter(null);
             viewPager = null;
         }
 
-        if (handler != null && !isFinishing()) {
+        if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }
 
