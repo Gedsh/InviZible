@@ -931,3 +931,10 @@
 **InviZible Pro beta 1.9.1**
 * Improved Tor Conjure bridge connection stability.
 * Fixed adding meek_lite bridges with a domain that contains a hyphen.
+
+**InviZible Pro beta 1.9.2**
+* Improved Tor Conjure bridge censorship resistance.
+* Improved meek_lite bridge censorship resistance.
+* Fixed modules not installed on initial app startup.
+* Updated German translation.
+* Fixes and optimizations.
