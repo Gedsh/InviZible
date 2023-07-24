@@ -2,7 +2,7 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-obfs4proxy_version=workaround/ntor-auth-mismatch
+lyrebird_version=workaround/ntor-auth-mismatch
 dnscryptproxy_version=master
 snowflake_version=v2.6.0
 libzmq_version=5bf04ee2ff207f0eaf34298658fe354ea61e1839
@@ -16,10 +16,7 @@ i2pd_openssl_version=OpenSSL_1_1_1u
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
 i2pd_version=2.48.0
 
-git clone https://github.com/Gedsh/obfs4
-pushd obfs4
-git checkout -b $obfs4proxy_version
-popd
+git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
 
 git clone --single-branch --branch $dnscryptproxy_version https://github.com/Gedsh/dnscrypt-proxy
 
