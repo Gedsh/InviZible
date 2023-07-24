@@ -341,8 +341,6 @@ public class TopFragment extends Fragment {
             }
 
             performBackgroundWorkAfterRootChecking();
-
-            performMainThreadWorkAfterRootChecking();
         });
     }
 
@@ -367,6 +365,10 @@ public class TopFragment extends Fragment {
             checkModulesStoppedBySystem(activity);
 
             checkIntegrity(activity);
+
+            if (handler != null) {
+                handler.post(this::performMainThreadWorkAfterRootChecking);
+            }
 
         });
     }
