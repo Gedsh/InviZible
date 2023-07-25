@@ -179,7 +179,7 @@
     <string name="pref_dnscrypt_sources_categ">Сервери</string>
     <string name="pref_tor_clearnet">Хост або IP для обходу</string>
     <string name="country_select_select_all">Вибрати все</string>
-    <string name="country_select_unselect_all">Remove Selection</string>
+    <string name="country_select_unselect_all">Прибрати вибране</string>
     <string name="pref_itpd_com_host_summ">Зовнішній IP роутера для вхідних з\'єднань.</string>
     <string name="pref_itpd_ntcp2_enabled">ntcp2 увімкнено</string>
     <string name="pref_itpd_reseeding">Ресідінґ</string>
@@ -205,7 +205,7 @@
     <string name="pref_dnscrypt_import_forwarding_rules">Імпортувати правила переадресації</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">Видалити правила переадресації</string>
     <string name="pref_dnscrypt_blacklist_summ">Чорний список складається з одного шаблону на рядок.</string>
-    <string name="pref_dnscrypt_relays_categ">Перемикачі</string>
+    <string name="pref_dnscrypt_relays_categ">Реле</string>
     <string name="pref_tor_unlock_edit">Редагувати хост або IP-адресу</string>
     <string name="pref_tor_isolate_dest_address_summ">Не використовати спільні ланцюги з потоками, що мають іншу адресу призначення.</string>
     <string name="pref_itpd_Socks_proxy">Сокс-проксі</string>
@@ -350,8 +350,8 @@
     <string name="pref_dnscrypt_import_whitelist">Імпортувати білий список</string>
     <string name="pref_dnscrypt_import_whitelist_summ">Імпортує список доменів. Ви можете вибрати кілька файлів, повторювані рядки видаляться.</string>
     <string name="pref_dnscrypt_refresh_delay_summ">Список джерел закінчується після refresh_delay.</string>
-    <string name="pref_dnscrypt_relays_delay_summ">Список перемикачів закінчується через годину refresh_delay.</string>
-    <string name="pref_dnscrypt_relays_title">Перемикачі DNSCrypt</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Список реле закінчується через годину refresh_delay.</string>
+    <string name="pref_dnscrypt_relays_title">Реле DNSCrypt</string>
     <string name="title_dnscrypt_query_log">Журнал запитів DNSCrypt</string>
     <string name="pref_tor_trans_port_summ">Відкриває цей порт для прослуховування прозорих проксі-з\'єднань.</string>
     <string name="pref_tor_unlock_disabled">Вимкнено</string>
@@ -438,4 +438,57 @@
 \n\tGarmatin Oleksandr
 \n\tinvizible.soft@gmail.com
 \n\tinvizible.net/en/privacy</string>
+    <string name="proxy_server_user_name">Ім\'я користувача:</string>
+    <string name="proxy_server_user_pass">Пароль:</string>
+    <string name="proxy_save">Зберегти та ввімкнути</string>
+    <string name="menu_firewall">Брандмауер</string>
+    <string name="firewall_sort_by_name">Сортувати за іменем</string>
+    <string name="firewall_switch">Увімкнення/вимкнення брандмауера</string>
+    <string name="notification_channel_auxiliary">Допоміжні сповіщення</string>
+    <string name="toast_new_tor_identity">Ідентифікатор Tor змінився</string>
+    <string name="notification_dns_rebinding_title">Переприв\'язка DNS</string>
+    <string name="firewall_sort_by_uid">Сортувати за UID</string>
+    <string name="dialog_send_crash_report">Виявлено повідомлення про помилку. Бажаєте відправити повідомлення розробнику, щоб покращити InviZible\?</string>
+    <string name="btn_new_tor_identity">Новий ідентифікатор Tor</string>
+    <string name="proxy_server_ip">Проксі-сервер:</string>
+    <string name="proxy_server_port">Проксі-порт:</string>
+    <string name="proxy_exclude_apps_from_proxy_summ">Список застосунків відкривається безпосередньо. Вони не використовують Tor або проксі для підключення до Інтернету!</string>
+    <string name="proxy_use_for_tor">Використовувати проксі для Tor</string>
+    <string name="proxy_use_for_itpd">Використовувати проксі для Purple I2P</string>
+    <string name="proxy_select_proxy_app">Якщо ви використовуєте локальний проксі, будь ласка, виберіть програму власника проксі, принаймні, якщо ви використовуєте локальний проксі.</string>
+    <string name="proxy_use_for_dnscrypt">Використовувати проксі для DNSCrypt</string>
+    <string name="proxy_successful_connection">Успішне з\'єднання. Пінґ %s мс.</string>
+    <string name="notification_arp_spoofing">Виявлено підміну ARP!</string>
+    <string name="proxy_no_connection">Не вдається під\'єднатися до проксі: %s</string>
+    <string name="notification_mitm">Виявлено атаку \"посередницьку\" типу! Ваші дані можуть бути перехоплені іншим пристроєм у локальній мережі. Вимкніть, зачекайте кілька секунд та увімкніть Wi-Fi. Використання поточної точки доступу Wi-Fi може бути небезпечним!</string>
+    <string name="notification_rogue_dhcp">Виявлено неавторизований DHCP!</string>
+    <string name="firewall_warning_enable_module">Щоб активувати брандмауер, потрібно запустити хоча б DNSCrypt або Tor.</string>
+    <string name="firewall_notification_allow_app_title">Встановлено %s</string>
+    <string name="ask_save_changes">Бажаєте зберегти зміни\?</string>
+    <string name="firewall_notification_allow_app">Дозволити Інтернет для цього\?</string>
+    <string name="firewall_btnTopCheckAllFirewall_tooltip">Вибрати всі</string>
+    <string name="firewall_btnTopVpnFirewall_tooltip">Дозволити підключення з увімкненим VPN</string>
+    <string name="firewall_btnTopRoamingFirewall_tooltip">Дозволити підключення в роумінгу</string>
+    <string name="firewall_item_button_tooltip">Зелений - дозволити, білий - заборонити з\'єднання</string>
+    <string name="pref_firewall_allow_internet_for_new_apps">Дозволити з\'єднання для нових застосунків</string>
+    <string name="pref_firewall_title">Налаштування брандмауера</string>
+    <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Зняти виділення</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_on_summ">Підключення до Інтернету для щойно встановлених додатків дозволено.</string>
+    <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Підєднання до Інтернету для нових встановлених додатків заблоковано.</string>
+    <string name="tile_changing_tor_ip">Зміна IP-адреси Tor</string>
+    <string name="tile_dialog_over_three_tiles_message">Ви додали більше 3-х плиток до Швидких налаштувань. Будь ласка, залиште лише 3. Додавання більшої кількості плиток може спричинити проблеми з керуванням програмою.</string>
+    <string name="proxy_exclude_apps_from_proxy">Виключення</string>
+    <string name="notification_dns_rebinding_text">Виявлено потенційну атаку на переприв\'язку DNS! Сайт %s було заблоковано.</string>
+    <string name="firewall_all_apps">Усі</string>
+    <string name="firewall_system_apps">Системні</string>
+    <string name="firewall_user_apps">Користувацькі</string>
+    <string name="firewall_btnTopLanFirewall_tooltip">Дозволити підключення до локальної мережі, сайтів onion та i2p</string>
+    <string name="firewall_btnTopGsmFirewall_tooltip">Дозволити з\'єднання в мережах GSM</string>
+    <string name="tile_change_tor_ip">Змінити IP-адресу Tor</string>
+    <string name="action_mode_child_lock">Захист від дітей</string>
+    <string name="notification_channel_firewall">Сповіщення брандмауера</string>
+    <string name="proxy_server_empty_field_hint">Це поле можна залишити порожнім</string>
+    <string name="toast_arp_detection_not_supported">Виявлення підміни ARP не підтримується на вашому пристрої!</string>
+    <string name="firewall_btnTopWifiFirewall_tooltip">Дозволити підключення до мереж WiFi</string>
+    <string name="notification_channel_root">Сповіщення про рут-команди</string>
 </resources>
