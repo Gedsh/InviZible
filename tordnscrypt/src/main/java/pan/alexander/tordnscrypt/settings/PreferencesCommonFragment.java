@@ -75,6 +75,7 @@ import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
@@ -548,13 +549,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         String line;
         for (int i = 0; i < torConf.size(); i++) {
             line = torConf.get(i);
-            if (line.contains("TransPort")) {
+            if (line.contains("TransPort") && !line.contains(LOOPBACK_ADDRESS_IPv6)) {
                 line = "TransPort " + addIsolateFlags(torTransPort, allowTorTether, isolateDestAddress, isolateDestPort);
                 torConf.set(i, line);
-            } else if (line.contains("SOCKSPort")) {
+            } else if (line.contains("SOCKSPort") && !line.contains(LOOPBACK_ADDRESS_IPv6)) {
                 line = "SOCKSPort " + addIsolateFlags(torSocksPort, allowTorTether, isolateDestAddress, isolateDestPort);
                 torConf.set(i, line);
-            } else if (line.contains("HTTPTunnelPort")) {
+            } else if (line.contains("HTTPTunnelPort") && !line.contains(LOOPBACK_ADDRESS_IPv6)) {
                 line = "HTTPTunnelPort " + addIsolateFlags(torHTTPTunnelPort, allowTorTether, isolateDestAddress, isolateDestPort);
                 torConf.set(i, line);
             }
@@ -569,8 +570,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     }
 
     private String addIsolateFlags(String port, boolean allowTorTethering, boolean isolateDestinationAddress, boolean isolateDestinationPort) {
-        String value = port;
-        if (allowTorTethering) {
+        String value = LOOPBACK_ADDRESS + ":" + port;
+        if (allowTorTethering && value.contains(LOOPBACK_ADDRESS)) {
+            value = value.replace(LOOPBACK_ADDRESS, META_ADDRESS);
+        } else if (allowTorTethering && !value.contains(LOOPBACK_ADDRESS_IPv6)) {
             value = "0.0.0.0:" + value;
         }
         if (isolateDestinationAddress) {
