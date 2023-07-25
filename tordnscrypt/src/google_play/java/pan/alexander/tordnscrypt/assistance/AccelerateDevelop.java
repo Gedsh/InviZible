@@ -323,8 +323,8 @@ public class AccelerateDevelop implements BillingClientStateListener {
                         activity.runOnUiThread(() -> {
                             NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                     context, activity.getString(R.string.pending_purchase)
-                                            + " " + TextUtils.join(", ", purchase.getProducts())
-                                            + " " + purchase.getOrderId(), "pending_purchase");
+                                            + " " + TextUtils.join(", ", purchase.getProducts()),
+                                    "pending_purchase");
                             if (notificationHelper != null && !activity.isDestroyed()) {
                                 notificationHelper.show(activity.getSupportFragmentManager(), NotificationHelper.TAG_HELPER);
                             }
