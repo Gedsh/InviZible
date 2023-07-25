@@ -938,3 +938,7 @@
 * Fixed modules not installed on initial app startup.
 * Updated German translation.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.9.3**
+* Fixed Tor not starting after enabling Allow Tor Tethering.
+* Fixes and optimizations.
