@@ -1017,6 +1017,10 @@ public class MainActivity extends LangAppCompatActivity
             ModulesAux.stopModulesService(this);
         }
 
+        if (viewPager != null) {
+            viewPagerPosition = viewPager.getCurrentItem();
+        }
+
         if (isChangingConfigurations()) {
             clearViews();
         }
@@ -1025,7 +1029,6 @@ public class MainActivity extends LangAppCompatActivity
     private void clearViews() {
 
         if (viewPager != null) {
-            viewPagerPosition = viewPager.getCurrentItem();
             viewPager.setAdapter(null);
             viewPager = null;
         }
