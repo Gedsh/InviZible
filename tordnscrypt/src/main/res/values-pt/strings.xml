@@ -345,7 +345,7 @@
     <string name="helper_dnscrypt_stopped">Parece que o DNSCrypt foi morto pelo sistema Android. A sua conexão com a Internet foi restaurada. Verifique as configurações do aparelho!</string>
     <string name="helper_tor_stopped">Parece que o Tor foi morto pelo sistema Android. A sua conexão com a Internet foi restaurada. Verifique as configurações do aparelho!</string>
     <string name="helper_itpd_stopped">Parece que o I2P foi morto pelo sistema Android. A sua conexão com a Internet foi restaurada. Verifique as configurações do aparelho!</string>
-    <string name="helper_dnscrypt_no_internet">Parece que o InviZible Pro NÃO PODE conectar com a INTERNET. Verifique as regras do FIREWALL. Permitir conexão para aplicações InviZible Pro e ROOT.</string>
+    <string name="helper_dnscrypt_no_internet">Parece que o DNSCrypt NÃO PODE conectar com a INTERNET.</string>
     <string name="helper_tor_use_bridges">Parece que o Tor NÃO PODE se conectar à INTERNET. O ISP pode bloquear as conexões do Tor. Pode tentar usar pontes de tor. Encontre-os em MENU -&gt; Configurações Rápidas -&gt; Pontes</string>
     <string name="action_mode_dialog_message_lock">Pode bloquear o controle deste aplicação. Por favor, digite a palavra-passe ou use a anterior.</string>
     <string name="action_mode_dialog_message_unlock">Por gentileza, entre com a Palavra-passe.</string>

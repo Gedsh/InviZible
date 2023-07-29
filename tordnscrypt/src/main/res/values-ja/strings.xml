@@ -284,7 +284,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="helper_dnscrypt_stopped">"DNSCryptがAndroidシステムによってキルされたようです。インターネット接続は復元さらました。端末の設定をご確認ください！"</string>
     <string name="helper_tor_stopped">"TorがAndroidシステムによってキルされたようです。インターネット接続は復元さらました。端末の設定をご確認ください！"</string>
     <string name="helper_itpd_stopped">"I2PがAndroidシステムによってキルされたようです。インターネット接続は復元さらました。端末の設定をご確認ください！"</string>
-    <string name="helper_dnscrypt_no_internet">"Invizible Proがインターネットに接続できません。Invizible ProとRootアプリケーションに接続を許可しているかファイアウォール設定をご確認ください。"</string>
+    <string name="helper_dnscrypt_no_internet">"DNSCryptがインターネットに接続できません。"</string>
     <string name="helper_tor_use_bridges">"Torがインターネットに接続できません。恐らくISPがTorへの接続をブロックしています。ブリッジの使用をお試しください。メニュー→Fast設定→ブリッジから設定できます。"</string>
     <string name="action_mode_child_lock">"チャイルドロック"</string>
     <string name="action_mode_dialog_message_lock">"このアプリの操作をロックできます。パスワードを入力してください"</string>

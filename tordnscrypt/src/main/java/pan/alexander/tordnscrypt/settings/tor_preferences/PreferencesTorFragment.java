@@ -602,9 +602,25 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "VirtualAddrNetwork")
-                && !newValue.toString().matches(IPv4_REGEX_WITH_MASK)) {
-            return false;
+        } else if (Objects.equals(preference.getKey(), "VirtualAddrNetwork")) {
+
+            String value = newValue.toString();
+
+            if (!value.matches(IPv4_REGEX_WITH_MASK)) {
+                return false;
+            }
+
+            int i = key_tor.indexOf("VirtualAddrNetwork");
+            if (i >= 0) {
+                key_tor.set(i, "VirtualAddrNetworkIPv4");
+            }
+
+            int k = key_tor.indexOf("VirtualAddrNetworkIPv4");
+            if (k >= 0) {
+                val_tor.set(k, value);
+            }
+
+            return true;
         } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
                 && !newValue.toString().matches("\\d+")) {
             return false;
@@ -670,6 +686,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                     && key_tor.contains("VirtualAddrNetwork")
                     && !key_tor.contains("VirtualAddrNetworkIPv6")) {
                 int index = key_tor.indexOf("VirtualAddrNetwork");
+                key_tor.set(index, "VirtualAddrNetworkIPv4");
+                key_tor.add(index + 1, "VirtualAddrNetworkIPv6");
+                val_tor.add(index + 1, TOR_VIRTUAL_ADDR_NETWORK_IPV6);
+            } else if (useIPv6
+                    && key_tor.contains("VirtualAddrNetworkIPv4")
+                    && !key_tor.contains("VirtualAddrNetworkIPv6")) {
+                int index = key_tor.indexOf("VirtualAddrNetworkIPv4");
                 key_tor.add(index + 1, "VirtualAddrNetworkIPv6");
                 val_tor.add(index + 1, TOR_VIRTUAL_ADDR_NETWORK_IPV6);
             } else if (!useIPv6 && key_tor.contains("VirtualAddrNetworkIPv6")) {

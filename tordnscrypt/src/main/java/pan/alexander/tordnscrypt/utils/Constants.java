@@ -50,6 +50,8 @@ public interface Constants {
 
     int HTTP_PORT = 80;
 
+    String DEFAULT_PROXY_PORT = "1080";
+
     int DNS_OVER_TLS_PORT = 853;
 
     int PLAINTEXT_DNS_PORT = 53;

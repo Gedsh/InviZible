@@ -65,7 +65,7 @@ class SelectBridgesTransportDialogFragment @Inject constructor(
             val rbgTorTransport = view.findViewById<RadioGroup>(R.id.rbgTorTransport)
             val chbRequestIPv6Bridges = view.findViewById<CheckBox>(R.id.chbRequestIPv6Bridges)
 
-            if (defaultPreferences.getBoolean(TOR_USE_IPV6, false)) {
+            if (defaultPreferences.getBoolean(TOR_USE_IPV6, true)) {
                 chbRequestIPv6Bridges.visibility = VISIBLE
             } else {
                 chbRequestIPv6Bridges.visibility = GONE

@@ -20,12 +20,14 @@
 package pan.alexander.tordnscrypt.vpn.service;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_61;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_62;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_42;
@@ -110,14 +112,14 @@ public class VpnBuilder {
     BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = defaultPreferences.get();
         boolean lan = prefs.getBoolean(BYPASS_LAN, true);
-        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
         boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
         boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
         boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
         boolean useProxy = prefs.getBoolean(USE_PROXY, false);
-        if (useProxy && (prefs.getString(PROXY_ADDRESS, "").isEmpty()
-                || prefs.getString(PROXY_PORT, "").isEmpty())) {
+        if (useProxy && (prefs.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS).isEmpty()
+                || prefs.getString(PROXY_PORT, DEFAULT_PROXY_PORT).isEmpty())) {
             useProxy = false;
         }
         boolean compatibilityMode;
@@ -275,8 +277,8 @@ public class VpnBuilder {
         List<String> sysDns = VpnUtils.getDefaultDNS(context);
 
         SharedPreferences prefs = defaultPreferences.get();
-        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, true);
-        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, false);
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
 
         boolean ip6 = (!blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED
                 || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED

@@ -111,7 +111,7 @@
         android:key="categoryCommonProxy"
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_common_proxy_categ">
-        <SwitchPreference
+        <pan.alexander.tordnscrypt.views.SwitchPlusClickPreference
             android:id="@+id/swUseProxy"
             android:defaultValue="false"
             android:key="swUseProxy"
@@ -186,7 +186,7 @@
             android:id="@+id/pref_common_wait_iptables"
             android:defaultValue="true"
             android:key="pref_common_wait_iptables"
-            android:title="@string/pref_common_wait_iptables"
-            android:summary="@string/pref_common_wait_iptables_summ"/>
+            android:summary="@string/pref_common_wait_iptables_summ"
+            android:title="@string/pref_common_wait_iptables" />
     </PreferenceCategory>
 </androidx.preference.PreferenceScreen>

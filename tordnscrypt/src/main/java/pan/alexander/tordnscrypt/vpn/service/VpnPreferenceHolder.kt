@@ -27,6 +27,8 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.proxy.CLEARNET_APPS_FOR_PROXY
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
+import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
@@ -47,8 +49,8 @@ class VpnPreferenceHolder @Inject constructor(
     val routeAllThroughTor = defaultPreferences.getBoolean(ALL_THROUGH_TOR, true)
     val torTethering = defaultPreferences.getBoolean(TOR_TETHERING, false)
     val torVirtualAddressNetwork: String = pathVars.torVirtAdrNet ?: "10.192.0.0/10"
-    val blockIPv6DnsCrypt = defaultPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, true)
-    val useIPv6Tor = defaultPreferences.getBoolean(TOR_USE_IPV6, false)
+    val blockIPv6DnsCrypt = defaultPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, false)
+    val useIPv6Tor = defaultPreferences.getBoolean(TOR_USE_IPV6, true)
 
     val setBypassProxy = preferenceRepository.getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
 
@@ -66,12 +68,12 @@ class VpnPreferenceHolder @Inject constructor(
     val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
     val ignoreSystemDNS = defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
 
-    val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, "") ?: ""
-    val proxyPort = defaultPreferences.getString(PROXY_PORT, "").let {
+    val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS) ?: LOOPBACK_ADDRESS
+    val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
         if (it?.matches(Regex(NUMBER_REGEX)) == true) {
             it.toInt()
         } else {
-            1080
+            DEFAULT_PROXY_PORT.toInt()
         }
     }
 

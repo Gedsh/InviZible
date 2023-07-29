@@ -284,7 +284,7 @@
     <string name="helper_dnscrypt_stopped">"Sembra che DNSCrypt sia stato terminato dal sistema android. La tua connessione internet è stata reimpostata. Controlla le impostazioni del dispositivo!"</string>
     <string name="helper_tor_stopped">"Sembra che Tor sia stato terminato dal sistema. La tua connessione internet è stata reimpostata. Controlla le impostazioni del dispositivo!"</string>
     <string name="helper_itpd_stopped">"Sembra che I2P sia stato terminato dal sistema. Controlla le impostazioni del dispositivo!"</string>
-    <string name="helper_dnscrypt_no_internet">"Sembra che InviZible Pro NON POSSA connettersi a INTERNET. Per favore controlla le impostazioni del FIREWALL. Abilita la connessione per InviZible Pro e per le applicazioni ROOT."</string>
+    <string name="helper_dnscrypt_no_internet">"Sembra che DNSCrypt NON POSSA connettersi a INTERNET."</string>
     <string name="helper_tor_use_bridges">"Sembra che Tor NON POSSA connettersi a INTERNET. Il tuo ISP potrebbe bloccare l'utilizzo di Tor. Prova a usare i Bridge. Li puoi trovare in MENU -&gt; Impostazioni Rapide -&gt; Bridges"</string>
     <string name="action_mode_child_lock">"Controllo Bambini"</string>
     <string name="action_mode_dialog_message_lock">"Puoi limitare l'utilizzo di questa applicazione. Per favore inserisci una password, o utilizza quella precedente."</string>

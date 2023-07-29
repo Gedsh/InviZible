@@ -901,3 +901,44 @@
 * Fixed requesting for new Tor bridges.
 * Updated Tor.
 * Updated DNSCrypt.
+
+**InviZible Pro beta 1.8.6**
+* Updated built-in snowflake and meek_lite Tor bridges.
+* IPv6 is enabled by default for app modules.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.8.7**
+* Updated Purple I2P to version 2.48.0.
+* Added support for the Tor Conjure bridge.
+* Fixed using Fastly server with Snowflake on Android versions below 8.
+* DNSCrypt shows that it is running if at least one server is ready.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.8.8**
+* Updated Tor Snowflake bridge to version 2.6.0.
+* Improved Tor Conjure bridge connection stability.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.8.9**
+* Updated Tor Conjure bridge.
+* Added option to separately activate and configure socks5 proxy.
+* Fixed adding Tor bridges without fingerprint.
+* Fixed using X bandwidth with Purple I2P.
+
+**InviZible Pro beta 1.9.0**
+* Fixed Tor Snowflake bridge failure on Android 11 and above.
+
+**InviZible Pro beta 1.9.1**
+* Improved Tor Conjure bridge connection stability.
+* Fixed adding meek_lite bridges with a domain that contains a hyphen.
+
+**InviZible Pro beta 1.9.2**
+* Improved Tor Conjure bridge censorship resistance.
+* Improved meek_lite bridge censorship resistance.
+* Fixed modules not installed on initial app startup.
+* Updated German translation.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.9.3**
+* Fixed Tor not starting after enabling Allow Tor Tethering.
+* Fixes and optimizations.

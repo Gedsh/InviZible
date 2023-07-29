@@ -87,8 +87,10 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
+import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
@@ -117,7 +119,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         CompoundButton.OnCheckedChangeListener, AdapterView.OnItemSelectedListener,
         OnTextFileOperationsCompleteListener, PreferencesBridges, SwipeRefreshLayout.OnRefreshListener {
     public final static String SNOWFLAKE_BRIDGES_DEFAULT = "3";
+    public final static String CONJURE_BRIDGES_DEFAULT = "4";
     public final static String SNOWFLAKE_BRIDGES_OWN = "4";
+    public final static String CONJURE_BRIDGES_OWN = "5";
 
     private final static int DEFAULT_VANILLA_BRIDGES_DISPLAY_COUNT = 5;
 
@@ -144,6 +148,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private String appDataDir;
     private String obfsPath;
+
+    private String conjurePath;
     private String currentBridgesFilePath;
     private String bridgesDefaultFilePath;
     private String bridgesCustomFilePath;
@@ -193,6 +199,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         appDataDir = pathVars.get().getAppDataDir();
         obfsPath = pathVars.get().getObfsPath();
+        conjurePath = pathVars.get().getConjurePath();
 
         currentBridgesFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesDefaultFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
@@ -369,6 +376,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 String clientTransportPlugin;
                 if (currentBridgesType.equals(snowflake)) {
                     clientTransportPlugin = snowflakeConfigurator.get().getConfiguration();
+                } else if (currentBridgesType.equals(conjure)) {
+                    String saveLogsString = "";
+                    if (appVersion.equals("beta")) {
+                        saveLogsString = " -log " + appDataDir + "/logs/Conjure.log";
+                    }
+                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
+                            + conjurePath + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
@@ -380,9 +394,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             for (String currentBridge : bridgesInUse) {
 
                 if (currentBridgesType == vanilla) {
-                    if (!currentBridge.isEmpty() && !currentBridge.contains(obfs4.toString())
-                            && !currentBridge.contains(obfs3.toString()) && !currentBridge.contains(scramblesuit.toString())
-                            && !currentBridge.contains(meek_lite.toString()) && !currentBridge.contains(snowflake.toString())) {
+                    if (isBridgeVanilla(currentBridge)) {
                         torConfCleaned.add("Bridge " + currentBridge);
                     }
                 } else {
@@ -392,6 +404,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                                     "Bridge " + currentBridge
                                             + " utls-imitate="
                                             + snowflakeConfigurator.get().getUtlsClientID()
+                                            //+ " utls-nosni=true"
 
                             );
                         } else {
@@ -645,8 +658,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setView(inputView);
 
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
-            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+";
-            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+ +\\w+";
+            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
+            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
             List<String> bridgesListNew = new ArrayList<>();
 
             String inputLinesStr = input.getText().toString().trim();
@@ -671,10 +684,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^scramblesuit +" + bridgeBase + "( +password=\\w+)?");
             } else if (inputLinesStr.contains(meek_lite.toString())) {
                 inputBridgesType = meek_lite.toString();
-                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./]+ +front=[\\w./]+");
+                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./-]+ +front=[\\w./-]+");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
                 pattern = Pattern.compile("^snowflake +" + bridgeBase);
+            } else if (inputLinesStr.contains(conjure.toString())) {
+                inputBridgesType = conjure.toString();
+                pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
             } else {
                 pattern = Pattern.compile(bridgeBase);
             }
@@ -791,9 +807,15 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
+                } else if (bridgesToAdd.contains(conjure.toString())) {
+                    if (!spOwnBridges.getSelectedItem().toString().equals(conjure.toString())) {
+                        spOwnBridges.setSelection(5);
+                    } else {
+                        ownBridgesOperation(bridgesListNew);
+                    }
                 } else {
                     if (!spOwnBridges.getSelectedItem().toString().equals(vanilla.toString())) {
-                        spOwnBridges.setSelection(5);
+                        spOwnBridges.setSelection(6);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
@@ -966,10 +988,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         if (!line.contains("#") && line.contains("Bridge ")) {
 
                             if (line.contains(snowflake.toString())) {
-                                line = line.replaceAll("utls-imitate.+?( |\\z)", "");
+                                line = extractSnowflakeBridgeBaseFromLine(line);
+                            } else {
+                                line = line.replace("Bridge ", "");
                             }
 
-                            bridgesInUse.add(line.replace("Bridge ", "").trim());
+                            bridgesInUse.add(line.trim());
                         }
                     }
 
@@ -985,6 +1009,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                             currentBridgesType = meek_lite;
                         } else if (testBridge.contains(snowflake.toString())) {
                             currentBridgesType = snowflake;
+                        } else if (testBridge.contains(conjure.toString())) {
+                            currentBridgesType = conjure;
                         } else {
                             currentBridgesType = vanilla;
                         }
@@ -1027,6 +1053,20 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }
             }
         }
+    }
+
+    private String extractSnowflakeBridgeBaseFromLine(String line) {
+        String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+";
+        Pattern pattern = Pattern.compile("Bridge (snowflake " + ipv4BridgeBase + ")");
+        Matcher matcher = pattern.matcher(line);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+
+        loge("PreferencesTorBridges extractSnowflakeBridgeBaseFromLine fault. " + line);
+
+        return "";
     }
 
     @Override
@@ -1249,7 +1289,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         doActionAndUpdateRecycler(() -> {
             bridgesToDisplay.clear();
             viewModel.requestRelayBridges(
-                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, false)
+                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, true)
             );
         });
 
@@ -1279,6 +1319,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 && !bridgeLine.contains(scramblesuit.toString())
                 && !bridgeLine.contains(meek_lite.toString())
                 && !bridgeLine.contains(snowflake.toString())
+                && !bridgeLine.contains(conjure.toString())
                 && !bridgeLine.isEmpty();
     }
 

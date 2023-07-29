@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.8.8**
+* Updated Tor Snowflake bridge to version 2.6.0.
+* Improved Tor Conjure bridge connection stability.
+* Fixes and optimizations.

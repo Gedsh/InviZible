@@ -143,7 +143,7 @@ class ConnectivityCheckManager @Inject constructor(
 
             val prefs = defaultPreferences.get()
             val blockIPv6DnsCrypt: Boolean =
-                prefs.getBoolean(PreferenceKeys.DNSCRYPT_BLOCK_IPv6, true)
+                prefs.getBoolean(PreferenceKeys.DNSCRYPT_BLOCK_IPv6, false)
             val useIPv6Tor: Boolean = prefs.getBoolean(PreferenceKeys.TOR_USE_IPV6, true)
             val includeIPv6 = (ModulesStatus.getInstance().mode != OperationMode.ROOT_MODE
                     && (!blockIPv6DnsCrypt || useIPv6Tor))

@@ -141,21 +141,6 @@
     <string name="pref_fast_use_tor_bridges_deactivate">Pls deactivate bridge first!</string>
     <string name="pref_fast_use_tor_bridges_obfs">Obfuscation</string>
     <string name="pref_fast_use_tor_bridges_ipv6">IPv6 bridges</string>
-    <string-array name="tor_bridges_default_obfs">
-        <item>obfs4</item>
-        <item>obfs3</item>
-        <item>meek_lite</item>
-        <item>snowflake</item>
-        <item>vanilla</item>
-    </string-array>
-    <string-array name="tor_bridges_own_obfs">
-        <item>obfs4</item>
-        <item>obfs3</item>
-        <item>scramblesuit</item>
-        <item>meek_lite</item>
-        <item>snowflake</item>
-        <item>vanilla</item>
-    </string-array>
     <string name="dialog_new_tor_default_bridges_available">New default Tor bridges are available. Do you want to update them?</string>
     <string name="pref_fast_use_tor_bridges_transport_select">Pls select obfuscation type:</string>
     <string name="pref_fast_use_tor_bridges_enter_characters">Pls enter characters from image</string>
@@ -481,7 +466,7 @@
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
-    <string name="pref_tor_clean_module_folder">Clean module folder</string>
+    <string name="pref_tor_clean_module_folder">Clear cache</string>
     <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
     <string name="pref_tor_isolate_dest_address_summ">Don’t share circuits with streams targeting a different destination address.</string>
     <string name="pref_tor_isolate_dest_port" translatable="false">IsolateDestPort</string>
@@ -509,18 +494,6 @@
     <string name="pref_itpd_com_floodfill_summ">Router will be floodfill.</string>
     <string name="pref_itpd_com_bandwidth" translatable="false">bandwidth</string>
     <string name="pref_itpd_com_bandwidth_summ">Bandwidth limit in KBps.</string>
-    <string-array name="itpd_com_bandwidth_title">
-        <item>32</item>
-        <item>256</item>
-        <item>2048</item>
-        <item>>9000</item>
-    </string-array>
-    <string-array name="itpd_com_bandwidth_value">
-        <item>L</item>
-        <item>O</item>
-        <item>P</item>
-        <item>>X</item>
-    </string-array>
     <string name="pref_itpd_com_share" translatable="false">share</string>
     <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
     <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
@@ -582,10 +555,9 @@
     <string name="helper_tor_stopped">Looks like Tor was killed by android system.
         Your internet connection was restored. Check device Settings!</string>
     <string name="helper_itpd_stopped">Looks like I2P was killed by android system. Check device Settings!</string>
-    <string name="helper_dnscrypt_no_internet">Looks like InviZible Pro CAN NOT connect to INTERNET.
-        Please Check FIREWALL rules. Allow connection for InviZible Pro and for ROOT applications.</string>
-    <string name="helper_tor_use_bridges">Looks like Tor CAN NOT connect to INTERNET.
-        ISP may blocks Tor connections. You can try to use tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
+    <string name="helper_dnscrypt_no_internet">Looks like DNSCrypt can\'t connect to the internet. You can try to choose another DNSCrypt servers. Please find them in MENU -> Fast Settings -> Select DNSCrypt servers</string>
+    <string name="helper_tor_use_bridges">Looks like Tor can\'t connect to the internet.
+        ISP may blocks Tor connections. You can try to use Tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
 
     <string name="action_mode_child_lock">Child Lock</string>
     <string name="action_mode_dialog_message_lock">You can lock control of this application. Please enter password, or use previous.</string>
@@ -681,8 +653,8 @@
     <string name="main_fragment_button_start" translatable="false">START</string>
     <string name="main_fragment_button_stop" translatable="false">STOP</string>
     <string name="main_fragment_hide_ip">Hide IP with TOR</string>
-    <string name="main_fragment_protect_dns">Protect DNS with DNSCRYPT</string>
-    <string name="main_fragment_access_i2p">Access to I2P sites with Purple I2P</string>
+    <string name="main_fragment_protect_dns">Defend with DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Access to I2P network with Purple I2P</string>
 
     <string name="ask_force_close_title">Attention</string>
     <string name="ask_force_close_text">InviZible Pro cannot start %1$s! Please check %2$s settings or try to Force Close the application.

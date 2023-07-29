@@ -147,7 +147,7 @@
     <string name="pref_common_restart_dnscrypt">"Silahkan mulai ulang DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Silahkan mulai ulang Tor"</string>
     <string name="pref_common_restart_itpd">"Silahkan mulai ulang I2P"</string>
-    <string name="pref_common_use_iptables">"Pilih Iptables"</string>
+    <string name="pref_common_use_iptables">Pilih iptables</string>
     <string name="pref_common_log_root_commands">"Simpan perintah Root untuk Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P dilindungi. Jangan disembunyikan."</string>
     <string name="notification_temp_text">Menjalankan perintah Root…</string>
@@ -292,8 +292,7 @@
     <string name="helper_dnscrypt_stopped">Sepertinya DNSCrypt dimatikan Sistem Android. Koneksi internet anda telah pulih. Periksa pengaturan perangkat!</string>
     <string name="helper_tor_stopped">Sepertinya Tor dimatikan Sistem Android. Koneksi internet anda dipulihkan. Periksa pengaturan perangkat!</string>
     <string name="helper_itpd_stopped">Sepertinya I2P dimatikan Sistem Android. Koneksi internet anda dipulihkan. Periksa pengaturan perangkat!</string>
-    <string name="helper_dnscrypt_no_internet">"Sepertinya InviZible Pro TIDAK BISA terhubung ke INTERNET.
-        Silakan periksa aturan FIREWALL, lalu Setujui perijinan koneksi untuk aplikasi InviZible Pro dan setujui akses ROOT."</string>
+    <string name="helper_dnscrypt_no_internet">"Sepertinya DNSCrypt TIDAK BISA terhubung ke INTERNET."</string>
     <string name="helper_tor_use_bridges">"Sepertinya Tor TIDAK BISA terhubung ke INTERNET.
         Penyedia jasa Internet anda mungkin memblokir koneksi Tor. Aktifkan fitur Bridge di Tor dengan cara tekan Menu -&gt; Pengaturan Cepat -&gt; Bridge"</string>
     <string name="action_mode_child_lock">Kunci dini</string>

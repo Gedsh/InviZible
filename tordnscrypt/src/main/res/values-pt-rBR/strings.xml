@@ -302,7 +302,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="helper_dnscrypt_stopped">"Parece que o DNSCrypt foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
     <string name="helper_tor_stopped">"Parece que o Tor foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
     <string name="helper_itpd_stopped">"Parece que o I2P foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
-    <string name="helper_dnscrypt_no_internet">"Parece que o InviZible Pro NÃO PODE se conectar à INTERNET. Verifique as regras do FIREWALL. Permitir conexão para aplicativos InviZible Pro e ROOT."</string>
+    <string name="helper_dnscrypt_no_internet">"Parece que o DNSCrypt NÃO PODE se conectar à INTERNET."</string>
     <string name="helper_tor_use_bridges">"Parece que o Tor NÃO PODE se conectar à INTERNET. O ISP pode bloquear as conexões do Tor. Você pode tentar usar pontes de tor. Encontre-os em MENU -&gt; Configurações Rápidas -&gt; Pontes"</string>
     <string name="action_mode_child_lock">"Bloqueio para crianças"</string>
     <string name="action_mode_dialog_message_lock">"Você pode bloquear o controle deste aplicativo. Por favor, digite a senha ou use a anterior."</string>

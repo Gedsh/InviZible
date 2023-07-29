@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.settings.tor_bridges;
 
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
@@ -163,7 +164,8 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                     || obfsType.contains(obfs3.toString())
                     || obfsType.contains(scramblesuit.toString())
                     || obfsType.contains(meek_lite.toString())
-                    || obfsType.contains(snowflake.toString()))
+                    || obfsType.contains(snowflake.toString())
+                    || obfsType.contains(conjure.toString()))
                     && bridgeComponents.length > 1) {
                 tvBridgeText = bridgeComponents[0] + " " + bridgeComponents[1];
             } else {
@@ -252,6 +254,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
 
             List<ObfsBridge> bridgesToDisplay = new ArrayList<>(preferencesBridges.getBridgesToDisplay());
             Collections.sort(bridgesToDisplay, new BridgePingComparator());
+            Collections.reverse(bridgesToDisplay);
 
             for (ObfsBridge bridge : bridgesToDisplay) {
                 if (bridge.active) {

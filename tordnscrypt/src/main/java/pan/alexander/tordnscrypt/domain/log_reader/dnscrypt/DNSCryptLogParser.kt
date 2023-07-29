@@ -42,13 +42,12 @@ class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) 
         if (!startedSuccessfully) {
             for (i in lines.size - 1 downTo 0) {
                 val line = lines[i]
-                if (line.contains("lowest initial latency")) {
+                if (line.contains(" OK ")) {
                     startedSuccessfully = true
                     startedWithError = false
                     errorCountDownCounter = COUNT_DOWN_TIMER
                     break
-                } else if (line.contains(" OK ")
-                    || line.contains("Stopped.")) {
+                } else if (line.contains("Stopped.")) {
                     startedSuccessfully = false
                     startedWithError = false
                     break

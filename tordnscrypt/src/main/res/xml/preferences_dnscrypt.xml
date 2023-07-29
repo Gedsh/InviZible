@@ -123,7 +123,7 @@
             android:title="@string/pref_dnscrypt_ignore_system_dns" />
         <CheckBoxPreference
             android:id="@+id/http3"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="http3"
             android:summary="@string/pref_dnscrypt_http3_summ"
             android:title="@string/pref_dnscrypt_http3" />
@@ -161,7 +161,7 @@
             android:title="@string/pref_dnscrypt_block_undelegated" />
         <CheckBoxPreference
             android:id="@+id/block_ipv6"
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="block_ipv6"
             android:summary="@string/pref_dnscrypt_block_ipv6_summ"
             android:title="@string/pref_dnscrypt_block_ipv6" />

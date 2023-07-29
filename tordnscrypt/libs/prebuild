@@ -2,22 +2,21 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-obfs4proxy_version=workaround/ntor-auth-mismatch
+lyrebird_version=workaround/ntor-auth-mismatch
 dnscryptproxy_version=master
-snowflake_version=v2.5.1
+snowflake_version=v2.6.0
+libzmq_version=5bf04ee2ff207f0eaf34298658fe354ea61e1839
+conjure_version=prod
 tor_openssl_version=OpenSSL_1_1_1s
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=release-0.4.7
-i2pd_openssl_version=OpenSSL_1_1_1s
+i2pd_openssl_version=OpenSSL_1_1_1u
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.47.0
+i2pd_version=2.48.0
 
-git clone https://github.com/Gedsh/obfs4
-pushd obfs4
-git checkout -b $obfs4proxy_version
-popd
+git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
 
 git clone --single-branch --branch $dnscryptproxy_version https://github.com/Gedsh/dnscrypt-proxy
 
@@ -25,6 +24,13 @@ git clone https://git.torproject.org/pluggable-transports/snowflake.git
 pushd snowflake/
 git checkout -f $snowflake_version -b $snowflake_version
 popd
+
+git clone https://github.com/zeromq/libzmq
+pushd libzmq/
+git checkout -f $libzmq_version -b $libzmq_version
+popd
+
+git clone --single-branch --branch $conjure_version https://gitlab.torproject.org/Gedsh/conjure
 
 git clone https://github.com/Gedsh/Nflog-android
 

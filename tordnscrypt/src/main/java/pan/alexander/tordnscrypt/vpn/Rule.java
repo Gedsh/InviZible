@@ -23,10 +23,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -40,7 +39,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.
 import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 
 public class Rule {
     public int uid;
@@ -83,7 +82,13 @@ public class Rule {
 
             Set<String> setUnlockApps = preferences.getStringSetPreference(unlockAppsStr);
 
-            Set<String> setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
+            boolean useProxy = prefs.getBoolean(USE_PROXY, false);
+            Set<String> setBypassProxy;
+            if (useProxy) {
+                setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
+            } else {
+                setBypassProxy = new HashSet<>();
+            }
 
             // Build rule list
             List<Rule> listRules = new ArrayList<>();

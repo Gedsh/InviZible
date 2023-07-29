@@ -287,7 +287,7 @@
     <string name="helper_dnscrypt_stopped">"似乎 DNSCrypt 被 Android 系统杀死了。 您的互联网连接已恢复。检查设备设置!"</string>
     <string name="helper_tor_stopped">"似乎 Tor 被 Android 系统杀死了。 您的互联网连接已恢复。检查设备设置!"</string>
     <string name="helper_itpd_stopped">"似乎 I2P 被 Android 系统杀死了。检查设备设置!"</string>
-    <string name="helper_dnscrypt_no_internet">"似乎 InviZible Pro 无法连接到互联网。 请检查防火墙规则。允许 InviZible Pro 和 ROOT 应用连接。"</string>
+    <string name="helper_dnscrypt_no_internet">"似乎 DNSCrypt 无法连接到互联网。 "</string>
     <string name="helper_tor_use_bridges">"似乎 Tor 无法连接到互联网。 ISP 可能阻止 Tor 连接。您可以尝试使用网桥。请前往菜单 -&gt; 快速设置 -&gt; 网桥设置"</string>
     <string name="action_mode_child_lock">"儿童锁"</string>
     <string name="action_mode_dialog_message_lock">"您可以锁定此应用控制。请输入密码或使用先前的。"</string>

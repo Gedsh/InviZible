@@ -308,7 +308,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="helper_dnscrypt_stopped">"Φαίνεται ότι το DNSCrypt τερματίστηκε ξαφνικά από το σύστημα android. Η σύνδεσή σας στο διαδίκτυο αποκαταστάθηκε. Ελέγξτε τις ρυθμίσεις της συσκευής!"</string>
     <string name="helper_tor_stopped">"Φαίνεται ότι ο Tor τερματίστηκε από το σύστημα android. Η σύνδεσή σας στο διαδίκτυο αποκαταστάθηκε. Ελέγξτε τις ρυθμίσεις της συσκευής!"</string>
     <string name="helper_itpd_stopped">"Φαίνεται ότι το I2P τερματίστηκε από το σύστημα android. Ελέγξτε τις ρυθμίσεις της συσκευής!"</string>
-    <string name="helper_dnscrypt_no_internet">"Φαίνεται ότι το InviZible Pro ΔΕΝ ΜΠΟΡΕΙ να συνδεθεί στο INTERNET. Ελέγξτε τους κανόνες του τείχους προστασίας. Επιτρέψτε τη σύνδεση στο διαδίκτυο για το InviZible Pro και για εφαρμογές με δικαιώματα ROOT."</string>
+    <string name="helper_dnscrypt_no_internet">"Φαίνεται ότι το DNSCrypt ΔΕΝ ΜΠΟΡΕΙ να συνδεθεί στο INTERNET."</string>
 
     <!-- Again here the word bridges.... will be inaccurate for translation unless we find an alternative one -->
     <string name="helper_tor_use_bridges">"Φαίνεται ότι το Tor ΔΕΝ ΜΠΟΡΕΙ να συνδεθεί στο INTERNET. Ο πάροχος ISP μπορεί να μπλοκάρει τις συνδέσεις του Tor. Μπορείτε να δοκιμάσετε να χρησιμοποιήσετε το tor Bridges. Απο το ΜΕΝΟΥ -&gt; Γρήγορες ρυθμίσεις -&gt; Γέφυρες"</string>

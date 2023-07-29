@@ -502,6 +502,7 @@
 
     <string-array name="tor_snowflake_stun_servers">
         <item>stun.l.google.com:19302</item>
+        <item>stun.sipgate.net:10000</item>
         <item>stun.voip.blackberry.com:3478</item>
         <item>stun.antisip.com:3478</item>
         <item>stun.bluesip.net:3478</item>
@@ -533,5 +534,35 @@
     <string-array name="pref_common_use_iptables_values">
         <item>1</item>
         <item>2</item>
+    </string-array>
+
+    <string-array name="tor_bridges_default_obfs">
+        <item>obfs4</item>
+        <item>obfs3</item>
+        <item>meek_lite</item>
+        <item>snowflake</item>
+        <item>conjure</item>
+        <item>vanilla</item>
+    </string-array>
+    <string-array name="tor_bridges_own_obfs">
+        <item>obfs4</item>
+        <item>obfs3</item>
+        <item>scramblesuit</item>
+        <item>meek_lite</item>
+        <item>snowflake</item>
+        <item>conjure</item>
+        <item>vanilla</item>
+    </string-array>
+    <string-array name="itpd_com_bandwidth_title">
+        <item>32</item>
+        <item>256</item>
+        <item>2048</item>
+        <item>>9000</item>
+    </string-array>
+    <string-array name="itpd_com_bandwidth_value">
+        <item>L</item>
+        <item>O</item>
+        <item>P</item>
+        <item>X</item>
     </string-array>
 </resources>
