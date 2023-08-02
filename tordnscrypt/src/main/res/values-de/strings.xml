@@ -402,16 +402,13 @@ Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
 "</string>
     <string name="pref_dnscrypt_erase_cloaking_rules">"Lösche Cloaking Regeln"</string>
     <string name="pref_dnscrypt_import_blacklist">"Importiere Blacklist"</string>
-    <string name="pref_dnscrypt_import_blacklist_summ">"Importiere eine Liste von Domains oder eine Hosts Datei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
-"</string>
+    <string name="pref_dnscrypt_import_blacklist_summ">Importiere eine Liste von Domains oder eine Hosts Datei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt.</string>
     <string name="pref_dnscrypt_erase_blacklist">"Lösche Blacklist"</string>
     <string name="pref_dnscrypt_import_ipblacklist">"Importiere IP Blacklist"</string>
-    <string name="pref_dnscrypt_import_ipblacklist_summ">"Importiere eine IP Blacklist. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
-"</string>
+    <string name="pref_dnscrypt_import_ipblacklist_summ">Importiere eine IP Blacklist Liste. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt.</string>
     <string name="pref_dnscrypt_erase_ipblacklist">"Lösche IP Blacklist"</string>
     <string name="pref_dnscrypt_import_whitelist">"Importiere Whitelist"</string>
-    <string name="pref_dnscrypt_import_whitelist_summ">"Importiere eine Liste von Domains. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt. 
-"</string>
+    <string name="pref_dnscrypt_import_whitelist_summ">Importiere eine Domain-Liste. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt.</string>
     <string name="pref_dnscrypt_erase_whitelist">"Lösche Whitelist"</string>
     <string name="pref_dnscrypt_block_ipv6_summ">"Beantworte IPv6 bezogene Anfragen umgehend leer.
 Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann aber gleichzeitig zu Störungen bei manchen Stub Resolvern führen."</string>
@@ -469,9 +466,8 @@ Möchtest du diesen zum Verbessern von InviZible an den Entwickler senden?"</str
     <string name="proxy_successful_connection">"Erfolgreiche Verbindung. Ping %s ms."</string>
     <string name="notification_arp_spoofing">"ARP Spoofing erkannt!"</string>
     <string name="notification_rogue_dhcp">"Bösartiges DHCP erkannt!"</string>
-    <string name="notification_mitm">"Man-in-the-middle Angriff erkannt! Deine Daten können von einem anderen Gerät im lokalen Netzwerk abgefangen werden.
-WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hotspots kann ebenfalls betroffen sein.
-"</string>
+    <string name="notification_mitm">Man-in-the-middle Angriff erkannt! Deine Daten können von einem anderen Gerät im lokalen Netzwerk abgefangen werden.
+\nWLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hotspots kann ebenfalls betroffen sein.</string>
     <string name="toast_arp_detection_not_supported">"Erkennung von ARP Spoofing auf deinem Gerät wird leider nicht unterstützt!"</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Bitte deaktiviere die Einstiegsknoten in den Tor Einstellungen um Bridges nutzen zu können."</string>
     <string name="pref_fast_tor_bypass_lan">"Umgehe LAN Adressen"</string>
