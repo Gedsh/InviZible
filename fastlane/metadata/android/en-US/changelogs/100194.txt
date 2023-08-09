@@ -1,0 +1,9 @@
+**InviZible Pro beta 1.9.4**
+* Updated Tor to version 4.8.3.
+* Updated Tor geoip file.
+* Updated Tor lyrebird obfuscating proxy.
+* Updated Tor Conjure bridge.
+* Updated Tor Snowflake bridge.
+* Updated DNSCrypt.
+* Fixed app can't start modules when ports are busy.
+* Fixes and optimizations.
