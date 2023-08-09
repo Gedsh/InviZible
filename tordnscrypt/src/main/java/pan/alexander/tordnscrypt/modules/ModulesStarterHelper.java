@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.widget.Toast;
 
@@ -29,6 +30,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
+import java.net.ConnectException;
+import java.net.DatagramSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,13 +46,21 @@ import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRANS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
@@ -62,12 +74,16 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class ModulesStarterHelper {
 
     public final static String ASK_FORCE_CLOSE = "pan.alexander.tordnscrypt.AskForceClose";
     public final static String MODULE_NAME = "pan.alexander.tordnscrypt.ModuleName";
 
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
@@ -78,6 +94,7 @@ public class ModulesStarterHelper {
     private final String appDataDir;
     private final String busyboxPath;
     private final String dnscryptPath;
+    private final String dnscryptConfPath;
     private final String torPath;
     private final String torConfPath;
     private final String obfsPath;
@@ -92,6 +109,7 @@ public class ModulesStarterHelper {
         appDataDir = pathVars.getAppDataDir();
         busyboxPath = pathVars.getBusyboxPath();
         dnscryptPath = pathVars.getDNSCryptPath();
+        dnscryptConfPath = pathVars.getDnscryptConfPath();
         torPath = pathVars.getTorPath();
         torConfPath = pathVars.getTorConfPath();
         obfsPath = pathVars.getObfsPath();
@@ -107,6 +125,12 @@ public class ModulesStarterHelper {
             String dnsCmdString;
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
+
+                List<String> lines = readDnsCryptConfiguration();
+
+                checkDnsCryptPortsForBusyness(lines);
+
+                saveDnsCryptConfiguration(lines);
 
                 dnsCmdString = busyboxPath + "nohup " + dnscryptPath
                         + " -config " + appDataDir
@@ -126,6 +150,13 @@ public class ModulesStarterHelper {
                 }
 
             } else {
+
+                List<String> lines = readDnsCryptConfiguration();
+
+                checkDnsCryptPortsForBusyness(lines);
+
+                saveDnsCryptConfiguration(lines);
+
                 dnsCmdString = dnscryptPath + " -config " + appDataDir
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + appDataDir + "/dnscrypt-proxy.pid";
                 preferenceRepository.get().setBoolPreference("DNSCryptStartedWithRoot", false);
@@ -185,9 +216,15 @@ public class ModulesStarterHelper {
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
 
-                List<String> lines = correctTorConfRunAsDaemon(context, true);
+                List<String> lines = readTorConfiguration();
+
+                correctTorConfRunAsDaemon(lines, true);
 
                 correctObfsModulePath(lines);
+
+                checkTorPortsForBusyness(lines);
+
+                saveTorConfiguration(lines);
 
                 torCmdString = torPath + " -f "
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
@@ -206,11 +243,17 @@ public class ModulesStarterHelper {
 
             } else {
 
-                List<String> lines = correctTorConfRunAsDaemon(context, false);
+                List<String> lines = readTorConfiguration();
+
+                correctTorConfRunAsDaemon(lines, false);
 
                 useTorSchedulerVanilla(lines);
 
                 correctObfsModulePath(lines);
+
+                checkTorPortsForBusyness(lines);
+
+                saveTorConfiguration(lines);
 
                 torCmdString = torPath + " -f "
                         + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
@@ -351,24 +394,53 @@ public class ModulesStarterHelper {
         };
     }
 
-    private List<String> correctTorConfRunAsDaemon(Context context, boolean runAsDaemon) {
+    private List<String> readDnsCryptConfiguration() {
+        return FileManager.readTextFileSynchronous(context, dnscryptConfPath);
+    }
 
-        List<String> lines = FileManager.readTextFileSynchronous(context, torConfPath);
+    private void checkDnsCryptPortsForBusyness(List<String> lines) {
+        String port = pathVars.getDNSCryptPort();
+
+        if (port.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(port))) {
+
+            String freePort = getFreePort(Integer.parseInt(port));
+
+            if (freePort.equals(port)) {
+                return;
+            }
+
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.contains("listen_addresses") && line.contains(port)) {
+                    line = line.replace(port, freePort);
+                    lines.set(i, line);
+                }
+            }
+            defaultPreferences.get().edit().putString(DNSCRYPT_LISTEN_PORT, freePort).apply();
+        }
+    }
+
+    private void saveDnsCryptConfiguration(List<String> lines) {
+        FileManager.writeTextFileSynchronous(context, dnscryptConfPath, lines);
+    }
+
+    private List<String> readTorConfiguration() {
+        return FileManager.readTextFileSynchronous(context, torConfPath);
+    }
+
+    private void correctTorConfRunAsDaemon(List<String> lines, boolean runAsDaemon) {
 
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).contains("RunAsDaemon")) {
                 if (runAsDaemon && lines.get(i).contains("0")) {
                     lines.set(i, "RunAsDaemon 1");
-                    FileManager.writeTextFileSynchronous(context, torConfPath, lines);
                 } else if (!runAsDaemon && lines.get(i).contains("1")) {
                     lines.set(i, "RunAsDaemon 0");
-                    FileManager.writeTextFileSynchronous(context, torConfPath, lines);
                 }
-                return lines;
+                return;
             }
         }
 
-        return lines;
     }
 
     //Disable Tor Kernel-Informed Socket Transport because ioctl() with request SIOCOUTQNSD is denied by android SELINUX policy
@@ -418,11 +490,51 @@ public class ModulesStarterHelper {
                     }
                 }
 
-                FileManager.writeTextFileSynchronous(context, torConfPath, lines);
-
                 logi("ModulesService Tor Obfs module path is corrected");
             }
         }
+    }
+
+    private void checkTorPortsForBusyness(List<String> lines) {
+        String dnsPort = pathVars.getTorDNSPort();
+        String socksPort = pathVars.getTorSOCKSPort();
+        String httpTunnelPort = pathVars.getTorHTTPTunnelPort();
+        String transPort = pathVars.getTorTransPort();
+
+        if (dnsPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(dnsPort))) {
+            fixTorProxyPort(lines, TOR_DNS_PORT, dnsPort);
+        }
+        if (socksPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(socksPort))) {
+            fixTorProxyPort(lines, TOR_SOCKS_PORT, socksPort);
+        }
+        if (httpTunnelPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(httpTunnelPort))) {
+            fixTorProxyPort(lines, TOR_HTTP_TUNNEL_PORT, httpTunnelPort);
+        }
+        if (transPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(transPort))) {
+            fixTorProxyPort(lines, TOR_TRANS_PORT, transPort);
+        }
+
+    }
+
+    private void fixTorProxyPort(List<String> lines, String proxyType, String proxyPort) {
+        String port = getFreePort(Integer.parseInt(proxyPort));
+
+        if (port.equals(proxyPort)) {
+            return;
+        }
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line.contains(proxyType) && line.contains(proxyPort)) {
+                line = line.replace(proxyPort, port);
+                lines.set(i, line);
+            }
+        }
+        defaultPreferences.get().edit().putString(proxyType, port).apply();
+    }
+
+    private void saveTorConfiguration(List<String> lines) {
+        FileManager.writeTextFileSynchronous(context, torConfPath, lines);
     }
 
     private void correctITPDConfRunAsDaemon(Context context, String appDataDir, boolean runAsDaemon) {
@@ -462,4 +574,40 @@ public class ModulesStarterHelper {
         Patch patch = new Patch(context);
         patch.checkPatches(true);
     }
+
+    private boolean isPortAvailable(int port) {
+        if (isTCPPortAvailable(port)) {
+            return isUDPPortAvailable(port);
+        }
+        return false;
+    }
+
+    private boolean isTCPPortAvailable(int port) {
+        try (Socket ignored = new Socket(LOOPBACK_ADDRESS, port)) {
+            return false;
+        } catch (ConnectException e) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isUDPPortAvailable(int port) {
+        try (DatagramSocket ignored = new DatagramSocket(port)) {
+            return true;
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
+    private String getFreePort(int port) {
+        for (int i = 0; i < 3; i++) {
+            int freePort = port + i + 1;
+            if (isPortAvailable(freePort)) {
+                return String.valueOf(freePort);
+            }
+        }
+        return String.valueOf(port);
+    }
+
 }
