@@ -62,9 +62,13 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRANS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -134,13 +138,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("MaxCircuitDirtiness"));
         preferences.add(findPreference("EnforceDistinctSubnets"));
         preferences.add(findPreference("Enable SOCKS proxy"));
-        preferences.add(findPreference("SOCKSPort"));
+        preferences.add(findPreference(TOR_SOCKS_PORT));
         preferences.add(findPreference("Enable HTTPTunnel"));
-        preferences.add(findPreference("HTTPTunnelPort"));
+        preferences.add(findPreference(TOR_HTTP_TUNNEL_PORT));
         preferences.add(findPreference("Enable Transparent proxy"));
-        preferences.add(findPreference("TransPort"));
+        preferences.add(findPreference(TOR_TRANS_PORT));
         preferences.add(findPreference("Enable DNS"));
-        preferences.add(findPreference("DNSPort"));
+        preferences.add(findPreference(TOR_DNS_PORT));
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference(TOR_USE_IPV6));
         preferences.add(findPreference("pref_tor_snowflake_stun"));
@@ -391,7 +395,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "DNSPort")) {
+        } else if (Objects.equals(preference.getKey(), TOR_DNS_PORT)) {
             String dnsPort = newValue.toString();
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
@@ -456,9 +460,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                         .getConfiguration(serversStr));
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "SOCKSPort")
-                || Objects.equals(preference.getKey(), "HTTPTunnelPort")
-                || Objects.equals(preference.getKey(), "TransPort")) {
+        } else if (Objects.equals(preference.getKey(), TOR_SOCKS_PORT)
+                || Objects.equals(preference.getKey(), TOR_HTTP_TUNNEL_PORT)
+                || Objects.equals(preference.getKey(), TOR_TRANS_PORT)) {
 
             String proxyPort = newValue.toString();
             String proxyType = preference.getKey();

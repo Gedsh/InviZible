@@ -38,6 +38,10 @@ import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRANS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -233,7 +237,7 @@ public class PathVars {
     }
 
     public String getTorTransPort() {
-        String torTransPort = preferences.getString("TransPort", "9040");
+        String torTransPort = preferences.getString(TOR_TRANS_PORT, "9040");
         if (torTransPort == null) {
             torTransPort = "9040";
         }
@@ -268,21 +272,21 @@ public class PathVars {
     }
 
     public String getTorDNSPort() {
-        String torDnsPort = preferences.getString("DNSPort", "5400");
+        String torDnsPort = preferences.getString(TOR_DNS_PORT, "5400");
         return torDnsPort.split(" ")[0]
                 .replaceAll(".+:", "")
                 .replaceAll("\\D+", "");
     }
 
     public String getTorSOCKSPort() {
-        String torSocksPort = preferences.getString("SOCKSPort", "9050");
+        String torSocksPort = preferences.getString(TOR_SOCKS_PORT, "9050");
         return torSocksPort.split(" ")[0]
                 .replaceAll(".+:", "")
                 .replaceAll("\\D+", "");
     }
 
     public String getTorHTTPTunnelPort() {
-        String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
+        String torHttpTunnelPort = preferences.getString(TOR_HTTP_TUNNEL_PORT, "8118");
         return torHttpTunnelPort.split(" ")[0]
                 .replaceAll(".+:", "")
                 .replaceAll("\\D+", "");

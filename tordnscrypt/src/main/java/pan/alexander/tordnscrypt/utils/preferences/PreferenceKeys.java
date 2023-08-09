@@ -122,6 +122,10 @@ public interface PreferenceKeys {
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
 
     //Tor Settings
+    String TOR_DNS_PORT = "DNSPort";
+    String TOR_SOCKS_PORT = "SOCKSPort";
+    String TOR_HTTP_TUNNEL_PORT = "HTTPTunnelPort";
+    String TOR_TRANS_PORT = "TransPort";
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
