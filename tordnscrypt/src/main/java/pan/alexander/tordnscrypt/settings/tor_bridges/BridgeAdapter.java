@@ -25,6 +25,7 @@ import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.scramblesuit;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.snowflake;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.webtunnel;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -165,7 +166,8 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                     || obfsType.contains(scramblesuit.toString())
                     || obfsType.contains(meek_lite.toString())
                     || obfsType.contains(snowflake.toString())
-                    || obfsType.contains(conjure.toString()))
+                    || obfsType.contains(conjure.toString())
+                    || obfsType.contains(webtunnel.toString()))
                     && bridgeComponents.length > 1) {
                 tvBridgeText = bridgeComponents[0] + " " + bridgeComponents[1];
             } else {

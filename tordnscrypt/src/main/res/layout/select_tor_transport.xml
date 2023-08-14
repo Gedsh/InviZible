@@ -25,6 +25,13 @@
             android:layout_weight="1"
             android:text="Obfs4" />
 
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/rbWebTunnel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="WebTunnel" />
+
     </RadioGroup>
 
     <androidx.appcompat.widget.AppCompatCheckBox

@@ -92,6 +92,11 @@ class SelectBridgesTransportDialogFragment @Inject constructor(
                             "obfs4",
                             ipv6Bridges
                         )
+                    R.id.rbWebTunnel ->
+                        preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
+                            "webtunnel",
+                            ipv6Bridges
+                        )
                 }
             }
 

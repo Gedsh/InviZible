@@ -542,6 +542,7 @@
         <item>meek_lite</item>
         <item>snowflake</item>
         <item>conjure</item>
+        <item>webtunnel</item>
         <item>vanilla</item>
     </string-array>
     <string-array name="tor_bridges_own_obfs">
@@ -551,6 +552,7 @@
         <item>meek_lite</item>
         <item>snowflake</item>
         <item>conjure</item>
+        <item>webtunnel</item>
         <item>vanilla</item>
     </string-array>
     <string-array name="itpd_com_bandwidth_title">

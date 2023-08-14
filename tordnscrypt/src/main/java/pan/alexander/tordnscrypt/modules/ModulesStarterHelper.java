@@ -479,13 +479,16 @@ public class ModulesStarterHelper {
                 for (int i = 0; i < lines.size(); i++) {
                     line = lines.get(i);
                     if (line.contains("ClientTransportPlugin ") && line.contains("/libobfs4proxy.so")) {
-                        line = line.replaceAll("/.+?/libobfs4proxy.so", context.getApplicationInfo().nativeLibraryDir + "/libobfs4proxy.so");
+                        line = line.replaceAll("/.+?/libobfs4proxy.so", pathVars.getObfsPath());
                         lines.set(i, line);
                     } else if (line.contains("ClientTransportPlugin ") && line.contains("/libsnowflake.so")) {
-                        line = line.replaceAll("/.+?/libsnowflake.so", context.getApplicationInfo().nativeLibraryDir + "/libsnowflake.so");
+                        line = line.replaceAll("/.+?/libsnowflake.so", pathVars.getSnowflakePath());
                         lines.set(i, line);
                     } else if (line.contains("ClientTransportPlugin ") && line.contains("/libconjure.so")) {
-                        line = line.replaceAll("/.+?/libconjure.so", context.getApplicationInfo().nativeLibraryDir + "/libconjure.so");
+                        line = line.replaceAll("/.+?/libconjure.so", pathVars.getConjurePath());
+                        lines.set(i, line);
+                    } else if (line.contains("ClientTransportPlugin ") && line.contains("/libwebtunnel.so")) {
+                        line = line.replaceAll("/.+?/libwebtunnel.so", pathVars.getWebTunnelPath());
                         lines.set(i, line);
                     }
                 }

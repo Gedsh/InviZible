@@ -85,6 +85,7 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManage
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
+import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -361,6 +362,7 @@ public class TopFragment extends Fragment {
 
             shortenTooLongSnowflakeLog(context, preferences, pathVars.get());
             shortenTooLongConjureLog(context, preferences, pathVars.get());
+            shortenTooLongWebTunnelLog(context, preferences, pathVars.get());
 
             checkModulesStoppedBySystem(activity);
 

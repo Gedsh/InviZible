@@ -257,11 +257,35 @@ object Utils {
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
-            if (showHelperMessages && (bridgesConjureDefault || bridgesConjureOwn)) {
+            val betaVersion = appVersion.equals("beta")
+            if ((showHelperMessages || betaVersion) && (bridgesConjureDefault || bridgesConjureOwn)) {
                 FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Conjure.log")
             }
         } catch (e: Exception) {
             loge("ShortenTooLongConjureLog exception", e)
+        }
+    }
+
+    @JvmStatic
+    fun shortenTooLongWebTunnelLog(
+        context: Context,
+        preferences: PreferenceRepository,
+        pathVars: PathVars
+    ) {
+        try {
+            val bridgesWebTunnelDefault =
+                preferences.getStringPreference(DEFAULT_BRIDGES_OBFS) == PreferencesTorBridges.WEB_TUNNEL_BRIDGES_DEFAULT
+            val bridgesWebTunnelOwn =
+                preferences.getStringPreference(OWN_BRIDGES_OBFS) == PreferencesTorBridges.WEB_TUNNEL_BRIDGES_OWN
+            val shPref = PreferenceManager.getDefaultSharedPreferences(context)
+            val showHelperMessages =
+                shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
+            val betaVersion = appVersion.equals("beta")
+            if ((showHelperMessages || betaVersion) && (bridgesWebTunnelDefault || bridgesWebTunnelOwn)) {
+                FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/WebTunnel.log")
+            }
+        } catch (e: Exception) {
+            loge("ShortenTooLongWebTunnelLog exception", e)
         }
     }
 

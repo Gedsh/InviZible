@@ -59,8 +59,8 @@ public class PathVars {
     private final String itpdPath;
     private final String obfsPath;
     private final String snowflakePath;
-
     private final String conjurePath;
+    private final String webTunnelPath;
     private final String nflogPath;
     private final boolean bbOK;
     private volatile int appUid = -1;
@@ -88,6 +88,7 @@ public class PathVars {
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
         snowflakePath = nativeLibPath + "/libsnowflake.so";
         conjurePath = nativeLibPath + "/libconjure.so";
+        webTunnelPath = nativeLibPath + "/libwebtunnel.so";
         nflogPath = nativeLibPath + "/libnflog.so";
     }
 
@@ -214,6 +215,10 @@ public class PathVars {
 
     public String getConjurePath() {
         return conjurePath;
+    }
+
+    public String getWebTunnelPath() {
+        return webTunnelPath;
     }
 
     public String getNflogPath() {

@@ -91,6 +91,7 @@ import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.webtunnel;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
@@ -120,8 +121,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         OnTextFileOperationsCompleteListener, PreferencesBridges, SwipeRefreshLayout.OnRefreshListener {
     public final static String SNOWFLAKE_BRIDGES_DEFAULT = "3";
     public final static String CONJURE_BRIDGES_DEFAULT = "4";
+    public final static String WEB_TUNNEL_BRIDGES_DEFAULT = "5";
     public final static String SNOWFLAKE_BRIDGES_OWN = "4";
     public final static String CONJURE_BRIDGES_OWN = "5";
+    public final static String WEB_TUNNEL_BRIDGES_OWN = "6";
 
     private final static int DEFAULT_VANILLA_BRIDGES_DISPLAY_COUNT = 5;
 
@@ -150,6 +153,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private String obfsPath;
 
     private String conjurePath;
+    private String webTunnelPath;
     private String currentBridgesFilePath;
     private String bridgesDefaultFilePath;
     private String bridgesCustomFilePath;
@@ -200,6 +204,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         appDataDir = pathVars.get().getAppDataDir();
         obfsPath = pathVars.get().getObfsPath();
         conjurePath = pathVars.get().getConjurePath();
+        webTunnelPath = pathVars.get().getWebTunnelPath();
 
         currentBridgesFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
         bridgesDefaultFilePath = appDataDir + "/app_data/tor/bridges_default.lst";
@@ -332,18 +337,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         if (!bridgesInUse.isEmpty()) {
             switch (savedBridgesSelector) {
-                case NO_BRIDGES:
-                    saveUseBridgesPreferences(true, false, false);
-                    break;
-                case DEFAULT_BRIDGES:
-                    saveUseBridgesPreferences(false, true, false);
-                    break;
-                case OWN_BRIDGES:
-                    saveUseBridgesPreferences(false, false, true);
-                    break;
-                default:
-                    saveUseBridgesPreferences(false, false, false);
-                    break;
+                case NO_BRIDGES -> saveUseBridgesPreferences(true, false, false);
+                case DEFAULT_BRIDGES -> saveUseBridgesPreferences(false, true, false);
+                case OWN_BRIDGES -> saveUseBridgesPreferences(false, false, true);
+                default -> saveUseBridgesPreferences(false, false, false);
             }
         }
 
@@ -383,6 +380,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + conjurePath + saveLogsString;
+                } else if (currentBridgesType.equals(webtunnel)) {
+                    String saveLogsString = "";
+                    if (appVersion.equals("beta")) {
+                        saveLogsString = " -log " + appDataDir + "/logs/WebTunnel.log";
+                    }
+                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
+                            + webTunnelPath + saveLogsString;
                 } else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
@@ -691,6 +695,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
                 pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
+            } else if (inputLinesStr.contains(webtunnel.toString())) {
+                inputBridgesType = webtunnel.toString();
+                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w./-]+");
             } else {
                 pattern = Pattern.compile(bridgeBase);
             }
@@ -813,9 +820,15 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
+                } else if (bridgesToAdd.contains(webtunnel.toString())) {
+                    if (!spOwnBridges.getSelectedItem().toString().equals(webtunnel.toString())) {
+                        spOwnBridges.setSelection(6);
+                    } else {
+                        ownBridgesOperation(bridgesListNew);
+                    }
                 } else {
                     if (!spOwnBridges.getSelectedItem().toString().equals(vanilla.toString())) {
-                        spOwnBridges.setSelection(6);
+                        spOwnBridges.setSelection(7);
                     } else {
                         ownBridgesOperation(bridgesListNew);
                     }
@@ -969,20 +982,17 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         if (fileOperationResult && currentFileOperation == readTextFile) {
             switch (tag) {
-                case TOR_CONF_FLAG:
+                case TOR_CONF_FLAG -> {
                     if (lines == null || lines.isEmpty()) {
                         return;
                     }
-
                     tor_conf.clear();
                     bridgesInUse.clear();
-
                     for (String line : lines) {
                         if (!line.trim().isEmpty()) {
                             tor_conf.add(line);
                         }
                     }
-
                     for (int i = 0; i < tor_conf.size(); i++) {
                         String line = tor_conf.get(i);
                         if (!line.contains("#") && line.contains("Bridge ")) {
@@ -996,7 +1006,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                             bridgesInUse.add(line.trim());
                         }
                     }
-
                     if (!bridgesInUse.isEmpty()) {
                         String testBridge = bridgesInUse.toString();
                         if (testBridge.contains(obfs4.toString())) {
@@ -1011,21 +1020,22 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                             currentBridgesType = snowflake;
                         } else if (testBridge.contains(conjure.toString())) {
                             currentBridgesType = conjure;
+                        } else if (testBridge.contains(webtunnel.toString())) {
+                            currentBridgesType = webtunnel;
                         } else {
                             currentBridgesType = vanilla;
                         }
                     } else {
                         currentBridgesType = undefined;
                     }
-                    break;
-                case ADD_BRIDGES_TAG: {
+                }
+                case ADD_BRIDGES_TAG -> {
                     final List<String> bridges_lst = lines;
                     if (handler != null && bridges_lst != null) {
                         handler.post(() -> addBridges(bridges_lst));
                     }
-                    break;
                 }
-                case DEFAULT_BRIDGES_OPERATION_TAG: {
+                case DEFAULT_BRIDGES_OPERATION_TAG -> {
                     final List<String> savedDefaultBridges = lines;
 
                     if (areDefaultVanillaBridgesSelected()) {
@@ -1035,21 +1045,18 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     if (handler != null && savedDefaultBridges != null) {
                         handler.post(() -> defaultBridgesOperation(savedDefaultBridges));
                     }
-                    break;
                 }
-                case OWN_BRIDGES_OPERATION_TAG: {
+                case OWN_BRIDGES_OPERATION_TAG -> {
                     final List<String> savedCustomBridges = lines;
                     if (handler != null && savedCustomBridges != null) {
                         handler.post(() -> ownBridgesOperation(savedCustomBridges));
                     }
-                    break;
                 }
-                case ADD_REQUESTED_BRIDGES_TAG: {
+                case ADD_REQUESTED_BRIDGES_TAG -> {
                     final List<String> savedCustomBridges = lines;
                     if (handler != null && savedCustomBridges != null) {
                         handler.post(() -> addRequestedBridges(requestedBridgesToAdd, savedCustomBridges));
                     }
-                    break;
                 }
             }
         }
@@ -1320,6 +1327,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 && !bridgeLine.contains(meek_lite.toString())
                 && !bridgeLine.contains(snowflake.toString())
                 && !bridgeLine.contains(conjure.toString())
+                && !bridgeLine.contains(webtunnel.toString())
                 && !bridgeLine.isEmpty();
     }
 
