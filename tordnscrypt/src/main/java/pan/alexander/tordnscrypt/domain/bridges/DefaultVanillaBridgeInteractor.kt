@@ -49,6 +49,7 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
             val defers = mutableListOf<Deferred<Unit>>()
             bridges.forEach {
                 try {
+                    ensureActive()
                     defers += async {
                         timeouts.emit(
                             BridgePingData(it.hashCode(), repository.getTimeout(it))
