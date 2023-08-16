@@ -952,3 +952,7 @@
 * Updated DNSCrypt.
 * Fixed app can't start modules when ports are busy.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.9.5**
+* Updated DNSCrypt to version 2.1.5.
+* Added support for the Tor WebTunnel bridge.
