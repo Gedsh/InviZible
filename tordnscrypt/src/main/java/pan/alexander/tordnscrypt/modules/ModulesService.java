@@ -34,8 +34,6 @@ import androidx.preference.PreferenceManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.DatagramSocket;
-import java.net.ServerSocket;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -57,6 +55,7 @@ import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.portchecker.PortChecker;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
@@ -138,6 +137,8 @@ public class ModulesService extends Service {
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
+    @Inject
+    public Lazy<PortChecker> portChecker;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -247,63 +248,28 @@ public class ModulesService extends Service {
         manageWakelocks();
 
         switch (action) {
-            case ACTION_START_DNSCRYPT:
-                startDNSCrypt();
-                break;
-            case ACTION_START_TOR:
-                startTor();
-                break;
-            case ACTION_START_ITPD:
-                startITPD();
-                break;
-            case ACTION_STOP_DNSCRYPT:
-                stopDNSCrypt();
-                break;
-            case ACTION_STOP_TOR:
-                stopTor();
-                break;
-            case ACTION_STOP_ITPD:
-                stopITPD();
-                break;
-            case ACTION_RESTART_DNSCRYPT:
-                restartDNSCrypt();
-                break;
-            case ACTION_RESTART_TOR:
-                restartTor();
-                break;
-            case ACTION_RESTART_TOR_FULL:
-                restartTorFull();
-                break;
-            case ACTION_RESTART_ITPD:
-                restartITPD();
-                break;
-            case ACTION_DISMISS_NOTIFICATION:
-                dismissNotification(startId);
-                break;
-            case ACTION_RECOVER_SERVICE:
-                recoverAppState();
-                break;
-            case SPEEDUP_LOOP:
-                speedupTimer();
-                break;
-            case SLOWDOWN_LOOP:
-                slowdownTimer();
-                break;
-            case EXTRA_LOOP:
-                makeExtraLoop();
-                break;
-            case ACTION_STOP_SERVICE:
+            case ACTION_START_DNSCRYPT -> startDNSCrypt();
+            case ACTION_START_TOR -> startTor();
+            case ACTION_START_ITPD -> startITPD();
+            case ACTION_STOP_DNSCRYPT -> stopDNSCrypt();
+            case ACTION_STOP_TOR -> stopTor();
+            case ACTION_STOP_ITPD -> stopITPD();
+            case ACTION_RESTART_DNSCRYPT -> restartDNSCrypt();
+            case ACTION_RESTART_TOR -> restartTor();
+            case ACTION_RESTART_TOR_FULL -> restartTorFull();
+            case ACTION_RESTART_ITPD -> restartITPD();
+            case ACTION_DISMISS_NOTIFICATION -> dismissNotification(startId);
+            case ACTION_RECOVER_SERVICE -> recoverAppState();
+            case SPEEDUP_LOOP -> speedupTimer();
+            case SLOWDOWN_LOOP -> slowdownTimer();
+            case EXTRA_LOOP -> makeExtraLoop();
+            case ACTION_STOP_SERVICE -> {
                 stopModulesService();
                 return START_NOT_STICKY;
-            case START_ARP_SCANNER:
-                startArpScanner();
-                break;
-            case STOP_ARP_SCANNER:
-                stopArpScanner();
-                break;
-            case CLEAR_IPTABLES_COMMANDS_HASH:
-                clearIptablesCommandsSavedHash();
-                break;
+            }
+            case START_ARP_SCANNER -> startArpScanner();
+            case STOP_ARP_SCANNER -> stopArpScanner();
+            case CLEAR_IPTABLES_COMMANDS_HASH -> clearIptablesCommandsSavedHash();
         }
 
         setBroadcastReceiver();
@@ -413,7 +379,8 @@ public class ModulesService extends Service {
     }
 
     private boolean stopDNSCryptIfPortIsBusy() {
-        if (isNotAvailable(pathVars.get().getDNSCryptPort())) {
+        PortChecker checker = portChecker.get();
+        if (checker.isPortBusy(pathVars.get().getDNSCryptPort())) {
             try {
                 modulesStatus.setDnsCryptState(RESTARTING);
 
@@ -540,10 +507,11 @@ public class ModulesService extends Service {
     }
 
     private boolean stopTorIfPortsIsBusy() {
-        boolean stopRequired = isNotAvailable(pathVars.get().getTorDNSPort())
-                || isNotAvailable(pathVars.get().getTorSOCKSPort())
-                || isNotAvailable(pathVars.get().getTorTransPort())
-                || isNotAvailable(pathVars.get().getTorHTTPTunnelPort());
+        PortChecker checker = portChecker.get();
+        boolean stopRequired = checker.isPortBusy(pathVars.get().getTorDNSPort())
+                || checker.isPortBusy(pathVars.get().getTorSOCKSPort())
+                || checker.isPortBusy(pathVars.get().getTorTransPort())
+                || checker.isPortBusy(pathVars.get().getTorHTTPTunnelPort());
 
         if (stopRequired) {
             try {
@@ -685,17 +653,18 @@ public class ModulesService extends Service {
         preferenceRepository.get()
                 .setStringSetPreference("ITPDTunnelsPorts", itpdTunnelsPorts);
 
+        PortChecker checker = portChecker.get();
         boolean stopRequired = false;
 
         for (String port : itpdTunnelsPorts) {
-            if (isNotAvailable(port)) {
+            if (checker.isPortBusy(port)) {
                 stopRequired = true;
             }
         }
 
         stopRequired = stopRequired ||
-                isNotAvailable(pathVars.get().getITPDSOCKSPort())
-                || isNotAvailable(pathVars.get().getITPDHttpProxyPort());
+                checker.isPortBusy(pathVars.get().getITPDSOCKSPort())
+                || checker.isPortBusy(pathVars.get().getITPDHttpProxyPort());
 
         if (stopRequired) {
             try {
@@ -924,7 +893,7 @@ public class ModulesService extends Service {
 
     private void stopVPNServiceIfRunning() {
         OperationMode operationMode = modulesStatus.getMode();
-        SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = defaultSharedPreferences.get();
         if (((operationMode == VPN_MODE) || modulesStatus.isFixTTL()) && prefs.getBoolean(VPN_SERVICE_ENABLED, false)) {
             ServiceVPNHelper.stop("ModulesService is destroyed", this);
         }
@@ -1163,35 +1132,6 @@ public class ModulesService extends Service {
             rootGroup = parentGroup;
         }
         return rootGroup;
-    }
-
-    private boolean isNotAvailable(String portStr) {
-
-        int port = Integer.parseInt(portStr);
-
-        ServerSocket ss = null;
-        DatagramSocket ds = null;
-        try {
-            ss = new ServerSocket(port);
-            ss.setReuseAddress(true);
-            ds = new DatagramSocket(port);
-            ds.setReuseAddress(true);
-            return false;
-        } catch (IOException ignored) {
-        } finally {
-            if (ds != null) {
-                ds.close();
-            }
-
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException ignored) {
-                }
-            }
-        }
-
-        return true;
     }
 
     private void cleanLogFileNoRootMethod(String logFilePath, String text) {

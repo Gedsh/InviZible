@@ -19,26 +19,40 @@
 
 package pan.alexander.tordnscrypt.utils.executors
 
-import android.util.Log
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
-import java.lang.Exception
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.Exception
 
 @Singleton
 class CachedExecutor @Inject constructor() {
 
-    val executorService: ExecutorService by lazy { Executors.newCachedThreadPool() }
+    private val executorService: ExecutorService by lazy { Executors.newCachedThreadPool() }
 
     @Synchronized
     fun submit(block: Runnable): Future<*>? =
         try {
             executorService.submit(block)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "CachedExecutor ${e.javaClass} ${e.message} ${e.cause}")
+            loge("CachedExecutor submit", e)
             null
         }
+
+    //For testing purposes
+    @Suppress("unused")
+    private fun checkTimeout(future: Future<*>) {
+        executorService.submit {
+            try {
+                future.get(2, TimeUnit.MINUTES)
+            } catch (e: TimeoutException) {
+                loge("CachedExecutor checkTimeout", e)
+            } catch (ignored: Exception) {
+            }
+        }
+    }
 }

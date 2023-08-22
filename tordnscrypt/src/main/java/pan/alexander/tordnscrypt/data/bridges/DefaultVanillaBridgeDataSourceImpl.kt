@@ -30,7 +30,6 @@ class DefaultVanillaBridgeDataSourceImpl @Inject constructor(
     private val httpsConnectionManager: HttpsConnectionManager
 ) : DefaultVanillaBridgeDataSource {
 
-    @Suppress("BlockingMethodInNonBlockingContext")
     override suspend fun getRelaysWithFingerprintAndAddress(): List<String> = httpsConnectionManager.apply {
         readTimeoutSec = READ_TIMEOUT_SEC
         connectTimeoutSec = CONNECT_TIMEOUT_SEC

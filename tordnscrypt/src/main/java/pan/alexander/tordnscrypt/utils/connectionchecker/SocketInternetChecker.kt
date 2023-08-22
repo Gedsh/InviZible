@@ -54,6 +54,7 @@ class SocketInternetChecker @Inject constructor() {
                 InetSocketAddress(InetAddress.getByName(ip), port)
 
             socket.connect(sockAddress, CONNECT_TIMEOUT_SEC * 1000)
+            socket.soTimeout = 1
 
             return if (isProxyUsed(proxyAddress, proxyPort)) {
                 socket.inetAddress.isReachable(CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC * 1000)
@@ -95,6 +96,7 @@ class SocketInternetChecker @Inject constructor() {
                 InetSocketAddress(InetAddress.getByName(ip), port)
 
             socket.connect(sockAddress, PING_TIMEOUT_SEC * 1000)
+            socket.soTimeout = 1
 
             if (isProxyUsed(proxyAddress, proxyPort)) {
                 if (socket.inetAddress.isReachable(CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC * 1000)) {

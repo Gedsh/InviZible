@@ -30,9 +30,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
-import java.net.ConnectException;
-import java.net.DatagramSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +39,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.portchecker.PortChecker;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
@@ -51,7 +49,6 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
-import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
@@ -88,6 +85,8 @@ public class ModulesStarterHelper {
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public PathVars pathVars;
+    @Inject
+    public Lazy<PortChecker> portChecker;
 
     private final Context context;
     private final Handler handler;
@@ -400,10 +399,11 @@ public class ModulesStarterHelper {
 
     private void checkDnsCryptPortsForBusyness(List<String> lines) {
         String port = pathVars.getDNSCryptPort();
+        PortChecker checker = portChecker.get();
 
-        if (port.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(port))) {
+        if (port.matches(NUMBER_REGEX) && checker.isPortBusy(port)) {
 
-            String freePort = getFreePort(Integer.parseInt(port));
+            String freePort = checker.getFreePort(port);
 
             if (freePort.equals(port)) {
                 return;
@@ -504,23 +504,26 @@ public class ModulesStarterHelper {
         String httpTunnelPort = pathVars.getTorHTTPTunnelPort();
         String transPort = pathVars.getTorTransPort();
 
-        if (dnsPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(dnsPort))) {
+        PortChecker checker = portChecker.get();
+
+        if (dnsPort.matches(NUMBER_REGEX) && checker.isPortBusy(dnsPort)) {
             fixTorProxyPort(lines, TOR_DNS_PORT, dnsPort);
         }
-        if (socksPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(socksPort))) {
+        if (socksPort.matches(NUMBER_REGEX) && checker.isPortBusy(socksPort)) {
             fixTorProxyPort(lines, TOR_SOCKS_PORT, socksPort);
         }
-        if (httpTunnelPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(httpTunnelPort))) {
+        if (httpTunnelPort.matches(NUMBER_REGEX) && checker.isPortBusy(httpTunnelPort)) {
             fixTorProxyPort(lines, TOR_HTTP_TUNNEL_PORT, httpTunnelPort);
         }
-        if (transPort.matches(NUMBER_REGEX) && !isPortAvailable(Integer.parseInt(transPort))) {
+        if (transPort.matches(NUMBER_REGEX) && checker.isPortBusy(transPort)) {
             fixTorProxyPort(lines, TOR_TRANS_PORT, transPort);
         }
 
     }
 
     private void fixTorProxyPort(List<String> lines, String proxyType, String proxyPort) {
-        String port = getFreePort(Integer.parseInt(proxyPort));
+        PortChecker checker = portChecker.get();
+        String port = checker.getFreePort(proxyPort);
 
         if (port.equals(proxyPort)) {
             return;
@@ -576,41 +579,6 @@ public class ModulesStarterHelper {
     private void checkModulesConfigPatches() {
         Patch patch = new Patch(context);
         patch.checkPatches(true);
-    }
-
-    private boolean isPortAvailable(int port) {
-        if (isTCPPortAvailable(port)) {
-            return isUDPPortAvailable(port);
-        }
-        return false;
-    }
-
-    private boolean isTCPPortAvailable(int port) {
-        try (Socket ignored = new Socket(LOOPBACK_ADDRESS, port)) {
-            return false;
-        } catch (ConnectException e) {
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private boolean isUDPPortAvailable(int port) {
-        try (DatagramSocket ignored = new DatagramSocket(port)) {
-            return true;
-        } catch (Exception ignored) {
-        }
-        return false;
-    }
-
-    private String getFreePort(int port) {
-        for (int i = 0; i < 3; i++) {
-            int freePort = port + i + 1;
-            if (isPortAvailable(freePort)) {
-                return String.valueOf(freePort);
-            }
-        }
-        return String.valueOf(port);
     }
 
 }
