@@ -2,8 +2,8 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.8.20'
-        dagger_version = '2.45'
+        kotlin_version = '1.9.0'
+        dagger_version = '2.47'
         multidex_version = "2.0.1"
     }
 
@@ -13,7 +13,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath 'com.android.tools.build:gradle:8.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
 
@@ -30,6 +30,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }
