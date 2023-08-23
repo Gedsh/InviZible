@@ -75,7 +75,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     val errorsLiveData: LiveData<String> get() = errorsMutableLiveData
 
     private val webTunnelBridgePattern by lazy {
-        Pattern.compile("^webtunnel +.+:(\\d+) +\\w+ +url=(http(s)?://[\\w./-]+)")
+        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.-]+)(?:/[\\w.-]+)*/?")
     }
 
     private val webTunnelBridgesMatcherMap by lazy { ConcurrentHashMap<Int, Int>() }
@@ -121,11 +121,16 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
                 val matcher = webTunnelBridgePattern.matcher(bridge.bridge)
                 if (matcher.find()) {
-                    val port = matcher.group(1) ?: continue
-                    val url = matcher.group(2) ?: continue
+                    val ipWithPort = matcher.group(1) ?: continue
+                    val domain = matcher.group(2) ?: continue
+                    val port = if (domain.startsWith("https")) {
+                        443
+                    } else {
+                        80
+                    }
 
                     val ips = try {
-                        dnsInteractor.resolveDomain(url, true, DNS_RESOLVE_TIMEOUT_SEC).toList()
+                        dnsInteractor.resolveDomain(domain, true, DNS_RESOLVE_TIMEOUT_SEC).toList()
                     } catch (ignored: Exception) {
                         emptyList()
                     }
@@ -139,8 +144,9 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                     } else {
                         "${ipsSorted.first()}:$port"
                     }
-                    bridgesToMeasure.add(address)
-                    webTunnelBridgesMatcherMap[address.hashCode()] =
+                    val bridgeLine = bridge.bridge.replace(ipWithPort, address)
+                    bridgesToMeasure.add(bridgeLine)
+                    webTunnelBridgesMatcherMap[bridgeLine.hashCode()] =
                         bridge.bridge.hashCode()
                 }
             }
