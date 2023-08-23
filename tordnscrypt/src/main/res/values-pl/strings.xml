@@ -62,7 +62,7 @@
     <string name="pref_fast_tor_autostart">"Uruchom Tor przy starcie systemu"</string>
     <string name="pref_fast_itpd_autostart">"Uruchom I2P przy starcie systemu"</string>
     <string name="pref_fast_autostart_delay">"Opoznij"</string>
-    <string name="pref_fast_autostart_delay_summ">"Uzyj opoznienia (w sek) tylko jesli autostart nie dziala prawidlowo"</string>
+    <string name="pref_fast_autostart_delay_summ">Użyj opóźnienia (w sekundach) tylko wtedy, gdy Autostart nie działa prawidłowo</string>
     <string name="pref_fast_dns_server">"Serwery DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"Wybierz serwery DNSCrypt"</string>
     <string name="pref_fast_tor">"Ustawienia Tora"</string>
@@ -140,7 +140,7 @@
     <string name="pref_common_restart_dnscrypt">"Prosze zrestartowac DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Prosze zrestartowac Tor"</string>
     <string name="pref_common_restart_itpd">"Prosze zrestartowac I2P"</string>
-    <string name="pref_common_use_iptables">"Wybierz Iptables"</string>
+    <string name="pref_common_use_iptables">Wybierz iptables</string>
     <string name="pref_common_log_root_commands">"Zapisz polecenia Roota w logu"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sa chronione. Nie ukrywaj!"</string>
     <string name="notification_temp_text">"Wykonywanie komend Root…"</string>
@@ -235,7 +235,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="pref_tor_clearnet">"Host lub IP ktory chcesz pominac"</string>
     <string name="pref_tor_unlock_edit">"Edytuj Host lub IP"</string>
     <string name="pref_tor_unlock_disabled">"Zablokowane"</string>
-    <string name="pref_tor_clean_module_folder">"Wyczysc folder modułu"</string>
+    <string name="pref_tor_clean_module_folder">Wyczyść pamięć podręczną</string>
     <string name="pref_routing_unlock_app">"Aplikacje laczace sie przez InviZible"</string>
     <string name="pref_routing_clearnet_app">"Aplikacje pomijajace InviZible"</string>
     <string name="country_select_select_all">"Zaznacz wszystko"</string>
@@ -285,7 +285,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="helper_tor_stopped">"Wyglada na to ze system android wylaczyl Tor. Twoje polaczenie z siecia zostalo przywrocone. Szprawdz ustawienia urzadzenia!"</string>
     <string name="helper_itpd_stopped">"Wyglada ze system android wylaczyl I2P. sprawdz ustawienia urzadzenia!"</string>
     <string name="helper_dnscrypt_no_internet">"Wyglada ze DNSCrypt NIE MOZE polaczyc sie z siecia."</string>
-    <string name="helper_tor_use_bridges">"Wyglada ze Tor NIE MOZE polaczyc sie z siecia. Twoj ISP moze blokowac polaczenie. Mozesz sprobowac uzyc mostka. Ustawienia w MENU -&gt; Szybkie ustawienia -&gt; Mostki"</string>
+    <string name="helper_tor_use_bridges">Wygląda na to, że Tor nie może połączyć się z Internetem. Dostawca usług internetowych może blokować połączenia z Torem. Możesz spróbować użyć mostów Tor. Można je znaleźć w MENU -&gt; Szybkie ustawienia -&gt; Mosty</string>
     <string name="action_mode_child_lock">"Child Lock"</string>
     <string name="action_mode_dialog_message_lock">"Mozesz zablokowac dostep do ustawien aplikacji. Wprowadz haslo lub uzyj poprzedniego."</string>
     <string name="action_mode_dialog_message_unlock">"Wprowadz haslo."</string>
@@ -336,8 +336,8 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="vpn_mode_error">"Błąd trybu VPN!"</string>
     <string name="vpn_tor_tether_summ">"Skonfiguruj użycie serwera proxy w ustawieniach podłączonego urządzenia. Wartości domyślne: IP:10.1.10.1 Port:8118"</string>
     <string name="main_fragment_hide_ip">"Ukryj adres IP za pomocą TOR"</string>
-    <string name="main_fragment_protect_dns">"Chron DNS za pomocą DNSCRYPT"</string>
-    <string name="main_fragment_access_i2p">" Dostep do stron I2P za pomocą Purple I2P"</string>
+    <string name="main_fragment_protect_dns">Ochrona DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Dostep do sieci I2P za pomocą Purple I2P</string>
     <string name="ask_force_close_title">"Uwaga"</string>
     <string name="ask_force_close_text">"Blad uruchomienia InviZible Pro %1$s! Sprawdz %2$s ustawienia lub sprobuj wymusic zamkniecie aplikacji w ustawieniach urzadzenia. Jesli brak poprawy, uruchom urzadzenie ponownie."</string>
     <string name="ask_force_close_btn">"Wymus zamkniecie"</string>
@@ -503,4 +503,17 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
+    <string name="agreement_text">\\ Dziękujemy za wybranie InviZible Pro. Mamy nadzieję, że przysłuży się on Twojej prywatności i umożliwi wygodneg korzystanie z Internetu.
+\n
+\n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
+\n
+\n\tInviZible Pro może używać roota, jeśli twoje urządzenie ma takie uprawnienia, lub używać lokalnej sieci VPN do dostarczania ruchu internetowego do sieci Tor, DNSCrypt i I2P.
+\n
+\n\tPolityka prywatności:
+\n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych lub wrażliwych danych użytkownika.
+\n
+\n\tCopyright © 2019-2023
+\n\tGarmatin Oleksandr
+\n\tinvizible.soft@gmail.com
+\n\tinvizible.net/en/privacy</string>
 </resources>
