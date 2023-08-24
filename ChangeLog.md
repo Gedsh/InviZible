@@ -956,3 +956,10 @@
 **InviZible Pro beta 1.9.5**
 * Updated DNSCrypt to version 2.1.5.
 * Added support for the Tor WebTunnel bridge.
+
+**InviZible Pro beta 1.9.6**
+* Improved Tor WebTunnel bridge censorship resistance.
+* Improved Tor Snowflake bridge connection stability.
+* Fixed adding meek_lite bridges with utls option.
+* Fixed display of ping and country for some WebTunnel bridges.
+* Optimized memory usage.
