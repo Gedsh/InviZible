@@ -79,7 +79,7 @@ object Utils {
         return false
     }
 
-    fun collectInfo(): String {
+    fun collectInfo(appSign: String): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return "BRAND " + Build.BRAND + 10.toChar() +
                     "MODEL " + Build.MODEL + 10.toChar() +
@@ -92,6 +92,7 @@ object Utils {
                     "SUPPORTED_32_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS) + 10.toChar() +
                     "SUPPORTED_64_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS) + 10.toChar() +
                     "SDK_INT " + Build.VERSION.SDK_INT + 10.toChar() +
+                    "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + 10.toChar() +
@@ -100,7 +101,7 @@ object Utils {
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + 10.toChar() +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + 10.toChar() +
                     "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + 10.toChar() +
-                    "SIGN_VERSION " + TopFragment.appSign
+                    "SIGN_VERSION " + appSign
         } else {
             return "BRAND " + Build.BRAND + 10.toChar() +
                     "MODEL " + Build.MODEL + 10.toChar() +
@@ -110,6 +111,7 @@ object Utils {
                     "BOARD " + Build.BOARD + 10.toChar() +
                     "HARDWARE " + Build.HARDWARE + 10.toChar() +
                     "SDK_INT " + Build.VERSION.SDK_INT + 10.toChar() +
+                    "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
                     "APP_PROC_VERSION " + TopFragment.appProcVersion + 10.toChar() +
@@ -118,7 +120,7 @@ object Utils {
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + 10.toChar() +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + 10.toChar() +
                     "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + 10.toChar() +
-                    "SIGN_VERSION " + TopFragment.appSign
+                    "SIGN_VERSION " + appSign
         }
     }
 }

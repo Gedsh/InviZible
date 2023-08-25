@@ -63,6 +63,7 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -84,6 +85,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Verifier> verifier;
 
     private TextView tvLogsPath;
     private EditText etLogsPath;
@@ -183,7 +186,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 return;
             }
 
-            info = Utils.INSTANCE.collectInfo();
+            try {
+                info = Utils.INSTANCE.collectInfo(verifier.get().getAppSignature());
+            } catch (Exception ignored) {
+            }
             br.setInfo(info);
 
             dialogFragment = PleaseWaitProgressDialog.getInstance();

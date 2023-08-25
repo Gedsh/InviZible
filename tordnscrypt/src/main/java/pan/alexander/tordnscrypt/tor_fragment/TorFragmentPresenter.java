@@ -59,7 +59,6 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -85,6 +84,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public Lazy<TorInteractorInterface> torInteractor;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
 
     public TorFragmentView view;
 
@@ -584,10 +585,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             }
 
             try {
-                Verifier verifier = new Verifier(activity);
-                String appSign = verifier.getApkSignatureZip();
+                Verifier verifier = verifierLazy.get();
+                String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, context.getString(R.string.verifier_error), "15");
                     if (notificationHelper != null) {

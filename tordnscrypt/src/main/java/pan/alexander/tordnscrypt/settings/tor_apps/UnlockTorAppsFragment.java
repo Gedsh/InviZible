@@ -35,7 +35,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -47,7 +46,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -67,8 +65,6 @@ import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appSign;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS;
@@ -112,6 +108,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<Handler> handler;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
 
 
     public UnlockTorAppsFragment() {
@@ -203,9 +201,10 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         cachedExecutor.submit(() -> {
             try {
-                Verifier verifier = new Verifier(context);
+                Verifier verifier = verifierLazy.get();
+                String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "11");
                     if (notificationHelper != null && isAdded()) {

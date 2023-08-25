@@ -121,8 +121,6 @@ public class TopFragment extends Fragment {
 
     public static boolean debug = false;
     public static String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
-    public static String wrongSign;
-    public static String appSign;
 
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -146,6 +144,8 @@ public class TopFragment extends Fragment {
     public Lazy<NotificationPermissionManager> notificationPermissionManager;
     @Inject
     public ViewModelProvider.Factory viewModelFactory;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
 
     private TopFragmentViewModel viewModel;
 
@@ -397,11 +397,11 @@ public class TopFragment extends Fragment {
 
     private void checkIntegrity(Activity activity) {
         try {
-            Verifier verifier = new Verifier(activity);
-            appSign = verifier.getApkSignatureZip();
+            Verifier verifier = verifierLazy.get();
+            String appSign = verifier.getAppSignature();
             String appSignAlt = verifier.getApkSignature();
             verifier.encryptStr(TOP_BROADCAST, appSign, appSignAlt);
-            wrongSign = getString(R.string.encoded).trim();
+            String wrongSign = verifier.getWrongSign();
             if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                 if (isAdded() && !isStateSaved()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -803,7 +803,10 @@ public class TopFragment extends Fragment {
 
         try {
             UpdateCheck updateCheck = new UpdateCheck(this);
-            updateCheckTask = updateCheck.requestUpdateData("https://invizible.net", appSign);
+            updateCheckTask = updateCheck.requestUpdateData(
+                    "https://invizible.net",
+                    verifierLazy.get().getAppSignature()
+            );
             if (showProgressDialog && !isStateSaved()) {
                 checkUpdatesDialog = new CheckUpdatesDialog();
                 checkUpdatesDialog.setCheckUpdatesTask(updateCheckTask);
