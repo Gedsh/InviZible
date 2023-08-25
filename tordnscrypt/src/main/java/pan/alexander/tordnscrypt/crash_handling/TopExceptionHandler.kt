@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.crash_handling
 import android.content.SharedPreferences
 import android.util.Log
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import kotlin.system.exitProcess
 
 class TopExceptionHandler(
     private val sharedPreferences: SharedPreferences
@@ -56,7 +57,7 @@ class TopExceptionHandler(
 
         saveReport(report)
 
-        defaultUEH?.uncaughtException(t, e)
+        defaultUEH?.uncaughtException(t, e) ?: exitProcess(2)
     }
 
     private fun saveReport(report: String) {

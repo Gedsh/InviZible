@@ -148,6 +148,9 @@ class App : Application() {
     }
 
     private fun setExceptionHandler() {
+        if (Thread.getDefaultUncaughtExceptionHandler() is TopExceptionHandler) {
+            return
+        }
         Thread.setDefaultUncaughtExceptionHandler(
             TopExceptionHandler(
                 getSharedPreferences(
