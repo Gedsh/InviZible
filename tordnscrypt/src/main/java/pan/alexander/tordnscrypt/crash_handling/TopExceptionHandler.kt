@@ -25,10 +25,9 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import kotlin.system.exitProcess
 
 class TopExceptionHandler(
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val defaultExceptionHandler: Thread.UncaughtExceptionHandler?
 ) : Thread.UncaughtExceptionHandler {
-
-    private val defaultUEH = Thread.getDefaultUncaughtExceptionHandler()
 
     override fun uncaughtException(t: Thread, e: Throwable) {
 
@@ -57,7 +56,7 @@ class TopExceptionHandler(
 
         saveReport(report)
 
-        defaultUEH?.uncaughtException(t, e) ?: exitProcess(2)
+        defaultExceptionHandler?.uncaughtException(t, e) ?: exitProcess(2)
     }
 
     private fun saveReport(report: String) {
