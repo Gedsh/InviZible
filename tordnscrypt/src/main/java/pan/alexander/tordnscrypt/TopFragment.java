@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
-import pan.alexander.tordnscrypt.dialogs.AskForceClose;
+import pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
@@ -73,6 +73,7 @@ import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
+import pan.alexander.tordnscrypt.utils.enums.ModuleName;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.dialogs.Registration;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -83,6 +84,7 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionDialog
 import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManager;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.MODULE_NAME_ARG;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
@@ -146,6 +148,8 @@ public class TopFragment extends Fragment {
     public ViewModelProvider.Factory viewModelFactory;
     @Inject
     public Lazy<Verifier> verifierLazy;
+    @Inject
+    public Lazy<AskRestoreDefaultsDialog> askRestoreDefaultsDialog;
 
     private TopFragmentViewModel viewModel;
 
@@ -921,9 +925,13 @@ public class TopFragment extends Fragment {
         if (intent.getAction().equals(UpdateService.UPDATE_RESULT)) {
             showUpdateResultMessage(activity);
             refreshModulesVersions(activity);
-        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
-            DialogFragment dialogFragment = AskForceClose.getInstance(intent.getStringExtra(ModulesStarterHelper.MODULE_NAME));
-            dialogFragment.show(getParentFragmentManager(), "AskForceClose");
+        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_RESTORE_DEFAULTS)) {
+            DialogFragment dialog = askRestoreDefaultsDialog.get();
+            Bundle args = new Bundle();
+            ModuleName name = (ModuleName) intent.getSerializableExtra(ModulesStarterHelper.MODULE_NAME);
+            args.putSerializable(MODULE_NAME_ARG, name);
+            dialog.setArguments(args);
+            dialog.show(getChildFragmentManager(), "AskRestoreDefaults");
         }
     }
 
@@ -938,7 +946,7 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        if (!action.equals(UpdateService.UPDATE_RESULT) && !action.equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
+        if (!action.equals(UpdateService.UPDATE_RESULT) && !action.equals(ModulesStarterHelper.ASK_RESTORE_DEFAULTS)) {
             return false;
         }
 
@@ -959,7 +967,7 @@ public class TopFragment extends Fragment {
         };
 
         IntentFilter intentFilterUpdate = new IntentFilter(UpdateService.UPDATE_RESULT);
-        IntentFilter intentFilterForceClose = new IntentFilter(ModulesStarterHelper.ASK_FORCE_CLOSE);
+        IntentFilter intentFilterForceClose = new IntentFilter(ModulesStarterHelper.ASK_RESTORE_DEFAULTS);
         LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterUpdate);
         LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterForceClose);
     }

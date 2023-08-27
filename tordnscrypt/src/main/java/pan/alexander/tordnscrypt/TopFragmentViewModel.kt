@@ -29,7 +29,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import pan.alexander.tordnscrypt.backup.ResetModuleHelper
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.utils.enums.ModuleName
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
 import javax.inject.Named
@@ -38,7 +40,8 @@ private const val CHECK_ROOT_TIMEOUT_SEC = 5
 
 class TopFragmentViewModel @Inject constructor(
     @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher
+    private val dispatcherIo: CoroutineDispatcher,
+    private val resetModuleHelper: dagger.Lazy<ResetModuleHelper>
 ): ViewModel() {
 
     private val rootStateMutableLiveData = MutableLiveData<RootState>()
@@ -98,6 +101,16 @@ class TopFragmentViewModel @Inject constructor(
         } else {
             rootCheckResultSuccess = true
             rootStateMutableLiveData.postValue(RootState.RootNotAvailable)
+        }
+    }
+
+    fun resetModuleSettings(moduleName: ModuleName) {
+        viewModelScope.launch(dispatcherIo) {
+            try {
+                resetModuleHelper.get().resetModuleSettings(moduleName)
+            } catch (e: Exception) {
+                loge("TopFragmentViewModel resetModuleSettings", e)
+            }
         }
     }
 }

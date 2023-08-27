@@ -351,10 +351,7 @@
     <string name="main_fragment_hide_ip">"Masquer l'IP avec TOR"</string>
     <string name="main_fragment_protect_dns">"Protection du DNS avec DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Accès aux sites I2P avec Purple I2P"</string>
-    <string name="ask_force_close_title">"Attention"</string>
-    <string name="ask_force_close_text">"InviZible Pro ne peut pas démarrer %1$s! Veuillez vérifier les paramètres de %2$s ou essayer de forcer la fermeture de l'application.
-         Si cela ne résout pas le problème, veuillez redémarrer votre appareil."</string>
-    <string name="ask_force_close_btn">"Forcer la fermeture"</string>
+    <string name="reset_settings_title">"Attention"</string>
     <string name="add_custom_server_title">"Ajouter un serveur personnalisé"</string>
     <string name="add_custom_server_error">"Configuration du serveur personnalisée non valide. Veuillez vérifier le champ SDNS."</string>
     <string name="pending_purchase">"Veuillez noter que vous avez un achat en attente:"</string>

@@ -341,9 +341,7 @@
     <string name="main_fragment_hide_ip">"使用 TOR 隐藏 IP"</string>
     <string name="main_fragment_protect_dns">"使用 DNSCRYPT 保护 DNS"</string>
     <string name="main_fragment_access_i2p">"使用 Purple I2P 访问 I2P 站点"</string>
-    <string name="ask_force_close_title">"注意"</string>
-    <string name="ask_force_close_text">"InviZible Pro 无法启动 %1$s！请检查 %2$s 设置或尝试强制关闭应用。 如果不起作用，请重启您的设备。"</string>
-    <string name="ask_force_close_btn">"强制关闭"</string>
+    <string name="reset_settings_title">"注意"</string>
     <string name="add_custom_server_title">"添加自定义服务器"</string>
     <string name="add_custom_server_error">"无效自定义服务器配置。请检查 SDNS 字段。"</string>
     <string name="pending_purchase">"请注意您有一个待完成的购买："</string>

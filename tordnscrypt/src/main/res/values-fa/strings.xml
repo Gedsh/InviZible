@@ -362,10 +362,7 @@
     <string name="main_fragment_hide_ip">"پنهان‌سازی IP توسط TOR"</string>
     <string name="main_fragment_protect_dns">"حفاظت از DNS توسط DNSCrypt"</string>
     <string name="main_fragment_access_i2p">"دسترسی به سایت‌های I2P توسط Purple I2P"</string>
-    <string name="ask_force_close_title">"توجه"</string>
-    <string name="ask_force_close_text">"اپلیکیشن InviZible Pro نمی‌تواند اجرا شود%2$s! لطفاً تنظیمات %1$s را بررسی نمایید و یا سعی نمایید برنامه را به‌صورت اجباری ببندید.
-اگر این موارد پاسخگو نبودند، لطفاً دستگاه خود را مجدداً راه‌اندازی نمایید."</string>
-    <string name="ask_force_close_btn">"بستن اجباری"</string>
+    <string name="reset_settings_title">"توجه"</string>
     <string name="add_custom_server_title">"افزودن سرور سفارشی"</string>
     <string name="add_custom_server_error">"تنظیمات سرور سفارشی نامعتبر است. لطفاً قسمت SDNS را بررسی نمایید."</string>
     <string name="pending_purchase">"لطفاً توجه نمایید که شما یک خرید در حالت انتظار دارید:"</string>

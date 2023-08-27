@@ -338,9 +338,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="main_fragment_hide_ip">"TorでIPを隠す"</string>
     <string name="main_fragment_protect_dns">"DNSCryptでDNSを保護する"</string>
     <string name="main_fragment_access_i2p">"Purple I2Pでeepsitesにアクセスする"</string>
-    <string name="ask_force_close_title">"警告"</string>
-    <string name="ask_force_close_text">"Invizible Proは %1$s を開始できませんでした。 %2$s の設定を確認するか、このアプリを強制終了して再度お試しください。それでも解決しない場合、端末を再起動してみてください。"</string>
-    <string name="ask_force_close_btn">"強制終了"</string>
+    <string name="reset_settings_title">"警告"</string>
     <string name="add_custom_server_title">"カスタムサーバーを追加"</string>
     <string name="add_custom_server_error">"カスタムサーバー設定が無効です。SDNSの項目をご確認ください。"</string>
     <string name="pending_purchase">"Please note that you have a pending purchase:"</string>

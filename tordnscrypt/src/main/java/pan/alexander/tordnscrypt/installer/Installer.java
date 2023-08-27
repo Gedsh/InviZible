@@ -73,6 +73,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<ModulesVersions> modulesVersions;
+    @Inject
+    public Lazy<InstallerHelper> installerHelper;
 
     private Activity activity;
     private MainActivity mainActivity;
@@ -371,55 +373,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                     && activity.getText(R.string.package_name).toString().contains(".gp")
                     && path.contains("dnscrypt-proxy.toml")
                     && !PathVars.isModulesInstalled(preferenceRepository.get())) {
-                lines = prepareDNSCryptForGP(lines);
+                lines = installerHelper.get().prepareDNSCryptForGP(lines);
             }
 
             FileManager.writeTextFileSynchronous(activity, path, lines);
         } else {
             throw new IllegalStateException("correctAppDir readTextFile return null " + path);
         }
-    }
-
-    @SuppressLint("SdCardPath")
-    private List<String> prepareDNSCryptForGP(List<String> lines) {
-
-        defaultPreferences.get().edit().putBoolean("require_nofilter", true).apply();
-
-        ArrayList<String> prepared = new ArrayList<>();
-
-        for (String line : lines) {
-
-            if (line.contains("blacklist_file")) {
-                line = "";
-            } else if (line.contains("whitelist_file")) {
-                line = "";
-            } else if (line.contains("blocked_names_file")) {
-                line = "";
-            } else if (line.contains("blocked_ips_file")) {
-                line = "";
-            } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
-                line = "";
-            } else if (line.matches("(^| )server_names([ =]).+")) {
-                line = "server_names = ['uncensoreddns-dk-ipv4', " +
-                        "'njalla-doh', " +
-                        "'faelix-ch-ipv4', " +
-                        "'dns.digitale-gesellschaft.ch', " +
-                        "'dnscrypt.ca-1', " +
-                        "'sth-doh-se', " +
-                        "'libredns', " +
-                        "'dnswarden-uncensor-dc-swiss', " +
-                        "'publicarray-au-doh', " +
-                        "'scaleway-fr']";
-            } else if (line.contains("require_nofilter")) {
-                line = "require_nofilter = true";
-            }
-
-            if (!line.isEmpty()) {
-                prepared.add(line);
-            }
-        }
-
-        return prepared;
     }
 
     protected void stopAllRunningModulesWithRootCommand() {

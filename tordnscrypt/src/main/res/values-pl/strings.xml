@@ -338,9 +338,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="main_fragment_hide_ip">"Ukryj adres IP za pomocą TOR"</string>
     <string name="main_fragment_protect_dns">"Chron DNS za pomocą DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">" Dostep do stron I2P za pomocą Purple I2P"</string>
-    <string name="ask_force_close_title">"Uwaga"</string>
-    <string name="ask_force_close_text">"Blad uruchomienia InviZible Pro %1$s! Sprawdz %2$s ustawienia lub sprobuj wymusic zamkniecie aplikacji w ustawieniach urzadzenia. Jesli brak poprawy, uruchom urzadzenie ponownie."</string>
-    <string name="ask_force_close_btn">"Wymus zamkniecie"</string>
+    <string name="reset_settings_title">"Uwaga"</string>
     <string name="add_custom_server_title">"Dodaj serwer"</string>
     <string name="add_custom_server_error">"Niepoprawna niestandardowa konfiguracja serwera. Sprawdź pole SDNS."</string>
     <string name="pending_purchase">"Pamiataj, ze masz oczekujacy zakup:"</string>

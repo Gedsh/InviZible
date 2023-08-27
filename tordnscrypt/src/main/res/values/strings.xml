@@ -656,10 +656,10 @@
     <string name="main_fragment_protect_dns">Defend with DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Access to I2P network with Purple I2P</string>
 
-    <string name="ask_force_close_title">Attention</string>
-    <string name="ask_force_close_text">InviZible Pro cannot start %1$s! Please check %2$s settings or try to Force Close the application.
+    <string name="reset_settings_title">Attention</string>
+    <string name="ask_reset_settings_btn">Reset</string>
+    <string name="ask_reset_settings_text">InviZible Pro cannot start %1$s! Please try resetting %2$s settings.
         If this does not help, please reboot your device.</string>
-    <string name="ask_force_close_btn">Force close</string>
 
     <string name="add_custom_server_title">Add custom server</string>
     <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>

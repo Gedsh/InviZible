@@ -351,10 +351,7 @@ Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation
     <string name="main_fragment_hide_ip">"Verstecke deine IP mit TOR"</string>
     <string name="main_fragment_protect_dns">"Schütze DNS mit DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Zugang zu I2P Seiten mit Purple I2P"</string>
-    <string name="ask_force_close_title">"Achtung"</string>
-    <string name="ask_force_close_text">"InviZible Pro kann nicht starten %1$s! Bitte überprüfe %2$s Einstellungen oder versuche die App manuell zu beenden.
-Falls das nicht helfen sollte, starte dein Gerät bitte neu."</string>
-    <string name="ask_force_close_btn">"Erzwinge Beenden"</string>
+    <string name="reset_settings_title">"Achtung"</string>
     <string name="add_custom_server_title">"Eigenen Server hinzufügen"</string>
     <string name="add_custom_server_error">"Ungültige Server Konfiguration. Bitte überprüfe das SDNS Feld."</string>
     <string name="pending_purchase">"Bitte beachte, dass du momentan bereits einen Einkauf getätigt hast:"</string>

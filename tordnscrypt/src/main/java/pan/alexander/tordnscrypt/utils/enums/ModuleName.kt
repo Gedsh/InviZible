@@ -17,23 +17,10 @@
     Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.installer;
+package pan.alexander.tordnscrypt.utils.enums
 
-import android.content.Context;
-
-import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
-
-public class ITPDExtractCommand extends AssetsExtractCommand {
-    private final String appDataDir;
-
-    public ITPDExtractCommand(Context context, String appDataDir) {
-        super(context);
-        this.appDataDir = appDataDir;
-    }
-
-    @Override
-    public void execute() throws Exception {
-        ZipFileManager zipFileManager = new ZipFileManager();
-        zipFileManager.extractZipFromInputStream(assets.open("itpd.mp3"), appDataDir);
-    }
+enum class ModuleName(val moduleName: String) {
+    DNSCRYPT_MODULE("DNSCrypt"),
+    TOR_MODULE("Tor"),
+    ITPD_MODULE("I2P")
 }

@@ -340,9 +340,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="main_fragment_hide_ip">"Ocultar IP con TOR"</string>
     <string name="main_fragment_protect_dns">"Proteger DNS con DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Acceso a sitios I2P con I2Pd"</string>
-    <string name="ask_force_close_title">"Atención"</string>
-    <string name="ask_force_close_text">"¡InviZible Pro no puede arrancar %1$s! Por favor, comprueba la configuración de %2$s o intenta un Cierre Forzado de la aplicación. Si esto no ayuda, por favor, reinicia tu dispositivo."</string>
-    <string name="ask_force_close_btn">"Forzar Cierre"</string>
+    <string name="reset_settings_title">"Atención"</string>
     <string name="add_custom_server_title">"Añadir servidor personalizado"</string>
     <string name="add_custom_server_error">"Configuración del servidor personalizado erronea. Por favor, comprueba el campo SDNS."</string>
     <string name="pending_purchase">"Te recordamos que tienes pendiente una compra incompleta:"</string>

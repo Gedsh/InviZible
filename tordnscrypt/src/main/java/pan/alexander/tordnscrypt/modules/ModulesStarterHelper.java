@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.enums.ModuleName;
 import pan.alexander.tordnscrypt.utils.portchecker.PortChecker;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -75,7 +76,7 @@ import javax.inject.Named;
 
 public class ModulesStarterHelper {
 
-    public final static String ASK_FORCE_CLOSE = "pan.alexander.tordnscrypt.AskForceClose";
+    public final static String ASK_RESTORE_DEFAULTS = "pan.alexander.tordnscrypt.AskRestoreDefaults";
     public final static String MODULE_NAME = "pan.alexander.tordnscrypt.ModuleName";
 
     @Inject
@@ -180,7 +181,7 @@ public class ModulesStarterHelper {
 
                     checkModulesConfigPatches();
 
-                    sendAskForceCloseBroadcast(context, "DNSCrypt");
+                    sendAskRestoreDefaults(context, ModuleName.DNSCRYPT_MODULE);
                 }
 
                 loge("Error DNSCrypt: "
@@ -277,7 +278,7 @@ public class ModulesStarterHelper {
 
                     checkModulesConfigPatches();
 
-                    sendAskForceCloseBroadcast(context, "Tor");
+                    sendAskRestoreDefaults(context, ModuleName.TOR_MODULE);
 
                     //Try to update Selinux context and UID once again
                     if (shellResult.exitCode == 1 && modulesStatus.isRootAvailable()) {
@@ -369,7 +370,7 @@ public class ModulesStarterHelper {
 
                     checkModulesConfigPatches();
 
-                    sendAskForceCloseBroadcast(context, "I2P");
+                    sendAskRestoreDefaults(context, ModuleName.ITPD_MODULE);
                 }
 
                 loge("Error ITPD: " + shellResult.exitCode + " ERR="
@@ -569,8 +570,8 @@ public class ModulesStarterHelper {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    private void sendAskForceCloseBroadcast(Context context, String module) {
-        Intent intent = new Intent(ASK_FORCE_CLOSE);
+    private void sendAskRestoreDefaults(Context context, ModuleName module) {
+        Intent intent = new Intent(ASK_RESTORE_DEFAULTS);
         intent.putExtra("Mark", TOP_FRAGMENT_MARK);
         intent.putExtra(MODULE_NAME, module);
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);

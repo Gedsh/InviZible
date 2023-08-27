@@ -356,9 +356,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="main_fragment_hide_ip">"Ocultar IP com TOR"</string>
     <string name="main_fragment_protect_dns">"Proteger DNS com DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Acessar sites com I2P"</string>
-    <string name="ask_force_close_title">"Atenção"</string>
-    <string name="ask_force_close_text">"InviZible Pro não pode iniciar %1$s! Verifique as configurações de %2$s ou tente forçar o fechamento do aplicativo. Se isso não ajudar, reinicie seu dispositivo."</string>
-    <string name="ask_force_close_btn">"Força o fechamennto"</string>
+    <string name="reset_settings_title">"Atenção"</string>
     <string name="add_custom_server_title">"Adicionar servidor customizado"</string>
     <string name="add_custom_server_error">"Configuração de servidor personalizado inválida. Verifique o campo SDNS."</string>
     <string name="pending_purchase">"Observe que você tem uma compra pendente:"</string>
