@@ -82,7 +82,7 @@ class InstalledApplicationsManager private constructor(
         try {
 
             if (multiUserSupport) {
-                allowInteractAcrossUsersPermissionIfRequired(context)
+                allowInteractAcrossUsersPermissionIfRequired(context, pathVars)
             }
 
             reentrantLock.lockInterruptibly()
@@ -258,6 +258,8 @@ class InstalledApplicationsManager private constructor(
                     }
                 }
             }
+        } catch (ignored: PackageManager.NameNotFoundException) {
+            useInternet = true
         } catch (e: Exception) {
             useInternet = true
             logw("InstalledApplications isAppUseInternet", e)
