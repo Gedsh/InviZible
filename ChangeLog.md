@@ -963,3 +963,8 @@
 * Fixed adding meek_lite bridges with utls option.
 * Fixed display of ping and country for some WebTunnel bridges.
 * Optimized memory usage.
+
+**InviZible Pro beta 1.9.7**
+* Updated Tor to version 4.8.4.
+* Added a suggestion to reset the module settings in case of a startup failure.
+* Fixes and optimizations.
