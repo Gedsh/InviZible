@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.util.Base64;
-import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -52,8 +51,8 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 
 @Singleton
@@ -94,7 +93,9 @@ public class Verifier {
             }
         }
 
-        return null;
+        loge("Verifier unable to get signature from zip. Use the conventional method instead.");
+
+        return getApkSignature();
     }
 
     @SuppressWarnings("unused")
@@ -143,7 +144,7 @@ public class Verifier {
         byte[] ivBytes = vector.substring(vector.length() - 16).getBytes();
         cipher.init(Cipher.DECRYPT_MODE, aesKey, new IvParameterSpec(ivBytes));
         byte[] decrypted = Base64.decode(text.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
-        if (appVersion.endsWith("d")) {
+        if (pathVars.get().getAppVersion().endsWith("d")) {
             return new String(decrypted);
         }
         return new String(cipher.doFinal(decrypted));
@@ -166,9 +167,9 @@ public class Verifier {
                 File f = new File(pathVars.get().getAppDataDir() + "/logs");
 
                 if (f.mkdirs() && f.setReadable(true) && f.setWritable(true)) {
-                    Log.i(LOG_TAG, "encryptStr log dir created");
+                    logi("encryptStr log dir created");
                 } else {
-                    Log.e(LOG_TAG, "encryptStr Unable to create and chmod log dir");
+                    loge("encryptStr Unable to create and chmod log dir");
                 }
 
                 PrintWriter writer = new PrintWriter(
@@ -186,7 +187,7 @@ public class Verifier {
 
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "encryptStr Failed " + e.getMessage() + " " + e.getCause());
+            loge("encryptStr Failed", e);
         }
     }
 

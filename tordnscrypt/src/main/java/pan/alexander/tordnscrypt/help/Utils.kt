@@ -79,7 +79,7 @@ object Utils {
         return false
     }
 
-    fun collectInfo(appSign: String): String {
+    fun collectInfo(appSign: String, appVersion: String, appProcVersion: String): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return "BRAND " + Build.BRAND + 10.toChar() +
                     "MODEL " + Build.MODEL + 10.toChar() +
@@ -95,9 +95,9 @@ object Utils {
                     "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
-                    "APP_PROC_VERSION " + TopFragment.appProcVersion + 10.toChar() +
+                    "APP_PROC_VERSION " + appProcVersion + 10.toChar() +
                     "CAN_FILTER " + VpnUtils.canFilter() + 10.toChar() +
-                    "APP_VERSION " + TopFragment.appVersion + 10.toChar() +
+                    "APP_VERSION " + appVersion + 10.toChar() +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + 10.toChar() +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + 10.toChar() +
                     "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + 10.toChar() +
@@ -114,9 +114,9 @@ object Utils {
                     "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
-                    "APP_PROC_VERSION " + TopFragment.appProcVersion + 10.toChar() +
+                    "APP_PROC_VERSION " + appProcVersion + 10.toChar() +
                     "CAN_FILTER " + VpnUtils.canFilter() + 10.toChar() +
-                    "APP_VERSION " + TopFragment.appVersion + 10.toChar() +
+                    "APP_VERSION " + appVersion + 10.toChar() +
                     "DNSCRYPT_INTERNAL_VERSION " + TopFragment.DNSCryptVersion + 10.toChar() +
                     "TOR_INTERNAL_VERSION " + TopFragment.TorVersion + 10.toChar() +
                     "I2PD_INTERNAL_VERSION " + TopFragment.ITPDVersion + 10.toChar() +

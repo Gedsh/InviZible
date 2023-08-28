@@ -87,7 +87,6 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
@@ -375,14 +374,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     clientTransportPlugin = snowflakeConfigurator.get().getConfiguration();
                 } else if (currentBridgesType.equals(conjure)) {
                     String saveLogsString = "";
-                    if (appVersion.equals("beta")) {
+                    if (pathVars.get().getAppVersion().equals("beta")) {
                         saveLogsString = " -log " + appDataDir + "/logs/Conjure.log";
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + conjurePath + saveLogsString;
                 } else if (currentBridgesType.equals(webtunnel)) {
                     String saveLogsString = "";
-                    if (appVersion.equals("beta")) {
+                    if (pathVars.get().getAppVersion().equals("beta")) {
                         saveLogsString = " -log " + appDataDir + "/logs/WebTunnel.log";
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "

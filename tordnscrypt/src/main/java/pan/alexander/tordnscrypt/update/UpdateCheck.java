@@ -51,10 +51,11 @@ import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.web.HttpsConnectionManager;
 
-import static pan.alexander.tordnscrypt.TopFragment.appProcVersion;
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.dialogs.Registration.wrongRegistrationCode;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -65,14 +66,20 @@ public class UpdateCheck {
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<HttpsConnectionManager> httpsConnectionManager;
+    @Inject
+    public Lazy<Verifier> verifier;
+    @Inject
+    public Lazy<CachedExecutor> cachedExecutor;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private static final int CONNECT_TIMEOUT = 30;
     private static final int READ_TIMEOUT = 30;
 
     private final TopFragment topFragment;
     private final Context context;
-    private static PublicKey publicKey;
-    private static PrivateKey privateKey;
+    private volatile static PublicKey publicKey;
+    private volatile static PrivateKey privateKey;
 
     public UpdateCheck(TopFragment topFragment) {
         App.getInstance().getDaggerComponent().inject(this);
@@ -130,8 +137,8 @@ public class UpdateCheck {
 
             String signature = appSignature.trim() +
                     convertKeyForPHP(publicKey.getEncoded()).trim() +
-                    appProcVersion.trim() +
-                    appVersion.trim() +
+                    pathVars.get().getAppProcVersion().trim() +
+                    pathVars.get().getAppVersion().trim() +
                     "submit";
 
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -154,13 +161,13 @@ public class UpdateCheck {
 
 
     private void compareVersions(String serverAnswer) {
-        if (!serverAnswer.toLowerCase().contains(appProcVersion.toLowerCase())) {
+        if (!serverAnswer.toLowerCase().contains(pathVars.get().getAppProcVersion().toLowerCase())) {
             showUpdateMessageAndSaveResult(R.string.update_fault);
             loge("compareVersions function fault " + serverAnswer);
             return;
         }
 
-        serverAnswer = serverAnswer.toLowerCase().replace(appProcVersion.toLowerCase(), "").trim();
+        serverAnswer = serverAnswer.toLowerCase().replace(pathVars.get().getAppProcVersion().toLowerCase(), "").trim();
         String[] modulesArr = serverAnswer.split(";");
         if (modulesArr.length < 1) {
             showUpdateMessageAndSaveResult(R.string.update_fault);
@@ -202,11 +209,11 @@ public class UpdateCheck {
         int currentIPROversion = Integer.parseInt(BuildConfig.VERSION_NAME.replaceAll("\\D+", ""));
 
         if (currentIPROversion < Integer.parseInt(iproArr[1].replaceAll("\\D+", ""))
-                || appVersion.startsWith("l")) {
+                || pathVars.get().getAppVersion().startsWith("l")) {
             String message;
-            if (appVersion.endsWith("e")) {
+            if (pathVars.get().getAppVersion().endsWith("e")) {
                 message = activity.getString(R.string.thanks_for_donate);
-                appVersion = "pfrzo".replace("f", "").replace("z", "");
+                pathVars.get().setAppVersion(this, "pfrzo".replace("f", "").replace("z", ""));
 
                 SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(activity);
                 SharedPreferences.Editor editor = sPref.edit();
@@ -216,7 +223,7 @@ public class UpdateCheck {
                 message = activity.getString(R.string.update_ipro_has_apdate) + " "
                         + activity.getString(R.string.update_new_version) + " " + iproArr[1];
             }
-            String iproName = "InviZible_" + appVersion.toUpperCase() + "_ver." + iproArr[1] + "_" + appProcVersion + ".apk";
+            String iproName = "InviZible_" + pathVars.get().getAppVersion().toUpperCase() + "_ver." + iproArr[1] + "_" + pathVars.get().getAppProcVersion() + ".apk";
             String iproUpdateStr = iproArr[2];
             String iproHash = iproArr[3];
 
@@ -234,17 +241,17 @@ public class UpdateCheck {
         return Base64.encodeToString(key, Base64.DEFAULT);
     }
 
-    public synchronized Future<?> requestUpdateData(final String domainName, final String appSign) {
-        if (appVersion.endsWith("p") || appVersion.startsWith("f")) {
+    public synchronized Future<?> requestUpdateData(final String domainName) {
+        if (pathVars.get().getAppVersion().endsWith("p") || pathVars.get().getAppVersion().startsWith("f")) {
             return null;
         }
 
-        return App.getInstance().getDaggerComponent().getCachedExecutor().submit(() -> {
+        return cachedExecutor.get().submit(() -> {
             String serverAnswerEncoded = "";
             String serverAnswer = "";
 
             try {
-                String rsaSign = RSASign(appSign);
+                String rsaSign = RSASign(verifier.get().getAppSignature());
 
                 if (rsaSign == null) {
                     showUpdateMessageAndSaveResult(R.string.update_fault);
@@ -257,8 +264,8 @@ public class UpdateCheck {
                 HashMap<String, String> request = new HashMap<>();
                 request.put("sign", rsaSign);
                 request.put("key", convertKeyForPHP(publicKey.getEncoded()));
-                request.put("app_proc_version", appProcVersion);
-                request.put("app_version", appVersion);
+                request.put("app_proc_version", pathVars.get().getAppProcVersion());
+                request.put("app_version", pathVars.get().getAppVersion());
                 request.put("registration_code", registrationCode.replaceAll("\\W", ""));
                 request.put("submit", "submit");
 

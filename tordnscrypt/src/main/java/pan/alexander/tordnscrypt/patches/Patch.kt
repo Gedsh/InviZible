@@ -25,7 +25,7 @@ import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.BuildConfig
-import pan.alexander.tordnscrypt.TopFragment.appVersion
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private const val SAVED_VERSION_CODE = "SAVED_VERSION_CODE"
 
-class Patch(private val context: Context) {
+class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private companion object {
         val patchingIsInProgress = AtomicBoolean(false)
@@ -245,7 +245,7 @@ class Patch(private val context: Context) {
     }
 
     private fun enableDNSCryptRequireNoFilterByDefault(savedVersion: Int) {
-        if (appVersion.endsWith("p") && (savedVersion <= 2143 || savedVersion <= 3143)) {
+        if (pathVars.appVersion.endsWith("p") && (savedVersion <= 2143 || savedVersion <= 3143)) {
 
             PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()

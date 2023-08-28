@@ -45,8 +45,9 @@ class TopFragmentViewModel @Inject constructor(
 ): ViewModel() {
 
     private val rootStateMutableLiveData = MutableLiveData<RootState>()
-    val rootStateLiveData: LiveData<RootState> get() = rootStateMutableLiveData.distinctUntilChanged()
+    val rootStateLiveData: LiveData<RootState> get() = rootStateMutableLiveData
 
+    @Volatile
     var rootCheckResultSuccess = false
 
     private var checkRootJob: Job? = null

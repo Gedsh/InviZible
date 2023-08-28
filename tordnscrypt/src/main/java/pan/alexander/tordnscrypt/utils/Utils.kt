@@ -34,7 +34,6 @@ import android.util.Base64
 import android.view.Display
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -257,7 +256,7 @@ object Utils {
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
-            val betaVersion = appVersion.equals("beta")
+            val betaVersion = pathVars.appVersion.equals("beta")
             if ((showHelperMessages || betaVersion) && (bridgesConjureDefault || bridgesConjureOwn)) {
                 FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Conjure.log")
             }
@@ -280,7 +279,7 @@ object Utils {
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
-            val betaVersion = appVersion.equals("beta")
+            val betaVersion = pathVars.appVersion.equals("beta")
             if ((showHelperMessages || betaVersion) && (bridgesWebTunnelDefault || bridgesWebTunnelOwn)) {
                 FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/WebTunnel.log")
             }
@@ -316,9 +315,10 @@ object Utils {
 
     @JvmStatic
     fun allowInteractAcrossUsersPermissionIfRequired(
-        context: Context
+        context: Context,
+        pathVars: PathVars
     ) {
-        if (!appVersion.endsWith("p")
+        if (!pathVars.appVersion.endsWith("p")
             && ModulesStatus.getInstance().isRootAvailable
             && !isInteractAcrossUsersPermissionGranted(context)
         ) {

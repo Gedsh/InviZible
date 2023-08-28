@@ -68,7 +68,6 @@ import pan.alexander.tordnscrypt.views.SwitchPlusClickPreference;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
@@ -253,7 +252,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         Preference shellControl = findPreference("pref_common_shell_control");
 
-        if (appVersion.startsWith("g")) {
+        if (pathVars.get().getAppVersion().startsWith("g")) {
             PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
             Preference blockHTTP = findPreference("pref_common_block_http");
             if (hotspotSettingsCategory != null && blockHTTP != null) {
@@ -398,7 +397,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 break;
             case MULTI_USER_SUPPORT:
                 if (Boolean.parseBoolean(newValue.toString())) {
-                    Utils.allowInteractAcrossUsersPermissionIfRequired(context);
+                    Utils.allowInteractAcrossUsersPermissionIfRequired(context, pathVars.get());
                 }
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 break;

@@ -153,7 +153,7 @@ class RestoreHelper extends Installer {
 
                 refreshModulesStatus(activity);
 
-                Patch patch = new Patch(activity);
+                Patch patch = new Patch(activity, pathVars.get());
                 patch.checkPatches(true);
 
             } catch (Exception e) {

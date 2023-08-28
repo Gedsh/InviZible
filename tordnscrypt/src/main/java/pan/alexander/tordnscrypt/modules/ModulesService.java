@@ -893,6 +893,9 @@ public class ModulesService extends Service {
 
     private void stopVPNServiceIfRunning() {
         OperationMode operationMode = modulesStatus.getMode();
+        if (defaultSharedPreferences == null) {
+            return;
+        }
         SharedPreferences prefs = defaultSharedPreferences.get();
         if (((operationMode == VPN_MODE) || modulesStatus.isFixTTL()) && prefs.getBoolean(VPN_SERVICE_ENABLED, false)) {
             ServiceVPNHelper.stop("ModulesService is destroyed", this);
@@ -1173,7 +1176,7 @@ public class ModulesService extends Service {
     }
 
     private void checkModulesConfigPatches() {
-        Patch patch = new Patch(this);
+        Patch patch = new Patch(this, pathVars.get());
         patch.checkPatches(false);
     }
 

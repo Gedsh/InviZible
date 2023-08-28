@@ -21,10 +21,10 @@ package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.Context
 import android.content.SharedPreferences
-import pan.alexander.tordnscrypt.TopFragment
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
@@ -40,7 +40,8 @@ class ConnectionRecordsParser @Inject constructor(
     private val applicationContext: Context,
     private val installedAppNamesStorage: dagger.Lazy<InstalledAppNamesStorage>,
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
-    defaultPreferences: SharedPreferences
+    defaultPreferences: SharedPreferences,
+    private val pathVars: dagger.Lazy<PathVars>
 ) {
 
     private val modulesStatus = ModulesStatus.getInstance()
@@ -85,7 +86,7 @@ class ConnectionRecordsParser @Inject constructor(
 
             val record = connectionRecords[i]
 
-            if (TopFragment.appVersion.startsWith("g") && record.blocked && record.blockedByIpv6
+            if (pathVars.get().appVersion.startsWith("g") && record.blocked && record.blockedByIpv6
                 /*remove artifacts*/
                 || (record.aName.trim() == "=" || record.qName.trim() == "=")
                 && record.uid == -1000

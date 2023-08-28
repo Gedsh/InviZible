@@ -56,7 +56,6 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
@@ -85,6 +84,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public Lazy<NflogManager> nflogManager;
     @Inject
     public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -149,11 +150,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             changePreferencesWithProxyMode();
         }
 
-        if (appVersion.startsWith("g")) {
+        if (pathVars.get().getAppVersion().startsWith("g")) {
             changePreferencesForGPVersion();
-        } else if (appVersion.endsWith("d")) {
+        } else if (pathVars.get().getAppVersion().endsWith("d")) {
             changePreferencesForFDVersion();
-        } else if (appVersion.startsWith("l")) {
+        } else if (pathVars.get().getAppVersion().startsWith("l")) {
             changePreferencesForLiteVersion();
         }
 
@@ -164,7 +165,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onCreatePreferences(Bundle bundle, String s) {
         Context context = getActivity();
 
-        if (appVersion.startsWith("g") && !accelerated && context != null) {
+        if (pathVars.get().getAppVersion().startsWith("g") && !accelerated && context != null) {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
             if (preferences != null) {
                 preferences.edit().putString("pref_fast_theme", "1").apply();
@@ -223,7 +224,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     + dateString + " " + timeString + System.lineSeparator() + lastUpdateResult);
         } else if (lastUpdateResult.equals(getString(R.string.update_fault))
                 && preferenceRepository.get().getStringPreference("updateTimeLast").isEmpty()
-                && appVersion.startsWith("p")) {
+                && pathVars.get().getAppVersion().startsWith("p")) {
             Preference pref_fast_auto_update = findPreference("pref_fast_auto_update");
             if (pref_fast_auto_update != null) {
                 pref_fast_auto_update.setEnabled(false);
@@ -271,7 +272,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         handler.get().post(() -> {
             try {
-                ThemeUtils.setDayNightTheme(context);
+                ThemeUtils.setDayNightTheme(context, pathVars.get());
                 activityCurrentRecreate();
             } catch (Exception e) {
                 loge("PreferencesFastFragment changeTheme", e);
@@ -386,7 +387,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
                 return true;
             case "pref_fast_theme":
-                if (appVersion.startsWith("g") && !accelerated) {
+                if (pathVars.get().getAppVersion().startsWith("g") && !accelerated) {
                     if (isAdded()) {
                         DialogFragment notificationDialogFragment = NotificationDialogFragment.newInstance(R.string.only_premium_feature);
                         notificationDialogFragment.show(getParentFragmentManager(), "NotificationDialogFragment");

@@ -52,13 +52,13 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -86,6 +86,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<Verifier> verifierLazy;
+    @Inject
+    public Lazy<PathVars> pathVars;
 
     public TorFragmentView view;
 
@@ -495,7 +497,9 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         boolean throughTorUpdate = sharedPreferences.getBoolean("pref_fast through_tor_update", false);
         boolean autoUpdate = sharedPreferences.getBoolean("pref_fast_auto_update", true)
-                && !appVersion.startsWith("l") && !appVersion.endsWith("p") && !appVersion.startsWith("f");
+                && !pathVars.get().getAppVersion().startsWith("l")
+                && !pathVars.get().getAppVersion().endsWith("p")
+                && !pathVars.get().getAppVersion().startsWith("f");
 
         String lastUpdateResult = preferenceRepository.get().getStringPreference("LastUpdateResult");
 

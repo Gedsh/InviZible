@@ -46,7 +46,6 @@ import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -77,7 +76,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
 
         addPreferencesFromResource(R.xml.preferences_i2pd);
 
-        if (appVersion.endsWith("p")) {
+        if (pathVars.get().getAppVersion().endsWith("p")) {
             changePreferencesForGPVersion();
         }
 
@@ -118,7 +117,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else if (!appVersion.startsWith("g")){
+            } else if (!pathVars.get().getAppVersion().startsWith("g")){
                 loge("PreferencesITPDFragment preference is null exception");
             }
         }

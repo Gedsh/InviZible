@@ -54,7 +54,6 @@ import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
@@ -118,7 +117,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return;
         }
 
-        if (appVersion.endsWith("p")) {
+        if (pathVars.get().getAppVersion().endsWith("p")) {
             changePreferencesForGPVersion();
         }
 
@@ -157,7 +156,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else if (!appVersion.startsWith("g")) {
+            } else if (!pathVars.get().getAppVersion().startsWith("g")) {
                 Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
             }
         }

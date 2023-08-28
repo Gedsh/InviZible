@@ -75,7 +75,11 @@ class SendCrashReport : ExtendedDialogFragment() {
 
                                     val logsDirPath = createLogsDir(ctx)
 
-                                    val info = Utils.collectInfo(verifier.get().appSignature)
+                                    val info = Utils.collectInfo(
+                                        verifier.get().appSignature,
+                                        pathVars.get().appVersion,
+                                        pathVars.get().appProcVersion
+                                    )
 
                                     if (saveLogCat(logsDirPath)) {
                                         sendCrashEmail(ctx, info, File("$logsDirPath/logcat.log"))

@@ -44,7 +44,6 @@ import pan.alexander.tordnscrypt.utils.portchecker.PortChecker;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
@@ -173,7 +172,7 @@ public class ModulesStarterHelper {
 
                 if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
 
-                    if (appVersion.startsWith("b") && handler != null) {
+                    if (pathVars.getAppVersion().startsWith("b") && handler != null) {
                         handler.post(() -> Toast.makeText(context, "DNSCrypt Module Fault: "
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
@@ -270,7 +269,7 @@ public class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
-                    if (appVersion.startsWith("b") && handler != null) {
+                    if (pathVars.getAppVersion().startsWith("b") && handler != null) {
                         handler.post(() -> Toast.makeText(context, "Tor Module Fault: " + shellResult.exitCode
                                 + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
@@ -362,7 +361,7 @@ public class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
-                    if (appVersion.startsWith("b") && handler != null) {
+                    if (pathVars.getAppVersion().startsWith("b") && handler != null) {
                         handler.post(() -> Toast.makeText(context, "Purple I2P Module Fault: "
                                 + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
@@ -578,7 +577,7 @@ public class ModulesStarterHelper {
     }
 
     private void checkModulesConfigPatches() {
-        Patch patch = new Patch(context);
+        Patch patch = new Patch(context, pathVars);
         patch.checkPatches(true);
     }
 

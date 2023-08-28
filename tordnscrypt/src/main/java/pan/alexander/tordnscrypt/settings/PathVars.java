@@ -31,7 +31,9 @@ import androidx.preference.PreferenceManager;
 import java.io.File;
 
 import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.update.UpdateCheck;
 
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
@@ -52,8 +54,9 @@ import javax.inject.Singleton;
 @Singleton
 public class PathVars {
     private final SharedPreferences preferences;
-
-    private String appDataDir;
+    private final String appDataDir;
+    private volatile String appVersion;
+    private final String appProcVersion;
     private final String dnscryptPath;
     private final String torPath;
     private final String itpdPath;
@@ -72,13 +75,13 @@ public class PathVars {
 
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-        appDataDir = context.getApplicationInfo().dataDir;
-
-        if (appDataDir == null) {
-            appDataDir = "/data/data/" + context.getPackageName();
-        }
+        String dataDir = context.getApplicationInfo().dataDir;
+        appDataDir = dataDir != null ? dataDir : "/data/data/" + context.getPackageName();
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+
+        appVersion = context.getString(R.string.appVersion);
+        appProcVersion = context.getString(R.string.appProcVersion);
 
         bbOK = App.getInstance().getDaggerComponent().getPreferenceRepository().get().getBoolPreference("bbOK");
 
@@ -254,7 +257,7 @@ public class PathVars {
         String dnsCryptFallbackResolvers = preferences.getString(DNSCRYPT_BOOTSTRAP_RESOLVERS, QUAD_DNS_41);
         StringBuilder fallbackResolvers = new StringBuilder();
 
-        for (String resolver: dnsCryptFallbackResolvers.split(", ?")) {
+        for (String resolver : dnsCryptFallbackResolvers.split(", ?")) {
             resolver = resolver
                     .replace("[", "").replace("]", "")
                     .replace("'", "").replace("\"", "");
@@ -436,5 +439,17 @@ public class PathVars {
             appUidStr = String.valueOf(getAppUid());
         }
         return appUidStr;
+    }
+
+    public String getAppVersion() {
+        return appVersion;
+    }
+
+    public <T extends UpdateCheck> void setAppVersion(T ignoredCaller, String version) {
+        appVersion = version;
+    }
+
+    public String getAppProcVersion() {
+        return appProcVersion;
     }
 }
