@@ -237,7 +237,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="pref_tor_clearnet">"Nombre de hosts o IPs para excluir de Tor"</string>
     <string name="pref_tor_unlock_edit">"Editar nombres de hosts o IPs"</string>
     <string name="pref_tor_unlock_disabled">"Desactivado"</string>
-    <string name="pref_tor_clean_module_folder">"Limpiar directorio del módulo"</string>
+    <string name="pref_tor_clean_module_folder">Limpiar la cache</string>
     <string name="pref_routing_unlock_app">"Apps a usar con InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps a excluir de InviZible"</string>
     <string name="country_select_select_all">"Seleccionar todo"</string>
@@ -338,9 +338,9 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="vpn_mode_error">"¡Fallo detectado en modo VPN!"</string>
     <string name="vpn_tor_tether_summ">"Por favor, configura el uso de un servidor de proxy en la configuración del dispositivo. Configuración por defecto: IP: 10.1.10.1 Puerto:8118"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP con TOR"</string>
-    <string name="main_fragment_protect_dns">"Proteger DNS con DNSCRYPT"</string>
-    <string name="main_fragment_access_i2p">"Acceso a sitios I2P con I2Pd"</string>
     <string name="reset_settings_title">"Atención"</string>
+    <string name="main_fragment_protect_dns">Protégete con DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Acceder a la red I2P con Purple I2P</string>
     <string name="add_custom_server_title">"Añadir servidor personalizado"</string>
     <string name="add_custom_server_error">"Configuración del servidor personalizado erronea. Por favor, comprueba el campo SDNS."</string>
     <string name="pending_purchase">"Te recordamos que tienes pendiente una compra incompleta:"</string>
