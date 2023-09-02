@@ -69,7 +69,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private var bridgeCountriesObserveJob: Job? = null
 
     private val dialogsFlowMutableLiveData = MutableLiveData<DialogsFlowState>()
-    val dialogsFlowLiveData: LiveData<DialogsFlowState> get() = dialogsFlowMutableLiveData.distinctUntilChanged()
+    val dialogsFlowLiveData: LiveData<DialogsFlowState> get() = dialogsFlowMutableLiveData
 
     private val errorsMutableLiveData = MutableLiveData<String>()
     val errorsLiveData: LiveData<String> get() = errorsMutableLiveData
