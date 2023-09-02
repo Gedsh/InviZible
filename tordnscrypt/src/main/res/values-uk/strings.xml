@@ -212,7 +212,7 @@
     <string name="update_core_not_show_again">Не запитувати знову</string>
     <string name="verifier_error">Схоже, це неофіційна версія InviZible. Будь ласка, будьте обережні!</string>
     <string name="donate">Пожертвувати</string>
-    <string name="main_fragment_protect_dns">Захистіться за допомогою DNSCRYPT</string>
+    <string name="main_fragment_protect_dns">Захиститися за допомогою DNSCRYPT</string>
     <string name="pref_common_excludes_from_tor_summ">Список веб-сайтів, які відкривати безпосередньо через HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Дозволити прив\'язку I2P</string>
     <string name="pref_common_log_root_commands">Зберігати рут-команди до журналу</string>
@@ -423,19 +423,16 @@
     <string name="update_over_three_activations">Схоже, ви вже активували 3 копії InviZible з цим кодом. Якщо це не так, зверніться до розробника.</string>
     <string name="enter_code">Увести код</string>
     <string name="thanks_for_donate">Проект InviZible Pro та його автор висловлюють подяку за допомогу. Бажаєте завантажити та оновити до версії PRO\? Оновлення триватиме у фоновому режимі.</string>
-    <string name="agreement_text">\\ \tдякуємо, що обрали InviZible Pro. Сподіваюся, він буде корисним для вашої конфіденційності та комфортного користування інтернетом.
-\n
-\n\tInviZible Pro включає в себе Tor, DNSCrypt і Purple I2P як модулі.
-\n
-\n\tInviZible Pro може використовувати root, якщо ваш пристрій має привілеї root, або використовувати локальну VPN для доставки інтернет-трафіку в мережі Tor, DNSCrypt і I2P.
-\n
-\n\tПолітика конфіденційності:
-\n\tInviZible Pro не збирає і не поширює будь-які особисті або конфіденційні дані користувачів.
-\n
-\n\tCopyright © 2019-2023
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tДякуємо, що обрали InviZible Pro. Сподіваюся, він буде корисним для вашої конфіденційності та комфортного користування інтернетом.
+        \n\n\tInviZible Pro включає в себе Tor, DNSCrypt і Purple I2P як модулі.
+        \n\n\tInviZible Pro може використовувати root, якщо ваш пристрій має привілеї root, або використовувати локальний VPN для доставки інтернет-трафіку в мережі Tor, DNSCrypt і I2P.
+        \n\n\tПолітика конфіденційності:
+        \n\tInviZible Pro не збирає і не поширює будь-які особисті або конфіденційні дані користувачів.
+        \n\n\tCopyright © 2019-2023
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy</string>
     <string name="proxy_server_user_name">Ім\'я користувача:</string>
     <string name="proxy_server_user_pass">Пароль:</string>
     <string name="proxy_save">Зберегти та ввімкнути</string>

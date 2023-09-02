@@ -44,7 +44,8 @@ public class LanguageList {
             "UG9ydHVndWVzZS1CUiAoUG9ydHVndcOqcy1CUik=",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
             "U3BhbmlzaCAoRXNwYcOxb2xhKQ==",
-            "VHVya2lzaCAoVMO8cmsp"
+            "VHVya2lzaCAoVMO8cmsp",
+            "VWtyYWluaWFuICjQo9C60YDQsNGX0L3RgdGM0LrQsCk="
     };
     private static final String[] MACHINE = {
             "",
@@ -63,7 +64,8 @@ public class LanguageList {
             "pt-rBR",
             "ru",
             "es",
-            "tr"
+            "tr",
+            "uk"
     };
     private static String[] mHuman;
 

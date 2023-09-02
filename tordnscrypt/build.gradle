@@ -57,7 +57,7 @@ android {
         targetSdkVersion 33
         versionCode 197
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk"
 
         externalNativeBuild {
             cmake {
