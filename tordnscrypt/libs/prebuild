@@ -7,6 +7,7 @@ dnscryptproxy_version=master
 snowflake_version=v2.6.0
 libzmq_version=5bf04ee2ff207f0eaf34298658fe354ea61e1839
 conjure_version=prod
+webtunnel_version=prod
 tor_openssl_version=openssl-3.1.2
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
@@ -31,6 +32,8 @@ git checkout -f $libzmq_version -b $libzmq_version
 popd
 
 git clone --single-branch --branch $conjure_version https://gitlab.torproject.org/Gedsh/conjure
+
+git clone --single-branch --branch $webtunnel_version https://gitlab.torproject.org/Gedsh/webtunnel
 
 git clone https://github.com/Gedsh/Nflog-android
 
