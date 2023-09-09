@@ -12,7 +12,7 @@ tor_openssl_version=openssl-3.1.2
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
-tor_version=release-0.4.8
+tor_version=prod
 i2pd_openssl_version=OpenSSL_1_1_1u
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
 i2pd_version=2.48.0
@@ -42,7 +42,7 @@ git clone --single-branch --branch $tor_openssl_version https://github.com/opens
 git clone --single-branch --branch $libevent_version https://github.com/libevent/libevent.git
 git clone --single-branch --branch $zstd_version https://github.com/facebook/zstd.git
 git clone --single-branch --branch $xz_version https://git.tukaani.org/xz.git
-git clone --single-branch --branch $tor_version https://git.torproject.org/tor.git
+git clone --single-branch --branch $tor_version https://gitlab.torproject.org/Gedsh/tor.git
 popd
 
 pushd ../../PurpleI2PBuildScript/external/
