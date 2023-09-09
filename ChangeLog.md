@@ -968,3 +968,12 @@
 * Updated Tor to version 4.8.4.
 * Added a suggestion to reset the module settings in case of a startup failure.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.9.8**
+* Updated Tor to version 4.8.5.
+* Implemented customizable SNI for Tor connections.
+* Using Chromium's TLS fingerprint instead of Firefox's obsolete TLS fingerprint for Tor connections.
+* Updated Tor WebTunnel bridge.
+* Fixed ANR on Android 4.4.2.
+* Fixed requesting new bridges button not responding in rare cases.
+* Added Ukrainian translation.
