@@ -111,12 +111,16 @@ public class ServiceVPNHelper {
     }
 
     private static void sendIntent(Context context, Intent intent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            intent.putExtra("showNotification", true);
-            context.startForegroundService(intent);
-        } else {
-            intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
-            context.startService(intent);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                intent.putExtra("showNotification", true);
+                context.startForegroundService(intent);
+            } else {
+                intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
+                context.startService(intent);
+            }
+        } catch (Exception e) {
+            loge("ServiceVPNHelper sendIntent", e, true);
         }
     }
 }

@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.update;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -274,10 +276,14 @@ public class UpdateService extends Service {
 
         Notification notification = builder.build();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
-        } else {
-            startForeground(notificationId, notification);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
+            } else {
+                startForeground(notificationId, notification);
+            }
+        } catch (Exception e) {
+            loge("UpdateService sendNotification", e, true);
         }
     }
 }

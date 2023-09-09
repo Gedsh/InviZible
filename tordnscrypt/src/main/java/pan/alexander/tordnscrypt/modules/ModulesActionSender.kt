@@ -27,7 +27,7 @@ import pan.alexander.tordnscrypt.utils.app
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 
 object ModulesActionSender {
-    fun sendIntent(context: Context, action: String) {
+    fun sendIntent(context: Context, action: String) = try {
 
         val intent = Intent(context, ModulesService::class.java)
         intent.action = action
@@ -49,5 +49,7 @@ object ModulesActionSender {
             intent.putExtra("showNotification", isShowNotification(context))
             context.startService(intent)
         }
+    } catch (e: Exception) {
+        loge("ModulesActionSender sendIntent", e, true)
     }
 }

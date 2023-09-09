@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.utils.root;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -81,10 +83,14 @@ public class RootServiceNotificationManager {
                 savedProgress
         );
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            service.startForeground(DEFAULT_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
-        } else {
-            service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                service.startForeground(DEFAULT_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
+            } else {
+                service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
+            }
+        } catch (Exception e) {
+            loge("RootServiceNotificationManager sendNotification", e, true);
         }
     }
 

@@ -127,10 +127,14 @@ public class ModulesServiceNotificationManager {
 
         Notification notification = builder.build();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            service.startForeground(DEFAULT_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
-        } else {
-            service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                service.startForeground(DEFAULT_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
+            } else {
+                service.startForeground(DEFAULT_NOTIFICATION_ID, notification);
+            }
+        } catch (Exception e) {
+            loge("ModulesServiceNotificationManager sendNotification", e);
         }
     }
 
