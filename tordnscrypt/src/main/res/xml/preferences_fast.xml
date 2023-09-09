@@ -111,6 +111,11 @@
                 android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
+        <pan.alexander.tordnscrypt.views.SwitchPlusClickPreference
+            android:id="@+id/swFakeSni"
+            android:defaultValue="false"
+            android:key="swFakeSni"
+            android:title="@string/pref_fast_fake_sni" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="fast_update"

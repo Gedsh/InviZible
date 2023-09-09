@@ -148,6 +148,7 @@
     <string name="pref_fast_use_tor_bridges_show_dialog">Your new bridges from bridges.torproject.org:</string>
     <string name="pref_fast_use_tor_bridges_add_dialog">Save</string>
     <string name="pref_fast_use_tor_bridges_close_dialog">Close</string>
+    <string name="pref_fast_fake_sni">Spoof SNI</string>
     <string name="pref_fast_unlock_host_wrong">Wrong host name!</string>
     <string name="pref_fast_theme">Select Theme</string>
     <string name="pref_fast_theme_titles_day_mode">Day Mode</string>

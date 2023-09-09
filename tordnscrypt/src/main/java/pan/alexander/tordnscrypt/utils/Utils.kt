@@ -26,11 +26,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Point
 import android.os.Build
 import android.os.Environment
 import android.os.Process
 import android.util.Base64
+import android.util.TypedValue
 import android.view.Display
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
@@ -41,6 +43,8 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
+import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
+import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
@@ -86,6 +90,13 @@ object Utils {
     fun dips2pixels(dips: Int, context: Context): Int {
         return (dips * context.resources.displayMetrics.density + 0.5f).roundToInt()
     }
+
+    fun dp2pixels(dp: Int) = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        dp.toFloat(),
+        Resources.getSystem().displayMetrics
+    )
+
 
     fun getDeviceIP(): String {
         try {
@@ -347,5 +358,12 @@ object Utils {
     @JvmStatic
     fun areNotificationsNotAllowed(notificationManager: NotificationManager) =
         !areNotificationsAllowed(notificationManager)
+
+    @JvmStatic
+    fun verifyHostsSet(hosts: Set<String>) =
+        hosts.filter {
+            it.length < 255
+                    && (it.matches(HOST_NAME_REGEX.toRegex()) || it.matches(IPv4_REGEX.toRegex()))
+        }.toSet()
 
 }

@@ -579,4 +579,13 @@
         <item>publicarray-au-doh</item>
         <item>scaleway-fr</item>
     </string-array>
+    <string-array name="default_fake_sni">
+        <item>play.googleapis.com</item>
+        <item>drive.google.com</item>
+        <item>cdn.ampproject.org</item>
+        <item>api.github.com</item>
+        <item>dev.skype.com</item>
+        <item>verizon.com</item>
+        <item>eset.com</item>
+    </string-array>
 </resources>

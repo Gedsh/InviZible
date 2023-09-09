@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -32,10 +33,13 @@ import com.jrummyapps.android.shell.Shell;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -50,10 +54,13 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
 import static pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX;
+import static pan.alexander.tordnscrypt.utils.Utils.verifyHostsSet;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
@@ -225,8 +232,13 @@ public class ModulesStarterHelper {
 
                 saveTorConfiguration(lines);
 
-                torCmdString = torPath + " -f "
-                        + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
+                torCmdString = torPath
+                        + " -f " + appDataDir + "/app_data/tor/tor.conf"
+                        + " -pidfile " + appDataDir + "/tor.pid";
+                String fakeHosts = getFakeSniHosts();
+                if (defaultPreferences.get().getBoolean(FAKE_SNI, false) && !fakeHosts.isEmpty()) {
+                    torCmdString += " -fake-hosts " + fakeHosts;
+                }
                 String waitString = busyboxPath + "sleep 3";
                 String checkIfModuleRunning = busyboxPath + "pgrep -l /libtor.so";
 
@@ -254,8 +266,13 @@ public class ModulesStarterHelper {
 
                 saveTorConfiguration(lines);
 
-                torCmdString = torPath + " -f "
-                        + appDataDir + "/app_data/tor/tor.conf -pidfile " + appDataDir + "/tor.pid";
+                torCmdString = torPath
+                        + " -f " + appDataDir + "/app_data/tor/tor.conf"
+                        + " -pidfile " + appDataDir + "/tor.pid";
+                String fakeHosts = getFakeSniHosts();
+                if (defaultPreferences.get().getBoolean(FAKE_SNI, false) && !fakeHosts.isEmpty()) {
+                    torCmdString += " -fake-hosts " + fakeHosts;
+                }
                 preferenceRepository.get().setBoolPreference("TorStartedWithRoot", false);
 
                 shellResult = new ProcessStarter(context.getApplicationInfo().nativeLibraryDir)
@@ -579,6 +596,18 @@ public class ModulesStarterHelper {
     private void checkModulesConfigPatches() {
         Patch patch = new Patch(context, pathVars);
         patch.checkPatches(true);
+    }
+
+    private String getFakeSniHosts() {
+        Set<String> hosts = verifyHostsSet(
+                preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
+        );
+        if (hosts.isEmpty()) {
+            hosts = new HashSet<>(
+                    Arrays.asList(context.getResources().getStringArray(R.array.default_fake_sni))
+            );
+        }
+        return TextUtils.join(",", hosts);
     }
 
 }
