@@ -603,7 +603,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         }
 
         Set<String> sni = verifyHostsSet(
-                new LinkedHashSet<>(Arrays.asList(text.split(", ?| +")))
+                new LinkedHashSet<>(Arrays.asList(text.split(", ?| +|\\n")))
         );
 
         Set<String> savedSni = verifyHostsSet(
