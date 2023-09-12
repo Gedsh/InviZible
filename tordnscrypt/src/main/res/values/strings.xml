@@ -468,6 +468,8 @@
     <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clear cache</string>
+    <string name="pref_tor_track_host_exits" translatable="false">TrackHostExits</string>
+    <string name="pref_tor_track_host_exits_summ">Tor will track recent connections to hosts and attempt to reuse the same exit node for each. This option may help avoid endless captcha.</string>
     <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
     <string name="pref_tor_isolate_dest_address_summ">Don’t share circuits with streams targeting a different destination address.</string>
     <string name="pref_tor_isolate_dest_port" translatable="false">IsolateDestPort</string>

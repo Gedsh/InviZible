@@ -152,6 +152,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
         preferences.add(findPreference(SNOWFLAKE_RENDEZVOUS));
+        preferences.add(findPreference("Enable TrackHostExits"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -391,6 +392,24 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                     key_tor.set(i, "DNSPort");
                 } else if (!enable && key.equals("DNSPort")) {
                     key_tor.set(i, "#DNSPort");
+                }
+            }
+            return true;
+        } else if (Objects.equals(preference.getKey(), "Enable TrackHostExits")) {
+            boolean enable = Boolean.parseBoolean(newValue.toString());
+            if (!key_tor.contains("TrackHostExits") && !key_tor.contains("#TrackHostExits")) {
+                int index = key_tor.indexOf("ConnectionPadding");
+                if (index > 0) {
+                    key_tor.add(index, "TrackHostExits");
+                    val_tor.add(index, ".");
+                }
+            }
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                if (enable && key.equals("#TrackHostExits")) {
+                    key_tor.set(i, "TrackHostExits");
+                } else if (!enable && key.equals("TrackHostExits")) {
+                    key_tor.set(i, "#TrackHostExits");
                 }
             }
             return true;
