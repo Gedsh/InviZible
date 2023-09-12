@@ -264,7 +264,8 @@ public class UpdateService extends Service {
                 .setUsesChronometer(true)
                 .setChannelId(UPDATE_CHANNEL_ID)
                 .setPriority(Notification.PRIORITY_DEFAULT)
-                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setProgress(100, 100, true);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_PROGRESS);
