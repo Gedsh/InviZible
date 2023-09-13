@@ -977,3 +977,8 @@
 * Fixed ANR on Android 4.4.2.
 * Fixed requesting new bridges button not responding in rare cases.
 * Added Ukrainian translation.
+
+**InviZible Pro beta 1.9.9**
+* Added TrackHostExits option to Tor settings.
+* Fixed the Tor WebTunnel bridge failure to connect on Android versions lower than 8.
+* Fixes and optimizations.
