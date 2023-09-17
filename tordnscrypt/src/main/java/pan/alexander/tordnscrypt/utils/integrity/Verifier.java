@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.util.Base64;
-import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -45,29 +44,30 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import dagger.Lazy;
-import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 
+@Singleton
 public class Verifier {
+    public Lazy<PathVars> pathVars;
+    public Context context;
+    private volatile String apkSignature;
 
     @Inject
-    public Lazy<PathVars> pathVars;
-
-    public Context context;
-
-    public Verifier(Context context) {
-        App.getInstance().getDaggerComponent().inject(this);
+    public Verifier(Context context, Lazy<PathVars> pathVars) {
         this.context = context;
+        this.pathVars = pathVars;
     }
 
-    public String getApkSignatureZip() throws Exception {
+    private String getApkSignatureZip() throws Exception {
 
         File apkFile = new File(context.getApplicationInfo().sourceDir);
 
@@ -77,27 +77,29 @@ public class Verifier {
             ZipEntry ze = entries.nextElement();
             String name = ze.getName().toUpperCase();
             if (name.startsWith("META-INF/") && (name.endsWith(".RSA") || name.endsWith(".DSA"))) {
-                InputStream inputStream = zipFile.getInputStream(ze);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] buffer = new byte[8192];
-                int len;
-                while ((len = inputStream.read(buffer)) != -1) {
-                    baos.write(buffer, 0, len);
+                try(InputStream inputStream = zipFile.getInputStream(ze);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                    byte[] buffer = new byte[8192];
+                    int len;
+                    while ((len = inputStream.read(buffer)) != -1) {
+                        baos.write(buffer, 0, len);
+                    }
+                    byte[] byteSign = baos.toByteArray();
+                    byteSign = CertificateFactory.getInstance("X509").generateCertificate(new ByteArrayInputStream(byteSign)).getEncoded();
+                    return Base64.encodeToString(MessageDigest.getInstance("md5").digest(byteSign), Base64.DEFAULT);
+                } finally {
+                    zipFile.close();
                 }
-                baos.close();
-                inputStream.close();
-                zipFile.close();
-                byte[] byteSign = baos.toByteArray();
-                byteSign = CertificateFactory.getInstance("X509").generateCertificate(new ByteArrayInputStream(byteSign)).getEncoded();
-                return Base64.encodeToString(MessageDigest.getInstance("md5").digest(byteSign), Base64.DEFAULT);
             }
         }
 
-        return null;
+        loge("Verifier unable to get signature from zip. Use the conventional method instead.");
+
+        return getApkSignature();
     }
 
     @SuppressWarnings("unused")
-    public String getApkSignatureZipModern() throws Exception {
+    private String getApkSignatureZipModern() throws Exception {
         File apkFile = new File(context.getApplicationInfo().sourceDir);
         ZipFile zipFile = new ZipFile(apkFile);
         ZipEntry ze = zipFile.getEntry("META-INF/CERT.RSA");
@@ -142,7 +144,7 @@ public class Verifier {
         byte[] ivBytes = vector.substring(vector.length() - 16).getBytes();
         cipher.init(Cipher.DECRYPT_MODE, aesKey, new IvParameterSpec(ivBytes));
         byte[] decrypted = Base64.decode(text.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
-        if (appVersion.endsWith("d")) {
+        if (pathVars.get().getAppVersion().endsWith("d")) {
             return new String(decrypted);
         }
         return new String(cipher.doFinal(decrypted));
@@ -165,9 +167,9 @@ public class Verifier {
                 File f = new File(pathVars.get().getAppDataDir() + "/logs");
 
                 if (f.mkdirs() && f.setReadable(true) && f.setWritable(true)) {
-                    Log.i(LOG_TAG, "encryptStr log dir created");
+                    logi("encryptStr log dir created");
                 } else {
-                    Log.e(LOG_TAG, "encryptStr Unable to create and chmod log dir");
+                    loge("encryptStr Unable to create and chmod log dir");
                 }
 
                 PrintWriter writer = new PrintWriter(
@@ -185,8 +187,23 @@ public class Verifier {
 
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "encryptStr Failed " + e.getMessage() + " " + e.getCause());
+            loge("encryptStr Failed", e);
         }
+    }
+
+    public String getWrongSign() {
+        return context.getString(R.string.encoded).trim();
+    }
+
+    public String getAppSignature() throws Exception {
+        if (apkSignature == null) {
+            synchronized (Verifier.class) {
+                if (apkSignature == null) {
+                    apkSignature = getApkSignatureZip();
+                }
+            }
+        }
+        return apkSignature;
     }
 
 }

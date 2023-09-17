@@ -57,6 +57,13 @@ class TorProjectBridgesParser @Inject constructor() {
         Pattern.compile("obfs4 +$ipv6BridgeBase +cert=.+ +iat-mode=\\d")
     }
 
+    private val webTunnelBridgePatternIPv4 by lazy {
+        Pattern.compile("webtunnel +$ipv4BridgeBase +url=http(s)?://[\\w./-]+")
+    }
+    private val webTunnelBridgePatternIPv6 by lazy {
+        Pattern.compile("webtunnel +$ipv6BridgeBase +url=http(s)?://[\\w./-]+")
+    }
+
     @Throws(IOException::class)
     fun parseCaptchaImage(inputStream: InputStream): Pair<Bitmap, String> {
 
@@ -177,6 +184,8 @@ class TorProjectBridgesParser @Inject constructor() {
     private fun parseBridge(line: String): String? =
         if (containsObfs4Bridge(line)) {
             parseObfs4Bridge(line)
+        } else if (containsWebTunnelBridge(line)) {
+            parseWebTunnelBridge(line)
         } else {
             parseVanillaBridge(line)
         }
@@ -198,6 +207,22 @@ class TorProjectBridgesParser @Inject constructor() {
         return null
     }
 
+    private fun parseWebTunnelBridge(line: String): String? {
+        val matcherIPv4 = webTunnelBridgePatternIPv4.matcher(line)
+        if (matcherIPv4.find()) {
+            return matcherIPv4.group()
+        }
+
+        val matcherIPv6 = webTunnelBridgePatternIPv6.matcher(line)
+        if (matcherIPv6.find()) {
+            return matcherIPv6.group()
+        }
+
+        loge("TorProjectBridgesParser parseWebTunnelBridge failed $line")
+
+        return null
+    }
+
     private fun parseVanillaBridge(line: String): String? {
         val matcherIPv4 = vanillaBridgePatternIPv4.matcher(line)
         if (matcherIPv4.find()) {
@@ -215,4 +240,6 @@ class TorProjectBridgesParser @Inject constructor() {
     }
 
     private fun containsObfs4Bridge(line: String): Boolean = line.contains("obfs4")
+
+    private fun containsWebTunnelBridge(line: String): Boolean = line.contains("webtunnel")
 }

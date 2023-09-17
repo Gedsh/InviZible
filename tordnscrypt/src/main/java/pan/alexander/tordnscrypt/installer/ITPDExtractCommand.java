@@ -26,7 +26,7 @@ import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 public class ITPDExtractCommand extends AssetsExtractCommand {
     private final String appDataDir;
 
-    ITPDExtractCommand(Context context, String appDataDir) {
+    public ITPDExtractCommand(Context context, String appDataDir) {
         super(context);
         this.appDataDir = appDataDir;
     }

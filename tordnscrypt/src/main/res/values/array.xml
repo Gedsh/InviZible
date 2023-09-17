@@ -542,6 +542,7 @@
         <item>meek_lite</item>
         <item>snowflake</item>
         <item>conjure</item>
+        <item>webtunnel</item>
         <item>vanilla</item>
     </string-array>
     <string-array name="tor_bridges_own_obfs">
@@ -551,6 +552,7 @@
         <item>meek_lite</item>
         <item>snowflake</item>
         <item>conjure</item>
+        <item>webtunnel</item>
         <item>vanilla</item>
     </string-array>
     <string-array name="itpd_com_bandwidth_title">
@@ -564,5 +566,26 @@
         <item>O</item>
         <item>P</item>
         <item>X</item>
+    </string-array>
+    <string-array name="default_dnscrypt_servers_gp">
+        <item>uncensoreddns-dk-ipv4</item>
+        <item>njalla-doh</item>
+        <item>faelix-ch-ipv4</item>
+        <item>dns.digitale-gesellschaft.ch</item>
+        <item>dnscrypt.ca-1</item>
+        <item>sth-doh-se</item>
+        <item>libredns</item>
+        <item>dnswarden-uncensor-dc-swiss</item>
+        <item>publicarray-au-doh</item>
+        <item>scaleway-fr</item>
+    </string-array>
+    <string-array name="default_fake_sni">
+        <item>play.googleapis.com</item>
+        <item>drive.google.com</item>
+        <item>cdn.ampproject.org</item>
+        <item>api.github.com</item>
+        <item>dev.skype.com</item>
+        <item>verizon.com</item>
+        <item>eset.com</item>
     </string-array>
 </resources>

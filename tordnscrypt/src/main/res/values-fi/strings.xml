@@ -352,10 +352,7 @@
     <string name="main_fragment_hide_ip">"Piilota IP TOR:lla"</string>
     <string name="main_fragment_protect_dns">"Suojaa DNS DNSCRYPT:llä"</string>
     <string name="main_fragment_access_i2p">"Pääsy I2P-sivustoihin Purple I2P:llä"</string>
-    <string name="ask_force_close_title">"Huomio"</string>
-    <string name="ask_force_close_text">"InviZible Pro ei voi käynnistää %1$s! Tarkista %2$s-asetukset tai yritä pakottaa sovellus sulkemaan.
-        Jos tämä ei auta, käynnistä laite uudelleen."</string>
-    <string name="ask_force_close_btn">"Pakota sulkeminen"</string>
+    <string name="reset_settings_title">"Huomio"</string>
     <string name="add_custom_server_title">"Lisää mukautettu palvelin"</string>
     <string name="add_custom_server_error">"Virheellinen mukautettu palvelinmääritys. Tarkista SDNS-kenttä."</string>
     <string name="pending_purchase">"Huomaa, että sinulla on vireillä oleva osto:"</string>

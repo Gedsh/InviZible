@@ -417,9 +417,7 @@
     <string name="main_fragment_hide_ip">TOR ile IP\'yi gizle</string>
     <string name="main_fragment_protect_dns">DNSCRYPT ile DNS\'i koru</string>
     <string name="main_fragment_access_i2p">Purple I2P ile I2P sitelerine eriş</string>
-    <string name="ask_force_close_title">Dikkat</string>
-    <string name="ask_force_close_text">%1$s, InviZible Pro tarafından başlatılamıyor! Lütfen %2$s ayarlarını gözden geçirin veya uygulamayı zorla kapatmayı deneyin. Bu yardımcı olmazsa, lütfen aygıtınızı yeniden başlatın.</string>
-    <string name="ask_force_close_btn">Kapatmaya zorla</string>
+    <string name="reset_settings_title">Dikkat</string>
     <string name="add_custom_server_title">Özel sunucu ekle</string>
     <string name="add_custom_server_error">Geçersiz özel sunucu yapılandırması. Lütfen SDNS alanını gözden geçirin.</string>
     <string name="pending_purchase">Bekleyen bir satın alma işleminiz olduğunu lütfen unutmayın:</string>

@@ -26,7 +26,7 @@ import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 public class TorExtractCommand extends AssetsExtractCommand {
     private final String appDataDir;
 
-    TorExtractCommand(Context context,  String appDataDir) {
+    public TorExtractCommand(Context context,  String appDataDir) {
         super(context);
         this.appDataDir = appDataDir;
     }

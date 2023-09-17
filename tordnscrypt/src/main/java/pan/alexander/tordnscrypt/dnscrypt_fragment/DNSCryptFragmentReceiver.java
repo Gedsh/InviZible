@@ -46,8 +46,6 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appSign;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -65,6 +63,8 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
 
     private final DNSCryptFragmentView view;
     private final DNSCryptFragmentPresenterInterface presenter;
@@ -178,9 +178,10 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                             return;
                         }
 
-                        Verifier verifier = new Verifier(context);
+                        Verifier verifier = verifierLazy.get();
+                        String appSign = verifier.getAppSignature();
                         String appSignAlt = verifier.getApkSignature();
-                        if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                        if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
 
                             if (fragmentManager != null) {
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(

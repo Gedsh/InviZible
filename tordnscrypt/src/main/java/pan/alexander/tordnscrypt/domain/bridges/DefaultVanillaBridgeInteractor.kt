@@ -22,6 +22,8 @@ package pan.alexander.tordnscrypt.domain.bridges
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import pan.alexander.tordnscrypt.data.bridges.RelayAddressFingerprint
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -45,14 +47,18 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
     fun observeTimeouts() = timeouts.asSharedFlow()
 
     suspend fun measureTimeouts(bridges: List<String>) =
-        withContext(dispatcherIo.limitedParallelism(SIMULTANEOUS_CHECKS)) {
+        withContext(dispatcherIo) {
+            val semaphore = Semaphore(SIMULTANEOUS_CHECKS)
             val defers = mutableListOf<Deferred<Unit>>()
             bridges.forEach {
                 try {
+                    ensureActive()
                     defers += async {
-                        timeouts.emit(
-                            BridgePingData(it.hashCode(), repository.getTimeout(it))
-                        )
+                        semaphore.withPermit {
+                            timeouts.emit(
+                                BridgePingData(it.hashCode(), repository.getTimeout(it))
+                            )
+                        }
                     }
                 } catch (ignored: CancellationException) {
                 } catch (e: Exception) {

@@ -253,7 +253,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_tor_clearnet">"Host ou IP para bypass"</string>
     <string name="pref_tor_unlock_edit">"Editar host ou IP"</string>
     <string name="pref_tor_unlock_disabled">"Desativado"</string>
-    <string name="pref_tor_clean_module_folder">"Limpar pasta de módulo"</string>
+    <string name="pref_tor_clean_module_folder">Limpar cache</string>
     <string name="pref_routing_unlock_app">"Aplicativos para usar com InviZible"</string>
     <string name="pref_routing_clearnet_app">"Apps para contornar InviZible"</string>
     <string name="country_select_select_all">"Selecionar todos"</string>
@@ -303,7 +303,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="helper_tor_stopped">"Parece que o Tor foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
     <string name="helper_itpd_stopped">"Parece que o I2P foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
     <string name="helper_dnscrypt_no_internet">"Parece que o DNSCrypt NÃO PODE se conectar à INTERNET."</string>
-    <string name="helper_tor_use_bridges">"Parece que o Tor NÃO PODE se conectar à INTERNET. O ISP pode bloquear as conexões do Tor. Você pode tentar usar pontes de tor. Encontre-os em MENU -&gt; Configurações Rápidas -&gt; Pontes"</string>
+    <string name="helper_tor_use_bridges">Parece que o Tor não consegue se conectar à Internet. O ISP pode bloquear as conexões Tor. Você pode tentar usar as Tor Bridges. Encontre-as em MENU -&gt; Configurações rápidas -&gt; Bridges</string>
     <string name="action_mode_child_lock">"Bloqueio para crianças"</string>
     <string name="action_mode_dialog_message_lock">"Você pode bloquear o controle deste aplicativo. Por favor, digite a senha ou use a anterior."</string>
     <string name="action_mode_dialog_message_unlock">"Por gentileza, entre com a Senha."</string>
@@ -354,11 +354,9 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="vpn_mode_error">Erro no modo VPN!</string>
     <string name="vpn_tor_tether_summ">"Configure o uso do servidor proxy nas configurações do dispositivo conectado. Valores padrão: IP:10.1.10.1 Porta:8118"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP com TOR"</string>
-    <string name="main_fragment_protect_dns">"Proteger DNS com DNSCRYPT"</string>
-    <string name="main_fragment_access_i2p">"Acessar sites com I2P"</string>
-    <string name="ask_force_close_title">"Atenção"</string>
-    <string name="ask_force_close_text">"InviZible Pro não pode iniciar %1$s! Verifique as configurações de %2$s ou tente forçar o fechamento do aplicativo. Se isso não ajudar, reinicie seu dispositivo."</string>
-    <string name="ask_force_close_btn">"Força o fechamennto"</string>
+    <string name="reset_settings_title">"Atenção"</string>
+    <string name="main_fragment_protect_dns">Defenda-se com DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Acesso à rede I2P com Purple I2P</string>
     <string name="add_custom_server_title">"Adicionar servidor customizado"</string>
     <string name="add_custom_server_error">"Configuração de servidor personalizado inválida. Verifique o campo SDNS."</string>
     <string name="pending_purchase">"Observe que você tem uma compra pendente:"</string>

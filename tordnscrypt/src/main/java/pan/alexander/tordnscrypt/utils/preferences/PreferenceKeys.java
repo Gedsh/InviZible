@@ -68,6 +68,7 @@ public interface PreferenceKeys {
     String USE_NO_BRIDGES = "useNoBridges";
     String USE_DEFAULT_BRIDGES = "useDefaultBridges";
     String USE_OWN_BRIDGES = "useOwnBridges";
+    String FAKE_SNI_HOSTS = "fakeSniHosts";
 
     String NOTIFICATIONS_ARE_BLOCKED = "notificationsAreBlocked";
 
@@ -81,6 +82,7 @@ public interface PreferenceKeys {
     String ALL_THROUGH_TOR = "pref_fast_all_through_tor";
     String BYPASS_LAN = "Allow LAN";
     String AUTO_START_DELAY = "pref_fast_autostart_delay";
+    String FAKE_SNI = "swFakeSni";
 
     //Common Settings
     String ARP_SPOOFING_DETECTION = "pref_common_arp_spoofing_detection";
@@ -122,6 +124,10 @@ public interface PreferenceKeys {
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
 
     //Tor Settings
+    String TOR_DNS_PORT = "DNSPort";
+    String TOR_SOCKS_PORT = "SOCKSPort";
+    String TOR_HTTP_TUNNEL_PORT = "HTTPTunnelPort";
+    String TOR_TRANS_PORT = "TransPort";
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";

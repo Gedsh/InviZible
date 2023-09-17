@@ -23,17 +23,17 @@ import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
-import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 
 object ThemeUtils {
 
     @JvmStatic @Suppress("deprecation")
-    fun setDayNightTheme(context: Context) {
+    fun setDayNightTheme(context: Context, pathVars: PathVars) {
         try {
-            val theme = if (appVersion.startsWith("g") && !accelerated) {
+            val theme = if (pathVars.appVersion.startsWith("g") && !accelerated) {
                 "1"
             } else {
                 val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)

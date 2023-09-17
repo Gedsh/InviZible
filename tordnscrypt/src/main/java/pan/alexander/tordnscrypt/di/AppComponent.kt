@@ -122,7 +122,6 @@ interface AppComponent {
     fun inject(receiver: HelpActivityReceiver)
     fun inject(receiver: IptablesReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
-    fun inject(dialogFragment: AskForceClose)
     fun inject(dialogFragment: SendCrashReport)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)

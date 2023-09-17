@@ -22,10 +22,10 @@ package pan.alexander.tordnscrypt.installer;
 import android.annotation.SuppressLint;
 import java.io.File;
 
-class ChmodCommand {
+public class ChmodCommand {
 
     @SuppressLint("SetWorldReadable")
-    static void dirChmod(String path, boolean executableDir) {
+    public static void dirChmod(String path, boolean executableDir) {
         File dir = new File(path);
 
         if (!dir.isDirectory()) {

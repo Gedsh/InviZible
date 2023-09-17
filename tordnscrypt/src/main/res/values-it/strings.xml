@@ -338,9 +338,7 @@
     <string name="main_fragment_hide_ip">"Nascondi IP con TOR"</string>
     <string name="main_fragment_protect_dns">"Proteggi DNS con DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Accedi ai siti I2P con Purple I2P"</string>
-    <string name="ask_force_close_title">"Attenzione"</string>
-    <string name="ask_force_close_text">"InviZible Pro non può avviare %1$s! Per favore controlla le impostazioni %2$s o prova la Chiusura Forzata dell'applicazione. Se non funziona, riavvia il tuo dispositivo."</string>
-    <string name="ask_force_close_btn">"Chiusura forzata"</string>
+    <string name="reset_settings_title">"Attenzione"</string>
     <string name="add_custom_server_title">"Aggiungi server personalizzato"</string>
     <string name="add_custom_server_error">"Configurazione server personalizzato invalida. Controlla il campo SDNS."</string>
     <string name="pending_purchase">"Attenzione hai già un acquisto in sospeso:"</string>

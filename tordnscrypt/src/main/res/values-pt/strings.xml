@@ -14,7 +14,7 @@
     <string name="update_check_no_update">Nenhuma atualização foi encontrada.</string>
     <string name="vpn_mode_error">Erro no modo VPN!</string>
     <string name="main_fragment_access_i2p">Acessar sites com I2P</string>
-    <string name="ask_force_close_title">Atenção</string>
+    <string name="reset_settings_title">Atenção</string>
     <string name="nav_header_title">Tor com DNSCrypt e I2P</string>
     <string name="nav_header_subtitle">a melhor solução para a sua privacidade</string>
     <string name="action_settings">Configurações</string>
@@ -395,8 +395,6 @@
     <string name="vpn_tor_tether_summ">Configure o uso do servidor proxy nas configurações do aparelho conectado. Valores padrão: IP:10.1.10.1 Porta:8118</string>
     <string name="main_fragment_hide_ip">Ocultar IP com TOR</string>
     <string name="main_fragment_protect_dns">Proteger DNS com DNSCRYPT</string>
-    <string name="ask_force_close_text">InviZible Pro não pode iniciar %1$s! Verifique as configurações de %2$s ou tente forçar o fechamento do aplicação. Se isso não ajudar, reinicie o seu aparelho.</string>
-    <string name="ask_force_close_btn">Força o fechamennto</string>
     <string name="add_custom_server_title">Adicionar servidor customizado</string>
     <string name="add_custom_server_error">Configuração de servidor personalizado inválida. Verifique o campo SDNS.</string>
     <string name="pending_purchase">Observe que tem uma compra pendente:</string>

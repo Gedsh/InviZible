@@ -109,7 +109,7 @@ class ArpScannerLoop @Inject constructor(
 
                 if (!ArpScanner.dhcpGatewayAttackDetected) {
                     arpWarningNotification.send(
-                        R.string.ask_force_close_title,
+                        R.string.reset_settings_title,
                         R.string.notification_rogue_dhcp,
                         DHCP_NOTIFICATION_ID
                     )
@@ -154,7 +154,7 @@ class ArpScannerLoop @Inject constructor(
 
                 if (!ArpScanner.arpAttackDetected) {
                     arpWarningNotification.send(
-                        R.string.ask_force_close_title,
+                        R.string.reset_settings_title,
                         R.string.notification_arp_spoofing,
                         ARP_NOTIFICATION_ID
                     )

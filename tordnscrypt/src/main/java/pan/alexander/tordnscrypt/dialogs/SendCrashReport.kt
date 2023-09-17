@@ -31,6 +31,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.BufferedReader
@@ -47,6 +48,8 @@ class SendCrashReport : ExtendedDialogFragment() {
     lateinit var pathVars: dagger.Lazy<PathVars>
     @Inject
     lateinit var cachedExecutor: CachedExecutor
+    @Inject
+    lateinit var verifier: dagger.Lazy<Verifier>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -72,7 +75,11 @@ class SendCrashReport : ExtendedDialogFragment() {
 
                                     val logsDirPath = createLogsDir(ctx)
 
-                                    val info = Utils.collectInfo()
+                                    val info = Utils.collectInfo(
+                                        verifier.get().appSignature,
+                                        pathVars.get().appVersion,
+                                        pathVars.get().appProcVersion
+                                    )
 
                                     if (saveLogCat(logsDirPath)) {
                                         sendCrashEmail(ctx, info, File("$logsDirPath/logcat.log"))
@@ -105,7 +112,7 @@ class SendCrashReport : ExtendedDialogFragment() {
         val cacheDir: String
         try {
             cacheDir = context.cacheDir?.canonicalPath
-                    ?: pathVars.get().appDataDir + "/cache"
+                ?: (pathVars.get().appDataDir + "/cache")
         } catch (e: Exception) {
             Log.w(LOG_TAG, "SendCrashReport cannot get cache dir ${e.message} ${e.cause}")
             return null

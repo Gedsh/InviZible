@@ -31,13 +31,19 @@ import androidx.preference.PreferenceManager;
 import java.io.File;
 
 import pan.alexander.tordnscrypt.App;
+import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.update.UpdateCheck;
 
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRANS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
@@ -48,15 +54,16 @@ import javax.inject.Singleton;
 @Singleton
 public class PathVars {
     private final SharedPreferences preferences;
-
-    private String appDataDir;
+    private final String appDataDir;
+    private volatile String appVersion;
+    private final String appProcVersion;
     private final String dnscryptPath;
     private final String torPath;
     private final String itpdPath;
     private final String obfsPath;
     private final String snowflakePath;
-
     private final String conjurePath;
+    private final String webTunnelPath;
     private final String nflogPath;
     private final boolean bbOK;
     private volatile int appUid = -1;
@@ -68,13 +75,13 @@ public class PathVars {
 
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-        appDataDir = context.getApplicationInfo().dataDir;
-
-        if (appDataDir == null) {
-            appDataDir = "/data/data/" + context.getPackageName();
-        }
+        String dataDir = context.getApplicationInfo().dataDir;
+        appDataDir = dataDir != null ? dataDir : "/data/data/" + context.getPackageName();
 
         String nativeLibPath = context.getApplicationInfo().nativeLibraryDir;
+
+        appVersion = context.getString(R.string.appVersion);
+        appProcVersion = context.getString(R.string.appProcVersion);
 
         bbOK = App.getInstance().getDaggerComponent().getPreferenceRepository().get().getBoolPreference("bbOK");
 
@@ -84,6 +91,7 @@ public class PathVars {
         obfsPath = nativeLibPath + "/libobfs4proxy.so";
         snowflakePath = nativeLibPath + "/libsnowflake.so";
         conjurePath = nativeLibPath + "/libconjure.so";
+        webTunnelPath = nativeLibPath + "/libwebtunnel.so";
         nflogPath = nativeLibPath + "/libnflog.so";
     }
 
@@ -212,6 +220,10 @@ public class PathVars {
         return conjurePath;
     }
 
+    public String getWebTunnelPath() {
+        return webTunnelPath;
+    }
+
     public String getNflogPath() {
         return nflogPath;
     }
@@ -233,7 +245,7 @@ public class PathVars {
     }
 
     public String getTorTransPort() {
-        String torTransPort = preferences.getString("TransPort", "9040");
+        String torTransPort = preferences.getString(TOR_TRANS_PORT, "9040");
         if (torTransPort == null) {
             torTransPort = "9040";
         }
@@ -245,7 +257,7 @@ public class PathVars {
         String dnsCryptFallbackResolvers = preferences.getString(DNSCRYPT_BOOTSTRAP_RESOLVERS, QUAD_DNS_41);
         StringBuilder fallbackResolvers = new StringBuilder();
 
-        for (String resolver: dnsCryptFallbackResolvers.split(", ?")) {
+        for (String resolver : dnsCryptFallbackResolvers.split(", ?")) {
             resolver = resolver
                     .replace("[", "").replace("]", "")
                     .replace("'", "").replace("\"", "");
@@ -268,21 +280,21 @@ public class PathVars {
     }
 
     public String getTorDNSPort() {
-        String torDnsPort = preferences.getString("DNSPort", "5400");
+        String torDnsPort = preferences.getString(TOR_DNS_PORT, "5400");
         return torDnsPort.split(" ")[0]
                 .replaceAll(".+:", "")
                 .replaceAll("\\D+", "");
     }
 
     public String getTorSOCKSPort() {
-        String torSocksPort = preferences.getString("SOCKSPort", "9050");
+        String torSocksPort = preferences.getString(TOR_SOCKS_PORT, "9050");
         return torSocksPort.split(" ")[0]
                 .replaceAll(".+:", "")
                 .replaceAll("\\D+", "");
     }
 
     public String getTorHTTPTunnelPort() {
-        String torHttpTunnelPort = preferences.getString("HTTPTunnelPort", "8118");
+        String torHttpTunnelPort = preferences.getString(TOR_HTTP_TUNNEL_PORT, "8118");
         return torHttpTunnelPort.split(" ")[0]
                 .replaceAll(".+:", "")
                 .replaceAll("\\D+", "");
@@ -427,5 +439,17 @@ public class PathVars {
             appUidStr = String.valueOf(getAppUid());
         }
         return appUidStr;
+    }
+
+    public String getAppVersion() {
+        return appVersion;
+    }
+
+    public <T extends UpdateCheck> void setAppVersion(T ignoredCaller, String version) {
+        appVersion = version;
+    }
+
+    public String getAppProcVersion() {
+        return appProcVersion;
     }
 }

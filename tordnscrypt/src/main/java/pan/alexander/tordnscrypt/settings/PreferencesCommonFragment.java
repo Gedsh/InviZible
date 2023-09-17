@@ -68,8 +68,6 @@ import pan.alexander.tordnscrypt.views.SwitchPlusClickPreference;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
@@ -120,6 +118,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<ProxyHelper> proxyHelper;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
 
     private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
@@ -252,7 +252,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         Preference shellControl = findPreference("pref_common_shell_control");
 
-        if (appVersion.startsWith("g")) {
+        if (pathVars.get().getAppVersion().startsWith("g")) {
             PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
             Preference blockHTTP = findPreference("pref_common_block_http");
             if (hotspotSettingsCategory != null && blockHTTP != null) {
@@ -307,10 +307,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         cachedExecutor.submit(() -> {
             try {
-                Verifier verifier = new Verifier(context);
-                String appSign = verifier.getApkSignatureZip();
+                Verifier verifier = verifierLazy.get();
+                String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "5889");
                     if (notificationHelper != null && isAdded()) {
@@ -397,7 +397,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 break;
             case MULTI_USER_SUPPORT:
                 if (Boolean.parseBoolean(newValue.toString())) {
-                    Utils.allowInteractAcrossUsersPermissionIfRequired(context);
+                    Utils.allowInteractAcrossUsersPermissionIfRequired(context, pathVars.get());
                 }
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 break;

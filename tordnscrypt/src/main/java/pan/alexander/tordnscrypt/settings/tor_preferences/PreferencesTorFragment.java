@@ -54,7 +54,6 @@ import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
@@ -62,9 +61,13 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRANS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -114,7 +117,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return;
         }
 
-        if (appVersion.endsWith("p")) {
+        if (pathVars.get().getAppVersion().endsWith("p")) {
             changePreferencesForGPVersion();
         }
 
@@ -134,13 +137,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("MaxCircuitDirtiness"));
         preferences.add(findPreference("EnforceDistinctSubnets"));
         preferences.add(findPreference("Enable SOCKS proxy"));
-        preferences.add(findPreference("SOCKSPort"));
+        preferences.add(findPreference(TOR_SOCKS_PORT));
         preferences.add(findPreference("Enable HTTPTunnel"));
-        preferences.add(findPreference("HTTPTunnelPort"));
+        preferences.add(findPreference(TOR_HTTP_TUNNEL_PORT));
         preferences.add(findPreference("Enable Transparent proxy"));
-        preferences.add(findPreference("TransPort"));
+        preferences.add(findPreference(TOR_TRANS_PORT));
         preferences.add(findPreference("Enable DNS"));
-        preferences.add(findPreference("DNSPort"));
+        preferences.add(findPreference(TOR_DNS_PORT));
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference(TOR_USE_IPV6));
         preferences.add(findPreference("pref_tor_snowflake_stun"));
@@ -149,11 +152,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
         preferences.add(findPreference(SNOWFLAKE_RENDEZVOUS));
+        preferences.add(findPreference("Enable TrackHostExits"));
 
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else if (!appVersion.startsWith("g")) {
+            } else if (!pathVars.get().getAppVersion().startsWith("g")) {
                 Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
             }
         }
@@ -391,7 +395,25 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "DNSPort")) {
+        } else if (Objects.equals(preference.getKey(), "Enable TrackHostExits")) {
+            boolean enable = Boolean.parseBoolean(newValue.toString());
+            if (!key_tor.contains("TrackHostExits") && !key_tor.contains("#TrackHostExits")) {
+                int index = key_tor.indexOf("ConnectionPadding");
+                if (index > 0) {
+                    key_tor.add(index, "TrackHostExits");
+                    val_tor.add(index, ".");
+                }
+            }
+            for (int i = 0; i < key_tor.size(); i++) {
+                String key = key_tor.get(i);
+                if (enable && key.equals("#TrackHostExits")) {
+                    key_tor.set(i, "TrackHostExits");
+                } else if (!enable && key.equals("TrackHostExits")) {
+                    key_tor.set(i, "#TrackHostExits");
+                }
+            }
+            return true;
+        } else if (Objects.equals(preference.getKey(), TOR_DNS_PORT)) {
             String dnsPort = newValue.toString();
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
@@ -456,9 +478,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                         .getConfiguration(serversStr));
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "SOCKSPort")
-                || Objects.equals(preference.getKey(), "HTTPTunnelPort")
-                || Objects.equals(preference.getKey(), "TransPort")) {
+        } else if (Objects.equals(preference.getKey(), TOR_SOCKS_PORT)
+                || Objects.equals(preference.getKey(), TOR_HTTP_TUNNEL_PORT)
+                || Objects.equals(preference.getKey(), TOR_TRANS_PORT)) {
 
             String proxyPort = newValue.toString();
             String proxyType = preference.getKey();

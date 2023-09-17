@@ -24,18 +24,29 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.domain.bridges.*
+import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
+import pan.alexander.tordnscrypt.utils.enums.BridgeType
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
+import java.util.concurrent.ConcurrentHashMap
+import java.util.regex.Pattern
 import javax.inject.Inject
-import kotlin.Exception
+import javax.inject.Named
+
+private const val DNS_RESOLVE_TIMEOUT_SEC = 3
 
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel @Inject constructor(
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
     private val requestBridgesInteractor: RequestBridgesInteractor,
-    private val bridgesCountriesInteractor: BridgesCountriesInteractor
+    private val bridgesCountriesInteractor: BridgesCountriesInteractor,
+    private val dnsInteractor: DnsInteractor,
+    @Named(CoroutinesModule.DISPATCHER_IO)
+    private val dispatcherIo: CoroutineDispatcher
 ) : ViewModel() {
 
     private val timeouts = mutableListOf<BridgePingResult>()
@@ -58,12 +69,22 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private var bridgeCountriesObserveJob: Job? = null
 
     private val dialogsFlowMutableLiveData = MutableLiveData<DialogsFlowState>()
-    val dialogsFlowLiveData: LiveData<DialogsFlowState> get() = dialogsFlowMutableLiveData.distinctUntilChanged()
+    val dialogsFlowLiveData: LiveData<DialogsFlowState> get() = dialogsFlowMutableLiveData
 
     private val errorsMutableLiveData = MutableLiveData<String>()
     val errorsLiveData: LiveData<String> get() = errorsMutableLiveData
 
+    private val webTunnelBridgePattern by lazy {
+        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.-]+)(?:/[\\w.-]+)*/?")
+    }
+
+    private val webTunnelBridgesMatcherMap by lazy { ConcurrentHashMap<Int, Int>() }
+
     fun measureTimeouts(bridges: List<ObfsBridge>) {
+
+        if (bridges.isEmpty()) {
+            return
+        }
 
         cancelMeasuringTimeouts()
 
@@ -71,9 +92,68 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             initBridgeCheckerObserver()
         }
 
+        webTunnelBridgesMatcherMap.clear()
+
         timeoutsMeasurementJob = viewModelScope.launch {
-            defaultVanillaBridgeInteractor.measureTimeouts(bridges.map { it.bridge })
+
+            if (bridges.firstOrNull()?.obfsType == BridgeType.webtunnel) {
+                val bridgesToMeasure = getRealIPFromWebTunnelBridges(ArrayList(bridges))
+                launch {
+                    defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
+                }
+                searchBridgeCountries(ArrayList(bridgesToMeasure).map {
+                    ObfsBridge(
+                        it,
+                        BridgeType.vanilla,
+                        false
+                    )
+                })
+            } else {
+                defaultVanillaBridgeInteractor.measureTimeouts(bridges.map { it.bridge })
+            }
         }
+    }
+
+    private suspend fun getRealIPFromWebTunnelBridges(bridges: List<ObfsBridge>) = try {
+        withContext(dispatcherIo) {
+            val bridgesToMeasure = mutableListOf<String>()
+            for (bridge in bridges) {
+
+                val matcher = webTunnelBridgePattern.matcher(bridge.bridge)
+                if (matcher.find()) {
+                    val ipWithPort = matcher.group(1) ?: continue
+                    val domain = matcher.group(2) ?: continue
+                    val port = if (domain.startsWith("https")) {
+                        443
+                    } else {
+                        80
+                    }
+
+                    val ips = try {
+                        dnsInteractor.resolveDomain(domain, true, DNS_RESOLVE_TIMEOUT_SEC).toList()
+                    } catch (ignored: Exception) {
+                        emptyList()
+                    }
+                    ensureActive()
+                    if (ips.isEmpty()) {
+                        continue
+                    }
+                    val ipsSorted = ips.sortedBy { it.isIPv6Address() }
+                    val address = if (ipsSorted.first().isIPv6Address()) {
+                        "[${ipsSorted.first()}]:$port"
+                    } else {
+                        "${ipsSorted.first()}:$port"
+                    }
+                    val bridgeLine = bridge.bridge.replace(ipWithPort, address)
+                    bridgesToMeasure.add(bridgeLine)
+                    webTunnelBridgesMatcherMap[bridgeLine.hashCode()] =
+                        bridge.bridge.hashCode()
+                }
+            }
+            bridgesToMeasure
+        }
+    } catch (ignored: Exception) {
+        emptyList()
     }
 
     fun cancelMeasuringTimeouts() {
@@ -88,6 +168,12 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                     when (it) {
                         is BridgePingData -> it.ping != 0
                         is PingCheckComplete -> true
+                    }
+                }.map {
+                    if (it is BridgePingData && webTunnelBridgesMatcherMap.containsKey(it.bridgeHash)) {
+                        BridgePingData(webTunnelBridgesMatcherMap[it.bridgeHash] ?: 0, it.ping)
+                    } else {
+                        it
                     }
                 }.onEach {
                     timeouts.add(it)
@@ -145,7 +231,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         torBridgesRequestJob?.cancel()
         torBridgesRequestJob = viewModelScope.launch {
             try {
-                val result = requestBridgesInteractor.requestCaptchaChallenge(transport, ipv6Bridges)
+                val result =
+                    requestBridgesInteractor.requestCaptchaChallenge(transport, ipv6Bridges)
                 dismissRequestBridgesDialogs()
                 showCaptchaDialog(transport, ipv6Bridges, result.first, result.second)
             } catch (e: CancellationException) {
@@ -159,7 +246,12 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
-    private fun showCaptchaDialog(transport: String, ipv6Bridges: Boolean, captcha: Bitmap, secretCode: String) {
+    private fun showCaptchaDialog(
+        transport: String,
+        ipv6Bridges: Boolean,
+        captcha: Bitmap,
+        secretCode: String
+    ) {
         dialogsFlowMutableLiveData.value =
             DialogsFlowState.CaptchaDialog(transport, ipv6Bridges, captcha, secretCode)
     }
@@ -188,6 +280,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 when (result) {
                     is ParseBridgesResult.BridgesReady ->
                         showBridgesReadyDialog(result.bridges)
+
                     is ParseBridgesResult.RecaptchaChallenge ->
                         showCaptchaDialog(transport, ipv6Bridges, result.captcha, result.secretCode)
                 }
@@ -208,6 +301,10 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             return
         }
 
+        if (bridges.first().obfsType == BridgeType.webtunnel) {
+            return
+        }
+
         cancelSearchingBridgeCountries()
 
         if (bridgeCountriesObserveJob?.isCancelled != false) {
@@ -222,7 +319,16 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private fun initBridgeCountriesObserver() {
         bridgeCountriesObserveJob = viewModelScope.launch {
             bridgesCountriesInteractor.observeBridgeCountries()
-                .onEach {
+                .map {
+                    if (webTunnelBridgesMatcherMap.containsKey(it.bridgeHash)) {
+                        BridgeCountryData(
+                            webTunnelBridgesMatcherMap[it.bridgeHash] ?: 0,
+                            it.country
+                        )
+                    } else {
+                        it
+                    }
+                }.onEach {
                     bridgeCountries.add(it)
                     bridgeCountriesMutableLiveData.value = bridgeCountries
                 }.collect()

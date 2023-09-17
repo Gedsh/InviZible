@@ -148,12 +148,17 @@ class App : Application() {
     }
 
     private fun setExceptionHandler() {
+        val exceptionHandler = Thread.getDefaultUncaughtExceptionHandler()
+        if (exceptionHandler is TopExceptionHandler) {
+            return
+        }
         Thread.setDefaultUncaughtExceptionHandler(
             TopExceptionHandler(
                 getSharedPreferences(
                     SharedPreferencesModule.APP_PREFERENCES_NAME,
                     Context.MODE_PRIVATE
-                )
+                ),
+                exceptionHandler
             )
         )
     }

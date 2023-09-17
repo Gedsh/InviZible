@@ -48,7 +48,7 @@ class NotificationPermissionDialog: ExtendedDialogFragment() {
 
         val builder = AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme)
         builder.setMessage(getString(R.string.notifications_permission_rationale_message))
-            .setTitle(R.string.ask_force_close_title)
+            .setTitle(R.string.reset_settings_title)
             .setPositiveButton(R.string.ok) { _, _ ->
                 if (activity?.isFinishing == false) {
                     launcher?.let {

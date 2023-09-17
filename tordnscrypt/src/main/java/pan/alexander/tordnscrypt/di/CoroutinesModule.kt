@@ -51,8 +51,7 @@ class CoroutinesModule {
 
     @Provides
     @Named(DISPATCHER_IO)
-    fun provideDispatcherIo(cachedExecutor: CachedExecutor): CoroutineDispatcher =
-        cachedExecutor.executorService.asCoroutineDispatcher()
+    fun provideDispatcherIo(): CoroutineDispatcher = Dispatchers.IO
 
     @Provides
     @Named(DISPATCHER_COMPUTATION)

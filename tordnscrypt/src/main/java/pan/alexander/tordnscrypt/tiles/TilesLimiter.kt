@@ -31,7 +31,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.ContextThemeWrapper
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.TopFragment.appVersion
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.di.tiles.TilesScope
@@ -56,7 +55,8 @@ private const val TILES_SAFE_COUNT = 3
 class TilesLimiter @Inject constructor(
     private val appPreferences: dagger.Lazy<PreferenceRepository>,
     @Named(DEFAULT_PREFERENCES_NAME)
-    private val defaultPreferences: dagger.Lazy<SharedPreferences>
+    private val defaultPreferences: dagger.Lazy<SharedPreferences>,
+    private val pathVars: dagger.Lazy<PathVars>
 ) {
 
     private val currentTilesSet by lazy {
@@ -81,7 +81,6 @@ class TilesLimiter @Inject constructor(
     }
 
     fun checkActiveTilesCount(service: TileService) {
-        appVersion = service.getString(R.string.appVersion)
 
         applyAppTheme(service)
 
@@ -100,11 +99,11 @@ class TilesLimiter @Inject constructor(
                 showDialog(service, getWarningDialog(service))
             }
         } else {
-            if (appVersion.endsWith("e")
+            if (pathVars.get().appVersion.endsWith("e")
                 && wrongRegistrationCode
                 && service is ChangeTorIpTileService) {
                 showDialog(service, getDonateDialogForLite(service))
-            } else if (appVersion.endsWith("p") && !accelerated) {
+            } else if (pathVars.get().appVersion.endsWith("p") && !accelerated) {
                 showDialog(service, getDonateDialogForGp(service))
             }
         }
@@ -113,7 +112,7 @@ class TilesLimiter @Inject constructor(
     private fun applyAppTheme(service: TileService) {
         if (!themeApplied) {
             try {
-                ThemeUtils.setDayNightTheme(service)
+                ThemeUtils.setDayNightTheme(service, pathVars.get())
                 themeApplied = true
             } catch (e: Exception) {
                 loge("TilesLimiter applyAppTheme", e)

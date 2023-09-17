@@ -65,7 +65,6 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.vpn.service.VpnBuilder;
 
 import static android.provider.DocumentsContract.EXTRA_INITIAL_URI;
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.DNSCRYPT_RELAYS_SOURCE_IPV6;
@@ -130,7 +129,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         checkRootDirAccessible();
 
-        if (appVersion.endsWith("p")) {
+        if (pathVars.get().getAppVersion().endsWith("p")) {
             removePreferencesWithGPVersion();
         }
 
@@ -166,7 +165,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
-            } else if (!appVersion.startsWith("g")) {
+            } else if (!pathVars.get().getAppVersion().startsWith("g")) {
                 loge("PreferencesDNSFragment preference is null exception");
             }
         }
@@ -174,7 +173,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         Preference editDNSTomlDirectly = findPreference("editDNSTomlDirectly");
         if (editDNSTomlDirectly != null) {
             editDNSTomlDirectly.setOnPreferenceClickListener(this);
-        } else if (!appVersion.startsWith("g")) {
+        } else if (!pathVars.get().getAppVersion().startsWith("g")) {
             loge("PreferencesDNSFragment preference is null exception");
         }
 
@@ -207,7 +206,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceClickListener(this);
-            } else if (!appVersion.startsWith("g")) {
+            } else if (!pathVars.get().getAppVersion().startsWith("g")) {
                 loge("PreferencesDNSFragment preference is null exception");
             }
         }

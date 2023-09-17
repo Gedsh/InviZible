@@ -26,7 +26,7 @@ import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 public class DNSCryptExtractCommand extends AssetsExtractCommand {
     private final String appDataDir;
 
-    DNSCryptExtractCommand(Context context, String appDataDir) {
+    public DNSCryptExtractCommand(Context context, String appDataDir) {
         super(context);
         this.appDataDir = appDataDir;
     }

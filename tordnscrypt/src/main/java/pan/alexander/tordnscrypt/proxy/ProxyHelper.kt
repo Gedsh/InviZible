@@ -151,6 +151,7 @@ class ProxyHelper @Inject constructor(
 
             Socket(proxy).use {
                 it.connect(sockaddr, CHECK_CONNECTION_TIMEOUT_MSEC)
+                it.soTimeout = 1
 
                 if (!it.isConnected) {
                     throw IllegalStateException("unable to connect to $dnsCryptFallbackRes")

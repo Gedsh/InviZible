@@ -68,7 +68,6 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
@@ -83,6 +82,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
 
     private RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> dNSServersAdapter;
     private ArrayList<String> dnsServerNames;
@@ -124,10 +125,10 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         cachedExecutor.submit(() -> {
             try {
-                Verifier verifier = new Verifier(activity);
-                String appSign = verifier.getApkSignatureZip();
+                Verifier verifier = verifierLazy.get();
+                String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, getText(R.string.verifier_error).toString(), "6787");
                     if (notificationHelper != null && isAdded()) {

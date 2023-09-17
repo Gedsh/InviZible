@@ -37,6 +37,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.UiThread;
+import androidx.annotation.WorkerThread;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
@@ -55,12 +57,11 @@ import java.util.concurrent.TimeUnit;
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
-import pan.alexander.tordnscrypt.dialogs.AskForceClose;
+import pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.SendCrashReport;
-import pan.alexander.tordnscrypt.dialogs.UpdateModulesDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.CheckUpdatesDialog;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -73,6 +74,7 @@ import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
+import pan.alexander.tordnscrypt.utils.enums.ModuleName;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.dialogs.Registration;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -83,8 +85,10 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionDialog
 import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManager;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.MODULE_NAME_ARG;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
+import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -108,28 +112,20 @@ import javax.inject.Inject;
 
 public class TopFragment extends Fragment {
 
-    public static String DNSCryptVersion = "2.0.36";
-    public static String TorVersion = "4.2.5";
-    public static String ITPDVersion = "2.29.0";
-
-    public static String appProcVersion = "armv7a";
-    public static String appVersion = "lite";
+    public volatile static String DNSCryptVersion = "";
+    public volatile static String TorVersion = "";
+    public volatile static String ITPDVersion = "";
 
     static String verSU = "";
     static String verBB = "";
 
     public static boolean debug = false;
-    public static String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
-    public static String wrongSign;
-    public static String appSign;
+    public static final String TOP_BROADCAST = "pan.alexander.tordnscrypt.action.TOP_BROADCAST";
 
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private boolean rootIsAvailable = false;
     private boolean rootIsAvailableSaved = false;
-    private static String suVersion = "";
-    private static List<String> suResult = null;
-    private static List<String> bbResult = null;
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -145,6 +141,10 @@ public class TopFragment extends Fragment {
     public Lazy<NotificationPermissionManager> notificationPermissionManager;
     @Inject
     public ViewModelProvider.Factory viewModelFactory;
+    @Inject
+    public Lazy<Verifier> verifierLazy;
+    @Inject
+    public Lazy<AskRestoreDefaultsDialog> askRestoreDefaultsDialog;
 
     private TopFragmentViewModel viewModel;
 
@@ -152,13 +152,13 @@ public class TopFragment extends Fragment {
     private boolean runModulesWithRoot = false;
 
     public CheckUpdatesDialog checkUpdatesDialog;
-    Future<?> updateCheckTask;
+    volatile Future<?> updateCheckTask;
 
     private ScheduledFuture<?> scheduledFuture;
     private BroadcastReceiver br;
     private OnActivityChangeListener onActivityChangeListener;
 
-    private Handler handler;
+    private volatile Handler handler;
 
     private static volatile ScheduledExecutorService timer;
 
@@ -192,9 +192,6 @@ public class TopFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this, viewModelFactory).get(TopFragmentViewModel.class);
 
-        appVersion = getString(R.string.appVersion);
-        appProcVersion = getString(R.string.appProcVersion);
-
         Context context = getActivity();
 
         if (context != null) {
@@ -215,7 +212,8 @@ public class TopFragment extends Fragment {
                 ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
             }
 
-            if (PathVars.isModulesInstalled(preferences) && appVersion.endsWith("p")) {
+            if (PathVars.isModulesInstalled(preferences)
+                    && pathVars.get().getAppVersion().endsWith("p")) {
                 checkAgreement(context);
             }
 
@@ -236,10 +234,6 @@ public class TopFragment extends Fragment {
         Looper looper = Looper.getMainLooper();
         if (looper != null) {
             handler = new Handler(looper);
-        }
-
-        if (!viewModel.getRootCheckResultSuccess()) {
-            viewModel.checkRootAvailable();
         }
 
         if (Build.VERSION.SDK_INT >= 33
@@ -274,13 +268,30 @@ public class TopFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (savedInstanceState == null
-                || !PathVars.isModulesInstalled(preferenceRepository.get())
-                || modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED
-                || modulesStatus.getTorState() == ModuleState.UNDEFINED
-                || modulesStatus.getItpdState() == ModuleState.UNDEFINED) {
+        if (savedInstanceState == null || isInitTasksRequired() || isRootCheckRequired()) {
+            checkRootAvailable();
             observeRootState();
         }
+    }
+
+    private boolean isInitTasksRequired() {
+        return !PathVars.isModulesInstalled(preferenceRepository.get())
+                || DNSCryptVersion.isEmpty()
+                || TorVersion.isEmpty()
+                || ITPDVersion.isEmpty()
+                || modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED
+                || modulesStatus.getTorState() == ModuleState.UNDEFINED
+                || modulesStatus.getItpdState() == ModuleState.UNDEFINED
+                || rootIsAvailable != rootIsAvailableSaved
+                || mode == UNDEFINED;
+    }
+
+    private boolean isRootCheckRequired() {
+        return !viewModel.getRootCheckResultSuccess();
+    }
+
+    private void checkRootAvailable() {
+        viewModel.checkRootAvailable();
     }
 
     @Override
@@ -335,16 +346,20 @@ public class TopFragment extends Fragment {
         viewModel.getRootStateLiveData().observe(getViewLifecycleOwner(), rootState -> {
 
             if (rootState instanceof RootState.RootAvailable) {
-                suVersion = ((RootState.RootAvailable) rootState).getSuVersion();
-                suResult = ((RootState.RootAvailable) rootState).getSuResult();
-                bbResult = ((RootState.RootAvailable) rootState).getBbResult();
+                String suVersion = ((RootState.RootAvailable) rootState).getSuVersion();
+                List <String> suResult = ((RootState.RootAvailable) rootState).getSuResult();
+                List<String> bbResult = ((RootState.RootAvailable) rootState).getBbResult();
+
+                setSUInfo(suResult, suVersion);
+                setBBinfo(bbResult);
             }
 
-            performBackgroundWorkAfterRootChecking();
+            performInitTasksBackgroundWork();
         });
     }
 
-    private void performBackgroundWorkAfterRootChecking() {
+    @WorkerThread
+    private void performInitTasksBackgroundWork() {
         cachedExecutor.submit(() -> {
 
             Activity activity = getActivity();
@@ -361,13 +376,14 @@ public class TopFragment extends Fragment {
 
             shortenTooLongSnowflakeLog(context, preferences, pathVars.get());
             shortenTooLongConjureLog(context, preferences, pathVars.get());
+            shortenTooLongWebTunnelLog(context, preferences, pathVars.get());
 
             checkModulesStoppedBySystem(activity);
 
             checkIntegrity(activity);
 
             if (handler != null) {
-                handler.post(this::performMainThreadWorkAfterRootChecking);
+                handler.post(this::performInitTasksMainThreadWork);
             }
 
         });
@@ -395,11 +411,11 @@ public class TopFragment extends Fragment {
 
     private void checkIntegrity(Activity activity) {
         try {
-            Verifier verifier = new Verifier(activity);
-            appSign = verifier.getApkSignatureZip();
+            Verifier verifier = verifierLazy.get();
+            String appSign = verifier.getAppSignature();
             String appSignAlt = verifier.getApkSignature();
             verifier.encryptStr(TOP_BROADCAST, appSign, appSignAlt);
-            wrongSign = getString(R.string.encoded).trim();
+            String wrongSign = verifier.getWrongSign();
             if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
                 if (isAdded() && !isStateSaved()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -422,7 +438,8 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private void performMainThreadWorkAfterRootChecking() {
+    @UiThread
+    private void performInitTasksMainThreadWork() {
 
         MainActivity activity = (MainActivity) getActivity();
 
@@ -431,9 +448,6 @@ public class TopFragment extends Fragment {
         }
 
         try {
-
-            setSUInfo(suResult, suVersion);
-            setBBinfo(bbResult);
 
             if (rootIsAvailable != rootIsAvailableSaved || mode == UNDEFINED) {
                 ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
@@ -444,11 +458,6 @@ public class TopFragment extends Fragment {
             if (!PathVars.isModulesInstalled(preferenceRepository.get())) {
                 actionModulesNotInstalled(activity);
             } else {
-
-                //Currently not used
-                //if (topFragment.coreUpdateReady(activity)) {
-                //    return;
-                //}
 
                 refreshModulesVersions(activity);
 
@@ -543,7 +552,7 @@ public class TopFragment extends Fragment {
             return;
         }
 
-        if (appVersion.endsWith("e")) {
+        if (pathVars.get().getAppVersion().endsWith("e")) {
             if (handler != null) {
                 handler.postDelayed(() -> {
                     if (isAdded() && !isStateSaved()) {
@@ -552,7 +561,7 @@ public class TopFragment extends Fragment {
                     }
                 }, 5000);
             }
-        } else if (appVersion.endsWith("p") && isAdded()) {
+        } else if (pathVars.get().getAppVersion().endsWith("p") && isAdded()) {
 
             if (!preferenceRepository.get().getBoolPreference("Agreement")) {
                 return;
@@ -584,37 +593,6 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private boolean coreUpdateReady(Context context) {
-
-        if (context == null) {
-            return false;
-        }
-
-        final PreferenceRepository preferences = preferenceRepository.get();
-
-        String currentDNSCryptVersionStr = preferences.getStringPreference("DNSCryptVersion");
-        String currentTorVersionStr = preferences.getStringPreference("TorVersion");
-        String currentITPDVersionStr = preferences.getStringPreference("ITPDVersion");
-        if (!(currentDNSCryptVersionStr.isEmpty() && currentTorVersionStr.isEmpty() && currentITPDVersionStr.isEmpty())) {
-            int currentDNSCryptVersion = Integer.parseInt(currentDNSCryptVersionStr.replaceAll("\\D+", ""));
-            int currentTorVersion = Integer.parseInt(currentTorVersionStr.replaceAll("\\D+", ""));
-            int currentITPDVersion = Integer.parseInt(currentITPDVersionStr.replaceAll("\\D+", ""));
-
-            if (((currentDNSCryptVersion < Integer.parseInt(DNSCryptVersion.replaceAll("\\D+", ""))
-                    || currentTorVersion < Integer.parseInt(TorVersion.replaceAll("\\D+", ""))
-                    || currentITPDVersion < Integer.parseInt(ITPDVersion.replaceAll("\\D+", "")))
-                    && !preferences.getBoolPreference("UpdateNotAllowed"))) {
-                if (isAdded() && !isStateSaved()) {
-                    DialogFragment updateCore = UpdateModulesDialogFragment.getInstance();
-                    updateCore.show(getParentFragmentManager(), "UpdateModulesDialogFragment");
-                }
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void actionModulesNotInstalled(Context context) {
 
         PreferenceManager.setDefaultValues(context, R.xml.preferences_common, true);
@@ -639,50 +617,57 @@ public class TopFragment extends Fragment {
     }
 
     private void setSUInfo(List<String> fSuResult, String fSuVersion) {
+        try {
+            final PreferenceRepository preferences = preferenceRepository.get();
 
-        final PreferenceRepository preferences = preferenceRepository.get();
+            if (fSuResult != null && fSuResult.size() != 0
+                    && fSuResult.toString().toLowerCase().contains("uid=0")
+                    && fSuResult.toString().toLowerCase().contains("gid=0")) {
 
-        if (fSuResult != null && fSuResult.size() != 0
-                && fSuResult.toString().toLowerCase().contains("uid=0")
-                && fSuResult.toString().toLowerCase().contains("gid=0")) {
+                rootIsAvailable = true;
 
-            rootIsAvailable = true;
+                preferences.setBoolPreference(ROOT_IS_AVAILABLE, true);
 
-            preferences.setBoolPreference(ROOT_IS_AVAILABLE, true);
-
-            if (fSuVersion != null && fSuVersion.length() != 0) {
-                verSU = "Root is available." + (char) 10 +
-                        "Super User Version: " + fSuVersion + (char) 10 +
-                        fSuResult.get(0);
+                if (fSuVersion != null && fSuVersion.length() != 0) {
+                    verSU = "Root is available." + (char) 10 +
+                            "Super User Version: " + fSuVersion + (char) 10 +
+                            fSuResult.get(0);
+                } else {
+                    verSU = "Root is available." + (char) 10 +
+                            "Super User Version: Unknown" +
+                            fSuResult.get(0);
+                }
+                logi(verSU);
             } else {
-                verSU = "Root is available." + (char) 10 +
-                        "Super User Version: Unknown" +
-                        fSuResult.get(0);
+                rootIsAvailable = false;
+                preferences.setBoolPreference(ROOT_IS_AVAILABLE, false);
             }
-            logi(verSU);
-        } else {
-            rootIsAvailable = false;
-            preferences.setBoolPreference(ROOT_IS_AVAILABLE, false);
+        } catch (Exception e) {
+            loge("TopFragment setSUInfo", e);
         }
     }
 
     private void setBBinfo(List<String> fBbResult) {
 
-        final PreferenceRepository preferences = preferenceRepository.get();
+        try {
+            final PreferenceRepository preferences = preferenceRepository.get();
 
-        if (fBbResult != null && fBbResult.size() != 0) {
-            verBB = fBbResult.get(0);
-        } else {
-            preferences.setBoolPreference("bbOK", false);
-            return;
-        }
+            if (fBbResult != null && fBbResult.size() != 0) {
+                verBB = fBbResult.get(0);
+            } else {
+                preferences.setBoolPreference("bbOK", false);
+                return;
+            }
 
-        if (verBB.toLowerCase().contains("not found")) {
-            preferences.setBoolPreference("bbOK", false);
-        } else {
-            preferences.setBoolPreference("bbOK", true);
+            if (verBB.toLowerCase().contains("not found")) {
+                preferences.setBoolPreference("bbOK", false);
+            } else {
+                preferences.setBoolPreference("bbOK", true);
 
-            logi("BusyBox is available " + verBB);
+                logi("BusyBox is available " + verBB);
+            }
+        } catch (Exception e) {
+            loge("TopFragment setBBinfo", e);
         }
     }
 
@@ -731,7 +716,7 @@ public class TopFragment extends Fragment {
             return true;
         }
 
-        if (appVersion.endsWith("p")) {
+        if (pathVars.get().getAppVersion().endsWith("p")) {
             return false;
         }
 
@@ -760,7 +745,9 @@ public class TopFragment extends Fragment {
         }
 
         boolean autoUpdate = spref.getBoolean("pref_fast_auto_update", true)
-                && !appVersion.startsWith("l") && !appVersion.endsWith("p") && !appVersion.startsWith("f");
+                && !pathVars.get().getAppVersion().startsWith("l")
+                && !pathVars.get().getAppVersion().endsWith("p")
+                && !pathVars.get().getAppVersion().startsWith("f");
 
         if (autoUpdate) {
             boolean throughTorUpdate = spref.getBoolean("pref_fast through_tor_update", false);
@@ -787,7 +774,8 @@ public class TopFragment extends Fragment {
 
     public void checkNewVer(Context context, boolean showProgressDialog) {
 
-        if (appVersion.endsWith("p") || appVersion.startsWith("f")) {
+        if (pathVars.get().getAppVersion().endsWith("p")
+                || pathVars.get().getAppVersion().startsWith("f")) {
             return;
         }
 
@@ -801,7 +789,7 @@ public class TopFragment extends Fragment {
 
         try {
             UpdateCheck updateCheck = new UpdateCheck(this);
-            updateCheckTask = updateCheck.requestUpdateData("https://invizible.net", appSign);
+            updateCheckTask = updateCheck.requestUpdateData("https://invizible.net");
             if (showProgressDialog && !isStateSaved()) {
                 checkUpdatesDialog = new CheckUpdatesDialog();
                 checkUpdatesDialog.setCheckUpdatesTask(updateCheckTask);
@@ -820,6 +808,11 @@ public class TopFragment extends Fragment {
     }
 
     public void downloadUpdate(String fileName, String updateStr, String message, String hash) {
+
+        if (handler == null) {
+            return;
+        }
+
         handler.post(() -> {
             Context context = getActivity();
             if (context == null)
@@ -855,7 +848,8 @@ public class TopFragment extends Fragment {
 
     public void showUpdateResultMessage(Activity activity) {
 
-        if (appVersion.equals("gp") || appVersion.equals("fd")) {
+        if (pathVars.get().getAppVersion().equals("gp")
+                || pathVars.get().getAppVersion().equals("fd")) {
             return;
         }
 
@@ -916,9 +910,13 @@ public class TopFragment extends Fragment {
         if (intent.getAction().equals(UpdateService.UPDATE_RESULT)) {
             showUpdateResultMessage(activity);
             refreshModulesVersions(activity);
-        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
-            DialogFragment dialogFragment = AskForceClose.getInstance(intent.getStringExtra(ModulesStarterHelper.MODULE_NAME));
-            dialogFragment.show(getParentFragmentManager(), "AskForceClose");
+        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_RESTORE_DEFAULTS)) {
+            DialogFragment dialog = askRestoreDefaultsDialog.get();
+            Bundle args = new Bundle();
+            ModuleName name = (ModuleName) intent.getSerializableExtra(ModulesStarterHelper.MODULE_NAME);
+            args.putSerializable(MODULE_NAME_ARG, name);
+            dialog.setArguments(args);
+            dialog.show(getChildFragmentManager(), "AskRestoreDefaults");
         }
     }
 
@@ -933,7 +931,7 @@ public class TopFragment extends Fragment {
             return false;
         }
 
-        if (!action.equals(UpdateService.UPDATE_RESULT) && !action.equals(ModulesStarterHelper.ASK_FORCE_CLOSE)) {
+        if (!action.equals(UpdateService.UPDATE_RESULT) && !action.equals(ModulesStarterHelper.ASK_RESTORE_DEFAULTS)) {
             return false;
         }
 
@@ -954,7 +952,7 @@ public class TopFragment extends Fragment {
         };
 
         IntentFilter intentFilterUpdate = new IntentFilter(UpdateService.UPDATE_RESULT);
-        IntentFilter intentFilterForceClose = new IntentFilter(ModulesStarterHelper.ASK_FORCE_CLOSE);
+        IntentFilter intentFilterForceClose = new IntentFilter(ModulesStarterHelper.ASK_RESTORE_DEFAULTS);
         LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterUpdate);
         LocalBroadcastManager.getInstance(context).registerReceiver(br, intentFilterForceClose);
     }

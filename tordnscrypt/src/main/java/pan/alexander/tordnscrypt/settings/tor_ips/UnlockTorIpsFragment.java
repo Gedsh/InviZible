@@ -52,8 +52,6 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.TopFragment.appSign;
-import static pan.alexander.tordnscrypt.TopFragment.wrongSign;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
@@ -83,6 +81,8 @@ public class UnlockTorIpsFragment extends Fragment {
     ViewModelProvider.Factory viewModelFactory;
     @Inject @Named(DEFAULT_PREFERENCES_NAME)
     Lazy<SharedPreferences> defaultPreferences;
+    @Inject
+    Lazy<Verifier> verifierLazy;
 
     public UnlockTorIpsViewModel viewModel;
 
@@ -134,9 +134,10 @@ public class UnlockTorIpsFragment extends Fragment {
 
         cachedExecutor.submit(() -> {
             try {
-                Verifier verifier = new Verifier(activity);
+                Verifier verifier = verifierLazy.get();
+                String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
-                if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, getString(R.string.verifier_error), "123");
                     if (notificationHelper != null && isAdded()) {

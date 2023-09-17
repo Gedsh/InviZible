@@ -942,3 +942,43 @@
 **InviZible Pro beta 1.9.3**
 * Fixed Tor not starting after enabling Allow Tor Tethering.
 * Fixes and optimizations.
+
+**InviZible Pro beta 1.9.4**
+* Updated Tor to version 4.8.3.
+* Updated Tor geoip file.
+* Updated Tor lyrebird obfuscating proxy.
+* Updated Tor Conjure bridge.
+* Updated Tor Snowflake bridge.
+* Updated DNSCrypt.
+* Fixed app can't start modules when ports are busy.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.9.5**
+* Updated DNSCrypt to version 2.1.5.
+* Added support for the Tor WebTunnel bridge.
+
+**InviZible Pro beta 1.9.6**
+* Improved Tor WebTunnel bridge censorship resistance.
+* Improved Tor Snowflake bridge connection stability.
+* Fixed adding meek_lite bridges with utls option.
+* Fixed display of ping and country for some WebTunnel bridges.
+* Optimized memory usage.
+
+**InviZible Pro beta 1.9.7**
+* Updated Tor to version 4.8.4.
+* Added a suggestion to reset the module settings in case of a startup failure.
+* Fixes and optimizations.
+
+**InviZible Pro beta 1.9.8**
+* Updated Tor to version 4.8.5.
+* Implemented customizable SNI for Tor connections.
+* Using Chromium's TLS fingerprint instead of Firefox's obsolete TLS fingerprint for Tor connections.
+* Updated Tor WebTunnel bridge.
+* Fixed ANR on Android 4.4.2.
+* Fixed requesting new bridges button not responding in rare cases.
+* Added Ukrainian translation.
+
+**InviZible Pro beta 1.9.9**
+* Added TrackHostExits option to Tor settings.
+* Fixed the Tor WebTunnel bridge failure to connect on Android versions lower than 8.
+* Fixes and optimizations.

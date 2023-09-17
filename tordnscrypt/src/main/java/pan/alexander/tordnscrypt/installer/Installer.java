@@ -53,6 +53,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
@@ -73,6 +74,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     public CachedExecutor cachedExecutor;
     @Inject
     public Lazy<ModulesVersions> modulesVersions;
+    @Inject
+    public Lazy<InstallerHelper> installerHelper;
 
     private Activity activity;
     private MainActivity mainActivity;
@@ -291,11 +294,15 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
         boolean result = true;
         try {
-            //noinspection ResultOfMethodCallIgnored
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            if (countDownLatch != null) {
+                //noinspection ResultOfMethodCallIgnored
+                countDownLatch.await(10, TimeUnit.SECONDS);
+            }
         } catch (InterruptedException e) {
             Log.e(LOG_TAG, "Installer CountDownLatch interrupted");
             result = false;
+        } catch (Exception e) {
+            loge("Installer waitUntilAllModulesStopped", e, true);
         }
 
         return result;
@@ -371,55 +378,13 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                     && activity.getText(R.string.package_name).toString().contains(".gp")
                     && path.contains("dnscrypt-proxy.toml")
                     && !PathVars.isModulesInstalled(preferenceRepository.get())) {
-                lines = prepareDNSCryptForGP(lines);
+                lines = installerHelper.get().prepareDNSCryptForGP(lines);
             }
 
             FileManager.writeTextFileSynchronous(activity, path, lines);
         } else {
             throw new IllegalStateException("correctAppDir readTextFile return null " + path);
         }
-    }
-
-    @SuppressLint("SdCardPath")
-    private List<String> prepareDNSCryptForGP(List<String> lines) {
-
-        defaultPreferences.get().edit().putBoolean("require_nofilter", true).apply();
-
-        ArrayList<String> prepared = new ArrayList<>();
-
-        for (String line : lines) {
-
-            if (line.contains("blacklist_file")) {
-                line = "";
-            } else if (line.contains("whitelist_file")) {
-                line = "";
-            } else if (line.contains("blocked_names_file")) {
-                line = "";
-            } else if (line.contains("blocked_ips_file")) {
-                line = "";
-            } else if (line.matches("(^| )\\{ ?server_name([ =]).+")) {
-                line = "";
-            } else if (line.matches("(^| )server_names([ =]).+")) {
-                line = "server_names = ['uncensoreddns-dk-ipv4', " +
-                        "'njalla-doh', " +
-                        "'faelix-ch-ipv4', " +
-                        "'dns.digitale-gesellschaft.ch', " +
-                        "'dnscrypt.ca-1', " +
-                        "'sth-doh-se', " +
-                        "'libredns', " +
-                        "'dnswarden-uncensor-dc-swiss', " +
-                        "'publicarray-au-doh', " +
-                        "'scaleway-fr']";
-            } else if (line.contains("require_nofilter")) {
-                line = "require_nofilter = true";
-            }
-
-            if (!line.isEmpty()) {
-                prepared.add(line);
-            }
-        }
-
-        return prepared;
     }
 
     protected void stopAllRunningModulesWithRootCommand() {

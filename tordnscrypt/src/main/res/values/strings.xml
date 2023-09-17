@@ -148,6 +148,7 @@
     <string name="pref_fast_use_tor_bridges_show_dialog">Your new bridges from bridges.torproject.org:</string>
     <string name="pref_fast_use_tor_bridges_add_dialog">Save</string>
     <string name="pref_fast_use_tor_bridges_close_dialog">Close</string>
+    <string name="pref_fast_fake_sni">Spoof SNI</string>
     <string name="pref_fast_unlock_host_wrong">Wrong host name!</string>
     <string name="pref_fast_theme">Select Theme</string>
     <string name="pref_fast_theme_titles_day_mode">Day Mode</string>
@@ -467,6 +468,8 @@
     <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clear cache</string>
+    <string name="pref_tor_track_host_exits" translatable="false">TrackHostExits</string>
+    <string name="pref_tor_track_host_exits_summ">Tor will track recent connections to hosts and attempt to reuse the same exit node for each. This option may help avoid endless captcha.</string>
     <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
     <string name="pref_tor_isolate_dest_address_summ">Don’t share circuits with streams targeting a different destination address.</string>
     <string name="pref_tor_isolate_dest_port" translatable="false">IsolateDestPort</string>
@@ -656,10 +659,10 @@
     <string name="main_fragment_protect_dns">Defend with DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Access to I2P network with Purple I2P</string>
 
-    <string name="ask_force_close_title">Attention</string>
-    <string name="ask_force_close_text">InviZible Pro cannot start %1$s! Please check %2$s settings or try to Force Close the application.
+    <string name="reset_settings_title">Attention</string>
+    <string name="ask_reset_settings_btn">Reset</string>
+    <string name="ask_reset_settings_text">InviZible Pro cannot start %1$s! Please try resetting %2$s settings.
         If this does not help, please reboot your device.</string>
-    <string name="ask_force_close_btn">Force close</string>
 
     <string name="add_custom_server_title">Add custom server</string>
     <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>

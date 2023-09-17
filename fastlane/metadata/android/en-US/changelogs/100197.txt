@@ -1,0 +1,4 @@
+**InviZible Pro beta 1.9.7**
+* Updated Tor to version 4.8.4.
+* Added a suggestion to reset the module settings in case of a startup failure.
+* Fixes and optimizations.

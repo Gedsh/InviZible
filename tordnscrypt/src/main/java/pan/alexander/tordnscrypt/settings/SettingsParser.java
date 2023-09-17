@@ -315,6 +315,12 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     case "#Socks5Proxy":
                         editor.putBoolean(TOR_OUTBOUND_PROXY, false);
                         break;
+                    case "TrackHostExits":
+                        editor.putBoolean("Enable TrackHostExits", true);
+                        break;
+                    case "#TrackHostExits":
+                        editor.putBoolean("Enable TrackHostExits", false);
+                        break;
                 }
             }
             editor.apply();

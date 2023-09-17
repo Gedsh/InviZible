@@ -99,7 +99,9 @@ class HttpsConnectionManager @Inject constructor(
                     mutableListOf<String>().also { lines ->
                         httpsURLConnection.inputStream.bufferedReader().useLines {
                             it.forEach { line ->
-                                yield()
+                                if (!isActive) {
+                                    return@forEach
+                                }
                                 lines.add(line)
                             }
                         }

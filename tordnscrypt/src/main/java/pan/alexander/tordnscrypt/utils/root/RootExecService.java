@@ -101,10 +101,14 @@ public class RootExecService extends Service
 
         logi("RootExecService Root = " + true + " performAction");
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent);
-        } else {
-            context.startService(intent);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent);
+            } else {
+                context.startService(intent);
+            }
+        } catch (Exception e) {
+            loge("RootExecService performAction", e, true);
         }
     }
 

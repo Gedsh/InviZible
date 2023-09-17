@@ -364,9 +364,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="main_fragment_hide_ip">"Απόκρυψη IP μέσω TOR"</string>
     <string name="main_fragment_protect_dns">"Προστασία DNS μέσω DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Πρόσβαση σε ιστοσελίδες I2P μέσω Purple I2P"</string>
-    <string name="ask_force_close_title">"Προσοχή"</string>
-    <string name="ask_force_close_text">"Το InviZible Pro δεν μπορεί να ξεκινήσει %1$s! Ελέγξτε τις ρυθμίσεις %2$s ή προσπαθήστε να κλείσετε με εξαναγκασμό την εφαρμογή. Εάν αυτό δεν σας βοηθήσει, κάντε επανεκκίνηση της συσκευής σας."</string>
-    <string name="ask_force_close_btn">"Τερματισμός"</string>
+    <string name="reset_settings_title">"Προσοχή"</string>
     <string name="add_custom_server_title">"Προσθήκη προσαρμοσμένου διακομιστή"</string>
     <string name="add_custom_server_error">"Μη έγκυρη προσαρμοσμένη διαμόρφωση διακομιστή. Ελέγξτε το πεδίο SDNS."</string>
     <string name="pending_purchase">"Λάβετε υπόψη ότι έχετε μια αγορά σε εκκρεμότητα:"</string>

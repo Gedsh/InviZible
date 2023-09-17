@@ -101,7 +101,6 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -235,7 +234,7 @@ public class MainActivity extends LangAppCompatActivity
 
         registerBroadcastReceiver();
 
-        if (appVersion.equals("gp")) {
+        if (pathVars.get().getAppVersion().equals("gp")) {
             accelerateDevelop = new AccelerateDevelop(this);
             accelerateDevelop.initBilling();
         }
@@ -274,7 +273,7 @@ public class MainActivity extends LangAppCompatActivity
 
     private void setDayNightTheme() {
         try {
-            ThemeUtils.setDayNightTheme(this);
+            ThemeUtils.setDayNightTheme(this, pathVars.get());
         } catch (Exception e) {
             loge("MainActivity setDayNightTheme", e);
         }
@@ -282,7 +281,8 @@ public class MainActivity extends LangAppCompatActivity
 
     private void checkUpdates() {
 
-        if (appVersion.equals("gp") || appVersion.equals("fd")) {
+        if (pathVars.get().getAppVersion().equals("gp")
+                || pathVars.get().getAppVersion().equals("fd")) {
             return;
         }
 
@@ -841,7 +841,7 @@ public class MainActivity extends LangAppCompatActivity
             Intent intent = new Intent(this, HelpActivity.class);
             startActivity(intent);
         } else if (id == R.id.nav_Donate) {
-            if (appVersion.startsWith("g")) {
+            if (pathVars.get().getAppVersion().startsWith("g")) {
                 if (accelerateDevelop != null && !accelerated) {
                     accelerateDevelop.launchBilling(AccelerateDevelop.mSkuId);
                 }
@@ -940,7 +940,9 @@ public class MainActivity extends LangAppCompatActivity
         }
 
         MenuItem item = navigationView.getMenu().findItem(R.id.nav_Donate);
-        if ((appVersion.startsWith("g") && accelerated) || appVersion.startsWith("p") || appVersion.startsWith("f")) {
+        if ((pathVars.get().getAppVersion().startsWith("g") && accelerated)
+                || pathVars.get().getAppVersion().startsWith("p")
+                || pathVars.get().getAppVersion().startsWith("f")) {
             if (item != null) {
                 item.setVisible(false);
             }
@@ -948,14 +950,14 @@ public class MainActivity extends LangAppCompatActivity
             if (item != null) {
                 item.setVisible(true);
 
-                if (appVersion.startsWith("g")) {
+                if (pathVars.get().getAppVersion().startsWith("g")) {
                     item.setTitle(R.string.premium);
                 }
             }
         }
 
         item = navigationView.getMenu().findItem(R.id.nav_Code);
-        if (appVersion.startsWith("l")) {
+        if (pathVars.get().getAppVersion().startsWith("l")) {
             if (item != null) {
                 item.setVisible(true);
             }

@@ -26,11 +26,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
@@ -40,24 +42,33 @@ import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.dialogs.FakeSniInputDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
+import pan.alexander.tordnscrypt.dialogs.SniInputListener;
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.language.Language;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
+import pan.alexander.tordnscrypt.views.SwitchPlusClickPreference;
 
-import static pan.alexander.tordnscrypt.TopFragment.appVersion;
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.dialogs.FakeSniInputDialogFragmentKt.FAKE_SNI_ARG;
+import static pan.alexander.tordnscrypt.utils.Utils.verifyHostsSet;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -66,6 +77,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_ST
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -73,18 +86,29 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
-public class PreferencesFastFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener {
+public class PreferencesFastFragment extends PreferenceFragmentCompat
+        implements Preference.OnPreferenceChangeListener,
+        SwitchPlusClickPreference.SwitchPlusClickListener,
+        SniInputListener {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<Handler> handler;
     @Inject
     public Lazy<NflogManager> nflogManager;
     @Inject
     public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<FakeSniInputDialogFragment> fakeSniInputDialogFragment;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -142,6 +166,20 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             pref_fast_language.setOnPreferenceChangeListener(this);
         }
 
+        SwitchPlusClickPreference fakeSni = findPreference(FAKE_SNI);
+        if (fakeSni != null) {
+            Set<String> hosts = verifyHostsSet(
+                    preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
+            );
+            if (hosts.isEmpty()) {
+                hosts = new LinkedHashSet<>(
+                        Arrays.asList(context.getResources().getStringArray(R.array.default_fake_sni))
+                );
+            }
+            fakeSni.setSummary(TextUtils.join(", ", hosts));
+            fakeSni.setSwitchClickListener(this);
+        }
+
         if (modulesStatus.getMode() == ROOT_MODE
                 || modulesStatus.getMode() == VPN_MODE) {
             changePreferencesWithRootOrVPNMode(context);
@@ -149,11 +187,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
             changePreferencesWithProxyMode();
         }
 
-        if (appVersion.startsWith("g")) {
+        if (pathVars.get().getAppVersion().startsWith("g")) {
             changePreferencesForGPVersion();
-        } else if (appVersion.endsWith("d")) {
+        } else if (pathVars.get().getAppVersion().endsWith("d")) {
             changePreferencesForFDVersion();
-        } else if (appVersion.startsWith("l")) {
+        } else if (pathVars.get().getAppVersion().startsWith("l")) {
             changePreferencesForLiteVersion();
         }
 
@@ -164,7 +202,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
     public void onCreatePreferences(Bundle bundle, String s) {
         Context context = getActivity();
 
-        if (appVersion.startsWith("g") && !accelerated && context != null) {
+        if (pathVars.get().getAppVersion().startsWith("g") && !accelerated && context != null) {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
             if (preferences != null) {
                 preferences.edit().putString("pref_fast_theme", "1").apply();
@@ -223,7 +261,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                     + dateString + " " + timeString + System.lineSeparator() + lastUpdateResult);
         } else if (lastUpdateResult.equals(getString(R.string.update_fault))
                 && preferenceRepository.get().getStringPreference("updateTimeLast").isEmpty()
-                && appVersion.startsWith("p")) {
+                && pathVars.get().getAppVersion().startsWith("p")) {
             Preference pref_fast_auto_update = findPreference("pref_fast_auto_update");
             if (pref_fast_auto_update != null) {
                 pref_fast_auto_update.setEnabled(false);
@@ -271,7 +309,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
 
         handler.get().post(() -> {
             try {
-                ThemeUtils.setDayNightTheme(context);
+                ThemeUtils.setDayNightTheme(context, pathVars.get());
                 activityCurrentRecreate();
             } catch (Exception e) {
                 loge("PreferencesFastFragment changeTheme", e);
@@ -386,7 +424,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
                 }
                 return true;
             case "pref_fast_theme":
-                if (appVersion.startsWith("g") && !accelerated) {
+                if (pathVars.get().getAppVersion().startsWith("g") && !accelerated) {
                     if (isAdded()) {
                         DialogFragment notificationDialogFragment = NotificationDialogFragment.newInstance(R.string.only_premium_feature);
                         notificationDialogFragment.show(getParentFragmentManager(), "NotificationDialogFragment");
@@ -406,6 +444,28 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         }
 
         return false;
+    }
+
+
+    @Override
+    public void onCheckedChanged(SwitchCompat buttonView, boolean isChecked) {
+        boolean torRunning = ModulesAux.isTorSavedStateRunning();
+        if (torRunning) {
+            ModulesRestarter.restartTor(getContext());
+            modulesStatus.setIptablesRulesUpdateRequested(getContext(), true);
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        FakeSniInputDialogFragment fragment = fakeSniInputDialogFragment.get();
+        Bundle bundle = new Bundle();
+        Set<String> hosts = verifyHostsSet(
+                preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
+        );
+        bundle.putStringArrayList(FAKE_SNI_ARG, new ArrayList<>(hosts));
+        fragment.setArguments(bundle);
+        fragment.show(getChildFragmentManager(), "FakeSniInputDialogFragment");
     }
 
     private void changePreferencesWithRootOrVPNMode(Context context) {
@@ -532,6 +592,45 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat implements
         if (prefCheckUpdate != null) {
             prefCheckUpdate.setSummary(R.string.only_for_pro);
             prefCheckUpdate.setEnabled(false);
+        }
+    }
+
+    @Override
+    public void setSni(String text) {
+
+        if (text == null) {
+            return;
+        }
+
+        Set<String> sni = verifyHostsSet(
+                new LinkedHashSet<>(Arrays.asList(text.split(", ?| +|\\n")))
+        );
+
+        Set<String> savedSni = verifyHostsSet(
+                preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
+        );
+
+        if (savedSni.size() == sni.size() && savedSni.containsAll(sni)) {
+            return;
+        }
+
+        preferenceRepository.get().setStringSetPreference(FAKE_SNI_HOSTS, sni);
+
+        if (sni.isEmpty()) {
+            sni = new LinkedHashSet<>(
+                    Arrays.asList(getResources().getStringArray(R.array.default_fake_sni))
+            );
+        }
+
+        SwitchPlusClickPreference fakeSni = findPreference(FAKE_SNI);
+        if (fakeSni != null) {
+            fakeSni.setSummary(TextUtils.join(", ", sni));
+        }
+
+        boolean torRunning = ModulesAux.isTorSavedStateRunning();
+        if (torRunning && defaultPreferences.get().getBoolean(FAKE_SNI, false)) {
+            ModulesRestarter.restartTor(getContext());
+            modulesStatus.setIptablesRulesUpdateRequested(getContext(), true);
         }
     }
 }

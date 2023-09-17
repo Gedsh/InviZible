@@ -96,6 +96,10 @@ public class OwnFileReader {
                         lines.remove(0);
                         fileIsTooLong = true;
                     }
+
+                    if (Thread.currentThread().isInterrupted()) {
+                        return lines;
+                    }
                 }
             }
 

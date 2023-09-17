@@ -242,7 +242,7 @@
     <string name="pref_tor_clearnet">"Host atau IP untuk jalan pintas"</string>
     <string name="pref_tor_unlock_edit">"Edit Host atau IP"</string>
     <string name="pref_tor_unlock_disabled">"Dinonaktifkan"</string>
-    <string name="pref_tor_clean_module_folder">"Bersihkan folder modul"</string>
+    <string name="pref_tor_clean_module_folder">Bersihkan cache</string>
     <string name="pref_routing_unlock_app">"Aplikasi untuk digunakan dengan InviZible"</string>
     <string name="pref_routing_clearnet_app">"Aplikasi untuk jalan pintas InviZible"</string>
     <string name="country_select_select_all">"Pilih Semua"</string>
@@ -345,12 +345,9 @@
     <string name="vpn_mode_error">"Kesalahan mode VPN!"</string>
     <string name="vpn_tor_tether_summ">"Harap konfigurasikan penggunaan server proxy dalam pengaturan perangkat yang terhubung. Nilai default: IP: 10.1.10.1 Port: 8118"</string>
     <string name="main_fragment_hide_ip">"Sembunyikan IP dengan TOR"</string>
-    <string name="main_fragment_protect_dns">"Lindungi DNS dengan DNSCRYPT"</string>
-    <string name="main_fragment_access_i2p">"Akses ke situs I2P dengan Purple I2P"</string>
-    <string name="ask_force_close_title">"Perhatian"</string>
-    <string name="ask_force_close_text">"InviZible Pro tidak dapat memulai %1$s! Silakan periksa pengaturan %2$s atau coba tutup paksa aplikasi.
-        Jika masih belum berfungsi, silakan mulai ulang perangkat anda."</string>
-    <string name="ask_force_close_btn">"Tutup paksa"</string>
+    <string name="reset_settings_title">"Perhatian"</string>
+    <string name="main_fragment_protect_dns">Lindungi dengan DNSCRYPT</string>
+    <string name="main_fragment_access_i2p">Akses situs I2P dengan Purple I2P</string>
     <string name="add_custom_server_title">"Tambahkan server khusus"</string>
     <string name="add_custom_server_error">"Konfigurasi server khusus tidak valid. Silakan periksa bidang SDNS."</string>
     <string name="pending_purchase">"Harap perhatikan bahwa Anda memiliki pembelian yang tertunda:"</string>
