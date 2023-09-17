@@ -53,6 +53,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
@@ -293,11 +294,15 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
         boolean result = true;
         try {
-            //noinspection ResultOfMethodCallIgnored
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            if (countDownLatch != null) {
+                //noinspection ResultOfMethodCallIgnored
+                countDownLatch.await(10, TimeUnit.SECONDS);
+            }
         } catch (InterruptedException e) {
             Log.e(LOG_TAG, "Installer CountDownLatch interrupted");
             result = false;
+        } catch (Exception e) {
+            loge("Installer waitUntilAllModulesStopped", e, true);
         }
 
         return result;
