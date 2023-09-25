@@ -13,9 +13,9 @@ libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=prod
-i2pd_openssl_version=OpenSSL_1_1_1u
+i2pd_openssl_version=OpenSSL_1_1_1w
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.48.0
+i2pd_version=2.49.0
 
 git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
 
