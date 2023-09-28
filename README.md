@@ -154,16 +154,19 @@ This product is produced independently from the **Tor®**, **DNSCrypt**, **Purpl
 and carries no guarantee from The Above Projects about quality, suitability or anything else.
 
 ## Donations
+**PayPal**: invizible.soft@gmail.com
 
-**Bitcoin**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
+**Patreon**: https://www.patreon.com/inviziblepro
 
-**Bitcoin Cache**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
+**BTC**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
 
-**USD PAX**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
+**BCH**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
 
-**Ether**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
+**USDT**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
 
-**Stellar**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
+**XLM**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
+
+**XMR** 83k3FtpRhoT8QpE3M8mKunjXsktfVhGS2fVXm1X1Myj4EoH5hJ4BfuFXkYcRod61kCDP1hpcDSw2FFM622rRD6rWEJ45UjU
 
 ## License
 
