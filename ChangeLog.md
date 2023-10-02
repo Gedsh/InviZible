@@ -982,3 +982,11 @@
 * Added TrackHostExits option to Tor settings.
 * Fixed the Tor WebTunnel bridge failure to connect on Android versions lower than 8.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.0**
+* Updated Tor to version 4.8.7.
+* Updated Purple I2P to version 2.49.0.
+* Fixed SnowFlake bridge failed to connect.
+* Fixed adding new SnowFlake bridges.
+* Fixed Conjure bridge failed to connect.
+* Fixes and optimizations.
