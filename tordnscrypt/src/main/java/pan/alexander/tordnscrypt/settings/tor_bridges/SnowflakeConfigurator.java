@@ -20,7 +20,6 @@
 package pan.alexander.tordnscrypt.settings.tor_bridges;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 
 import android.content.Context;
@@ -35,7 +34,6 @@ import javax.inject.Named;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.PathVars;
 
 public class SnowflakeConfigurator {
 
@@ -44,40 +42,103 @@ public class SnowflakeConfigurator {
 
     private final Context context;
     private final Lazy<SharedPreferences> defaultPreferences;
-    private final Lazy<PathVars> pathVars;
 
     @Inject
     public SnowflakeConfigurator(
             Context context,
             @Named(DEFAULT_PREFERENCES_NAME)
-                    Lazy<SharedPreferences> defaultPreferences,
-            Lazy<PathVars> pathVars
+            Lazy<SharedPreferences> defaultPreferences
     ) {
         this.context = context;
         this.defaultPreferences = defaultPreferences;
-        this.pathVars = pathVars;
+    }
+    
+    String getConfiguration(String currentBridge) {
+        return getConfiguration(currentBridge, 0, "");
     }
 
-    public String getConfiguration() {
-        return "ClientTransportPlugin " + getConfiguration(0, "");
+    public String getConfiguration(String currentBridge, String stunServers) {
+        return getConfiguration(currentBridge, 0, stunServers);
     }
 
-    public String getConfiguration(int rendezvous) {
-        return getConfiguration(rendezvous, "");
+    public String getConfiguration(String currentBridge, int rendezvousType) {
+        return getConfiguration(currentBridge, rendezvousType, "");
     }
 
-    public String getConfiguration(String stunServers) {
-        return getConfiguration(0, stunServers);
+    private String getConfiguration(String currentBridge, int rendezvousType, String stunServers) {
+        StringBuilder bridgeBuilder = new StringBuilder();
+        bridgeBuilder.append(currentBridge);
+        if (!currentBridge.contains(" url=")) {
+            bridgeBuilder.append(" url=").append(getURL(rendezvousType));
+        }
+        if (!currentBridge.contains(" front=")) {
+            bridgeBuilder.append(" front=").append(getFront(rendezvousType));
+        }
+        if (!currentBridge.contains(" ice=")) {
+            bridgeBuilder.append(" ice=").append(getStunServers(stunServers));
+        }
+        if (!currentBridge.contains(" utls-imitate=")) {
+            bridgeBuilder.append(" utls-imitate=").append(getUtlsClientID());
+        }
+        return bridgeBuilder.toString();
     }
 
-    private String getConfiguration(int rendezvousType, String servers) {
+    private String getURL(int rendezvousType) {
+        int rendezvous = getRendezvous(rendezvousType);
+        if (rendezvous == AMP_CACHE) {
+            return "https://snowflake-broker.torproject.net/"
+                    + " ampcache=https://cdn.ampproject.org/";
+        } else if (rendezvous == FASTLY) {
+            return "https://snowflake-broker.torproject.net.global.prod.fastly.net/";
+        } else {
+            return "";
+        }
+    }
 
-        String appDataDir = pathVars.get().getAppDataDir();
-        String snowflakePath = pathVars.get().getSnowflakePath();
+    private String getFront(int rendezvousType) {
+        int rendezvous = getRendezvous(rendezvousType);
+        if (rendezvous == AMP_CACHE) {
+            return "www.google.com";
+        } else if (rendezvous == FASTLY) {
+            return "foursquare.com";
+        } else {
+            return "";
+        }
+    }
+
+    private int getRendezvous(int rendezvousType) {
+        int rendezvous;
+        if (rendezvousType == 0) {
+            rendezvous = Integer.parseInt(
+                    defaultPreferences.get().getString(SNOWFLAKE_RENDEZVOUS, "1")
+            );
+        } else {
+            rendezvous = rendezvousType;
+        }
+        return rendezvous;
+    }
+
+    private String getStunServers(String servers) {
 
         String stunServers;
         if (servers.isEmpty()) {
-            stunServers = getStunServers();
+            String defaultStunServers = TextUtils.join(
+                    ",", context.getResources().getStringArray(R.array.tor_snowflake_stun_servers)
+            );
+
+            stunServers = defaultPreferences.get().getString(
+                    "pref_tor_snowflake_stun",
+                    defaultStunServers
+            );
+
+            if (stunServers != null && stunServers.equals("stun.l.google.com:19302")) {
+                stunServers = null;
+            }
+
+            if (stunServers == null) {
+                stunServers = defaultStunServers;
+                defaultPreferences.get().edit().putString("pref_tor_snowflake_stun", stunServers).apply();
+            }
         } else {
             stunServers = servers;
         }
@@ -94,66 +155,11 @@ public class SnowflakeConfigurator {
         }
         stunServerBuilder.deleteCharAt(stunServerBuilder.lastIndexOf(","));
 
-        boolean saveExtendedLogs = defaultPreferences.get()
-                .getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false);
-        String saveLogsString = "";
-        if (saveExtendedLogs) {
-            saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
-        }
-
-        int rendezvous;
-        if (rendezvousType == 0) {
-            rendezvous = Integer.parseInt(
-                    defaultPreferences.get().getString(SNOWFLAKE_RENDEZVOUS, "1")
-            );
-        } else {
-            rendezvous = rendezvousType;
-        }
-
-        if (rendezvous == AMP_CACHE) {
-            return "snowflake exec "
-                    + snowflakePath + " -url https://snowflake-broker.torproject.net/"
-                    + " -ampcache https://cdn.ampproject.org/"
-                    + " -front www.google.com -ice "
-                    + stunServerBuilder
-                    + " -max 1"
-                    + saveLogsString;
-        } else if (rendezvous == FASTLY) {
-            return "snowflake exec "
-                    + snowflakePath + " -url https://snowflake-broker.torproject.net.global.prod.fastly.net/"
-                    + " -front cdn.sstatic.net -ice "
-                    + stunServerBuilder
-                    + " -max 1"
-                    + saveLogsString;
-        } else {
-            return "";
-        }
-    }
-
-    private String getStunServers() {
-        String defaultStunServers = TextUtils.join(
-                ",", context.getResources().getStringArray(R.array.tor_snowflake_stun_servers)
-        );
-
-        String stunServers = defaultPreferences.get().getString(
-                "pref_tor_snowflake_stun",
-                defaultStunServers
-        );
-
-        if (stunServers != null && stunServers.equals("stun.l.google.com:19302")) {
-            stunServers = null;
-        }
-
-        if (stunServers == null) {
-            stunServers = defaultStunServers;
-            defaultPreferences.get().edit().putString("pref_tor_snowflake_stun", stunServers).apply();
-        }
-
-        return stunServers;
+        return stunServerBuilder.toString();
     }
 
     @SuppressWarnings("unused")
-    public String getUtlsClientID() {
+    private String getUtlsClientID() {
         final String hellorandomizedalpn = "hellorandomizedalpn";
         final String hellorandomizednoalpn = "hellorandomizednoalpn";
         final String hellofirefox_auto = "hellofirefox_auto";

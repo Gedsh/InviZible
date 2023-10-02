@@ -245,7 +245,8 @@ object Utils {
             val shPref = PreferenceManager.getDefaultSharedPreferences(context)
             val showHelperMessages =
                 shPref.getBoolean(ALWAYS_SHOW_HELP_MESSAGES, false)
-            if (showHelperMessages && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
+            val betaVersion = pathVars.appVersion.equals("beta")
+            if ((showHelperMessages || betaVersion) && (bridgesSnowflakeDefault || bridgesSnowflakeOwn)) {
                 FileShortener.shortenTooTooLongFile(pathVars.appDataDir + "/logs/Snowflake.log")
             }
         } catch (e: Exception) {
