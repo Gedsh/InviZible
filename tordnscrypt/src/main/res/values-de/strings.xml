@@ -146,7 +146,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_use_iptables">"iptables auswählen"</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
-    <string name="notification_temp_text">"Diese Benachrichtigung verschwindet gleich"</string>
+    <string name="notification_temp_text">"Führe Root Befehle aus..."</string>
     <string name="tvSettings_text">"Bitte warten…"</string>
     <string name="toastSettings_saved">"Einstellungen gespeichert"</string>
     <string name="pref_dnscrypt_global_settings_categ">"GLOBALE EINSTELLUNGEN"</string>
@@ -158,7 +158,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_doh_servers_summ">"Benutze Server die das DNS-over-HTTPS Protokoll implementieren."</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">"Benötige Server die von Remote Quellen definiert wurden, um spezielle Eigenschaften zu erfüllen."</string>
     <string name="pref_dnscrypt_require_dnssec_summ">"Server muss die DNS Sicherheits Erweiterungen unterstützen (DNSSEC)."</string>
-    <string name="pref_dnscrypt_require_nolog_summ">"Server darf Useranfragen nicht speichern(deklarativ)."</string>
+    <string name="pref_dnscrypt_require_nolog_summ">"Server darf Useranfragen nicht speichern (deklarativ)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server darf keine eigene Blacklist erzwingen (Elterliche Kontrolle, Blockieren von Werbung…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
     <string name="pref_dnscrypt_force_tcp_summ">"Dies kann nützlich sein, wenn jeglicher Datenverkehr durch Tor geleitet werden soll.
@@ -169,21 +169,19 @@ Andernfalls sollte dies nicht aktiviert werden, da die Sicherheit dadurch nicht 
 Da Tor UDP nicht unterstützt, setze force_tcp ebenfalls auf aktiv."</string>
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"Andere Einstellungen."</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Fallback Resolver.
-Dies ist ein normaler, nicht verschlüsselter DNS Resolver, der nur für einmalige Anfragen benutzt wird, um die Liste von Eingangsresolvern zu beziehen, und dies nur, wenn die System DNS Konfiguration nicht funktioniert.
-Er wird nie benutzt sobald sich Listen im Cache befinden.
-Personen in China müssen hier möglicherweise 114.114.114.114:53 benutzen."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">"Bootstrap Resolver. Dies ist ein normaler, nicht verschlüsselter DNS Resolver, der nur für einmalige Anfragen benutzt wird, um die Liste von Eingangsresolvern zu beziehen, und dies nur, wenn die System DNS Konfiguration nicht funktioniert.
+Er wird nie benutzt sobald sich Listen im Cache befinden."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Lasse Dnscrypt-proxy niemals versuchen die DNS Einstellungen des Systems zu verwenden. Verwende den Fallback Resolver.."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTER"</string>
-    <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
-    <string name="pref_dnscrypt_forwarding_rules_summ">"Route Anfragen für spezifische Domains zu festgelegten Servern weiter. Temporär deaktiviert. "</string>
-    <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
+    <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding Regeln"</string>
+    <string name="pref_dnscrypt_forwarding_rules_summ">"Route Anfragen für spezifische Domains zu festgelegten Servern weiter."</string>
+    <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking Regeln"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück.
 Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Logging von Anfragen."</string>
     <string name="pref_dnscrypt_query_log_summ">"Logge Client-Anfragen in eine Datei."</string>
     <string name="pref_dnscrypt_query_log">"Aktiviere das Logging von Anfragen"</string>
-    <string name="pref_dnscrypt_ignored_qtypes_summ">"Folgende Anfragetypen nicht loggen, um weniger geschwätzig zu sein. Leerlassen um alles zu loggen."</string>
+    <string name="pref_dnscrypt_ignored_qtypes_summ">"Folgende Anfragetypen nicht loggen, um die Informationsmenge zu reduzieren. Leerlassen um alles zu loggen."</string>
     <string name="open_query_log">"Öffne das Anfragen Log"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Logging von verdächtigen Anfragen."</string>
     <string name="pref_dnscrypt_nx_log_summ">"Logge Anfragen für nichtexistente Zonen.
@@ -349,9 +347,8 @@ Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation
     <string name="vpn_mode_error">"VPN Modus Fehler!"</string>
     <string name="vpn_tor_tether_summ">"Bitte konfiguriere die Benutzung des Proxy Servers in den Einstellungen des verbundenen Gerätes. Standard Werte sind: IP:10.1.10.1 Port:8118"</string>
     <string name="main_fragment_hide_ip">"Verstecke deine IP mit TOR"</string>
-    <string name="reset_settings_title">"Achtung"</string>
-    <string name="main_fragment_protect_dns">Mit DNSCRYPT verteidigen</string>
-    <string name="main_fragment_access_i2p">Zugang zum I2P-Netzwerk mit Purple I2P</string>
+    <string name="main_fragment_protect_dns">"Mit DNSCRYPT schützen"</string>
+    <string name="main_fragment_access_i2p">"Zugang zum I2P-Netzwerk mit Purple I2P"</string>
     <string name="add_custom_server_title">"Eigenen Server hinzufügen"</string>
     <string name="add_custom_server_error">"Ungültige Server Konfiguration. Bitte überprüfe das SDNS Feld."</string>
     <string name="pending_purchase">"Bitte beachte, dass du momentan bereits einen Einkauf getätigt hast:"</string>
@@ -399,13 +396,13 @@ Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation
 "</string>
     <string name="pref_dnscrypt_erase_cloaking_rules">"Lösche Cloaking Regeln"</string>
     <string name="pref_dnscrypt_import_blacklist">"Importiere Blacklist"</string>
-    <string name="pref_dnscrypt_import_blacklist_summ">Importiere eine Liste von Domains oder eine Hosts Datei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt.</string>
+    <string name="pref_dnscrypt_import_blacklist_summ">"Importiere eine Liste von Domains oder eine Hosts Datei. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt."</string>
     <string name="pref_dnscrypt_erase_blacklist">"Lösche Blacklist"</string>
     <string name="pref_dnscrypt_import_ipblacklist">"Importiere IP Blacklist"</string>
-    <string name="pref_dnscrypt_import_ipblacklist_summ">Importiere eine IP Blacklist Liste. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt.</string>
+    <string name="pref_dnscrypt_import_ipblacklist_summ">"Importiere eine IP Blacklist Liste. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt."</string>
     <string name="pref_dnscrypt_erase_ipblacklist">"Lösche IP Blacklist"</string>
     <string name="pref_dnscrypt_import_whitelist">"Importiere Whitelist"</string>
-    <string name="pref_dnscrypt_import_whitelist_summ">Importiere eine Domain-Liste. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt.</string>
+    <string name="pref_dnscrypt_import_whitelist_summ">"Importiere eine Domain-Liste. Du kannst mehrere Dateien auswählen, doppelte Einträge werden entfernt."</string>
     <string name="pref_dnscrypt_erase_whitelist">"Lösche Whitelist"</string>
     <string name="pref_dnscrypt_block_ipv6_summ">"Beantworte IPv6 bezogene Anfragen umgehend leer.
 Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann aber gleichzeitig zu Störungen bei manchen Stub Resolvern führen."</string>
@@ -463,8 +460,8 @@ Möchtest du diesen zum Verbessern von InviZible an den Entwickler senden?"</str
     <string name="proxy_successful_connection">"Erfolgreiche Verbindung. Ping %s ms."</string>
     <string name="notification_arp_spoofing">"ARP Spoofing erkannt!"</string>
     <string name="notification_rogue_dhcp">"Bösartiges DHCP erkannt!"</string>
-    <string name="notification_mitm">Man-in-the-middle Angriff erkannt! Deine Daten können von einem anderen Gerät im lokalen Netzwerk abgefangen werden.
-\nWLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hotspots kann ebenfalls betroffen sein.</string>
+    <string name="notification_mitm">"Man-in-the-middle Angriff erkannt! Deine Daten können von einem anderen Gerät im lokalen Netzwerk abgefangen werden.
+WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hotspots kann ebenfalls betroffen sein."</string>
     <string name="toast_arp_detection_not_supported">"Erkennung von ARP Spoofing auf deinem Gerät wird leider nicht unterstützt!"</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Bitte deaktiviere die Einstiegsknoten in den Tor Einstellungen um Bridges nutzen zu können."</string>
     <string name="pref_fast_tor_bypass_lan">"Umgehe LAN Adressen"</string>
@@ -547,4 +544,9 @@ Möchtest du diesen zum Verbessern von InviZible an den Entwickler senden?"</str
     <string name="pref_dnscrypt_dns64_summ">"Aktiviere diese Option nur, wenn du dich in einem IPv6 Netzwerk befindest und IPv4 Adressen nicht mehr erreichbar sind.  Andernfalls wirst du keinerlei Verbindungen mehr aufbauen können."</string>
     <string name="pref_dnscrypt_dns64_prefix_summ">"Verwendete statische IPv6 Präfixe."</string>
     <string name="pref_fast_use_tor_bridges_ipv6">"IPv6 bridges"</string>
+    <string name="reset_settings_title">"Achtung"</string>
+    <string name="ask_reset_settings_text">"InviZible Pro kann %1$s nicht starten! Bitte versuchen Sie, die Einstellungen von %2$s zurückzusetzen. Wenn dies nicht hilft, starten Sie bitte Ihr Gerät neu."</string>
+    <string name="ask_reset_settings_btn">"Zurücksetzen"</string>
+    <string name="pref_fast_fake_sni">"SNI vortäuschen"</string>
+    <string name="pref_tor_track_host_exits_summ">"Tor verfolgt die letzten Verbindungen zu Hosts und versucht, die jeweiligen Exit-Nodes wiederzuverwenden. Diese Option kann dazu beitragen, endlose Captchas zu vermeiden."</string>
 </resources>
