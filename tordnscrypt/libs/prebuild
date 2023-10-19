@@ -5,7 +5,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 lyrebird_version=workaround/ntor-auth-mismatch
 dnscryptproxy_version=master
 snowflake_version=v2.6.0
-libzmq_version=5bf04ee2ff207f0eaf34298658fe354ea61e1839
+libzmq_version=v4.3.5
 conjure_version=prod
 webtunnel_version=prod
 tor_openssl_version=openssl-3.1.2
