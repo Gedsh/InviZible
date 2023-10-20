@@ -164,6 +164,8 @@ public class TopFragment extends Fragment {
 
     public static float logsTextSize = 0f;
 
+    public static volatile boolean initTasksRequired = true;
+
     public interface OnActivityChangeListener {
         void onActivityChange(MainActivity mainActivity);
     }
@@ -241,6 +243,10 @@ public class TopFragment extends Fragment {
                 && !preferenceRepository.get().getBoolPreference(NOTIFICATIONS_ARE_BLOCKED)) {
             checkNotificationsPermission(activity);
         }
+
+        if (isInitTasksRequired() || isRootCheckRequired()) {
+            checkRootAvailable();
+        }
     }
 
     @Override
@@ -268,14 +274,12 @@ public class TopFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (savedInstanceState == null || isInitTasksRequired() || isRootCheckRequired()) {
-            checkRootAvailable();
-            observeRootState();
-        }
+        observeRootState();
     }
 
     private boolean isInitTasksRequired() {
-        return !PathVars.isModulesInstalled(preferenceRepository.get())
+        return initTasksRequired
+                || !PathVars.isModulesInstalled(preferenceRepository.get())
                 || DNSCryptVersion.isEmpty()
                 || TorVersion.isEmpty()
                 || ITPDVersion.isEmpty()
@@ -305,10 +309,6 @@ public class TopFragment extends Fragment {
 
         saveLogsTextSize();
 
-        if (activity.isFinishing()) {
-            unRegisterReceiver(activity);
-        }
-
         if (!activity.isChangingConfigurations()) {
             stopInstallationTimer();
 
@@ -322,6 +322,8 @@ public class TopFragment extends Fragment {
             dismissCheckUpdatesDialog();
 
             cancelHandlerTasks();
+
+            unRegisterReceiver(activity);
         }
     }
 
@@ -345,7 +347,9 @@ public class TopFragment extends Fragment {
     private void observeRootState() {
         viewModel.getRootStateLiveData().observe(getViewLifecycleOwner(), rootState -> {
 
-            if (rootState instanceof RootState.RootAvailable) {
+            if (rootState instanceof RootState.Undefined) {
+                return;
+            } else if (rootState instanceof RootState.RootAvailable) {
                 String suVersion = ((RootState.RootAvailable) rootState).getSuVersion();
                 List <String> suResult = ((RootState.RootAvailable) rootState).getSuResult();
                 List<String> bbResult = ((RootState.RootAvailable) rootState).getBbResult();
@@ -479,6 +483,8 @@ public class TopFragment extends Fragment {
                 checkInternetConnectionIfRequired();
             }
 
+            initTasksRequired = false;
+
         } catch (Exception e) {
             loge("RootChecker onPostExecute", e);
         }
@@ -548,7 +554,7 @@ public class TopFragment extends Fragment {
 
     private void showDonDialog(Activity activity) {
 
-        if (activity == null || activity.isFinishing() || isStateSaved()) {
+        if (!initTasksRequired || activity == null || activity.isFinishing() || isStateSaved()) {
             return;
         }
 
