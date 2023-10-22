@@ -990,3 +990,12 @@
 * Fixed adding new SnowFlake bridges.
 * Fixed Conjure bridge failed to connect.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.1**
+* Updated Tor to version 4.8.8.
+* Updated Tor Snowflake bridge to version 2.7.0.
+* Updated Tor Lirebird, WebTunnel, Conjure bridges.
+* Updated DNSCrypt.
+* Updated default DNSCrypt settings.
+* Fixed on/off firewall button is not displayed.
+* Fixes and optimizations.
