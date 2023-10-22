@@ -61,7 +61,7 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
         boolean use_dns_servers = sp.getBoolean("dnscrypt_servers", true);
         boolean use_doh_servers = sp.getBoolean("doh_servers", true);
         boolean use_ipv4_servers = sp.getBoolean("ipv4_servers", true);
-        boolean use_ipv6_servers = sp.getBoolean("ipv6_servers", false);
+        boolean use_ipv6_servers = sp.getBoolean("ipv6_servers", true);
 
         if (!accelerated && context.getText(R.string.package_name).toString().contains(".gp")) {
             require_nofilter = true;
