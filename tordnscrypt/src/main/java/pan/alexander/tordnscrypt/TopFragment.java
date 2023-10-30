@@ -194,10 +194,16 @@ public class TopFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this, viewModelFactory).get(TopFragmentViewModel.class);
 
-        Context context = getActivity();
+    }
 
-        if (context != null) {
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        FragmentActivity activity = getActivity();
+
+        if (activity != null) {
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(activity);
             PreferenceRepository preferences = preferenceRepository.get();
             rootIsAvailableSaved = rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
             runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
@@ -216,19 +222,12 @@ public class TopFragment extends Fragment {
 
             if (PathVars.isModulesInstalled(preferences)
                     && pathVars.get().getAppVersion().endsWith("p")) {
-                checkAgreement(context);
+                checkAgreement(activity);
             }
 
             logsTextSize = preferences.getFloatPreference("LogsTextSize");
         }
 
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        FragmentActivity activity = getActivity();
         if (activity != null) {
             registerReceiver(activity);
         }
