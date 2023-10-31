@@ -34,6 +34,8 @@ import android.os.Process
 import android.util.Base64
 import android.util.TypedValue
 import android.view.Display
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
@@ -60,6 +62,7 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import kotlin.math.roundToInt
+
 
 object Utils {
     fun getScreenOrientationOld(activity: Activity): Int {
@@ -366,5 +369,15 @@ object Utils {
             it.length < 255
                     && (it.matches(HOST_NAME_REGEX.toRegex()) || it.matches(IPv4_REGEX.toRegex()))
         }.toSet()
+
+    @JvmStatic
+    fun hideKeyboard(activity: Activity) {
+        val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        var view = activity.currentFocus
+        if (view == null) {
+            view = View(activity)
+        }
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
 
 }

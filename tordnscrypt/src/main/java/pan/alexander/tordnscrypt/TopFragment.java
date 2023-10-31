@@ -86,6 +86,7 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManage
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.MODULE_NAME_ARG;
+import static pan.alexander.tordnscrypt.utils.Utils.hideKeyboard;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
@@ -830,6 +831,7 @@ public class TopFragment extends Fragment {
 
             if (isAdded() && !isStateSaved()) {
                 DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
+                newUpdateDialogFragment.setCancelable(false);
                 newUpdateDialogFragment.show(getParentFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
             }
         });
