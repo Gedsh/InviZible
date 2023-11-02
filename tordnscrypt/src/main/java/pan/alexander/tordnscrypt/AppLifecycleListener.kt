@@ -43,6 +43,7 @@ class AppLifecycleListener(private val app: App): DefaultLifecycleObserver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             BaseTileService.releaseTilesSubcomponent()
             TilesLimiter.resetActiveTiles()
+            TopFragment.initTasksRequired = true
         }
     }
 }

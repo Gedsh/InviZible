@@ -44,7 +44,7 @@
             android:title="@string/pref_dnscrypt_ipv4_servers" />
         <CheckBoxPreference
             android:id="@+id/ipv6_servers"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="ipv6_servers"
             android:summary="@string/pref_dnscrypt_ipv6_servers_summ"
             android:title="@string/pref_dnscrypt_ipv6_servers" />

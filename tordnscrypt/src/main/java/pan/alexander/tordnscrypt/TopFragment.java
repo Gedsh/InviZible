@@ -86,6 +86,7 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManage
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.MODULE_NAME_ARG;
+import static pan.alexander.tordnscrypt.utils.Utils.hideKeyboard;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
@@ -164,6 +165,8 @@ public class TopFragment extends Fragment {
 
     public static float logsTextSize = 0f;
 
+    public static volatile boolean initTasksRequired = true;
+
     public interface OnActivityChangeListener {
         void onActivityChange(MainActivity mainActivity);
     }
@@ -192,10 +195,16 @@ public class TopFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this, viewModelFactory).get(TopFragmentViewModel.class);
 
-        Context context = getActivity();
+    }
 
-        if (context != null) {
-            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(context);
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        FragmentActivity activity = getActivity();
+
+        if (activity != null) {
+            SharedPreferences shPref = PreferenceManager.getDefaultSharedPreferences(activity);
             PreferenceRepository preferences = preferenceRepository.get();
             rootIsAvailableSaved = rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
             runModulesWithRoot = shPref.getBoolean(RUN_MODULES_WITH_ROOT, false);
@@ -214,19 +223,12 @@ public class TopFragment extends Fragment {
 
             if (PathVars.isModulesInstalled(preferences)
                     && pathVars.get().getAppVersion().endsWith("p")) {
-                checkAgreement(context);
+                checkAgreement(activity);
             }
 
             logsTextSize = preferences.getFloatPreference("LogsTextSize");
         }
 
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        FragmentActivity activity = getActivity();
         if (activity != null) {
             registerReceiver(activity);
         }
@@ -240,6 +242,10 @@ public class TopFragment extends Fragment {
                 && activity != null
                 && !preferenceRepository.get().getBoolPreference(NOTIFICATIONS_ARE_BLOCKED)) {
             checkNotificationsPermission(activity);
+        }
+
+        if (isInitTasksRequired() || isRootCheckRequired()) {
+            checkRootAvailable();
         }
     }
 
@@ -268,14 +274,12 @@ public class TopFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (savedInstanceState == null || isInitTasksRequired() || isRootCheckRequired()) {
-            checkRootAvailable();
-            observeRootState();
-        }
+        observeRootState();
     }
 
     private boolean isInitTasksRequired() {
-        return !PathVars.isModulesInstalled(preferenceRepository.get())
+        return initTasksRequired
+                || !PathVars.isModulesInstalled(preferenceRepository.get())
                 || DNSCryptVersion.isEmpty()
                 || TorVersion.isEmpty()
                 || ITPDVersion.isEmpty()
@@ -305,10 +309,6 @@ public class TopFragment extends Fragment {
 
         saveLogsTextSize();
 
-        if (activity.isFinishing()) {
-            unRegisterReceiver(activity);
-        }
-
         if (!activity.isChangingConfigurations()) {
             stopInstallationTimer();
 
@@ -322,6 +322,8 @@ public class TopFragment extends Fragment {
             dismissCheckUpdatesDialog();
 
             cancelHandlerTasks();
+
+            unRegisterReceiver(activity);
         }
     }
 
@@ -345,7 +347,9 @@ public class TopFragment extends Fragment {
     private void observeRootState() {
         viewModel.getRootStateLiveData().observe(getViewLifecycleOwner(), rootState -> {
 
-            if (rootState instanceof RootState.RootAvailable) {
+            if (rootState instanceof RootState.Undefined) {
+                return;
+            } else if (rootState instanceof RootState.RootAvailable) {
                 String suVersion = ((RootState.RootAvailable) rootState).getSuVersion();
                 List <String> suResult = ((RootState.RootAvailable) rootState).getSuResult();
                 List<String> bbResult = ((RootState.RootAvailable) rootState).getBbResult();
@@ -479,6 +483,8 @@ public class TopFragment extends Fragment {
                 checkInternetConnectionIfRequired();
             }
 
+            initTasksRequired = false;
+
         } catch (Exception e) {
             loge("RootChecker onPostExecute", e);
         }
@@ -548,7 +554,7 @@ public class TopFragment extends Fragment {
 
     private void showDonDialog(Activity activity) {
 
-        if (activity == null || activity.isFinishing() || isStateSaved()) {
+        if (!initTasksRequired || activity == null || activity.isFinishing() || isStateSaved()) {
             return;
         }
 
@@ -825,6 +831,7 @@ public class TopFragment extends Fragment {
 
             if (isAdded() && !isStateSaved()) {
                 DialogFragment newUpdateDialogFragment = NewUpdateDialogFragment.newInstance(message, updateStr, fileName, hash);
+                newUpdateDialogFragment.setCancelable(false);
                 newUpdateDialogFragment.show(getParentFragmentManager(), NewUpdateDialogFragment.TAG_NOT_FRAG);
             }
         });

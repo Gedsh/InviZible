@@ -150,6 +150,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private String appDataDir;
     private String obfsPath;
+    private String snowFlakePath;
 
     private String conjurePath;
     private String webTunnelPath;
@@ -202,6 +203,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         appDataDir = pathVars.get().getAppDataDir();
         obfsPath = pathVars.get().getObfsPath();
+        snowFlakePath = pathVars.get().getSnowflakePath();
         conjurePath = pathVars.get().getConjurePath();
         webTunnelPath = pathVars.get().getWebTunnelPath();
 
@@ -371,7 +373,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
                 String clientTransportPlugin;
                 if (currentBridgesType.equals(snowflake)) {
-                    clientTransportPlugin = snowflakeConfigurator.get().getConfiguration();
+                    String saveLogsString = "";
+                    if (pathVars.get().getAppVersion().equals("beta")) {
+                        saveLogsString = " -log " + appDataDir + "/logs/Snowflake.log";
+                    }
+                    clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave
+                            + " exec " + snowFlakePath
+                            + " -max 1"
+                            + saveLogsString;
                 } else if (currentBridgesType.equals(conjure)) {
                     String saveLogsString = "";
                     if (pathVars.get().getAppVersion().equals("beta")) {
@@ -403,13 +412,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 } else {
                     if (!currentBridge.isEmpty() && currentBridge.contains(currentBridgesType.toString())) {
                         if (currentBridgesType.equals(snowflake)) {
-                            torConfCleaned.add(
-                                    "Bridge " + currentBridge
-                                            + " utls-imitate="
-                                            + snowflakeConfigurator.get().getUtlsClientID()
-                                            //+ " utls-nosni=true"
-
-                            );
+                            torConfCleaned.add("Bridge " + snowflakeConfigurator.get().getConfiguration(currentBridge));
                         } else {
                             torConfCleaned.add("Bridge " + currentBridge);
                         }
@@ -690,7 +693,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./-]+ +front=[\\w./-]+( +utls=\\w+)?");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +" + bridgeBase);
+                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w./-]+)?(?: +ampcache=https://[\\w./-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?");
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
                 pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
@@ -707,9 +710,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         .replaceAll(" +", " ")
                         .split("\n");
             } else {
-                bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\[\\]:+=/. -]", " ")
+                bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\[\\]:+=/. ,-]", " ")
                         .replaceAll(" +", " ")
-                        .split(inputBridgesType);
+                        .split(inputBridgesType + " ");
             }
 
             if (bridgesArrNew.length != 0) {
@@ -946,6 +949,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         for (String line : bridges) {
             ObfsBridge obfsBridge;
             if (!obfsType.equals(vanilla) && line.contains(obfsType.toString())) {
+                if (obfsType.equals(snowflake)) {
+                    line = snowflakeConfigurator.get().getConfiguration(line);
+                }
                 obfsBridge = new ObfsBridge(line, obfsType, false);
                 if (bridgesInUse.contains(line)) {
                     obfsBridge.active = true;
@@ -995,13 +1001,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     for (int i = 0; i < tor_conf.size(); i++) {
                         String line = tor_conf.get(i);
                         if (!line.contains("#") && line.contains("Bridge ")) {
-
-                            if (line.contains(snowflake.toString())) {
-                                line = extractSnowflakeBridgeBaseFromLine(line);
-                            } else {
-                                line = line.replace("Bridge ", "");
-                            }
-
+                            line = line.replace("Bridge ", "");
                             bridgesInUse.add(line.trim());
                         }
                     }
@@ -1059,20 +1059,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 }
             }
         }
-    }
-
-    private String extractSnowflakeBridgeBaseFromLine(String line) {
-        String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+";
-        Pattern pattern = Pattern.compile("Bridge (snowflake " + ipv4BridgeBase + ")");
-        Matcher matcher = pattern.matcher(line);
-
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-
-        loge("PreferencesTorBridges extractSnowflakeBridgeBaseFromLine fault. " + line);
-
-        return "";
     }
 
     @Override

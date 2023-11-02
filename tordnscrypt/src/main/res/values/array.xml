@@ -568,15 +568,15 @@
         <item>X</item>
     </string-array>
     <string-array name="default_dnscrypt_servers_gp">
-        <item>uncensoreddns-dk-ipv4</item>
+        <item>bebasdns-dnscrypt</item>
         <item>njalla-doh</item>
-        <item>faelix-ch-ipv4</item>
+        <item>mullvad-doh</item>
         <item>dns.digitale-gesellschaft.ch</item>
         <item>dnscrypt.ca-1</item>
         <item>sth-doh-se</item>
         <item>libredns</item>
-        <item>dnswarden-uncensor-dc-swiss</item>
-        <item>publicarray-au-doh</item>
+        <item>dnswarden-uncensor-dc</item>
+        <item>openinternet</item>
         <item>scaleway-fr</item>
     </string-array>
     <string-array name="default_fake_sni">

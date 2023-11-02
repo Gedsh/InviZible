@@ -44,7 +44,7 @@ class TopFragmentViewModel @Inject constructor(
     private val resetModuleHelper: dagger.Lazy<ResetModuleHelper>
 ): ViewModel() {
 
-    private val rootStateMutableLiveData = MutableLiveData<RootState>()
+    private val rootStateMutableLiveData = MutableLiveData<RootState>(RootState.Undefined)
     val rootStateLiveData: LiveData<RootState> get() = rootStateMutableLiveData
 
     @Volatile

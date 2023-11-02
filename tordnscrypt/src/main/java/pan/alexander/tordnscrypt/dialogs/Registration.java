@@ -41,6 +41,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.utils.Utils;
 
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
@@ -98,6 +99,11 @@ public class Registration {
         @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
         final EditText editText = inputView.findViewById(R.id.etForDialog);
         editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        editText.setOnFocusChangeListener((v, hasFocus) -> {
+            if(!hasFocus){
+                Utils.hideKeyboard(activity);
+            }
+        });
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
         builder.setTitle(R.string.enter_code)

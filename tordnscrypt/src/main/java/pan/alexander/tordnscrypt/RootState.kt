@@ -26,5 +26,7 @@ sealed class RootState {
         val bbResult: List<String>
     ) : RootState()
 
-    object RootNotAvailable: RootState()
+    data object RootNotAvailable: RootState()
+
+    data object Undefined: RootState()
 }

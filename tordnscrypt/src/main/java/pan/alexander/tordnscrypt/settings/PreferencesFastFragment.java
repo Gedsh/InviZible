@@ -463,6 +463,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         Set<String> hosts = verifyHostsSet(
                 preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
         );
+        if (hosts.isEmpty()) {
+            hosts = new LinkedHashSet<>(
+                    Arrays.asList(getResources().getStringArray(R.array.default_fake_sni))
+            );
+        }
         bundle.putStringArrayList(FAKE_SNI_ARG, new ArrayList<>(hosts));
         fragment.setArguments(bundle);
         fragment.show(getChildFragmentManager(), "FakeSniInputDialogFragment");

@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -56,6 +58,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
@@ -440,16 +443,19 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             cachedExecutor.submit(modifyForwardingRules.getRunnable());
             return true;
         } else if (Objects.equals(preference.getKey(), SNOWFLAKE_RENDEZVOUS)) {
-
-            if (!key_tor.contains("ClientTransportPlugin")) {
-                return true;
-            }
-
-            int index = key_tor.indexOf("ClientTransportPlugin");
-
-            if (val_tor.get(index).contains("snowflake")) {
-                val_tor.set(index, snowflakeConfigurator.get()
-                        .getConfiguration(Integer.parseInt(newValue.toString())));
+            for (int i = 0; i < key_tor.size(); i++) {
+                if (key_tor.get(i).contains("Bridge") && val_tor.get(i).contains("snowflake")) {
+                    String bridgeBaseRegex = getBridgeBaseRegex(val_tor.get(i));
+                    Pattern bridgePattern = Pattern.compile("snowflake +" + bridgeBaseRegex + "( +fingerprint=\\w+)?");
+                    Matcher matcher = bridgePattern.matcher(val_tor.get(i));
+                    if (matcher.find()) {
+                        String bridgeBase = matcher.group();
+                        val_tor.set(i, snowflakeConfigurator.get()
+                                .getConfiguration(bridgeBase, Integer.parseInt(newValue.toString())));
+                    } else {
+                        return false;
+                    }
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
@@ -467,15 +473,19 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
 
-            if (!key_tor.contains("ClientTransportPlugin")) {
-                return true;
-            }
-
-            int index = key_tor.indexOf("ClientTransportPlugin");
-
-            if (val_tor.get(index).contains("snowflake")) {
-                val_tor.set(index, snowflakeConfigurator.get()
-                        .getConfiguration(serversStr));
+            for (int i = 0; i < key_tor.size(); i++) {
+                if (key_tor.get(i).contains("Bridge") && val_tor.get(i).contains("snowflake")) {
+                    String bridgeBaseRegex = getBridgeBaseRegex(val_tor.get(i));
+                    Pattern bridgePattern = Pattern.compile("snowflake +" + bridgeBaseRegex + "( +fingerprint=\\w+)?");
+                    Matcher matcher = bridgePattern.matcher(val_tor.get(i));
+                    if (matcher.find()) {
+                        String bridgeBase = matcher.group();
+                        val_tor.set(i, snowflakeConfigurator.get()
+                                .getConfiguration(bridgeBase, serversStr));
+                    } else {
+                        return false;
+                    }
+                }
             }
             return true;
         } else if (Objects.equals(preference.getKey(), TOR_SOCKS_PORT)
@@ -830,6 +840,17 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         Preference editTorConfDirectly = findPreference("editTorConfDirectly");
         if (otherCategory != null && editTorConfDirectly != null) {
             otherCategory.removePreference(editTorConfDirectly);
+        }
+    }
+
+    private String getBridgeBaseRegex(String bridge) {
+        String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
+        String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
+
+        if (bridge.contains("[") && bridge.contains("]")) {
+            return ipv6BridgeBase;
+        } else {
+            return ipv4BridgeBase;
         }
     }
 }

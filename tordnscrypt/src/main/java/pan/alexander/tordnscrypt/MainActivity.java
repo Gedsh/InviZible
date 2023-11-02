@@ -190,8 +190,6 @@ public class MainActivity extends LangAppCompatActivity
 
         modulesStatus = ModulesStatus.getInstance();
 
-        changeDrawerWithVersionAndDestination(navigationView);
-
         viewPager = findViewById(R.id.viewPager);
         if (viewPager != null) {
             viewPager.setOffscreenPageLimit(4);
@@ -218,6 +216,14 @@ public class MainActivity extends LangAppCompatActivity
             viewPager.setCurrentItem(viewPagerPosition);
         }
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        changeDrawerWithVersionAndDestination(navigationView);
     }
 
     @Override

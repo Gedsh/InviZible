@@ -12,43 +12,45 @@
 
 ### [F-Droid stable version](https://f-droid.org/packages/pan.alexander.tordnscrypt.stable/)
 
-## Android application for Internet privacy and security
+## Android application for online privacy and security
 
-*Keeps privacy, protects your device from dangerous sites, prevents tracking, gets access to blocked on-line resources*
+*Preserves privacy, prevents tracking, and provides access to restricted and hidden online content*
 
-**InviZible Pro** includes well-known modules such as **DNSCrypt**, **Tor** and **Purple I2P**.
-They are used to achieve maximum security, privacy and comfortable use of the Internet.
+**InviZible Pro** combines the strengths of **Tor**, **DNSCrypt**, and **Purple I2P** to provide a comprehensive solution for online privacy, security, and anonymity.
+
+### Tor
+* Hides user's identity and location
+* Defends against traffic analysis and censorship
+* Protects online activities from surveillance
+* Routes traffic through multiple servers
+* Provides access to "onion" websites
+* Open-source
 
 ### DNSCrypt
-* Encrypts DNS requests
-* Protects against DNS spoofing
+* Secures DNS traffic with encryption
+* Verifies DNS server legitimacy using cryptographic keys
+* Shields against DNS-based attacks like spoofing
+* Guards against eavesdropping and DNS query logging
 * Can block ads *
 * Can protect against dangerous and malicious sites *
 * Can block "adult" sites *
-* Hides visited sites from your provider **
-* Prevents some types of resource blocks
 * Open-source
 
 **Depending on the selected dnscrypt server*
 **(Not available in Google Play version!)**
 
-***In case your ISP does not use DPI equipment*
-
-### Tor
-* Encrypts Internet traffic
-* Prevents sites blocking
-* Can provide privacy and anonymity
-* Provides access to "onion" sites
-* Open-source
-
 ### Purple I2P
-* Encrypts Internet traffic
-* Provides access to the hidden anonymous network Invisible Internet and "i2p" sites
+* Provides anonymous communication network
+* Conceals users' identities and activities
+* Defends against surveillance
+* Ensures secure data transmission
+* Distributed and self-organizing network
+* Provides access to "i2p" websites (eepsites)
 * Open-source
 
-To start using **InviZible Pro**, all you need is an android phone.
-Just run all three modules and enjoy safe and comfortable Internet surfing. However,
-if you want to get full control over the application and your Internet connection - no problem!
+To start using **InviZible Pro**, all you need is an Android phone.
+Just run all three modules and enjoy safe and comfortable internet surfing. However,
+if you want to get full control over the application and your internet connection - no problem!
 There is access to a large number of both simple and professional settings.
 You can flexibly configure **InviZible Pro** itself, as well as its modules - **DNSCrypt**,
 **Tor** and **Purple I2P**, to satisfy the most non-standard requirements.
@@ -58,18 +60,16 @@ You can flexibly configure **InviZible Pro** itself, as well as its modules - **
  It does not contain any ads, bloatware and does not spy upon its users.
  
 ### Why InviZible Pro is better than other similar applications:
-* There are no analogs))).
-* The only application that provides handy use of **DNSCrypt** on Android.
-* It is often more stable than the Orbot application, which also uses the Tor network.
-* Much more handy than the official **Purple I2P** client.
-* Allows you to easily and flexibly configure which sites and applications will open through **Tor**,
- for anonymity or bypassing blocks.
-* Can transform your phone, or Android TV set-top box into a secure Wi-Fi access point,
- which can be used by any phone, without root access.
-* Optimized interface for set-top boxes.
-* Replaces various VPNs and other tools to achieve privacy and anonymity.
-* Successfully combines **DNSCrypt**, **Tor** and **Purple I2P** features.
-* Free and open-source.
+* Privacy Protection: Guards your online activities.
+* Anonymous Browsing: Conceals your identity.
+* Secure DNS Encryption: Protects your DNS queries.
+* Anonymity Network Integration: Utilizes Tor, DNSCrypt, and Purple I2P.
+* Firewall: Safeguards against unauthorized access.
+* Access to Restricted Content: Unblocks blocked websites.
+* Anti-Tracking Measures: Prevents tracking of your online behavior.
+* Hidden Network Access: Connects to "onion" and "i2p" websites.
+* Open-Source: Transparent and community-driven.
+* User-Friendly Design: Simple and intuitive interface.
 
 ## Compatibility
 
@@ -154,16 +154,19 @@ This product is produced independently from the **Tor®**, **DNSCrypt**, **Purpl
 and carries no guarantee from The Above Projects about quality, suitability or anything else.
 
 ## Donations
+**PayPal**: Send to invizible.soft@gmail.com
 
-**Bitcoin**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
+**Patreon**: https://www.patreon.com/inviziblepro
 
-**Bitcoin Cache**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
+**BTC**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
 
-**USD PAX**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
+**BCH**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
 
-**Ether**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
+**USDT**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
 
-**Stellar**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
+**XLM**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
+
+**XMR** 83k3FtpRhoT8QpE3M8mKunjXsktfVhGS2fVXm1X1Myj4EoH5hJ4BfuFXkYcRod61kCDP1hpcDSw2FFM622rRD6rWEJ45UjU
 
 ## License
 
