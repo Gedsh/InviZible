@@ -36,4 +36,5 @@
     <color name="torBridgePingBad">#F08080</color>
     <color name="systemAppWithoutInternetPermission">#D45E5E</color>
     <color name="userAppWithoutInternetPermission">#64A39D</color>
+    <color name="dividerColor">#1F000000</color>
 </resources>
