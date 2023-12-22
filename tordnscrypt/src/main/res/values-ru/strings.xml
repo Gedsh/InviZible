@@ -135,7 +135,7 @@
     <string name="pref_common_wait_iptables_summ">Ждать разблокировку iptables, чтобы предотвратить одновременную модификацию правил iptables несколькими программами.</string>
     <string name="pref_common_log_root_commands">Логировать команды root</string>
     <string name="notification_text">DNSCrypt, Tor, I2P защищены. Не скрывайте уведомление.</string>
-    <string name="notification_temp_text">Выполнение Рут команд…</string>
+    <string name="notification_exec_root_commands">Выполнение Рут команд…</string>
     <string name="tvSettings_text">Пожалуйста подождите…</string>
     <string name="toastSettings_saved">Настройки сохранены</string>
     <string name="pref_dnscrypt_global_settings_categ">ОБЩИЕ НАСТРОЙКИ</string>

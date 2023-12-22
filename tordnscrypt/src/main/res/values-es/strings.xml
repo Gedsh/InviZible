@@ -146,7 +146,7 @@ En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
     <string name="pref_common_use_iptables">"Seleccionar binario Iptables"</string>
     <string name="pref_common_log_root_commands">"Guardar comandos Root al Log"</string>
     <string name="notification_text">"DNSCrypt, Tor e I2P estan ejecutandose. Ésta notificación no se cerrará."</string>
-    <string name="notification_temp_text">"Ejecutando comandos Root…"</string>
+    <string name="notification_exec_root_commands">"Ejecutando comandos Root…"</string>
     <string name="tvSettings_text">"Por favor, espera…"</string>
     <string name="toastSettings_saved">"Cambios guardados"</string>
     <string name="pref_dnscrypt_global_settings_categ">"AJUSTES GLOBALES"</string>

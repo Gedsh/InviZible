@@ -135,7 +135,7 @@
     <string name="pref_dnscrypt_blacklist">Чорний список</string>
     <string name="pref_dnscrypt_import_blacklist">Імпортувати чорний список</string>
     <string name="tvSettings_text">Будь ласка зачекайте…</string>
-    <string name="notification_temp_text">Виконання Рут команд…</string>
+    <string name="notification_exec_root_commands">Виконання Рут команд…</string>
     <string name="pref_advanced">Тільки для досвідчених користувачів!</string>
     <string name="pref_dnscrypt_local_port_summ">Номер порту.</string>
     <string name="btnResetSettings">Скинути налаштування</string>

@@ -121,7 +121,7 @@
     <string name="pref_common_use_iptables">Velg Iptables</string>
     <string name="notification_connecting">Kobler til …</string>
     <string name="notification_waiting_network">Venter på nettverk …</string>
-    <string name="notification_temp_text">Kjører rot-kommandoer …</string>
+    <string name="notification_exec_root_commands">Kjører rot-kommandoer …</string>
     <string name="pref_advanced">Kun for avanserte brukere!</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">Bruk tjenere som kan nås over IPv4</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Bruk tjenere som kan nås over IPv6</string>

@@ -147,7 +147,7 @@
     <string name="pref_common_use_iptables">"Valitse Iptablet"</string>
     <string name="pref_common_log_root_commands">"Tallenna Root komennot lokiin"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P ovat suojattu. Älä piiloudu."</string>
-    <string name="notification_temp_text">"Suoritetaan root-komentoja ..."</string>
+    <string name="notification_exec_root_commands">"Suoritetaan root-komentoja ..."</string>
     <string name="tvSettings_text">"Odota..."</string>
     <string name="toastSettings_saved">"Asetukset tallennettiin"</string>
     <string name="pref_dnscrypt_global_settings_categ">"YLEISET ASETUKSET"</string>

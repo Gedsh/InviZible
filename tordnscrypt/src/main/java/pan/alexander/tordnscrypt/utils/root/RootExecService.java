@@ -164,7 +164,7 @@ public class RootExecService extends Service
     private void moveServiceToForeground() {
         if (systemNotificationManager != null) {
             serviceNotificationManager.sendNotification(
-                    getString(R.string.notification_temp_text),
+                    getString(R.string.notification_exec_root_commands),
                     ""
             );
         }
@@ -193,7 +193,7 @@ public class RootExecService extends Service
     private void updateNotificationProgress(int progress) {
         if (systemNotificationManager != null) {
             serviceNotificationManager.updateNotification(
-                    getString(R.string.notification_temp_text),
+                    getString(R.string.notification_exec_root_commands),
                     "",
                     progress
             );

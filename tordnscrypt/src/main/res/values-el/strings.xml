@@ -163,7 +163,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_common_use_iptables">"Επιλογή Iptables"</string>
     <string name="pref_common_log_root_commands">"Αποθήκευση εντολών Root σε αρχείο καταγραφής"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P είναι προστατευμένα. Μην κρύβετε."</string>
-    <string name="notification_temp_text">"Εκτέλεση εντολών Root..."</string>
+    <string name="notification_exec_root_commands">"Εκτέλεση εντολών Root..."</string>
     <string name="tvSettings_text">"Παρακαλώ περιμένετε…"</string>
     <string name="toastSettings_saved">"Οι ρυθμίσεις αποθηκεύτηκαν"</string>
     <string name="pref_dnscrypt_global_settings_categ">"ΚΑΘΟΛΙΚΕΣ ΡΥΘΜΙΣΕΙΣ"</string>

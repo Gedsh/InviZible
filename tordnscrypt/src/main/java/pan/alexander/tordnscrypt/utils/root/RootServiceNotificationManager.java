@@ -66,7 +66,7 @@ public class RootServiceNotificationManager {
             rootNotificationChannelIsCreated = true;
         }
 
-        sendNotification(service.getString(R.string.notification_temp_text), "");
+        sendNotification(service.getString(R.string.notification_exec_root_commands), "");
     }
 
     void sendNotification(String title, String text) {

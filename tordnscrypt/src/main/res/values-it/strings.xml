@@ -143,7 +143,7 @@
     <string name="pref_common_use_iptables">"Seleziona Iptables"</string>
     <string name="pref_common_log_root_commands">"Salva i Comandi di Root nel Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sono protetti. Non nasconderti."</string>
-    <string name="notification_temp_text">Esecuzione dei comandi di Root…</string>
+    <string name="notification_exec_root_commands">Esecuzione dei comandi di Root…</string>
     <string name="tvSettings_text">Aspetta…</string>
     <string name="toastSettings_saved">"Impostazioni salvate"</string>
     <string name="pref_dnscrypt_global_settings_categ">"IMPOSTAZIONI GLOBALI"</string>

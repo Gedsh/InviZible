@@ -246,7 +246,7 @@
 
 
     <string name="notification_text">DNSCrypt, Tor, I2P are protected. Don\'t hide.</string>
-    <string name="notification_temp_text">Executing Root commands…</string>
+    <string name="notification_exec_root_commands">Executing Root commands…</string>
     <string name="notification_connecting">Connecting…</string>
     <string name="notification_waiting_network">Waiting for network…</string>
 

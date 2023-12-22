@@ -147,7 +147,7 @@
     <string name="pref_common_use_iptables">"Sélectionner Iptables"</string>
     <string name="pref_common_log_root_commands">"Enregistrer les commandes Administrateurs dans le Journal"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sont protégés. Ne vous cachez pas."</string>
-    <string name="notification_temp_text">"Exécution des commandes Administrateurs…"</string>
+    <string name="notification_exec_root_commands">"Exécution des commandes Administrateurs…"</string>
     <string name="tvSettings_text">"S'il vous plaît, patientez..."</string>
     <string name="toastSettings_saved">"Paramètres sauvegardés"</string>
     <string name="pref_dnscrypt_global_settings_categ">"PARAMÈTRES GLOBAUX"</string>

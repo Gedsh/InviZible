@@ -146,7 +146,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_use_iptables">"iptables auswählen"</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
-    <string name="notification_temp_text">"Führe Root Befehle aus..."</string>
+    <string name="notification_exec_root_commands">"Führe Root Befehle aus..."</string>
     <string name="tvSettings_text">"Bitte warten…"</string>
     <string name="toastSettings_saved">"Einstellungen gespeichert"</string>
     <string name="pref_dnscrypt_global_settings_categ">"GLOBALE EINSTELLUNGEN"</string>

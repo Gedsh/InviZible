@@ -146,7 +146,7 @@
     <string name="pref_common_use_iptables">选择 iptables</string>
     <string name="pref_common_log_root_commands">"将 Root 命令保存到日志"</string>
     <string name="notification_text">"DNSCrypt，Tor，I2P 已受保护。不隐藏。"</string>
-    <string name="notification_temp_text">"执行 Root 命令…"</string>
+    <string name="notification_exec_root_commands">"执行 Root 命令…"</string>
     <string name="tvSettings_text">"请稍候…"</string>
     <string name="toastSettings_saved">"设置已保存"</string>
     <string name="pref_dnscrypt_global_settings_categ">"全局设置"</string>

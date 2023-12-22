@@ -187,7 +187,7 @@
     <string name="pref_common_use_iptables">Selecionar Iptables</string>
     <string name="pref_common_log_root_commands">Gravar comandos Root para o log</string>
     <string name="notification_text">DNSCrypt, Tor 2 o I2P são protegidos. Não esconda.</string>
-    <string name="notification_temp_text">Executando comandos de Root…</string>
+    <string name="notification_exec_root_commands">Executando comandos de Root…</string>
     <string name="notification_connecting">Conectando…</string>
     <string name="notification_waiting_network">Aguardando rede…</string>
     <string name="tvSettings_text">Por favor, aguarde…</string>

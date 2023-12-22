@@ -150,7 +150,7 @@
     <string name="pref_common_use_iptables">Pilih iptables</string>
     <string name="pref_common_log_root_commands">"Simpan perintah Root untuk Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P dilindungi. Jangan disembunyikan."</string>
-    <string name="notification_temp_text">Menjalankan perintah Root…</string>
+    <string name="notification_exec_root_commands">Menjalankan perintah Root…</string>
     <string name="tvSettings_text">Silahkan tunggu…</string>
     <string name="toastSettings_saved">"Setelan tersimpan"</string>
     <string name="pref_dnscrypt_global_settings_categ">"PENGATURAN GLOBAL"</string>
