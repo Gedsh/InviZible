@@ -999,3 +999,9 @@
 * Updated default DNSCrypt settings.
 * Fixed on/off firewall button is not displayed.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.2**
+* Updated Tor to version 4.8.10.
+* Updated Purple I2P to version 2.50.1.
+* Fixed mode switching on some devices.
+* Fixes and optimizations.
