@@ -31,7 +31,7 @@
     <string name="discard_changes">Скасувати зміни</string>
     <string name="allow">Дозволити</string>
     <string name="areYouSure">Ви впевнені\? Ця дія не може бути скасована!</string>
-    <string name="write_file_error">Помилка при збереженні файлу!</string>
+    <string name="write_file_error">Помилка збереження файлу!</string>
     <string name="nav_header_title">Tor, DNSCrypt та I2P</string>
     <string name="tvITPDRunning">I2P працює</string>
     <string name="tvITPDInstalled">I2P встановлено</string>
