@@ -76,7 +76,7 @@
     <string name="pref_fast_unlock_with_tor">Вибрати сайти</string>
     <string name="pref_fast_unlock_with_tor_summ">Сайти, які відкриваються через Tor. Ця функція не працює для сайтів за CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Вибрати програми</string>
-    <string name="pref_fast_unlock_apps_with_ipro_summ">Програми, що відкриваються через Tor</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Програми, що відкриваються через InviZible</string>
     <string name="pref_fast_exclude_from_tor">Виключити сайти</string>
     <string name="pref_fast_exclude_from_tor_summ">Сайти, що відкриваються в обхід Tor. Ця функція не працює для сайтів за CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Виключити програми</string>
@@ -488,4 +488,6 @@
     <string name="notification_channel_root">Сповіщення про рут-команди</string>
     <string name="pref_fast_fake_sni">Підробити SNI</string>
     <string name="pref_tor_track_host_exits_summ">Tor відстежуватиме нещодавні підключення до сайтів і намагатиметься використовувати той самий вихідний вузол для кожного. Ця опція може допомогти уникнути нескінченної каптчі.</string>
+    <string name="donate_button">Відвідати</string>
+    <string name="pref_itpd_addressbook">Адресна книга</string>
 </resources>
