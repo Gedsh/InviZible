@@ -309,6 +309,7 @@ class InstalledApplicationsManager private constructor(
                             savedTime = time
                         }
                     }
+                } catch (ignored: SecurityException) {
                 } catch (e: Exception) {
                     loge("InstalledApplications checkPartOfMultiUser", e)
                 }
