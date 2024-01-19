@@ -346,7 +346,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         powerOFF.addAction(SHUTDOWN_FILTER_ACTION);
         powerOFF.addAction(POWER_OFF_FILTER_ACTION);
         powerOFF.addAction(REBOOT_FILTER_ACTION);
-        context.registerReceiver(this, powerOFF);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(this, powerOFF, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            context.registerReceiver(this, powerOFF);
+        }
         rootReceiversRegistered = true;
     }
 
@@ -596,7 +600,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private void registerVpnRevokeReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(VPN_REVOKE_ACTION);
-        context.registerReceiver(this, intentFilter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(this, intentFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            context.registerReceiver(this, intentFilter);
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
