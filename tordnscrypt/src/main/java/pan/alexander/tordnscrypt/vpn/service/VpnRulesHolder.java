@@ -139,10 +139,6 @@ public class VpnRulesHolder {
                 || Tethering.usbTetherOn && packet.saddr.contains(usbModemAddresses)
                 || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
 
-        if (packet.uid != vpn.vpnPreferences.getOwnUID()) {
-            vpn.addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport, packet.saddr);
-        }
-
         lock.readLock().lock();
 
         VpnPreferenceHolder vpnPreferences = vpn.vpnPreferences;
@@ -236,7 +232,8 @@ public class VpnRulesHolder {
         } else if (vpnPreferences.getFirewallEnabled()
                 && isIpInLanRange(packet.daddr)) {
             packet.allowed = uidLanAllowed.contains(packet.uid);
-        } else if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
+        } else if (vpnPreferences.getFirewallEnabled()
+                && isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
             packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
         } else if (vpnPreferences.getFirewallEnabled()) {
 
@@ -283,6 +280,17 @@ public class VpnRulesHolder {
 
         lock.readLock().unlock();
 
+        if (packet.uid != vpn.vpnPreferences.getOwnUID()) {
+            vpn.addUIDtoDNSQueryRawRecords(
+                    packet.uid,
+                    packet.daddr,
+                    packet.dport,
+                    packet.saddr,
+                    packet.allowed,
+                    packet.protocol
+            );
+        }
+
         return allowed;
     }
 
@@ -312,19 +320,19 @@ public class VpnRulesHolder {
     }
 
     private boolean isSpecialAllowed(int uid, String destIp, int destPort) {
+        boolean allow = false;
         if (uid == 0 && destPort == PLAINTEXT_DNS_PORT) {
-            return true;
+            allow = true;
         } else if (uid == SPECIAL_UID_KERNEL) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_KERNEL);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_KERNEL);
         } else if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_NTP)
-                    || mapUidAllowed.containsKey(1000);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_NTP);
         } else if (destPort == SPECIAL_PORT_AGPS1 || destPort == SPECIAL_PORT_AGPS2) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
         } else if (connectivityCheckIps.contains(destIp)) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
         }
-        return false;
+        return allow || mapUidAllowed.containsKey(uid) && mapUidAllowed.get(uid) != null;
     }
 
     private boolean isPacketAllowedForCompatibilityMode(Packet packet, boolean fixTTLForPacket) {

@@ -20,12 +20,13 @@
 package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.SharedPreferences
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.lang.ref.WeakReference
 import javax.inject.Inject
@@ -60,10 +61,7 @@ class ConnectionRecordsInteractor @Inject constructor(
         try {
             convert()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "ConnectionRecordsInteractor convertRecords exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("ConnectionRecordsInteractor", e, true)
         }
     }
 
@@ -85,30 +83,25 @@ class ConnectionRecordsInteractor @Inject constructor(
             return
         }
 
-        var rawConnections: List<ConnectionRecord?> = emptyList()
+        var rawConnections: List<ConnectionData> = emptyList()
 
         try {
             rawConnections = connectionRecordsRepository.getRawConnectionRecords()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ConnectionRecordsInteractor getRawConnectionRecords exception ${e.message} ${e.cause}"
-            )
+            loge("ConnectionRecordsInteractor getRawConnectionRecords", e, true)
         }
 
         if (rawConnections.isEmpty()) {
             return
         }
 
-        var connectionRecords: List<ConnectionRecord>? = emptyList()
+        var connectionRecords: List<ConnectionLogEntry>? = emptyList()
 
         try {
             connectionRecords = converter.get().convertRecords(rawConnections)
+                .sortedBy { it.time }
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ConnectionRecordsInteractor convertRecords exception ${e.message} ${e.cause}"
-            )
+            loge("ConnectionRecordsInteractor convertRecords", e, true)
         }
 
         if (connectionRecords?.isEmpty() == true) {
@@ -119,10 +112,7 @@ class ConnectionRecordsInteractor @Inject constructor(
         try {
             records = parser.formatLines(connectionRecords ?: emptyList())
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ConnectionRecordsInteractor formatLines exception ${e.message} ${e.cause}"
-            )
+            loge("ConnectionRecordsInteractor formatLines", e, true)
         }
 
         if (records.isNullOrBlank()) {

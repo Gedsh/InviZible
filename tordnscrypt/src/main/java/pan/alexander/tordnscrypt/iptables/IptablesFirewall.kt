@@ -63,9 +63,9 @@ class IptablesFirewall @Inject constructor(
 
     private val ownUID = pathVars.appUid
 
-    private val uidAllowed by lazy { hashSetOf<Int>() }
-    private val uidSpecialAllowed by lazy { hashSetOf<Int>() }
-    private val uidLanAllowed by lazy { hashSetOf<Int>() }
+    val uidAllowed by lazy { hashSetOf<Int>() }
+    val uidSpecialAllowed by lazy { hashSetOf<Int>() }
+    val uidLanAllowed by lazy { hashSetOf<Int>() }
 
     fun getFirewallRules(tetheringActive: Boolean): List<String> {
 
@@ -221,7 +221,7 @@ class IptablesFirewall @Inject constructor(
             emptyList()
         }
 
-    private fun prepareUidAllowed() {
+    fun prepareUidAllowed() {
         clearAllowedUids()
         fillAllowedAndSpecialUids(getUidsAllowed())
         fillLanAllowed()

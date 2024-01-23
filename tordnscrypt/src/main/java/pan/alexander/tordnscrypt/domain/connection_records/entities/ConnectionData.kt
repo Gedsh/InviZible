@@ -62,7 +62,7 @@ class DnsRecord(
     }
 
     override fun toString(): String {
-        return "DnsRecord(qName='$qName', aName='$aName', cName='$cName', hInfo='$hInfo', rCode=$rCode, ip='$ip')"
+        return "DnsRecord(time='$time', qName='$qName', aName='$aName', cName='$cName', hInfo='$hInfo', rCode=$rCode, ip='$ip')"
     }
 
 
@@ -72,7 +72,10 @@ class PacketRecord(
     time: Long,
     val uid: Int,
     val saddr: String,
-    val daddr: String
+    val daddr: String,
+    @get:ConnectionProtocol
+    val protocol: Int = UNDEFINED,
+    val allowed: Boolean
 ): ConnectionData(time) {
 
     override fun equals(other: Any?): Boolean {
@@ -84,19 +87,21 @@ class PacketRecord(
         if (uid != other.uid) return false
         if (saddr != other.saddr) return false
         if (daddr != other.daddr) return false
-
-        return true
+        if (protocol != other.protocol) return false
+        return allowed == other.allowed
     }
 
     override fun hashCode(): Int {
         var result = uid
         result = 31 * result + saddr.hashCode()
         result = 31 * result + daddr.hashCode()
+        result = 31 * result + protocol.hashCode()
+        result = 31 * result + allowed.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "PacketRecord(uid=$uid, saddr='$saddr', daddr='$daddr')"
+        return "PacketRecord(time='$time', uid=$uid, saddr='$saddr', daddr='$daddr, protocol='$protocol', allowed='$allowed')"
     }
 
 

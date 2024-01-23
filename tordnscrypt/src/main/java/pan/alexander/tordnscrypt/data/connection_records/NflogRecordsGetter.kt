@@ -30,7 +30,7 @@ class NflogRecordsGetter @Inject constructor(
     private val nflogManager: NflogManager
 ) {
 
-    fun getConnectionRawRecords(): ConcurrentHashMap<ConnectionData, Boolean> =
+    fun getConnectionRawRecords(): Map<ConnectionData, Long> =
         nflogManager.getRealTimeLogs()
 
     fun clearConnectionRawRecords() = nflogManager.clearRealTimeLogs()

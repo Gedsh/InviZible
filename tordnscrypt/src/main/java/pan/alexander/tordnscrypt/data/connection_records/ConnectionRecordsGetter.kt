@@ -57,17 +57,17 @@ class ConnectionRecordsGetter @Inject constructor(
     @Volatile
     private var serviceVPN: WeakReference<ServiceVPN?>? = null
 
-    fun getConnectionRawRecords(): Map<ConnectionData, Boolean> {
+    fun getConnectionRawRecords(): Map<ConnectionData, Long> {
         if (bound.compareAndSet(false, true)) {
             logi("ConnectionRecordsGetter bind to VPN service")
             bindToVPNService()
         }
 
         val rawRecords = try {
-            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyMap<ConnectionData, Boolean>()
+            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyMap<ConnectionData, Long>()
         } catch (e: Exception) {
             logw("ConnectionRecordsGetter getConnectionRawRecords", e)
-            emptyMap<ConnectionData, Boolean>()
+            emptyMap<ConnectionData, Long>()
         }
 
         return rawRecords

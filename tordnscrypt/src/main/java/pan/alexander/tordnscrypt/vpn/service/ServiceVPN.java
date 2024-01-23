@@ -33,6 +33,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
+import android.os.SystemClock;
 import android.widget.Toast;
 
 import androidx.annotation.Keep;
@@ -55,9 +56,9 @@ import pan.alexander.tordnscrypt.arp.DNSRebindProtection;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData;
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol;
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord;
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord;
-import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesServiceNotificationManager;
@@ -125,8 +126,6 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public Lazy<DnsInteractor> dnsInteractor;
-    @Inject
     public Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
     @Inject
     public Lazy<Handler> handler;
@@ -148,7 +147,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     volatile ParcelFileDescriptor vpn = null;
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-    private final ConcurrentHashMap<ConnectionData, Boolean> connectionDataRecords = new ConcurrentHashMap<>(
+    private final ConcurrentHashMap<ConnectionData, Long> connectionDataRecords = new ConcurrentHashMap<>(
             16,
             0.75f,
             2
@@ -362,16 +361,22 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         DnsRecord dnsRecord = new DnsRecord(
                 System.currentTimeMillis(),
-                rr.QName != null ? toUnicode(rr.QName.trim(), ALLOW_UNASSIGNED) : "",
-                rr.AName != null ? toUnicode(rr.AName.trim(), ALLOW_UNASSIGNED) : "",
-                rr.CName != null ? toUnicode(rr.CName.trim(), ALLOW_UNASSIGNED) : "",
+                rr.QName != null ? toUnicode(rr.QName.trim().toLowerCase(), ALLOW_UNASSIGNED) : "",
+                rr.AName != null ? toUnicode(rr.AName.trim().toLowerCase(), ALLOW_UNASSIGNED) : "",
+                rr.CName != null ? toUnicode(rr.CName.trim().toLowerCase(), ALLOW_UNASSIGNED) : "",
                 rr.HInfo != null ? rr.HInfo.trim() : "",
                 rr.Rcode,
                 rr.Resource != null ? rr.Resource.trim() : ""
         );
 
-        connectionDataRecords.remove(dnsRecord);
-        connectionDataRecords.put(dnsRecord, true);
+        //Remove entry to update key time
+        Long creationTime = connectionDataRecords.remove(dnsRecord);
+        //Use value creation time to keep DNS records order
+        connectionDataRecords.put(
+                dnsRecord,
+                creationTime != null ? creationTime : SystemClock.elapsedRealtimeNanos()
+        );
+
 
         if (connectionDataRecords.size() >= LINES_IN_DNS_QUERY_RAW_RECORDS) {
             freeSpaceInConnectionRecords();
@@ -836,7 +841,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
     }
 
-    public ConcurrentHashMap<ConnectionData, Boolean> getDnsQueryRawRecords() {
+    public ConcurrentHashMap<ConnectionData, Long> getDnsQueryRawRecords() {
         return connectionDataRecords;
     }
 
@@ -859,7 +864,15 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         });
     }
 
-    void addUIDtoDNSQueryRawRecords(int uid, String destinationAddress, int destinationPort, String sourceAddres) {
+    void addUIDtoDNSQueryRawRecords(
+            int uid,
+            String destinationAddress,
+            int destinationPort,
+            String sourceAddress,
+            boolean allowed,
+            @ConnectionProtocol
+            int protocol
+    ) {
 
         if (!vpnPreferences.getConnectionLogsEnabled()) {
             return;
@@ -872,12 +885,15 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 PacketRecord packetRecord = new PacketRecord(
                         System.currentTimeMillis(),
                         uid,
-                        sourceAddres,
-                        destinationAddress
+                        sourceAddress,
+                        destinationAddress,
+                        protocol,
+                        allowed
                 );
 
+                //Remove entry to update key time
                 connectionDataRecords.remove(packetRecord);
-                connectionDataRecords.put(packetRecord, true);
+                connectionDataRecords.put(packetRecord, SystemClock.elapsedRealtimeNanos());
 
                 if (connectionDataRecords.size() > LINES_IN_DNS_QUERY_RAW_RECORDS) {
                     freeSpaceInConnectionRecords();

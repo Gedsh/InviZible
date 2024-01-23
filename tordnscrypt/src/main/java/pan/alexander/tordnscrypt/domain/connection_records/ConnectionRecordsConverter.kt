@@ -19,15 +19,27 @@
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Build
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.iptables.IptablesFirewall
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
+import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
@@ -36,10 +48,14 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
+import pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.LINES_IN_DNS_QUERY_RAW_RECORDS
 import pan.alexander.tordnscrypt.vpn.service.VpnBuilder
+import java.io.IOException
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.Future
 import javax.inject.Inject
 
@@ -48,195 +64,312 @@ private const val IP_TO_HOST_ADDRESS_MAP_SIZE = LINES_IN_DNS_QUERY_RAW_RECORDS
 private const val DNS_REVERSE_LOOKUP_SUFFIX = ".in-addr.arpa"
 
 class ConnectionRecordsConverter @Inject constructor(
-    context: Context,
-    preferenceRepository: PreferenceRepository,
+    private val context: Context,
+    private val preferenceRepository: PreferenceRepository,
     private val dnsInteractor: dagger.Lazy<DnsInteractor>,
     private val cachedExecutor: CachedExecutor,
-    private val connectivityCheckManager: ConnectivityCheckManager
+    private val connectivityCheckManager: ConnectivityCheckManager,
+    private val iptablesFirewall: dagger.Lazy<IptablesFirewall>
 ) {
+
+    private val modulesStatus = ModulesStatus.getInstance()
 
     private val sharedPreferences: SharedPreferences =
         PreferenceManager.getDefaultSharedPreferences(context)
-    private val blockIPv6: Boolean = sharedPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, false)
-    private val meteredNetwork = NetworkChecker.isMeteredNetwork(context)
-    private val vpnDNS = VpnBuilder.vpnDnsSet
-    private val modulesStatus = ModulesStatus.getInstance()
-    private val fixTTL = (modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
-            && !modulesStatus.isUseModulesWithRoot)
-    private var compatibilityMode = (sharedPreferences.getBoolean(COMPATIBILITY_MODE, false)
-            || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
-            && modulesStatus.mode == OperationMode.VPN_MODE
 
-    private val dnsQueryLogRecords = ArrayList<ConnectionRecord>()
-    private val dnsQueryLogRecordsSublist = ArrayList<ConnectionRecord>()
+    @Volatile
+    private var blockIPv6: Boolean = isBlockIPv6()
+
+    @Volatile
+    private var meteredNetwork = isMeteredNetwork()
+
+    @Volatile
+    private var vpnDNS = VpnBuilder.vpnDnsSet
+
+    @Volatile
+    private var compatibilityMode = isCompatibilityMode()
+
+    private val logRecords = ArrayList<ConnectionLogEntry>()
     private val reverseLookupQueue = ArrayBlockingQueue<String>(REVERSE_LOOKUP_QUEUE_CAPACITY, true)
     private val ipToHostAddressMap = mutableMapOf<IpToTime, String>()
     private var futureTask: Future<*>? = null
 
-    private val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
-    private var appsAllowed = mutableSetOf<Int>()
-    private val appsLanAllowed = mutableListOf<Int>()
+    private var firewallEnabled = isFirewallEnabled()
+
+    private val hostRegex by lazy { Regex(HOST_NAME_REGEX) }
+
+    private val appsAllowed by lazy { ConcurrentSkipListSet<Int>() }
+
+    private val appsLanAllowed by lazy { ConcurrentSkipListSet<Int>() }
+
+    private val appsSpecialAllowed by lazy { ConcurrentSkipListSet<Int>() }
+
+    @Volatile
+    private var receiverRegistered = false
 
     init {
-        if (firewallEnabled) {
-            preferenceRepository.getStringSetPreference(APPS_ALLOW_LAN_PREF)
-                .forEach { appsLanAllowed.add(it.toInt()) }
-
-            var tempSet: MutableSet<String>? = null
-            if (NetworkChecker.isWifiActive(context) || NetworkChecker.isEthernetActive(context)) {
-                tempSet = preferenceRepository.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
-            } else if (NetworkChecker.isCellularActive(context)) {
-                tempSet = preferenceRepository.getStringSetPreference(APPS_ALLOW_GSM_PREF)
-            } else if (NetworkChecker.isRoaming(context)) {
-                tempSet = preferenceRepository.getStringSetPreference(APPS_ALLOW_ROAMING)
+        if (isRootMode()) {
+            cachedExecutor.submit {
+                try {
+                    updateVars()
+                } catch (e: Exception) {
+                    loge("ConnectionRecordsConverter init", e, true)
+                }
             }
-
-            tempSet?.forEach { appsAllowed.add(it.toInt()) }
         }
     }
 
-    fun convertRecords(dnsQueryRawRecords: List<ConnectionRecord?>): List<ConnectionRecord> {
+    fun convertRecords(rawRecords: List<ConnectionData>): List<ConnectionLogEntry> {
 
-        dnsQueryLogRecords.clear()
+        registerIptablesReceiver()
+
+        logRecords.clear()
 
         startReverseLookupQueue()
 
-        dnsQueryRawRecords.forEach { addRecord(it) }
+        rawRecords.forEach { addRecord(it) }
 
-        return dnsQueryLogRecords
+        return logRecords
     }
 
-    private fun addRecord(dnsQueryRawRecord: ConnectionRecord?) {
+    private fun addRecord(rawRecord: ConnectionData) {
+        when (rawRecord) {
+            is DnsRecord -> addDnsRecord(rawRecord)
+            is PacketRecord -> addPacketRecord(rawRecord)
+        }
+    }
 
-        if (dnsQueryRawRecord == null) {
+    private fun addDnsRecord(processedDnsRecord: DnsRecord) {
+
+        if (!processedDnsRecord.aName.matches(hostRegex)
+            && !processedDnsRecord.qName.matches(hostRegex)
+            || isRootMode() && isPointerRecord(processedDnsRecord)
+        ) {
             return
         }
 
-        if (dnsQueryLogRecords.isNotEmpty()) {
-            if (dnsQueryRawRecord.uid != -1000) {
-                addUID(dnsQueryRawRecord)
-                return
-            } else if (isIdenticalRecord(dnsQueryRawRecord)
-                || isRootMode() && isPointerRecord(dnsQueryRawRecord)
-            ) {
-                return
-            }
-        }
+        if (logRecords.isEmpty()) {
+            logRecords.add(getDnsLogEntry(processedDnsRecord))
+        } else {
 
-        setQueryBlocked(dnsQueryRawRecord)
+            var consumed = false
 
-        if (dnsQueryRawRecord.blocked) {
-            dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
-        }
+            for (i in logRecords.size - 1 downTo 0) {
 
-        dnsQueryLogRecords.add(dnsQueryRawRecord)
-    }
+                val logEntry = if (logRecords[i] is DnsLogEntry) {
+                    logRecords[i]
+                } else {
+                    continue
+                } as DnsLogEntry
 
-    private fun isIdenticalRecord(dnsQueryRawRecord: ConnectionRecord): Boolean {
+                val dnsRecordHost = processedDnsRecord.aName.ifEmpty { processedDnsRecord.qName }
+                val dnsRecordBlocked = isDnsBlocked(processedDnsRecord)
+                val dnsRecordBlockedByIPv6 = if (dnsRecordBlocked) {
+                    isDnsBlockedByIPv6(processedDnsRecord)
+                } else {
+                    false
+                }
 
-        for (i in dnsQueryLogRecords.size - 1 downTo 0) {
-            val record = dnsQueryLogRecords[i]
-
-            if (dnsQueryRawRecord.aName == record.aName
-                && dnsQueryRawRecord.qName == record.qName
-                && dnsQueryRawRecord.hInfo == record.hInfo
-                && dnsQueryRawRecord.rCode == record.rCode
-                && dnsQueryRawRecord.saddr == record.saddr
-            ) {
-
-                if (dnsQueryRawRecord.daddr.isNotEmpty() && record.daddr.isNotEmpty()) {
-                    if (!record.daddr.contains(dnsQueryRawRecord.daddr.trim())) {
-                        dnsQueryLogRecords[i] =
-                            record.apply { daddr = daddr + ", " + dnsQueryRawRecord.daddr.trim() }
+                if (logEntry.blocked == dnsRecordBlocked
+                    && logEntry.blockedByIpv6 == dnsRecordBlockedByIPv6
+                    && logEntry.domainsChain.indexOf(dnsRecordHost) >= 0
+                ) {
+                    if (processedDnsRecord.ip.isNotEmpty()) {
+                        logEntry.ips.add(processedDnsRecord.ip)
                     }
-                    return true
+                    if (processedDnsRecord.cName.isNotEmpty()
+                        && !logEntry.domainsChain.contains(processedDnsRecord.cName)
+                    ) {
+                        logEntry.domainsChain.add(
+                            logEntry.domainsChain.indexOf(dnsRecordHost) + 1,
+                            processedDnsRecord.cName
+                        )
+                    }
+                    consumed = true
+                } else if (logEntry.blocked == dnsRecordBlocked
+                    && logEntry.blockedByIpv6 == dnsRecordBlockedByIPv6
+                    && processedDnsRecord.cName.isNotEmpty()
+                    && logEntry.domainsChain.indexOf(processedDnsRecord.cName) >= 0
+                ) {
+                    if (!logEntry.domainsChain.contains(dnsRecordHost)) {
+                        logEntry.domainsChain.add(
+                            logEntry.domainsChain.indexOf(processedDnsRecord.cName),
+                            dnsRecordHost
+                        )
+                    }
+                    consumed = true
+                }
+
+                //Hide blocked DNSs that later resolved successfully
+                if (logEntry.blocked && !logEntry.blockedByIpv6
+                    && logEntry.domainsChain.contains(dnsRecordHost)
+                    && !dnsRecordBlocked
+                ) {
+                    logEntry.visible = false
+                }
+            }
+
+            if (!consumed) {
+                //Do not add blocked DNSs that were previously resolved successfully
+                val freshEntry = getDnsLogEntry(processedDnsRecord)
+                if (freshEntry.blocked && !freshEntry.blockedByIpv6) {
+                    var found = false
+                    for (i in logRecords.size - 1 downTo 0) {
+                        val logEntry = if (logRecords[i] is DnsLogEntry) {
+                            logRecords[i]
+                        } else {
+                            continue
+                        } as DnsLogEntry
+                        if (!logEntry.blocked
+                            && logEntry.domainsChain.containsAll(freshEntry.domainsChain)
+                        ) {
+                            found = true
+                            break
+                        }
+                    }
+                    if (!found) {
+                        logRecords.add(freshEntry)
+                    }
+                } else {
+                    logRecords.add(freshEntry)
                 }
             }
         }
-
-        return false
     }
 
-    private fun isRootMode() =
-        modulesStatus.mode == OperationMode.ROOT_MODE && !modulesStatus.isFixTTL
+    private fun getDnsLogEntry(dnsRecord: DnsRecord): DnsLogEntry {
+        val domains = mutableListOf<String>()
 
-    private fun isPointerRecord(dnsQueryRawRecord: ConnectionRecord) =
-        dnsQueryRawRecord.aName.endsWith(DNS_REVERSE_LOOKUP_SUFFIX)
+        if (dnsRecord.aName.isNotEmpty()) {
+            domains.add(dnsRecord.aName)
+        }
 
-    private fun addUID(dnsQueryRawRecord: ConnectionRecord) {
-        var savedRecord: ConnectionRecord? = null
-        dnsQueryLogRecordsSublist.clear()
+        if (dnsRecord.qName.isNotEmpty() && !domains.contains(dnsRecord.qName)) {
+            domains.add(0, dnsRecord.qName)
+        }
 
-        val uidBlocked = if (firewallEnabled) {
-            if (compatibilityMode && dnsQueryRawRecord.uid == SPECIAL_UID_KERNEL
-                || fixTTL && dnsQueryRawRecord.uid == SPECIAL_UID_KERNEL
-                || appsAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK)
-                && connectivityCheckManager.getConnectivityCheckIps()
-                    .contains(dnsQueryRawRecord.daddr)
-            ) {
-                false
-            } else if (isIpInLanRange(dnsQueryRawRecord.daddr)) {
-                !appsLanAllowed.contains(dnsQueryRawRecord.uid)
+        if (dnsRecord.cName.isNotEmpty() && !domains.contains(dnsRecord.cName)) {
+            domains.add(dnsRecord.cName)
+        }
+
+        val ips = if (dnsRecord.ip.isNotEmpty()) {
+            mutableSetOf(dnsRecord.ip)
+        } else {
+            mutableSetOf()
+        }
+
+        val entry = DnsLogEntry(domains, ips).also {
+            it.time = dnsRecord.time
+        }
+
+        addDnsRecordBlocked(dnsRecord, entry)
+
+        return entry
+    }
+
+    private fun addDnsRecordBlocked(dnsRecord: DnsRecord, logEntry: DnsLogEntry) {
+        if (isDnsBlocked(dnsRecord)) {
+            logEntry.blockedByIpv6 = isDnsBlockedByIPv6(dnsRecord)
+            logEntry.blocked = true
+        }
+    }
+
+    private fun isDnsBlocked(dnsRecord: DnsRecord) = dnsRecord.ip ==
+            META_ADDRESS
+            || dnsRecord.ip == LOOPBACK_ADDRESS
+            || dnsRecord.ip == "::"
+            || dnsRecord.ip.contains(":") && blockIPv6
+            || dnsRecord.hInfo.contains("dnscrypt")
+            || dnsRecord.rCode != 0
+            || dnsRecord.ip.isEmpty()
+            && dnsRecord.cName.isEmpty()
+            && !isPointerRecord(dnsRecord)
+
+    private fun isDnsBlockedByIPv6(dnsRecord: DnsRecord) =
+        dnsRecord.hInfo.contains(DNSCRYPT_BLOCK_IPv6)
+                || dnsRecord.ip == "::"
+                || dnsRecord.ip.contains(":") && blockIPv6
+
+    private fun addPacketRecord(packetRecord: PacketRecord) {
+
+        val packetLogEntry = PacketLogEntry(
+            uid = packetRecord.uid,
+            saddr = packetRecord.saddr,
+            daddr = packetRecord.daddr,
+            protocol = packetRecord.protocol
+        ).also {
+            it.time = packetRecord.time
+        }
+
+        packetLogEntry.blocked = isUidBlocked(packetRecord)
+
+        var consumed = false
+
+        for (i in logRecords.size - 1 downTo 0) {
+            val logEntry = if (logRecords[i] is DnsLogEntry) {
+                logRecords[i]
             } else {
-                !appsAllowed.contains(dnsQueryRawRecord.uid)
+                continue
+            } as DnsLogEntry
+
+            if (!logEntry.blocked && logEntry.ips.contains(packetRecord.daddr)) {
+                if (packetLogEntry.dnsLogEntry == null
+                    || (packetLogEntry.dnsLogEntry?.domainsChain?.size == logEntry.domainsChain.size
+                            && packetLogEntry.dnsLogEntry?.domainsChain?.containsAll(logEntry.domainsChain) == true)
+                ) {
+                    logEntry.visible = false
+                }
+                if (packetLogEntry.dnsLogEntry == null) {
+                    packetLogEntry.dnsLogEntry = logEntry
+                }
+                consumed = true
+            }
+        }
+
+        if (consumed) {
+            logRecords.add(packetLogEntry)
+        } else if (vpnDNS == null || !vpnDNS.contains(packetRecord.daddr)) {
+            if (!meteredNetwork && packetRecord.daddr.isNotEmpty()) {
+                val host = ipToHostAddressMap[IpToTime(packetRecord.daddr)]
+                if (host == null) {
+                    makeReverseLookup(packetRecord.daddr)
+                } else if (host != packetRecord.daddr) {
+                    packetLogEntry.reverseDns = host
+                }
+            }
+            logRecords.add(packetLogEntry)
+        }
+    }
+
+    private fun isUidBlocked(packetRecord: PacketRecord) =
+        if (isRootMode() || isFixTTL()) {
+            if (firewallEnabled) {
+                if (compatibilityMode && packetRecord.uid == SPECIAL_UID_KERNEL
+                    || isFixTTL() && packetRecord.uid == SPECIAL_UID_KERNEL
+                    || packetRecord.uid == SPECIAL_UID_KERNEL
+                    && appsSpecialAllowed.contains(SPECIAL_UID_KERNEL)
+                    || appsSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK)
+                    && connectivityCheckManager.getConnectivityCheckIps()
+                        .contains(packetRecord.daddr)
+                ) {
+                    false
+                } else if (isIpInLanRange(packetRecord.daddr)) {
+                    !appsLanAllowed.contains(packetRecord.uid)
+                } else {
+                    !appsAllowed.contains(packetRecord.uid)
+                }
+            } else {
+                false
             }
         } else {
-            false
+            !packetRecord.allowed
         }
 
-        for (index in dnsQueryLogRecords.size - 1 downTo 0) {
-            val record = dnsQueryLogRecords[index]
-            if (savedRecord == null && record.daddr.contains(dnsQueryRawRecord.daddr) && record.uid == -1000) {
-                record.blocked = uidBlocked
-                record.unused = false
-                dnsQueryLogRecordsSublist.add(record)
-                savedRecord = record
-            } else if (savedRecord != null && savedRecord.aName == record.cName) {
-                record.blocked = uidBlocked
-                record.unused = false
-                dnsQueryLogRecordsSublist.add(record)
-                savedRecord = record
-            } else if (savedRecord != null && savedRecord.aName != record.cName) {
-                break
-            }
-        }
+    private fun isRootMode() =
+        modulesStatus.mode == OperationMode.ROOT_MODE
 
-        if (savedRecord != null) {
-
-            val dnsQueryNewRecord = ConnectionRecord(
-                savedRecord.qName, savedRecord.aName, savedRecord.cName,
-                savedRecord.hInfo, -1, dnsQueryRawRecord.saddr, "", dnsQueryRawRecord.uid
-            )
-            dnsQueryNewRecord.blocked = uidBlocked
-            dnsQueryNewRecord.unused = false
-
-            dnsQueryLogRecordsSublist.add(dnsQueryNewRecord)
-
-        } else if (vpnDNS == null || !vpnDNS.contains(dnsQueryRawRecord.daddr)) {
-
-            if (!meteredNetwork && dnsQueryRawRecord.daddr.isNotEmpty()) {
-                val host = ipToHostAddressMap[IpToTime(dnsQueryRawRecord.daddr)]
-
-                if (host == null) {
-                    makeReverseLookup(dnsQueryRawRecord.daddr)
-                } else if (host != dnsQueryRawRecord.daddr) {
-                    dnsQueryRawRecord.reverseDNS = host
-                }
-            }
-
-            dnsQueryRawRecord.blocked = uidBlocked
-
-            dnsQueryRawRecord.unused = false
-
-            dnsQueryLogRecords.removeAll { it == dnsQueryRawRecord }
-            dnsQueryLogRecords.add(dnsQueryRawRecord)
-        }
-
-        if (dnsQueryLogRecordsSublist.isNotEmpty()) {
-            dnsQueryLogRecords.removeAll(dnsQueryLogRecordsSublist.toSet())
-            dnsQueryLogRecords.addAll(dnsQueryLogRecordsSublist.reversed())
-        }
-    }
+    private fun isPointerRecord(dnsQueryRawRecord: DnsRecord) =
+        dnsQueryRawRecord.aName.endsWith(DNS_REVERSE_LOOKUP_SUFFIX)
 
     private fun makeReverseLookup(ip: String) {
         if (!reverseLookupQueue.contains(ip)) {
@@ -256,7 +389,11 @@ class ConnectionRecordsConverter @Inject constructor(
                 while (!Thread.currentThread().isInterrupted) {
                     val ip = reverseLookupQueue.take()
 
-                    val host = dnsInteractor.get().reverseResolve(ip)
+                    val host = try {
+                        dnsInteractor.get().reverseResolve(ip)
+                    } catch (e: IOException) {
+                        ""
+                    }
 
                     if (ipToHostAddressMap.size >= IP_TO_HOST_ADDRESS_MAP_SIZE) {
 
@@ -267,7 +404,7 @@ class ConnectionRecordsConverter @Inject constructor(
                         }
                     }
 
-                    if (host.isNotBlank()) {
+                    if (host.isNotEmpty()) {
                         ipToHostAddressMap[IpToTime(ip, System.currentTimeMillis())] = host
                     }
                 }
@@ -279,36 +416,6 @@ class ConnectionRecordsConverter @Inject constructor(
         }
     }
 
-    private fun setQueryBlocked(dnsQueryRawRecord: ConnectionRecord): Boolean {
-
-        if (dnsQueryRawRecord.daddr == META_ADDRESS
-            || dnsQueryRawRecord.daddr == LOOPBACK_ADDRESS
-            || dnsQueryRawRecord.daddr == "::"
-            || dnsQueryRawRecord.daddr.contains(":") && blockIPv6
-            || dnsQueryRawRecord.hInfo.contains("dnscrypt")
-            || dnsQueryRawRecord.rCode != 0
-        ) {
-
-            dnsQueryRawRecord.blockedByIpv6 = (dnsQueryRawRecord.hInfo.contains(DNSCRYPT_BLOCK_IPv6)
-                    || dnsQueryRawRecord.daddr == "::"
-                    || dnsQueryRawRecord.daddr.contains(":") && blockIPv6)
-
-            dnsQueryRawRecord.blocked = true
-            dnsQueryRawRecord.unused = false
-
-        } else if (dnsQueryRawRecord.daddr.isBlank()
-            && dnsQueryRawRecord.cName.isBlank()
-            && !dnsQueryRawRecord.aName.contains(DNS_REVERSE_LOOKUP_SUFFIX)
-        ) {
-            dnsQueryRawRecord.blocked = true
-            dnsQueryRawRecord.unused = false
-        } else {
-            dnsQueryRawRecord.unused = true
-        }
-
-        return dnsQueryRawRecord.blocked
-    }
-
     fun onStop() {
         futureTask?.let {
             if (!it.isDone) {
@@ -316,10 +423,12 @@ class ConnectionRecordsConverter @Inject constructor(
                 futureTask = null
             }
         }
+
+        unregisterIptablesReceiver()
     }
 
     private fun isIpInLanRange(destAddress: String): Boolean {
-        if (destAddress.isBlank()) {
+        if (destAddress.isEmpty()) {
             return false
         }
 
@@ -329,6 +438,98 @@ class ConnectionRecordsConverter @Inject constructor(
             }
         }
         return false
+    }
+
+    private fun isFirewallEnabled() = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
+
+    private fun isFixTTL() =
+        modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE
+                && !modulesStatus.isUseModulesWithRoot
+
+    private fun isCompatibilityMode() = (sharedPreferences.getBoolean(COMPATIBILITY_MODE, false)
+            || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP)
+            && modulesStatus.mode == OperationMode.VPN_MODE
+
+    private fun isBlockIPv6() = sharedPreferences.getBoolean(DNSCRYPT_BLOCK_IPv6, false)
+
+    private fun isMeteredNetwork() = NetworkChecker.isMeteredNetwork(context)
+
+    private val iptablesReceiver by lazy {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+
+                if (!isRootMode()) {
+                    return
+                }
+
+                val int = intent ?: return
+                val action = int.action ?: return
+
+                if (int.getIntExtra("Mark", 0) == IPTABLES_MARK
+                    && action == COMMAND_RESULT
+                ) {
+                    val result = goAsync()
+
+                    cachedExecutor.submit {
+                        try {
+                            updateVars()
+                        } catch (e: Exception) {
+                            loge("ConnectionRecordsConverter iptablesReceiver", e, true)
+                        } finally {
+                            result.finish()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun registerIptablesReceiver() {
+        if (!receiverRegistered) {
+            LocalBroadcastManager.getInstance(context)
+                .registerReceiver(iptablesReceiver, IntentFilter(COMMAND_RESULT))
+            receiverRegistered = true
+        }
+    }
+
+    private fun updateVars() {
+        iptablesFirewall.get().prepareUidAllowed()
+        blockIPv6 = isBlockIPv6()
+        meteredNetwork = isMeteredNetwork()
+        vpnDNS = VpnBuilder.vpnDnsSet
+        firewallEnabled = isFirewallEnabled()
+        compatibilityMode = isCompatibilityMode()
+        val networkAvailable = NetworkChecker.isNetworkAvailable(context)
+        appsAllowed.apply {
+            clear()
+            if (networkAvailable) {
+                addAll(iptablesFirewall.get().uidAllowed)
+            }
+        }
+        appsLanAllowed.apply {
+            clear()
+            if (networkAvailable) {
+                addAll(iptablesFirewall.get().uidLanAllowed)
+            }
+        }
+        appsSpecialAllowed.apply {
+            clear()
+            if (networkAvailable) {
+                addAll(iptablesFirewall.get().uidSpecialAllowed)
+            }
+        }
+    }
+
+    private fun unregisterIptablesReceiver() = try {
+        if (receiverRegistered) {
+            LocalBroadcastManager.getInstance(context)
+                .unregisterReceiver(iptablesReceiver)
+        } else {
+            Unit
+        }
+    } catch (ignored: Exception) {
+    } finally {
+        receiverRegistered = false
     }
 
     private class IpToTime(

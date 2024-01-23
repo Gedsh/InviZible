@@ -37,4 +37,8 @@
     <color name="systemAppWithoutInternetPermission">#D45E5E</color>
     <color name="userAppWithoutInternetPermission">#64A39D</color>
     <color name="dividerColor">#1F000000</color>
+    <color name="liveLogEntryBlocked">#F08080</color>
+    <color name="liveLogEntryNoDns">#E7AD42</color>
+    <color name="liveLogEntryDnsUnused">#9e9e9e</color>
+    <color name="liveLogEntryDnsUsed">#009688</color>
 </resources>

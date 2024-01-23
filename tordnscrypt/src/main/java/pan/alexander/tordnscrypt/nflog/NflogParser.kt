@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.nflog
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.UNDEFINED
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.net.IDN
@@ -34,9 +35,9 @@ class NflogParser @Inject constructor(
 ) {
 
     private val packetPattern =
-        Pattern.compile("PKT UID:(-?\\d+) ([^ ]+) SIP:([^ ]*) SPT:(\\d+) DIP:([^ ]*) DPT:(\\d+)")
+        Pattern.compile("PKT TIME:(\\d+?) UID:(-?\\d+?) ([^ ]+?) SIP:([^ ]*) SPT:(\\d+?) DIP:([^ ]*) DPT:(\\d+?)")
     private val dnsPattern =
-        Pattern.compile("DNS QNAME:([^ ]*) ANAME:([^ ]*) CNAME:([^ ]*) HINFO:(.*?) RCODE:(\\d+) IP:([^ ]*)")
+        Pattern.compile("DNS TIME:(\\d+?) QNAME:([^ ]*) ANAME:([^ ]*) CNAME:([^ ]*) HINFO:(.*?) RCODE:(\\d+?) IP:([^ ]*)")
 
     private val ownUid = pathVars.get().appUid
 
@@ -51,12 +52,14 @@ class NflogParser @Inject constructor(
     private fun parsePacket(line: String): PacketRecord? {
         val matcher = packetPattern.matcher(line)
         if (matcher.find()) {
-            var uid = (matcher.group(1) ?: "-1").toInt()
-            val protocol = matcher.group(2) ?: ""
-            val saddr = matcher.group(3) ?: ""
-            val sport = (matcher.group(4) ?: "0").toInt()
-            val daddr = matcher.group(5) ?: ""
-            val dport = (matcher.group(6) ?: "0").toInt()
+            val time = (matcher.group(1) ?: "0").toLong()
+                .takeIf { it > 0 } ?: System.currentTimeMillis()
+            var uid = (matcher.group(2) ?: "-1").toInt()
+            val protocol = matcher.group(3) ?: ""
+            val saddr = matcher.group(4) ?: ""
+            val sport = (matcher.group(5) ?: "0").toInt()
+            val daddr = matcher.group(6) ?: ""
+            val dport = (matcher.group(7) ?: "0").toInt()
 
             if (uid >= 0) {
                 nflogSessionsHolder.addSession(uid, protocol, saddr, sport, daddr, dport)
@@ -68,11 +71,21 @@ class NflogParser @Inject constructor(
                 return null
             }
 
+            val protocolInt = when(protocol) {
+                "TCP" -> 6
+                "UDP" -> 17
+                "ICMPv4" -> 1
+                "ICMPv6" -> 58
+                else -> UNDEFINED
+            }
+
             return PacketRecord(
-                time = System.currentTimeMillis(),
+                time = time,
                 uid = uid,
                 saddr = saddr,
-                daddr = daddr
+                daddr = daddr,
+                protocol = protocolInt,
+                allowed = true
             )
         }
 
@@ -83,15 +96,17 @@ class NflogParser @Inject constructor(
 
         val matcher = dnsPattern.matcher(line)
         if (matcher.find()) {
-            val qName = matcher.group(1)?.toUnicode() ?: ""
-            val aName = matcher.group(2)?.toUnicode() ?: ""
-            val cName = matcher.group(3)?.toUnicode() ?: ""
-            val hInfo = matcher.group(4) ?: ""
-            val rCode = (matcher.group(5) ?: "0").toInt()
-            val ip = matcher.group(6) ?: ""
+            val time = (matcher.group(1) ?: "0").toLong()
+                .takeIf { it > 0 } ?: System.currentTimeMillis()
+            val qName = matcher.group(2)?.toUnicode()?.lowercase() ?: ""
+            val aName = matcher.group(3)?.toUnicode()?.lowercase() ?: ""
+            val cName = matcher.group(4)?.toUnicode()?.lowercase() ?: ""
+            val hInfo = matcher.group(5) ?: ""
+            val rCode = (matcher.group(6) ?: "0").toInt()
+            val ip = matcher.group(7) ?: ""
 
             return DnsRecord(
-                time = System.currentTimeMillis(),
+                time = time,
                 qName = qName,
                 aName = aName,
                 cName = cName,

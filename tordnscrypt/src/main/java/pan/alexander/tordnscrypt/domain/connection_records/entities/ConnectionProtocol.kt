@@ -17,12 +17,16 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.connection_records
+package pan.alexander.tordnscrypt.domain.connection_records.entities
 
-import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import androidx.annotation.IntDef
 
-interface ConnectionRecordsRepository {
-    fun getRawConnectionRecords(): List<ConnectionData>
-    fun clearConnectionRawRecords()
-    fun connectionRawRecordsNoMoreRequired()
-}
+@Retention(AnnotationRetention.SOURCE)
+@IntDef(UNDEFINED, TCP, UDP, ICMPv4, ICMPv6)
+annotation class ConnectionProtocol
+
+const val UNDEFINED = -1
+const val TCP = 6
+const val UDP = 17
+const val ICMPv4 = 1
+const val ICMPv6 = 58

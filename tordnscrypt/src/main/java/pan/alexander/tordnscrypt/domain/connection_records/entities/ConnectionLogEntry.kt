@@ -17,12 +17,26 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.domain.connection_records
+package pan.alexander.tordnscrypt.domain.connection_records.entities
 
-import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+sealed class ConnectionLogEntry(
+    var time: Long = 0,
+    var blocked: Boolean = false
+)
 
-interface ConnectionRecordsRepository {
-    fun getRawConnectionRecords(): List<ConnectionData>
-    fun clearConnectionRawRecords()
-    fun connectionRawRecordsNoMoreRequired()
-}
+data class DnsLogEntry(
+    val domainsChain: MutableList<String>,
+    val ips: MutableSet<String>,
+    var visible: Boolean = true,
+    var blockedByIpv6: Boolean = false
+): ConnectionLogEntry()
+
+data class PacketLogEntry(
+    val uid: Int,
+    val saddr: String,
+    val daddr: String,
+    @get:ConnectionProtocol
+    val protocol: Int = UNDEFINED,
+    var reverseDns: String? = null,
+    var dnsLogEntry: DnsLogEntry? = null
+): ConnectionLogEntry()
