@@ -1005,3 +1005,8 @@
 * Updated Purple I2P to version 2.50.1.
 * Fixed mode switching on some devices.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.3**
+* Updated Purple I2P to version 2.50.2.
+* Improved real-time connection logs.
+* Fixes and optimizations.
