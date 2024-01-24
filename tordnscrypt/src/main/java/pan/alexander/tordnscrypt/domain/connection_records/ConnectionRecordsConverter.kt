@@ -33,17 +33,21 @@ import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsLogEntry
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketLogEntry
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.TCP
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesFirewall
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
+import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS
+import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS
 import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager
+import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -89,6 +93,9 @@ class ConnectionRecordsConverter @Inject constructor(
     @Volatile
     private var compatibilityMode = isCompatibilityMode()
 
+    @Volatile
+    private var allThroughTor = isRouteAllThroughTor()
+
     private val logRecords = ArrayList<ConnectionLogEntry>()
     private val reverseLookupQueue = ArrayBlockingQueue<String>(REVERSE_LOOKUP_QUEUE_CAPACITY, true)
     private val ipToHostAddressMap = mutableMapOf<IpToTime, String>()
@@ -103,6 +110,10 @@ class ConnectionRecordsConverter @Inject constructor(
     private val appsLanAllowed by lazy { ConcurrentSkipListSet<Int>() }
 
     private val appsSpecialAllowed by lazy { ConcurrentSkipListSet<Int>() }
+
+    private val appsThroughTor by lazy { ConcurrentSkipListSet<Int>() }
+
+    private val appsBypassTor by lazy { ConcurrentSkipListSet<Int>() }
 
     @Volatile
     private var receiverRegistered = false
@@ -356,13 +367,27 @@ class ConnectionRecordsConverter @Inject constructor(
                 } else if (isIpInLanRange(packetRecord.daddr)) {
                     !appsLanAllowed.contains(packetRecord.uid)
                 } else {
-                    !appsAllowed.contains(packetRecord.uid)
+                    if (isTorRunning() && packetRecord.protocol != TCP) {
+                        if (appsAllowed.contains(packetRecord.uid)) {
+                            if (allThroughTor) {
+                                !appsBypassTor.contains(packetRecord.uid)
+                            } else {
+                                !appsThroughTor.contains(packetRecord.uid)
+                            }
+                        } else {
+                            true
+                        }
+                    } else {
+                        !appsAllowed.contains(packetRecord.uid)
+                    }
                 }
             } else {
                 false
             }
-        } else {
+        } else if (firewallEnabled) {
             !packetRecord.allowed
+        } else {
+            false
         }
 
     private fun isRootMode() =
@@ -454,6 +479,10 @@ class ConnectionRecordsConverter @Inject constructor(
 
     private fun isMeteredNetwork() = NetworkChecker.isMeteredNetwork(context)
 
+    private fun isRouteAllThroughTor() = sharedPreferences.getBoolean(ALL_THROUGH_TOR, true)
+
+    private fun isTorRunning() = modulesStatus.torState == ModuleState.RUNNING
+
     private val iptablesReceiver by lazy {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
@@ -493,12 +522,14 @@ class ConnectionRecordsConverter @Inject constructor(
     }
 
     private fun updateVars() {
+
         iptablesFirewall.get().prepareUidAllowed()
         blockIPv6 = isBlockIPv6()
         meteredNetwork = isMeteredNetwork()
         vpnDNS = VpnBuilder.vpnDnsSet
         firewallEnabled = isFirewallEnabled()
         compatibilityMode = isCompatibilityMode()
+
         val networkAvailable = NetworkChecker.isNetworkAvailable(context)
         appsAllowed.apply {
             clear()
@@ -517,6 +548,16 @@ class ConnectionRecordsConverter @Inject constructor(
             if (networkAvailable) {
                 addAll(iptablesFirewall.get().uidSpecialAllowed)
             }
+        }
+
+        allThroughTor = isRouteAllThroughTor()
+        appsThroughTor.apply {
+            clear()
+            addAll(preferenceRepository.getStringSetPreference(UNLOCK_APPS).map { it.toInt() })
+        }
+        appsBypassTor.apply {
+            clear()
+            addAll(preferenceRepository.getStringSetPreference(CLEARNET_APPS).map { it.toInt() })
         }
     }
 
