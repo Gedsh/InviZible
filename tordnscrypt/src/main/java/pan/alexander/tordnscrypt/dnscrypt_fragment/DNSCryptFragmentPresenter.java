@@ -434,11 +434,6 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecordsInteractor != null && modulesStatus.getDnsCryptState() == RESTARTING) {
-            connectionRecordsInteractor.get().clearConnectionRecords();
-            return;
-        }
-
         if (!dnsCryptLogAutoScroll) {
             return;
         }
