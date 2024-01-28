@@ -30,6 +30,7 @@ import android.content.res.Resources
 import android.graphics.Point
 import android.os.Build
 import android.os.Environment
+import android.os.Handler
 import android.os.Process
 import android.util.Base64
 import android.util.TypedValue
@@ -371,13 +372,14 @@ object Utils {
         }.toSet()
 
     @JvmStatic
-    fun hideKeyboard(activity: Activity) {
-        val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        var view = activity.currentFocus
-        if (view == null) {
-            view = View(activity)
+    fun hideKeyboard(activity: Activity) =
+        Handler(activity.mainLooper).post {
+            val imm = activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            var view = activity.currentFocus
+            if (view == null) {
+                view = View(activity)
+            }
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
-    }
 
 }
