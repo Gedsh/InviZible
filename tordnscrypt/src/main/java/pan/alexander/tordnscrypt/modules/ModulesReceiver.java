@@ -63,6 +63,7 @@ import androidx.annotation.NonNull;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -83,6 +84,7 @@ import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
@@ -440,6 +442,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     logi(" DNS cur=" + (dns == null ? null : TextUtils.join(",", dns)) +
                             " DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
 
+                    if (modulesStatus.getDnsCryptState() == RUNNING && changed(last_dns, dns)) {
+                        logi("Restart DNSCrypt on network change");
+                        ModulesRestarter.restartDNSCrypt(context);
+                    }
+
                     last_dns = dns;
 
                     if (isRootMode()) {
@@ -557,6 +564,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         return false;
 
                 return true;
+            }
+
+            boolean changed(List<InetAddress> last, List<InetAddress> current) {
+                if (last == null || current == null)
+                    return false;
+                if (last.size() != current.size())
+                    return true;
+
+                return !new HashSet<>(last).containsAll(current);
             }
         };
 
