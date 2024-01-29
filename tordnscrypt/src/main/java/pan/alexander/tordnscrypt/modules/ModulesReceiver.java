@@ -84,7 +84,6 @@ import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
-import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
@@ -442,7 +441,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     logi(" DNS cur=" + (dns == null ? null : TextUtils.join(",", dns)) +
                             " DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
 
-                    if (modulesStatus.getDnsCryptState() == RUNNING && changed(last_dns, dns)) {
+                    if (modulesStatus.getDnsCryptState() == RUNNING
+                            && isRestartNeeded(last_dns, dns)) {
                         logi("Restart DNSCrypt on network change");
                         ModulesRestarter.restartDNSCrypt(context);
                     }
@@ -566,12 +566,20 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 return true;
             }
 
-            boolean changed(List<InetAddress> last, List<InetAddress> current) {
-                if (last == null || current == null)
+            boolean isRestartNeeded(List<InetAddress> last, List<InetAddress> current) {
+                //Do not restart after the app start or if the network does not propagate DNS
+                if (last == null || current == null) {
                     return false;
-                if (last.size() != current.size())
+                }
+                //Do not restart if network just advertises additional DNS
+                for (InetAddress address: current) {
+                    if (last.contains(address)) {
+                        return false;
+                    }
+                }
+                if (last.size() != current.size()) {
                     return true;
-
+                }
                 return !new HashSet<>(last).containsAll(current);
             }
         };
