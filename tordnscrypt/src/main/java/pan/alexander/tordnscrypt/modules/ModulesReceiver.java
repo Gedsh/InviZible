@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.modules;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -29,6 +30,8 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
@@ -80,12 +83,14 @@ import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
@@ -117,6 +122,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final Lazy<Handler> handler;
     private final Lazy<TorRestarterReconnector> torRestarterReconnector;
     private final Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
+    private final Lazy<PathVars> pathVars;
 
     private Context context;
     private volatile Object commonNetworkCallback;
@@ -143,7 +149,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             CachedExecutor cachedExecutor,
             Lazy<Handler> handler,
             Lazy<TorRestarterReconnector> torRestarterReconnector,
-            Lazy<InstalledAppNamesStorage> installedAppNamesStorage
+            Lazy<InstalledAppNamesStorage> installedAppNamesStorage,
+            Lazy<PathVars> pathVars
     ) {
         this.preferenceRepository = preferenceRepository;
         this.defaultPreferences = defaultSharedPreferences;
@@ -153,6 +160,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         this.handler = handler;
         this.torRestarterReconnector = torRestarterReconnector;
         this.installedAppNamesStorage = installedAppNamesStorage;
+        this.pathVars = pathVars;
     }
 
     @Override
@@ -441,9 +449,21 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     logi(" DNS cur=" + (dns == null ? null : TextUtils.join(",", dns)) +
                             " DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
 
-                    if (modulesStatus.getDnsCryptState() == RUNNING
+                    String nat64 = "";
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                            && linkProperties.getNat64Prefix() != null) {
+                        nat64 = linkProperties.getNat64Prefix().toString();
+                    }
+                    boolean restartRequested = false;
+                    if (!nat64.isEmpty() && isNat64Active() && !getSavedNat64Prefix().equals(nat64)) {
+                        updateDNSCryptNat64Prefix(nat64);
+                        restartRequested = true;
+                    }
+
+                    if (!restartRequested
+                            && modulesStatus.getDnsCryptState() == RUNNING
                             && isRestartNeeded(last_dns, dns)) {
-                        logi("Restart DNSCrypt on network change");
+                        logi("Restart DNSCrypt on network DNS change");
                         ModulesRestarter.restartDNSCrypt(context);
                     }
 
@@ -572,7 +592,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     return false;
                 }
                 //Do not restart if network just advertises additional DNS
-                for (InetAddress address: current) {
+                for (InetAddress address : current) {
                     if (last.contains(address)) {
                         return false;
                     }
@@ -581,6 +601,54 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     return true;
                 }
                 return !new HashSet<>(last).containsAll(current);
+            }
+
+            boolean isNat64Active() {
+                return defaultPreferences.get().getBoolean(DNSCRYPT_DNS64, false);
+            }
+
+            String getSavedNat64Prefix() {
+                return defaultPreferences.get().getString(DNSCRYPT_DNS64_PREFIX, "64:ff9b::/96");
+            }
+
+            void saveNat64Prefix(String prefix) {
+                defaultPreferences.get().edit().putString(DNSCRYPT_DNS64_PREFIX, prefix).apply();
+            }
+
+            void updateDNSCryptNat64Prefix(String prefix) {
+                cachedExecutor.submit(() -> {
+                    boolean consumed = false;
+                    Pattern pattern = Pattern.compile("prefix ?= ?\\['" + IPv6_REGEX_NO_BOUNDS + "/\\d+']");
+                    List<String> conf = FileManager.readTextFileSynchronous(
+                            context,
+                            pathVars.get().getDnscryptConfPath()
+                    );
+                    for (int i = 0; i < conf.size(); i++) {
+                        String line = conf.get(i);
+                        if (line.startsWith("prefix =")) {
+                            Matcher matcher = pattern.matcher(line);
+                            if (matcher.matches()) {
+                                line = "prefix = ['" + prefix + "']";
+                                conf.set(i, line);
+                                consumed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!consumed) {
+                        return;
+                    }
+                    FileManager.writeTextFileSynchronous(
+                            context,
+                            pathVars.get().getDnscryptConfPath(),
+                            conf
+                    );
+                    saveNat64Prefix(prefix);
+                    if (modulesStatus.getDnsCryptState() == RUNNING) {
+                        logi("Restart DNSCrypt on network Nat64Prefix change");
+                        ModulesRestarter.restartDNSCrypt(context);
+                    }
+                });
             }
         };
 
