@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.core.view.GravityCompat;
@@ -173,6 +174,7 @@ public class MainActivity extends LangAppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setBackground(ContextCompat.getDrawable(this, R.drawable.toolbar_shape));
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -432,7 +434,7 @@ public class MainActivity extends LangAppCompatActivity
             if (mitmDetected) {
                 rootIcon.setIcon(R.drawable.ic_arp_attack_notification);
             } else if (mode == ROOT_MODE && fixTTL) {
-                rootIcon.setIcon(R.drawable.ic_ttl_main);
+                rootIcon.setIcon(R.drawable.ic_ttl);
             } else if (mode == ROOT_MODE && busyBoxIsAvailable) {
                 rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
             } else if (mode == ROOT_MODE) {

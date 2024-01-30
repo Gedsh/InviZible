@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -14,6 +13,7 @@
         android:layout_gravity="center_horizontal"
         android:adjustViewBounds="true"
         android:cropToPadding="true"
+        android:tint="@color/colorPrimary"
         app:srcCompat="@drawable/ic_help_title"
         tools:ignore="ContentDescription" />
 
