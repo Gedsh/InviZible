@@ -96,6 +96,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
         timeoutsMeasurementJob = viewModelScope.launch {
 
+            delay(500)
+
             if (bridges.firstOrNull()?.obfsType == BridgeType.webtunnel) {
                 val bridgesToMeasure = getRealIPFromWebTunnelBridges(ArrayList(bridges))
                 launch {
