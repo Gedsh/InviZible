@@ -568,15 +568,15 @@
         <item>X</item>
     </string-array>
     <string-array name="default_dnscrypt_servers_gp">
-        <item>bebasdns-dnscrypt</item>
+        <item>meganerd-doh-ipv6</item>
         <item>njalla-doh</item>
         <item>mullvad-doh</item>
         <item>dns.digitale-gesellschaft.ch</item>
         <item>dnscrypt.ca-1</item>
-        <item>sth-doh-se</item>
+        <item>plan9dns-nj-doh-ipv6</item>
         <item>libredns</item>
         <item>dnswarden-uncensor-dc</item>
-        <item>openinternet</item>
+        <item>meganerd-ipv6</item>
         <item>scaleway-fr</item>
     </string-array>
     <string-array name="default_fake_sni">
