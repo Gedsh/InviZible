@@ -1,0 +1,9 @@
+**InviZible Pro beta 2.0.4**
+* Updated DNSCrypt.
+* Updated default DNSCrypt servers.
+* Updated Tor Snowflake bridge to version 2.8.1.
+* Updated Tor Lirebird bridge.
+* Updated Polish translation.
+* The app icon and color scheme have been changed.
+* Improved handling of IPv6-only networks.
+* Fixes and optimizations.
