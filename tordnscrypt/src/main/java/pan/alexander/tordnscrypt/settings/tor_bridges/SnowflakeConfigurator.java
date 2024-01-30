@@ -71,8 +71,8 @@ public class SnowflakeConfigurator {
         if (!currentBridge.contains(" url=")) {
             bridgeBuilder.append(" url=").append(getURL(rendezvousType));
         }
-        if (!currentBridge.contains(" front=")) {
-            bridgeBuilder.append(" front=").append(getFront(rendezvousType));
+        if (!currentBridge.contains(" front=") && !currentBridge.contains(" fronts=")) {
+            bridgeBuilder.append(" fronts=").append(getFront(rendezvousType));
         }
         if (!currentBridge.contains(" ice=")) {
             bridgeBuilder.append(" ice=").append(getStunServers(stunServers));
@@ -98,9 +98,9 @@ public class SnowflakeConfigurator {
     private String getFront(int rendezvousType) {
         int rendezvous = getRendezvous(rendezvousType);
         if (rendezvous == AMP_CACHE) {
-            return "www.google.com";
+            return "www.google.com,accounts.google.com";
         } else if (rendezvous == FASTLY) {
-            return "foursquare.com";
+            return "foursquare.com,github.githubassets.com";
         } else {
             return "";
         }
