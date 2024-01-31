@@ -539,17 +539,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
         if (isActive()) {
             view.setTorProgressBarIndeterminate(indeterminate);
-
-            if (indeterminate) {
-                view.setTorProgressBarProgress(100);
-            } else {
-                view.setTorProgressBarProgress(0);
-            }
         }
     }
 
     private void setTorProgressBarPercents(int percents) {
-        view.setTorProgressBarIndeterminate(false);
         view.setTorProgressBarProgress(percents);
     }
 

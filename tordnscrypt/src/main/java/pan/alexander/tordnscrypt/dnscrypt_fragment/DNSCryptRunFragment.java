@@ -53,6 +53,8 @@ import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import com.google.android.material.divider.MaterialDivider;
+
 
 public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener,
         ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
@@ -61,6 +63,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     private Button btnDNSCryptStart;
     private TextView tvDNSStatus;
     private ProgressBar pbDNSCrypt;
+    private MaterialDivider divDNSCrypt;
     private TextView tvDNSCryptLog;
     private ScrollView svDNSCryptLog;
     private BroadcastReceiver receiver;
@@ -90,6 +93,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         btnDNSCryptStart.requestFocus();
 
         pbDNSCrypt = view.findViewById(R.id.pbDNSCrypt);
+        divDNSCrypt = view.findViewById(R.id.divDNSCrypt);
 
         tvDNSCryptLog = view.findViewById(R.id.tvDNSCryptLog);
 
@@ -186,6 +190,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         btnDNSCryptStart = null;
         tvDNSStatus = null;
         pbDNSCrypt = null;
+        divDNSCrypt = null;
         tvDNSCryptLog = null;
         svDNSCryptLog = null;
 
@@ -225,8 +230,12 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
         if (!pbDNSCrypt.isIndeterminate() && indeterminate) {
             pbDNSCrypt.setIndeterminate(true);
+            pbDNSCrypt.setVisibility(View.VISIBLE);
+            divDNSCrypt.setVisibility(View.GONE);
         } else if (pbDNSCrypt.isIndeterminate() && !indeterminate) {
             pbDNSCrypt.setIndeterminate(false);
+            pbDNSCrypt.setVisibility(View.GONE);
+            divDNSCrypt.setVisibility(View.VISIBLE);
         }
     }
 

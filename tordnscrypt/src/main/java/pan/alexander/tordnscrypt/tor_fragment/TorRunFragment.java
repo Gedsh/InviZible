@@ -52,6 +52,8 @@ import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import com.google.android.material.divider.MaterialDivider;
+
 
 public class TorRunFragment extends Fragment implements TorFragmentView, View.OnClickListener,
         ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
@@ -60,6 +62,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     private Button btnTorStart;
     private TextView tvTorStatus;
     private ProgressBar pbTor;
+    private MaterialDivider divTor;
     private TextView tvTorLog;
     private ScrollView svTorLog;
     private BroadcastReceiver receiver;
@@ -86,6 +89,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         btnTorStart.setOnClickListener(this);
 
         pbTor = view.findViewById(R.id.pbTor);
+        divTor = view.findViewById(R.id.divTor);
 
         tvTorLog = view.findViewById(R.id.tvTorLog);
 
@@ -177,6 +181,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         btnTorStart = null;
         tvTorStatus = null;
         pbTor = null;
+        divTor = null;
         tvTorLog = null;
         svTorLog = null;
 
@@ -220,16 +225,30 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
     @Override
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
-        if (!pbTor.isIndeterminate() && indeterminate) {
+        if (indeterminate) {
             pbTor.setIndeterminate(true);
-        } else if (pbTor.isIndeterminate() && !indeterminate) {
+            pbTor.setVisibility(View.VISIBLE);
+            divTor.setVisibility(View.GONE);
+        } else {
             pbTor.setIndeterminate(false);
+            pbTor.setVisibility(View.GONE);
+            divTor.setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void setTorProgressBarProgress(int progress) {
-        pbTor.setProgress(progress);
+        if (pbTor.isIndeterminate()) {
+            pbTor.setIndeterminate(false);
+        }
+        if (progress >= 0) {
+            pbTor.setProgress(progress);
+            pbTor.setVisibility(View.VISIBLE);
+            divTor.setVisibility(View.GONE);
+        } else {
+            pbTor.setVisibility(View.GONE);
+            divTor.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

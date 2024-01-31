@@ -143,8 +143,8 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     presenter.stopDisplayLog();
                     presenter.setTorStopped();
                     modulesStatus.setTorState(STOPPED);
+                    view.setTorProgressBarProgress(-1);
                     presenter.refreshTorState();
-                    view.setTorProgressBarProgress(0);
                 } else if (sb.toString().contains("Something went wrong!")) {
                     presenter.setTorSomethingWrong();
                 }

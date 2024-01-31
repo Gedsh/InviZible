@@ -82,6 +82,8 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 
+import com.google.android.material.divider.MaterialDivider;
+
 import javax.inject.Inject;
 
 public class MainFragment extends Fragment implements DNSCryptFragmentView, TorFragmentView, ITPDFragmentView,
@@ -98,8 +100,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     private TextView tvTorMainFragment;
     private TextView tvITPDMainFragment;
     private ProgressBar pbDNSMainFragment;
+    private MaterialDivider divDNSMainFragment;
     private ProgressBar pbTorMainFragment;
+    private MaterialDivider divTorMainFragment;
     private ProgressBar pbITPDMainFragment;
+    private MaterialDivider divITPDMainFragment;
 
     private DNSCryptFragmentPresenter dnsCryptFragmentPresenter;
     private DNSCryptFragmentReceiver dnsCryptFragmentReceiver;
@@ -151,8 +156,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         tvITPDMainFragment = view.findViewById(R.id.tvITPDMainFragment);
 
         pbDNSMainFragment = view.findViewById(R.id.pbDNSMainFragment);
+        divDNSMainFragment = view.findViewById(R.id.divDNSMainFragment);
         pbTorMainFragment = view.findViewById(R.id.pbTorMainFragment);
+        divTorMainFragment = view.findViewById(R.id.divTorMainFragment);
         pbITPDMainFragment = view.findViewById(R.id.pbITPDMainFragment);
+        divITPDMainFragment = view.findViewById(R.id.divITPDMainFragment);
 
         Context context = getActivity();
         if (context == null) {
@@ -264,6 +272,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         tvTorMainFragment = null;
         tvITPDMainFragment = null;
         pbDNSMainFragment = null;
+        divDNSMainFragment = null;
+        divTorMainFragment = null;
+        divITPDMainFragment = null;
         pbTorMainFragment = null;
         pbITPDMainFragment = null;
 
@@ -485,8 +496,12 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
         if (!pbDNSMainFragment.isIndeterminate() && indeterminate) {
             pbDNSMainFragment.setIndeterminate(true);
+            pbDNSMainFragment.setVisibility(View.VISIBLE);
+            divDNSMainFragment.setVisibility(View.GONE);
         } else if (pbDNSMainFragment.isIndeterminate() && !indeterminate) {
             pbDNSMainFragment.setIndeterminate(false);
+            pbDNSMainFragment.setVisibility(View.GONE);
+            divDNSMainFragment.setVisibility(View.VISIBLE);
         }
     }
 
@@ -593,16 +608,30 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
-        if (!pbTorMainFragment.isIndeterminate() && indeterminate) {
+        if (indeterminate) {
             pbTorMainFragment.setIndeterminate(true);
-        } else if (pbTorMainFragment.isIndeterminate() && !indeterminate) {
+            pbTorMainFragment.setVisibility(View.VISIBLE);
+            divTorMainFragment.setVisibility(View.GONE);
+        } else {
             pbTorMainFragment.setIndeterminate(false);
+            pbTorMainFragment.setVisibility(View.GONE);
+            divTorMainFragment.setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void setTorProgressBarProgress(int progress) {
-        pbTorMainFragment.setProgress(progress);
+        if (pbTorMainFragment.isIndeterminate()) {
+            pbTorMainFragment.setIndeterminate(false);
+        }
+        if (progress >= 0) {
+            pbTorMainFragment.setProgress(progress);
+            pbTorMainFragment.setVisibility(View.VISIBLE);
+            divTorMainFragment.setVisibility(View.GONE);
+        } else {
+            pbTorMainFragment.setVisibility(View.GONE);
+            divTorMainFragment.setVisibility(View.VISIBLE);
+        }
     }
 
     @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
@@ -695,8 +724,12 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
         if (!pbITPDMainFragment.isIndeterminate() && indeterminate) {
             pbITPDMainFragment.setIndeterminate(true);
+            pbITPDMainFragment.setVisibility(View.VISIBLE);
+            divITPDMainFragment.setVisibility(View.GONE);
         } else if (pbITPDMainFragment.isIndeterminate() && !indeterminate) {
             pbITPDMainFragment.setIndeterminate(false);
+            pbITPDMainFragment.setVisibility(View.GONE);
+            divITPDMainFragment.setVisibility(View.VISIBLE);
         }
     }
 

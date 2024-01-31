@@ -55,6 +55,8 @@ import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
+import com.google.android.material.divider.MaterialDivider;
+
 
 public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener,
         ViewTreeObserver.OnScrollChangedListener, View.OnTouchListener {
@@ -62,6 +64,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     private Button btnITPDStart;
     private TextView tvITPDStatus;
     private ProgressBar pbITPD;
+    private MaterialDivider divITPD;
     private TextView tvITPDLog;
     private TextView tvITPDinfoLog;
     private ScrollView svITPDLog;
@@ -89,6 +92,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         btnITPDStart.setOnClickListener(this);
 
         pbITPD = view.findViewById(R.id.pbITPD);
+        divITPD = view.findViewById(R.id.divITPD);
 
         svITPDLog = view.findViewById(R.id.svITPDLog);
 
@@ -191,6 +195,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         btnITPDStart = null;
         tvITPDStatus = null;
         pbITPD = null;
+        divITPD = null;
         tvITPDLog = null;
         tvITPDinfoLog = null;
         svITPDLog = null;
@@ -231,8 +236,12 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
         if (!pbITPD.isIndeterminate() && indeterminate) {
             pbITPD.setIndeterminate(true);
+            pbITPD.setVisibility(View.VISIBLE);
+            divITPD.setVisibility(View.GONE);
         } else if (pbITPD.isIndeterminate() && !indeterminate) {
             pbITPD.setIndeterminate(false);
+            pbITPD.setVisibility(View.GONE);
+            divITPD.setVisibility(View.VISIBLE);
         }
     }
 

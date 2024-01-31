@@ -143,6 +143,15 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:visibility="gone"/>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:id="@+id/divTorMainFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="7dp"
                     android:layout_weight="1" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -166,6 +175,15 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:visibility="gone"/>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:id="@+id/divDNSMainFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="7dp"
                     android:layout_weight="1" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -190,7 +208,16 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1" />
+                    android:layout_weight="1"
+                    android:visibility="gone"/>
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:id="@+id/divITPDMainFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="7dp"
+                    android:layout_weight="1"/>
             </androidx.appcompat.widget.LinearLayoutCompat>
 
         </androidx.appcompat.widget.LinearLayoutCompat>
