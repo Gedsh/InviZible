@@ -99,6 +99,11 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
                 tvDialogImportRules.setText(dialogMessage);
             }
             pbDialogImportRules.setIndeterminate(dialogImportRulesIndeterminate);
+            if (dialogImportRulesIndeterminate) {
+                pbDialogImportRules.setVisibility(View.VISIBLE);
+            } else {
+                pbDialogImportRules.setVisibility(View.GONE);
+            }
             btnDialogImportRules.setText(buttonText);
         }
     }
@@ -121,6 +126,7 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
                 if (tvDialogImportRules != null && pbDialogImportRules != null) {
                     dialogMessage = String.format(getString(R.string.import_dnscrypt_rules_dialog_message), linesAdded);
                     tvDialogImportRules.setText(dialogMessage);
+                    pbDialogImportRules.setVisibility(View.VISIBLE);
                     pbDialogImportRules.setIndeterminate(true);
                     dialogImportRulesIndeterminate = true;
                 }
@@ -132,22 +138,28 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
     public void onDNSCryptRuleLineAdded(int count) {
         linesAdded = count;
         dialogMessage = String.format(getString(R.string.import_dnscrypt_rules_dialog_message), linesAdded);
-        if (tvDialogImportRules != null && handler != null) {
-            handler.post(() -> tvDialogImportRules.setText(dialogMessage));
+        if (handler != null) {
+            handler.post(() -> {
+                if (tvDialogImportRules != null) {
+                    tvDialogImportRules.setText(dialogMessage);
+                }
+            });
         }
     }
 
     @Override
     public void onDNSCryptRuleLinesAddingFinished() {
-
-        if (tvDialogImportRules!= null && pbDialogImportRules != null && btnDialogImportRules != null && handler != null) {
+        if (handler != null) {
             handler.post(() -> {
-                dialogMessage = String.format(getString(R.string.import_dnscrypt_rules_complete_dialog_message), linesAdded);
-                tvDialogImportRules.setText(dialogMessage);
-                pbDialogImportRules.setIndeterminate(false);
-                dialogImportRulesIndeterminate = false;
-                buttonText = R.string.ok;
-                btnDialogImportRules.setText(buttonText);
+                if (tvDialogImportRules!= null && pbDialogImportRules != null && btnDialogImportRules != null) {
+                    dialogMessage = String.format(getString(R.string.import_dnscrypt_rules_complete_dialog_message), linesAdded);
+                    tvDialogImportRules.setText(dialogMessage);
+                    pbDialogImportRules.setIndeterminate(false);
+                    pbDialogImportRules.setVisibility(View.GONE);
+                    dialogImportRulesIndeterminate = false;
+                    buttonText = R.string.ok;
+                    btnDialogImportRules.setText(buttonText);
+                }
             });
         }
 

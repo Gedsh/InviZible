@@ -21,16 +21,15 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_settings
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -88,6 +87,7 @@ class ImportRules(
 
     private val contentResolver = context.applicationContext.contentResolver
 
+    @Volatile
     private var linesCount = 0
     private var hash = 0
     private var hashes = IntArray(0)
@@ -189,15 +189,24 @@ class ImportRules(
                 remoteRulesFilePath
             }
 
-            File(rulesFilePath).copyTo(File(fileToSave), true)
+            try {
+                File(rulesFilePath).copyTo(File(fileToSave), true)
+            } catch (e: Exception) {
+                onDNSCryptRuleAddLineListener?.onDNSCryptRuleLineAdded(0)
+                loge("ImportRules doTheJob copy", e)
+            }
 
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+            loge("ImportRules doTheJob", e)
         } finally {
             onDNSCryptRuleAddLineListener?.onDNSCryptRuleLinesAddingFinished()
 
             if (powerLocked) {
                 wakeLocksManager.stopPowerWakelock()
+            }
+
+            if (linesCount > 0) {
+                restartDNSCryptIfRequired()
             }
 
             reentrantLock.unlock()
@@ -211,7 +220,7 @@ class ImportRules(
         remoteRulesFilePath: String,
         rulesRegex: Regex,
         filesToImport: MutableList<Any?>
-    ) {
+    ) = try {
 
         val fileToAdd: String = if (localRules) {
             remoteRulesFilePath
@@ -236,10 +245,8 @@ class ImportRules(
         }
 
         onDNSCryptRuleAddLineListener?.onDNSCryptRuleLineAdded(linesCount)
-
-        if (linesCount > 0) {
-            restartDNSCryptIfRequired()
-        }
+    } catch (e: Exception) {
+        loge("ImportRules mixFiles", e)
     }
 
     private fun mixFilesWithPass(
@@ -271,7 +278,7 @@ class ImportRules(
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+                    loge("ImportRules mixFilesWithPass", e)
                 }
             }
         }
@@ -303,7 +310,7 @@ class ImportRules(
                 }
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+            loge("ImportRules mixFilesWithUri", e)
         }
     }
 
