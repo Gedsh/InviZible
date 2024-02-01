@@ -106,7 +106,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setDNSCryptProgressBarIndeterminate(false);
+                //view.setDNSCryptProgressBarIndeterminate(false);
 
                 view.setDNSCryptStartButtonEnabled(true);
 

@@ -120,13 +120,15 @@
             android:layout_gravity="bottom"
             android:layout_margin="8dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingTop="10dp">
 
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="4dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -134,6 +136,7 @@
                     android:id="@+id/tvTorMainFragment"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginBottom="4dp"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="@string/tvTorStop" />
@@ -143,22 +146,25 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_weight="1"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
                 <com.google.android.material.divider.MaterialDivider
                     android:id="@+id/divTorMainFragment"
-                    android:layout_width="match_parent"
+                    android:layout_width="30dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="7dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="7dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_weight="1" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="4dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -166,6 +172,7 @@
                     android:id="@+id/tvDNSMainFragment"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:layout_marginBottom="4dp"
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="@string/tvDNSStop" />
@@ -175,15 +182,17 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_weight="1"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
                 <com.google.android.material.divider.MaterialDivider
                     android:id="@+id/divDNSMainFragment"
-                    android:layout_width="match_parent"
+                    android:layout_width="30dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="7dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="7dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_weight="1" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -191,7 +200,8 @@
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="4dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -208,16 +218,18 @@
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_weight="1"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
                 <com.google.android.material.divider.MaterialDivider
                     android:id="@+id/divITPDMainFragment"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
                     android:layout_marginTop="8dp"
                     android:layout_marginBottom="7dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1" />
             </androidx.appcompat.widget.LinearLayoutCompat>
 
         </androidx.appcompat.widget.LinearLayoutCompat>

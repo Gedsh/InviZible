@@ -92,7 +92,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setITPDProgressBarIndeterminate(false);
+                //view.setITPDProgressBarIndeterminate(false);
 
                 view.setITPDStartButtonEnabled(true);
 

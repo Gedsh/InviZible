@@ -90,7 +90,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
             Log.i(LOG_TAG, "TorRunFragment onReceive");
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setTorProgressBarIndeterminate(false);
+                //view.setTorProgressBarIndeterminate(false);
 
                 view.setTorStartButtonEnabled(true);
 
