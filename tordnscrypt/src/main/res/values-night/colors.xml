@@ -7,7 +7,7 @@
     <color name="colorText">@color/colorWhite</color>
     <color name="colorSelected">#1A3F70B5</color>
     <color name="colorBlue">#00B0FF</color>
-    <color name="colorGreen">#1DE9B6</color>
+    <color name="colorGreen">#1EBC95</color>
     <color name="colorRedDark">#FF1744</color>
     <color name="colorGreyLightFaint">#1FFFFFFF</color>
     <color name="colorSecond">@color/colorGreyDark</color>
