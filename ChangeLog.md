@@ -1020,3 +1020,10 @@
 * The app icon and color scheme have been changed.
 * Improved handling of IPv6-only networks.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.5**
+* The app icon and color scheme have been changed.
+* Added monochrome adaptive icon.
+* Fixed the appearance of the DNSCrypt rules import dialog.
+* Update translations.
+* Fixes and optimizations.
