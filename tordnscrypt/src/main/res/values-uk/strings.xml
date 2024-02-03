@@ -31,7 +31,7 @@
     <string name="discard_changes">Скасувати зміни</string>
     <string name="allow">Дозволити</string>
     <string name="areYouSure">Ви впевнені\? Ця дія не може бути скасована!</string>
-    <string name="write_file_error">Помилка при збереженні файлу!</string>
+    <string name="write_file_error">Помилка збереження файлу!</string>
     <string name="nav_header_title">Tor, DNSCrypt та I2P</string>
     <string name="tvITPDRunning">I2P працює</string>
     <string name="tvITPDInstalled">I2P встановлено</string>
@@ -76,7 +76,7 @@
     <string name="pref_fast_unlock_with_tor">Вибрати сайти</string>
     <string name="pref_fast_unlock_with_tor_summ">Сайти, які відкриваються через Tor. Ця функція не працює для сайтів за CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Вибрати програми</string>
-    <string name="pref_fast_unlock_apps_with_ipro_summ">Програми, що відкриваються через Tor</string>
+    <string name="pref_fast_unlock_apps_with_ipro_summ">Програми, що відкриваються через InviZible</string>
     <string name="pref_fast_exclude_from_tor">Виключити сайти</string>
     <string name="pref_fast_exclude_from_tor_summ">Сайти, що відкриваються в обхід Tor. Ця функція не працює для сайтів за CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Виключити програми</string>
@@ -496,4 +496,7 @@
     <string name="long_press_to_edit">Натисніть та затримайте, щоб редагувати.</string>
     <string name="anonymize_relays">Анонімні ретранслятори</string>
     <string name="anonymize_relays_not_used">Анонімні ретранслятори не використовуються.</string>
+    <string name="donate_button">Відвідати</string>
+    <string name="pref_itpd_addressbook">Адресна книга</string>
 </resources>
+

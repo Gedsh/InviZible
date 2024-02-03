@@ -304,7 +304,7 @@
     <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS çıktı vekilini etkinleştir</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor, tüm OR bağlantılarını SOCKS5 vekili üzerinden yapacaktır.</string>
     <string name="pref_tor_edit_conf">tor.conf dosyasını doğrudan düzenle</string>
-    <string name="pref_tor_clean_module_folder">Modül klasörünü temizle</string>
+    <string name="pref_tor_clean_module_folder">Önbelleği temizle</string>
     <string name="pref_tor_isolate_dest_address_summ">Farklı bir hedef adresi hedefleyen akışlarla devreleri paylaşmayın.</string>
     <string name="pref_tor_isolate_dest_port_summ">Farklı bir hedef bağlantı noktasını hedefleyen akışlarla devreleri paylaşmayın.</string>
     <string name="pref_routing_unlock_app">InviZible ile kullanılacak uygulamalar</string>
@@ -362,7 +362,7 @@
     <string name="helper_dnscrypt_stopped">DNSCrypt Android sistemi tarafından sonlandırıldı gibi görünüyor. İnternet bağlantınız geri yüklendi. Aygıt ayarlarına bakın!</string>
     <string name="helper_tor_stopped">Tor Android sistemi tarafından sonlandırıldı gibi görünüyor. İnternet bağlantınız geri yüklendi. Aygıt ayarlarına bakın!</string>
     <string name="helper_itpd_stopped">I2P Android sistemi tarafından sonlandırıldı gibi görünüyor. Aygıt ayarlarına bakın!</string>
-    <string name="helper_dnscrypt_no_internet">DNSCrypt internete bağlanamıyor gibi görünüyor.</string>
+    <string name="helper_dnscrypt_no_internet">DNSCrypt internete bağlanamıyor gibi görünüyor. Başka DNSCrypt sunucuları seçmeyi deneyebilirsiniz. Lütfen MENÜ -&gt; Hızlı Ayarlar -&gt; DNSCRypt sunucuları seç bölümüne bakın.</string>
     <string name="helper_tor_use_bridges">Tor internete bağlanamıyor gibi görünüyor. İnternet sağlayıcı Tor bağlantılarını engelleyebilir. Tor köprüleri kullanmayı deneyebilirsiniz. Lütfen MENÜ -&gt; Hızlı Ayarlar -&gt; Köprüler bölümüne bakın.</string>
     <string name="action_mode_child_lock">Çocuk Kilidi</string>
     <string name="action_mode_dialog_message_lock">Bu uygulamanın denetimini kilitleyebilirsiniz. Lütfen parolayı girin veya öncekini kullanın.</string>
@@ -415,8 +415,8 @@
     <string name="vpn_mode_error">VPN modu hatası!</string>
     <string name="vpn_tor_tether_summ">Lütfen bağlı aygıtın ayarlarında vekil sunucusu kullanımını yapılandırın. Öntanımlı değerler: IP:10.1.10.1 Bağlantı noktası:8118</string>
     <string name="main_fragment_hide_ip">TOR ile IP\'yi gizle</string>
-    <string name="main_fragment_protect_dns">DNSCRYPT ile DNS\'i koru</string>
-    <string name="main_fragment_access_i2p">Purple I2P ile I2P sitelerine eriş</string>
+    <string name="main_fragment_protect_dns">DNSCRYPT ile koru</string>
+    <string name="main_fragment_access_i2p">Purple I2P ile I2P ağına eriş</string>
     <string name="reset_settings_title">Dikkat</string>
     <string name="add_custom_server_title">Özel sunucu ekle</string>
     <string name="add_custom_server_error">Geçersiz özel sunucu yapılandırması. Lütfen SDNS alanını gözden geçirin.</string>
