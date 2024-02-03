@@ -138,6 +138,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private volatile boolean vpnRevoked = false;
 
     private static final int CHECK_INTERNET_CONNECTION_DELAY_SEC = 30;
+    private static final int RESTART_DNSCRYPT_DELAY_SEC = 5;
     private final AtomicBoolean isCheckingInternetConnection = new AtomicBoolean(false);
 
     @Inject
@@ -463,8 +464,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     if (!restartRequested
                             && modulesStatus.getDnsCryptState() == RUNNING
                             && isRestartNeeded(last_dns, dns)) {
-                        logi("Restart DNSCrypt on network DNS change");
-                        ModulesRestarter.restartDNSCrypt(context);
+                        handler.get().postDelayed(() -> {
+                            if (modulesStatus.getDnsCryptState() == RUNNING) {
+                                logi("Restart DNSCrypt on network DNS change");
+                                ModulesRestarter.restartDNSCrypt(context);
+                            }
+                        }, RESTART_DNSCRYPT_DELAY_SEC * 1000);
+
                     }
 
                     last_dns = dns;
