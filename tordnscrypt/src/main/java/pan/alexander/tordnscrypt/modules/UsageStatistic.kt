@@ -166,15 +166,18 @@ class UsageStatistic(private val context: Context) {
     fun getTitle(): String {
         var title = ""
 
-        if (modulesStatus.torState == ModuleState.RUNNING) {
+        if (modulesStatus.torState == ModuleState.RUNNING
+            || modulesStatus.torState == ModuleState.RESTARTING) {
             title += "TOR"
         }
 
-        if (modulesStatus.dnsCryptState == ModuleState.RUNNING) {
+        if (modulesStatus.dnsCryptState == ModuleState.RUNNING
+            || modulesStatus.dnsCryptState == ModuleState.RESTARTING) {
             title += " & DNSCRYPT"
         }
 
-        if (modulesStatus.itpdState == ModuleState.RUNNING) {
+        if (modulesStatus.itpdState == ModuleState.RUNNING
+            || modulesStatus.itpdState == ModuleState.RESTARTING) {
             title += " & I2P"
         }
 
