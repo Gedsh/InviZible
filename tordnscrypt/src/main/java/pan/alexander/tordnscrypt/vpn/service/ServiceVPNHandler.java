@@ -33,6 +33,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -141,20 +142,10 @@ public class ServiceVPNHandler extends Handler {
         try {
             if (cmd != null) {
                 switch (cmd) {
-                    case START:
-                        start();
-                        break;
-
-                    case RELOAD:
-                        reload();
-                        break;
-
-                    case STOP:
-                        stop();
-                        break;
-
-                    default:
-                        loge("VPN Handler Unknown command=" + cmd);
+                    case START -> start();
+                    case RELOAD -> reload();
+                    case STOP -> stop();
+                    default -> loge("VPN Handler Unknown command=" + cmd);
                 }
             }
 
@@ -255,6 +246,11 @@ public class ServiceVPNHandler extends Handler {
             if (serviceVPN.vpn != null && builder.equals(last_builder)) {
                 logi("VPN Handler Native restart");
                 serviceVPN.stopNative();
+
+                // Set underlying network
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    setUnderlyingNetwork();
+                }
 
             } else {
                 last_builder = builder;
@@ -378,19 +374,8 @@ public class ServiceVPNHandler extends Handler {
             ParcelFileDescriptor pfd = builder.establish();
 
             // Set underlying network
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && serviceVPN != null) {
-                ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
-                Network active = (cm == null ? null : cm.getActiveNetwork());
-                if (active != null) {
-                    logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
-                    serviceVPN.setUnderlyingNetworks(new Network[]{active});
-                } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
-                    logi("VPN Handler Setting underlying network=empty");
-                    serviceVPN.setUnderlyingNetworks(new Network[]{});
-                } else {
-                    logi("VPN Handler Setting underlying network=default");
-                    serviceVPN.setUnderlyingNetworks(null);
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+               setUnderlyingNetwork();
             }
 
             return pfd;
@@ -399,6 +384,27 @@ public class ServiceVPNHandler extends Handler {
         } catch (Throwable ex) {
             loge("ServiceVPNHandler startVPN", ex, true);
             return null;
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void setUnderlyingNetwork() {
+
+        if (serviceVPN == null) {
+            return;
+        }
+
+        ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
+        Network active = (cm == null ? null : cm.getActiveNetwork());
+        if (active != null) {
+            logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
+            serviceVPN.setUnderlyingNetworks(new Network[]{active});
+        } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
+            logi("VPN Handler Setting underlying network=empty");
+            serviceVPN.setUnderlyingNetworks(new Network[]{});
+        } else {
+            logi("VPN Handler Setting underlying network=default");
+            serviceVPN.setUnderlyingNetworks(null);
         }
     }
 
