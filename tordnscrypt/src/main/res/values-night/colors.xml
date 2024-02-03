@@ -2,31 +2,24 @@
 <resources>
     <color name="colorPrimary">#1E1E1E</color>
     <color name="colorPrimaryDark">#121212</color>
-    <color name="colorAccent">#24A7C1</color>
-    <color name="colorBackground">#121212</color>
-    <color name="colorText">#FFFFFF</color>
+    <color name="colorAccent">#00B0FF</color>
+    <color name="colorBackground">@color/colorPrimaryDark</color>
+    <color name="colorText">@color/colorWhite</color>
     <color name="colorSelected">#1A3F70B5</color>
-    <!-- colorFirst same as cardsColor -->
-    <color name="colorFirst">#1E1E1E</color>
-    <color name="colorSecond">#3C3C3C</color>
-    <color name="cardsColor">#1E1E1E</color>
-    <color name="alertWindowColor">#1E1E1E</color>
-    <color name="buttonColor">#3C3C3C</color>
+    <color name="colorBlue">#00B0FF</color>
+    <color name="colorGreen">#1DE9B6</color>
+    <color name="colorRedDark">#FF1744</color>
+    <color name="colorGreyLightFaint">#1FFFFFFF</color>
+    <color name="colorSecond">@color/colorGreyDark</color>
+    <color name="buttonColor">@color/colorGreyDark</color>
     <color name="buttonColorFocusedHighlight">#1A00E5FF</color>
     <color name="buttonColorFocusedHighlightStroke">#00E5FF</color>
-    <color name="buttonColorPressedHighlight">#646464</color>
-    <color name="buttonTextColor">#FFFFFF</color>
-    <color name="textModuleStatusColorAlert">#FF1744</color>
-    <color name="textModuleStatusColorStopped">#FFFFFF</color>
-    <color name="textModuleStatusColorStarting">#2979FF</color>
-    <color name="textModuleStatusColorStopping">#2979FF</color>
-    <color name="textModuleStatusColorRunning">#1DE9B6</color>
-    <color name="textModuleStatusColorInstalling">#2979FF</color>
-    <color name="textModuleStatusColorInstalled">#1DE9B6</color>
-    <color name="buttonItemColorFocusedHighlight">#3C3C3C</color>
-    <color name="mainStartButtonColorStart">#3C3C3C</color>
-    <color name="mainStartButtonColorEnd">#646464</color>
-    <color name="mainStartButtonColorActive">#00B0FF</color>
+    <color name="buttonColorPressedHighlight">@color/colorGreyDarkFaint</color>
+    <color name="buttonItemColorFocusedHighlight">@color/colorGreyDark</color>
+    <color name="mainStartButtonColorStart">@color/colorGreyDark</color>
+    <color name="mainStartButtonColorEnd">@color/colorGreyDarkFaint</color>
+    <color name="mainStartButtonColorPressedHighlightStart">@color/colorGreyDark</color>
+    <color name="mainStartButtonColorPressedHighlightEnd">@color/colorGreyDarkFaint</color>
+    <color name="textModuleStatusColorStopped">@color/colorGreyLight</color>
     <color name="chipColorFocused">#4D02AF9B</color>
-    <color name="dividerColor">#1FFFFFFF</color>
 </resources>
