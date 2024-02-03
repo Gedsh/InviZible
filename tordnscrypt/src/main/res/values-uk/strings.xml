@@ -102,6 +102,8 @@
     <string name="pref_fast_tor_bypass_lan">Виключити LAN адреси</string>
     <string name="pref_fast_tor_bypass_lan_summ">Не використовувати Tor для LAN адресів та зарезервованих блоків IP IANA</string>
     <string name="pref_fast_language">Вибрати мову</string>
+    <string name="pref_fast_logs">Логи з’єднань</string>
+    <string name="pref_fast_logs_summ">Показати лог підключень додатків на вкладці DNS</string>
     <string name="pref_fast_block_http">Заблокувати http</string>
     <string name="pref_fast_auto_update_summ">Перевіряти оновлення InviZible Pro та модулів щодня</string>
     <string name="pref_fast_chek_update">Перевірити оновлення</string>
@@ -488,4 +490,10 @@
     <string name="notification_channel_root">Сповіщення про рут-команди</string>
     <string name="pref_fast_fake_sni">Підробити SNI</string>
     <string name="pref_tor_track_host_exits_summ">Tor відстежуватиме нещодавні підключення до сайтів і намагатиметься використовувати той самий вихідний вузол для кожного. Ця опція може допомогти уникнути нескінченної каптчі.</string>
+    <string name="press_to_add">Натисніть, щоб додати.</string>
+    <string name="long_press_to_add">Натисніть та затримайте, щоб додати.</string>
+    <string name="press_to_edit">Натисніть, щоб редагувати.</string>
+    <string name="long_press_to_edit">Натисніть та затримайте, щоб редагувати.</string>
+    <string name="anonymize_relays">Анонімні ретранслятори</string>
+    <string name="anonymize_relays_not_used">Анонімні ретранслятори не використовуються.</string>
 </resources>

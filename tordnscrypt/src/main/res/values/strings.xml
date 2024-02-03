@@ -752,4 +752,10 @@
     <string name="list_is_empty">List is Empty</string>
     <string name="connectivity_check">Internet connectivity check</string>
     <string name="notifications_permission_rationale_message">Notifications are essential for displaying important information about the app\'s operation, app control, and detected attacks. Would you like to allow notifications for InviZible?</string>
+    <string name="press_to_add">Press to add.</string>
+    <string name="long_press_to_add">Long Press to add.</string>
+    <string name="press_to_edit">Press to edit.</string>
+    <string name="long_press_to_edit">Long Press to edit.</string>
+    <string name="anonymize_relays">Anonymize relays</string>
+    <string name="anonymize_relays_not_used">Anonymize relays are not used.</string>
 </resources>

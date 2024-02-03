@@ -544,4 +544,10 @@
     <string name="pref_fast_use_tor_bridges_ipv6">IPv6 мосты</string>
     <string name="pref_fast_fake_sni">Подделать SNI</string>
     <string name="pref_tor_track_host_exits_summ">Tor будет отслеживать недавние подключения к сайтам и пытаться использовать один и тот же выходной узел для каждого. Эта опция может помочь избежать бесконечной каптчи.</string>
+    <string name="press_to_add">Нажмите для добавления.</string>
+    <string name="long_press_to_add">Нажмите и удерживайте для добавления.</string>
+    <string name="press_to_edit">Нажмите для редактирования.</string>
+    <string name="long_press_to_edit">Нажмите и удерживайте для редактирования.</string>
+    <string name="anonymize_relays">Анонимные ретрансляторы</string>
+    <string name="anonymize_relays_not_used">Анонимные ретрансляторы не используются.</string>
 </resources>
