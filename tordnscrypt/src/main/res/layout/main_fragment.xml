@@ -70,21 +70,9 @@
             android:layout_height="match_parent">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnBackroundMainFragment"
+                android:id="@+id/btnStartMainFragment"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/button_main_border"
-                android:clickable="false"
-                android:focusable="false"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnStartMainFragment"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
@@ -96,11 +84,10 @@
                 android:textColor="@color/colorAccent"
                 android:textSize="@dimen/start_btns_text_size"
                 android:typeface="monospace"
-                app:layout_constraintBottom_toBottomOf="@+id/btnBackroundMainFragment"
-                app:layout_constraintEnd_toEndOf="@+id/btnBackroundMainFragment"
-                app:layout_constraintHorizontal_bias="0.6"
-                app:layout_constraintStart_toStartOf="@+id/btnBackroundMainFragment"
-                app:layout_constraintTop_toTopOf="@+id/btnBackroundMainFragment" />
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>
@@ -139,7 +126,8 @@
                     android:layout_marginBottom="4dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/tvTorStop" />
+                    android:text="@string/tvTorStop"
+                    android:textStyle="bold" />
 
                 <ProgressBar
                     android:id="@+id/pbTorMainFragment"
@@ -175,7 +163,8 @@
                     android:layout_marginBottom="4dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/tvDNSStop" />
+                    android:text="@string/tvDNSStop"
+                    android:textStyle="bold" />
 
                 <ProgressBar
                     android:id="@+id/pbDNSMainFragment"
@@ -211,7 +200,8 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/tvITPDStop" />
+                    android:text="@string/tvITPDStop"
+                    android:textStyle="bold" />
 
                 <ProgressBar
                     android:id="@+id/pbITPDMainFragment"

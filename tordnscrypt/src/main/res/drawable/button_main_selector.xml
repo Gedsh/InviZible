@@ -1,22 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:state_pressed="true" >
-        <shape android:shape="oval">
-            <stroke android:width="2dp" android:color="@color/mainStartButtonColorActive" />
-            <gradient android:angle="-90" android:startColor="@color/buttonColorPressedHighlight" android:endColor="@color/buttonColorPressedHighlight"  />
-        </shape>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <size android:width="180dp" android:height="180dp" />
+                    <stroke android:width="2dp" android:color="@color/cardsColor" />
+                    <gradient android:angle="90" android:endColor="@color/mainStartButtonColorEnd" android:startColor="@color/mainStartButtonColorStart" />
+                    <padding android:bottom="16dp" android:left="16dp" android:right="16dp" android:top="16dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="oval">
+                    <stroke android:width="2dp" android:color="@color/mainStartButtonColorActive" />
+                    <gradient android:angle="-90" android:endColor="@color/mainStartButtonColorPressedHighlightEnd" android:startColor="@color/mainStartButtonColorPressedHighlightStart" />
+                    <padding android:bottom="4dp" android:left="4dp" android:right="4dp" android:top="4dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
     <item android:state_focused="true">
-        <shape android:shape="oval"  >
-            <stroke android:width="2dp" android:color="@color/buttonColorFocusedHighlightStroke" />
-            <solid android:color="@color/buttonColorFocusedHighlight"/>
-        </shape>
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <size android:width="180dp" android:height="180dp" />
+                    <stroke android:width="2dp" android:color="@color/buttonColorFocusedHighlightStroke" />
+                    <solid android:color="@color/buttonColorFocusedHighlight" />
+                    <padding android:bottom="16dp" android:left="16dp" android:right="16dp" android:top="16dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="oval">
+                    <stroke android:width="2dp" android:color="@color/buttonColorFocusedHighlightStroke" />
+                    <solid android:color="@color/buttonColorFocusedHighlight" />
+                    <padding android:bottom="4dp" android:left="4dp" android:right="4dp" android:top="4dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
-    <item >
-        <shape android:shape="oval"  >
-            <stroke android:width="2dp" android:color="@color/cardsColor" />
-            <gradient android:angle="90" android:startColor="@color/mainStartButtonColorStart" android:endColor="@color/mainStartButtonColorEnd" />
-            <padding android:bottom="4dp" android:top="4dp" android:right="4dp" android:left="4dp"/>
-        </shape>
+    <item>
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <size android:width="180dp" android:height="180dp" />
+                    <stroke android:width="2dp" android:color="@color/cardsColor" />
+                    <gradient android:angle="90" android:endColor="@color/mainStartButtonColorEnd" android:startColor="@color/mainStartButtonColorStart" />
+                    <padding android:bottom="16dp" android:left="16dp" android:right="16dp" android:top="16dp" />
+                </shape>
+            </item>
+            <item>
+                <shape android:shape="oval">
+                    <stroke android:width="2dp" android:color="@color/cardsColor" />
+                    <gradient android:angle="90" android:endColor="@color/mainStartButtonColorEnd" android:startColor="@color/mainStartButtonColorStart" />
+                    <padding android:bottom="4dp" android:left="4dp" android:right="4dp" android:top="4dp" />
+                </shape>
+            </item>
+        </layer-list>
     </item>
 </selector>
