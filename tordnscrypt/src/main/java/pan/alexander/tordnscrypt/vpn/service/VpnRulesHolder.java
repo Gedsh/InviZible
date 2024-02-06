@@ -164,12 +164,13 @@ public class VpnRulesHolder {
             logw("Block DNS over TLS " + packet);
         } else if (vpnDnsSet.contains(packet.daddr)
                 && packet.dport != PLAINTEXT_DNS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()) {
+                && vpnPreferences.getIgnoreSystemDNS()
+                && packet.uid != vpnPreferences.getOwnUID()) {
             logw("Block DNS over HTTPS " + packet);
-        } else if ((packet.uid == vpnPreferences.getOwnUID()
+        } else if (packet.uid == vpnPreferences.getOwnUID()
                 || vpnPreferences.getCompatibilityMode()
                 && packet.uid == SPECIAL_UID_KERNEL
-                && !fixTTLForPacket)) {
+                && !fixTTLForPacket) {
             packet.allowed = true;
 
             if (!vpnPreferences.getCompatibilityMode()) {
