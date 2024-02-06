@@ -57,7 +57,7 @@ public class Registration {
 
     public void showDonateDialog() {
         try {
-            AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
             builder.setMessage(R.string.donate_project)
                     .setTitle(R.string.donate)
                     .setPositiveButton(R.string.enter_code_button, (dialog, which) -> {
@@ -105,7 +105,7 @@ public class Registration {
             }
         });
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
                     if (activity.isFinishing()) {

@@ -37,9 +37,8 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
 
     private final WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag;
 
-    public DialogDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag,
-                          int themeResId) {
-        super(unlockTorIpsFrag.get().requireContext(), themeResId);
+    public DialogDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag) {
+        super(unlockTorIpsFrag.get().requireContext());
         this.unlockTorIpsFrag = unlockTorIpsFrag;
     }
 

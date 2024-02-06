@@ -43,8 +43,8 @@ public class DialogAddDomainIp extends DialogDomainIp {
 
     private final WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment;
 
-    public DialogAddDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment, int themeResId) {
-        super(unlockTorIpsFragment, themeResId);
+    public DialogAddDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment) {
+        super(unlockTorIpsFragment);
         this.unlockTorIpsFragment = unlockTorIpsFragment;
     }
 

@@ -27,7 +27,7 @@ import pan.alexander.tordnscrypt.R;
 
 public class RootCheckingProgressDialog {
     public static AlertDialog.Builder getBuilder(Context context) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.root);
         builder.setMessage(R.string.root_available);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);

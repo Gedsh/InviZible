@@ -43,10 +43,9 @@ public class DialogEditDomainIp extends DialogDomainIp {
     private final DomainIpEntity domainIp;
 
     public DialogEditDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFragment,
-                              int themeResId,
                               DomainIpEntity domainIp
     ) {
-        super(unlockTorIpsFragment, themeResId);
+        super(unlockTorIpsFragment);
         this.unlockTorIpsFragment = unlockTorIpsFragment;
         this.domainIp = domainIp;
     }

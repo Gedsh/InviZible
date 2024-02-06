@@ -53,7 +53,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
                     activity.getString(R.string.firewall_warning_enable_module)
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
 
         builder.setTitle(R.string.menu_firewall)
         builder.setMessage(message)

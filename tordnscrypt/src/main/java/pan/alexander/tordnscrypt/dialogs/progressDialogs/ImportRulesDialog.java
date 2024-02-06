@@ -56,7 +56,7 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.import_dnscrypt_rules_dialog_title);
 
         @SuppressLint("InflateParams")

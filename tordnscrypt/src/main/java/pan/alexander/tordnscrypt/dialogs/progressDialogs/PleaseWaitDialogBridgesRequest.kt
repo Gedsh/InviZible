@@ -43,7 +43,7 @@ class PleaseWaitDialogBridgesRequest @Inject constructor(
     )
 
     override fun assignBuilder(): AlertDialog.Builder =
-        AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
+        AlertDialog.Builder(requireActivity()).apply {
             setTitle(R.string.pref_fast_use_tor_bridges_request_dialog)
             setMessage(R.string.please_wait)
             setIcon(R.drawable.ic_visibility_off_black_24dp)

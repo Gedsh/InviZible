@@ -44,7 +44,7 @@ class BridgesReadyDialogFragment @Inject constructor(
     var bridges = ""
 
     override fun assignBuilder(): AlertDialog.Builder =
-        AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
+        AlertDialog.Builder(requireActivity()).apply {
             val tvBridges = TextView(requireActivity()).apply {
                 setBackgroundResource(R.drawable.background_10dp_padding)
                 setTextIsSelectable(true)

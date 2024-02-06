@@ -30,7 +30,7 @@ const val FAKE_SNI_ARG = "pan.alexander.tordnscrypt.dialogs.FAKE_SNI_ARG"
 class FakeSniInputDialogFragment @Inject constructor() : ExtendedDialogFragment() {
 
     override fun assignBuilder(): AlertDialog.Builder =
-        AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
+        AlertDialog.Builder(requireActivity()).apply {
 
             setTitle(R.string.pref_fast_fake_sni)
 

@@ -37,7 +37,7 @@ class CheckUpdatesDialog: ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
         builder.setTitle(R.string.update_checking_title)
         builder.setMessage(R.string.update_checking_message)
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp)

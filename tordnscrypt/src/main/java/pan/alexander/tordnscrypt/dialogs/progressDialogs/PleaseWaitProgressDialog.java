@@ -39,7 +39,7 @@ public class PleaseWaitProgressDialog extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.please_wait);
         builder.setPositiveButton(R.string.cancel, (dialogInterface, i) -> dialogInterface.dismiss());
 

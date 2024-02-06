@@ -42,7 +42,7 @@ public class AskAccelerateDevelop extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.buy_premium_gp)
                 .setTitle(getString(R.string.premium))
                 .setPositiveButton(R.string.ok, (dialog, which) -> {

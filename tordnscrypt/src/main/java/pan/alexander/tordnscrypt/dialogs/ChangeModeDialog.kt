@@ -51,7 +51,7 @@ class ChangeModeDialog: ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
 
         val mode = arguments?.get(OPERATION_MODE_ARG) as OperationMode
 

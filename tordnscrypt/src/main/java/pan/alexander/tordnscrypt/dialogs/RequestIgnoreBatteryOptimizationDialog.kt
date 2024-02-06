@@ -56,9 +56,9 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
 
-        builder.setTitle(R.string.helper_dialog_title)
+        builder.setTitle(R.string.notification_exclude_bat_optimisation_title)
         builder.setMessage(R.string.pref_common_notification_helper)
 
         builder.setPositiveButton(R.string.ok) { _, _ ->

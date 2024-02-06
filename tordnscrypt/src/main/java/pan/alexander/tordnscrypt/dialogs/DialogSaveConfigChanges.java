@@ -64,7 +64,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             moduleName = getArguments().getString("moduleName");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(activity);
 
         alertDialog.setTitle(R.string.warning);
         alertDialog.setMessage(R.string.config_changes_dialog_message);

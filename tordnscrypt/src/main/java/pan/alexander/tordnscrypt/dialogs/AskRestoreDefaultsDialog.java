@@ -66,7 +66,7 @@ public class AskRestoreDefaultsDialog extends ExtendedDialogFragment {
             module = (ModuleName) arguments.getSerializable(MODULE_NAME_ARG);
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(
                         String.format(
                                 getString(R.string.ask_reset_settings_text),

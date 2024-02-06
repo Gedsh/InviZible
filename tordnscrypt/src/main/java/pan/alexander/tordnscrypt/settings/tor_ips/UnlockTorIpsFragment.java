@@ -200,8 +200,7 @@ public class UnlockTorIpsFragment extends Fragment {
         floatingBtnAddTorIPs.setAlpha(0.8f);
         floatingBtnAddTorIPs.setOnClickListener(v -> {
             DialogAddDomainIp dialogAddHostIP = new DialogAddDomainIp(
-                    new WeakReference<>(this),
-                    R.style.CustomAlertDialogTheme
+                    new WeakReference<>(this)
             );
             dialogAddHostIP.show();
         });

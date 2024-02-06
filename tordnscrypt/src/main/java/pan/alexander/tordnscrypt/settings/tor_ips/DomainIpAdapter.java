@@ -158,7 +158,6 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
         void editHostIPDialog(final DomainIpEntity domainIpEntity) {
             DialogEditDomainIp dialogEditHostIP = new DialogEditDomainIp(
                     new WeakReference<>(unlockTorIpsFragment),
-                    R.style.CustomAlertDialogTheme,
                     domainIpEntity
             );
             dialogEditHostIP.show();

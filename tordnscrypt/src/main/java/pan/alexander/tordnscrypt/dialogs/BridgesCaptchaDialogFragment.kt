@@ -56,7 +56,7 @@ class BridgesCaptchaDialogFragment @Inject constructor(
 
     @SuppressLint("InflateParams")
     override fun assignBuilder(): AlertDialog.Builder =
-        AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
+        AlertDialog.Builder(requireActivity()).apply {
             val layoutInflater = requireActivity().getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE
             ) as LayoutInflater

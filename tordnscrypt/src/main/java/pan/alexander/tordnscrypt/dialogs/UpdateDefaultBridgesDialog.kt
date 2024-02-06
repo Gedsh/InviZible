@@ -43,7 +43,7 @@ class UpdateDefaultBridgesDialog private constructor() {
                 return null
             }
 
-            val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+            val builder = AlertDialog.Builder(activity)
 
             builder.setTitle(R.string.helper_dialog_title)
             builder.setMessage(R.string.dialog_new_tor_default_bridges_available)

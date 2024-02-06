@@ -309,7 +309,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             return;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(R.string.pref_fast_use_tor_bridges_edit);
 
         List<ObfsBridge> bridgeList = preferencesBridges.getBridgesToDisplay();

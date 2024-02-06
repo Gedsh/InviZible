@@ -59,7 +59,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.add_custom_server_title)
                 .setView(R.layout.add_own_server)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {

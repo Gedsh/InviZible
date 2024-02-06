@@ -61,7 +61,7 @@ class SendCrashReport : ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(requireActivity())
         builder.setMessage(getString(R.string.dialog_send_crash_report))
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok) { _, _ ->

@@ -132,7 +132,7 @@ class TilesLimiter @Inject constructor(
     }
 
     private fun getWarningDialog(context: Context): Dialog =
-        AlertDialog.Builder(ContextThemeWrapper(context, R.style.CustomTileDialogTheme))
+        AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppTheme_Dialog_Alert_Contrast))
             .apply {
                 setTitle(R.string.main_activity_label)
                 setMessage(R.string.tile_dialog_over_three_tiles_message)
@@ -151,7 +151,7 @@ class TilesLimiter @Inject constructor(
     }
 
     private fun getDonateDialogForLite(context: Context): Dialog =
-        AlertDialog.Builder(ContextThemeWrapper(context, R.style.CustomTileDialogTheme))
+        AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppTheme_Dialog_Alert_Contrast))
             .apply {
                 setTitle(R.string.donate)
                 setMessage(R.string.donate_project)
@@ -162,7 +162,7 @@ class TilesLimiter @Inject constructor(
             }.create()
 
     private fun getDonateDialogForGp(context: Context): Dialog =
-        AlertDialog.Builder(ContextThemeWrapper(context, R.style.CustomTileDialogTheme))
+        AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppTheme_Dialog_Alert_Contrast))
             .apply {
                 setTitle(R.string.premium)
                 setMessage(R.string.buy_premium_gp)

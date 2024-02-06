@@ -62,7 +62,7 @@ public class NewUpdateDialogFragment extends ExtendedDialogFragment {
             hash = getArguments().getString("hash");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
         alertDialog.setMessage(mMessageToDisplay)
                 .setPositiveButton(R.string.ok, (dialogInterface, i) -> {
                     Intent intent = new Intent(getActivity(), UpdateService.class);

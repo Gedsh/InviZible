@@ -55,7 +55,7 @@ public class UpdateModulesDialogFragment extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         builder.setMessage(R.string.update_core_message)
                 .setTitle(R.string.update_core_title)

@@ -420,7 +420,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     }
 
     private void showAreYouSureDialog(Activity activity, int title, Runnable action) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(title);
         builder.setMessage(R.string.areYouSure);
         builder.setPositiveButton(R.string.ok, (dialog, which) -> action.run());

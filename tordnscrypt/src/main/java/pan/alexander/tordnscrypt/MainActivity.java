@@ -723,7 +723,7 @@ public class MainActivity extends LangAppCompatActivity
 
 
     private void childLock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_lock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);
@@ -766,7 +766,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void childUnlock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_unlock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);

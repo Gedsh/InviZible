@@ -59,7 +59,7 @@ public class NotificationDialogFragment extends ExtendedDialogFragment {
             messageStr = getArguments().getString("messageStr");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(getActivity());
 
         if (message == 0) {
             alertDialog.setMessage(messageStr);
