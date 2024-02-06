@@ -28,8 +28,6 @@
     <!-- Generic Dialog Theme -->
     <style name="Theme.AppTheme.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog">
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:background">@color/colorPrimary</item>
-        <item name="background">@color/colorPrimary</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
         <item name="buttonBarNeutralButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
@@ -39,8 +37,6 @@
     <!-- Alert Dialog Theme -->
     <style name="Theme.AppTheme.Dialog.Alert" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="android:background">@color/colorPrimary</item>
-        <item name="background">@color/colorPrimary</item>
         <item name="buttonBarPositiveButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
         <item name="buttonBarNeutralButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
         <item name="buttonBarNegativeButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
