@@ -33,6 +33,7 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CRASH_REPORT
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.io.BufferedReader
 import java.io.File
@@ -154,13 +155,13 @@ class SendCrashReport : ExtendedDialogFragment() {
 
     private fun sendCrashEmail(context: Context, info: String, logCat: File) {
 
-        val text = preferenceRepository.get().getStringPreference("CrashReport")
+        val text = preferenceRepository.get().getStringPreference(CRASH_REPORT)
         if (text.isNotEmpty()) {
             val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", logCat)
             if (uri != null) {
                 Utils.sendMail(context, info + "\n\n" + text, uri)
             }
-            preferenceRepository.get().setStringPreference("CrashReport", "")
+            preferenceRepository.get().setStringPreference(CRASH_REPORT, "")
         }
     }
 

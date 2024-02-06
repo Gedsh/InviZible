@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.crash_handling
 
 import android.content.SharedPreferences
 import android.util.Log
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CRASH_REPORT
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import kotlin.system.exitProcess
 
@@ -60,6 +61,6 @@ class TopExceptionHandler(
     }
 
     private fun saveReport(report: String) {
-        sharedPreferences.edit().putString("CrashReport", report).commit()
+        sharedPreferences.edit().putString(CRASH_REPORT, report).commit()
     }
 }
