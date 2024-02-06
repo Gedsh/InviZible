@@ -507,7 +507,7 @@ jint restore_uid(const struct arguments *args,
                  const char *flags,
                  const uint8_t *payload);
 
-int protect_socket(const struct arguments *args, int socket);
+int protect_socket(const struct arguments *args, int socket, int uid);
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
 

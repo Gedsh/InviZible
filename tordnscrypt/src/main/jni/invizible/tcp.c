@@ -1075,7 +1075,7 @@ int open_tcp_socket(const struct arguments *args,
     }
 
     // Protect
-    if (protect_socket(args, sock) < 0)
+    if (protect_socket(args, sock, cur->uid) < 0)
         return -1;
 
 

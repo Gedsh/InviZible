@@ -468,7 +468,7 @@ int open_udp_socket(const struct arguments *args,
     }
 
     // Protect socket
-    if (protect_socket(args, sock) < 0)
+    if (protect_socket(args, sock, cur->uid) < 0)
         return -1;
 
 
