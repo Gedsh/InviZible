@@ -40,6 +40,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.dialogs.RequestIgnoreBatteryOptimizationDialog;
+import pan.alexander.tordnscrypt.dialogs.RequestIgnoreDataRestrictionDialog;
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
 import pan.alexander.tordnscrypt.domain.log_reader.DNSCryptInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_records.OnConnectionRecordsUpdatedListener;
@@ -626,7 +627,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
             displayLog();
 
-            showIgnoreBatteryOptimizationDialog();
+            showIgnoreRestrictionsDialog();
         } else if (modulesStatus.getDnsCryptState() == RUNNING) {
             setDnsCryptStopping();
             stopDNSCrypt();
@@ -635,14 +636,23 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         setDNSCryptProgressBarIndeterminate(true);
     }
 
-    private void showIgnoreBatteryOptimizationDialog() {
-        DialogFragment dialog = RequestIgnoreBatteryOptimizationDialog.getInstance(
+    private void showIgnoreRestrictionsDialog() {
+        DialogFragment batteryOptimizationDialog = RequestIgnoreBatteryOptimizationDialog.getInstance(
                 context, preferenceRepository.get()
         );
 
         FragmentManager fragmentManager = view.getFragmentFragmentManager();
-        if (dialog != null && !fragmentManager.isStateSaved()) {
-            dialog.show(fragmentManager, RequestIgnoreBatteryOptimizationDialog.TAG);
+        if (batteryOptimizationDialog != null && !fragmentManager.isStateSaved()) {
+            batteryOptimizationDialog.show(fragmentManager, RequestIgnoreBatteryOptimizationDialog.TAG);
+            return;
+        }
+
+        DialogFragment dataRestrictionDialog = RequestIgnoreDataRestrictionDialog.getInstance(
+                context, preferenceRepository.get()
+        );
+
+        if (dataRestrictionDialog != null && !fragmentManager.isStateSaved()) {
+            dataRestrictionDialog.show(fragmentManager, RequestIgnoreDataRestrictionDialog.TAG);
         }
     }
 

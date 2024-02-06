@@ -21,11 +21,14 @@ package pan.alexander.tordnscrypt.dialogs
 
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED
+import android.net.ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED
+import android.net.ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
@@ -33,11 +36,11 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import javax.inject.Inject
 
-class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
+class RequestIgnoreDataRestrictionDialog : ExtendedDialogFragment() {
 
     @Inject
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
@@ -48,7 +51,7 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
         App.instance.daggerComponent.inject(this)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun assignBuilder(): AlertDialog.Builder? {
 
         val activity = activity
@@ -58,16 +61,19 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
 
         val builder = AlertDialog.Builder(activity)
 
-        builder.setTitle(R.string.notification_exclude_bat_optimisation_title)
-        builder.setMessage(R.string.pref_common_notification_helper)
+        builder.setTitle(R.string.notification_exclude_data_restriction_title)
+        builder.setMessage(R.string.notification_exclude_data_restriction_message)
 
         builder.setPositiveButton(R.string.ok) { _, _ ->
             context?.let {
-                Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                Intent(
+                    Settings.ACTION_IGNORE_BACKGROUND_DATA_RESTRICTIONS_SETTINGS,
+                    Uri.parse("package:${it.packageName}")
+                ).apply {
                     try {
                         it.startActivity(this)
                     } catch (e: Exception) {
-                        Log.e(LOG_TAG, "Requesting ignore battery optimization failed ${e.message}")
+                        loge("RequestIgnoreDataRestrictionDialog", e)
                     }
                 }
             }
@@ -75,7 +81,7 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
 
         builder.setNeutralButton(R.string.dont_show) { _, _ ->
             preferenceRepository.get().setBoolPreference(
-                PreferenceKeys.DO_NOT_SHOW_IGNORE_BATTERY_OPTIMIZATION_DIALOG, true
+                PreferenceKeys.DO_NOT_SHOW_REQUEST_DATA_RESTRICTION_DIALOG, true
             )
         }
 
@@ -92,19 +98,31 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
             context: Context,
             preferenceRepository: PreferenceRepository
         ): DialogFragment? {
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
-            val packageName = context.packageName
-            val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-                || pm?.isIgnoringBatteryOptimizations(packageName) == true
-                || (preferenceRepository.getBoolPreference(PreferenceKeys.DO_NOT_SHOW_IGNORE_BATTERY_OPTIMIZATION_DIALOG)
-                        && !pref.getBoolean(PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES, false))
+            val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                && (!preferenceRepository.getBoolPreference(PreferenceKeys.DO_NOT_SHOW_REQUEST_DATA_RESTRICTION_DIALOG)
+                        || preferences.getBoolean(PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES, false))
             ) {
-                return null
+                (context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager).apply {
+                    when (restrictBackgroundStatus) {
+                        RESTRICT_BACKGROUND_STATUS_ENABLED -> {
+                            return RequestIgnoreDataRestrictionDialog()
+                        }
+
+                        RESTRICT_BACKGROUND_STATUS_WHITELISTED -> {
+                            return null
+                        }
+
+                        RESTRICT_BACKGROUND_STATUS_DISABLED -> {
+                            return null
+                        }
+                    }
+                }
             }
-            return RequestIgnoreBatteryOptimizationDialog()
+
+            return null
         }
 
-        const val TAG = "RequestIgnoreBatteryOptimizationDialog"
+        const val TAG = "RequestIgnoreDataRestrictionDialog"
     }
 }

@@ -19,33 +19,54 @@
 
 package pan.alexander.tordnscrypt.dialogs;
 
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AGREEMENT_ACCEPTED;
+
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
-public class AgreementDialog {
-    public static AlertDialog.Builder getDialogBuilder(Context context) {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.CustomDialogTheme);
+public class AgreementDialog extends ExtendedDialogFragment {
 
-        LayoutInflater lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    private boolean exit;
+
+    public static AgreementDialog newInstance() {
+        return new AgreementDialog();
+    }
+
+    @Override
+    public AlertDialog.Builder assignBuilder() {
+
+        Activity activity = getActivity();
+        if (activity == null) {
+            return null;
+        }
+
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(activity);
+
+        LayoutInflater lInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
         if (lInflater == null) {
-            preferences.setBoolPreference("Agreement", true);
+            preferences.setBoolPreference(AGREEMENT_ACCEPTED, true);
             return null;
         }
 
         View view = lInflater.inflate(R.layout.agreement_layout, null, false);
 
         if (view == null) {
-            preferences.setBoolPreference("Agreement", true);
+            preferences.setBoolPreference(AGREEMENT_ACCEPTED, true);
             return null;
         }
 
@@ -54,11 +75,42 @@ public class AgreementDialog {
         alertDialog.setCancelable(false);
 
         alertDialog.setPositiveButton(R.string.agree, (dialog, id) -> {
-            preferences.setBoolPreference("Agreement", true);
-            dialog.dismiss();
+            exit = false;
+            preferences.setBoolPreference(AGREEMENT_ACCEPTED, true);
+            OnAgreementAcceptedListener listener = getListener(getActivity().getSupportFragmentManager());
+            if (listener != null) {
+                listener.onAgreementAccepted();
+            }
         });
-        alertDialog.setNegativeButton(R.string.disagree, ((dialog, id) -> System.exit(0)));
+        alertDialog.setNegativeButton(R.string.disagree, ((dialog, id) -> {
+            exit = true;
+            dismiss();
+        }));
 
         return alertDialog;
+    }
+
+    @Override
+    public void onDismiss(@NonNull DialogInterface dialog) {
+        super.onDismiss(dialog);
+
+        Activity activity = getActivity();
+        if (exit && activity != null) {
+            activity.finish();
+        }
+    }
+
+    private OnAgreementAcceptedListener getListener(FragmentManager manager) {
+        for (Fragment fragment: manager.getFragments()) {
+            if (fragment instanceof OnAgreementAcceptedListener) {
+                return (OnAgreementAcceptedListener) fragment;
+            }
+            getListener(fragment.getChildFragmentManager());
+        }
+        return null;
+    }
+
+    public interface OnAgreementAcceptedListener {
+        void onAgreementAccepted();
     }
 }

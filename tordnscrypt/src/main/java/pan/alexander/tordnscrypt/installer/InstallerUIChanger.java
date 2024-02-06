@@ -19,8 +19,9 @@
 
 package pan.alexander.tordnscrypt.installer;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.DialogFragment;
+
 import android.util.Log;
 
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
@@ -210,10 +211,9 @@ class InstallerUIChanger {
 
     Runnable showDialogAfterInstallation() {
         return () -> {
-            AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(mainActivity);
-            if (agreementDialogBuilder != null) {
-                agreementDialogBuilder.show();
-            }
+            DialogFragment agreementDialog = AgreementDialog.newInstance();
+            agreementDialog.setCancelable(false);
+            agreementDialog.show(mainActivity.getSupportFragmentManager(), "AgreementDialog");
         };
     }
 

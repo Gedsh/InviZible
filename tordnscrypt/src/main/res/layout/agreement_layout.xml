@@ -13,16 +13,23 @@
         android:layout_gravity="center_horizontal"
         android:adjustViewBounds="true"
         android:cropToPadding="true"
-        android:tint="@color/colorPrimary"
+        android:layout_margin="8dp"
+        android:tint="@color/ic_launcher_background"
         app:srcCompat="@drawable/ic_help_title"
         tools:ignore="ContentDescription" />
+
+    <View
+        android:id="@+id/divider6"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="8dp"
+        android:background="?android:attr/listDivider" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/textViewAgreement"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_margin="8dp"
         android:autoLink="all"
         android:linksClickable="true"
         android:scrollbarAlwaysDrawVerticalTrack="true"

@@ -119,7 +119,10 @@
     <string name="pref_common_wakelock">Заборонити сон пристрою</string>
     <string name="pref_common_show_help_summ">Завжди показувати довідкові повідомлення</string>
     <string name="pref_common_shell_control">Увімкнути керування скриптами</string>
+    <string name="notification_exclude_bat_optimisation_title">Вимкнути оптимізацію батареї?</string>
     <string name="pref_common_notification_helper">Будь ласка, виключіть InviZible Pro зі списку оптимізації споживання енергії. Інакше андроїд може завершити DNSCrypt, Tor або I2P будь-якої миті. Для деяких оболонок, наприклад MIUI, можуть знадобитися додаткові налаштування.</string>
+    <string name="notification_exclude_data_restriction_title">Вимкнути економію трафіку?</string>
+    <string name="notification_exclude_data_restriction_message">InviZible Pro зможе працювати правильно, коли увімкнено економію трафіку. Це важливо задля безперебійної роботи додатку.</string>
     <string name="pref_common_use_busybox">Вибрати BusyBox</string>
     <string name="pref_common_excludes_from_tor">Виключити сайти</string>
     <string name="pref_common_local_eth_device_addr">IP адреса пристрою в LAN</string>
@@ -426,9 +429,9 @@
     <string name="enter_code">Увести код</string>
     <string name="thanks_for_donate">Проект InviZible Pro та його автор висловлюють подяку за допомогу. Бажаєте завантажити та оновити до версії PRO\? Оновлення триватиме у фоновому режимі.</string>
     <string name="agreement_text">
-        \tДякуємо, що обрали InviZible Pro. Сподіваюся, він буде корисним для вашої конфіденційності та комфортного користування інтернетом.
+        \tДякую, що обрали InviZible Pro. Впевнений, він буде корисним для вашої конфіденційності та комфортного користування інтернетом.
         \n\n\tInviZible Pro включає в себе Tor, DNSCrypt і Purple I2P як модулі.
-        \n\n\tInviZible Pro може використовувати root, якщо ваш пристрій має привілеї root, або використовувати локальний VPN для доставки інтернет-трафіку в мережі Tor, DNSCrypt і I2P.
+        \n\n\tInviZible Pro може використовувати root, якщо ваш пристрій має привілеї root, або використовувати локальний VPN для доставки інтернет-трафіку напряму в мережі Tor, DNSCrypt і I2P.
         \n\n\tПолітика конфіденційності:
         \n\tInviZible Pro не збирає і не поширює будь-які особисті або конфіденційні дані користувачів.
         \n\n\tCopyright © 2019-2024
@@ -498,5 +501,6 @@
     <string name="anonymize_relays_not_used">Анонімні ретранслятори не використовуються.</string>
     <string name="donate_button">Відвідати</string>
     <string name="pref_itpd_addressbook">Адресна книга</string>
+    <string name="ask_later">Запитати пізніше</string>
 </resources>
 

@@ -24,6 +24,8 @@ public interface PreferenceKeys {
     String USB_MODEM_IS_ON = "ModemIsON";
     String DO_NOT_SHOW_IGNORE_BATTERY_OPTIMIZATION_DIALOG = "DoNotShowIgnoreBatteryOptimizationDialog";
 
+    String DO_NOT_SHOW_REQUEST_DATA_RESTRICTION_DIALOG = "DoNotShowRequestIgnoreDataRestrictionDialog";
+
     String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
     String TOR_READY_PREF = "Tor Ready";
     String ITPD_READY_PREF = "ITPD Ready";
@@ -70,7 +72,11 @@ public interface PreferenceKeys {
     String USE_OWN_BRIDGES = "useOwnBridges";
     String FAKE_SNI_HOSTS = "fakeSniHosts";
 
-    String NOTIFICATIONS_ARE_BLOCKED = "notificationsAreBlocked";
+    String NOTIFICATIONS_REQUEST_BLOCKED = "notificationsAreBlocked";
+
+    String AGREEMENT_ACCEPTED = "Agreement";
+
+    String CRASH_REPORT = "CrashReport";
 
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";

@@ -19,9 +19,14 @@
 
 package pan.alexander.tordnscrypt.dialogs;
 
+import android.app.Activity;
 import android.app.Dialog;
+import android.graphics.RenderEffect;
+import android.graphics.Shader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,23 +39,55 @@ import androidx.fragment.app.FragmentTransaction;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
-import javax.inject.Inject;
-
-import pan.alexander.tordnscrypt.App;
-
 public abstract class ExtendedDialogFragment extends DialogFragment {
 
-    @Inject
     public Handler handler;
 
+    private int waitForOpenCounter = 2;
     private int waitForCloseCounter = 3;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
+
+        handler = new Handler(Looper.getMainLooper());
+    }
+
+    //Considering the use
+    private void blurBackground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (getDialog() == null) {
+                return;
+            }
+            Activity activity = getDialog().getOwnerActivity();
+            if (activity == null) {
+                return;
+            }
+            activity.getWindow().getDecorView().getRootView()
+                    .setRenderEffect(
+                            RenderEffect.createBlurEffect(
+                                    5,
+                                    5,
+                                    Shader.TileMode.CLAMP
+                            )
+                    );
+        }
+    }
+
+    private void unblurBackground() {
+        if (getDialog() == null) {
+            return;
+        }
+        Activity activity = getDialog().getOwnerActivity();
+        if (activity == null) {
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            activity.getWindow().getDecorView().getRootView()
+                    .setRenderEffect(null);
+        }
     }
 
     @Override
@@ -67,7 +104,9 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
     @Override
     public void onDestroy() {
 
-        handler.removeCallbacksAndMessages(null);
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
 
         super.onDestroy();
     }
@@ -85,17 +124,32 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
     }
 
     @Override
-    public void show(FragmentManager manager, String tag) {
+    public void show(@NonNull FragmentManager manager, String tag) {
         try {
-            manager.executePendingTransactions();
-            Fragment fragment = manager.findFragmentByTag(tag);
-            if (fragment == null || !fragment.isAdded()) {
-                FragmentTransaction ft = manager.beginTransaction();
-                ft.add(this, tag);
-                ft.commitAllowingStateLoss();
-            }
+            showDialog(manager, tag);
         } catch (IllegalStateException e) {
             logw("ExtendedDialogFragment show", e);
+
+            if (handler == null) {
+                handler = new Handler(Looper.getMainLooper());
+            }
+
+            waitForOpenCounter--;
+            if (waitForOpenCounter > 0) {
+                handler.post(() -> showDialog(manager, tag));
+            } else if (waitForOpenCounter == 0) {
+                handler.postDelayed(() -> showDialog(manager, tag), 500);
+            }
+        }
+    }
+
+    private void showDialog(FragmentManager manager, String tag) {
+        manager.executePendingTransactions();
+        Fragment fragment = manager.findFragmentByTag(tag);
+        if (fragment == null || !fragment.isAdded()) {
+            FragmentTransaction ft = manager.beginTransaction();
+            ft.add(this, tag);
+            ft.commitAllowingStateLoss();
         }
     }
 

@@ -111,7 +111,6 @@ interface AppComponent {
     fun inject(fragment: PreferencesDNSFragment)
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
-    fun inject(fragment: ExtendedDialogFragment)
     fun inject(service: ModulesService)
     fun inject(service: RootExecService)
     fun inject(service: UpdateService)
@@ -122,6 +121,7 @@ interface AppComponent {
     fun inject(receiver: HelpActivityReceiver)
     fun inject(receiver: IptablesReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
+    fun inject(dialogFragment: RequestIgnoreDataRestrictionDialog)
     fun inject(dialogFragment: SendCrashReport)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
@@ -138,4 +138,5 @@ interface AppComponent {
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
     fun inject(installedApplicationsManager: InstalledApplicationsManager)
+    fun inject(agreementDialog: AgreementDialog)
 }

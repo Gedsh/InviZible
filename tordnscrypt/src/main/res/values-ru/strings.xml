@@ -42,7 +42,7 @@
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
     <string name="drawer_menu_I2PDSettings">Настройки I2P</string>
     <string name="drawer_menu_fastSettings">Быстрые настройки</string>
-    <string name="drawer_menu_backup">Сохранить&amp;восстановить</string>
+    <string name="drawer_menu_backup">Резервная копия</string>
     <string name="drawer_menu_about">О программе</string>
     <string name="drawer_menu_help">Логи</string>
     <string name="btnRestoreBackup">Восстановить настройки</string>
@@ -103,9 +103,12 @@
     <string name="pref_common_show_notification">Показывать уведомление</string>
     <string name="pref_common_show_help">Показывать справку</string>
     <string name="pref_common_show_help_summ">Всегда показывать справочные сообщения</string>
+    <string name="notification_exclude_bat_optimisation_title">Выключить оптимизацию батареи?</string>
     <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления.
         Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
         Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
+    <string name="notification_exclude_data_restriction_title">Отключить экономию трафика?</string>
+    <string name="notification_exclude_data_restriction_message">InviZible Pro сможет работать правильно, когда включена экономия трафика. Это важно для бесперебойной работы приложения.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
     <string name="pref_common_use_busybox_auto">Автоматически</string>
     <string name="pref_common_use_busybox_device">Использовать BusyBox телефона</string>
@@ -377,9 +380,9 @@
     <string name="agree">Я согласен</string>
     <string name="disagree">Не согласен</string>
     <string name="agreement_text">
-        \tСпасибо за выбор InviZible Pro. Надеюсь, приложение будет полезно для Вашей конфиденциальности и комфортного использования интернета.
+        \tСпасибо за выбор InviZible Pro. Уверен, приложение будет полезно для Вашей конфиденциальности и комфортного использования интернета.
         \n\n\tInviZible Pro содержит Tor, DNSCrypt и Purple I2P в качестве модулей.
-        \n\n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
+        \n\n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика напрямую в сети Tor, DNSCrypt и I2P.
         \n\n\tПолитика конфиденциальности:
         \n\tInviZible Pro не собирает и не передает какие-либо личные или конфиденциальные данные пользователей.
         \n\n\tCopyright © 2019-2024

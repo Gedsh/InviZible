@@ -28,11 +28,28 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
 
 class NotificationPermissionManager @Inject constructor() {
 
     var onPermissionResultListener: OnPermissionResultListener? = null
+    var launcher:  ActivityResultLauncher<String>? = null
+
+    fun isNotificationPermissionRequestRequired(activity: FragmentActivity) =
+        when {
+            ContextCompat.checkSelfPermission(
+                activity,
+                POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED -> false
+
+            shouldShowRequestPermissionRationale(
+                activity,
+                POST_NOTIFICATIONS
+            ) -> false
+
+            else -> true
+        }
 
     @RequiresApi(33)
     fun requestNotificationPermission(activity: FragmentActivity) {
@@ -43,12 +60,14 @@ class NotificationPermissionManager @Inject constructor() {
             ) == PackageManager.PERMISSION_GRANTED -> {
                 onPermissionResultListener?.onAllowed()
             }
+
             shouldShowRequestPermissionRationale(
                 activity,
                 POST_NOTIFICATIONS
             ) -> {
                 onPermissionResultListener?.onShowRationale()
             }
+
             else -> {
                 onPermissionResultListener?.onShowRationale()
             }
@@ -68,6 +87,8 @@ class NotificationPermissionManager @Inject constructor() {
             if (isGranted) {
                 onPermissionResultListener?.onAllowed()
             }
+        }.also {
+            launcher = it
         }
 
     interface OnPermissionResultListener {
