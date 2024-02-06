@@ -25,7 +25,7 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnDialogImportRules"
         style="@style/Widget.MaterialComponents.Button.TextButton.Dialog"
-        android:textColor="@color/textColorPrimary"
+        android:textColor="@color/colorAccent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
