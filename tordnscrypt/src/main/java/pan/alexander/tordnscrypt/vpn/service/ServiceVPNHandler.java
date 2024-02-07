@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.vpn.service;
 
+import static android.content.Context.CONNECTIVITY_SERVICE;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -55,7 +57,6 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Rule;
 
-import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -395,10 +396,12 @@ public class ServiceVPNHandler extends Handler {
         }
 
         ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
-        Network active = (cm == null ? null : cm.getActiveNetwork());
-        if (active != null) {
-            logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
-            serviceVPN.setUnderlyingNetworks(new Network[]{active});
+        Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
+        if (networks.length > 0) {
+            serviceVPN.setUnderlyingNetworks(networks);
+            for (Network network: networks) {
+                logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(network));
+            }
         } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
             logi("VPN Handler Setting underlying network=empty");
             serviceVPN.setUnderlyingNetworks(new Network[]{});

@@ -28,7 +28,10 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import androidx.core.net.ConnectivityManagerCompat
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.getConnectivityManager
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import java.util.SortedMap
+import java.util.TreeMap
 
 private const val DEFAULT_MTU = 1400
 private val MTU_REGEX = Regex("\\d{4}")
@@ -51,7 +54,8 @@ object NetworkChecker {
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
                     for (network in it) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        val networkCapabilities =
+                            connectivityManager.getNetworkCapabilities(network)
                         if (networkCapabilities != null && hasActiveTransport(networkCapabilities)) {
                             return true
                         }
@@ -75,14 +79,16 @@ object NetworkChecker {
                         || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
 
 
-    @JvmStatic @JvmOverloads
+    @JvmStatic
+    @JvmOverloads
     fun isCellularActive(context: Context, checkAllNetworks: Boolean = false): Boolean =
         try {
             val connectivityManager = context.getConnectivityManager()
             var capabilities: NetworkCapabilities? = null
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && connectivityManager != null
-                && !checkAllNetworks) {
+                && !checkAllNetworks
+            ) {
                 capabilities = connectivityManager.getNetworkCapabilities(
                     connectivityManager.activeNetwork
                 )
@@ -93,7 +99,8 @@ object NetworkChecker {
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
                     for (network in it) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        val networkCapabilities =
+                            connectivityManager.getNetworkCapabilities(network)
                         if (networkCapabilities != null && hasCellularTransport(networkCapabilities)) {
                             return true
                         }
@@ -131,7 +138,8 @@ object NetworkChecker {
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
                     for (network in it) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        val networkCapabilities =
+                            connectivityManager.getNetworkCapabilities(network)
                         if (networkCapabilities != null && hasRoamingTransport(networkCapabilities)) {
                             return true
                         }
@@ -162,14 +170,16 @@ object NetworkChecker {
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
                 && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING)
 
-    @JvmStatic @JvmOverloads
+    @JvmStatic
+    @JvmOverloads
     fun isWifiActive(context: Context, checkAllNetworks: Boolean = false): Boolean =
         try {
             val connectivityManager = context.getConnectivityManager()
             var capabilities: NetworkCapabilities? = null
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && connectivityManager != null
-                && !checkAllNetworks) {
+                && !checkAllNetworks
+            ) {
                 capabilities = connectivityManager.getNetworkCapabilities(
                     connectivityManager.activeNetwork
                 )
@@ -180,7 +190,8 @@ object NetworkChecker {
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
                     for (network in it) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        val networkCapabilities =
+                            connectivityManager.getNetworkCapabilities(network)
                         if (networkCapabilities != null && hasWifiTransport(networkCapabilities)) {
                             return true
                         }
@@ -217,7 +228,8 @@ object NetworkChecker {
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
                     for (network in it) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        val networkCapabilities =
+                            connectivityManager.getNetworkCapabilities(network)
                         if (networkCapabilities != null && hasEthernetTransport(networkCapabilities)) {
                             return true
                         }
@@ -272,7 +284,8 @@ object NetworkChecker {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
                     for (network in it) {
-                        val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+                        val networkCapabilities =
+                            connectivityManager.getNetworkCapabilities(network)
                         if (networkCapabilities != null && hasVpnTransport(networkCapabilities)) {
                             return true
                         }
@@ -290,7 +303,7 @@ object NetworkChecker {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun hasVpnTransport(capabilities: NetworkCapabilities): Boolean =
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
 
     @JvmStatic
     fun getMtu(context: Context, network: Network): Int =
@@ -298,7 +311,7 @@ object NetworkChecker {
             val connectivityManager = context.getConnectivityManager()
             var linkProperties: LinkProperties? = null
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && connectivityManager != null) {
-               linkProperties = connectivityManager.getLinkProperties(network)
+                linkProperties = connectivityManager.getLinkProperties(network)
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && linkProperties != null) {
@@ -331,6 +344,65 @@ object NetworkChecker {
             loge("NetworkChecker isCaptivePortalDetected", e)
             false
         }
+
+    //Use of background networks requires CHANGE_NETWORK_STATE permission.
+    @JvmStatic
+    fun getAvailableNetworksSorted(context: Context): Array<Network> {
+
+        val networks = TreeMap<Int, Network>()
+
+        try {
+            val connectivityManager = context.getConnectivityManager()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
+                for (network in connectivityManager.allNetworks) {
+                    val capabilities = connectivityManager.getNetworkCapabilities(network)
+                    if (capabilities != null
+                        && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                        && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                    ) {
+                        when {
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ->
+                                networks[1] = network
+
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
+                                networks[2] = network
+
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                                networks[3] = network
+                        }
+                    } else if (capabilities != null
+                        && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                    ) {
+                        when {
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ->
+                                networks[4] = network
+
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
+                                networks[5] = network
+
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                                networks[6] = network
+                        }
+                    }
+                }
+
+                if (networks.isEmpty()) {
+                    connectivityManager.activeNetwork?.let {
+                        networks[1] = it
+                    }
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && connectivityManager != null) {
+                connectivityManager.allNetworks.forEachIndexed { index, network ->
+                    networks[index] = network
+                }
+            }
+
+        } catch (e: Exception) {
+            loge("NetworkChecker getAvailableNetworksSorted", e)
+        }
+
+        return networks.values.toTypedArray()
+    }
 
 
     private fun Context.getConnectivityManager(): ConnectivityManager? =
