@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Iniciar durante o Boot"</string>
     <string name="root_available">"Checando se o Root está disponível…"</string>
     <string name="please_wait">"Por favor, aguarde…"</string>
-    <string name="dont_show">"Não mostrar novamente"</string>
+    <string name="dont_show">Não mostrar novamente</string>
     <string name="tvDNSStop">"DNSCrypt Parado"</string>
     <string name="tvDNSInstalled">"DNSCrypt instalado"</string>
     <string name="tvDNSInstalling">"Instalando DNSCrypt"</string>
@@ -343,7 +343,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="verifier_error">"Parece que esta versão não é oficial do InviZible. Por favor, cuide disso!"</string>
     <string name="only_for_pro">"Apenas para a versão PRO"</string>
     <string name="donate">"Doação"</string>
-    <string name="donate_project">"O Projeto InviZible Pro precisa de sua ajuda. Visite a página de doações ou insira o código de registro recebido."</string>
+    <string name="donate_project">O Projeto InviZible Pro precisa de sua ajuda. Visite a página de doações ou insira o código de registro recebido.</string>
     <string name="donate_button">"Visite"</string>
     <string name="enter_code_button">"Coloque o código"</string>
     <string name="enter_code">"Coloque o código"</string>
@@ -360,7 +360,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="add_custom_server_title">"Adicionar servidor customizado"</string>
     <string name="add_custom_server_error">"Configuração de servidor personalizado inválida. Verifique o campo SDNS."</string>
     <string name="pending_purchase">"Observe que você tem uma compra pendente:"</string>
-    <string name="buy_premium_gp">"O Projeto InviZible Pro precisa de sua ajuda. Pressione OK para adquirir recursos premium."</string>
+    <string name="buy_premium_gp">O Projeto InviZible Pro precisa de sua ajuda. Pressione OK para adquirir recursos premium.</string>
     <string name="wrong_purchase_signature_gp">"Desculpe, mas é impossível confirmar sua compra. Você receberá um reembolso após 3 dias."</string>
     <string name="only_premium_feature">"Infelizmente, esse recurso está disponível apenas para a versão premium."</string>
     <string name="pref_itpd_use_HTTP_outproxy">Outproxy HTTP</string>
