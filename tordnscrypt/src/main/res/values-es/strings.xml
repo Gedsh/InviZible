@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Arranque en Reinicio"</string>
     <string name="root_available">"Comprobando acceso root…"</string>
     <string name="please_wait">"Un momento…"</string>
-    <string name="dont_show">Descartar mensaje</string>
+    <string name="dont_show">No preguntar</string>
     <string name="tvDNSStop">"DNSCrypt parado"</string>
     <string name="tvDNSInstalled">"DNSCrypt Instalado"</string>
     <string name="tvDNSInstalling">"Instalando DNSCrypt"</string>
@@ -122,9 +122,7 @@
     <string name="pref_common_wakelock_summ">"Añade una protección adicional que previene la parada súbita de la aplicación por Android en modos no Root. Puede gastar batería."</string>
     <string name="pref_common_show_help">"Mensajes de ayuda"</string>
     <string name="pref_common_show_help_summ">"Muestra siempre los mensajes de ayuda."</string>
-    <string name="pref_common_notification_helper">Por favor, desactiva para InviZible Pro la optimización de bateria de Android.
-\nDe otra manera Android parará los procesos de DNSCrypt, Tor e I2P en cualquier momento.
-\nEn otros sistemas, como MIUI, se requieren ajustes adicionales.</string>
+    <string name="pref_common_notification_helper">Por favor, excluye InviZible Pro de la optimización de batería de Android para evitar que el sistema termine DNSCrypt, Tor o I2P en cualquier momento. Algunos sistemas especiales, como MIUI, pueden requerir pasos adicionales.</string>
     <string name="pref_common_use_busybox">"Seleccionar binario BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Compartir Internet-En pruebas"</string>
     <string name="pref_common_tethering_autostart">"Arrancar Compartir Internet al inicio del dispositivo"</string>
@@ -327,7 +325,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="verifier_error">"¡Cuidado! Esta versión de InviZible no es la original."</string>
     <string name="only_for_pro">"Solo versión PRO"</string>
     <string name="donate">"Donaciones"</string>
-    <string name="donate_project">El proyecto InviZible Pro necesita de tu ayuda. Por favor, visita la página para donaciones o introduce el código de registro recibido.</string>
+    <string name="donate_project">El Proyecto InviZible Pro busca tu ayuda. Visita la página de donaciones o introduce el código premium que ya has recibido.</string>
     <string name="donate_button">"Visita"</string>
     <string name="enter_code_button">"Introducir código"</string>
     <string name="enter_code">"Introducir código"</string>
@@ -344,22 +342,22 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="add_custom_server_title">"Añadir servidor personalizado"</string>
     <string name="add_custom_server_error">"Configuración del servidor personalizado erronea. Por favor, comprueba el campo SDNS."</string>
     <string name="pending_purchase">"Te recordamos que tienes pendiente una compra incompleta:"</string>
-    <string name="buy_premium_gp">InviZible Pro necesita de tu ayuda. Pulsa OK para comprar y obtener funciones exclusivas.</string>
+    <string name="buy_premium_gp">El Proyecto InviZible Pro solicita su ayuda. Pulse OK para adquirir funciones premium.</string>
     <string name="wrong_purchase_signature_gp">"Lo sentimos, pero no hemos podido verificar tu compra. Recibiras un reembolso en los próximos días (3 días, al menos)."</string>
     <string name="only_premium_feature">"Lo sentimos, pero esa función solo esta disponible en la versión exclusiva."</string>
-    <string name="agreement_text">racias por elegir InviZible Pro. Espero que sea útil para su privacidad y uso cómodo de Internet.
+    <string name="agreement_text">Muchas gracias por elegir InviZible Pro. Estoy seguro de que mejorará su privacidad y le proporcionará una experiencia en línea sin problemas.
 \n
-\nInviZible Pro incluye Tor, DNSCrypt y Purple I2P como módulos.
+\n\tInviZible Pro incluye Tor, DNSCrypt y Purple I2P como módulos.
 \n
-\nInviZible Pro puede usar la raíz, si su dispositivo tiene privilegios de raíz, o usa una VPN local para enviar tráfico de Internet a las redes Tor, DNSCrypt e I2P.
+\n\tInviZible Pro puede usar root si tu dispositivo está rooteado, o usa una VPN local para entregar el tráfico de internet directamente a las redes Tor, DNSCrypt e I2P.
 \n
-\nPolítica de privacidad:
-\nInviZible Pro no recopila ni comparte ningún dato personal o confidencial del usuario.
+\n\tPolítica de privacidad:
+\n\tInviZible Pro no recopila ni comparte ningún dato personal o sensible del usuario.
 \n
-\nDerechos de autor © 2019-2024
-\nGarmatina Oleksandr
-\ninvizible.soft@gmail.com
-\ninvizible.net/en/privacy</string>
+\n\tDerechos de autor © 2019-2024
+\n\tGarmatin Oleksandr
+\n\tinvizible.soft@gmail.com
+\n\tinvizible.net/es/privacidad</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy HTTP exterior"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Dirección del proxy HTTP exterior"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Proxy SOCKS exterior"</string>
