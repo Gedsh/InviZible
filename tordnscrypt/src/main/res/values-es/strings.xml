@@ -515,4 +515,5 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
+    <string name="notification_exclude_data_restriction_message">Por favor, permite el uso de datos en segundo plano y permite el uso de datos mientras el Economizador de datos está activado. Esto es esencial para una experiencia en línea sin problemas.</string>
 </resources>
