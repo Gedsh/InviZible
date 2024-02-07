@@ -108,7 +108,7 @@
         Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
         Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
     <string name="notification_exclude_data_restriction_title">Отключить экономию трафика?</string>
-    <string name="notification_exclude_data_restriction_message">InviZible Pro сможет работать правильно, когда включена экономия трафика. Это важно для бесперебойной работы приложения.</string>
+    <string name="notification_exclude_data_restriction_message">Разрешите передачу данных в фоновом режиме и передачу данных в режиме экономии энергии. Это важно для бесперебойной работы приложения.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
     <string name="pref_common_use_busybox_auto">Автоматически</string>
     <string name="pref_common_use_busybox_device">Использовать BusyBox телефона</string>

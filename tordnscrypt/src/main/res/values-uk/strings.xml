@@ -122,7 +122,7 @@
     <string name="notification_exclude_bat_optimisation_title">Вимкнути оптимізацію батареї?</string>
     <string name="pref_common_notification_helper">Будь ласка, виключіть InviZible Pro зі списку оптимізації споживання енергії. Інакше андроїд може завершити DNSCrypt, Tor або I2P будь-якої миті. Для деяких оболонок, наприклад MIUI, можуть знадобитися додаткові налаштування.</string>
     <string name="notification_exclude_data_restriction_title">Вимкнути економію трафіку?</string>
-    <string name="notification_exclude_data_restriction_message">InviZible Pro зможе працювати правильно, коли увімкнено економію трафіку. Це важливо задля безперебійної роботи додатку.</string>
+    <string name="notification_exclude_data_restriction_message">Дозвольте передачу даних у фоновому режимі та передачу даних у режимі економії енергії. Це важливо задля безперебійної роботи додатку.</string>
     <string name="pref_common_use_busybox">Вибрати BusyBox</string>
     <string name="pref_common_excludes_from_tor">Виключити сайти</string>
     <string name="pref_common_local_eth_device_addr">IP адреса пристрою в LAN</string>

@@ -208,7 +208,7 @@
     <string name="notification_exclude_bat_optimisation_title">Stop optimizing battery usage?</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from Android battery optimization to prevent the system from terminating DNSCrypt, Tor, or I2P at any time. Some special systems, such as MIUI, may require additional steps.</string>
     <string name="notification_exclude_data_restriction_title">Disable network data saver?</string>
-    <string name="notification_exclude_data_restriction_message">InviZible Pro will be able to work properly when background data restriction is enabled. This is essential for a smooth online experience.</string>
+    <string name="notification_exclude_data_restriction_message">Please allow background data usage and allow data usage while Data saver is on. This is essential for a smooth online experience.</string>
     <string name="pref_common_use_busybox">Select BusyBox</string>
     <string name="pref_common_use_busybox_auto">Auto</string>
     <string name="pref_common_use_busybox_device">Use device BusyBox</string>
