@@ -104,9 +104,7 @@
     <string name="pref_common_show_help">Показывать справку</string>
     <string name="pref_common_show_help_summ">Всегда показывать справочные сообщения</string>
     <string name="notification_exclude_bat_optimisation_title">Выключить оптимизацию батареи?</string>
-    <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления.
-        Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
-        Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
+    <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления. Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент. Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
     <string name="notification_exclude_data_restriction_title">Отключить экономию трафика?</string>
     <string name="notification_exclude_data_restriction_message">Разрешите передачу данных в фоновом режиме и передачу данных в режиме экономии энергии. Это важно для бесперебойной работы приложения.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
@@ -334,7 +332,7 @@
     <string name="donate">Поддержка проекта</string>
     <string name="donate_button">Посетить</string>
     <string name="enter_code_button">Ввести код</string>
-    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите         страницу поддержки или введите уже полученный PRO код.</string>
+    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите страницу поддержки или введите уже полученный PRO код.</string>
     <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO? Обновление будет продолжено в фоновом режиме.</string>
     <string name="thanks_for_donate_gp">Проект InviZible Pro и его автор благодарен за помощь!</string>
     <string name="enter_code">Введите код</string>
