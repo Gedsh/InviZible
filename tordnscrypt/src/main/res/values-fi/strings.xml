@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Aloita käynnistyksessä"</string>
     <string name="root_available">"Tarkistetaan Rootin saatavuutta..."</string>
     <string name="please_wait">"Odota..."</string>
-    <string name="dont_show">"Älä näytä uudestaan"</string>
+    <string name="dont_show">Älä näytä uudestaan</string>
     <string name="tvDNSStop">"DNSCrypt pysäytettin"</string>
     <string name="tvDNSInstalled">"DNSCrypt asennettiin"</string>
     <string name="tvDNSInstalling">"DNSCryptiä asennetaan"</string>
@@ -123,8 +123,8 @@
     <string name="pref_common_show_help">"Ohjeviestit"</string>
     <string name="pref_common_show_help_summ">"Näytä ohjeviestit aina"</string>
     <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista.
-        Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä,
-        kuten MIUI, vaati joitain lisävaiheita."</string>
+\n        Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä,
+\n        kuten MIUI, vaati joitain lisävaiheita."</string>
     <string name="pref_common_use_busybox">"Valitse BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Kokeellinen-HOTSPOT"</string>
     <string name="pref_common_tethering_autostart">"Aloita tethering käynnistyksessä"</string>
@@ -339,7 +339,7 @@
     <string name="verifier_error">"Näyttää siltä, ​​että tämä  on epävirallinen InviZible-versio. Ole varovainen!"</string>
     <string name="only_for_pro">"Vain PRO-versiolle"</string>
     <string name="donate">"Lahjoita"</string>
-    <string name="donate_project">"InviZible Pro -projekti tarvitsee apuasi. Ole hyvä ja käy lahjoittajasivulla tai kirjoita vastaanotettu rekisteröintikoodisi."</string>
+    <string name="donate_project">InviZible Pro -projekti tarvitsee apuasi. Ole hyvä ja käy lahjoittajasivulla tai kirjoita vastaanotettu rekisteröintikoodisi.</string>
     <string name="donate_button">"Mene sivulle"</string>
     <string name="enter_code_button">"Syötä koodi"</string>
     <string name="enter_code">"Syötä koodi"</string>
@@ -356,7 +356,7 @@
     <string name="add_custom_server_title">"Lisää mukautettu palvelin"</string>
     <string name="add_custom_server_error">"Virheellinen mukautettu palvelinmääritys. Tarkista SDNS-kenttä."</string>
     <string name="pending_purchase">"Huomaa, että sinulla on vireillä oleva osto:"</string>
-    <string name="buy_premium_gp">"InviZible Pro -projekti tarvitsee apuasi. Voit ostaa premium-ominaisuuksia painamalla OK-painiketta."</string>
+    <string name="buy_premium_gp">InviZible Pro -projekti tarvitsee apuasi. Voit ostaa premium-ominaisuuksia painamalla OK-painiketta.</string>
     <string name="wrong_purchase_signature_gp">"Anteeksi, mutta ostoksesi vahvistaminen on mahdotonta. Saat hyvityksen 3 päivän kuluttua."</string>
     <string name="only_premium_feature">"Valitettavasti tämä ominaisuus on saatavana vain premium-versiolle."</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP outproxy"</string>
