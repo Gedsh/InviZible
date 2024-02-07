@@ -1027,3 +1027,8 @@
 * Fixed the appearance of the DNSCrypt rules import dialog.
 * Update translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.6**
+* Various user interface fixes and improvements.
+* Improve switching speed between networks.
+* Fixes and optimizations.
