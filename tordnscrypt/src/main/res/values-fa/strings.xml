@@ -16,7 +16,7 @@
     <!-- ...بررسی در دسترس بودن روت -->
     <string name="root_available">بررسی روت بودن دستگاه…</string>
     <string name="please_wait">لطفاً صبر کنید…</string>
-    <string name="dont_show">"مجدداً نشان داده نشود"</string>
+    <string name="dont_show">مجدداً نشان داده نشود</string>
     <string name="tvDNSStop">"DNSCrypt متوقف شد"</string>
     <string name="tvDNSInstalled">"DNSCrypt نصب شد"</string>
     <!-- DNSCrypt در حال نصب -->
@@ -347,7 +347,7 @@
     <string name="verifier_error">"به نظر می‌رسد این نسخه غیررسمی از InviZible است. لطفاً مراقب آن باشید!"</string>
     <string name="only_for_pro">"فقط برای نسخه PRO"</string>
     <string name="donate">"کمک مالی"</string>
-    <string name="donate_project">"پروژه InviZible Pro به کمک شما احتیاج دارد. لطفاً از صفحه کمک مالی بازدید و یا کد ثبت‌نام دریافتی را وارد نمایید."</string>
+    <string name="donate_project">پروژه InviZible Pro به کمک شما احتیاج دارد. لطفاً از صفحه کمک مالی بازدید و یا کد ثبت‌نام دریافتی را وارد نمایید.</string>
     <string name="donate_button">"بازدید"</string>
     <string name="enter_code_button">"کد را وارد کنید"</string>
     <string name="enter_code">"کد را وارد کنید"</string>
@@ -366,7 +366,7 @@
     <string name="add_custom_server_title">"افزودن سرور سفارشی"</string>
     <string name="add_custom_server_error">"تنظیمات سرور سفارشی نامعتبر است. لطفاً قسمت SDNS را بررسی نمایید."</string>
     <string name="pending_purchase">"لطفاً توجه نمایید که شما یک خرید در حالت انتظار دارید:"</string>
-    <string name="buy_premium_gp">"پروژه InviZible Pro به کمک شما نیاز دارد. بر روی OK کلیک کرده تا نسخه پیشرفته را خریداری نمایید."</string>
+    <string name="buy_premium_gp">پروژه InviZible Pro به کمک شما نیاز دارد. بر روی OK کلیک کرده تا نسخه پیشرفته را خریداری نمایید.</string>
     <string name="wrong_purchase_signature_gp">"متأسفیم، اما خرید شما تأیید نشد. طی ۳ روز آینده وجه به حساب شما برمی‌گردد."</string>
     <string name="only_premium_feature">"متأسفانه، این قابلیت فقط برای نسخه کامل برنامه قابل استفاده است."</string>
     <string name="pref_itpd_use_HTTP_outproxy">"پروکسی"</string>
