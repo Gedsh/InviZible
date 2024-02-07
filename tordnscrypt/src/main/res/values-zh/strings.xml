@@ -16,7 +16,7 @@
     <string name="swRunOnBoot">启动设备时启动</string>
     <string name="root_available">正在检查 Root 是否可用…</string>
     <string name="please_wait">"请稍侯…"</string>
-    <string name="dont_show">"不再显示"</string>
+    <string name="dont_show">不再显示</string>
     <string name="tvDNSStop">"DNSCrypt 已停止"</string>
     <string name="tvDNSInstalled">"DNSCrypt 已安装"</string>
     <string name="tvDNSInstalling">"DNSCrypt 正在安装"</string>
@@ -125,7 +125,7 @@
     <string name="pref_common_wakelock_summ">"无 Root 模式下的附加保护防止应用被 Android 系统杀死。可能消耗电池"</string>
     <string name="pref_common_show_help">"帮助信息"</string>
     <string name="pref_common_show_help_summ">"总是显示帮助信息"</string>
-    <string name="pref_common_notification_helper">"请对 InviZible Pro 关闭 Android 电池优化。 否则 Android 将随时杀死 DNSCrypt，Tor 或 I2P。在特定系统上，如 MIUI，需要一些额外步骤 。"</string>
+    <string name="pref_common_notification_helper">请对 InviZible Pro 关闭 Android 电池优化。 否则 Android 将随时杀死 DNSCrypt，Tor 或 I2P。在特定系统上，如 MIUI，需要一些额外步骤 。</string>
     <string name="pref_common_use_busybox">"选择 BusyBox"</string>
     <string name="pref_common_categ_hotspot">"热点-实验性"</string>
     <string name="pref_common_tethering_autostart">"设备启动时启动数据共享"</string>
@@ -328,7 +328,7 @@
     <string name="verifier_error">"似乎这是非官方版本的 InviZible。请小心！"</string>
     <string name="only_for_pro">"仅用于 PRO 版本"</string>
     <string name="donate">"捐助"</string>
-    <string name="donate_project">"InviZible Pro 项目需要您的帮助。请访问捐助页面或输入收到的注册码。"</string>
+    <string name="donate_project">InviZible Pro 项目需要您的帮助。请访问捐助页面或输入收到的注册码。</string>
     <string name="donate_button">"访问"</string>
     <string name="enter_code_button">"输入代码"</string>
     <string name="enter_code">"输入代码"</string>
@@ -345,7 +345,7 @@
     <string name="add_custom_server_title">"添加自定义服务器"</string>
     <string name="add_custom_server_error">"无效自定义服务器配置。请检查 SDNS 字段。"</string>
     <string name="pending_purchase">"请注意您有一个待完成的购买："</string>
-    <string name="buy_premium_gp">"InviZible Pro 项目需要您的帮助。点按 OK 购买高级功能。"</string>
+    <string name="buy_premium_gp">InviZible Pro 项目需要您的帮助。点按 OK 购买高级功能。</string>
     <string name="wrong_purchase_signature_gp">"抱歉，无法确认您的购买。您将在 3 日后收到退款。"</string>
     <string name="only_premium_feature">"不幸的是，此功能仅高级版可用。"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP 出口代理"</string>
