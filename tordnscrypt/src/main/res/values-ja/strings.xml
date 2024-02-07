@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"起動時に自動実行"</string>
     <string name="root_available">"Rootが利用可能か確認中です..."</string>
     <string name="please_wait">"お待ちください..."</string>
-    <string name="dont_show">"二度と表示しない"</string>
+    <string name="dont_show">二度と表示しない</string>
     <string name="tvDNSStop">"DNSCrypt 停止中"</string>
     <string name="tvDNSInstalled">"DNSCryptをインストールしました"</string>
     <string name="tvDNSInstalling">"DNSCryptをインストール中"</string>
@@ -122,7 +122,7 @@
     <string name="pref_common_wakelock_summ">"非Rootモードでアプリのプロセスがandroidによってキルされるのを防止します。バッテリー消費が増加します。"</string>
     <string name="pref_common_show_help">"ヘルプメッセージ"</string>
     <string name="pref_common_show_help_summ">"常にヘルプメッセージを表示する"</string>
-    <string name="pref_common_notification_helper">"Invizible Proをandroidのバッテリー最適化設定から除外してください。そうしなければモジュールが自動的に停止してしまう可能性があります。MIUIなどの特別なカスタマイズが施されたシステムの場合、追加の工程が必要な場合があります。"</string>
+    <string name="pref_common_notification_helper">Invizible Proをandroidのバッテリー最適化設定から除外してください。そうしなければモジュールが自動的に停止してしまう可能性があります。MIUIなどの特別なカスタマイズが施されたシステムの場合、追加の工程が必要な場合があります。</string>
     <string name="pref_common_use_busybox">"Busyboxを選択"</string>
     <string name="pref_common_categ_hotspot">"ホットスポット(実験的)"</string>
     <string name="pref_common_tethering_autostart">"起動時にテザリングを開始する"</string>
@@ -325,7 +325,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="verifier_error">"Looks like this unofficial version of InviZible. Please be care of it!"</string>
     <string name="only_for_pro">"Proバージョンのみ"</string>
     <string name="donate">"寄付"</string>
-    <string name="donate_project">"InviZible Pro Project needs your assistance. Please visit donate page or enter received registration code."</string>
+    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received registration code.</string>
     <string name="donate_button">"寄付する"</string>
     <string name="enter_code_button">"コードを入力"</string>
     <string name="enter_code">"コードを入力"</string>
@@ -342,7 +342,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="add_custom_server_title">"カスタムサーバーを追加"</string>
     <string name="add_custom_server_error">"カスタムサーバー設定が無効です。SDNSの項目をご確認ください。"</string>
     <string name="pending_purchase">"Please note that you have a pending purchase:"</string>
-    <string name="buy_premium_gp">"InviZible Pro Project needs your assistance. Press OK to purchase premium features."</string>
+    <string name="buy_premium_gp">InviZible Pro Project needs your assistance. Press OK to purchase premium features.</string>
     <string name="wrong_purchase_signature_gp">"申し訳ありません、支払いを確認できませんでした。3日後に返金が行われます。"</string>
     <string name="only_premium_feature">"残念ながらこの機能は有料バージョンのみです。"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP出力プロキシ"</string>
