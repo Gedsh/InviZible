@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Uruchom podczas startu urzadzenia"</string>
     <string name="root_available">"Sprawdzam czy Root jest dostepny…"</string>
     <string name="please_wait">"Prosze czekac…"</string>
-    <string name="dont_show">"Nie pokazuj ponownie"</string>
+    <string name="dont_show">Nie pokazuj ponownie</string>
     <string name="tvDNSStop">"DNSCrypt zatrzymany"</string>
     <string name="tvDNSInstalled">"DNSCrypt zainstalowany"</string>
     <string name="tvDNSInstalling">"Instalacja DNSCrypt"</string>
@@ -122,7 +122,7 @@
     <string name="pref_common_wakelock_summ">"Dodatkowa ochrona bez trybu rootowania, aby zapobiec uspieniu aplikacji przez Androida. Moze wyczeprac baterie"</string>
     <string name="pref_common_show_help">"Podpowiedzi"</string>
     <string name="pref_common_show_help_summ">"Zawsze pokazuj podpowiedzi"</string>
-    <string name="pref_common_notification_helper">"Prosze wykluczyc InviZible Pro z optymalizacji baterii. W innym przypadku Android moze zatrzymac proces DNSCrypt, Tor or I2P w kazdej chwili. Systemy niestandardowe jak MIUI, wymagaja dodatkowych czynnosci."</string>
+    <string name="pref_common_notification_helper">Prosze wykluczyc InviZible Pro z optymalizacji baterii. W innym przypadku Android moze zatrzymac proces DNSCrypt, Tor or I2P w kazdej chwili. Systemy niestandardowe jak MIUI, wymagaja dodatkowych czynnosci.</string>
     <string name="pref_common_use_busybox">"Wybierz BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Punkt dostepu - eksperymentalnie"</string>
     <string name="pref_common_tethering_autostart">"Autostart udostepniania polaczenia przy starcie systemu"</string>
@@ -325,7 +325,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="verifier_error">"To chyba nie jest oficjalna wersja InviZible. Uwazaj!"</string>
     <string name="only_for_pro">"Tylko wersja PRO"</string>
     <string name="donate">"Dotacja"</string>
-    <string name="donate_project">"Projekt InviZible Pro potrzebuje Twojego wsparcia. Prosze odwiedz strone dotacji lub wprowadz otrzymany kod rejestracyjny."</string>
+    <string name="donate_project">Projekt InviZible Pro potrzebuje Twojego wsparcia. Prosze odwiedz strone dotacji lub wprowadz otrzymany kod rejestracyjny.</string>
     <string name="donate_button">"Odwiedz"</string>
     <string name="enter_code_button">"Wprowadz kod"</string>
     <string name="enter_code">"Wprowadz kod"</string>
@@ -341,7 +341,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="add_custom_server_title">"Dodaj serwer"</string>
     <string name="add_custom_server_error">"Niepoprawna niestandardowa konfiguracja serwera. Sprawdź pole SDNS."</string>
     <string name="pending_purchase">"Pamiataj, ze masz oczekujacy zakup:"</string>
-    <string name="buy_premium_gp">"Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium."</string>
+    <string name="buy_premium_gp">Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium.</string>
     <string name="wrong_purchase_signature_gp">"Przepraszamy, ale nie mozna potwierdzic zakupu. Otrzymasz zwrot pieniedzy po 3 dniach."</string>
     <string name="only_premium_feature">"Niestety ta funkcja jest dostepna tylko w wersji premium."</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy wychodzace HTTP"</string>
