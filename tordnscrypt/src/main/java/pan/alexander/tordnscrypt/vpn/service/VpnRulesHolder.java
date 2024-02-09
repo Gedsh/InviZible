@@ -234,6 +234,7 @@ public class VpnRulesHolder {
                 && isIpInLanRange(packet.daddr)) {
             packet.allowed = uidLanAllowed.contains(packet.uid);
         } else if (vpnPreferences.getFirewallEnabled()
+                && !mapUidAllowed.isEmpty()
                 && isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
             packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
         } else if (vpnPreferences.getFirewallEnabled()) {
