@@ -1025,10 +1025,16 @@
 * The app icon and color scheme have been changed.
 * Added monochrome adaptive icon.
 * Fixed the appearance of the DNSCrypt rules import dialog.
-* Update translations.
+* Updated translations.
 * Fixes and optimizations.
 
 **InviZible Pro beta 2.0.6**
 * Various user interface fixes and improvements.
-* Improve switching speed between networks.
+* Improved switching speed between networks.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.7**
+* Various fixes to save battery power when network is unavailable.
+* Added DormantClientTimeout option to Tor settings.
+* Updated Tor Snowflake bridge to version v2.9.0.
 * Fixes and optimizations.

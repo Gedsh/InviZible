@@ -2,5 +2,5 @@
 * The app icon and color scheme have been changed.
 * Added monochrome adaptive icon.
 * Fixed the appearance of the DNSCrypt rules import dialog.
-* Update translations.
+* Updated translations.
 * Fixes and optimizations.
