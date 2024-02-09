@@ -49,6 +49,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
@@ -227,15 +228,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     val_tor.add(val);
                 }
 
-                if (key.equals("SOCKSPort")
-                        || key.equals("HTTPTunnelPort")
-                        || key.equals("TransPort")
-                        || key.equals("DNSPort")) {
-                    val = val.split(" ")[0]
-                            .replaceAll(".+:", "")
-                            .replaceAll("\\D+", "");
-                } else if (key.equals("VirtualAddrNetworkIPv4")) {
-                    key = "VirtualAddrNetwork";
+                switch (key) {
+                    case "SOCKSPort", "HTTPTunnelPort", "TransPort", "DNSPort" ->
+                            val = val.split(" ")[0]
+                                    .replaceAll(".+:", "")
+                                    .replaceAll("\\D+", "");
+                    case "VirtualAddrNetworkIPv4" -> key = "VirtualAddrNetwork";
+                    case DORMANT_CLIENT_TIMEOUT -> val = val.replaceAll("\\D+", "");
                 }
 
                 String val_saved_str = "";

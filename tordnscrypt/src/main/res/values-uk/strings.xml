@@ -273,6 +273,7 @@
     <string name="pref_tor_client_use_IPv6_summ">Якщо увімкнено, Tor може підключатися до серверів каталогів або вузлів входу через IPv6.</string>
     <string name="pref_tor_snowflake_stun">STUN-сервери для мостів SnowFlake</string>
     <string name="pref_tor_edit_conf">Редагувати tor.conf безпосередньо</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor переходить у режим очікування, якщо не бачить активності клієнта протягом заданого часу. Має бути не менше 10 хвилин.</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor буде здійснювати всі OR-з\'єднання через проксі-сервер SOCKS 5.</string>
     <string name="pref_routing_unlock_app">Застосунки для використання з InviZible</string>
     <string name="pref_tor_clean_module_folder">Очистити кеш</string>

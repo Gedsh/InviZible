@@ -434,6 +434,8 @@
     <string name="pref_tor_new_circuit_period_summ">Every NUM seconds consider whether to build a new circuit.</string>
     <string name="pref_tor_max_circuit_dirtiness" translatable="false">MaxCircuitDirtiness</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">Feel free to reuse a circuit that was first used at most NUM seconds ago, but never attach a new stream to a circuit that is too old.</string>
+    <string name="pref_tor_dormant_client_timeout" translatable="false">DormantClientTimeout</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor enters a dormant state if it does not see client activity for a specified time. Must be at least 10 minutes</string>
     <string name="pref_tor_enforce_distinct_subnets" translatable="false">EnforceDistinctSubnets</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">If enabled, Tor will not put two servers whose IP addresses are "too close" on the same circuit. Currently, two addresses are "too close" if they lie in the same /16 range.</string>
     <string name="pref_tor_enable_SOCKS_proxy">Enable SOCKS proxy</string>

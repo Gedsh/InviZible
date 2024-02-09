@@ -90,6 +90,14 @@
             android:singleLine="true"
             android:summary="@string/pref_tor_max_circuit_dirtiness_summ"
             android:title="@string/pref_tor_max_circuit_dirtiness" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_dormant_client_timeout"
+            android:defaultValue="30"
+            android:key="DormantClientTimeout"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_dormant_client_timeout_summ"
+            android:title="@string/pref_tor_dormant_client_timeout" />
         <CheckBoxPreference
             android:id="@+id/pref_tor_enforce_distinct_subnets"
             android:defaultValue="true"

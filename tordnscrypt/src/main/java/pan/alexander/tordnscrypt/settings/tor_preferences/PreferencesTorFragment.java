@@ -63,6 +63,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
@@ -156,6 +157,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
         preferences.add(findPreference(SNOWFLAKE_RENDEZVOUS));
         preferences.add(findPreference("Enable TrackHostExits"));
+        preferences.add(findPreference(DORMANT_CLIENT_TIMEOUT));
 
         for (Preference preference : preferences) {
             if (preference != null) {
@@ -653,9 +655,29 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
 
             return true;
-        } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
+        } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod")
+                || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
                 && !newValue.toString().matches("\\d+")) {
             return false;
+        } else if ((Objects.equals(preference.getKey(), DORMANT_CLIENT_TIMEOUT))) {
+            if (newValue.toString().matches("\\d+")) {
+                int value = Integer.parseInt(newValue.toString());
+                if (value < 10) {
+                    return false;
+                }
+                int i = key_tor.indexOf("DormantCanceledByStartup");
+                if (!key_tor.contains("DormantClientTimeout") && i >= 0) {
+                    key_tor.add(i + 1, "DormantClientTimeout");
+                    val_tor.add(i + 1, newValue + " minutes");
+                }
+                int k = key_tor.indexOf("DormantClientTimeout");
+                if (k >= 0) {
+                    val_tor.set(k, newValue + " minutes");
+                }
+                return true;
+            } else {
+                return false;
+            }
         } else if ((Objects.equals(preference.getKey(), TOR_OUTBOUND_PROXY))) {
             if (Boolean.parseBoolean(newValue.toString())) {
                 if (key_tor.contains("#Socks5Proxy")) {

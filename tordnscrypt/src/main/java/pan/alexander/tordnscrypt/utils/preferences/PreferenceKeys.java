@@ -137,6 +137,7 @@ public interface PreferenceKeys {
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
+    String DORMANT_CLIENT_TIMEOUT = "DormantClientTimeout";
 
     String TOR_USE_IPV6 = "ClientUseIPv6";
 
