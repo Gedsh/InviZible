@@ -19,6 +19,16 @@
 
 package pan.alexander.tordnscrypt.patches
 
-data class PatchLine(val header: String,
-                     val lineToFind: Regex,
-                     val lineToReplace: String)
+sealed class AlterConfig {
+    data class ReplaceLine(
+        val header: String,
+        val lineToFind: Regex,
+        val lineToReplace: String
+    ) : AlterConfig()
+
+    data class AddLine(
+        val header: String,
+        val lineToFind: Regex,
+        val lineToAdd: String
+    ) : AlterConfig()
+}

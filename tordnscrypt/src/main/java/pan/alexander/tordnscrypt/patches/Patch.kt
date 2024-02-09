@@ -39,9 +39,9 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
         val patchingIsInProgress = AtomicBoolean(false)
     }
 
-    private val dnsCryptConfigPatches = mutableListOf<PatchLine>()
-    private val torConfigPatches = mutableListOf<PatchLine>()
-    private val itpdConfigPatches = mutableListOf<PatchLine>()
+    private val dnsCryptConfigPatches = mutableListOf<AlterConfig>()
+    private val torConfigPatches = mutableListOf<AlterConfig>()
+    private val itpdConfigPatches = mutableListOf<AlterConfig>()
 
     private val preferenceRepository = App.instance.daggerComponent.getPreferenceRepository()
 
@@ -73,6 +73,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 removeDNSCryptDaemonize()
                 enableDNSCryptRequireNoFilterByDefault(currentVersionSaved)
                 clearFlagDoNotUpdateTorDefaultBridges()
+                addTorDormantOption()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -101,7 +102,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun removeQuad9FromBrokenImplementation() {
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "[broken_implementations]",
                 Regex("fragments_blocked =.*quad9-dnscrypt.*"),
                 "fragments_blocked = ['cisco', 'cisco-ipv6', 'cisco-familyshield'," +
@@ -113,7 +114,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun changeV2DNSCryptUpdateSourcesToV3() {
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex(".*v2/public-resolvers.md.*"),
                 "urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md'," +
@@ -121,7 +122,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
             )
         )
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex(".*v2/relays.md.*"),
                 "urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/relays.md'," +
@@ -132,39 +133,39 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun replaceBlackNames() {
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "[blacklist]",
                 Regex("blacklist_file = 'blacklist.txt'"), "blocked_names_file = 'blacklist.txt'"
             )
         )
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "[ip_blacklist]",
                 Regex("blacklist_file = 'ip-blacklist.txt'"),
                 "blocked_ips_file = 'ip-blacklist.txt'"
             )
         )
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "[whitelist]",
                 Regex("whitelist_file = 'whitelist.txt'"), "allowed_names_file = 'whitelist.txt'"
             )
         )
 
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex("\\[blacklist]"), "[blocked_names]"
             )
         )
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex("\\[ip_blacklist]"), "[blocked_ips]"
             )
         )
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex("\\[whitelist]"), "[allowed_names]"
             )
@@ -173,7 +174,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun updateITPDAddressBookDefaultUrl() {
         itpdConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "[addressbook]",
                 Regex("defaulturl = http://joajgazyztfssty4w2on5oaqksz6tqoxbduy553y34mf4byv6gpq.b32.i2p/export/alive-hosts.txt"),
                 "defaulturl = http://shx5vqsw7usdaunyzr2qmes2fq37oumybpudrd4jjj4e4vk4uusa.b32.i2p/hosts.txt"
@@ -187,8 +188,10 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
         when {
             sharedPreferences.contains(DNSCRYPT_BOOTSTRAP_RESOLVERS) -> {
-                fallbackResolver = extractResolverIp(sharedPreferences, DNSCRYPT_BOOTSTRAP_RESOLVERS)
+                fallbackResolver =
+                    extractResolverIp(sharedPreferences, DNSCRYPT_BOOTSTRAP_RESOLVERS)
             }
+
             sharedPreferences.contains("fallback_resolvers") -> {
                 fallbackResolver = extractResolverIp(sharedPreferences, "fallback_resolvers")
                 sharedPreferences.edit()
@@ -196,6 +199,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                     .remove("fallback_resolvers")
                     .apply()
             }
+
             sharedPreferences.contains("fallback_resolver") -> {
                 fallbackResolver = extractResolverIp(sharedPreferences, "fallback_resolver")
                 sharedPreferences.edit()
@@ -206,13 +210,13 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
         }
 
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex("fallback_resolver =.+"), "bootstrap_resolvers = ['$fallbackResolver:53']"
             )
         )
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex("fallback_resolvers =.+"), "bootstrap_resolvers = ['$fallbackResolver:53']"
             )
@@ -237,7 +241,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun removeDNSCryptDaemonize() {
         dnsCryptConfigPatches.add(
-            PatchLine(
+            AlterConfig.ReplaceLine(
                 "",
                 Regex("daemonize.+"), ""
             )
@@ -253,7 +257,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 .apply()
 
             dnsCryptConfigPatches.add(
-                PatchLine(
+                AlterConfig.ReplaceLine(
                     "",
                     Regex("require_nofilter ?=.+"),
                     "require_nofilter = true"
@@ -264,6 +268,16 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun clearFlagDoNotUpdateTorDefaultBridges() {
         preferenceRepository.get().setBoolPreference("doNotShowNewDefaultBridgesDialog", false)
+    }
+
+    private fun addTorDormantOption() {
+        torConfigPatches.add(
+            AlterConfig.AddLine(
+                "",
+                Regex("DormantCanceledByStartup .+"),
+                "DormantClientTimeout 15 minutes"
+            )
+        )
     }
 
 }
