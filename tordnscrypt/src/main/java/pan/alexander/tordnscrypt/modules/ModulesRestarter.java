@@ -39,6 +39,11 @@ public class ModulesRestarter {
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
+    public static void rebootTor(Context context) {
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_TOR);
+        ModulesAux.speedupModulesStateLoopTimer(context);
+    }
+
     public static void restartTor(Context context) {
         ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_TOR_FULL);
         ModulesAux.speedupModulesStateLoopTimer(context);
