@@ -64,7 +64,7 @@ object NetworkChecker {
                 }
 
             } else {
-                connectivityManager?.activeNetworkInfo?.isConnected ?: false
+                connectivityManager?.let { it.activeNetworkInfo?.isConnected ?: false } ?: true
             }
         } catch (e: Exception) {
             loge("NetworkChecker isNetworkAvailable", e)
