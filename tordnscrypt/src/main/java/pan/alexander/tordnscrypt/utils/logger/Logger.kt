@@ -20,42 +20,103 @@
 package pan.alexander.tordnscrypt.utils.logger
 
 import android.util.Log
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 private const val LOG_TAG = "pan.alexander.TPDCLogs"
 
 object Logger {
 
+    private val coroutineScope by lazy {
+        CoroutineScope(
+            SupervisorJob() +
+                    Dispatchers.IO +
+                    CoroutineName("Logger") +
+                    CoroutineExceptionHandler { _, throwable ->
+                        Log.e(LOG_TAG, "Logger uncaught exception", throwable)
+                    }
+        )
+    }
+
+    private val logFlow by lazy {
+        MutableSharedFlow<LogEntry>(
+            replay = 0,
+            extraBufferCapacity = 100,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST
+        ).also { flow ->
+            flow.distinctUntilChanged()
+                .onEach {
+                    when (it.level) {
+                        LogLevel.INFO -> Log.i(LOG_TAG, it.message)
+                        LogLevel.WARN -> Log.w(LOG_TAG, it.message)
+                        LogLevel.ERROR -> Log.e(LOG_TAG, it.message)
+                    }
+                }.launchIn(coroutineScope)
+        }
+    }
+
     @JvmStatic
     fun logi(message: String) {
-        Log.i(LOG_TAG, message)
+        logFlow.tryEmit(LogEntry(LogLevel.INFO, message))
     }
 
     @JvmStatic
     fun logw(message: String) {
-        Log.w(LOG_TAG, message)
+        logFlow.tryEmit(LogEntry(LogLevel.WARN, message))
     }
 
     @JvmStatic
     fun logw(message: String, e: Throwable) {
-        Log.w(LOG_TAG, "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}")
+        logFlow.tryEmit(
+            LogEntry(
+                LogLevel.WARN,
+                "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}"
+            )
+        )
     }
 
     @JvmStatic
     fun loge(message: String, e: Throwable) {
-        Log.e(LOG_TAG, "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}")
+        logFlow.tryEmit(
+            LogEntry(
+                LogLevel.ERROR,
+                "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}"
+            )
+        )
     }
 
     @JvmStatic
     fun loge(message: String, e: Throwable, printStackTrace: Boolean) {
-        Log.e(
-            LOG_TAG,
-            "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}" +
-                    if (printStackTrace) "\n" + Log.getStackTraceString(e) else ""
+        logFlow.tryEmit(
+            LogEntry(
+                LogLevel.ERROR,
+                "$message ${e.javaClass.canonicalName} ${e.message} ${e.cause ?: ""}" +
+                        if (printStackTrace) "\n" + Log.getStackTraceString(e) else ""
+            )
         )
     }
 
     @JvmStatic
     fun loge(message: String) {
-        Log.e(LOG_TAG, message)
+        logFlow.tryEmit(LogEntry(LogLevel.ERROR, message))
+    }
+
+    private data class LogEntry(
+        val level: LogLevel,
+        val message: String
+    )
+
+    private enum class LogLevel {
+        INFO,
+        WARN,
+        ERROR,
     }
 }
