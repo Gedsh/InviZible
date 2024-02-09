@@ -141,6 +141,13 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         try {
             withTimeout(CHECKING_LOOP_TIMEOUT_MINT * 60_000L) {
                 while (isActive && !internetAvailable) {
+
+                    checkNetworkConnection()
+                    if (!getNetworkConnectionResult()) {
+                        makeDelay(CHECK_INTERVAL_SEC)
+                        continue
+                    }
+
                     val available = try {
                         withTimeout(CHECKING_TIMEOUT_SEC * 1000L) {
                             check(via)
