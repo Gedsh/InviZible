@@ -24,10 +24,9 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.TopFragment
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.util.*
 
@@ -52,7 +51,7 @@ object Utils {
             try {
                 context.startActivity(sendEmailIntent)
             } catch (e: java.lang.Exception) {
-                Log.e(LOG_TAG, "sendMail exception ${e.message} ${e.cause}")
+                loge("sendMail", e)
             }
 
         }

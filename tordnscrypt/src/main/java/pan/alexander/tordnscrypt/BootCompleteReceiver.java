@@ -47,6 +47,10 @@ public class BootCompleteReceiver extends BroadcastReceiver {
 
         App.getInstance().getDaggerComponent().inject(this);
 
+        if (intent == null) {
+            return;
+        }
+
         String action = intent.getAction();
 
         if (action == null) {

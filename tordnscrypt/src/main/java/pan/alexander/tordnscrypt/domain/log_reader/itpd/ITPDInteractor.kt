@@ -19,11 +19,10 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import android.util.Log
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
 
@@ -52,10 +51,7 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
         try {
             parseLog()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "ITPDInteractor parseITPDLog exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("ITPDInteractor parseITPDLog", e, true)
         }
     }
 

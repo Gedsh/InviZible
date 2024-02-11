@@ -20,8 +20,7 @@
 package pan.alexander.tordnscrypt.domain.log_reader
 
 import android.text.TextUtils
-import android.util.Log
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.StringBuilder
 import java.util.*
 
@@ -65,7 +64,7 @@ abstract class AbstractLogParser {
                 }
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "LogParser formatLines exception ${e.message} ${e.cause}")
+            loge("LogParser formatLines", e)
         }
 
         val lastBrIndex: Int = stringBuilder.lastIndexOf("<br />")

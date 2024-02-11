@@ -24,12 +24,10 @@ package pan.alexander.tordnscrypt.modules
 import android.content.Context
 import android.net.TrafficStats
 import android.os.Process
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -136,7 +134,7 @@ class UsageStatistic(private val context: Context) {
                 counter++
             }
         } catch (exception: Exception) {
-            Log.e(LOG_TAG, "UsageStatistics exception " + exception.message + " " + exception.cause)
+            loge("UsageStatistics", exception)
         } finally {
             updating.compareAndSet(true, false)
         }

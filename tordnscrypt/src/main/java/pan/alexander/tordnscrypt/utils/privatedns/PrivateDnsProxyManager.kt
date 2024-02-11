@@ -31,7 +31,6 @@ import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import pan.alexander.tordnscrypt.AUX_CHANNEL_ID
@@ -40,8 +39,9 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 
 const val DISABLE_PRIVATE_DNS_NOTIFICATION = 167
@@ -63,7 +63,7 @@ object PrivateDnsProxyManager {
                 localLinkProperties =
                     connectivityManager.getLinkProperties(connectivityManager.activeNetwork)
 
-                Log.i(LOG_TAG, "LinkProperties $localLinkProperties")
+                logi("LinkProperties $localLinkProperties")
             }
 
 
@@ -97,10 +97,7 @@ object PrivateDnsProxyManager {
 
             }
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "AuxNotificationSender checkPrivateDNSAndProxy exception ${e.message} ${e.cause}"
-            )
+            loge("AuxNotificationSender checkPrivateDNSAndProxy", e)
         }
     }
 

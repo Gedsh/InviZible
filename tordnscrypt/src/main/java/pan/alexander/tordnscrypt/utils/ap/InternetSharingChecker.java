@@ -31,12 +31,13 @@ import static pan.alexander.tordnscrypt.utils.Constants.STANDARD_VPN_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.STANDARD_VPN_INTERFACE_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.STANDARD_WIFI_INTERFACE_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.STANDARD_WIFI_INTERFACE_NAMES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.util.Log;
 import android.util.Pair;
 
 import java.lang.reflect.Method;
@@ -176,10 +177,10 @@ public class InternetSharingChecker {
                     "USB modem is " + (usbTetherOn ? "ON" : "OFF") + "\n" +
                     "USB modem interface name " + usbModemInterfaceName + "\n" +
                     "USB modem addresses range " + usbModemAddressesRange;
-            Log.i(LOG_TAG, logEntry);
+            logi(logEntry);
 
         } catch (SocketException e) {
-            Log.e(LOG_TAG, "Tethering SocketException " + e.getMessage() + " " + e.getCause());
+            loge("Tethering SocketException", e);
         }
     }
 
@@ -189,7 +190,7 @@ public class InternetSharingChecker {
             if (interfaceName.matches(name.replace("+", "\\d+"))) {
                 ethernetOn = true;
                 ethernetInterfaceName = networkInterface.getName();
-                Log.i(LOG_TAG, "LAN interface name " + ethernetInterfaceName);
+                logi("LAN interface name " + ethernetInterfaceName);
                 break;
             }
         }
@@ -208,7 +209,7 @@ public class InternetSharingChecker {
                     apIsOn = true;
                     wifiAPInterfaceName = apInterfaceNameFromReceiver;
                     wifiAPAddressesRange = hostAddress.replaceAll("\\.\\d+$", ".0/24");
-                    Log.i(LOG_TAG, "Receiver WiFi AP interface name " + wifiAPInterfaceName);
+                    logi("Receiver WiFi AP interface name " + wifiAPInterfaceName);
                     return;
                 }
             }
@@ -228,7 +229,7 @@ public class InternetSharingChecker {
                     usbTetherOn = true;
                     usbModemInterfaceName = usbModemInterfaceNameFromReceiver;
                     usbModemAddressesRange = hostAddress.replaceAll("\\.\\d+$", ".0/24");
-                    Log.i(LOG_TAG, "Receiver USB interface name " + usbModemInterfaceName);
+                    logi("Receiver USB interface name " + usbModemInterfaceName);
                     return;
                 }
             }
@@ -244,7 +245,7 @@ public class InternetSharingChecker {
             if (hostAddress != null && hostAddress.contains(STANDARD_AP_INTERFACE_RANGE)) {
                 apIsOn = true;
                 wifiAPInterfaceName = networkInterface.getName();
-                Log.i(LOG_TAG, "Standard WiFi AP interface name " + wifiAPInterfaceName);
+                logi("Standard WiFi AP interface name " + wifiAPInterfaceName);
                 return;
             }
         }
@@ -308,7 +309,7 @@ public class InternetSharingChecker {
             if (hostAddress != null && hostAddress.contains(STANDARD_USB_MODEM_INTERFACE_RANGE)) {
                 usbTetherOn = true;
                 usbModemInterfaceName = networkInterface.getName();
-                Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
+                logi("USB Modem interface name " + usbModemInterfaceName);
                 return;
             }
         }
@@ -320,7 +321,7 @@ public class InternetSharingChecker {
             if (interfaceName.matches(name.replace("+", "\\d+"))) {
                 usbTetherOn = true;
                 usbModemInterfaceName = networkInterface.getName();
-                Log.i(LOG_TAG, "USB Modem interface name " + usbModemInterfaceName);
+                logi("USB Modem interface name " + usbModemInterfaceName);
 
                 for (Enumeration<InetAddress> enumIpAddr = networkInterface.getInetAddresses();
                      enumIpAddr.hasMoreElements(); ) {
@@ -329,7 +330,7 @@ public class InternetSharingChecker {
 
                     if (hostAddress != null && isNotIPv6Address(hostAddress) && isInetAddress(hostAddress)) {
                         usbModemAddressesRange = hostAddress;
-                        Log.i(LOG_TAG, "USB Modem addresses range " + usbModemAddressesRange);
+                        logi("USB Modem addresses range " + usbModemAddressesRange);
                         return;
                     }
                 }
@@ -359,7 +360,7 @@ public class InternetSharingChecker {
 
             if (hostAddress != null && hostAddress.contains(STANDARD_VPN_ADDRESS)) {
                 vpnInterfaceName = intf.getName();
-                Log.i(LOG_TAG, "VPN interface name " + vpnInterfaceName);
+                logi("VPN interface name " + vpnInterfaceName);
             }
         }
     }
@@ -394,7 +395,7 @@ public class InternetSharingChecker {
                 }
             }
         } catch (Exception e) {
-            Log.w(LOG_TAG, "InternetSharingChecker checkApOn exception", e);
+            logw("InternetSharingChecker checkApOn exception", e);
         }
 
         return result;

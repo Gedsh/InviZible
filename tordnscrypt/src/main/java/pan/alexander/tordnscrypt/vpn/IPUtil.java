@@ -37,7 +37,7 @@ public class IPUtil {
     public static List<CIDR> toCIDR(InetAddress start, InetAddress end) {
         List<CIDR> listResult = new ArrayList<>();
 
-        //Log.i(LOG_TAG, "toCIDR(" + start.getHostAddress() + "," + end.getHostAddress() + ")");
+        //logi("toCIDR(" + start.getHostAddress() + "," + end.getHostAddress() + ")");
 
         long from = inet2long(start);
         long to = inet2long(end);

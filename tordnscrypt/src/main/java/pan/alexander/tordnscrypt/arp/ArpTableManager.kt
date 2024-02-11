@@ -20,9 +20,9 @@
 package pan.alexander.tordnscrypt.arp
 
 import android.os.Build
-import android.util.Log
 import pan.alexander.tordnscrypt.di.arp.ArpScope
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -78,7 +78,7 @@ class ArpTableManager @Inject constructor(
         try {
             tryUpdateGatewayMacUsingFile(defaultGateway)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ArpScanner getArpStringFromFile exception ${e.message}\n${e.cause}")
+            loge("ArpScanner getArpStringFromFile", e)
         }
     }
 
@@ -97,7 +97,7 @@ class ArpTableManager @Inject constructor(
                         val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
                             .replace(Regex("\\w+?"), "*")
                             .plus(gatewayMac.substring(gatewayMac.length - 6))
-                        Log.i(LOG_TAG, "ArpScanner gatewayMac is $macStared")
+                        logi("ArpScanner gatewayMac is $macStared")
                         savedGatewayMac = gatewayMac
                     }
                     break
@@ -112,7 +112,7 @@ class ArpTableManager @Inject constructor(
         try {
             tryUpdateGatewayMacUsingShell(defaultGateway)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ArpScanner getArpStringFromShell exception ${e.message}\n${e.cause}")
+            loge("ArpScanner getArpStringFromShell", e)
         }
     }
 
@@ -142,7 +142,7 @@ class ArpTableManager @Inject constructor(
                     val macStared = gatewayMac.substring(0..gatewayMac.length - 7)
                         .replace(Regex("\\w+?"), "*")
                         .plus(gatewayMac.substring(gatewayMac.length - 6))
-                    Log.i(LOG_TAG, "ArpScanner gatewayMac is $macStared")
+                    logi("ArpScanner gatewayMac is $macStared")
                     savedGatewayMac = gatewayMac
                 }
 

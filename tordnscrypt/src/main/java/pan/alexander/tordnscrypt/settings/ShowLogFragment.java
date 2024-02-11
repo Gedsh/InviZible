@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +42,7 @@ import java.util.List;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -157,7 +156,7 @@ public class ShowLogFragment extends Fragment implements View.OnClickListener, S
                 });
             }
         } catch (IOException e) {
-            Log.e(LOG_TAG, "DNSCrypt startReadAndRefreshLogs fault " + e.getMessage() + e.getCause());
+            loge("DNSCrypt startReadAndRefreshLogs fault", e);
         }
     }
 
@@ -178,7 +177,7 @@ public class ShowLogFragment extends Fragment implements View.OnClickListener, S
             try(FileWriter fileWriter = new FileWriter(path)) {
                 fileWriter.write(tvLogFileText);
             } catch (IOException e) {
-                Log.e(LOG_TAG, "DNSCrypt ShowLogTimer shorten file fault " + e.getMessage() + e.getCause());
+                loge("DNSCrypt ShowLogTimer shorten file fault", e);
             }
         }
         return tvLogFileText;

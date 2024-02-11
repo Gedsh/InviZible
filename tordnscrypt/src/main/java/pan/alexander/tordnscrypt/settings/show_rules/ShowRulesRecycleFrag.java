@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +58,7 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 
 public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListener {
@@ -304,7 +303,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
             try {
                 list_rules_adapter.remove(position);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ShowRulesRecycleFrag getItemCount exception " + e.getMessage() + " " + e.getCause());
+                loge("ShowRulesRecycleFrag getItemCount", e);
             }
 
 

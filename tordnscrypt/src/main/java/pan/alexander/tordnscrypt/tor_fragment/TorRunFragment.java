@@ -31,7 +31,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.text.Spanned;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -50,7 +49,7 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import com.google.android.material.divider.MaterialDivider;
 
@@ -156,7 +155,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());
+            loge("TorFragment onStop", e);
         }
 
         if (presenter != null) {

@@ -22,13 +22,12 @@ package pan.alexander.tordnscrypt.installer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 public class InstallerReceiver extends BroadcastReceiver {
 
@@ -37,7 +36,7 @@ public class InstallerReceiver extends BroadcastReceiver {
         if (intent != null) {
 
             if (isBroadcastMatch(intent)) {
-                Log.i(LOG_TAG, "InstallerReceiver onReceive");
+                logi("InstallerReceiver onReceive");
             } else {
                 return;
             }
@@ -58,11 +57,11 @@ public class InstallerReceiver extends BroadcastReceiver {
         if (rootCommandsResult.replaceAll("\\W+", "").equals("checkModulesRunning")) {
             Installer.continueInstallation(false);
 
-            Log.i(LOG_TAG, "InstallerReceiver receive " + rootCommandsResult + " continueInstallation");
+            logi("InstallerReceiver receive " + rootCommandsResult + " continueInstallation");
         } else {
             Installer.continueInstallation(true);
 
-            Log.i(LOG_TAG, "InstallerReceiver receive \"" + rootCommandsResult + "\" interruptInstallation");
+            logi("InstallerReceiver receive \"" + rootCommandsResult + "\" interruptInstallation");
         }
     }
 

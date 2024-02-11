@@ -21,12 +21,12 @@ package pan.alexander.tordnscrypt.dialogs
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
-import pan.alexander.tordnscrypt.utils.root.RootExecService
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -77,7 +77,7 @@ class UpdateDefaultBridgesDialog private constructor() {
                             if (fileName.contains("bridges_default.lst") && zipEntry.size != installedBridgesSize) {
                                 FileOutputStream(outputFile).use { outputStream ->
                                     copyData(zipInputStream, outputStream)
-                                    Log.i(RootExecService.LOG_TAG, "Tor default bridges were updated!")
+                                    logi("Tor default bridges were updated!")
 
                                     if (!activity.isFinishing && useDefaultBridges) {
                                         activity.runOnUiThread {
@@ -101,7 +101,7 @@ class UpdateDefaultBridgesDialog private constructor() {
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(RootExecService.LOG_TAG, "UpdateDefaultBridgesDialog updateDefaultBridges exception ${e.message} ${e.cause}")
+                    loge("UpdateDefaultBridgesDialog updateDefaultBridges", e)
                 }
             }
         }

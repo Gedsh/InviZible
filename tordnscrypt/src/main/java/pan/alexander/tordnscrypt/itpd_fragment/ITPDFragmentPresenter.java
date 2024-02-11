@@ -25,7 +25,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
-import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
@@ -59,8 +58,9 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -341,7 +341,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
                 notification.show(fragmentManager, "NotificationDialogFragment");
             }
 
-            Log.e(LOG_TAG, context.getString(R.string.helper_itpd_stopped));
+            loge(context.getString(R.string.helper_itpd_stopped));
         }
 
     }
@@ -442,7 +442,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
             }
 
             FileManager.copyFolderSynchronous(context, certificateSource, certificateDestination);
-            Log.i(LOG_TAG, "Copy i2p certificates");
+            logi("Copy i2p certificates");
         });
     }
 
@@ -454,18 +454,18 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
 
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
-            public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+            public boolean onScale(@NonNull ScaleGestureDetector scaleGestureDetector) {
                 setLogsTextSize(scaleGestureDetector.getScaleFactor());
                 return true;
             }
 
             @Override
-            public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+            public boolean onScaleBegin(@NonNull ScaleGestureDetector scaleGestureDetector) {
                 return true;
             }
 
             @Override
-            public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+            public void onScaleEnd(@NonNull ScaleGestureDetector scaleGestureDetector) {
             }
         });
     }

@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.modules;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -44,11 +43,13 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -116,7 +117,7 @@ public class ModulesKiller {
         try {
             TimeUnit.SECONDS.sleep(sec);
         } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "Modules killer makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
+            loge("Modules killer makeDelay interrupted!", e);
         }
     }
 
@@ -165,12 +166,12 @@ public class ModulesKiller {
                 if (!result) {
 
                     if (rootIsAvailable) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with root method!");
+                        logw("ModulesKiller cannot stop DNSCrypt. Stop with root method!");
                         result = killModule(dnscryptPath, dnsCryptPid, dnsCryptThread, true, "SIGKILL", 10);
                     }
 
                     if (!moduleStartedWithRoot && !result) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop DNSCrypt. Stop with interrupt thread!");
+                        logw("ModulesKiller cannot stop DNSCrypt. Stop with interrupt thread!");
 
                         makeDelay(5);
 
@@ -188,7 +189,7 @@ public class ModulesKiller {
 
                         modulesStatus.setDnsCryptState(RUNNING);
 
-                        Log.e(LOG_TAG, "ModulesKiller cannot stop DNSCrypt!");
+                        loge("ModulesKiller cannot stop DNSCrypt!");
 
                     } else {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
@@ -209,7 +210,7 @@ public class ModulesKiller {
 
                         modulesStatus.setDnsCryptState(RUNNING);
 
-                        Log.e(LOG_TAG, "ModulesKiller cannot stop DNSCrypt!");
+                        loge("ModulesKiller cannot stop DNSCrypt!");
                     } else {
 
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
@@ -221,7 +222,7 @@ public class ModulesKiller {
                     }
                 }
             } catch (Exception e){
-                Log.e(LOG_TAG, "ModulesKiller getDNSCryptKillerRunnable exception " + e.getMessage() + " " + e.getCause());
+                loge("ModulesKiller getDNSCryptKillerRunnable", e);
             } finally {
                 reentrantLock.unlock();
             }
@@ -251,12 +252,12 @@ public class ModulesKiller {
                 if (!result) {
 
                     if (rootIsAvailable) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with root method!");
+                        logw("ModulesKiller cannot stop Tor. Stop with root method!");
                         result = killModule(torPath, torPid, torThread, true, "SIGKILL", 10);
                     }
 
                     if (!moduleStartedWithRoot && !result) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop Tor. Stop with interrupt thread!");
+                        logw("ModulesKiller cannot stop Tor. Stop with interrupt thread!");
 
                         makeDelay(5);
 
@@ -275,7 +276,7 @@ public class ModulesKiller {
 
                         modulesStatus.setTorState(RUNNING);
 
-                        Log.e(LOG_TAG, "ModulesKiller cannot stop Tor!");
+                        loge("ModulesKiller cannot stop Tor!");
 
                     } else {
                         if (modulesStatus.getTorState() != RESTARTING) {
@@ -296,7 +297,7 @@ public class ModulesKiller {
 
                         modulesStatus.setTorState(RUNNING);
 
-                        Log.e(LOG_TAG, "ModulesKiller cannot stop Tor!");
+                        loge("ModulesKiller cannot stop Tor!");
                     } else {
 
                         if (modulesStatus.getTorState() != RESTARTING) {
@@ -308,7 +309,7 @@ public class ModulesKiller {
                     }
                 }
             } catch (Exception e){
-                Log.e(LOG_TAG, "ModulesKiller getTorKillerRunnable exception " + e.getMessage() + " " + e.getCause());
+                loge("ModulesKiller getTorKillerRunnable", e);
             } finally {
                 reentrantLock.unlock();
             }
@@ -337,12 +338,12 @@ public class ModulesKiller {
                 if (!result) {
 
                     if (rootIsAvailable) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with root method!");
+                        logw("ModulesKiller cannot stop I2P. Stop with root method!");
                         result = killModule(itpdPath, itpdPid, itpdThread, true, "SIGKILL", 10);
                     }
 
                     if (!moduleStartedWithRoot && !result) {
-                        Log.w(LOG_TAG, "ModulesKiller cannot stop I2P. Stop with interrupt thread!");
+                        logw("ModulesKiller cannot stop I2P. Stop with interrupt thread!");
 
                         makeDelay(5);
 
@@ -360,7 +361,7 @@ public class ModulesKiller {
 
                         modulesStatus.setItpdState(RUNNING);
 
-                        Log.e(LOG_TAG, "ModulesKiller cannot stop I2P!");
+                        loge("ModulesKiller cannot stop I2P!");
 
                     } else {
                         if (modulesStatus.getItpdState() != RESTARTING) {
@@ -383,7 +384,7 @@ public class ModulesKiller {
 
                     modulesStatus.setItpdState(RUNNING);
 
-                    Log.e(LOG_TAG, "ModulesKiller cannot stop I2P!");
+                    loge("ModulesKiller cannot stop I2P!");
                 } else {
 
                     if (modulesStatus.getItpdState() != RESTARTING) {
@@ -394,7 +395,7 @@ public class ModulesKiller {
                     }
                 }
             } catch (Exception e){
-                Log.e(LOG_TAG, "ModulesKiller getITPDKillerRunnable exception " + e.getMessage() + " " + e.getCause());
+                loge("ModulesKiller getITPDKillerRunnable", e);
             } finally {
                 reentrantLock.unlock();
             }
@@ -428,9 +429,9 @@ public class ModulesKiller {
             }
 
             if (shellResult != null) {
-                Log.i(LOG_TAG, "Kill " + module + " with root: result " + result + "\n" + shellResult);
+                logi("Kill " + module + " with root: result " + result + "\n" + shellResult);
             } else {
-                Log.i(LOG_TAG, "Kill " + module + " with root: result false");
+                logi("Kill " + module + " with root: result false");
             }
         } else {
 
@@ -452,9 +453,9 @@ public class ModulesKiller {
             }
 
             if (shellResult != null) {
-                Log.i(LOG_TAG, "Kill " + module + " without root: result " + result + "\n" + shellResult);
+                logi("Kill " + module + " without root: result " + result + "\n" + shellResult);
             } else {
-                Log.i(LOG_TAG, "Kill " + module + " without root: result " + result);
+                logi("Kill " + module + " without root: result " + result);
             }
         }
 
@@ -470,7 +471,7 @@ public class ModulesKiller {
             }
             makeDelay(delay);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ModulesKiller killWithPid exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesKiller killWithPid", e);
         }
     }
 
@@ -481,7 +482,7 @@ public class ModulesKiller {
             shellResult = Shell.SH.run(commands);
             makeDelay(delay);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Kill " + module + " without root exception " + e.getMessage() + " " + e.getCause());
+            loge("Kill " + module + " without root", e);
         }
         return shellResult;
     }
@@ -492,7 +493,7 @@ public class ModulesKiller {
         try {
             shellResult = Shell.SU.run(commands);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Kill " + module + " with root exception " + e.getMessage() + " " + e.getCause());
+            loge("Kill " + module + " with root", e);
         }
         return shellResult;
     }
@@ -575,7 +576,7 @@ public class ModulesKiller {
                 attempts++;
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Kill with interrupt thread exception " + e.getMessage() + " " + e.getCause());
+            loge("Kill with interrupt thread", e);
         }
 
         return result;

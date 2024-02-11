@@ -28,7 +28,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,8 +58,9 @@ import pan.alexander.tordnscrypt.installer.Installer;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_READ;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_NEWLY_INSTALLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 class RestoreHelper extends Installer {
     private final List<String> requiredFiles = Arrays.asList(
@@ -157,7 +157,7 @@ class RestoreHelper extends Installer {
                 patch.checkPatches(true);
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, "Restore fault " + e.getMessage() + " " + e.getCause());
+                loge("Restore fault", e);
 
                 if (activity instanceof BackupActivity) {
                     try {
@@ -169,7 +169,7 @@ class RestoreHelper extends Installer {
                             fragment.showToast(activity.getString(R.string.wrong));
                         }
                     } catch (Exception ex) {
-                        Log.e(LOG_TAG, "RestoreHelper close progress fault " + ex.getMessage() + " " + ex.getCause());
+                        loge("RestoreHelper close progress fault", e);
                     }
 
                 }
@@ -198,18 +198,18 @@ class RestoreHelper extends Installer {
                 zipEntry = zipInputStream.getNextEntry();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "RestoreHelper isBackupExist exception " + e.getMessage() + " " + e.getCause());
+            loge("RestoreHelper isBackupExist", e);
         }
 
-        if (zipEntries.containsAll(requiredFiles)) {
+        if (new HashSet<>(zipEntries).containsAll(requiredFiles)) {
             return true;
         } else {
             ArrayList<String> copy = new ArrayList<>(requiredFiles);
             copy.removeAll(zipEntries);
-            Log.e(LOG_TAG, "RestoreHelper isBackupExist backup file corrupted " + copy);
+            loge("RestoreHelper isBackupExist backup file corrupted " + copy);
         }
 
-        return zipEntries.containsAll(requiredFiles);
+        return new HashSet<>(zipEntries).containsAll(requiredFiles);
     }
 
     void openFileWithSAF() {
@@ -234,15 +234,13 @@ class RestoreHelper extends Installer {
             return;
         }
 
-        try (FileOutputStream fileOutputStream = new FileOutputStream(cacheDir + "/InvizibleBackup.zip")) {
+        try (inputStream; FileOutputStream fileOutputStream = new FileOutputStream(cacheDir + "/InvizibleBackup.zip")) {
             byte[] buffer = new byte[8 * 1024];
 
             for (int len; (len = inputStream.read(buffer)) > 0; ) {
                 fileOutputStream.write(buffer, 0, len);
             }
             fileOutputStream.flush();
-        } finally {
-            inputStream.close();
         }
     }
 
@@ -272,7 +270,7 @@ class RestoreHelper extends Installer {
         ZipFileManager zipFileManager = new ZipFileManager(pathBackup + "/InvizibleBackup.zip");
         zipFileManager.extractZip(appDataDir);
 
-        Log.i(LOG_TAG, "RestoreHelper: extractBackup OK");
+        logi("RestoreHelper: extractBackup OK");
     }
 
     private void restoreSharedPreferencesFromFile(SharedPreferences sharedPref, String src) throws Exception {
@@ -281,7 +279,7 @@ class RestoreHelper extends Installer {
         loadSharedPreferencesFromFile(editor, src);
         editor.apply();
 
-        Log.i(LOG_TAG, "RestoreHelper: sharedPreferences restore " + src + " OK");
+        logi("RestoreHelper: sharedPreferences restore " + src + " OK");
     }
 
     @SuppressWarnings({"unchecked"})

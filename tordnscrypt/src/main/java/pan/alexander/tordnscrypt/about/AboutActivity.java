@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.about;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,7 +33,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
@@ -138,12 +137,12 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         }
         catch (IOException e)
         {
-            Log.e(LOG_TAG, "AboutActivity exception " + e.getMessage() + " " + e.getCause());
+            loge("AboutActivity", e);
             try {
                 raw.close();
                 byteArrayOutputStream.close();
             } catch (IOException e1) {
-                Log.e(LOG_TAG, "AboutActivity exception " + e1.getMessage() + " " + e1.getCause());
+                loge("AboutActivity", e1);
             }
         }
     }

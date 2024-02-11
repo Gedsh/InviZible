@@ -20,12 +20,11 @@
 package pan.alexander.tordnscrypt.utils
 
 import android.content.Context
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 
 object ThemeUtils {
@@ -46,10 +45,7 @@ object ThemeUtils {
                 "4" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ThemeUtils setDayNightTheme ${e.javaClass} ${e.message}\n${e.cause}"
-            )
+            loge("ThemeUtils setDayNightTheme", e)
         }
     }
 }

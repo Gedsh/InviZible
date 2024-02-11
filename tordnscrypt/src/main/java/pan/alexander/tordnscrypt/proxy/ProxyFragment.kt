@@ -27,7 +27,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,6 +45,7 @@ import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_I2PD
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_TOR
@@ -54,7 +54,6 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.util.concurrent.Future
 import javax.inject.Inject
 
@@ -350,7 +349,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "ProxyFragment checkProxy exception ${e.message} ${e.cause}")
+                loge("ProxyFragment checkProxy", e)
             }
 
         }

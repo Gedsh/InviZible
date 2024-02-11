@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,7 +45,7 @@ import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 import javax.inject.Inject;
 
@@ -318,7 +317,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
                 pleaseWaitDialog.dismiss();
                 pleaseWaitDialog = null;
             } catch (Exception e) {
-                Log.w(LOG_TAG, "PreferencesDNSCryptRelays closePleaseWaitDialog Exception: " + e.getMessage() + " " + e.getCause());
+                logw("PreferencesDNSCryptRelays closePleaseWaitDialog", e);
             }
         }
     }

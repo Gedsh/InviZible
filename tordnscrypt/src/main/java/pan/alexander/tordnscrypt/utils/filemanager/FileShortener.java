@@ -19,14 +19,12 @@
 
 package pan.alexander.tordnscrypt.utils.filemanager;
 
-import android.util.Log;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class FileShortener {
     private final static long TOO_TOO_LONG_FILE_LENGTH = 1024 * 500;
@@ -58,7 +56,7 @@ public class FileShortener {
                 randomAccessFile.setLength(baos.size());
 
             } catch (IOException e) {
-                Log.e(LOG_TAG, "Unable to rewrite too too long file" + filePath + e.getMessage() + " " + e.getCause());
+                loge("Unable to rewrite too too long file" + filePath, e);
             }
         }
     }

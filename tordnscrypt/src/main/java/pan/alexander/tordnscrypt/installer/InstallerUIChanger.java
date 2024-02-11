@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.installer;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.DialogFragment;
 
-import android.util.Log;
 
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
@@ -31,7 +30,7 @@ import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.tor_fragment.TorRunFragment;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 class InstallerUIChanger {
     private MainActivity mainActivity;
@@ -54,7 +53,7 @@ class InstallerUIChanger {
         torRunFragment = mainActivity.getTorRunFragment();
         itpdRunFragment = mainActivity.getITPDRunFragment();
 
-        Log.i(LOG_TAG, "Installer: getViews() OK");
+        logi("Installer: getViews() OK");
     }
 
     Runnable lockDrawerMenu(final boolean lock) {
@@ -62,10 +61,10 @@ class InstallerUIChanger {
            DrawerLayout mDrawerLayout = mainActivity.findViewById(R.id.drawer_layout);
            if (lock) {
                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-               Log.i(LOG_TAG, "Installer: DrawerMenu locked");
+               logi("Installer: DrawerMenu locked");
            } else {
                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-               Log.i(LOG_TAG, "Installer: DrawerMenu unlocked");
+               logi("Installer: DrawerMenu unlocked");
            }
        };
     }
@@ -85,7 +84,7 @@ class InstallerUIChanger {
                 itpdRunFragment.getPresenter().setITPDInstalling();
             }
 
-            Log.i(LOG_TAG, "Installer: setModulesStatusTextInstalling");
+            logi("Installer: setModulesStatusTextInstalling");
         };
     }
 
@@ -127,7 +126,7 @@ class InstallerUIChanger {
                 itpdRunFragment.getPresenter().setITPDStartButtonEnabled(false);
             }
 
-            Log.i(LOG_TAG, "Installer: setModulesStartButtonsDisabled");
+            logi("Installer: setModulesStartButtonsDisabled");
         };
     }
 
@@ -145,7 +144,7 @@ class InstallerUIChanger {
                 itpdRunFragment.getPresenter().setITPDProgressBarIndeterminate(true);
             }
 
-            Log.i(LOG_TAG, "Installer: startModulesProgressBarIndeterminate");
+            logi("Installer: startModulesProgressBarIndeterminate");
         };
     }
 
@@ -163,7 +162,7 @@ class InstallerUIChanger {
                 itpdRunFragment.getPresenter().setITPDProgressBarIndeterminate(false);
             }
 
-            Log.i(LOG_TAG, "Installer: stopModulesProgressBarIndeterminate");
+            logi("Installer: stopModulesProgressBarIndeterminate");
         };
     }
 
@@ -205,7 +204,7 @@ class InstallerUIChanger {
                 itpdRunFragment.getPresenter().setITPDStartButtonEnabled(true);
             }
 
-            Log.i(LOG_TAG, "Installer: setModulesStartButtonsEnabled");
+            logi("Installer: setModulesStartButtonsEnabled");
         };
     }
 
@@ -231,7 +230,7 @@ class InstallerUIChanger {
                 itpdRunFragment.getPresenter().setITPDSomethingWrong();
             }
 
-            Log.i(LOG_TAG, "Installer: setModulesStatusTextError");
+            logi("Installer: setModulesStatusTextError");
         };
     }
 

@@ -23,7 +23,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -63,6 +62,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
@@ -75,7 +75,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRA
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -163,7 +162,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
             } else if (!pathVars.get().getAppVersion().startsWith("g")) {
-                Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
+                loge("PreferencesTorFragment preference is null exception");
             }
         }
 

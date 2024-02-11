@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.utils.zipUtil;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,7 +37,8 @@ import java.util.zip.ZipOutputStream;
 
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 public class ZipFileManager {
     private String zipFile;
@@ -181,7 +181,7 @@ public class ZipFileManager {
         try {
             f = new File(path);
         } catch (Exception e) {
-            Log.w(LOG_TAG, "ZipFileManager File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+            logw("ZipFileManager File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
             FileManager fileManager = new FileManager();
             fileManager.restoreAccess(context, path);
         }
@@ -192,13 +192,13 @@ public class ZipFileManager {
 
         if (f.isFile() && !f.canRead()) {
             if (f.setReadable(true, false)) {
-                Log.i(LOG_TAG, "ZipFileManager take " + path + " success");
+                logi("ZipFileManager take " + path + " success");
             } else {
-                Log.w(LOG_TAG, "ZipFileManager take " + path + " warning");
+                logw("ZipFileManager take " + path + " warning");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, path);
                 if (f.setReadable(true, false)) {
-                    Log.i(LOG_TAG, "ZipFileManager take " + path + " success");
+                    logi("ZipFileManager take " + path + " success");
                 } else {
                     throw new IllegalStateException("ZipFileManager File is no accessible " + path + " error");
                 }

@@ -19,12 +19,10 @@
 
 package pan.alexander.tordnscrypt.di
 
-import android.util.Log
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.*
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Named
 
 @Module
@@ -60,10 +58,7 @@ class CoroutinesModule {
     @Provides
     fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
         return CoroutineExceptionHandler { coroutine, throwable ->
-            Log.e(
-                LOG_TAG,
-                "Coroutine ${coroutine[CoroutineName]} exception ${throwable.message} cause ${throwable.cause}"
-            )
+            loge("Coroutine ${coroutine[CoroutineName]}", throwable)
         }
     }
 

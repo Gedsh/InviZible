@@ -23,7 +23,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -34,8 +33,8 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 
@@ -95,7 +94,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
                 return notificationHelper;
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "NotificationHelper exception " + e.getMessage() + " " + e.getCause());
+            loge("NotificationHelper", e);
         }
 
         return null;

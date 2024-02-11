@@ -33,7 +33,6 @@ import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.os.Looper;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -70,9 +69,10 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVE_ROOT_LOGS;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 
@@ -281,7 +281,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             try {
                 LocalBroadcastManager.getInstance(this).unregisterReceiver(br);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "HelpActivity uregister receiver fault " + e.getMessage() + " " + e.getCause());
+                logw("HelpActivity uregister receiver fault", e);
             }
 
         }
@@ -313,7 +313,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Override
     public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag) {
         if (currentFileOperation == deleteFile && !fileOperationResult) {
-            Log.e(LOG_TAG, "Unable to delete file " + path);
+            loge("Unable to delete file " + path);
         } else if (currentFileOperation == moveBinaryFile) {
 
             if (dialogFragment != null) {

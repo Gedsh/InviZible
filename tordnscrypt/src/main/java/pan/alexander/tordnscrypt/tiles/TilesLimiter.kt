@@ -25,7 +25,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.service.quicksettings.TileService
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.ContextThemeWrapper
@@ -41,7 +40,6 @@ import pan.alexander.tordnscrypt.utils.ThemeUtils
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TILES_LIMIT_DIALOG_NOT_SHOW
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -146,7 +144,7 @@ class TilesLimiter @Inject constructor(
         try {
             service.showDialog(dialog)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "TilesLimiter show dialog ${e.javaClass} ${e.message}\n${e.cause}")
+            loge("TilesLimiter show dialog", e)
         }
     }
 
@@ -179,7 +177,7 @@ class TilesLimiter @Inject constructor(
                 context.startActivity(this)
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "TilesLimiter show activity ${e.javaClass} ${e.message}\n${e.cause}")
+            loge("TilesLimiter show activity", e)
         }
     }
 

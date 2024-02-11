@@ -19,13 +19,12 @@
 
 package pan.alexander.tordnscrypt.settings.firewall
 
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 
 class SaveFirewallChangesDialog : ExtendedDialogFragment() {
@@ -62,7 +61,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
             try {
                 firewallFragment.viewModel.saveFirewallChanges()
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "SaveFirewallChanges exception ${e.message} ${e.cause}")
+                loge("SaveFirewallChanges", e)
             } finally {
                 activity.finish()
             }
@@ -73,7 +72,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
             try {
                 dialog.cancel()
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "SaveFirewallChanges exception ${e.message} ${e.cause}")
+                loge("SaveFirewallChanges", e)
             } finally {
                 activity.finish()
             }

@@ -19,9 +19,8 @@
 
 package pan.alexander.tordnscrypt.data.log_reader
 
-import android.util.Log
 import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.net.HttpURLConnection
 import java.net.URL
@@ -39,7 +38,7 @@ class HtmlReader(val port: Int) {
         try {
             lines = tryReadLines()
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "HtmlReader exception ${e.message} ${e.cause}")
+            loge("HtmlReader", e)
         } finally {
             con?.disconnect()
         }

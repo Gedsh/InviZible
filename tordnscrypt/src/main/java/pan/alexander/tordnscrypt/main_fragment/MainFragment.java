@@ -30,7 +30,6 @@ import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Spanned;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -82,7 +81,7 @@ import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
@@ -237,7 +236,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(itpdFragmentReceiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
+            loge("MainFragment onStop", e);
         }
 
         if (dnsCryptFragmentPresenter != null) {

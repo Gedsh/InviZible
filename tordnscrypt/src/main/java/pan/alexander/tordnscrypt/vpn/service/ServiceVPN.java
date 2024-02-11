@@ -314,7 +314,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     // Called from native code
     @Keep
     public void logPacket(Packet packet) {
-        //Log.i(LOG_TAG, "VPN Log packet " + packet.toString());
+        //logi("VPN Log packet " + packet.toString());
     }
 
     // Called from native code
@@ -547,7 +547,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     // Called from native code
     @Keep
     public void accountUsage(Usage usage) {
-        //Log.i(LOG_TAG, usage.toString());
+        //logi(usage.toString());
     }
 
     @Override

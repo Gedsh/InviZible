@@ -28,7 +28,6 @@ import android.net.Uri;
 import androidx.appcompat.app.AlertDialog;
 
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -43,7 +42,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.Utils;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class Registration {
     private final Activity activity;
@@ -84,7 +83,7 @@ public class Registration {
                 builder.show();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Reg exception " + e.getMessage() + " " + e.getCause());
+            loge("Reg", e);
         }
 
     }

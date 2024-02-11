@@ -25,7 +25,6 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -44,7 +43,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -68,7 +66,8 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 import javax.inject.Inject;
 
@@ -142,8 +141,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 if (isAdded() && notificationHelper != null) {
                     activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
-                Log.e(LOG_TAG, "PreferencesDNSCryptServers fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                        Arrays.toString(e.getStackTrace()));
+                loge("PreferencesDNSCryptServers fault", e, true);
             }
         });
 
@@ -289,7 +287,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 }
             }
         } else {
-            Log.e(LOG_TAG, "PreferencesDNSCryptServers getArguments() nullPointer");
+            loge("PreferencesDNSCryptServers getArguments() nullPointer");
         }
     }
 
@@ -306,7 +304,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 if (dnsServer.isVisibility() && !dnsServerNames.get(i).contains("repeat_server"))
                     list_dns_servers.add(dnsServer);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "Trying to add wrong DNSCrypt server " + e.getMessage() + " "
+                logw("Trying to add wrong DNSCrypt server " + e.getMessage() + " "
                         + dnsServerNames.get(i) + " " + dnsServerDescr.get(i)
                         + " " + dnsServerSDNS);
             }
@@ -362,7 +360,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         try {
             rvDNSServers.setAdapter(dNSServersAdapter);
         } catch (IllegalStateException e) {
-            Log.e(LOG_TAG, "PreferencesDNSCryptServers setAdapter Exception " + e.getMessage());
+            loge("PreferencesDNSCryptServers setAdapter", e);
         }
 
         if (rvDNSServers.getLayoutManager() != null) {
@@ -643,7 +641,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
                         dnsServerItemsOwn.add(item);
                     } catch (Exception e) {
-                        Log.w(LOG_TAG, "Trying to add wrong DNSCrypt server " + e.getMessage() + " "
+                        logw("Trying to add wrong DNSCrypt server " + e.getMessage() + " "
                                 + name + " " + description
                                 + " " + sdns);
                     }

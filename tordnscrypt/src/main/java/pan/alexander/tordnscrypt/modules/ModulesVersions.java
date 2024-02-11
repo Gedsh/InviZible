@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -38,11 +37,11 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -154,7 +153,7 @@ public class ModulesVersions {
         try {
             console = Shell.SH.getConsole();
         } catch (ShellNotFoundException e) {
-            Log.e(LOG_TAG, "ModulesStatus: SH shell not found! " + e.getMessage() + e.getCause());
+            loge("ModulesStatus: SH shell not found!", e);
         }
     }
 

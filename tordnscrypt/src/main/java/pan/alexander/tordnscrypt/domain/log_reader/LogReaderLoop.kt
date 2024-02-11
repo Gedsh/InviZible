@@ -19,7 +19,6 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader
 
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.dnscrypt.DNSCryptInteractor
@@ -27,7 +26,7 @@ import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDHtmlInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.itpd.ITPDInteractor
 import pan.alexander.tordnscrypt.domain.log_reader.tor.TorInteractor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.lang.Exception
 import java.util.concurrent.locks.ReentrantLock
 
@@ -69,10 +68,7 @@ class LogReaderLoop(
         try {
             startLoop(period)
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "LogReaderLoop startLogsParser exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("LogReaderLoop startLogsParser", e, true)
         } finally {
             if (reentrantLock.isHeldByCurrentThread) {
                 reentrantLock.unlock()
@@ -85,7 +81,7 @@ class LogReaderLoop(
             return
         }
 
-        Log.i(LOG_TAG, "LogReaderLoop startLogsParser, period $period sec")
+        logi("LogReaderLoop startLogsParser, period $period sec")
 
         displayPeriod = period
 
@@ -103,7 +99,7 @@ class LogReaderLoop(
             timer = null
             connectionRecordsInteractor.stopConverter(true)
             App.instance.subcomponentsManager.releaseLogReaderScope()
-            Log.i(LOG_TAG, "LogReaderLoop stopLogsParser")
+            logi("LogReaderLoop stopLogsParser")
         } catch (e: Exception) {
             loge("LogReaderLoop stopLogsParser", e)
         } finally {

@@ -25,7 +25,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
@@ -33,8 +32,8 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import javax.inject.Inject
 
 class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
@@ -67,7 +66,7 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
                     try {
                         it.startActivity(this)
                     } catch (e: Exception) {
-                        Log.e(LOG_TAG, "Requesting ignore battery optimization failed ${e.message}")
+                        loge("Requesting ignore battery optimization failed", e)
                     }
                 }
             }

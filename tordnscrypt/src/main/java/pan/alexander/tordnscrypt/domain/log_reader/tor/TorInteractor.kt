@@ -19,11 +19,10 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.tor
 
-import android.util.Log
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
 
@@ -53,10 +52,7 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
         try {
             parseLog()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "TorInteractor parseTorLog exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("TorInteractor parseTorLog", e, true)
         }
     }
 

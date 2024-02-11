@@ -22,11 +22,10 @@ package pan.alexander.tordnscrypt.utils.appexit;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
 
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 public class AppExitDetectService extends Service {
     public AppExitDetectService() {
@@ -50,6 +49,6 @@ public class AppExitDetectService extends Service {
 
         FileManager.removeAllOnFileOperationsListeners();
 
-        Log.i(LOG_TAG, "App Exit");
+        logi("App Exit");
     }
 }
