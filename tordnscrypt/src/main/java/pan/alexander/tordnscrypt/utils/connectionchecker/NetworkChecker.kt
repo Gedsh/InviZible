@@ -28,7 +28,9 @@ import android.os.Build
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import androidx.core.net.ConnectivityManagerCompat
+import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.getConnectivityManager
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.util.SortedMap
 import java.util.TreeMap
@@ -38,6 +40,7 @@ private val MTU_REGEX = Regex("\\d{4}")
 
 @Suppress("deprecation")
 object NetworkChecker {
+
     @JvmStatic
     fun isNetworkAvailable(context: Context): Boolean =
         try {
@@ -49,7 +52,7 @@ object NetworkChecker {
                 )
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && capabilities != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && capabilities != null && !isRootMode()) {
                 hasActiveTransport(capabilities)
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && connectivityManager != null) {
                 connectivityManager.allNetworks.let {
@@ -407,4 +410,8 @@ object NetworkChecker {
 
     private fun Context.getConnectivityManager(): ConnectivityManager? =
         getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+    private fun isRootMode() = ModulesStatus.getInstance().run {
+        mode == OperationMode.ROOT_MODE && !isFixTTL
+    }
 }
