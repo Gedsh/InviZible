@@ -27,4 +27,5 @@ interface ConnectionCheckerInteractor {
     fun setInternetConnectionResult(internetIsAvailable: Boolean)
     fun checkNetworkConnection()
     fun getNetworkConnectionResult(): Boolean
+    fun setNetworkConnectionResult(networkIsAvailable: Boolean)
 }

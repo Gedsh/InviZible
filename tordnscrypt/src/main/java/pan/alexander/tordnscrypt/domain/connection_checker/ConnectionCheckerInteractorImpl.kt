@@ -77,6 +77,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
     @Volatile
     private var networkAvailable = false
+    @Volatile
+    private var networkAvailableViaNetworkCallback = false
 
     @Volatile
     private var task: Job? = null
@@ -107,10 +109,16 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     }
 
     override fun checkNetworkConnection() {
-        networkAvailable = checkerRepository.checkNetworkAvailable()
+        networkAvailable =
+            networkAvailableViaNetworkCallback || checkerRepository.checkNetworkAvailable()
     }
 
-    override fun getNetworkConnectionResult(): Boolean = networkAvailable
+    override fun getNetworkConnectionResult(): Boolean =
+        networkAvailableViaNetworkCallback || networkAvailable
+
+    override fun setNetworkConnectionResult(networkIsAvailable: Boolean) {
+        networkAvailableViaNetworkCallback = networkIsAvailable
+    }
 
     override fun checkInternetConnection() {
         if (checking.compareAndSet(false, true)) {
@@ -223,9 +231,11 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                     CHECK_SOCKET_TIMEOUT_SEC
                 ).isNotEmpty()
             }
+
             Via.DIRECT -> {
                 val proxyAddress =
-                    defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS) ?: LOOPBACK_ADDRESS
+                    defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)
+                        ?: LOOPBACK_ADDRESS
                 val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
                     if (it?.matches(Regex(NUMBER_REGEX)) == true) {
                         it.toInt()

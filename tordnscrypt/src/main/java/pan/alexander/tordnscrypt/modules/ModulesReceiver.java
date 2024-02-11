@@ -53,6 +53,7 @@ import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.VpnService;
 import android.os.Build;
@@ -62,6 +63,7 @@ import android.os.PowerManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -407,9 +409,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onAvailable(@NonNull Network network) {
 
-                last_connected = isNetworkAvailable();
+                if (isVpnNetwork(cm, network)) {
+                    logi("ModulesReceiver available VPN network=" + network + " connected=" + last_connected);
+                    return;
+                } else {
+                    logi("ModulesReceiver available network=" + network + " connected=" + last_connected);
+                }
 
-                logi("ModulesReceiver available network=" + network + " connected=" + last_connected);
+                last_connected = true;
+                setNetworkAvailable(true);
 
                 if (!last_connected) {
                     last_connected = true;
@@ -439,9 +447,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
 
             @Override
-            public void onLinkPropertiesChanged(@NonNull Network network, LinkProperties linkProperties) {
+            public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties linkProperties) {
 
                 logi("ModulesReceiver changed link properties=" + linkProperties);
+
+                if (isVpnNetwork(cm, network)) {
+                    return;
+                }
+
+                setNetworkAvailable(true);
 
                 // Make sure the right DNS servers are being used
                 List<InetAddress> dns = linkProperties.getDnsServers();
@@ -505,7 +519,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
 
-                if (isNetworkAvailable() && (last_connected == null || !last_connected)) {
+                if (isVpnNetwork(cm, network)) {
+                    return;
+                }
+
+                setNetworkAvailable(true);
+
+                if (last_connected == null || !last_connected) {
 
                     last_connected = true;
 
@@ -558,9 +578,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onLost(@NonNull Network network) {
 
-                last_connected = false;
+                if (isVpnNetwork(cm, network)) {
+                    logi("ModulesReceiver lost VPN network=" + network + " connected=false");
+                    return;
+                } else {
+                    logi("ModulesReceiver lost network=" + network + " connected=false");
+                }
 
-                logi("ModulesReceiver lost network=" + network + " connected=false");
+                last_connected = false;
+                setNetworkAvailable(false);
 
                 if (isVpnMode() && !vpnRevoked) {
                     setInternetAvailable(false);
@@ -659,6 +685,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         };
 
         if (cm != null) {
+            setNetworkAvailable(false);
             cm.registerNetworkCallback(builder.build(), nc);
             commonNetworkCallback = nc;
         }
@@ -669,11 +696,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null) {
             cm.unregisterNetworkCallback((ConnectivityManager.NetworkCallback) commonNetworkCallback);
+            setNetworkAvailable(false);
         }
     }
 
     private void listenConnectivityChanges() {
         logi("ModulesReceiver start listening to connectivity changes");
+        setNetworkAvailable(false);
         IntentFilter ifConnectivity = new IntentFilter();
         ifConnectivity.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         context.registerReceiver(this, ifConnectivity);
@@ -786,13 +815,24 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     }
 
     private void connectivityStateChanged(Intent intent) {
+
+        if (intent == null) {
+            return;
+        }
+
         logi("ModulesReceiver connectivityStateChanged received " + intent);
+
+        Object network = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
 
         if (isVpnMode()) {
             // Filter VPN connectivity changes
             int networkType = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE, ConnectivityManager.TYPE_DUMMY);
             if (networkType == ConnectivityManager.TYPE_VPN)
                 return;
+
+            if (network instanceof NetworkInfo) {
+                setNetworkAvailable(((NetworkInfo) network).isConnectedOrConnecting());
+            }
 
             if (vpnRevoked) {
                 resetArpScanner();
@@ -803,10 +843,16 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
 
         } else if (isRootMode()) {
+            if (network instanceof NetworkInfo) {
+                setNetworkAvailable(((NetworkInfo) network).isConnectedOrConnecting());
+            }
             updateIptablesRules(false);
             resetArpScanner();
             checkInternetConnection();
         } else if (isProxyMode()) {
+            if (network instanceof NetworkInfo) {
+                setNetworkAvailable(((NetworkInfo) network).isConnectedOrConnecting());
+            }
             resetArpScanner();
         }
     }
@@ -1114,7 +1160,23 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         return connectionCheckerInteractor.get().getNetworkConnectionResult();
     }
 
+    private void setNetworkAvailable(boolean available) {
+        connectionCheckerInteractor.get().setNetworkConnectionResult(available);
+    }
+
     private boolean isFirewallEnabled() {
         return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private boolean isVpnNetwork(ConnectivityManager connectivityManager, Network network) {
+        if (connectivityManager == null) {
+            return false;
+        }
+        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+        if (capabilities == null) {
+            return false;
+        }
+        return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN);
     }
 }
