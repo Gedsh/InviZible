@@ -1038,3 +1038,8 @@
 * Added DormantClientTimeout option to Tor settings.
 * Updated Tor Snowflake bridge to version v2.9.0.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.8**
+* Updated DNSCrypt to save battery power when the network is unavailable.
+* Further improvements to save battery power when the network is unavailable.
+* Fixes and optimizations.
