@@ -25,17 +25,18 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 class ITPDHtmlInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashMap<Class<*>, WeakReference<OnITPDHtmlUpdatedListener>> = hashMapOf()
+    private val listeners = ConcurrentHashMap<Class<*>, WeakReference<OnITPDHtmlUpdatedListener>>()
     private var parser: ITPDHtmlParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun <T: OnITPDHtmlUpdatedListener> addListener (listener: T?) {
+    fun <T : OnITPDHtmlUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun <T: OnITPDHtmlUpdatedListener> removeListener (listener: T?) {
+    fun <T : OnITPDHtmlUpdatedListener> removeListener(listener: T?) {
         listener?.let { listeners.remove(it.javaClass) }
 
         if (listeners.isEmpty()) {

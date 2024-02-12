@@ -25,17 +25,18 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashMap<Class<*>, WeakReference<OnTorLogUpdatedListener>> = hashMapOf()
+    private val listeners = ConcurrentHashMap<Class<*>, WeakReference<OnTorLogUpdatedListener>>()
     private var parser: TorLogParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun <T: OnTorLogUpdatedListener> addListener (listener: T?) {
+    fun <T : OnTorLogUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[listener.javaClass] = WeakReference(it) }
     }
 
-    fun <T: OnTorLogUpdatedListener> removeListener (listener: T?) {
+    fun <T : OnTorLogUpdatedListener> removeListener(listener: T?) {
 
         listener?.let { listeners.remove(it.javaClass) }
 

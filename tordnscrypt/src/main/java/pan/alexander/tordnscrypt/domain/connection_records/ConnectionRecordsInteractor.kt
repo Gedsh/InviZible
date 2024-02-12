@@ -29,6 +29,7 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -41,8 +42,8 @@ class ConnectionRecordsInteractor @Inject constructor(
     private val defaultPreferences: dagger.Lazy<SharedPreferences>
 ) {
     private val applicationContext = App.instance.applicationContext
-    private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> =
-        hashMapOf()
+    private val listeners =
+        ConcurrentHashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>>()
 
     fun <T : OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
