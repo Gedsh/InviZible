@@ -6,7 +6,7 @@
     <string name="tvITPDNotInstalled">I2P не встановлено</string>
     <string name="swRunOnBoot">Автозавантаження</string>
     <string name="please_wait">Будь ласка зачекайте…</string>
-    <string name="dont_show">Більше не показувати</string>
+    <string name="dont_show">Не запитувати</string>
     <string name="tvDNSInstalled">DNSCrypt встановлено</string>
     <string name="tvDNSInstalling">DNSCrypt встановлюється</string>
     <string name="tvDNSNotInstalled">DNSCrypt не встановлено</string>
@@ -120,7 +120,7 @@
     <string name="pref_common_show_help_summ">Завжди показувати довідкові повідомлення</string>
     <string name="pref_common_shell_control">Увімкнути керування скриптами</string>
     <string name="notification_exclude_bat_optimisation_title">Вимкнути оптимізацію батареї?</string>
-    <string name="pref_common_notification_helper">Будь ласка, виключіть InviZible Pro зі списку оптимізації споживання енергії. Інакше андроїд може завершити DNSCrypt, Tor або I2P будь-якої миті. Для деяких оболонок, наприклад MIUI, можуть знадобитися додаткові налаштування.</string>
+    <string name="pref_common_notification_helper">Будь ласка, виключіть InviZible Pro з оптимізації заряду батареї Android, щоб система не припиняла роботу DNSCrypt, Tor або I2P в будь-яку мить. Деякі спеціальні системи, такі як MIUI, можуть вимагати додаткових кроків.</string>
     <string name="notification_exclude_data_restriction_title">Вимкнути економію трафіку?</string>
     <string name="notification_exclude_data_restriction_message">Дозвольте передачу даних у фоновому режимі та передачу даних у режимі економії енергії. Це важливо задля безперебійної роботи додатку.</string>
     <string name="pref_common_use_busybox">Вибрати BusyBox</string>
@@ -329,7 +329,7 @@
     <string name="update_over_five_times">Ви перевіряли оновлення InviZible Pro більше 5 разів на день. Будь ласка, спробуйте ще раз пізніше.</string>
     <string name="enter_code_button">Увести код</string>
     <string name="only_for_pro">Тільки для PRO-версії</string>
-    <string name="donate_project">Проект InviZible Pro потребує вашої допомоги. Будь ласка, відвідайте сторінку пожертвування або введіть отриманий преміум-код.</string>
+    <string name="donate_project">Проект InviZible Pro потребує вашої допомоги. Будь ласка, відвідайте сторінку пожертвування або введіть отриманий преміум-код, який ви вже отримали.</string>
     <string name="pref_dnscrypt_relays_summ">Віддалені списки доступних реле.</string>
     <string name="vpn_mode_off">Режим VPN вимкнено</string>
     <string name="vpn_mode_active">Режим VPN активовано</string>
