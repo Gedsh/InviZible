@@ -136,14 +136,29 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
 
             waitForOpenCounter--;
             if (waitForOpenCounter > 0) {
-                handler.post(() -> showDialog(manager, tag));
+                handler.post(() -> {
+                    try {
+                        showDialog(manager, tag);
+                    } catch (Exception ex) {
+                        logw("ExtendedDialogFragment show", ex);
+                    }
+                });
             } else if (waitForOpenCounter == 0) {
-                handler.postDelayed(() -> showDialog(manager, tag), 500);
+                handler.postDelayed(() -> {
+                    try {
+                        showDialog(manager, tag);
+                    } catch (Exception ex) {
+                        logw("ExtendedDialogFragment show", ex);
+                    }
+                }, 500);
             }
         }
     }
 
     private void showDialog(FragmentManager manager, String tag) {
+        if (manager.isDestroyed()) {
+            return;
+        }
         manager.executePendingTransactions();
         Fragment fragment = manager.findFragmentByTag(tag);
         if (fragment == null || !fragment.isAdded()) {
