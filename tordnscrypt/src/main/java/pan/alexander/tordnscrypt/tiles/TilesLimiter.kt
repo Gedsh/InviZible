@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.tiles
@@ -25,7 +25,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.service.quicksettings.TileService
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.view.ContextThemeWrapper
@@ -41,7 +40,6 @@ import pan.alexander.tordnscrypt.utils.ThemeUtils
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TILES_LIMIT_DIALOG_NOT_SHOW
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -132,7 +130,7 @@ class TilesLimiter @Inject constructor(
     }
 
     private fun getWarningDialog(context: Context): Dialog =
-        AlertDialog.Builder(ContextThemeWrapper(context, R.style.CustomTileDialogTheme))
+        AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppTheme_Dialog_Alert_Contrast))
             .apply {
                 setTitle(R.string.main_activity_label)
                 setMessage(R.string.tile_dialog_over_three_tiles_message)
@@ -146,12 +144,12 @@ class TilesLimiter @Inject constructor(
         try {
             service.showDialog(dialog)
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "TilesLimiter show dialog ${e.javaClass} ${e.message}\n${e.cause}")
+            loge("TilesLimiter show dialog", e)
         }
     }
 
     private fun getDonateDialogForLite(context: Context): Dialog =
-        AlertDialog.Builder(ContextThemeWrapper(context, R.style.CustomTileDialogTheme))
+        AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppTheme_Dialog_Alert_Contrast))
             .apply {
                 setTitle(R.string.donate)
                 setMessage(R.string.donate_project)
@@ -162,7 +160,7 @@ class TilesLimiter @Inject constructor(
             }.create()
 
     private fun getDonateDialogForGp(context: Context): Dialog =
-        AlertDialog.Builder(ContextThemeWrapper(context, R.style.CustomTileDialogTheme))
+        AlertDialog.Builder(ContextThemeWrapper(context, R.style.Theme_AppTheme_Dialog_Alert_Contrast))
             .apply {
                 setTitle(R.string.premium)
                 setMessage(R.string.buy_premium_gp)
@@ -179,7 +177,7 @@ class TilesLimiter @Inject constructor(
                 context.startActivity(this)
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "TilesLimiter show activity ${e.javaClass} ${e.message}\n${e.cause}")
+            loge("TilesLimiter show activity", e)
         }
     }
 

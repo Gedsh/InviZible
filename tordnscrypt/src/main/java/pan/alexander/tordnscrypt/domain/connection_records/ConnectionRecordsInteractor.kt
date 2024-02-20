@@ -14,20 +14,22 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.SharedPreferences
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.di.logreader.LogReaderScope
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -40,8 +42,8 @@ class ConnectionRecordsInteractor @Inject constructor(
     private val defaultPreferences: dagger.Lazy<SharedPreferences>
 ) {
     private val applicationContext = App.instance.applicationContext
-    private val listeners: HashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>> =
-        hashMapOf()
+    private val listeners =
+        ConcurrentHashMap<Class<*>, WeakReference<OnConnectionRecordsUpdatedListener>>()
 
     fun <T : OnConnectionRecordsUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
@@ -60,10 +62,7 @@ class ConnectionRecordsInteractor @Inject constructor(
         try {
             convert()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "ConnectionRecordsInteractor convertRecords exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("ConnectionRecordsInteractor", e, true)
         }
     }
 
@@ -85,30 +84,25 @@ class ConnectionRecordsInteractor @Inject constructor(
             return
         }
 
-        var rawConnections: List<ConnectionRecord?> = emptyList()
+        var rawConnections: List<ConnectionData> = emptyList()
 
         try {
             rawConnections = connectionRecordsRepository.getRawConnectionRecords()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ConnectionRecordsInteractor getRawConnectionRecords exception ${e.message} ${e.cause}"
-            )
+            loge("ConnectionRecordsInteractor getRawConnectionRecords", e, true)
         }
 
         if (rawConnections.isEmpty()) {
             return
         }
 
-        var connectionRecords: List<ConnectionRecord>? = emptyList()
+        var connectionRecords: List<ConnectionLogEntry>? = emptyList()
 
         try {
             connectionRecords = converter.get().convertRecords(rawConnections)
+                .sortedBy { it.time }
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ConnectionRecordsInteractor convertRecords exception ${e.message} ${e.cause}"
-            )
+            loge("ConnectionRecordsInteractor convertRecords", e, true)
         }
 
         if (connectionRecords?.isEmpty() == true) {
@@ -119,10 +113,7 @@ class ConnectionRecordsInteractor @Inject constructor(
         try {
             records = parser.formatLines(connectionRecords ?: emptyList())
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ConnectionRecordsInteractor formatLines exception ${e.message} ${e.cause}"
-            )
+            loge("ConnectionRecordsInteractor formatLines", e, true)
         }
 
         if (records.isNullOrBlank()) {

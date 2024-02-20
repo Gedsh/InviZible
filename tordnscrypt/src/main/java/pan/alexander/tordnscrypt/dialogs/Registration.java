@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs;
@@ -28,7 +28,6 @@ import android.net.Uri;
 import androidx.appcompat.app.AlertDialog;
 
 import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -43,7 +42,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.Utils;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class Registration {
     private final Activity activity;
@@ -57,7 +56,7 @@ public class Registration {
 
     public void showDonateDialog() {
         try {
-            AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
             builder.setMessage(R.string.donate_project)
                     .setTitle(R.string.donate)
                     .setPositiveButton(R.string.enter_code_button, (dialog, which) -> {
@@ -84,7 +83,7 @@ public class Registration {
                 builder.show();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Reg exception " + e.getMessage() + " " + e.getCause());
+            loge("Reg", e);
         }
 
     }
@@ -105,7 +104,7 @@ public class Registration {
             }
         });
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(R.string.enter_code)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
                     if (activity.isFinishing()) {

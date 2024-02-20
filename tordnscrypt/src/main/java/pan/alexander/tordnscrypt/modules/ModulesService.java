@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
@@ -26,7 +26,6 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
@@ -49,7 +48,6 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
-import pan.alexander.tordnscrypt.patches.Patch;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
@@ -88,13 +86,14 @@ import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.STOP_ARP_S
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
@@ -286,8 +285,6 @@ public class ModulesService extends Service {
 
         new Thread(() -> {
 
-            checkModulesConfigPatches();
-
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousDnsCryptThread = modulesKiller.getDnsCryptThread();
 
@@ -322,14 +319,14 @@ public class ModulesService extends Service {
                 try {
                     dnsCryptThread.setPriority(Thread.NORM_PRIORITY);
                 } catch (SecurityException e) {
-                    Log.e(LOG_TAG, "ModulesService startDNSCrypt exception " + e.getMessage() + " " + e.getCause());
+                    loge("ModulesService startDNSCrypt", e);
                 }
                 dnsCryptThread.start();
 
                 changeDNSCryptStatus(dnsCryptThread);
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, "DnsCrypt was unable to start " + e.getMessage());
+                loge("DnsCrypt was unable to start", e);
                 if (handler != null) {
                     handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
@@ -351,7 +348,7 @@ public class ModulesService extends Service {
                 result = findThreadByName("DNSCryptThread");
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "checkPreviouslyRunningDNSCryptModule exception " + e.getMessage());
+            loge("checkPreviouslyRunningDNSCryptModule exception", e);
         }
 
         return result;
@@ -400,7 +397,7 @@ public class ModulesService extends Service {
                 modulesStatus.setDnsCryptState(STARTING);
 
             } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
+                loge("ModulesService restartDNSCrypt join interrupted!", e);
             }
         }
         return false;
@@ -413,8 +410,6 @@ public class ModulesService extends Service {
         }
 
         new Thread(() -> {
-
-            checkModulesConfigPatches();
 
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousTorThread = modulesKiller.getTorThread();
@@ -450,13 +445,13 @@ public class ModulesService extends Service {
                 try {
                     torThread.setPriority(Thread.NORM_PRIORITY);
                 } catch (SecurityException e) {
-                    Log.e(LOG_TAG, "ModulesService startTor exception " + e.getMessage() + " " + e.getCause());
+                    loge("ModulesService startTor", e);
                 }
                 torThread.start();
 
                 changeTorStatus(torThread);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "Tor was unable to startRefreshModulesStatus: " + e.getMessage());
+                loge("Tor was unable to startRefreshModulesStatus:", e);
                 if (handler != null) {
                     handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
@@ -479,7 +474,7 @@ public class ModulesService extends Service {
                 result = findThreadByName("TorThread");
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "checkPreviouslyRunningTorModule exception " + e.getMessage());
+            loge("checkPreviouslyRunningTorModule", e);
         }
 
         return result;
@@ -533,7 +528,7 @@ public class ModulesService extends Service {
                 modulesStatus.setTorState(STARTING);
 
             } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartTor join interrupted!");
+                loge("ModulesService restartTor join interrupted!", e);
             }
         }
         return false;
@@ -547,8 +542,6 @@ public class ModulesService extends Service {
         }
 
         new Thread(() -> {
-
-            checkModulesConfigPatches();
 
             if (!modulesStatus.isUseModulesWithRoot()) {
                 Thread previousITPDThread = modulesKiller.getItpdThread();
@@ -583,13 +576,13 @@ public class ModulesService extends Service {
                 try {
                     itpdThread.setPriority(Thread.NORM_PRIORITY);
                 } catch (SecurityException e) {
-                    Log.e(LOG_TAG, "ModulesService startITPD exception " + e.getMessage() + " " + e.getCause());
+                    loge("ModulesService startITPD", e);
                 }
                 itpdThread.start();
 
                 changeITPDStatus(itpdThread);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "I2PD was unable to startRefreshModulesStatus: " + e.getMessage());
+                loge("I2PD was unable to startRefreshModulesStatus:", e);
                 if (handler != null) {
                     handler.get().post(() -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
                 }
@@ -611,7 +604,7 @@ public class ModulesService extends Service {
                 result = findThreadByName("ITPDThread");
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "checkPreviouslyRunningITPDModule exception " + e.getMessage());
+            loge("checkPreviouslyRunningITPDModule", e);
         }
 
         return result;
@@ -686,7 +679,7 @@ public class ModulesService extends Service {
                 modulesStatus.setItpdState(STARTING);
 
             } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
+                loge("ModulesService restartITPD join interrupted!", e);
             }
         }
         return false;
@@ -729,7 +722,7 @@ public class ModulesService extends Service {
                 }
 
             } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartDNSCrypt join interrupted!");
+                loge("ModulesService restartDNSCrypt join interrupted!", e);
             }
 
         }).start();
@@ -743,19 +736,14 @@ public class ModulesService extends Service {
 
         new Thread(() -> {
             try {
-                modulesStatus.setTorState(RESTARTING);
-
-                makeDelay(5);
 
                 ModulesRestarter modulesRestarter = new ModulesRestarter();
                 modulesRestarter.getTorRestarterRunnable(this).run();
 
-                modulesStatus.setTorState(RUNNING);
-
                 checkInternetConnection();
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService restartTor exception " + e.getMessage() + " " + e.getCause());
+                loge("ModulesService restartTor", e);
             }
 
         }).start();
@@ -785,7 +773,7 @@ public class ModulesService extends Service {
                 }
 
             } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartTorFull join interrupted!");
+                loge("ModulesService restartTorFull join interrupted!", e);
             }
 
         }).start();
@@ -817,7 +805,7 @@ public class ModulesService extends Service {
                 }
 
             } catch (InterruptedException e) {
-                Log.e(LOG_TAG, "ModulesService restartITPD join interrupted!");
+                loge("ModulesService restartITPD join interrupted!", e);
             }
 
         }).start();
@@ -834,7 +822,7 @@ public class ModulesService extends Service {
             systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ModulesService dismissNotification exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesService dismissNotification exception", e);
         }
 
         stopSelf(startId);
@@ -858,7 +846,7 @@ public class ModulesService extends Service {
 
             scheduledFuture = checkModulesThreadsTimer.scheduleWithFixedDelay(checkModulesStateTask, 1, timerPeriod, TimeUnit.MILLISECONDS);
 
-            Log.i(LOG_TAG, "ModulesService speedUPTimer");
+            logi("ModulesService speedUPTimer");
         }
     }
 
@@ -874,7 +862,7 @@ public class ModulesService extends Service {
 
             scheduledFuture = checkModulesThreadsTimer.scheduleWithFixedDelay(checkModulesStateTask, 1, timerPeriod, TimeUnit.MILLISECONDS);
 
-            Log.i(LOG_TAG, "ModulesService slowDOWNTimer");
+            logi("ModulesService slowDOWNTimer");
         }
     }
 
@@ -967,7 +955,7 @@ public class ModulesService extends Service {
                 systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
                 stopForeground(true);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesService stopService exception " + e.getMessage() + " " + e.getCause());
+                loge("ModulesService stopService", e);
             }
 
         }
@@ -1045,7 +1033,7 @@ public class ModulesService extends Service {
             systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ModulesService stopModulesService exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesService stopModulesService", e);
         }
 
         stopSelf();
@@ -1057,7 +1045,7 @@ public class ModulesService extends Service {
             systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground1 exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesService stopModulesServiceForeground1", e);
         }
     }
 
@@ -1067,7 +1055,7 @@ public class ModulesService extends Service {
             systemNotificationManager.cancel(DEFAULT_NOTIFICATION_ID);
             stopForeground(true);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ModulesService stopModulesServiceForeground2 exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesService stopModulesServiceForeground2", e);
         }
 
         stopSelf(startId);
@@ -1091,7 +1079,7 @@ public class ModulesService extends Service {
         try {
             modulesReceiver.get().unregisterReceivers();
         } catch (Exception e) {
-            Log.i(LOG_TAG, "ModulesService unregister receiver exception " + e.getMessage());
+            logw("ModulesService unregister receiver", e);
         }
     }
 
@@ -1099,7 +1087,7 @@ public class ModulesService extends Service {
         try {
             TimeUnit.SECONDS.sleep(sec);
         } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "ModulesService makeDelay interrupted! " + e.getMessage() + " " + e.getCause());
+            loge("ModulesService makeDelay interrupted!", e);
         }
     }
 
@@ -1115,9 +1103,9 @@ public class ModulesService extends Service {
             if (thread != null) {
                 name = thread.getName();
             }
-            //Log.i(LOG_TAG, "Current threads " + name);
+            //logi("Current threads " + name);
             if (name.equals(threadName)) {
-                Log.i(LOG_TAG, "Found old module thread " + name);
+                logi("Found old module thread " + name);
                 return thread;
             }
         }
@@ -1142,13 +1130,13 @@ public class ModulesService extends Service {
             File f = new File(pathVars.get().getAppDataDir() + "/logs");
 
             if (f.mkdirs() && f.setReadable(true) && f.setWritable(true))
-                Log.i(LOG_TAG, "log dir created");
+                logi("log dir created");
 
             PrintWriter writer = new PrintWriter(logFilePath, "UTF-8");
             writer.println(text);
             writer.close();
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Unable to create dnsCrypt log file " + e.getMessage());
+            loge("Unable to create dnsCrypt log file", e);
         }
     }
 
@@ -1173,11 +1161,6 @@ public class ModulesService extends Service {
         if (checkModulesStateTask != null) {
             checkModulesStateTask.clearIptablesCommandHash();
         }
-    }
-
-    private void checkModulesConfigPatches() {
-        Patch patch = new Patch(this, pathVars.get());
-        patch.checkPatches(false);
     }
 
     private void stopRootExecServiceIfRequired() {

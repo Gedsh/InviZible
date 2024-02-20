@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt;
@@ -39,7 +39,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import androidx.annotation.WorkerThread;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -86,18 +85,19 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManage
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.MODULE_NAME_ARG;
-import static pan.alexander.tordnscrypt.utils.Utils.hideKeyboard;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AGREEMENT_ACCEPTED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CRASH_REPORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.NOTIFICATIONS_ARE_BLOCKED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.NOTIFICATIONS_REQUEST_BLOCKED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_READY_PREF;
@@ -111,7 +111,9 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import javax.inject.Inject;
 
 
-public class TopFragment extends Fragment {
+public class TopFragment extends Fragment
+        implements NotificationPermissionDialog.NotificationPermissionDialogListener,
+        AgreementDialog.OnAgreementAcceptedListener {
 
     public volatile static String DNSCryptVersion = "";
     public volatile static String TorVersion = "";
@@ -221,9 +223,8 @@ public class TopFragment extends Fragment {
                 ModulesAux.switchModes(rootIsAvailable, runModulesWithRoot, mode);
             }
 
-            if (PathVars.isModulesInstalled(preferences)
-                    && pathVars.get().getAppVersion().endsWith("p")) {
-                checkAgreement(activity);
+            if (PathVars.isModulesInstalled(preferences)) {
+                checkAgreement();
             }
 
             logsTextSize = preferences.getFloatPreference("LogsTextSize");
@@ -240,8 +241,9 @@ public class TopFragment extends Fragment {
 
         if (Build.VERSION.SDK_INT >= 33
                 && activity != null
-                && !preferenceRepository.get().getBoolPreference(NOTIFICATIONS_ARE_BLOCKED)) {
-            checkNotificationsPermission(activity);
+                && !preferenceRepository.get().getBoolPreference(NOTIFICATIONS_REQUEST_BLOCKED)
+                && notificationPermissionManager.get().isNotificationPermissionRequestRequired(activity)) {
+            registerNotificationsPermissionListener(activity);
         }
 
         if (isInitTasksRequired() || isRootCheckRequired()) {
@@ -467,18 +469,19 @@ public class TopFragment extends Fragment {
 
                 stopInstallationTimer();
 
-                if (checkCrashReport(activity)) {
-                    return;
+                if (!pathVars.get().getAppVersion().endsWith("p")
+                        && !preferenceRepository.get().getStringPreference(CRASH_REPORT).isEmpty()) {
+                    sendCrashReport(activity);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        && !preferenceRepository.get().getBoolPreference(NOTIFICATIONS_REQUEST_BLOCKED)
+                        && isAgreementAccepted()
+                        && notificationPermissionManager.get().isNotificationPermissionRequestRequired(activity)) {
+                    requestNotificationPermissions();
+                } else {
+                    showUpdateResultMessage(activity);
+                    checkUpdates(activity);
+                    showDonDialog(activity);
                 }
-
-                ////////////////////Show message about previous update attempt///////////////////////
-                showUpdateResultMessage(activity);
-
-                ////////////////////////////CHECK UPDATES///////////////////////////////////////////
-                checkUpdates(activity);
-
-                /////////////////////////////DONATION////////////////////////////////////////////
-                showDonDialog(activity);
 
                 checkInternetConnectionIfRequired();
             }
@@ -491,10 +494,8 @@ public class TopFragment extends Fragment {
     }
 
     @RequiresApi(33)
-    private void checkNotificationsPermission(FragmentActivity activity) {
-        NotificationPermissionManager manager = notificationPermissionManager.get();
-        ActivityResultLauncher<String> launcher = manager
-                .getNotificationPermissionLauncher(activity);
+    private void registerNotificationsPermissionListener(FragmentActivity activity) {
+        notificationPermissionManager.get().getNotificationPermissionLauncher(activity);
 
         NotificationPermissionDialog previousDialog =
                 (NotificationPermissionDialog) activity.getSupportFragmentManager()
@@ -504,7 +505,7 @@ public class TopFragment extends Fragment {
                 new NotificationPermissionManager.OnPermissionResultListener() {
                     @Override
                     public void onAllowed() {
-                        preferenceRepository.get().setBoolPreference(NOTIFICATIONS_ARE_BLOCKED, false);
+                        preferenceRepository.get().setBoolPreference(NOTIFICATIONS_REQUEST_BLOCKED, false);
                         logi("Notifications are allowed");
                     }
 
@@ -512,31 +513,22 @@ public class TopFragment extends Fragment {
                     public void onShowRationale() {
                         if (previousDialog == null && isAdded() && !isStateSaved()) {
                             NotificationPermissionDialog dialog = new NotificationPermissionDialog();
-                            dialog.setManager(manager);
-                            dialog.setLauncher(launcher);
                             dialog.show(getParentFragmentManager(), "NotificationsPermission");
                         }
                     }
 
                     @Override
                     public void onDenied() {
-                        preferenceRepository.get().setBoolPreference(NOTIFICATIONS_ARE_BLOCKED, true);
+                        preferenceRepository.get().setBoolPreference(NOTIFICATIONS_REQUEST_BLOCKED, true);
                         logw("Notifications are blocked");
                     }
                 };
 
-        manager.setOnPermissionResultListener(listener);
-
-        if (!activity.isFinishing() && previousDialog != null) {
-            previousDialog.setManager(manager);
-            previousDialog.setLauncher(launcher);
-        }
-
-        requestNotificationPermissions(manager);
+        notificationPermissionManager.get().setOnPermissionResultListener(listener);
     }
 
     @RequiresApi(33)
-    private void requestNotificationPermissions(NotificationPermissionManager manager) {
+    private void requestNotificationPermissions() {
         if (handler == null) {
             return;
         }
@@ -547,14 +539,35 @@ public class TopFragment extends Fragment {
                 return;
 
             if (isAdded() && !isStateSaved()) {
-                manager.requestNotificationPermission(activity);
+                notificationPermissionManager.get().requestNotificationPermission(activity);
             }
-        }, 5500);
+        }, 1000);
+    }
+
+    @Override
+    public void notificationPermissionDialogOkPressed() {
+        ActivityResultLauncher<String> launcher = notificationPermissionManager.get().getLauncher();
+        if (isAdded() && !isStateSaved() && launcher != null) {
+            notificationPermissionManager.get().launchNotificationPermissionSystemDialog(launcher);
+        }
+    }
+
+    @Override
+    public void notificationPermissionDialogDoNotShowPressed() {
+        NotificationPermissionManager.OnPermissionResultListener listener =
+        notificationPermissionManager.get().getOnPermissionResultListener();
+        if (listener != null) {
+            listener.onDenied();
+        }
     }
 
     private void showDonDialog(Activity activity) {
 
-        if (!initTasksRequired || activity == null || activity.isFinishing() || isStateSaved()) {
+        if (!initTasksRequired
+                || activity == null
+                || activity.isFinishing()
+                || isStateSaved()
+                || !isAgreementAccepted()) {
             return;
         }
 
@@ -568,10 +581,6 @@ public class TopFragment extends Fragment {
                 }, 5000);
             }
         } else if (pathVars.get().getAppVersion().endsWith("p") && isAdded()) {
-
-            if (!preferenceRepository.get().getBoolPreference("Agreement")) {
-                return;
-            }
 
             if (handler != null) {
                 handler.postDelayed(() -> {
@@ -717,25 +726,19 @@ public class TopFragment extends Fragment {
         }
     }
 
-    private boolean checkCrashReport(Activity activity) {
+    private void sendCrashReport(Activity activity) {
+
         if (activity == null || activity.isFinishing()) {
-            return true;
+            return;
         }
 
-        if (pathVars.get().getAppVersion().endsWith("p")) {
-            return false;
-        }
-
-        String crash = preferenceRepository.get().getStringPreference("CrashReport");
+        String crash = preferenceRepository.get().getStringPreference(CRASH_REPORT);
         if (!crash.isEmpty()) {
             SendCrashReport crashReport = SendCrashReport.Companion.getCrashReportDialog(activity);
             if (crashReport != null && isAdded() && !isStateSaved()) {
                 crashReport.show(getParentFragmentManager(), "SendCrashReport");
             }
-            return true;
         }
-
-        return false;
     }
 
     public void checkUpdates(Context context) {
@@ -975,13 +978,33 @@ public class TopFragment extends Fragment {
 
     }
 
-    private void checkAgreement(Context context) {
-        if (!preferenceRepository.get().getBoolPreference("Agreement")) {
-            AlertDialog.Builder agreementDialogBuilder = AgreementDialog.getDialogBuilder(context);
-            if (agreementDialogBuilder != null && !isStateSaved()) {
-                agreementDialogBuilder.show();
+    private void checkAgreement() {
+        if (!isAgreementAccepted()) {
+            DialogFragment dialog = AgreementDialog.newInstance();
+            dialog.setCancelable(false);
+            if (isAdded() && !isStateSaved()) {
+                dialog.show(getParentFragmentManager(), "AgreementDialog");
             }
         }
+    }
+
+    @Override
+    public void onAgreementAccepted() {
+
+        FragmentActivity activity = getActivity();
+        if (activity == null) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && !preferenceRepository.get().getBoolPreference(NOTIFICATIONS_REQUEST_BLOCKED)
+                && notificationPermissionManager.get().isNotificationPermissionRequestRequired(activity)) {
+            requestNotificationPermissions();
+        }
+    }
+
+    private boolean isAgreementAccepted() {
+        return preferenceRepository.get().getBoolPreference(AGREEMENT_ACCEPTED);
     }
 
     private static void initTimer() {

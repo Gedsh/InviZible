@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.wakelock;
@@ -23,11 +23,10 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
-import android.util.Log;
 
 import org.jetbrains.annotations.NotNull;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 public class WakeLocksManager {
 
@@ -56,7 +55,7 @@ public class WakeLocksManager {
             if (powerWakeLock == null && pm != null) {
                 powerWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
                 powerWakeLock.acquire();
-                Log.i(LOG_TAG, "WakeLocksManager Power wake lock is acquired");
+                logi("WakeLocksManager Power wake lock is acquired");
             }
         } else {
             stopPowerWakelock();
@@ -69,7 +68,7 @@ public class WakeLocksManager {
             if (wifiWakeLock == null && wm != null) {
                 wifiWakeLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF , "InviZible::WifiLock");
                 wifiWakeLock.acquire();
-                Log.i(LOG_TAG, "WakeLocksManager WiFi wake lock is acquired");
+                logi("WakeLocksManager WiFi wake lock is acquired");
             }
         } else {
             stopWiFiLock();
@@ -80,7 +79,7 @@ public class WakeLocksManager {
         if (powerWakeLock != null && powerWakeLock.isHeld()) {
             powerWakeLock.release();
             powerWakeLock = null;
-            Log.i(LOG_TAG, "WakeLocksManager Power wake lock is released");
+            logi("WakeLocksManager Power wake lock is released");
         }
     }
 
@@ -88,7 +87,7 @@ public class WakeLocksManager {
         if (wifiWakeLock != null && wifiWakeLock.isHeld()) {
             wifiWakeLock.release();
             wifiWakeLock = null;
-            Log.i(LOG_TAG, "WakeLocksManager WiFi wake lock is released");
+            logi("WakeLocksManager WiFi wake lock is released");
         }
     }
 

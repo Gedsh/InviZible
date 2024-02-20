@@ -14,10 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
+
+import static android.content.Context.CONNECTIVITY_SERVICE;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -33,6 +35,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,7 +57,6 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Rule;
 
-import static android.content.Context.CONNECTIVITY_SERVICE;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -141,20 +143,10 @@ public class ServiceVPNHandler extends Handler {
         try {
             if (cmd != null) {
                 switch (cmd) {
-                    case START:
-                        start();
-                        break;
-
-                    case RELOAD:
-                        reload();
-                        break;
-
-                    case STOP:
-                        stop();
-                        break;
-
-                    default:
-                        loge("VPN Handler Unknown command=" + cmd);
+                    case START -> start();
+                    case RELOAD -> reload();
+                    case STOP -> stop();
+                    default -> loge("VPN Handler Unknown command=" + cmd);
                 }
             }
 
@@ -255,6 +247,11 @@ public class ServiceVPNHandler extends Handler {
             if (serviceVPN.vpn != null && builder.equals(last_builder)) {
                 logi("VPN Handler Native restart");
                 serviceVPN.stopNative();
+
+                // Set underlying network
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    setUnderlyingNetwork();
+                }
 
             } else {
                 last_builder = builder;
@@ -378,19 +375,8 @@ public class ServiceVPNHandler extends Handler {
             ParcelFileDescriptor pfd = builder.establish();
 
             // Set underlying network
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && serviceVPN != null) {
-                ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
-                Network active = (cm == null ? null : cm.getActiveNetwork());
-                if (active != null) {
-                    logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(active));
-                    serviceVPN.setUnderlyingNetworks(new Network[]{active});
-                } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
-                    logi("VPN Handler Setting underlying network=empty");
-                    serviceVPN.setUnderlyingNetworks(new Network[]{});
-                } else {
-                    logi("VPN Handler Setting underlying network=default");
-                    serviceVPN.setUnderlyingNetworks(null);
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+               setUnderlyingNetwork();
             }
 
             return pfd;
@@ -399,6 +385,29 @@ public class ServiceVPNHandler extends Handler {
         } catch (Throwable ex) {
             loge("ServiceVPNHandler startVPN", ex, true);
             return null;
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void setUnderlyingNetwork() {
+
+        if (serviceVPN == null) {
+            return;
+        }
+
+        ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
+        Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
+        if (networks.length > 0) {
+            serviceVPN.setUnderlyingNetworks(networks);
+            for (Network network: networks) {
+                logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(network));
+            }
+        } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
+            logi("VPN Handler Setting underlying network=empty");
+            serviceVPN.setUnderlyingNetworks(new Network[]{});
+        } else {
+            logi("VPN Handler Setting underlying network=default");
+            serviceVPN.setUnderlyingNetworks(null);
         }
     }
 

@@ -14,22 +14,27 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.text.format.DateUtils
+import androidx.core.content.ContextCompat
+import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketLogEntry
 import pan.alexander.tordnscrypt.iptables.Tethering
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants
-import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
-import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Named
@@ -40,8 +45,7 @@ class ConnectionRecordsParser @Inject constructor(
     private val applicationContext: Context,
     private val installedAppNamesStorage: dagger.Lazy<InstalledAppNamesStorage>,
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
-    defaultPreferences: SharedPreferences,
-    private val pathVars: dagger.Lazy<PathVars>
+    defaultPreferences: SharedPreferences
 ) {
 
     private val modulesStatus = ModulesStatus.getInstance()
@@ -51,7 +55,27 @@ class ConnectionRecordsParser @Inject constructor(
             Constants.STANDARD_ADDRESS_LOCAL_PC
         ) ?: Constants.STANDARD_ADDRESS_LOCAL_PC
 
-    fun formatLines(connectionRecords: List<ConnectionRecord>): String {
+    private val liveLogEntryBlocked by lazy {
+        ContextCompat.getColor(applicationContext, R.color.liveLogEntryBlocked)
+    }
+    private val liveLogEntryNoDns by lazy {
+        ContextCompat.getColor(applicationContext, R.color.liveLogEntryNoDns)
+    }
+    private val liveLogEntryDnsUnused by lazy {
+        ContextCompat.getColor(applicationContext, R.color.liveLogEntryDnsUnused)
+    }
+    private val liveLogEntryDnsUsed by lazy {
+        ContextCompat.getColor(applicationContext, R.color.liveLogEntryDnsUsed)
+    }
+
+    private val dateFormatToday by lazy {
+        SimpleDateFormat("HH:mm:ss", Locale.ROOT)
+    }
+    private val dateFormat by lazy {
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT)
+    }
+
+    fun formatLines(connectionRecords: List<ConnectionLogEntry>): String {
 
         val fixTTL =
             modulesStatus.isFixTTL && modulesStatus.mode == OperationMode.ROOT_MODE && !modulesStatus.isUseModulesWithRoot
@@ -86,73 +110,84 @@ class ConnectionRecordsParser @Inject constructor(
 
             val record = connectionRecords[i]
 
-            if (pathVars.get().appVersion.startsWith("g") && record.blocked && record.blockedByIpv6
-                /*remove artifacts*/
-                || (record.aName.trim() == "=" || record.qName.trim() == "=")
-                && record.uid == -1000
-            ) {
+            if (record is DnsLogEntry && !record.visible) {
                 continue
             }
 
             if (record.blocked) {
-                lines.append("<font color=#f08080>")
-            } else if (record.uid != -1000 && record.daddr.trim().isNotEmpty()) {
-                lines.append("<font color=#E7AD42>")
-            } else if (record.unused) {
-                lines.append("<font color=#9e9e9e>")
-            } else {
-                lines.append("<font color=#009688>")
+                lines.append("<font color=$liveLogEntryBlocked>")
+            } else if (record is PacketLogEntry && record.dnsLogEntry == null) {
+                lines.append("<font color=$liveLogEntryNoDns>")
+            } else if (record is DnsLogEntry) {
+                lines.append("<font color=$liveLogEntryDnsUnused>")
+            } else if (record is PacketLogEntry) {
+                lines.append("<font color=$liveLogEntryDnsUsed>")
             }
 
-            if (record.uid != -1000) {
+            lines.append("[")
+            if (DateUtils.isToday(record.time)) {
+                lines.append(dateFormatToday.format(record.time))
+            } else {
+                lines.append(dateFormat.format(record.time))
+            }
+            lines.append("] ")
+
+            if (record is PacketLogEntry) {
                 var appName = installedAppNamesStorage.get().getAppNameByUid(record.uid) ?: ""
                 if (appName.isEmpty() || record.uid == 1000) {
                     appName =
                         applicationContext.packageManager.getNameForUid(record.uid) ?: "Undefined"
                 }
 
+                val protocol = when (record.protocol) {
+                    6 -> " (TCP)"
+                    17 -> " (UDP)"
+                    1 -> " (ICMPv4)"
+                    58 -> " (ICMPv6)"
+                    else -> ""
+                }
+
                 if (Tethering.apIsOn && fixTTL && record.saddr.contains(apAddresses)) {
-                    lines.append("<b>").append("WiFi").append("</b>").append(" -> ")
+                    lines.append("<b>").append("WiFi").append("</b>")
+                        .append(protocol).append(" -> ")
                 } else if (Tethering.usbTetherOn && fixTTL && record.saddr.contains(usbAddresses)) {
-                    lines.append("<b>").append("USB").append("</b>").append(" -> ")
+                    lines.append("<b>").append("USB").append("</b>")
+                        .append(protocol).append(" -> ")
                 } else if (Tethering.ethernetOn && fixTTL && record.saddr.contains(
                         localEthernetDeviceAddress
                     )
                 ) {
-                    lines.append("<b>").append("LAN").append("</b>").append(" -> ")
+                    lines.append("<b>").append("LAN").append("</b>")
+                        .append(protocol).append(" -> ")
                 } else if (appName.isNotEmpty()) {
-                    lines.append("<b>").append(appName).append("</b>").append(" -> ")
+                    lines.append("<b>").append(appName).append("</b>")
+                        .append(protocol).append(" -> ")
                 } else {
                     lines.append("<b>").append("Unknown UID").append(record.uid).append("</b>")
-                        .append(" -> ")
+                        .append(protocol).append(" -> ")
                 }
-            }
 
-            if (record.aName.trim().isNotEmpty()) {
-                lines.append(record.aName.lowercase(Locale.ROOT))
+                record.dnsLogEntry?.let {
+                    lines.append(it.domainsChain.joinToString(" -> "))
+                        .append(" -> ")
+                        .append(record.daddr)
+                } ?: record.reverseDns?.let {
+                    lines.append(it).append(" -> ").append(record.daddr)
+                } ?: run {
+                    lines.append(record.daddr)
+                }
+            } else if (record is DnsLogEntry) {
+                if (record.domainsChain.isNotEmpty()) {
+                    lines.append(record.domainsChain.joinToString(" -> "))
+                }
                 if (record.blocked && record.blockedByIpv6) {
                     lines.append(" ipv6")
                 }
-            } else if (record.qName.trim().isNotEmpty()) {
-                lines.append(record.qName.lowercase(Locale.ROOT))
+                if (!record.blocked && record.ips.isNotEmpty()) {
+                    lines.append(" -> ").append(record.ips.joinToString(", "))
+                }
             }
 
-            if (record.cName.trim().isNotEmpty() && record.uid == -1000) {
-                lines.append(" -> ").append(record.cName.lowercase(Locale.ROOT))
-            }
-            if (record.daddr.trim().isNotEmpty()
-                && (!record.daddr.contains(META_ADDRESS)
-                        && !record.daddr.contains(LOOPBACK_ADDRESS)
-                        || record.uid != -1000)
-            ) {
-                if (record.uid == -1000) {
-                    lines.append(" -> ")
-                }
-                if (record.uid != -1000 && record.reverseDNS.isNotEmpty()) {
-                    lines.append(record.reverseDNS).append(" -> ")
-                }
-                lines.append(record.daddr)
-            }
             lines.append("</font>")
 
             if (i < connectionRecords.size - 1) {

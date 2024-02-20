@@ -22,4 +22,6 @@
     <dimen name="firewall_item_app_name_margin">4dp</dimen>
     <dimen name="firewall_chip_group_padding">4dp</dimen>
     <dimen name="firewall_progress_bar_margin">10dp</dimen>
+    <!-- Dialog-->
+    <dimen name="dialog_corner_radius">10dp</dimen>
 </resources>

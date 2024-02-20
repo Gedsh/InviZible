@@ -14,29 +14,30 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.log_reader.dnscrypt
 
-import android.util.Log
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashMap<Class<*>, WeakReference<OnDNSCryptLogUpdatedListener>> = hashMapOf()
+    private val listeners =
+        ConcurrentHashMap<Class<*>, WeakReference<OnDNSCryptLogUpdatedListener>>()
     private var parser: DNSCryptLogParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun <T: OnDNSCryptLogUpdatedListener> addListener(listener: T?) {
+    fun <T : OnDNSCryptLogUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun <T: OnDNSCryptLogUpdatedListener> removeListener(listener: T?) {
+    fun <T : OnDNSCryptLogUpdatedListener> removeListener(listener: T?) {
         listener?.let { listeners.remove(it.javaClass) }
 
         if (listeners.isEmpty()) {
@@ -52,10 +53,7 @@ class DNSCryptInteractor(private val modulesLogRepository: ModulesLogRepository)
         try {
             parseLog()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "DNSCryptInteractor parseDNSCryptLog exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("DNSCryptInteractor parseDNSCryptLog", e, true)
         }
     }
 

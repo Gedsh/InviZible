@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt;
@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.core.view.GravityCompat;
@@ -173,6 +174,7 @@ public class MainActivity extends LangAppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setBackground(ContextCompat.getDrawable(this, R.drawable.toolbar_shape));
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -432,7 +434,7 @@ public class MainActivity extends LangAppCompatActivity
             if (mitmDetected) {
                 rootIcon.setIcon(R.drawable.ic_arp_attack_notification);
             } else if (mode == ROOT_MODE && fixTTL) {
-                rootIcon.setIcon(R.drawable.ic_ttl_main);
+                rootIcon.setIcon(R.drawable.ic_ttl);
             } else if (mode == ROOT_MODE && busyBoxIsAvailable) {
                 rootIcon.setIcon(R.drawable.ic_done_all_white_24dp);
             } else if (mode == ROOT_MODE) {
@@ -721,7 +723,7 @@ public class MainActivity extends LangAppCompatActivity
 
 
     private void childLock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_lock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);
@@ -764,7 +766,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void childUnlock(final MenuItem item) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.action_mode_child_lock);
         builder.setMessage(R.string.action_mode_dialog_message_unlock);
         builder.setIcon(R.drawable.ic_lock_outline_blue_24dp);

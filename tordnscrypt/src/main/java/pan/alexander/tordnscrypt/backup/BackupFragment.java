@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.backup;
@@ -420,7 +420,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     }
 
     private void showAreYouSureDialog(Activity activity, int title, Runnable action) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(title);
         builder.setMessage(R.string.areYouSure);
         builder.setPositiveButton(R.string.ok, (dialog, which) -> action.run());

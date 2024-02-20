@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.tor_fragment;
@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.Html;
 import android.text.Spanned;
-import android.util.Log;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
@@ -32,8 +31,6 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
-
-import java.util.Arrays;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -60,8 +57,9 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -325,7 +323,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                 notification.show(fragmentManager, "NotificationDialogFragment");
             }
 
-            Log.e(LOG_TAG, context.getString(R.string.helper_tor_stopped));
+            loge(context.getString(R.string.helper_tor_stopped));
         }
 
     }
@@ -458,7 +456,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        Log.e(LOG_TAG, "Problem bootstrapping Tor: " + logData.getLines());
+        loge("Problem bootstrapping Tor: " + logData.getLines());
 
         NotificationHelper notificationHelper;
         notificationHelper = NotificationHelper.setHelperMessage(
@@ -479,7 +477,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
     @Override
     public void onConnectionChecked(boolean available) {
-        Log.i(LOG_TAG, "Tor connection is checked. " + (available ? "Tor ready." : "Tor not ready."));
+        logi("Tor connection is checked. " + (available ? "Tor ready." : "Tor not ready."));
 
         if (!available) {
             return;
@@ -539,17 +537,10 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
         if (isActive()) {
             view.setTorProgressBarIndeterminate(indeterminate);
-
-            if (indeterminate) {
-                view.setTorProgressBarProgress(100);
-            } else {
-                view.setTorProgressBarProgress(0);
-            }
         }
     }
 
     private void setTorProgressBarPercents(int percents) {
-        view.setTorProgressBarIndeterminate(false);
         view.setTorProgressBarProgress(percents);
     }
 
@@ -606,8 +597,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                 if (notificationHelper != null) {
                     activity.runOnUiThread(() -> notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER));
                 }
-                Log.e(LOG_TAG, "TorRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                        Arrays.toString(e.getStackTrace()));
+                loge("TorRunFragment fault", e, true);
             }
         });
 
@@ -657,8 +647,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     private void showNewTorIdentityIcon(boolean show) {
-        if (isActive() && view.getFragmentActivity() instanceof MainActivity) {
-            MainActivity mainActivity = (MainActivity) view.getFragmentActivity();
+        if (isActive() && view.getFragmentActivity() instanceof MainActivity mainActivity) {
             mainActivity.showNewTorIdentityIcon(show);
         }
     }
@@ -667,18 +656,18 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
-            public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+            public boolean onScale(@NonNull ScaleGestureDetector scaleGestureDetector) {
                 setLogsTextSize(scaleGestureDetector.getScaleFactor());
                 return true;
             }
 
             @Override
-            public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+            public boolean onScaleBegin(@NonNull ScaleGestureDetector scaleGestureDetector) {
                 return true;
             }
 
             @Override
-            public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+            public void onScaleEnd(@NonNull ScaleGestureDetector scaleGestureDetector) {
             }
         });
     }

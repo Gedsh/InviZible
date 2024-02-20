@@ -14,54 +14,54 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.notification
 
-import android.os.Bundle
-import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
-import pan.alexander.tordnscrypt.App
+import androidx.fragment.app.FragmentManager
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
-import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
-import javax.inject.Inject
 
 class NotificationPermissionDialog: ExtendedDialogFragment() {
-
-    @Inject
-    lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
-
-    var manager: NotificationPermissionManager? = null
-    var launcher: ActivityResultLauncher<String>? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        App.instance.daggerComponent.inject(this)
-        super.onCreate(savedInstanceState)
-    }
 
     override fun assignBuilder(): AlertDialog.Builder? {
         if (activity?.isFinishing != false) {
             return null
         }
 
-        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(requireActivity())
         builder.setMessage(getString(R.string.notifications_permission_rationale_message))
             .setTitle(R.string.reset_settings_title)
             .setPositiveButton(R.string.ok) { _, _ ->
-                if (activity?.isFinishing == false) {
-                    launcher?.let {
-                        manager?.launchNotificationPermissionSystemDialog(it)
-                    }
+                activity?.supportFragmentManager?.let {
+                    getListener(it)?.notificationPermissionDialogOkPressed()
                 }
             }
             .setNegativeButton(R.string.ask_later) { _, _ ->
                 dismiss()
             }
             .setNeutralButton(R.string.dont_show) { _, _ ->
-                manager?.onPermissionResultListener?.onDenied()
+                activity?.supportFragmentManager?.let {
+                    getListener(it)?.notificationPermissionDialogDoNotShowPressed()
+                }
             }
         return builder
+    }
+
+    private fun getListener(manager: FragmentManager): NotificationPermissionDialogListener ? {
+        for (fragment in manager.fragments) {
+            if (fragment is NotificationPermissionDialogListener) {
+                return fragment
+            }
+            getListener(fragment.childFragmentManager)
+        }
+        return null
+    }
+
+    interface NotificationPermissionDialogListener {
+        fun notificationPermissionDialogOkPressed()
+        fun notificationPermissionDialogDoNotShowPressed()
     }
 }

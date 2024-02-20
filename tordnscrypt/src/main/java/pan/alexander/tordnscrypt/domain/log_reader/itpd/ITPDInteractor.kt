@@ -14,29 +14,29 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import android.util.Log
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashMap<Class<*>, WeakReference<OnITPDLogUpdatedListener>> = hashMapOf()
+    private val listeners = ConcurrentHashMap<Class<*>, WeakReference<OnITPDLogUpdatedListener>>()
     private var parser: ITPDLogParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun <T: OnITPDLogUpdatedListener> addListener(listener: T?) {
+    fun <T : OnITPDLogUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[listener.javaClass] = WeakReference(listener) }
     }
 
-    fun <T: OnITPDLogUpdatedListener> removeListener(listener: T?) {
+    fun <T : OnITPDLogUpdatedListener> removeListener(listener: T?) {
         listener?.let { listeners.remove(listener.javaClass) }
 
         if (listeners.isEmpty()) {
@@ -52,10 +52,7 @@ class ITPDInteractor(private val modulesLogRepository: ModulesLogRepository) {
         try {
             parseLog()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "ITPDInteractor parseITPDLog exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("ITPDInteractor parseITPDLog", e, true)
         }
     }
 

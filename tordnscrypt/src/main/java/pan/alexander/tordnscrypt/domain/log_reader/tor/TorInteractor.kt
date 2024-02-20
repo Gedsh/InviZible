@@ -14,29 +14,29 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.log_reader.tor
 
-import android.util.Log
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashMap<Class<*>, WeakReference<OnTorLogUpdatedListener>> = hashMapOf()
+    private val listeners = ConcurrentHashMap<Class<*>, WeakReference<OnTorLogUpdatedListener>>()
     private var parser: TorLogParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun <T: OnTorLogUpdatedListener> addListener (listener: T?) {
+    fun <T : OnTorLogUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[listener.javaClass] = WeakReference(it) }
     }
 
-    fun <T: OnTorLogUpdatedListener> removeListener (listener: T?) {
+    fun <T : OnTorLogUpdatedListener> removeListener(listener: T?) {
 
         listener?.let { listeners.remove(it.javaClass) }
 
@@ -53,10 +53,7 @@ class TorInteractor(private val modulesLogRepository: ModulesLogRepository) {
         try {
             parseLog()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "TorInteractor parseTorLog exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("TorInteractor parseTorLog", e, true)
         }
     }
 

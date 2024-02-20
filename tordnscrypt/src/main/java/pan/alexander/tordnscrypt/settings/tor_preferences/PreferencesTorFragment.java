@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_preferences;
@@ -23,7 +23,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -63,6 +62,8 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
@@ -74,7 +75,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRA
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
@@ -156,12 +156,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("pref_tor_isolate_dest_port"));
         preferences.add(findPreference(SNOWFLAKE_RENDEZVOUS));
         preferences.add(findPreference("Enable TrackHostExits"));
+        preferences.add(findPreference(DORMANT_CLIENT_TIMEOUT));
 
         for (Preference preference : preferences) {
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
             } else if (!pathVars.get().getAppVersion().startsWith("g")) {
-                Log.e(LOG_TAG, "PreferencesTorFragment preference is null exception");
+                loge("PreferencesTorFragment preference is null exception");
             }
         }
 
@@ -653,9 +654,29 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
 
             return true;
-        } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod") || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
+        } else if ((Objects.equals(preference.getKey(), "NewCircuitPeriod")
+                || Objects.equals(preference.getKey(), "MaxCircuitDirtiness"))
                 && !newValue.toString().matches("\\d+")) {
             return false;
+        } else if ((Objects.equals(preference.getKey(), DORMANT_CLIENT_TIMEOUT))) {
+            if (newValue.toString().matches("\\d+")) {
+                int value = Integer.parseInt(newValue.toString());
+                if (value < 10) {
+                    return false;
+                }
+                int i = key_tor.indexOf("DormantCanceledByStartup");
+                if (!key_tor.contains("DormantClientTimeout") && i >= 0) {
+                    key_tor.add(i + 1, "DormantClientTimeout");
+                    val_tor.add(i + 1, newValue + " minutes");
+                }
+                int k = key_tor.indexOf("DormantClientTimeout");
+                if (k >= 0) {
+                    val_tor.set(k, newValue + " minutes");
+                }
+                return true;
+            } else {
+                return false;
+            }
         } else if ((Objects.equals(preference.getKey(), TOR_OUTBOUND_PROXY))) {
             if (Boolean.parseBoolean(newValue.toString())) {
                 if (key_tor.contains("#Socks5Proxy")) {

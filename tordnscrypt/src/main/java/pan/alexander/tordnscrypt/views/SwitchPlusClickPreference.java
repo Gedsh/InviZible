@@ -14,21 +14,25 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.views;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceViewHolder;
 import androidx.preference.SwitchPreferenceCompat;
+
+import pan.alexander.tordnscrypt.R;
 
 /**
  * Custom preference for handling a switch with a clickable preference area as well
@@ -123,6 +127,8 @@ public class SwitchPlusClickPreference extends SwitchPreferenceCompat {
 
         final SwitchCompat switchView = findSwitchWidget(holder.itemView);
         if (switchView != null) {
+            Drawable divider = ContextCompat.getDrawable(getContext(), R.drawable.switch_plus_click_divider);
+            switchView.setBackground(divider);
             switchView.setOnClickListener(v -> {
                 if (listener != null)
                     listener.onCheckedChanged((SwitchCompat) v, ((SwitchCompat) v).isChecked());

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.help;
@@ -26,7 +26,6 @@ import android.os.Handler;
 
 import androidx.fragment.app.DialogFragment;
 
-import android.util.Log;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -46,9 +45,10 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVE_ROOT_LOGS;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.HELP_ACTIVITY_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 
@@ -76,7 +76,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i(LOG_TAG, "BackupActivity onReceive");
+        logi("BackupActivity onReceive");
 
         if (!isBroadcastMatch(intent)) {
             return;
@@ -110,7 +110,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             } else {
                 closeProgressDialog();
                 showSomethingWrongToast(context);
-                Log.e(LOG_TAG, "Collect logs alternative method fault");
+                loge("Collect logs alternative method fault");
             }
         };
     }
@@ -121,7 +121,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             zipFileManager.createZip(context, cacheDir + "/logs_dir");
             FileManager.deleteDirSynchronous(context, cacheDir + "/logs_dir");
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Create zip file for first method failed  " + e.getMessage() + " " + e.getCause());
+            loge("Create zip file for first method failed ", e);
         }
     }
 
@@ -151,7 +151,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
             saveLogsMethodOne(context);
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Collect logs alternative method fault " + e.getMessage() + " " + e.getCause());
+            loge("Collect logs alternative method fault", e);
             showSomethingWrongToast(context);
         }
     }
@@ -186,7 +186,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
         try {
             saveIfconfig(logsDirPath);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Collect ifconfig alternative method fault " + e.getMessage() + " " + e.getCause());
+            loge("Collect ifconfig alternative method fault", e);
         }
     }
 

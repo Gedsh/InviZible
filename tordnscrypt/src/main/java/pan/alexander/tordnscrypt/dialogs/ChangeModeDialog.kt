@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs
@@ -51,7 +51,7 @@ class ChangeModeDialog: ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
 
         val mode = arguments?.get(OPERATION_MODE_ARG) as OperationMode
 

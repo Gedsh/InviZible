@@ -1,7 +1,9 @@
 <resources>
 
+    <style name="AppTheme" parent="BaseAppTheme" />
+
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="BaseAppTheme" parent="Theme.MaterialComponents.DayNight">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -10,47 +12,47 @@
         <item name="android:windowBackground">@color/colorBackground</item>
 
         <!-- AppCompat Dialog Attributes -->
-        <item name="dialogTheme">@style/CustomDialogTheme</item>
-        <item name="alertDialogTheme">@style/CustomAlertDialogTheme</item>
+        <item name="dialogTheme">@style/Theme.AppTheme.Dialog</item>
+        <item name="alertDialogTheme">@style/Theme.AppTheme.Dialog.Alert</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="AppTheme">
+    <style name="AppTheme.NoActionBar" parent="BaseAppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
+    <style name="ThemeOverlay.AppTheme.AppBar" parent="ThemeOverlay.MaterialComponents.ActionBar" />
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Dark" />
+    <style name="ThemeOverlay.AppTheme.Popup" parent="ThemeOverlay.MaterialComponents"/>
 
     <!-- Generic Dialog Theme -->
-    <style name="CustomDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog">
-
-        <!-- Used for the background -->
-        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
-        <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
-        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
-        <item name="dialogCornerRadius">5dp</item>
+    <style name="Theme.AppTheme.Dialog" parent="Theme.MaterialComponents.DayNight.Dialog">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
+        <item name="dialogCornerRadius">@dimen/dialog_corner_radius</item>
     </style>
 
     <!-- Alert Dialog Theme -->
-    <style name="CustomAlertDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
-        <item name="colorOnPrimary">@color/colorPrimary</item>
-        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
-        <item name="buttonBarNeutralButtonStyle">@style/DialogButtonStyle</item>
-        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
-        <item name="dialogCornerRadius">5dp</item>
+    <style name="Theme.AppTheme.Dialog.Alert" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.AppTheme.DialogButtonStyle</item>
+        <item name="dialogCornerRadius">@dimen/dialog_corner_radius</item>
     </style>
 
-    <style name="CustomTileDialogTheme" parent="CustomAlertDialogTheme">
+    <style name="Theme.AppTheme.Dialog.Alert.Contrast" parent="Theme.AppTheme.Dialog.Alert">
         <item name="android:background">@color/colorBackground</item>
         <item name="background">@color/colorBackground</item>
         <item name="android:textColor">@color/colorText</item>
         <item name="android:textColorPrimary">@color/colorText</item>
     </style>
 
-    <style name="DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+    <style name="Widget.AppTheme.DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
         <item name="android:textColor">@color/colorAccent</item>
+        <item name="rippleColor">@color/colorGreyLightFaint</item>
     </style>
 
 </resources>

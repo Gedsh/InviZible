@@ -14,12 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.nflog
 
 import android.os.HandlerThread
+import android.os.SystemClock
 import com.jrummyapps.android.shell.Shell
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -31,6 +32,8 @@ import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceScope
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
+import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP
 import pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX
@@ -62,7 +65,7 @@ class NflogManager @Inject constructor(
     @Volatile
     private var nfLogStartFailed = false
 
-    private val connectionDataRecords = ConcurrentHashMap<ConnectionData, Boolean>(
+    private val connectionDataRecords = ConcurrentHashMap<ConnectionData, Long>(
         16,
         0.75f,
         2
@@ -239,7 +242,7 @@ class NflogManager @Inject constructor(
 
     private fun getNflogStartCommand(): String = with(pathVars.get()) {
         return "$nflogPath " +
-                //"-ouid $appUid " +
+                "-ouid $appUid " +
                 "-group $NFLOG_GROUP " +
                 "-dport $dnsCryptPort " +
                 "-tport $torDNSPort " +
@@ -342,19 +345,24 @@ class NflogManager @Inject constructor(
     private fun handleConnectionRecordLine(line: String) {
         try {
             nflogParser.parse(line)?.let {
-                connectionDataRecords.remove(it)
-                connectionDataRecords.put(it, true)
+                when (it) {
+                    is DnsRecord -> {
+                        val creationTime = connectionDataRecords.remove(it)
+                        connectionDataRecords.put(it, creationTime ?: SystemClock.elapsedRealtimeNanos())
+                    }
+                    is PacketRecord -> {
+                        connectionDataRecords.remove(it)
+                        connectionDataRecords.put(it, SystemClock.elapsedRealtimeNanos())
+                    }
+                }
+
             }
 
             if (connectionDataRecords.size >= LINES_IN_DNS_QUERY_RAW_RECORDS) {
-                connectionDataRecords.keys()
-                    .toList()
+                connectionDataRecords.keys
                     .sortedBy { it.time }
-                    .take(LINES_IN_DNS_QUERY_RAW_RECORDS / 5).let {
-                        for (record in it) {
-                            connectionDataRecords.remove(record)
-                        }
-                    }
+                    .take(LINES_IN_DNS_QUERY_RAW_RECORDS / 5)
+                    .forEach { connectionDataRecords.remove(it) }
             }
         } catch (e: Exception) {
             loge("NflogManager parseLine $line", e)

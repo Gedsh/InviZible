@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.itpd_fragment;
@@ -33,7 +33,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -53,7 +52,9 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
+import com.google.android.material.divider.MaterialDivider;
 
 
 public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.OnClickListener,
@@ -62,6 +63,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     private Button btnITPDStart;
     private TextView tvITPDStatus;
     private ProgressBar pbITPD;
+    private MaterialDivider divITPD;
     private TextView tvITPDLog;
     private TextView tvITPDinfoLog;
     private ScrollView svITPDLog;
@@ -89,6 +91,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         btnITPDStart.setOnClickListener(this);
 
         pbITPD = view.findViewById(R.id.pbITPD);
+        divITPD = view.findViewById(R.id.divITPD);
 
         svITPDLog = view.findViewById(R.id.svITPDLog);
 
@@ -164,7 +167,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ITPDRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
+            loge("ITPDRunFragment onStop", e);
         }
 
         if (presenter != null) {
@@ -191,6 +194,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
         btnITPDStart = null;
         tvITPDStatus = null;
         pbITPD = null;
+        divITPD = null;
         tvITPDLog = null;
         tvITPDinfoLog = null;
         svITPDLog = null;
@@ -231,8 +235,12 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
         if (!pbITPD.isIndeterminate() && indeterminate) {
             pbITPD.setIndeterminate(true);
+            pbITPD.setVisibility(View.VISIBLE);
+            divITPD.setVisibility(View.GONE);
         } else if (pbITPD.isIndeterminate() && !indeterminate) {
             pbITPD.setIndeterminate(false);
+            pbITPD.setVisibility(View.GONE);
+            divITPD.setVisibility(View.VISIBLE);
         }
     }
 

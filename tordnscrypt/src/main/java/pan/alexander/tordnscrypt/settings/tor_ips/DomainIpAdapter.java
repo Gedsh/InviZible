@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_ips;
@@ -158,7 +158,6 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
         void editHostIPDialog(final DomainIpEntity domainIpEntity) {
             DialogEditDomainIp dialogEditHostIP = new DialogEditDomainIp(
                     new WeakReference<>(unlockTorIpsFragment),
-                    R.style.CustomAlertDialogTheme,
                     domainIpEntity
             );
             dialogEditHostIP.show();

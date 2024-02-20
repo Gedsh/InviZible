@@ -14,15 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.patches
 
 import android.content.Context
-import android.util.Log
 import pan.alexander.tordnscrypt.App
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -32,16 +32,31 @@ import java.util.zip.ZipInputStream
 class ConfigUtil(private val context: Context) {
     private val pathVars = App.instance.daggerComponent.getPathVars().get()
 
-    fun patchDNSCryptConfig(dnsCryptConfigPatches: List<PatchLine>) {
-        readFromFile(pathVars.dnscryptConfPath).replaceLinesInFile(dnsCryptConfigPatches).writeToFile(pathVars.dnscryptConfPath)
+    fun patchDNSCryptConfig(dnsCryptConfigPatches: List<AlterConfig>) {
+        readFromFile(pathVars.dnscryptConfPath).run {
+            addLinesToFile(dnsCryptConfigPatches.filterIsInstance<AlterConfig.AddLine>())
+                .replaceLinesInFile(dnsCryptConfigPatches.filterIsInstance<AlterConfig.ReplaceLine>())
+                .takeIf { it.size != this.size || !it.containsAll(this) }
+                ?.writeToFile(pathVars.dnscryptConfPath)
+        }
     }
 
-    fun patchTorConfig(torConfigPatches: List<PatchLine>) {
-        readFromFile(pathVars.torConfPath).replaceLinesInFile(torConfigPatches).writeToFile(pathVars.torConfPath)
+    fun patchTorConfig(torConfigPatches: List<AlterConfig>) {
+        readFromFile(pathVars.torConfPath).run {
+            addLinesToFile(torConfigPatches.filterIsInstance<AlterConfig.AddLine>())
+                .replaceLinesInFile(torConfigPatches.filterIsInstance<AlterConfig.ReplaceLine>())
+                .takeIf { it.size != this.size || !it.containsAll(this) }
+                ?.writeToFile(pathVars.torConfPath)
+        }
     }
 
-    fun patchItpdConfig(itpdConfigPatches: List<PatchLine>) {
-        readFromFile(pathVars.itpdConfPath).replaceLinesInFile(itpdConfigPatches).writeToFile(pathVars.itpdConfPath)
+    fun patchItpdConfig(itpdConfigPatches: List<AlterConfig>) {
+        readFromFile(pathVars.itpdConfPath).run {
+            addLinesToFile(itpdConfigPatches.filterIsInstance<AlterConfig.AddLine>())
+                .replaceLinesInFile(itpdConfigPatches.filterIsInstance<AlterConfig.ReplaceLine>())
+                .takeIf { it.size != this.size || !it.containsAll(this) }
+                ?.writeToFile(pathVars.itpdConfPath)
+        }
     }
 
     private fun readFromFile(filePath: String): List<String> {
@@ -50,7 +65,7 @@ class ConfigUtil(private val context: Context) {
         return if (file.isFile && (file.canRead() || file.setReadable(true))) {
             file.readLines()
         } else {
-            Log.e(LOG_TAG, "Patches ConfigUtil cannot read from file $filePath")
+            loge("Patches ConfigUtil cannot read from file $filePath")
             emptyList()
         }
     }
@@ -73,11 +88,47 @@ class ConfigUtil(private val context: Context) {
         if (file.isFile && (file.canWrite() || file.setWritable(true))) {
             file.writeText(text.toString())
         } else {
-            Log.e(LOG_TAG, "Patches ConfigUtil cannot write to file $filePath")
+            loge("Patches ConfigUtil cannot write to file $filePath")
         }
     }
 
-    private fun List<String>.replaceLinesInFile(replacementLines: List<PatchLine>): List<String> {
+    private fun List<String>.addLinesToFile(addLines: List<AlterConfig.AddLine>): List<String> {
+        val newLines = mutableListOf<String>()
+        val keyRegex = Regex("[ =]")
+
+        this.forEach { line -> newLines.add(line.trim()) }
+
+        var currentHeader = ""
+        for (index: Int in newLines.indices) {
+
+            val line = newLines[index]
+
+            if (line.matches(Regex("\\[.+]"))) {
+                currentHeader = line
+            }
+
+            for (addLine: AlterConfig.AddLine in addLines) {
+
+                val keyToAdd = addLine.lineToAdd.split(keyRegex).firstOrNull() ?: ""
+                val existingKey = newLines.find {
+                    it.split(keyRegex).firstOrNull()?.trim() == keyToAdd
+                }
+                if (existingKey != null) {
+                    continue
+                }
+
+                if ((addLine.header.isEmpty() || addLine.header == currentHeader)
+                    && line.matches(addLine.lineToFind)
+                ) {
+                    newLines.add(index + 1, addLine.lineToAdd)
+                }
+            }
+        }
+
+        return newLines
+    }
+
+    private fun List<String>.replaceLinesInFile(replacementLines: List<AlterConfig.ReplaceLine>): List<String> {
         val newLines = mutableListOf<String>()
 
         this.forEach { line -> newLines.add(line.trim()) }
@@ -91,19 +142,16 @@ class ConfigUtil(private val context: Context) {
                 currentHeader = line
             }
 
-            for (replacementLine: PatchLine in replacementLines) {
+            for (replacementLine: AlterConfig.ReplaceLine in replacementLines) {
                 if ((replacementLine.header.isEmpty() || replacementLine.header == currentHeader)
-                        && line.matches(replacementLine.lineToFind)) {
+                    && line.matches(replacementLine.lineToFind)
+                ) {
                     newLines[index] = replacementLine.lineToReplace
                 }
             }
         }
 
-        return if (this.size != newLines.size || !this.containsAll(newLines)) {
-            newLines
-        } else {
-            emptyList()
-        }
+        return newLines
     }
 
     fun updateTorGeoip() {
@@ -120,14 +168,14 @@ class ConfigUtil(private val context: Context) {
                         if (zipEntry.size != installedGeoip6Size) {
                             FileOutputStream(geoip6).use { outputStream ->
                                 copyData(zipInputStream, outputStream)
-                                Log.i(LOG_TAG, "Tor geoip6 was updated!")
+                                logi("Tor geoip6 was updated!")
                             }
                         }
                     } else if (fileName.contains("geoip")) {
                         if (zipEntry.size != installedGeoipSize) {
                             FileOutputStream(geoip).use { outputStream ->
                                 copyData(zipInputStream, outputStream)
-                                Log.i(LOG_TAG, "Tor geoip was updated!")
+                                logi("Tor geoip was updated!")
                             }
                         }
                     }
@@ -135,7 +183,7 @@ class ConfigUtil(private val context: Context) {
                 }
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ConfigUtil updateTorGeoip exception " + e.message + " " + e.cause)
+            loge("ConfigUtil updateTorGeoip", e)
         }
     }
 

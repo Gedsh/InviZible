@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.preferences;
@@ -23,6 +23,8 @@ public interface PreferenceKeys {
     String WIFI_ACCESS_POINT_IS_ON = "APisON";
     String USB_MODEM_IS_ON = "ModemIsON";
     String DO_NOT_SHOW_IGNORE_BATTERY_OPTIMIZATION_DIALOG = "DoNotShowIgnoreBatteryOptimizationDialog";
+
+    String DO_NOT_SHOW_REQUEST_DATA_RESTRICTION_DIALOG = "DoNotShowRequestIgnoreDataRestrictionDialog";
 
     String DNSCRYPT_READY_PREF = "DNSCrypt Ready";
     String TOR_READY_PREF = "Tor Ready";
@@ -70,7 +72,11 @@ public interface PreferenceKeys {
     String USE_OWN_BRIDGES = "useOwnBridges";
     String FAKE_SNI_HOSTS = "fakeSniHosts";
 
-    String NOTIFICATIONS_ARE_BLOCKED = "notificationsAreBlocked";
+    String NOTIFICATIONS_REQUEST_BLOCKED = "notificationsAreBlocked";
+
+    String AGREEMENT_ACCEPTED = "Agreement";
+
+    String CRASH_REPORT = "CrashReport";
 
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
@@ -131,6 +137,7 @@ public interface PreferenceKeys {
     String TOR_OUTBOUND_PROXY = "Enable output Socks5Proxy";
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
+    String DORMANT_CLIENT_TIMEOUT = "DormantClientTimeout";
 
     String TOR_USE_IPV6 = "ClientUseIPv6";
 

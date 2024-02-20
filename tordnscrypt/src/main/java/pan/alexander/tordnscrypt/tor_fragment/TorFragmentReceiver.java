@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.tor_fragment;
@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.tor_fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,8 +39,8 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
 import static pan.alexander.tordnscrypt.modules.ModulesService.TOR_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOR_RUN_FRAGMENT_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -87,10 +86,10 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     || action.equals("")
                     || ((intent.getIntExtra("Mark", 0) != TOR_RUN_FRAGMENT_MARK) &&
                     !action.equals(TopFragment.TOP_BROADCAST))) return;
-            Log.i(LOG_TAG, "TorRunFragment onReceive");
+            logi("TorRunFragment onReceive");
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setTorProgressBarIndeterminate(false);
+                //view.setTorProgressBarIndeterminate(false);
 
                 view.setTorStartButtonEnabled(true);
 
@@ -104,7 +103,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                 StringBuilder sb = new StringBuilder();
                 if (comResult != null) {
                     for (String com : comResult.getCommands()) {
-                        Log.i(LOG_TAG, com);
+                        logi(com);
                         sb.append(com).append((char) 10);
                     }
                 }
@@ -143,8 +142,8 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                     presenter.stopDisplayLog();
                     presenter.setTorStopped();
                     modulesStatus.setTorState(STOPPED);
+                    view.setTorProgressBarProgress(-1);
                     presenter.refreshTorState();
-                    view.setTorProgressBarProgress(0);
                 } else if (sb.toString().contains("Something went wrong!")) {
                     presenter.setTorSomethingWrong();
                 }
@@ -153,7 +152,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
 
             if (action.equals(TopFragment.TOP_BROADCAST)) {
                 if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
-                    Log.i(LOG_TAG, "TorRunFragment onReceive TOP_BROADCAST");
+                    logi("TorRunFragment onReceive TOP_BROADCAST");
 
                     checkTorVersionWithRoot(context);
                 }

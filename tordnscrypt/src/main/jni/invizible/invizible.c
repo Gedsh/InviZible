@@ -17,7 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -37,7 +37,7 @@ char proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
 int proxy_socks5_port = 0;
 char proxy_socks5_username[127 + 1];
 char proxy_socks5_password[127 + 1];
-int own_uid = 0;
+int own_uid = -2;
 int loglevel = ANDROID_LOG_WARN;
 bool compatibility_mode = false;
 bool can_filter = true;
@@ -373,9 +373,9 @@ void report_exit(const struct arguments *args, const char *fmt, ...) {
 
 static jmethodID midProtect = NULL;
 
-int protect_socket(const struct arguments *args, int socket) {
+int protect_socket(const struct arguments *args, int socket, int uid) {
 
-    if (args->ctx->sdk >= 21 && !compatibility_mode)
+    if (args->ctx->sdk >= 21 && !compatibility_mode && uid != own_uid)
         return 0;
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs
@@ -25,6 +25,7 @@ import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnFocusChangeListener
 import android.widget.EditText
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
@@ -33,6 +34,7 @@ import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
+import pan.alexander.tordnscrypt.utils.Utils.hideKeyboard
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -54,7 +56,7 @@ class BridgesCaptchaDialogFragment @Inject constructor(
 
     @SuppressLint("InflateParams")
     override fun assignBuilder(): AlertDialog.Builder =
-        AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme).apply {
+        AlertDialog.Builder(requireActivity()).apply {
             val layoutInflater = requireActivity().getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE
             ) as LayoutInflater
@@ -63,6 +65,11 @@ class BridgesCaptchaDialogFragment @Inject constructor(
 
             val imgCode = view.findViewById<ImageView>(R.id.imgCode)
             val etCode = view.findViewById<EditText>(R.id.etCode)
+            etCode.onFocusChangeListener = OnFocusChangeListener { _: View?, hasFocus: Boolean ->
+                if (!hasFocus) {
+                    activity?.let { hideKeyboard(it) }
+                }
+            }
 
             imgCode.setImageBitmap(captcha)
 

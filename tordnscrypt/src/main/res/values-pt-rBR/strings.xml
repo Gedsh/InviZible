@@ -150,7 +150,7 @@
     <string name="pref_common_use_iptables">Selecionar Iptables</string>
     <string name="pref_common_log_root_commands">"Salvar comandos Root para o log"</string>
     <string name="notification_text">"DNSCrypt, Tor 2 o I2P são protegidos. Não esconda."</string>
-    <string name="notification_temp_text">Executando comandos de Root…</string>
+    <string name="notification_exec_root_commands">Executando comandos de Root…</string>
     <string name="tvSettings_text">"Por favor, aguarde…"</string>
     <string name="toastSettings_saved">"Configurações salvas"</string>
     <string name="pref_dnscrypt_global_settings_categ">"CONFIGURAÇÕES GLOBAIS"</string>
@@ -528,7 +528,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
 \n\tPolítica de Privacidade:
 \n\tO InviZible Pro não coleta ou compartilha nenhum dado pessoal ou sensível do usuário.
 \n
-\n\tCopyright © 2019-2023
+\n\tCopyright © 2019-2024
 \n\tGarmatin Oleksandr
 \n\tinvizible.soft@gmail.com
 \n\tinvizible.net/en/privacy</string>

@@ -14,16 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.arp
 
 import android.content.Context
 import android.net.wifi.WifiManager
-import android.util.Log
 import pan.alexander.tordnscrypt.di.arp.ArpScope
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.math.BigInteger
 import java.net.InetAddress
 import java.nio.ByteOrder
@@ -49,6 +49,7 @@ class DefaultGatewayManager @Inject constructor(
 
     @Volatile
     var defaultGateway = ""
+
     @Volatile
     var savedDefaultGateway = ""
 
@@ -67,7 +68,7 @@ class DefaultGatewayManager @Inject constructor(
             defaultGateway = myAddr.hostAddress?.trim() ?: ""
 
             if (savedDefaultGateway.isEmpty()) {
-                Log.i(LOG_TAG, "ArpScanner defaultGateway is $defaultGateway")
+                logi("ArpScanner defaultGateway is $defaultGateway")
                 savedDefaultGateway = defaultGateway
             }
         } catch (e: Exception) {
@@ -75,7 +76,8 @@ class DefaultGatewayManager @Inject constructor(
             if (connectionManager.connectionAvailable
                 && !connectionManager.cellularActive
                 && !connectionManager.wifiActive
-                && !connectionManager.ethernetActive) {
+                && !connectionManager.ethernetActive
+            ) {
                 arpScannerHelper.makePause(true, resetInternalValues = true)
             } else {
 
@@ -83,7 +85,7 @@ class DefaultGatewayManager @Inject constructor(
                     arpScannerHelper.resetArpScannerState()
                 }
 
-                Log.e(LOG_TAG, "ArpScanner error getting default gateway ${e.message}\n${e.cause}")
+                loge("ArpScanner error getting default gateway", e)
             }
         }
     }
@@ -91,10 +93,10 @@ class DefaultGatewayManager @Inject constructor(
     fun requestRuleTable() {
         if (ethernetTable.isEmpty()) {
             try {
-                Log.i(LOG_TAG, "ArpScanner requestRuleTable")
+                logi("ArpScanner requestRuleTable")
                 requestDefaultEthernetGateway(commandExecutor.execNormal(COMMAND_RULE_SHOW))
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "ArpScanner requestRuleTable exception ${e.message} ${e.cause}")
+                loge("ArpScanner requestRuleTable", e)
             }
         } else {
             requestDefaultEthernetGateway()
@@ -111,7 +113,7 @@ class DefaultGatewayManager @Inject constructor(
 
                     ethernetTable = matcher.group(1) ?: ""
 
-                    Log.i(LOG_TAG, "ArpScanner ethTable is $ethernetTable")
+                    logi("ArpScanner ethTable is $ethernetTable")
 
                     if (ethernetTable.isNotEmpty()) {
                         setDefaultEthernetGateway(
@@ -128,10 +130,7 @@ class DefaultGatewayManager @Inject constructor(
                 }
             }
         } catch (e: java.lang.Exception) {
-            Log.e(
-                LOG_TAG,
-                "ArpScanner requestDefaultEthernetGateway(lines) exception ${e.message} ${e.cause}"
-            )
+            loge("ArpScanner requestDefaultEthernetGateway(lines)", e)
         }
     }
 
@@ -148,10 +147,7 @@ class DefaultGatewayManager @Inject constructor(
                 )
             }
         } catch (e: java.lang.Exception) {
-            Log.e(
-                LOG_TAG,
-                "ArpScanner requestDefaultEthernetGateway exception ${e.message} ${e.cause}"
-            )
+            loge("ArpScanner requestDefaultEthernetGateway", e)
         }
     }
 
@@ -166,7 +162,7 @@ class DefaultGatewayManager @Inject constructor(
                     matcher.group(1)?.let { defaultGateway = it }
 
                     if (savedDefaultGateway.isEmpty()) {
-                        Log.i(LOG_TAG, "ArpScanner defaultGateway is $defaultGateway")
+                        logi("ArpScanner defaultGateway is $defaultGateway")
                         savedDefaultGateway = defaultGateway
                     }
 
@@ -179,7 +175,7 @@ class DefaultGatewayManager @Inject constructor(
                 arpScannerHelper.resetArpScannerState()
             }
 
-            Log.e(LOG_TAG, "ArpScanner error getting default gateway ${e.message} ${e.cause}")
+            loge("ArpScanner error getting default gateway", e)
         }
     }
 

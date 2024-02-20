@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.root;
@@ -164,7 +164,7 @@ public class RootExecService extends Service
     private void moveServiceToForeground() {
         if (systemNotificationManager != null) {
             serviceNotificationManager.sendNotification(
-                    getString(R.string.notification_temp_text),
+                    getString(R.string.notification_exec_root_commands),
                     ""
             );
         }
@@ -193,7 +193,7 @@ public class RootExecService extends Service
     private void updateNotificationProgress(int progress) {
         if (systemNotificationManager != null) {
             serviceNotificationManager.updateNotification(
-                    getString(R.string.notification_temp_text),
+                    getString(R.string.notification_exec_root_commands),
                     "",
                     progress
             );

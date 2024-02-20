@@ -14,13 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.crash_handling
 
 import android.content.SharedPreferences
 import android.util.Log
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CRASH_REPORT
 import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import kotlin.system.exitProcess
 
@@ -60,6 +61,6 @@ class TopExceptionHandler(
     }
 
     private fun saveReport(report: String) {
-        sharedPreferences.edit().putString("CrashReport", report).commit()
+        sharedPreferences.edit().putString(CRASH_REPORT, report).commit()
     }
 }

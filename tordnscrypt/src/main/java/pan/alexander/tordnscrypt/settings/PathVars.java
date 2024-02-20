@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings;
@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.os.Process;
-import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
@@ -38,6 +37,8 @@ import pan.alexander.tordnscrypt.update.UpdateCheck;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
@@ -46,7 +47,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOC
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TRANS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -383,21 +383,21 @@ public class PathVars {
 
             if (!cacheDir.isDirectory()) {
                 if (cacheDir.mkdirs()) {
-                    Log.i(LOG_TAG, "PathVars getCacheDirPath create cache dir success");
+                    logi("PathVars getCacheDirPath create cache dir success");
                     if (cacheDir.setReadable(true) && cacheDir.setWritable(true)) {
-                        Log.i(LOG_TAG, "PathVars getCacheDirPath chmod cache dir success");
+                        logi("PathVars getCacheDirPath chmod cache dir success");
                     } else {
-                        Log.e(LOG_TAG, "PathVars getCacheDirPath chmod cache dir failed");
+                        loge("PathVars getCacheDirPath chmod cache dir failed");
                     }
                 } else {
-                    Log.e(LOG_TAG, "PathVars getCacheDirPath create cache dir failed");
+                    loge("PathVars getCacheDirPath create cache dir failed");
                 }
             }
 
             cacheDirPath = cacheDir.getCanonicalPath();
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "PathVars getCacheDirPath exception " + e.getMessage() + " " + e.getCause());
+            loge("PathVars getCacheDirPath exception", e);
         }
 
         return cacheDirPath;

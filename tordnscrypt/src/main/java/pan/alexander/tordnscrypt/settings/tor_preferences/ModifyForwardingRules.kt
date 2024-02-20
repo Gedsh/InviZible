@@ -14,18 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_preferences
 
 import android.content.Context
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.io.File
 import java.io.PrintWriter
 
@@ -53,7 +52,7 @@ class ModifyForwardingRules(private val context: Context,
                 restartDNSCryptIfRequired()
 
             } catch (e: java.lang.Exception) {
-                Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+                loge("ImportRules", e)
             }
         }
     }
@@ -74,7 +73,7 @@ class ModifyForwardingRules(private val context: Context,
             }
 
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ImportRules Exception " + e.message + " " + e.cause)
+            loge("ImportRules", e)
         }
     }
 
@@ -96,7 +95,7 @@ class ModifyForwardingRules(private val context: Context,
             }
 
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "ModifyForwardingRules " + e.message + " " + e.cause)
+            loge("ModifyForwardingRules", e)
         }
     }
 

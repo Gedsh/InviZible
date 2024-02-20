@@ -14,18 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.firewall
 
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 
 class SaveFirewallChangesDialog : ExtendedDialogFragment() {
@@ -53,7 +52,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
                     activity.getString(R.string.firewall_warning_enable_module)
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
 
         builder.setTitle(R.string.menu_firewall)
         builder.setMessage(message)
@@ -62,7 +61,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
             try {
                 firewallFragment.viewModel.saveFirewallChanges()
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "SaveFirewallChanges exception ${e.message} ${e.cause}")
+                loge("SaveFirewallChanges", e)
             } finally {
                 activity.finish()
             }
@@ -73,7 +72,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
             try {
                 dialog.cancel()
             } catch (e: Exception) {
-                Log.e(LOG_TAG, "SaveFirewallChanges exception ${e.message} ${e.cause}")
+                loge("SaveFirewallChanges", e)
             } finally {
                 activity.finish()
             }

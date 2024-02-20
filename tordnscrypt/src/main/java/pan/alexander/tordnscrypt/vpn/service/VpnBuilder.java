@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -190,7 +190,7 @@ public class VpnBuilder {
             try {
                 InetAddress start = InetAddress.getByName(META_ADDRESS);
                 for (IPUtil.CIDR exclude : listExclude) {
-                    //Log.i(LOG_TAG, "Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
+                    //logi("Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
                     for (IPUtil.CIDR include : IPUtil.toCIDR(start, IPUtil.minus1(exclude.getStart())))
                         try {
                             builder.addRoute(include.address, include.prefix);
@@ -232,7 +232,7 @@ public class VpnBuilder {
 
             try {
                 builder.addDisallowedApplication(context.getPackageName());
-                //Log.i(LOG_TAG, "VPN Not routing " + getPackageName());
+                //logi("VPN Not routing " + getPackageName());
             } catch (PackageManager.NameNotFoundException ex) {
                 loge("VPNBuilder", ex, true);
             }
@@ -243,7 +243,7 @@ public class VpnBuilder {
                 if (!useProxy) {
                     for (Rule rule : listRule) {
                         try {
-                            //Log.i(LOG_TAG, "VPN Not routing " + rule.packageName);
+                            //logi("VPN Not routing " + rule.packageName);
                             builder.addDisallowedApplication(rule.packageName);
                         } catch (PackageManager.NameNotFoundException ex) {
                             loge("VPNBuilder", ex, true);

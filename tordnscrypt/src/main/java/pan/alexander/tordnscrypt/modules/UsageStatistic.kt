@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 @file:JvmName("UsageStatistics")
@@ -24,12 +24,10 @@ package pan.alexander.tordnscrypt.modules
 import android.content.Context
 import android.net.TrafficStats
 import android.os.Process
-import android.util.Log
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -136,7 +134,7 @@ class UsageStatistic(private val context: Context) {
                 counter++
             }
         } catch (exception: Exception) {
-            Log.e(LOG_TAG, "UsageStatistics exception " + exception.message + " " + exception.cause)
+            loge("UsageStatistics", exception)
         } finally {
             updating.compareAndSet(true, false)
         }
@@ -166,15 +164,18 @@ class UsageStatistic(private val context: Context) {
     fun getTitle(): String {
         var title = ""
 
-        if (modulesStatus.torState == ModuleState.RUNNING) {
+        if (modulesStatus.torState == ModuleState.RUNNING
+            || modulesStatus.torState == ModuleState.RESTARTING) {
             title += "TOR"
         }
 
-        if (modulesStatus.dnsCryptState == ModuleState.RUNNING) {
+        if (modulesStatus.dnsCryptState == ModuleState.RUNNING
+            || modulesStatus.dnsCryptState == ModuleState.RESTARTING) {
             title += " & DNSCRYPT"
         }
 
-        if (modulesStatus.itpdState == ModuleState.RUNNING) {
+        if (modulesStatus.itpdState == ModuleState.RUNNING
+            || modulesStatus.itpdState == ModuleState.RESTARTING) {
             title += " & I2P"
         }
 

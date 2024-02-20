@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_ips;
@@ -37,9 +37,8 @@ public abstract class DialogDomainIp extends AlertDialog.Builder {
 
     private final WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag;
 
-    public DialogDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag,
-                          int themeResId) {
-        super(unlockTorIpsFrag.get().requireContext(), themeResId);
+    public DialogDomainIp(@NonNull WeakReference<UnlockTorIpsFragment> unlockTorIpsFrag) {
+        super(unlockTorIpsFrag.get().requireContext());
         this.unlockTorIpsFrag = unlockTorIpsFrag;
     }
 

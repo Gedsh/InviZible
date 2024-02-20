@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dnscrypt_fragment;
@@ -23,7 +23,6 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.fragment.app.FragmentManager;
 
@@ -47,8 +46,9 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -102,11 +102,11 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                     || ((intent.getIntExtra("Mark", 0) != DNSCRYPT_RUN_FRAGMENT_MARK) &&
                     !action.equals(TOP_BROADCAST))) return;
 
-            Log.i(LOG_TAG, "DNSCryptRunFragment onReceive");
+            logi("DNSCryptRunFragment onReceive");
 
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setDNSCryptProgressBarIndeterminate(false);
+                //view.setDNSCryptProgressBarIndeterminate(false);
 
                 view.setDNSCryptStartButtonEnabled(true);
 
@@ -121,7 +121,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 StringBuilder sb = new StringBuilder();
                 if (comResult != null) {
                     for (String com : comResult.getCommands()) {
-                        Log.i(LOG_TAG, com);
+                        logi(com);
                         sb.append(com).append((char) 10);
                     }
                 }
@@ -164,7 +164,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
             } else if (action.equals(TOP_BROADCAST)) {
                 if (TOP_BROADCAST.contains("TOP_BROADCAST")) {
-                    Log.i(LOG_TAG, "DNSCryptRunFragment onReceive TOP_BROADCAST");
+                    logi("DNSCryptRunFragment onReceive TOP_BROADCAST");
 
                     checkDNSVersionWithRoot(context);
                 }
@@ -200,8 +200,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                                 notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
                             }
                         }
-                        Log.e(LOG_TAG, "DNSCryptRunFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                                Arrays.toString(e.getStackTrace()));
+                        loge("DNSCryptRunFragment fault", e, true);
                     }
                 });
 

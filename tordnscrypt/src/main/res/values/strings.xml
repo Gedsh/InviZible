@@ -31,7 +31,7 @@
     <string name="root_available">Checking if Root is available…</string>
 
     <string name="please_wait">Please wait…</string>
-    <string name="dont_show">Don\'t show again</string>
+    <string name="dont_show">Don\'t ask</string>
 
 
     <string name="tvDNSStop">DNSCrypt Stopped</string>
@@ -205,9 +205,10 @@
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules:
         \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
         --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
-    <string name="pref_common_notification_helper">Please exclude InviZible Pro from android battery optimisation.
-        Otherwise android will kill DNSCrypt, Tor or I2P at any time. On special systems,
-        like MIUI, required some additional steps.</string>
+    <string name="notification_exclude_bat_optimisation_title">Stop optimizing battery usage?</string>
+    <string name="pref_common_notification_helper">Please exclude InviZible Pro from Android battery optimization to prevent the system from terminating DNSCrypt, Tor, or I2P at any time. Some special systems, such as MIUI, may require additional steps.</string>
+    <string name="notification_exclude_data_restriction_title">Disable network data saver?</string>
+    <string name="notification_exclude_data_restriction_message">Please allow background data usage and allow data usage while Data saver is on. This is essential for a smooth online experience.</string>
     <string name="pref_common_use_busybox">Select BusyBox</string>
     <string name="pref_common_use_busybox_auto">Auto</string>
     <string name="pref_common_use_busybox_device">Use device BusyBox</string>
@@ -246,7 +247,7 @@
 
 
     <string name="notification_text">DNSCrypt, Tor, I2P are protected. Don\'t hide.</string>
-    <string name="notification_temp_text">Executing Root commands…</string>
+    <string name="notification_exec_root_commands">Executing Root commands…</string>
     <string name="notification_connecting">Connecting…</string>
     <string name="notification_waiting_network">Waiting for network…</string>
 
@@ -433,6 +434,8 @@
     <string name="pref_tor_new_circuit_period_summ">Every NUM seconds consider whether to build a new circuit.</string>
     <string name="pref_tor_max_circuit_dirtiness" translatable="false">MaxCircuitDirtiness</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">Feel free to reuse a circuit that was first used at most NUM seconds ago, but never attach a new stream to a circuit that is too old.</string>
+    <string name="pref_tor_dormant_client_timeout" translatable="false">DormantClientTimeout</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor enters a dormant state if it does not see client activity for a specified time. Must be at least 10 minutes</string>
     <string name="pref_tor_enforce_distinct_subnets" translatable="false">EnforceDistinctSubnets</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">If enabled, Tor will not put two servers whose IP addresses are "too close" on the same circuit. Currently, two addresses are "too close" if they lie in the same /16 range.</string>
     <string name="pref_tor_enable_SOCKS_proxy">Enable SOCKS proxy</string>
@@ -587,7 +590,7 @@
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
     <string name="about_proc_ver" translatable="false">Processor Version:</string>
-    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2023 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
+    <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2024 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
     <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
         InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
@@ -639,7 +642,7 @@
     <string name="verifier_error">Looks like this unofficial version of InviZible. Please be care of it!</string>
     <string name="only_for_pro">Only for PRO version</string>
     <string name="donate">Donate</string>
-    <string name="donate_project">InviZible Pro Project needs your assistance. Please visit donate page or enter received premium code.</string>
+    <string name="donate_project">InviZible Pro Project seeks your assistance. Please visit the donation page or enter the premium code you\'ve already received.</string>
     <string name="donate_button">Visit</string>
     <string name="enter_code_button">Enter Code</string>
     <string name="enter_code">Enter Code</string>
@@ -668,16 +671,16 @@
     <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>
 
     <string name="pending_purchase">Please note that you have a pending purchase:</string>
-    <string name="buy_premium_gp">InviZible Pro Project needs your assistance. Press OK to purchase premium features.</string>
+    <string name="buy_premium_gp">InviZible Pro Project seeks your assistance. Press OK to purchase premium features.</string>
     <string name="wrong_purchase_signature_gp">Sorry, but it is impossible to confirm your purchase. You will receive a refund after 3 days.</string>
     <string name="only_premium_feature">Unfortunately, this feature is available for the premium version only.</string>
     <string name="agreement_text">
-        \tThanks for choosing InviZible Pro. I hope that it will be useful for your privacy and comfortable use of the Internet.
+        \tThanks for choosing InviZible Pro. I am confident that it will enhance your privacy and provide a smooth online experience.
         \n\n\tInviZible Pro includes Tor, DNSCrypt and Purple I2P as modules.
-        \n\n\tInviZible Pro can use root, if your device has root privileges, or uses a local VPN to deliver Internet traffic to Tor, DNSCrypt and I2P networks.
+        \n\n\tInviZible Pro can use root if your device is rooted, or uses a local VPN to deliver internet traffic directly to the Tor, DNSCrypt and I2P networks.
         \n\n\tPrivacy Policy:
         \n\tInviZible Pro does not collect or share any personal or sensitive user data.
-        \n\n\tCopyright © 2019-2023
+        \n\n\tCopyright © 2019-2024
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -752,4 +755,10 @@
     <string name="list_is_empty">List is Empty</string>
     <string name="connectivity_check">Internet connectivity check</string>
     <string name="notifications_permission_rationale_message">Notifications are essential for displaying important information about the app\'s operation, app control, and detected attacks. Would you like to allow notifications for InviZible?</string>
+    <string name="press_to_add">Press to add.</string>
+    <string name="long_press_to_add">Long Press to add.</string>
+    <string name="press_to_edit">Press to edit.</string>
+    <string name="long_press_to_edit">Long Press to edit.</string>
+    <string name="anonymize_relays">Anonymize relays</string>
+    <string name="anonymize_relays_not_used">Anonymize relays are not used.</string>
 </resources>

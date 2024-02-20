@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.iptables
@@ -23,11 +23,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
-import android.util.Log
 import android.widget.Toast
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
@@ -57,14 +57,14 @@ class IptablesReceiver : BroadcastReceiver() {
             return
         }
 
-        Log.i(LOG_TAG, "IptablesReceiver onReceive")
+        logi("IptablesReceiver onReceive")
 
         val comResult = intent.getSerializableExtra("CommandsResult") as RootCommands?
 
         val result = StringBuilder()
         if (comResult != null) {
             for (com in comResult.commands) {
-                Log.i(LOG_TAG, com)
+                logi(com)
                 result.append(com).append("\n")
             }
         }

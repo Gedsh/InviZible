@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.help
@@ -24,10 +24,9 @@ import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import pan.alexander.tordnscrypt.BuildConfig
 import pan.alexander.tordnscrypt.TopFragment
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.util.*
 
@@ -52,7 +51,7 @@ object Utils {
             try {
                 context.startActivity(sendEmailIntent)
             } catch (e: java.lang.Exception) {
-                Log.e(LOG_TAG, "sendMail exception ${e.message} ${e.cause}")
+                loge("sendMail", e)
             }
 
         }

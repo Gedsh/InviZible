@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs;
@@ -23,7 +23,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -34,8 +33,8 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 
@@ -63,7 +62,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setMessage(message)
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok, (dialog, which) -> notificationHelper = null)
@@ -95,7 +94,7 @@ public class NotificationHelper extends ExtendedDialogFragment {
                 return notificationHelper;
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "NotificationHelper exception " + e.getMessage() + " " + e.getCause());
+            loge("NotificationHelper", e);
         }
 
         return null;

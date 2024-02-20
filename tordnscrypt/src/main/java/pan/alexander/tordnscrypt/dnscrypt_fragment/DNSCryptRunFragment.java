@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dnscrypt_fragment;
@@ -31,7 +31,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.text.Spanned;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -51,7 +50,9 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
+import com.google.android.material.divider.MaterialDivider;
 
 
 public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentView, View.OnClickListener,
@@ -61,6 +62,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     private Button btnDNSCryptStart;
     private TextView tvDNSStatus;
     private ProgressBar pbDNSCrypt;
+    private MaterialDivider divDNSCrypt;
     private TextView tvDNSCryptLog;
     private ScrollView svDNSCryptLog;
     private BroadcastReceiver receiver;
@@ -90,6 +92,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         btnDNSCryptStart.requestFocus();
 
         pbDNSCrypt = view.findViewById(R.id.pbDNSCrypt);
+        divDNSCrypt = view.findViewById(R.id.divDNSCrypt);
 
         tvDNSCryptLog = view.findViewById(R.id.tvDNSCryptLog);
 
@@ -161,7 +164,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "DNSCryptRunFragment onStop exception " + e.getMessage() + " " + e.getCause());
+            loge("DNSCryptRunFragment onStop", e);
         }
 
         if (presenter != null) {
@@ -186,6 +189,7 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
         btnDNSCryptStart = null;
         tvDNSStatus = null;
         pbDNSCrypt = null;
+        divDNSCrypt = null;
         tvDNSCryptLog = null;
         svDNSCryptLog = null;
 
@@ -225,8 +229,12 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
         if (!pbDNSCrypt.isIndeterminate() && indeterminate) {
             pbDNSCrypt.setIndeterminate(true);
+            pbDNSCrypt.setVisibility(View.VISIBLE);
+            divDNSCrypt.setVisibility(View.GONE);
         } else if (pbDNSCrypt.isIndeterminate() && !indeterminate) {
             pbDNSCrypt.setIndeterminate(false);
+            pbDNSCrypt.setVisibility(View.GONE);
+            divDNSCrypt.setVisibility(View.VISIBLE);
         }
     }
 

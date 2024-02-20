@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings;
@@ -35,7 +35,6 @@ import android.os.Bundle;
 
 import androidx.preference.PreferenceManager;
 
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -63,7 +62,8 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DeviceOrTether.DEVICE;
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DeviceOrTether.TETHER;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 import javax.inject.Inject;
 
@@ -109,7 +109,10 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         FragmentTransaction fSupportTrans = getSupportFragmentManager().beginTransaction();
         Intent intent = getIntent();
-        Log.d(LOG_TAG, "SettingsActivity getAction " + intent.getAction());
+        if (intent == null) {
+            return;
+        }
+        logi("SettingsActivity getAction " + intent.getAction());
 
         if (Objects.equals(intent.getAction(), "DNS_Pref")) {
             dialogFragment = PleaseWaitProgressDialog.getInstance();
@@ -272,7 +275,7 @@ public class SettingsActivity extends LangAppCompatActivity {
                         preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.CLOAKING, filesUri);
                         break;
                     default:
-                        Log.e(LOG_TAG, "SettingsActivity wrong onActivityRequestCode " + requestCode);
+                        loge("SettingsActivity wrong onActivityRequestCode " + requestCode);
                 }
 
             }

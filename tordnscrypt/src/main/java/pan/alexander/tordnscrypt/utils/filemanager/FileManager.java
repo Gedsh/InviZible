@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.filemanager;
@@ -24,7 +24,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -52,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import dagger.Lazy;
-import kotlin.jvm.JvmStatic;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -64,9 +62,11 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.delet
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.FILE_OPERATIONS_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 
@@ -95,7 +95,7 @@ public class FileManager {
                         || action.equals("")
                         || ((intent.getIntExtra("Mark", 0) != FILE_OPERATIONS_MARK))) return;
 
-                Log.i(LOG_TAG, "FileOperations onReceive");
+                logi("FileOperations onReceive");
 
                 if (action.equals(RootExecService.COMMAND_RESULT)) {
                     continueFileOperations();
@@ -123,7 +123,7 @@ public class FileManager {
 
                     if (!dir.canRead() || !dir.canWrite()) {
                         if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod dir " + dir);
+                            logw("Unable to chmod dir " + dir);
                         }
                     }
                 }
@@ -140,7 +140,7 @@ public class FileManager {
                 try {
                     inFile = new File(inputPath + "/" + inputFile);
                 } catch (Exception e) {
-                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inputPath + "/" + inputFile);
                 }
@@ -151,7 +151,7 @@ public class FileManager {
 
                 if (!inFile.canRead()) {
                     if (!inFile.setReadable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod file " + inFile);
+                        logw("Unable to chmod file " + inFile);
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inFile.getPath());
                     } else if (!inFile.canRead()) {
@@ -195,7 +195,7 @@ public class FileManager {
                 }
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, "moveBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+                loge("moveBinaryFile function fault", e);
                 if (callback != null && !tag.contains("ignored")) {
                     if (callback instanceof OnBinaryFileOperationsCompleteListener) {
                         ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
@@ -230,7 +230,7 @@ public class FileManager {
 
                     if (!dir.canRead() || !dir.canWrite()) {
                         if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod dir " + dir);
+                            logw("Unable to chmod dir " + dir);
                         }
                     }
                 }
@@ -247,7 +247,7 @@ public class FileManager {
                 try {
                     inFile = new File(inputPath + "/" + inputFile);
                 } catch (Exception e) {
-                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inputPath + "/" + inputFile);
                 }
@@ -258,7 +258,7 @@ public class FileManager {
 
                 if (!inFile.canRead()) {
                     if (!inFile.setReadable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod file " + inFile);
+                        logw("Unable to chmod file " + inFile);
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inFile.getPath());
                     } else if (!inFile.canRead()) {
@@ -301,7 +301,7 @@ public class FileManager {
                         throw new ClassCastException("Wrong File operations type. Choose binary type.");
                     }
                 }
-                Log.e(LOG_TAG, "copyBinaryFile function fault " + e.getMessage() + " " + e.getCause());
+                loge("copyBinaryFile function fault", e);
             } finally {
                 reentrantLock.unlock();
             }
@@ -328,7 +328,7 @@ public class FileManager {
 
                 if (!dir.canRead() || !dir.canWrite()) {
                     if (!dir.setReadable(true) || !dir.setWritable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod dir " + dir);
+                        logw("Unable to chmod dir " + dir);
                     }
                 }
             }
@@ -345,7 +345,7 @@ public class FileManager {
             try {
                 inFile = new File(inputPath + "/" + inputFile);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, inputPath + "/" + inputFile);
             }
@@ -356,7 +356,7 @@ public class FileManager {
 
             if (!inFile.canRead()) {
                 if (!inFile.setReadable(true)) {
-                    Log.w(LOG_TAG, "Unable to chmod file " + inFile);
+                    logw("Unable to chmod file " + inFile);
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inFile.getPath());
                 } else if (!inFile.canRead()) {
@@ -380,7 +380,7 @@ public class FileManager {
             }
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "copyBinaryFileSynchronous function fault " + e.getMessage() + " " + e.getCause());
+            loge("copyBinaryFileSynchronous function fault", e);
         } finally {
             reentrantLock.unlock();
         }
@@ -397,7 +397,7 @@ public class FileManager {
             try {
                 inDir = new File(inputPath);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "Dir is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                logw("Dir is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, inputPath);
             }
@@ -408,7 +408,7 @@ public class FileManager {
 
             if (!inDir.canRead()) {
                 if (!inDir.setReadable(true)) {
-                    Log.w(LOG_TAG, "Unable to chmod dir " + inDir);
+                    logw("Unable to chmod dir " + inDir);
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inDir.getPath());
                 } else if (!inDir.canRead()) {
@@ -424,7 +424,7 @@ public class FileManager {
             }
 
             if (!outDir.setReadable(true) || !outDir.setWritable(true) || !outDir.setExecutable(true)) {
-                Log.w(LOG_TAG, "Unable to chmod dir " + outDir);
+                logw("Unable to chmod dir " + outDir);
             }
 
             for (File file: Objects.requireNonNull(inDir.listFiles())) {
@@ -441,7 +441,7 @@ public class FileManager {
             }
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "copyFolderSynchronous function fault " + e.getMessage() + " " + e.getCause());
+            loge("copyFolderSynchronous function fault", e);
         } finally {
             reentrantLock.unlock();
         }
@@ -457,7 +457,7 @@ public class FileManager {
             try {
                 usedFile = new File(inputPath + "/" + inputFile);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, inputPath + "/" + inputFile);
             }
@@ -469,28 +469,28 @@ public class FileManager {
             if (usedFile.exists()) {
                 if (!usedFile.canRead() || !usedFile.canWrite()) {
                     if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
+                        logw("Unable to chmod file " + inputPath + "/" + inputFile);
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inputPath + "/" + inputFile);
                     } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                        Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
+                        loge("Unable to chmod file " + inputPath + "/" + inputFile);
                         return true;
                     }
                 }
                 if (!usedFile.delete()) {
-                    Log.w(LOG_TAG, "Unable to delete file " + usedFile + " Try restore access!");
+                    logw("Unable to delete file " + usedFile + " Try restore access!");
 
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inputPath + "/" + inputFile);
 
                     if (!usedFile.delete()) {
-                        Log.e(LOG_TAG, "Unable to delete file " + usedFile);
+                        loge("Unable to delete file " + usedFile);
                     }
 
                     return true;
                 }
             } else {
-                Log.w(LOG_TAG, "Unable to delete file internal function. No file " + usedFile);
+                logw("Unable to delete file internal function. No file " + usedFile);
                 return false;
             }
         } catch (Exception e) {
@@ -499,7 +499,7 @@ public class FileManager {
                 fileManager.restoreAccess(context, inputPath + "/" + inputFile);
             }
 
-            Log.e(LOG_TAG, "deleteFileSynchronous function fault " + e.getMessage());
+            loge("deleteFileSynchronous function fault", e);
             return true;
         } finally {
             reentrantLock.unlock();
@@ -518,7 +518,7 @@ public class FileManager {
                 try {
                     usedFile = new File(inputPath + "/" + inputFile);
                 } catch (Exception e) {
-                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, inputPath + "/" + inputFile);
                 }
@@ -530,15 +530,15 @@ public class FileManager {
                 if (usedFile.exists()) {
                     if (!usedFile.canRead() || !usedFile.canWrite()) {
                         if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                            Log.w(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
+                            logw("Unable to chmod file " + inputPath + "/" + inputFile);
                             FileManager fileManager = new FileManager();
                             fileManager.restoreAccess(context, inputPath + "/" + inputFile);
                         } else if (!usedFile.setReadable(true) || !usedFile.setWritable(true)) {
-                            Log.e(LOG_TAG, "Unable to chmod file " + inputPath + "/" + inputFile);
+                            loge("Unable to chmod file " + inputPath + "/" + inputFile);
                         }
                     }
                     if (!usedFile.delete()) {
-                        Log.w(LOG_TAG, "Unable to delete file " + usedFile + " Try restore access!");
+                        logw("Unable to delete file " + usedFile + " Try restore access!");
 
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inputPath + "/" + inputFile);
@@ -548,7 +548,7 @@ public class FileManager {
                         }
                     }
                 } else {
-                    Log.w(LOG_TAG, "Unable to delete file. No file " + usedFile);
+                    logw("Unable to delete file. No file " + usedFile);
                 }
 
                 if (callback != null && !tag.contains("ignored")) {
@@ -560,7 +560,7 @@ public class FileManager {
                     }
                 }
             } catch (Exception e) {
-                Log.e(LOG_TAG, "deleteFile function fault " + e.getMessage() + " " + e.getCause());
+                loge("deleteFile function fault", e);
                 if (callback != null && !tag.contains("ignored")) {
                     if (callback instanceof OnBinaryFileOperationsCompleteListener) {
                         ((OnBinaryFileOperationsCompleteListener) callback).OnFileOperationComplete(
@@ -585,7 +585,6 @@ public class FileManager {
         executorService.execute(runnable);
     }
 
-    @JvmStatic
     public static boolean deleteDirSynchronous(final Context context, final String inputPath) {
         reentrantLock.lock();
 
@@ -597,7 +596,7 @@ public class FileManager {
             try {
                 usedDir = new File(inputPath);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "Dir is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                logw("Dir is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, inputPath);
             }
@@ -609,11 +608,11 @@ public class FileManager {
             if (usedDir.isDirectory()) {
                 if (!usedDir.canRead() || !usedDir.canWrite()) {
                     if (!usedDir.setReadable(true) || !usedDir.setWritable(true)) {
-                        Log.w(LOG_TAG, "Unable to chmod dir " + inputPath);
+                        logw("Unable to chmod dir " + inputPath);
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, inputPath);
                     } else if (!usedDir.setReadable(true) || !usedDir.setWritable(true)) {
-                        Log.e(LOG_TAG, "Unable to chmod dir " + inputPath);
+                        loge("Unable to chmod dir " + inputPath);
                     }
                 }
             } else {
@@ -637,7 +636,7 @@ public class FileManager {
             }
 
             if (!usedDir.delete()) {
-                Log.w(LOG_TAG, "Unable to delete dir " + inputPath + " Try to restore access!");
+                logw("Unable to delete dir " + inputPath + " Try to restore access!");
 
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, inputPath);
@@ -649,7 +648,7 @@ public class FileManager {
 
             result = true;
         } catch (Exception e) {
-            Log.e(LOG_TAG, "delete Dir function fault " + e.getMessage() + " " + e.getCause());
+            loge("delete Dir function fault", e);
 
             if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
                 FileManager fileManager = new FileManager();
@@ -677,7 +676,7 @@ public class FileManager {
                 try {
                     f = new File(filePath);
                 } catch (Exception e) {
-                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, filePath);
                 }
@@ -688,13 +687,13 @@ public class FileManager {
 
                 if (f.isFile()) {
                     if (f.canRead() || f.setReadable(true, false)) {
-                        Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
+                        logi("readTextFile take " + filePath + " success");
                     } else {
-                        Log.w(LOG_TAG, "readTextFile take " + filePath + " warning");
+                        logw("readTextFile take " + filePath + " warning");
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, filePath);
                         if (f.setReadable(true, false)) {
-                            Log.i(LOG_TAG, "readTextFile take " + filePath + " success");
+                            logi("readTextFile take " + filePath + " success");
                         } else {
                             throw new IllegalStateException("readTextFile take " + filePath + " error");
                         }
@@ -742,7 +741,7 @@ public class FileManager {
                 }
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, "readTextFile Exception " + e.getMessage() + " " + e.getCause());
+                loge("readTextFile Exception", e);
                 if (callback != null) {
                     if (callback instanceof OnTextFileOperationsCompleteListener) {
                         ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
@@ -780,7 +779,7 @@ public class FileManager {
                 try {
                     f = new File(filePath);
                 } catch (Exception e) {
-                    Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                    logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, filePath);
                 }
@@ -791,13 +790,13 @@ public class FileManager {
 
                 if (f.isFile()) {
                     if (f.canRead() && f.canWrite() || f.setReadable(true, false) && f.setWritable(true)) {
-                        Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
+                        logi("writeToTextFile writeTo " + filePath + " success");
                     } else {
-                        Log.w(LOG_TAG, "writeToTextFile writeTo " + filePath + " warning");
+                        logw("writeToTextFile writeTo " + filePath + " warning");
                         FileManager fileManager = new FileManager();
                         fileManager.restoreAccess(context, filePath);
                         if (f.setReadable(true, false) && f.setWritable(true)) {
-                            Log.i(LOG_TAG, "writeToTextFile writeTo " + filePath + " success");
+                            logi("writeToTextFile writeTo " + filePath + " success");
                         } else {
                             throw new IllegalStateException("writeToTextFile writeTo " + filePath + " error");
                         }
@@ -823,7 +822,7 @@ public class FileManager {
                     }
                 }
             } catch (Exception e) {
-                Log.e(LOG_TAG, "writeToTextFile Exception " + e.getMessage() + " " + e.getCause());
+                loge("writeToTextFile", e);
                 if (callback != null && !tag.contains("ignored")) {
                     if (callback instanceof OnTextFileOperationsCompleteListener) {
                         ((OnTextFileOperationsCompleteListener) callback).OnFileOperationComplete(
@@ -863,7 +862,7 @@ public class FileManager {
             try {
                 f = new File(filePath);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, filePath);
             }
@@ -874,13 +873,13 @@ public class FileManager {
 
             if (f.isFile()) {
                 if (f.canRead() || f.setReadable(true, false)) {
-                    Log.i(LOG_TAG, "readTextFileSynchronous take " + filePath + " success");
+                    logi("readTextFileSynchronous take " + filePath + " success");
                 } else {
-                    Log.w(LOG_TAG, "readTextFileSynchronous take " + filePath + " warning");
+                    logw("readTextFileSynchronous take " + filePath + " warning");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, filePath);
                     if (f.setReadable(true, false)) {
-                        Log.i(LOG_TAG, "readTextFileSynchronous take " + filePath + " success");
+                        logi("readTextFileSynchronous take " + filePath + " success");
                     } else {
                         throw new IllegalStateException("readTextFileSynchronous take " + filePath + " error");
                     }
@@ -914,7 +913,7 @@ public class FileManager {
             }
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "readTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
+            loge("readTextFileSynchronous", e);
 
             if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
                 FileManager fileManager = new FileManager();
@@ -940,7 +939,7 @@ public class FileManager {
             try {
                 f = new File(filePath);
             } catch (Exception e) {
-                Log.w(LOG_TAG, "File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
+                logw("File is no accessible " + e.getMessage() + " " + e.getCause() + " .Try to restore access.");
                 FileManager fileManager = new FileManager();
                 fileManager.restoreAccess(context, filePath);
             }
@@ -951,13 +950,13 @@ public class FileManager {
 
             if (f.isFile()) {
                 if (f.canRead() && f.canWrite() || f.setReadable(true, false) && f.setWritable(true)) {
-                    Log.i(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " success");
+                    logi("writeTextFileSynchronous writeTo " + filePath + " success");
                 } else {
-                    Log.w(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " warning");
+                    logw("writeTextFileSynchronous writeTo " + filePath + " warning");
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, filePath);
                     if (f.setReadable(true, false) && f.setWritable(true)) {
-                        Log.i(LOG_TAG, "writeTextFileSynchronous writeTo " + filePath + " success");
+                        logi("writeTextFileSynchronous writeTo " + filePath + " success");
                     } else {
                         throw new IllegalStateException("writeTextFileSynchronous writeTo " + filePath + " error");
                     }
@@ -972,7 +971,7 @@ public class FileManager {
 
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "writeTextFileSynchronous Exception " + e.getMessage() + " " + e.getCause());
+            loge("writeTextFileSynchronous", e);
             result = false;
 
             if (e.getMessage() != null && e.getMessage().contains("Permission denied")) {
@@ -1049,7 +1048,7 @@ public class FileManager {
                     executorService.awaitTermination(10, TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
                     executorService.shutdownNow();
-                    Log.w(LOG_TAG, "FileOperations executorService awaitTermination has interrupted " + e.getMessage());
+                    logw("FileOperations executorService awaitTermination has interrupted", e);
                 }
 
             }
@@ -1061,7 +1060,7 @@ public class FileManager {
         try {
             latch.await();
         } catch (InterruptedException e) {
-            Log.w(LOG_TAG, "FileOperations latch interrupted " + e.getMessage() + " " + e.getCause());
+            logw("FileOperations latch interrupted", e);
         }
     }
 

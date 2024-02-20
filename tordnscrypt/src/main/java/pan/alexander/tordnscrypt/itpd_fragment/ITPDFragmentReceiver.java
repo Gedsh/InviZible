@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.itpd_fragment;
@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.itpd_fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,8 +40,8 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.modules.ModulesService.ITPD_KEYWORD;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.I2PD_RUN_FRAGMENT_MARK;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
@@ -88,11 +87,11 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                     || action.equals("")
                     || ((intent.getIntExtra("Mark", 0) != I2PD_RUN_FRAGMENT_MARK) &&
                     !action.equals(TOP_BROADCAST))) return;
-            Log.i(LOG_TAG, "I2PDFragment onReceive");
+            logi("I2PDFragment onReceive");
 
             if (action.equals(RootExecService.COMMAND_RESULT)) {
 
-                view.setITPDProgressBarIndeterminate(false);
+                //view.setITPDProgressBarIndeterminate(false);
 
                 view.setITPDStartButtonEnabled(true);
 
@@ -107,7 +106,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
                 StringBuilder sb = new StringBuilder();
                 if (comResult != null) {
                     for (String com : comResult.getCommands()) {
-                        Log.i(LOG_TAG, com);
+                        logi(com);
                         sb.append(com).append((char) 10);
                     }
                 }
@@ -155,7 +154,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
             if (action.equals(TOP_BROADCAST)) {
                 if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
                     checkITPDVersionWithRoot(context);
-                    Log.i(LOG_TAG, "ITPDRunFragment onReceive TOP_BROADCAST");
+                    logi("ITPDRunFragment onReceive TOP_BROADCAST");
                 }
             }
         }

@@ -14,13 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
 
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+
 interface ConnectionRecordsRepository {
-    fun getRawConnectionRecords(): List<ConnectionRecord?>
+    fun getRawConnectionRecords(): List<ConnectionData>
     fun clearConnectionRawRecords()
     fun connectionRawRecordsNoMoreRequired()
 }

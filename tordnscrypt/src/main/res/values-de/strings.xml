@@ -146,7 +146,7 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_use_iptables">"iptables auswählen"</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
-    <string name="notification_temp_text">"Führe Root Befehle aus..."</string>
+    <string name="notification_exec_root_commands">"Führe Root Befehle aus..."</string>
     <string name="tvSettings_text">"Bitte warten…"</string>
     <string name="toastSettings_saved">"Einstellungen gespeichert"</string>
     <string name="pref_dnscrypt_global_settings_categ">"GLOBALE EINSTELLUNGEN"</string>
@@ -366,7 +366,7 @@ Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation
         
 \tInviZible Pro wird veröffentlicht in der Hoffnung etwas Nützliches zu schaffen, allerdings OHNE JEGLICHE GEWÄHRLEISTUNG; ferner ohne jegliche auch nur implizierte Zusicherung von Verwendbarkeit oder Gebrauchstauglichkeit für spezielle Einsatzzwecke.
         
-\tCopyright © 2019-2023
+\tCopyright © 2019-2024
         
 \tGarmatin Oleksandr
         

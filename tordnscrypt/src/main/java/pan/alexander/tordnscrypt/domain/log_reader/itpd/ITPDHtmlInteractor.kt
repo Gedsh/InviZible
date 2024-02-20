@@ -14,29 +14,29 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.log_reader.itpd
 
-import android.util.Log
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 import java.lang.ref.WeakReference
+import java.util.concurrent.ConcurrentHashMap
 
 class ITPDHtmlInteractor(private val modulesLogRepository: ModulesLogRepository) {
-    private val listeners: HashMap<Class<*>, WeakReference<OnITPDHtmlUpdatedListener>> = hashMapOf()
+    private val listeners = ConcurrentHashMap<Class<*>, WeakReference<OnITPDHtmlUpdatedListener>>()
     private var parser: ITPDHtmlParser? = null
     private val modulesStatus = ModulesStatus.getInstance()
 
-    fun <T: OnITPDHtmlUpdatedListener> addListener (listener: T?) {
+    fun <T : OnITPDHtmlUpdatedListener> addListener(listener: T?) {
         listener?.let { listeners[it.javaClass] = WeakReference(it) }
     }
 
-    fun <T: OnITPDHtmlUpdatedListener> removeListener (listener: T?) {
+    fun <T : OnITPDHtmlUpdatedListener> removeListener(listener: T?) {
         listener?.let { listeners.remove(it.javaClass) }
 
         if (listeners.isEmpty()) {
@@ -52,10 +52,7 @@ class ITPDHtmlInteractor(private val modulesLogRepository: ModulesLogRepository)
         try {
             parseHtml()
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG, "ITPDHtmlInteractor parseITPDHTML exception " +
-                        "${e.message} ${e.cause} ${e.stackTrace.joinToString { "," }}"
-            )
+            loge("ITPDHtmlInteractor parseITPDHTML", e, true)
         }
     }
 

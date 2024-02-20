@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs
@@ -25,7 +25,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
@@ -33,8 +32,8 @@ import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import javax.inject.Inject
 
 class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
@@ -56,9 +55,9 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(activity)
 
-        builder.setTitle(R.string.helper_dialog_title)
+        builder.setTitle(R.string.notification_exclude_bat_optimisation_title)
         builder.setMessage(R.string.pref_common_notification_helper)
 
         builder.setPositiveButton(R.string.ok) { _, _ ->
@@ -67,7 +66,7 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
                     try {
                         it.startActivity(this)
                     } catch (e: Exception) {
-                        Log.e(LOG_TAG, "Requesting ignore battery optimization failed ${e.message}")
+                        loge("Requesting ignore battery optimization failed", e)
                     }
                 }
             }
@@ -79,7 +78,7 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
             )
         }
 
-        builder.setNegativeButton(R.string.cancel) { dialog, _ ->
+        builder.setNegativeButton(R.string.ask_later) { dialog, _ ->
             dialog.cancel()
         }
 

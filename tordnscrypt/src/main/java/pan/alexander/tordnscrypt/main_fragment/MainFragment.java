@@ -14,11 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.main_fragment;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -27,7 +30,6 @@ import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.Spanned;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -73,14 +75,18 @@ import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
+
+import com.google.android.material.divider.MaterialDivider;
 
 import javax.inject.Inject;
 
@@ -98,8 +104,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     private TextView tvTorMainFragment;
     private TextView tvITPDMainFragment;
     private ProgressBar pbDNSMainFragment;
+    private MaterialDivider divDNSMainFragment;
     private ProgressBar pbTorMainFragment;
+    private MaterialDivider divTorMainFragment;
     private ProgressBar pbITPDMainFragment;
+    private MaterialDivider divITPDMainFragment;
 
     private DNSCryptFragmentPresenter dnsCryptFragmentPresenter;
     private DNSCryptFragmentReceiver dnsCryptFragmentReceiver;
@@ -151,8 +160,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         tvITPDMainFragment = view.findViewById(R.id.tvITPDMainFragment);
 
         pbDNSMainFragment = view.findViewById(R.id.pbDNSMainFragment);
+        divDNSMainFragment = view.findViewById(R.id.divDNSMainFragment);
         pbTorMainFragment = view.findViewById(R.id.pbTorMainFragment);
+        divTorMainFragment = view.findViewById(R.id.divTorMainFragment);
         pbITPDMainFragment = view.findViewById(R.id.pbITPDMainFragment);
+        divITPDMainFragment = view.findViewById(R.id.divITPDMainFragment);
 
         Context context = getActivity();
         if (context == null) {
@@ -224,7 +236,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(itpdFragmentReceiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "MainFragment onStop exception " + e.getMessage() + " " + e.getCause());
+            loge("MainFragment onStop", e);
         }
 
         if (dnsCryptFragmentPresenter != null) {
@@ -264,6 +276,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         tvTorMainFragment = null;
         tvITPDMainFragment = null;
         pbDNSMainFragment = null;
+        divDNSMainFragment = null;
+        divTorMainFragment = null;
+        divITPDMainFragment = null;
         pbTorMainFragment = null;
         pbITPDMainFragment = null;
 
@@ -484,9 +499,41 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void setDNSCryptProgressBarIndeterminate(boolean indeterminate) {
         if (!pbDNSMainFragment.isIndeterminate() && indeterminate) {
-            pbDNSMainFragment.setIndeterminate(true);
+            progressBarExpandWithAnimation(pbDNSMainFragment, divDNSMainFragment, 0.1f, 1f);
         } else if (pbDNSMainFragment.isIndeterminate() && !indeterminate) {
-            pbDNSMainFragment.setIndeterminate(false);
+            progressBarCollapseWithAnimation(pbDNSMainFragment, divDNSMainFragment, 1f, 0.1f);
+        }
+    }
+
+    public void progressBarExpandWithAnimation(ProgressBar progress,
+                                               MaterialDivider divider,
+                                               float... values) {
+        progress.setIndeterminate(true);
+        if (progress.getVisibility() == View.GONE) {
+            ObjectAnimator.ofFloat(progress, View.SCALE_X, values)
+                    .setDuration(150).start();
+            progress.setVisibility(View.VISIBLE);
+            divider.setVisibility(View.GONE);
+        }
+    }
+
+    public void progressBarCollapseWithAnimation(ProgressBar progress,
+                                                 MaterialDivider divider,
+                                                 float... values) {
+        progress.setIndeterminate(false);
+        if (progress.getVisibility() == View.VISIBLE) {
+            ObjectAnimator animator = ObjectAnimator.ofFloat(progress, View.SCALE_X, values)
+                    .setDuration(100);
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(@NonNull Animator animation) {
+                    super.onAnimationEnd(animation);
+                    progress.setVisibility(View.GONE);
+                    progress.setScaleX(1f);
+                    divider.setVisibility(View.VISIBLE);
+                }
+            });
+            animator.start();
         }
     }
 
@@ -510,7 +557,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 tvDNSCryptLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
             }
             tvDNSCryptLog.setGravity(Gravity.CENTER);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
             params.gravity = Gravity.CENTER;
             svDNSCryptLog.setLayoutParams(params);
         }
@@ -536,7 +583,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 tvDNSCryptLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
             }
             tvDNSCryptLog.setGravity(Gravity.NO_GRAVITY);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
             params.gravity = Gravity.BOTTOM;
             svDNSCryptLog.setLayoutParams(params);
         }
@@ -593,16 +640,26 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
     @Override
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
-        if (!pbTorMainFragment.isIndeterminate() && indeterminate) {
-            pbTorMainFragment.setIndeterminate(true);
-        } else if (pbTorMainFragment.isIndeterminate() && !indeterminate) {
-            pbTorMainFragment.setIndeterminate(false);
+        if (indeterminate && !pbTorMainFragment.isIndeterminate()) {
+            progressBarExpandWithAnimation(pbTorMainFragment, divTorMainFragment, 0.1f, 1f);
+        } else if (!indeterminate) {
+            progressBarCollapseWithAnimation(pbTorMainFragment, divTorMainFragment, 1f, 0.1f);
         }
     }
 
     @Override
     public void setTorProgressBarProgress(int progress) {
-        pbTorMainFragment.setProgress(progress);
+        if (pbTorMainFragment.isIndeterminate()) {
+            pbTorMainFragment.setIndeterminate(false);
+        }
+        if (progress >= 0) {
+            pbTorMainFragment.setProgress(progress);
+            pbTorMainFragment.setVisibility(View.VISIBLE);
+            divTorMainFragment.setVisibility(View.GONE);
+        } else {
+            pbTorMainFragment.setVisibility(View.GONE);
+            divTorMainFragment.setVisibility(View.VISIBLE);
+        }
     }
 
     @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
@@ -625,7 +682,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 tvTorLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
             }
             tvTorLog.setGravity(Gravity.CENTER);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
             params.gravity = Gravity.CENTER;
             svTorLog.setLayoutParams(params);
         }
@@ -651,7 +708,7 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 tvTorLog.setTextSize(COMPLEX_UNIT_PX, TopFragment.logsTextSize);
             }
             tvTorLog.setGravity(Gravity.NO_GRAVITY);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT);
             params.gravity = Gravity.BOTTOM;
             svTorLog.setLayoutParams(params);
         }
@@ -694,9 +751,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public void setITPDProgressBarIndeterminate(boolean indeterminate) {
         if (!pbITPDMainFragment.isIndeterminate() && indeterminate) {
-            pbITPDMainFragment.setIndeterminate(true);
+            progressBarExpandWithAnimation(pbITPDMainFragment, divITPDMainFragment, 0f, 1f);
         } else if (pbITPDMainFragment.isIndeterminate() && !indeterminate) {
-            pbITPDMainFragment.setIndeterminate(false);
+            progressBarCollapseWithAnimation(pbITPDMainFragment, divITPDMainFragment, 1f, 0f);
         }
     }
 

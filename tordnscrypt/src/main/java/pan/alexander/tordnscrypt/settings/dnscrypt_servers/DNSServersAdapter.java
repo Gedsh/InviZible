@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
@@ -36,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
@@ -58,6 +59,20 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
     private final boolean relaysMdExist;
     private final SearchView searchDNSServer;
 
+    private final String colorDNSCryptServer;
+    private final String colorDohServer;
+    private final String colorNonFilteringServer;
+    private final String colorFilteringServer;
+    private final String colorNonLoggingServer;
+    private final String colorKeepLogsServer;
+    private final String colorDNSSECServer;
+    private final String pressToAdd;
+    private final String longPressToAdd;
+    private final String pressToEdit;
+    private final String longPressToEdit;
+    private final String anonymizeRelays;
+    private final String relaysNotUsed;
+
     DNSServersAdapter(Context context, SearchView searchDNSServer,
                       PreferencesDNSCryptServers preferencesDNSCryptServers,
                       FragmentManager fragmentManager,
@@ -74,6 +89,21 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
         this.relaysMdExist = relaysMdExist;
 
         lInflater = (LayoutInflater) Objects.requireNonNull(context).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        colorDNSCryptServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDNSCryptServer)));
+        colorDohServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDohServer)));
+        colorNonFilteringServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorNonFilteringServer)));
+        colorFilteringServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorFilteringServer)));
+        colorNonLoggingServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorNonLoggingServer)));
+        colorKeepLogsServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorKeepLogsServer)));
+        colorDNSSECServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDNSSECServer)));
+
+        pressToAdd = ContextCompat.getString(context, R.string.press_to_add);
+        longPressToAdd = ContextCompat.getString(context, R.string.long_press_to_add);
+        pressToEdit = ContextCompat.getString(context, R.string.press_to_edit);
+        longPressToEdit = ContextCompat.getString(context, R.string.long_press_to_edit);
+        anonymizeRelays = ContextCompat.getString(context, R.string.anonymize_relays);
+        relaysNotUsed = ContextCompat.getString(context, R.string.anonymize_relays_not_used);
     }
 
 
@@ -172,7 +202,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
             StringBuilder sb = new StringBuilder();
             if (dnsServer.isProtoDNSCrypt()) {
-                sb.append("<font color='#7F4E52'>DNSCrypt Server </font>");
+                sb.append("<font color='").append(colorDNSCryptServer).append("'>DNSCrypt Server </font>");
 
                 if (dnsServer.isChecked() && relaysMdExist) {
                     StringBuilder routes = new StringBuilder();
@@ -180,7 +210,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
                     boolean orientation = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
 
                     if (dnsServer.getRoutes().size() > 0) {
-                        routes.append("Anonymize relays: ");
+                        routes.append(anonymizeRelays).append(": ");
 
                         for (String route : dnsServer.getRoutes()) {
                             routes.append(route).append(", ");
@@ -190,17 +220,17 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
 
                         if (orientation) {
-                            routes.append(".\nLong Press to edit.");
+                            routes.append(".\n").append(longPressToEdit);
                         } else {
-                            routes.append(".\nPress to edit.");
+                            routes.append(".\n").append(pressToEdit);
                         }
 
 
                     } else {
                         if (orientation) {
-                            routes.append("Anonymize relays are not used.\nLong Press to add.");
+                            routes.append(relaysNotUsed).append("\n").append(longPressToAdd);
                         } else {
-                            routes.append("Anonymize relays are not used.\nPress to add.");
+                            routes.append(relaysNotUsed).append("\n").append(pressToAdd);
                         }
 
                     }
@@ -213,22 +243,22 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
                 }
 
             } else if (dnsServer.isProtoDoH()) {
-                sb.append("<font color='#614051'>DoH Server </font>");
+                sb.append("<font color='").append(colorDohServer).append("'>DoH Server </font>");
                 btnDNSServerRelay.setVisibility(View.GONE);
             }
             if (dnsServer.isNofilter()) {
-                sb.append("<font color='#728FCE'>Non-Filtering </font>");
+                sb.append("<font color='").append(colorNonFilteringServer).append("'>Non-Filtering </font>");
             } else {
-                sb.append("<font color='#4C787E'>Filtering </font>");
+                sb.append("<font color='").append(colorFilteringServer).append("'>Filtering </font>");
             }
             if (dnsServer.isNolog()) {
-                sb.append("<font color='#4863A0'>Non-Logging </font>");
+                sb.append("<font color='").append(colorNonLoggingServer).append("'>Non-Logging </font>");
             } else {
-                sb.append("<font color='#800517'>Keep Logs </font>");
+                sb.append("<font color='").append(colorKeepLogsServer).append("'>Keep Logs </font>");
             }
 
             if (dnsServer.isDnssec()) {
-                sb.append("<font color='#4E387E'>DNSSEC</font>");
+                sb.append("<font color='").append(colorDNSSECServer).append("'>DNSSEC</font>");
             }
 
             tvDNSServerFlags.setText(Html.fromHtml(sb.toString()));

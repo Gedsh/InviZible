@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules
@@ -30,7 +30,8 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import javax.inject.Inject
 import javax.inject.Named
 
-private const val DELAY_BEFORE_RESTART_TOR_SEC = 30
+private const val DELAY_BEFORE_RESTART_TOR_SEC = 10
+private const val DELAY_BEFORE_FULL_RESTART_TOR_SEC = 35
 
 @ExperimentalCoroutinesApi
 class TorRestarterReconnector @Inject constructor(
@@ -69,12 +70,18 @@ class TorRestarterReconnector @Inject constructor(
 
                 logi("Start Tor restarter counter")
 
-                while (counter < DELAY_BEFORE_RESTART_TOR_SEC) {
+                while (counter < DELAY_BEFORE_FULL_RESTART_TOR_SEC) {
+                    if (counter == DELAY_BEFORE_RESTART_TOR_SEC
+                        && modulesStatus.isTorReady
+                        && isNetworkAvailable()) {
+                        ModulesRestarter.rebootTor(context)
+                    }
                     counter++
                     delay(1000L)
                 }
 
-                if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady
+                if (modulesStatus.torState == ModuleState.RUNNING
+                    && modulesStatus.isTorReady
                     && isNetworkAvailable()
                 ) {
                     deleteTorCachedFiles()

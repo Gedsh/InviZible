@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_apps;
@@ -23,7 +23,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +43,6 @@ import com.google.android.material.chip.ChipGroup;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,9 +64,9 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
@@ -218,8 +216,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 if (notificationHelper != null && isAdded()) {
                     handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
-                Log.e(LOG_TAG, "UnlockTorAppsFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                        Arrays.toString(e.getStackTrace()));
+                loge("UnlockTorAppsFragment fault", e, true);
             }
         });
     }
@@ -590,8 +587,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 }
 
             } catch (Exception e) {
-                Log.e(LOG_TAG, "UnlockTorAppsFragment getDeviceApps exception " + e.getMessage()
-                        + "\n" + e.getCause() + "\n" + Arrays.toString(e.getStackTrace()));
+                loge("UnlockTorAppsFragment getDeviceApps", e, true);
             } finally {
                 if (reentrantLock.isLocked()) {
                     reentrantLock.unlock();

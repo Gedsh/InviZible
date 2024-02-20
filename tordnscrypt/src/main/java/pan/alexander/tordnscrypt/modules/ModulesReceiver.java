@@ -14,12 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -29,6 +30,8 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
@@ -50,6 +53,7 @@ import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.VpnService;
 import android.os.Build;
@@ -59,10 +63,12 @@ import android.os.PowerManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -79,12 +85,14 @@ import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
@@ -116,6 +124,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final Lazy<Handler> handler;
     private final Lazy<TorRestarterReconnector> torRestarterReconnector;
     private final Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
+    private final Lazy<PathVars> pathVars;
 
     private Context context;
     private volatile Object commonNetworkCallback;
@@ -131,6 +140,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private volatile boolean vpnRevoked = false;
 
     private static final int CHECK_INTERNET_CONNECTION_DELAY_SEC = 30;
+    private static final int RESTART_DNSCRYPT_DELAY_SEC = 5;
     private final AtomicBoolean isCheckingInternetConnection = new AtomicBoolean(false);
 
     @Inject
@@ -142,7 +152,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             CachedExecutor cachedExecutor,
             Lazy<Handler> handler,
             Lazy<TorRestarterReconnector> torRestarterReconnector,
-            Lazy<InstalledAppNamesStorage> installedAppNamesStorage
+            Lazy<InstalledAppNamesStorage> installedAppNamesStorage,
+            Lazy<PathVars> pathVars
     ) {
         this.preferenceRepository = preferenceRepository;
         this.defaultPreferences = defaultSharedPreferences;
@@ -152,6 +163,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         this.handler = handler;
         this.torRestarterReconnector = torRestarterReconnector;
         this.installedAppNamesStorage = installedAppNamesStorage;
+        this.pathVars = pathVars;
     }
 
     @Override
@@ -346,7 +358,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         powerOFF.addAction(SHUTDOWN_FILTER_ACTION);
         powerOFF.addAction(POWER_OFF_FILTER_ACTION);
         powerOFF.addAction(REBOOT_FILTER_ACTION);
-        context.registerReceiver(this, powerOFF);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(this, powerOFF, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            context.registerReceiver(this, powerOFF);
+        }
         rootReceiversRegistered = true;
     }
 
@@ -393,9 +409,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onAvailable(@NonNull Network network) {
 
-                last_connected = isNetworkAvailable();
+                if (isVpnNetwork(cm, network)) {
+                    logi("ModulesReceiver available VPN network=" + network + " connected=" + last_connected);
+                    return;
+                } else {
+                    logi("ModulesReceiver available network=" + network + " connected=" + last_connected);
+                }
 
-                logi("ModulesReceiver available network=" + network + " connected=" + last_connected);
+                last_connected = true;
+                setNetworkAvailable(true);
 
                 if (!last_connected) {
                     last_connected = true;
@@ -425,9 +447,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
 
             @Override
-            public void onLinkPropertiesChanged(@NonNull Network network, LinkProperties linkProperties) {
+            public void onLinkPropertiesChanged(@NonNull Network network, @NonNull LinkProperties linkProperties) {
 
                 logi("ModulesReceiver changed link properties=" + linkProperties);
+
+                if (isVpnNetwork(cm, network)) {
+                    return;
+                }
+
+                setNetworkAvailable(true);
 
                 // Make sure the right DNS servers are being used
                 List<InetAddress> dns = linkProperties.getDnsServers();
@@ -435,6 +463,29 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !same(last_dns, dns)) {
                     logi(" DNS cur=" + (dns == null ? null : TextUtils.join(",", dns)) +
                             " DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
+
+                    String nat64 = "";
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                            && linkProperties.getNat64Prefix() != null) {
+                        nat64 = linkProperties.getNat64Prefix().toString();
+                    }
+                    boolean restartRequested = false;
+                    if (!nat64.isEmpty() && isNat64Active() && !getSavedNat64Prefix().equals(nat64)) {
+                        updateDNSCryptNat64Prefix(nat64);
+                        restartRequested = true;
+                    }
+
+                    if (!restartRequested
+                            && modulesStatus.getDnsCryptState() == RUNNING
+                            && isRestartNeeded(last_dns, dns)) {
+                        handler.get().postDelayed(() -> {
+                            if (modulesStatus.getDnsCryptState() == RUNNING) {
+                                logi("Restart DNSCrypt on network DNS change");
+                                ModulesRestarter.restartDNSCrypt(context);
+                            }
+                        }, RESTART_DNSCRYPT_DELAY_SEC * 1000);
+
+                    }
 
                     last_dns = dns;
 
@@ -468,7 +519,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onCapabilitiesChanged(@NonNull Network network, @NonNull NetworkCapabilities networkCapabilities) {
 
-                if (isNetworkAvailable() && (last_connected == null || !last_connected)) {
+                if (isVpnNetwork(cm, network)) {
+                    return;
+                }
+
+                setNetworkAvailable(true);
+
+                if (last_connected == null || !last_connected) {
 
                     last_connected = true;
 
@@ -521,9 +578,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onLost(@NonNull Network network) {
 
-                last_connected = false;
+                if (isVpnNetwork(cm, network)) {
+                    logi("ModulesReceiver lost VPN network=" + network + " connected=false");
+                    return;
+                } else {
+                    logi("ModulesReceiver lost network=" + network + " connected=false");
+                }
 
-                logi("ModulesReceiver lost network=" + network + " connected=false");
+                last_connected = false;
+                setNetworkAvailable(false);
 
                 if (isVpnMode() && !vpnRevoked) {
                     setInternetAvailable(false);
@@ -554,9 +617,75 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 return true;
             }
+
+            boolean isRestartNeeded(List<InetAddress> last, List<InetAddress> current) {
+                //Do not restart after the app start or if the network does not propagate DNS
+                if (last == null || current == null) {
+                    return false;
+                }
+                //Do not restart if network just advertises additional DNS
+                for (InetAddress address : current) {
+                    if (last.contains(address)) {
+                        return false;
+                    }
+                }
+                if (last.size() != current.size()) {
+                    return true;
+                }
+                return !new HashSet<>(last).containsAll(current);
+            }
+
+            boolean isNat64Active() {
+                return defaultPreferences.get().getBoolean(DNSCRYPT_DNS64, false);
+            }
+
+            String getSavedNat64Prefix() {
+                return defaultPreferences.get().getString(DNSCRYPT_DNS64_PREFIX, "64:ff9b::/96");
+            }
+
+            void saveNat64Prefix(String prefix) {
+                defaultPreferences.get().edit().putString(DNSCRYPT_DNS64_PREFIX, prefix).apply();
+            }
+
+            void updateDNSCryptNat64Prefix(String prefix) {
+                cachedExecutor.submit(() -> {
+                    boolean consumed = false;
+                    Pattern pattern = Pattern.compile("prefix ?= ?\\['" + IPv6_REGEX_NO_BOUNDS + "/\\d+']");
+                    List<String> conf = FileManager.readTextFileSynchronous(
+                            context,
+                            pathVars.get().getDnscryptConfPath()
+                    );
+                    for (int i = 0; i < conf.size(); i++) {
+                        String line = conf.get(i);
+                        if (line.startsWith("prefix =")) {
+                            Matcher matcher = pattern.matcher(line);
+                            if (matcher.matches()) {
+                                line = "prefix = ['" + prefix + "']";
+                                conf.set(i, line);
+                                consumed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!consumed) {
+                        return;
+                    }
+                    FileManager.writeTextFileSynchronous(
+                            context,
+                            pathVars.get().getDnscryptConfPath(),
+                            conf
+                    );
+                    saveNat64Prefix(prefix);
+                    if (modulesStatus.getDnsCryptState() == RUNNING) {
+                        logi("Restart DNSCrypt on network Nat64Prefix change");
+                        ModulesRestarter.restartDNSCrypt(context);
+                    }
+                });
+            }
         };
 
         if (cm != null) {
+            setNetworkAvailable(false);
             cm.registerNetworkCallback(builder.build(), nc);
             commonNetworkCallback = nc;
         }
@@ -567,11 +696,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null) {
             cm.unregisterNetworkCallback((ConnectivityManager.NetworkCallback) commonNetworkCallback);
+            setNetworkAvailable(false);
         }
     }
 
     private void listenConnectivityChanges() {
         logi("ModulesReceiver start listening to connectivity changes");
+        setNetworkAvailable(false);
         IntentFilter ifConnectivity = new IntentFilter();
         ifConnectivity.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         context.registerReceiver(this, ifConnectivity);
@@ -596,7 +727,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private void registerVpnRevokeReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(VPN_REVOKE_ACTION);
-        context.registerReceiver(this, intentFilter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(this, intentFilter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            context.registerReceiver(this, intentFilter);
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -680,13 +815,24 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     }
 
     private void connectivityStateChanged(Intent intent) {
+
+        if (intent == null) {
+            return;
+        }
+
         logi("ModulesReceiver connectivityStateChanged received " + intent);
+
+        Object network = intent.getParcelableExtra(ConnectivityManager.EXTRA_NETWORK_INFO);
 
         if (isVpnMode()) {
             // Filter VPN connectivity changes
             int networkType = intent.getIntExtra(ConnectivityManager.EXTRA_NETWORK_TYPE, ConnectivityManager.TYPE_DUMMY);
             if (networkType == ConnectivityManager.TYPE_VPN)
                 return;
+
+            if (network instanceof NetworkInfo) {
+                setNetworkAvailable(((NetworkInfo) network).isConnectedOrConnecting());
+            }
 
             if (vpnRevoked) {
                 resetArpScanner();
@@ -697,10 +843,16 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
 
         } else if (isRootMode()) {
+            if (network instanceof NetworkInfo) {
+                setNetworkAvailable(((NetworkInfo) network).isConnectedOrConnecting());
+            }
             updateIptablesRules(false);
             resetArpScanner();
             checkInternetConnection();
         } else if (isProxyMode()) {
+            if (network instanceof NetworkInfo) {
+                setNetworkAvailable(((NetworkInfo) network).isConnectedOrConnecting());
+            }
             resetArpScanner();
         }
     }
@@ -1008,7 +1160,23 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         return connectionCheckerInteractor.get().getNetworkConnectionResult();
     }
 
+    private void setNetworkAvailable(boolean available) {
+        connectionCheckerInteractor.get().setNetworkConnectionResult(available);
+    }
+
     private boolean isFirewallEnabled() {
         return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private boolean isVpnNetwork(ConnectivityManager connectivityManager, Network network) {
+        if (connectivityManager == null) {
+            return false;
+        }
+        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+        if (capabilities == null) {
+            return false;
+        }
+        return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN);
     }
 }

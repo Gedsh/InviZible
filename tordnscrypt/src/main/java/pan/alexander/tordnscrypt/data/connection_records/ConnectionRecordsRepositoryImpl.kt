@@ -14,15 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_records
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
-import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecord
-import pan.alexander.tordnscrypt.domain.connection_records.RawConnectionRecordsMapper
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -33,8 +32,7 @@ import javax.inject.Inject
 @ExperimentalCoroutinesApi
 class ConnectionRecordsRepositoryImpl @Inject constructor(
     private val connectionRecordsGetter: ConnectionRecordsGetter,
-    private val nflogRecordsGetter: NflogRecordsGetter,
-    private val rawConnectionRecordsMapper: RawConnectionRecordsMapper
+    private val nflogRecordsGetter: NflogRecordsGetter
 ) : ConnectionRecordsRepository {
 
     private val modulesStatus = ModulesStatus.getInstance()
@@ -42,7 +40,7 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
     @Volatile
     private var savedMode = modulesStatus.mode
 
-    override fun getRawConnectionRecords(): List<ConnectionRecord?> =
+    override fun getRawConnectionRecords(): List<ConnectionData> =
         if (isVpnMode()) {
 
             if (modulesStatus.mode != savedMode) {
@@ -50,18 +48,18 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
                 savedMode = modulesStatus.mode
             }
 
-            rawConnectionRecordsMapper.map(connectionRecordsGetter.getConnectionRawRecords())
+            connectionRecordsGetter.getConnectionRawRecords().toSortedKeysList()
 
         } else if (isFixTTL()) {
-            rawConnectionRecordsMapper.map(
-                connectionRecordsGetter.getConnectionRawRecords()
-                        + nflogRecordsGetter.getConnectionRawRecords().filter {
+
+            (connectionRecordsGetter.getConnectionRawRecords() + nflogRecordsGetter.getConnectionRawRecords())
+                .filter {
                     when (val record = it.key) {
                         is PacketRecord -> record.uid != SPECIAL_UID_KERNEL
                         is DnsRecord -> true
                     }
-                }
-            )
+                }.toSortedKeysList()
+
 
         } else if (isRootMode()) {
 
@@ -70,7 +68,7 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
                 savedMode = modulesStatus.mode
             }
 
-            rawConnectionRecordsMapper.map(nflogRecordsGetter.getConnectionRawRecords())
+            nflogRecordsGetter.getConnectionRawRecords().toSortedKeysList()
         } else {
             emptyList()
         }
@@ -106,5 +104,9 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
     private fun isFixTTL() = modulesStatus.isFixTTL
             && modulesStatus.mode == OperationMode.ROOT_MODE
             && !modulesStatus.isUseModulesWithRoot
+
+    private fun Map<ConnectionData, Long>.toSortedKeysList(): List<ConnectionData> = let { map ->
+        map.entries.sortedBy { it.value }.map { it.key }
+    }
 
 }

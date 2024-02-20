@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="nav_header_title">"Tor 及 DNSCrypt 和 I2P"</string>
-    <string name="nav_header_subtitle">"最佳隐私解决方案"</string>
+    <string name="nav_header_subtitle">保护您隐私的最佳解决方案</string>
     <string name="action_settings">"设置"</string>
     <!-- Fuzzy -->
     <string name="tvITPDStop">"I2P 已停止"</string>
@@ -13,8 +13,8 @@
     <string name="tvITPDInstalling">"I2P 正在安装"</string>
     <string name="tvITPDInstalled">"I2P 已安装"</string>
     <string name="tvITPDNotInstalled">"I2P 未安装"</string>
-    <string name="swRunOnBoot">"设备启动时启动"</string>
-    <string name="root_available">"检查 Root 是否可用…"</string>
+    <string name="swRunOnBoot">启动设备时启动</string>
+    <string name="root_available">正在检查 Root 是否可用…</string>
     <string name="please_wait">"请稍侯…"</string>
     <string name="dont_show">"不再显示"</string>
     <string name="tvDNSStop">"DNSCrypt 已停止"</string>
@@ -146,7 +146,7 @@
     <string name="pref_common_use_iptables">选择 iptables</string>
     <string name="pref_common_log_root_commands">"将 Root 命令保存到日志"</string>
     <string name="notification_text">"DNSCrypt，Tor，I2P 已受保护。不隐藏。"</string>
-    <string name="notification_temp_text">"执行 Root 命令…"</string>
+    <string name="notification_exec_root_commands">"执行 Root 命令…"</string>
     <string name="tvSettings_text">"请稍候…"</string>
     <string name="toastSettings_saved">"设置已保存"</string>
     <string name="pref_dnscrypt_global_settings_categ">"全局设置"</string>
@@ -287,7 +287,7 @@
     <string name="helper_dnscrypt_stopped">"似乎 DNSCrypt 被 Android 系统杀死了。 您的互联网连接已恢复。检查设备设置!"</string>
     <string name="helper_tor_stopped">"似乎 Tor 被 Android 系统杀死了。 您的互联网连接已恢复。检查设备设置!"</string>
     <string name="helper_itpd_stopped">"似乎 I2P 被 Android 系统杀死了。检查设备设置!"</string>
-    <string name="helper_dnscrypt_no_internet">"似乎 DNSCrypt 无法连接到互联网。 "</string>
+    <string name="helper_dnscrypt_no_internet">看起来DNSCypt无法连接到互联网。您可以尝试选择其他DNSCypt服务器。请在菜单-&gt;快速设置-&gt;选择DNSCypt服务器中找到它们</string>
     <string name="helper_tor_use_bridges">似乎 Tor 无法连接到互联网。 ISP 可能阻止 Tor 连接。您可以尝试使用网桥。请前往菜单 -&gt; 快速设置 -&gt; 网桥设置</string>
     <string name="action_mode_child_lock">"儿童锁"</string>
     <string name="action_mode_dialog_message_lock">"您可以锁定此应用控制。请输入密码或使用先前的。"</string>
@@ -480,7 +480,7 @@
     <string name="notification_connecting">正在连接…</string>
     <string name="notification_waiting_network">等待网络…</string>
     <string name="tile_change_tor_ip">更改Tor IP</string>
-    <string name="tile_changing_tor_ip">Tor IP changing</string>
+    <string name="tile_changing_tor_ip">ToR IP更改</string>
     <string name="tile_dialog_over_three_tiles_message">你在快捷设置中添加了超过3个磁贴。请只留下3个。添加超过3个磁贴会导致应用控制的问题。</string>
     <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
@@ -513,7 +513,7 @@
 \n\t隐私政策：
 \n\tInviZible Pro不收集或分享任何私人或敏感的用户数据。
 \n
-\n\tCopyright © 2019-2023
+\n\tCopyright © 2019-2024
 \n\tGarmatin Oleksandr
 \n\tinvizible.soft@gmail.com
 \n\tinvizible.net/en/privacy</string>

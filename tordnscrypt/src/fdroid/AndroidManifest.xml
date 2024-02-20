@@ -19,19 +19,27 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--  Allows an app to obtain the default gateway for ARP spoofing detection.  -->
+    <!--  https://developer.android.com/reference/android/net/wifi/WifiManager#getDhcpInfo()  -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission
-        android:name="android.permission.CHANGE_NETWORK_STATE"
-        tools:node="remove" />
+    <!--  Allows an app to use background networks for VPN connections.  -->
+    <!--  https://developer.android.com/develop/connectivity/network-ops/reading-network-state  -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission
         android:name="android.permission.CHANGE_WIFI_STATE"
         tools:node="remove" />
+    <!--  Allows an app to access information about networks.  -->
+    <!--  https://developer.android.com/develop/connectivity/network-ops/managing  -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!--  Allows an app to open network sockets.  -->
+    <!--  https://developer.android.com/develop/connectivity/network-ops/managing  -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:node="remove" />
+    <!--  Allows an app to keep the CPU running to do work while the screen is off.  -->
+    <!--  https://developer.android.com/develop/background-work/background-tasks/scheduling/wakelock  -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission

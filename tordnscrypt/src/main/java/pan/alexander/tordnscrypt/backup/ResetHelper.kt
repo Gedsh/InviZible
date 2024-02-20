@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.backup
@@ -22,13 +22,13 @@ package pan.alexander.tordnscrypt.backup
 import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.installer.Installer
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import java.lang.ref.WeakReference
 
 class ResetHelper(
@@ -88,9 +88,7 @@ class ResetHelper(
             } catch (e: Exception) {
                 backupFragmentWeakReference.get()?.showToast(activityWeakReference.get()?.getString(R.string.wrong))
 
-                Log.e(LOG_TAG, "ResetHelper resetSettings exception ${e.message} ${e.cause} ${
-                    e.stackTrace.joinToString { "," }
-                }")
+                loge("ResetHelper resetSettings", e, true)
             } finally {
                 backupFragmentWeakReference.get()?.closePleaseWaitDialog()
             }
@@ -115,7 +113,7 @@ class ResetHelper(
         sharedPref?.edit()?.apply {
             clear()
             apply()
-            Log.i(LOG_TAG, "ResetHelper resetSharedPreferences OK")
+            logi("ResetHelper resetSharedPreferences OK")
         }
     }
 

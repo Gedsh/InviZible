@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.di
@@ -111,7 +111,6 @@ interface AppComponent {
     fun inject(fragment: PreferencesDNSFragment)
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
-    fun inject(fragment: ExtendedDialogFragment)
     fun inject(service: ModulesService)
     fun inject(service: RootExecService)
     fun inject(service: UpdateService)
@@ -122,6 +121,7 @@ interface AppComponent {
     fun inject(receiver: HelpActivityReceiver)
     fun inject(receiver: IptablesReceiver)
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
+    fun inject(dialogFragment: RequestIgnoreDataRestrictionDialog)
     fun inject(dialogFragment: SendCrashReport)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
@@ -138,4 +138,5 @@ interface AppComponent {
     fun inject(serviceVPNHandler: ServiceVPNHandler)
     fun inject(installer: Installer)
     fun inject(installedApplicationsManager: InstalledApplicationsManager)
+    fun inject(agreementDialog: AgreementDialog)
 }

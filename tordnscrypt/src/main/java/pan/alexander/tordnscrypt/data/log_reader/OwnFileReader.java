@@ -14,13 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.log_reader;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,7 +35,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 public class OwnFileReader {
     //private final static long TOO_LONG_FILE_LENGTH = 1024 * 100;
@@ -71,16 +72,16 @@ public class OwnFileReader {
 
             if (context != null && !file.canRead()) {
                 if (!file.setReadable(true)) {
-                    Log.w(LOG_TAG, "Impossible to read file " + filePath + " Try restore access");
+                    logw("Impossible to read file " + filePath + " Try restore access");
 
                     FileManager fileManager = new FileManager();
                     fileManager.restoreAccess(context, filePath);
                 }
 
                 if (file.canRead()) {
-                    Log.i(LOG_TAG, "Access to " + filePath + " restored");
+                    logi("Access to " + filePath + " restored");
                 } else {
-                    Log.e(LOG_TAG, "Impossible to read file " + filePath);
+                    loge("Impossible to read file " + filePath);
                 }
             }
 
@@ -109,7 +110,7 @@ public class OwnFileReader {
             }
 
         }  catch (Exception e) {
-            Log.e(LOG_TAG, "Impossible to read file " + filePath + " " + e.getMessage() + " " + e.getCause());
+            loge("Impossible to read file " + filePath, e);
         } finally {
             reentrantLock.unlock();
         }
@@ -132,7 +133,7 @@ public class OwnFileReader {
                 writer.println(buffer);
             }
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Unable to rewrite too long file" + filePath + e.getMessage() + " " + e.getCause());
+            loge("Unable to rewrite too long file" + filePath, e);
         }
     }
 

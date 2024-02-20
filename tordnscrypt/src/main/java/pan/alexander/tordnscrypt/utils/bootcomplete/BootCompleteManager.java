@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.bootcomplete;
@@ -28,6 +28,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
@@ -37,7 +39,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_D
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_ITPD_STATE_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_TOR_STATE_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -46,7 +47,6 @@ import android.content.SharedPreferences;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -110,10 +110,14 @@ public class BootCompleteManager {
 
         String action = intent.getAction();
 
-        Log.i(LOG_TAG, "Boot complete manager receive " + action);
+        logi("Boot complete manager receive " + action);
+
+        if (action == null) {
+            return;
+        }
 
         if (action.equals(SHELL_SCRIPT_CONTROL) && !defaultPreferences.getBoolean("pref_common_shell_control", false)) {
-            Log.w(LOG_TAG, "BootCompleteReceiver received SHELL_CONTROL, but the appropriate option is disabled!");
+            logw("BootCompleteReceiver received SHELL_CONTROL, but the appropriate option is disabled!");
             return;
         }
 
@@ -160,7 +164,7 @@ public class BootCompleteManager {
             autoStartTor = startTor == 1;
             autoStartITPD = startItpd == 1;
 
-            Log.i(LOG_TAG, "SHELL_SCRIPT_CONTROL start: " +
+            logi("SHELL_SCRIPT_CONTROL start: " +
                     "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
         } else {
             resetModulesSavedState(preferences);
@@ -222,21 +226,12 @@ public class BootCompleteManager {
                 handler.get().postDelayed(() -> {
                     defaultPreferences.edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
 
-                    String reason;
-                    switch (action) {
-                        case MY_PACKAGE_REPLACED:
-                            reason = "MY_PACKAGE_REPLACED";
-                            break;
-                        case ALWAYS_ON_VPN:
-                            reason = "ALWAYS_ON_VPN";
-                            break;
-                        case SHELL_SCRIPT_CONTROL:
-                            reason = "SHELL_SCRIPT_CONTROL";
-                            break;
-                        default:
-                            reason = "Boot complete";
-                            break;
-                    }
+                    String reason = switch (action) {
+                        case MY_PACKAGE_REPLACED -> "MY_PACKAGE_REPLACED";
+                        case ALWAYS_ON_VPN -> "ALWAYS_ON_VPN";
+                        case SHELL_SCRIPT_CONTROL -> "SHELL_SCRIPT_CONTROL";
+                        default -> "Boot complete";
+                    };
 
                     ServiceVPNHelper.start(reason, context);
                 }, 2000);
@@ -261,7 +256,7 @@ public class BootCompleteManager {
             try {
                 context.startActivity(intent_tether);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "BootCompleteReceiver startHOTSPOT exception " + e.getMessage() + " " + e.getCause());
+                loge("BootCompleteReceiver startHOTSPOT", e);
             }
         }
     }
@@ -352,7 +347,7 @@ public class BootCompleteManager {
             context.startForegroundService(stopModulesServiceForeground);
             stopModulesServiceForeground.putExtra("showNotification", true);
 
-            Log.i(LOG_TAG, "BootCompleteReceiver stop running services foreground");
+            logi("BootCompleteReceiver stop running services foreground");
         }
     }
 }

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.installer;
@@ -24,7 +24,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -54,10 +53,10 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -201,7 +200,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Installation fault " + e.getMessage() + " " + e.getCause());
+            loge("Installation fault", e);
 
             savePreferencesModulesInstalled(false);
 
@@ -234,7 +233,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.setDnsCryptInstalledStatus());
         }
 
-        Log.i(LOG_TAG, "Installer: extractDNSCrypt OK");
+        logi("Installer: extractDNSCrypt OK");
     }
 
     protected void extractTor() throws Exception {
@@ -250,7 +249,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.setTorInstalledStatus());
         }
 
-        Log.i(LOG_TAG, "Installer: extractTor OK");
+        logi("Installer: extractTor OK");
     }
 
     protected void extractITPD() throws Exception {
@@ -266,7 +265,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             mainActivity.runOnUiThread(installerUIChanger.setItpdInstalledStatus());
         }
 
-        Log.i(LOG_TAG, "Installer: extractITPD OK");
+        logi("Installer: extractITPD OK");
     }
 
     protected void savePreferencesModulesInstalled(boolean installed) {
@@ -290,7 +289,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     protected boolean waitUntilAllModulesStopped() {
         countDownLatch = new CountDownLatch(1);
-        Log.i(LOG_TAG, "Installer: waitUntilAllModulesStopped");
+        logi("Installer: waitUntilAllModulesStopped");
 
         boolean result = true;
         try {
@@ -299,7 +298,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 countDownLatch.await(10, TimeUnit.SECONDS);
             }
         } catch (InterruptedException e) {
-            Log.e(LOG_TAG, "Installer CountDownLatch interrupted");
+            loge("Installer CountDownLatch interrupted");
             result = false;
         } catch (Exception e) {
             loge("Installer waitUntilAllModulesStopped", e, true);
@@ -341,14 +340,14 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             }
         }
 
-        Log.i(LOG_TAG, "Installer: removeInstallationDirsIfExists OK");
+        logi("Installer: removeInstallationDirsIfExists OK");
     }
 
     protected void chmodExtractedDirs() {
         ChmodCommand.dirChmod(appDataDir + "/app_bin", true);
         ChmodCommand.dirChmod(appDataDir + "/app_data", false);
 
-        Log.i(LOG_TAG, "Installer: chmodExtractedDirs OK");
+        logi("Installer: chmodExtractedDirs OK");
     }
 
     protected void correctAppDir() {
@@ -359,7 +358,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         fixAppDirLinesList(torConfPath, FileManager.readTextFileSynchronous(activity, torConfPath));
         fixAppDirLinesList(itpdConfPath, FileManager.readTextFileSynchronous(activity, itpdConfPath));
 
-        Log.i(LOG_TAG, "Installer: correctAppDir OK");
+        logi("Installer: correctAppDir OK");
     }
 
     @SuppressLint("SdCardPath")
@@ -388,7 +387,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     }
 
     protected void stopAllRunningModulesWithRootCommand() {
-        Log.i(LOG_TAG, "Installer: stopAllRunningModulesWithRootCommand");
+        logi("Installer: stopAllRunningModulesWithRootCommand");
 
         ModulesAux.saveDNSCryptStateRunning(false);
         ModulesAux.saveTorStateRunning(false);
@@ -476,7 +475,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             }
         }
 
-        Log.i(LOG_TAG, "Installer: createLogsDir OK");
+        logi("Installer: createLogsDir OK");
     }
 
     protected void refreshModulesStatus(Activity activity) {
@@ -496,14 +495,14 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         IntentFilter intentFilter = new IntentFilter(COMMAND_RESULT);
         LocalBroadcastManager.getInstance(activity).registerReceiver(br, intentFilter);
 
-        Log.i(LOG_TAG, "Installer: registerReceiver OK");
+        logi("Installer: registerReceiver OK");
     }
 
     protected void unRegisterReceiver(Activity activity) {
         if (br != null) {
             LocalBroadcastManager.getInstance(activity).unregisterReceiver(br);
 
-            Log.i(LOG_TAG, "Installer: unregisterReceiver OK");
+            logi("Installer: unregisterReceiver OK");
         }
     }
 

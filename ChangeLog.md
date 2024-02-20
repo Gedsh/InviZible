@@ -999,3 +999,47 @@
 * Updated default DNSCrypt settings.
 * Fixed on/off firewall button is not displayed.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.2**
+* Updated Tor to version 4.8.10.
+* Updated Purple I2P to version 2.50.1.
+* Fixed mode switching on some devices.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.3**
+* Updated Purple I2P to version 2.50.2.
+* Improved real-time connection logs.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.4**
+* Updated DNSCrypt.
+* Updated default DNSCrypt servers.
+* Updated Tor Snowflake bridge to version 2.8.1.
+* Updated Tor Lirebird bridge.
+* Updated Polish translation.
+* The app icon and color scheme have been changed.
+* Improved handling of IPv6-only networks.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.5**
+* The app icon and color scheme have been changed.
+* Added monochrome adaptive icon.
+* Fixed the appearance of the DNSCrypt rules import dialog.
+* Updated translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.6**
+* Various user interface fixes and improvements.
+* Improved switching speed between networks.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.7**
+* Various fixes to save battery power when network is unavailable.
+* Added DormantClientTimeout option to Tor settings.
+* Updated Tor Snowflake bridge to version v2.9.0.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.0.8**
+* Updated DNSCrypt to save battery power when the network is unavailable.
+* Further improvements to save battery power when the network is unavailable.
+* Fixes and optimizations.

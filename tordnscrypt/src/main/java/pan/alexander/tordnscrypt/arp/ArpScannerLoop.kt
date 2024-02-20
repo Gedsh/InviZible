@@ -14,15 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.arp
 
-import android.util.Log
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.arp.ArpScope
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.util.concurrent.ScheduledExecutorService
 import javax.inject.Inject
 
@@ -51,10 +52,7 @@ class ArpScannerLoop @Inject constructor(
             if (defaultGatewayManager.defaultGateway.isNotEmpty()) {
                 arpScannerHelper.resetArpScannerState()
             }
-            Log.w(
-                LOG_TAG,
-                "ArpScanner executor exception! ${e.message}\n${e.cause}\n${e.stackTrace}"
-            )
+            loge("ArpScanner executor", e, true)
         }
     }
 
@@ -70,7 +68,7 @@ class ArpScannerLoop @Inject constructor(
 
             scheduledExecutorService?.let {
                 if (!it.isShutdown) {
-                    Log.i(LOG_TAG, "ArpScanner Stopped")
+                    logi("ArpScanner Stopped")
                     it.shutdownNow()
                 }
             }
@@ -97,13 +95,11 @@ class ArpScannerLoop @Inject constructor(
         ) {
 
             if (defaultGatewayManager.savedDefaultGateway != defaultGatewayManager.defaultGateway) {
-                Log.e(LOG_TAG, "DHCPAttackDetected defaultGateway changed")
-                Log.i(
-                    LOG_TAG,
+                loge("DHCPAttackDetected defaultGateway changed")
+                logi(
                     "Upstream Network Saved default Gateway:${defaultGatewayManager.savedDefaultGateway}"
                 )
-                Log.i(
-                    LOG_TAG,
+                logi(
                     "Upstream Network Current default Gateway:${defaultGatewayManager.defaultGateway}"
                 )
 
@@ -141,13 +137,11 @@ class ArpScannerLoop @Inject constructor(
             }
 
             if (arpTableManager.gatewayMac != arpTableManager.savedGatewayMac) {
-                Log.e(LOG_TAG, "ArpAttackDetected")
-                Log.i(
-                    LOG_TAG,
+                loge("ArpAttackDetected")
+                logi(
                     "Upstream Network Saved default Gateway:${defaultGatewayManager.savedDefaultGateway} MAC:${arpTableManager.savedGatewayMac}"
                 )
-                Log.i(
-                    LOG_TAG,
+                logi(
                     "Upstream Network Current default Gateway:${defaultGatewayManager.defaultGateway} MAC:${arpTableManager.gatewayMac}"
                 )
 
@@ -174,7 +168,7 @@ class ArpScannerLoop @Inject constructor(
 
         if (arpTableManager.notSupportedCounter == 0 && arpScannerHelper.getArpSpoofingDetectionSupported()) {
             arpScannerHelper.saveArpSpoofingDetectionNotSupported(true)
-            Log.w(LOG_TAG, "Arp Spoofing detection is not supported. Only rogue DHCP detection.")
+            logw("Arp Spoofing detection is not supported. Only rogue DHCP detection.")
             //uiUpdater.makeToast(R.string.toast_arp_detection_not_supported)
             //arpScanner.stop()
         }

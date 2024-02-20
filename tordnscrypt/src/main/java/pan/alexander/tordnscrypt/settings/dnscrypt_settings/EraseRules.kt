@@ -14,13 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_settings
 
 import android.content.Context
-import android.util.Log
 import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
@@ -28,9 +27,9 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment
 import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.io.File
 import java.lang.Exception
 
@@ -88,7 +87,7 @@ class EraseRules(private val context: Context,
                 file.writeText(eraseText)
             }
         } catch (e: Exception) {
-            Log.e(LOG_TAG, "EraseRules Exception " + e.message + " " + e.cause)
+            loge("EraseRules", e)
         }
 
     }

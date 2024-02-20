@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn;
@@ -37,7 +37,7 @@ public class IPUtil {
     public static List<CIDR> toCIDR(InetAddress start, InetAddress end) {
         List<CIDR> listResult = new ArrayList<>();
 
-        //Log.i(LOG_TAG, "toCIDR(" + start.getHostAddress() + "," + end.getHostAddress() + ")");
+        //logi("toCIDR(" + start.getHostAddress() + "," + end.getHostAddress() + ")");
 
         long from = inet2long(start);
         long to = inet2long(end);

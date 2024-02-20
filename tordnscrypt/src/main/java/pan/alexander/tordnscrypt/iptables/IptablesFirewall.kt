@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.iptables
@@ -63,9 +63,9 @@ class IptablesFirewall @Inject constructor(
 
     private val ownUID = pathVars.appUid
 
-    private val uidAllowed by lazy { hashSetOf<Int>() }
-    private val uidSpecialAllowed by lazy { hashSetOf<Int>() }
-    private val uidLanAllowed by lazy { hashSetOf<Int>() }
+    val uidAllowed by lazy { hashSetOf<Int>() }
+    val uidSpecialAllowed by lazy { hashSetOf<Int>() }
+    val uidLanAllowed by lazy { hashSetOf<Int>() }
 
     fun getFirewallRules(tetheringActive: Boolean): List<String> {
 
@@ -221,7 +221,7 @@ class IptablesFirewall @Inject constructor(
             emptyList()
         }
 
-    private fun prepareUidAllowed() {
+    fun prepareUidAllowed() {
         clearAllowedUids()
         fillAllowedAndSpecialUids(getUidsAllowed())
         fillLanAllowed()

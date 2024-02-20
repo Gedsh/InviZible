@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs.progressDialogs;
@@ -27,7 +27,7 @@ import pan.alexander.tordnscrypt.R;
 
 public class RootCheckingProgressDialog {
     public static AlertDialog.Builder getBuilder(Context context) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.root);
         builder.setMessage(R.string.root_available);
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp);

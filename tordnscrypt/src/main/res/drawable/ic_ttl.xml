@@ -1,0 +1,36 @@
+<!--
+  ~    This file is part of InviZible Pro.
+  ~
+  ~    InviZible Pro is free software: you can redistribute it and/or modify
+  ~    it under the terms of the GNU General Public License as published by
+  ~    the Free Software Foundation, either version 3 of the License, or
+  ~    (at your option) any later version.
+  ~
+  ~    InviZible Pro is distributed in the hope that it will be useful,
+  ~    but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~    GNU General Public License for more details.
+  ~
+  ~    You should have received a copy of the GNU General Public License
+  ~    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+  ~
+  ~    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:autoMirrored="true"
+    android:tint="?attr/colorControlNormal"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M1.371,3.346L8.453,3.346l0,3.514L5.906,6.86L5.906,21.375L3.924,21.375L3.924,6.86L1.371,6.86Z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="m8.803,3.346l7.082,0l0,3.514L13.338,6.86L13.338,21.375L11.356,21.375L11.356,6.86l-2.553,0z" />
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="m16.91,3.346l1.982,0l0,14.515l3.479,0l0,3.514l-5.461,0z" />
+</vector>

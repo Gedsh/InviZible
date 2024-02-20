@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings;
@@ -37,13 +37,11 @@ import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreferenceCompat;
 
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.ArrayList;;
 import java.util.List;
 import java.util.Set;
 
@@ -75,6 +73,8 @@ import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorF
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_NOT_SUPPORTED;
@@ -91,7 +91,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TET
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -324,8 +323,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 if (notificationHelper != null && isAdded()) {
                     handler.get().post(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
-                Log.e(LOG_TAG, "PreferencesCommonFragment fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                        Arrays.toString(e.getStackTrace()));
+                loge("PreferencesCommonFragment fault", e, true);
             }
         });
 
@@ -385,7 +383,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                     fixTTLPreference.setEnabled(!newOptionValue);
                 }
 
-                Log.i(LOG_TAG, "PreferencesCommonFragment switch to "
+                logi("PreferencesCommonFragment switch to "
                         + (Boolean.parseBoolean(newValue.toString()) ? "Root" : "No Root"));
                 break;
             case FIX_TTL:
@@ -457,7 +455,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             try {
                 context.startActivity(intent_tether);
             } catch (Exception e) {
-                Log.e(LOG_TAG, "PreferencesCommonFragment startHOTSPOT exception " + e.getMessage() + " " + e.getCause());
+                loge("PreferencesCommonFragment startHOTSPOT", e);
             }
         }
         return false;

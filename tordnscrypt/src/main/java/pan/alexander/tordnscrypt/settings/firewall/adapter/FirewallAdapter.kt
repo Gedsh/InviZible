@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.firewall.adapter
@@ -164,13 +164,18 @@ class FirewallAdapter(
     private val icFirewallVpnGreen =
         ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
 
-    private val colorRed = ContextCompat.getColor(context, R.color.colorAlert)
-    private val colorBlack = ContextCompat.getColor(
-        context,
-        R.color.textModuleStatusColorStopped
-    )
-    private val colorGreen = ContextCompat.getColor(context, R.color.userAppWithoutInternetPermission)
-    private val colorBrown = ContextCompat.getColor(context, R.color.systemAppWithoutInternetPermission)
+    private val colorRed by lazy {
+        ContextCompat.getColor(context, R.color.colorAlert)
+    }
+    private val colorBlack by lazy {
+        ContextCompat.getColor(context, R.color.textModuleStatusColorStopped)
+    }
+    private val colorGreen by lazy {
+        ContextCompat.getColor(context, R.color.userAppWithoutInternetPermission)
+    }
+    private val colorBrown by lazy {
+        ContextCompat.getColor(context, R.color.systemAppWithoutInternetPermission)
+    }
 
     inner class FirewallViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
         View.OnClickListener {

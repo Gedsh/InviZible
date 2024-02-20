@@ -14,14 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
@@ -45,14 +44,15 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_WITH_MASK;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.writeToTextFile;
 
@@ -227,15 +227,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     val_tor.add(val);
                 }
 
-                if (key.equals("SOCKSPort")
-                        || key.equals("HTTPTunnelPort")
-                        || key.equals("TransPort")
-                        || key.equals("DNSPort")) {
-                    val = val.split(" ")[0]
-                            .replaceAll(".+:", "")
-                            .replaceAll("\\D+", "");
-                } else if (key.equals("VirtualAddrNetworkIPv4")) {
-                    key = "VirtualAddrNetwork";
+                switch (key) {
+                    case "SOCKSPort", "HTTPTunnelPort", "TransPort", "DNSPort" ->
+                            val = val.split(" ")[0]
+                                    .replaceAll(".+:", "")
+                                    .replaceAll("\\D+", "");
+                    case "VirtualAddrNetworkIPv4" -> key = "VirtualAddrNetwork";
+                    case DORMANT_CLIENT_TIMEOUT -> val = val.replaceAll("\\D+", "");
                 }
 
                 String val_saved_str = "";
@@ -416,7 +414,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     try {
                         val_saved_bool = sp.getBoolean(key, false);
                     } catch (ClassCastException e1) {
-                        Log.e(LOG_TAG, "SettingsParser ClassCastException " + e1.getMessage() + " " + e1.getCause());
+                        loge("SettingsParser ClassCastException", e1);
                     }
 
                 }

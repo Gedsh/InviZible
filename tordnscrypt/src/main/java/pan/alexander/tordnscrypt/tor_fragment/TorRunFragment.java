@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.tor_fragment;
@@ -31,7 +31,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.text.Spanned;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -50,7 +49,9 @@ import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
+import com.google.android.material.divider.MaterialDivider;
 
 
 public class TorRunFragment extends Fragment implements TorFragmentView, View.OnClickListener,
@@ -60,6 +61,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     private Button btnTorStart;
     private TextView tvTorStatus;
     private ProgressBar pbTor;
+    private MaterialDivider divTor;
     private TextView tvTorLog;
     private ScrollView svTorLog;
     private BroadcastReceiver receiver;
@@ -86,6 +88,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         btnTorStart.setOnClickListener(this);
 
         pbTor = view.findViewById(R.id.pbTor);
+        divTor = view.findViewById(R.id.divTor);
 
         tvTorLog = view.findViewById(R.id.tvTorLog);
 
@@ -152,7 +155,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
                 LocalBroadcastManager.getInstance(context).unregisterReceiver(receiver);
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "TorFragment onStop exception " + e.getMessage() + " " + e.getCause());
+            loge("TorFragment onStop", e);
         }
 
         if (presenter != null) {
@@ -177,6 +180,7 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
         btnTorStart = null;
         tvTorStatus = null;
         pbTor = null;
+        divTor = null;
         tvTorLog = null;
         svTorLog = null;
 
@@ -220,16 +224,30 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
     @Override
     public void setTorProgressBarIndeterminate(boolean indeterminate) {
-        if (!pbTor.isIndeterminate() && indeterminate) {
+        if (indeterminate) {
             pbTor.setIndeterminate(true);
-        } else if (pbTor.isIndeterminate() && !indeterminate) {
+            pbTor.setVisibility(View.VISIBLE);
+            divTor.setVisibility(View.GONE);
+        } else {
             pbTor.setIndeterminate(false);
+            pbTor.setVisibility(View.GONE);
+            divTor.setVisibility(View.VISIBLE);
         }
     }
 
     @Override
     public void setTorProgressBarProgress(int progress) {
-        pbTor.setProgress(progress);
+        if (pbTor.isIndeterminate()) {
+            pbTor.setIndeterminate(false);
+        }
+        if (progress >= 0) {
+            pbTor.setProgress(progress);
+            pbTor.setVisibility(View.VISIBLE);
+            divTor.setVisibility(View.GONE);
+        } else {
+            pbTor.setVisibility(View.GONE);
+            divTor.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

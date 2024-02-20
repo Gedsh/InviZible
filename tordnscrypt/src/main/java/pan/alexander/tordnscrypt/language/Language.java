@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.language;
@@ -24,11 +24,10 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import androidx.preference.PreferenceManager;
-import android.util.Log;
 
 import java.util.Locale;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class Language {
     private static final Locale mOriginalLocale;
@@ -136,7 +135,7 @@ public class Language {
                 }
             }
             catch (Exception e) {
-                Log.e(LOG_TAG, "Language Set exception " + e.getMessage() + " " + e.getCause());
+                loge("Language Set", e);
             }
         }
     }

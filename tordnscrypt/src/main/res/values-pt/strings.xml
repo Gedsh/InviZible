@@ -13,7 +13,7 @@
     <string name="update_checking_title">Verificar Atualizações</string>
     <string name="update_check_no_update">Nenhuma atualização foi encontrada.</string>
     <string name="vpn_mode_error">Erro no modo VPN!</string>
-    <string name="main_fragment_access_i2p">Acessar sites com I2P</string>
+    <string name="main_fragment_access_i2p">Acesso à rede I2P com Purple I2P</string>
     <string name="reset_settings_title">Atenção</string>
     <string name="nav_header_title">Tor com DNSCrypt e I2P</string>
     <string name="nav_header_subtitle">a melhor solução para a sua privacidade</string>
@@ -187,7 +187,7 @@
     <string name="pref_common_use_iptables">Selecionar Iptables</string>
     <string name="pref_common_log_root_commands">Gravar comandos Root para o log</string>
     <string name="notification_text">DNSCrypt, Tor 2 o I2P são protegidos. Não esconda.</string>
-    <string name="notification_temp_text">Executando comandos de Root…</string>
+    <string name="notification_exec_root_commands">Executando comandos de Root…</string>
     <string name="notification_connecting">Conectando…</string>
     <string name="notification_waiting_network">Aguardando rede…</string>
     <string name="tvSettings_text">Por favor, aguarde…</string>
@@ -297,7 +297,7 @@
     <string name="pref_tor_enable_SOCKS_output_proxy">Ativar proxy de saída SOCKS</string>
     <string name="pref_tor_SOCKS_output_address_summ">O Tor fará todas as conexões OR por meio do proxy SOCKS 5.</string>
     <string name="pref_tor_edit_conf">Edite tor.conf diretamente</string>
-    <string name="pref_tor_clean_module_folder">Limpar pasta de módulo</string>
+    <string name="pref_tor_clean_module_folder">Limpar cache</string>
     <string name="pref_tor_isolate_dest_address_summ">Não compartilhe circuitos com streams que visam um endereço de destino diferente.</string>
     <string name="pref_tor_isolate_dest_port_summ">Não compartilhe circuitos com streams que visam uma porta de destino diferente.</string>
     <string name="pref_routing_unlock_app">Apps para usar com InviZible</string>
@@ -346,7 +346,7 @@
     <string name="helper_tor_stopped">Parece que o Tor foi morto pelo sistema Android. A sua conexão com a Internet foi restaurada. Verifique as configurações do aparelho!</string>
     <string name="helper_itpd_stopped">Parece que o I2P foi morto pelo sistema Android. A sua conexão com a Internet foi restaurada. Verifique as configurações do aparelho!</string>
     <string name="helper_dnscrypt_no_internet">Parece que o DNSCrypt NÃO PODE conectar com a INTERNET.</string>
-    <string name="helper_tor_use_bridges">Parece que o Tor NÃO PODE se conectar à INTERNET. O ISP pode bloquear as conexões do Tor. Pode tentar usar pontes de tor. Encontre-os em MENU -&gt; Configurações Rápidas -&gt; Pontes</string>
+    <string name="helper_tor_use_bridges">Parece que o Tor não pode conectar à Internet. O ISP pode bloquear as conexões do Tor. Pode tentar usar pontes de tor. Encontre-os em MENU -&gt; Configurações Rápidas -&gt; Pontes</string>
     <string name="action_mode_dialog_message_lock">Pode bloquear o controle deste aplicação. Por favor, digite a palavra-passe ou use a anterior.</string>
     <string name="action_mode_dialog_message_unlock">Por gentileza, entre com a Palavra-passe.</string>
     <string name="action_mode_dialog_wrong_pass">Palavra-passe incorreta!</string>
@@ -394,7 +394,7 @@
     <string name="vpn_mode_off">Modo VPN esta desativado</string>
     <string name="vpn_tor_tether_summ">Configure o uso do servidor proxy nas configurações do aparelho conectado. Valores padrão: IP:10.1.10.1 Porta:8118</string>
     <string name="main_fragment_hide_ip">Ocultar IP com TOR</string>
-    <string name="main_fragment_protect_dns">Proteger DNS com DNSCRYPT</string>
+    <string name="main_fragment_protect_dns">Defender com DNSCRYPT</string>
     <string name="add_custom_server_title">Adicionar servidor customizado</string>
     <string name="add_custom_server_error">Configuração de servidor personalizado inválida. Verifique o campo SDNS.</string>
     <string name="pending_purchase">Observe que tem uma compra pendente:</string>
@@ -410,7 +410,7 @@
 \n\tPolítica de Privacidade:
 \n\tO InviZible Pro não coleta ou compartilha nenhum dado pessoal ou sensível do utilizador.
 \n
-\n\tCopyright © 2019-2023
+\n\tCopyright © 2019-2024
 \n\tGarmatin Oleksandr
 \n\tinvizible.soft@gmail.com
 \n\tinvizible.net/en/privacy</string>
@@ -490,4 +490,6 @@
     <string name="pref_itpd_SAM_interface_port_summ">Porto da ponte SAM.</string>
     <string name="firewall_switch">Firewall ligado/desligado</string>
     <string name="tile_dialog_over_three_tiles_message">Adicionou mais que 3 blocos às Configurações Rápidas. Por favor, deixe apenas 3. Adicionar mais de 3 blocos pode causar problemas com o controlo de apps.</string>
+    <string name="pref_itpd_addressbook">Contactos</string>
+    <string name="pref_itpd_reseeding">Reseeding</string>
 </resources>

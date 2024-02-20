@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.firewall
@@ -31,7 +31,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
@@ -40,8 +39,9 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
 
 const val ALLOW_ACTION = "pan.alexander.tordnscrypt.ALLOW_APP_FOR_FIREWALL"
 const val DENY_ACTION = "pan.alexander.tordnscrypt.DENY_APP_FOR_FIREWALL"
@@ -112,7 +112,7 @@ class FirewallNotification : BroadcastReceiver() {
 
     private fun packageAdded(context: Context?, intent: Intent) {
 
-        Log.i(LOG_TAG, "FirewallNotification packageAdded received intent $intent")
+        logi("FirewallNotification packageAdded received intent $intent")
 
         val uid = intent.getIntExtra(Intent.EXTRA_UID, 0)
         val packageManager = context?.packageManager
@@ -141,7 +141,6 @@ class FirewallNotification : BroadcastReceiver() {
                     PackageManager.PackageInfoFlags.of(0)
                 ).applicationInfo
             } else {
-                @Suppress("DEPRECATION")
                 packageManager.getPackageInfo(packages[0], 0).applicationInfo
             }
             system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
@@ -151,7 +150,6 @@ class FirewallNotification : BroadcastReceiver() {
                     PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong())
                 )
             } else {
-                @Suppress("DEPRECATION")
                 packageManager.getPackageInfo(
                     applicationInfo.packageName,
                     PackageManager.GET_PERMISSIONS
@@ -168,17 +166,14 @@ class FirewallNotification : BroadcastReceiver() {
             label = packageManager.getApplicationLabel(applicationInfo).toString()
         } catch (e: Exception) {
             useInternet = true
-            Log.e(LOG_TAG, "FirewallNotification packageAdded exception  ${e.message}\n${e.cause}")
+            loge("FirewallNotification packageAdded", e)
         }
 
         if (label.isBlank()) {
             try {
                 label = packageManager.getNameForUid(uid) ?: ""
             } catch (e: Exception) {
-                Log.e(
-                    LOG_TAG,
-                    "FirewallNotification packageAdded exception  ${e.message}\n${e.cause}"
-                )
+                loge("FirewallNotification packageAdded", e)
             }
         }
 
@@ -207,11 +202,11 @@ class FirewallNotification : BroadcastReceiver() {
             addFirewallRule(context, uid)
         }
 
-        Log.i(LOG_TAG, "FirewallNotification package added UID $uid")
+        logi("FirewallNotification package added UID $uid")
     }
 
     private fun packageRemoved(context: Context?, intent: Intent) {
-        Log.i(LOG_TAG, "FirewallNotification packageRemoved received intent $intent")
+        logi("FirewallNotification packageRemoved received intent $intent")
 
         val uid = intent.getIntExtra(Intent.EXTRA_UID, 0)
 
@@ -219,7 +214,7 @@ class FirewallNotification : BroadcastReceiver() {
             removeFirewallRule(context, uid)
         }
 
-        Log.i(LOG_TAG, "FirewallNotification package removed UID $uid")
+        logi("FirewallNotification package removed UID $uid")
     }
 
     private fun addFirewallRule(context: Context?, uid: Int) {
@@ -256,7 +251,7 @@ class FirewallNotification : BroadcastReceiver() {
                 modulesStatus.setIptablesRulesUpdateRequested(context, true)
             }
 
-            Log.i(LOG_TAG, "FirewallNotification addFirewallRule UID $uid")
+            logi("FirewallNotification addFirewallRule UID $uid")
         }
     }
 
@@ -294,7 +289,7 @@ class FirewallNotification : BroadcastReceiver() {
                 modulesStatus.setIptablesRulesUpdateRequested(context, true)
             }
 
-            Log.i(LOG_TAG, "FirewallNotification removeFirewallRule UID $uid")
+            logi("FirewallNotification removeFirewallRule UID $uid")
         }
     }
 

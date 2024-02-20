@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_ips;
@@ -33,14 +33,12 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -54,10 +52,10 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -151,8 +149,7 @@ public class UnlockTorIpsFragment extends Fragment {
                 if (notificationHelper != null && isAdded()) {
                     activity.runOnUiThread(() -> notificationHelper.show(getParentFragmentManager(), NotificationHelper.TAG_HELPER));
                 }
-                Log.e(LOG_TAG, "UnlockTorIpsFrag fault " + e.getMessage() + " " + e.getCause() + System.lineSeparator() +
-                        Arrays.toString(e.getStackTrace()));
+                loge("UnlockTorIpsFrag fault", e, true);
             }
         });
     }
@@ -200,8 +197,7 @@ public class UnlockTorIpsFragment extends Fragment {
         floatingBtnAddTorIPs.setAlpha(0.8f);
         floatingBtnAddTorIPs.setOnClickListener(v -> {
             DialogAddDomainIp dialogAddHostIP = new DialogAddDomainIp(
-                    new WeakReference<>(this),
-                    R.style.CustomAlertDialogTheme
+                    new WeakReference<>(this)
             );
             dialogAddHostIP.show();
         });

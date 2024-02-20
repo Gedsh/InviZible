@@ -14,14 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
@@ -32,8 +31,10 @@ import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CRASH_REPORT
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileWriter
@@ -61,7 +62,7 @@ class SendCrashReport : ExtendedDialogFragment() {
             return null
         }
 
-        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomAlertDialogTheme)
+        val builder = AlertDialog.Builder(requireActivity())
         builder.setMessage(getString(R.string.dialog_send_crash_report))
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -87,7 +88,7 @@ class SendCrashReport : ExtendedDialogFragment() {
 
                                 }
                             } catch (exception: Exception) {
-                                Log.e(LOG_TAG, "SendCrashReport exception ${exception.message} ${exception.cause}")
+                                loge("SendCrashReport", exception)
                             }
 
 
@@ -114,14 +115,14 @@ class SendCrashReport : ExtendedDialogFragment() {
             cacheDir = context.cacheDir?.canonicalPath
                 ?: (pathVars.get().appDataDir + "/cache")
         } catch (e: Exception) {
-            Log.w(LOG_TAG, "SendCrashReport cannot get cache dir ${e.message} ${e.cause}")
+            logw("SendCrashReport cannot get cache dir", e)
             return null
         }
 
         val logDirPath = "$cacheDir/logs"
         val dir = File(logDirPath)
         if (!dir.isDirectory && !dir.mkdirs()) {
-            Log.e(LOG_TAG, "SendCrashReport cannot create logs dir")
+            loge("SendCrashReport cannot create logs dir")
             return null
         }
 
@@ -154,13 +155,13 @@ class SendCrashReport : ExtendedDialogFragment() {
 
     private fun sendCrashEmail(context: Context, info: String, logCat: File) {
 
-        val text = preferenceRepository.get().getStringPreference("CrashReport")
+        val text = preferenceRepository.get().getStringPreference(CRASH_REPORT)
         if (text.isNotEmpty()) {
             val uri = FileProvider.getUriForFile(context, context.packageName + ".fileprovider", logCat)
             if (uri != null) {
                 Utils.sendMail(context, info + "\n\n" + text, uri)
             }
-            preferenceRepository.get().setStringPreference("CrashReport", "")
+            preferenceRepository.get().setStringPreference(CRASH_REPORT, "")
         }
     }
 

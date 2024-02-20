@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs;
@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.dialogs;
 import android.app.Dialog;
 import android.content.Context;
 import android.util.Base64;
-import android.util.Log;
 import android.widget.EditText;
 
 import androidx.appcompat.app.AlertDialog;
@@ -31,7 +30,8 @@ import androidx.fragment.app.DialogFragment;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DNSServerItem;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
 public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
 
@@ -59,7 +59,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
             return null;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.add_custom_server_title)
                 .setView(R.layout.add_own_server)
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
@@ -94,7 +94,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
     }
 
     private boolean saveOwnDNSCryptServer(Context context) {
-        Log.i(LOG_TAG, "Save Own DNSCrypt server");
+        logi("Save Own DNSCrypt server");
 
         String etOwnServerNameText = etOwnServerName.getText().toString().trim();
         String etOwnServerDescriptionText = etOwnServerDescription.getText().toString().trim();
@@ -107,7 +107,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
         try {
             Base64.decode(etOwnServerSDNSText.substring(0, 7).getBytes(), 16);
         } catch (Exception e) {
-            Log.w(LOG_TAG, "Trying to add wrong DNSCrypt server "
+            logw("Trying to add wrong DNSCrypt server "
                     + etOwnServerNameText + " " + etOwnServerDescriptionText
                     + " " + etOwnServerSDNSText);
             return false;
@@ -121,7 +121,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
                 onServerAddedListener.onServerAdded(item);
             }
         } catch (Exception e) {
-            Log.w(LOG_TAG, "Trying to add wrong DNSCrypt server " + e.getMessage() + " "
+            logw("Trying to add wrong DNSCrypt server " + e.getMessage() + " "
                     + etOwnServerNameText + " " + etOwnServerDescriptionText
                     + " " + etOwnServerSDNSText);
             return false;

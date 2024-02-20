@@ -14,16 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.arp
 
-import android.util.Log
 import com.jrummyapps.android.shell.Shell
 import com.jrummyapps.android.shell.ShellNotFoundException
 import pan.alexander.tordnscrypt.di.arp.ArpScope
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.lang.Exception
 import javax.inject.Inject
 
@@ -43,23 +43,17 @@ class CommandExecutor @Inject constructor() {
             }
             process.errorStream.bufferedReader().use {
                 it.forEachLine { line ->
-                    Log.e(LOG_TAG, "ArpScanner execCommand $command error $line")
+                    loge("ArpScanner execCommand $command error $line")
                 }
             }
             val exitCode = process.waitFor()
 
             if (exitCode != 0) {
-                Log.w(
-                    LOG_TAG,
-                    "ArpScanner result exitCode:$exitCode command:$command"
-                )
+                logw("ArpScanner result exitCode:$exitCode command:$command")
             }
 
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ArpScanner execCommand $command exception ${e.message}\n${e.cause}"
-            )
+            loge("ArpScanner execCommand $command", e)
         } finally {
             process?.destroy()
         }
@@ -82,10 +76,7 @@ class CommandExecutor @Inject constructor() {
         try {
             result.addAll(console.run(command).getStdout().split("\n"))
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "Arp command executor: SU exec failed " + e.message + e.cause
-            )
+            loge("Arp command executor: SU exec failed", e)
         }
 
         return result
@@ -96,10 +87,7 @@ class CommandExecutor @Inject constructor() {
         try {
             console = Shell.SU.getConsole()
         } catch (e: ShellNotFoundException) {
-            Log.e(
-                LOG_TAG,
-                "Arp command executor: SU not found! " + e.message + e.cause
-            )
+            loge("Arp command executor: SU not found!", e)
         }
     }
 

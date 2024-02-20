@@ -42,7 +42,7 @@
     <string name="drawer_menu_TorSettings">Настройки Tor</string>
     <string name="drawer_menu_I2PDSettings">Настройки I2P</string>
     <string name="drawer_menu_fastSettings">Быстрые настройки</string>
-    <string name="drawer_menu_backup">Сохранить&amp;восстановить</string>
+    <string name="drawer_menu_backup">Резервная копия</string>
     <string name="drawer_menu_about">О программе</string>
     <string name="drawer_menu_help">Логи</string>
     <string name="btnRestoreBackup">Восстановить настройки</string>
@@ -103,9 +103,12 @@
     <string name="pref_common_show_notification">Показывать уведомление</string>
     <string name="pref_common_show_help">Показывать справку</string>
     <string name="pref_common_show_help_summ">Всегда показывать справочные сообщения</string>
+    <string name="notification_exclude_bat_optimisation_title">Выключить оптимизацию батареи?</string>
     <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления.
         Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
         Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
+    <string name="notification_exclude_data_restriction_title">Отключить экономию трафика?</string>
+    <string name="notification_exclude_data_restriction_message">Разрешите передачу данных в фоновом режиме и передачу данных в режиме экономии энергии. Это важно для бесперебойной работы приложения.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
     <string name="pref_common_use_busybox_auto">Автоматически</string>
     <string name="pref_common_use_busybox_device">Использовать BusyBox телефона</string>
@@ -135,7 +138,7 @@
     <string name="pref_common_wait_iptables_summ">Ждать разблокировку iptables, чтобы предотвратить одновременную модификацию правил iptables несколькими программами.</string>
     <string name="pref_common_log_root_commands">Логировать команды root</string>
     <string name="notification_text">DNSCrypt, Tor, I2P защищены. Не скрывайте уведомление.</string>
-    <string name="notification_temp_text">Выполнение Рут команд…</string>
+    <string name="notification_exec_root_commands">Выполнение Рут команд…</string>
     <string name="tvSettings_text">Пожалуйста подождите…</string>
     <string name="toastSettings_saved">Настройки сохранены</string>
     <string name="pref_dnscrypt_global_settings_categ">ОБЩИЕ НАСТРОЙКИ</string>
@@ -228,6 +231,7 @@
     <string name="pref_tor_snowflake_stun">STUN сервера для мостов SnowFlake</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor переходит в режим ожидания, если не видит активности клиента в течении заданного времени. Должно быть не менее 10 минут.</string>
     <string name="country_select_select_all">Активировать все</string>
     <string name="country_select_unselect_all">Деактивировать все</string>
     <string name="pref_itpd_common">Общие Настройки</string>
@@ -377,12 +381,12 @@
     <string name="agree">Я согласен</string>
     <string name="disagree">Не согласен</string>
     <string name="agreement_text">
-        \tСпасибо за выбор InviZible Pro. Надеюсь, приложение будет полезно для Вашей конфиденциальности и комфортного использования интернета.
+        \tСпасибо за выбор InviZible Pro. Уверен, приложение будет полезно для Вашей конфиденциальности и комфортного использования интернета.
         \n\n\tInviZible Pro содержит Tor, DNSCrypt и Purple I2P в качестве модулей.
-        \n\n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика в сети Tor, DNSCrypt и I2P.
+        \n\n\tInviZible Pro может использовать рут, если у Вас есть рут права, или использовать локальный VPN для доставки интернет траффика напрямую в сети Tor, DNSCrypt и I2P.
         \n\n\tПолитика конфиденциальности:
         \n\tInviZible Pro не собирает и не передает какие-либо личные или конфиденциальные данные пользователей.
-        \n\n\tCopyright © 2019-2023
+        \n\n\tCopyright © 2019-2024
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -544,4 +548,10 @@
     <string name="pref_fast_use_tor_bridges_ipv6">IPv6 мосты</string>
     <string name="pref_fast_fake_sni">Подделать SNI</string>
     <string name="pref_tor_track_host_exits_summ">Tor будет отслеживать недавние подключения к сайтам и пытаться использовать один и тот же выходной узел для каждого. Эта опция может помочь избежать бесконечной каптчи.</string>
+    <string name="press_to_add">Нажмите для добавления.</string>
+    <string name="long_press_to_add">Нажмите и удерживайте для добавления.</string>
+    <string name="press_to_edit">Нажмите для редактирования.</string>
+    <string name="long_press_to_edit">Нажмите и удерживайте для редактирования.</string>
+    <string name="anonymize_relays">Анонимные ретрансляторы</string>
+    <string name="anonymize_relays_not_used">Анонимные ретрансляторы не используются.</string>
 </resources>

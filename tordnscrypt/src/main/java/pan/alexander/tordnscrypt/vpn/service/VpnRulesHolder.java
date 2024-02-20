@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -29,6 +29,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.Constants.PLAINTEXT_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -60,6 +61,7 @@ import javax.inject.Named;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
+import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -81,6 +83,7 @@ public class VpnRulesHolder {
     private final PreferenceRepository preferenceRepository;
     private final PathVars pathVars;
     private final Lazy<ConnectivityCheckManager> connectivityCheckManager;
+    private final Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
 
     @SuppressLint("UseSparseArrays")
     final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
@@ -99,12 +102,14 @@ public class VpnRulesHolder {
     public VpnRulesHolder(@Named(DEFAULT_PREFERENCES_NAME) SharedPreferences defaultPreferences,
                           PreferenceRepository preferenceRepository,
                           PathVars pathVars,
-                          Lazy<ConnectivityCheckManager> connectivityCheckManager
+                          Lazy<ConnectivityCheckManager> connectivityCheckManager,
+                          Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor
     ) {
         this.defaultPreferences = defaultPreferences;
         this.preferenceRepository = preferenceRepository;
         this.pathVars = pathVars;
         this.connectivityCheckManager = connectivityCheckManager;
+        this.connectionCheckerInteractor = connectionCheckerInteractor;
     }
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -139,10 +144,6 @@ public class VpnRulesHolder {
                 || Tethering.usbTetherOn && packet.saddr.contains(usbModemAddresses)
                 || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
 
-        if (packet.uid != vpn.vpnPreferences.getOwnUID()) {
-            vpn.addUIDtoDNSQueryRawRecords(packet.uid, packet.daddr, packet.dport, packet.saddr);
-        }
-
         lock.readLock().lock();
 
         VpnPreferenceHolder vpnPreferences = vpn.vpnPreferences;
@@ -157,6 +158,8 @@ public class VpnRulesHolder {
             redirectToProxy = vpn.isRedirectToProxy(packet.uid, packet.daddr, packet.dport);
         }
 
+        boolean networkAvailable = connectionCheckerInteractor.get().getNetworkConnectionResult();
+
         packet.allowed = false;
         // https://android.googlesource.com/platform/system/core/+/master/include/private/android_filesystem_config.h
         if ((!vpn.canFilter) && isSupported(packet.protocol)) {
@@ -168,12 +171,13 @@ public class VpnRulesHolder {
             logw("Block DNS over TLS " + packet);
         } else if (vpnDnsSet.contains(packet.daddr)
                 && packet.dport != PLAINTEXT_DNS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()) {
+                && vpnPreferences.getIgnoreSystemDNS()
+                && packet.uid != vpnPreferences.getOwnUID()) {
             logw("Block DNS over HTTPS " + packet);
-        } else if ((packet.uid == vpnPreferences.getOwnUID()
+        } else if (packet.uid == vpnPreferences.getOwnUID()
                 || vpnPreferences.getCompatibilityMode()
                 && packet.uid == SPECIAL_UID_KERNEL
-                && !fixTTLForPacket)) {
+                && !fixTTLForPacket) {
             packet.allowed = true;
 
             if (!vpnPreferences.getCompatibilityMode()) {
@@ -224,10 +228,10 @@ public class VpnRulesHolder {
                 logw("Allowing unknown system " + packet);
             }
         } else if (torIsRunning
-                && packet.protocol != 6
+                && (packet.protocol != 6 || !networkAvailable)
                 && packet.dport != PLAINTEXT_DNS_PORT
-                && redirectToTor) {
-            logw("Disallowing non tcp traffic to Tor " + packet);
+                && (redirectToTor || isToTorTraffic(packet))) {
+            logw("Disallowing" + (networkAvailable ? " non tcp " : " ") + "traffic to Tor " + packet);
         } else if (vpnPreferences.getUseProxy()
                 && packet.protocol != 6
                 && packet.dport != PLAINTEXT_DNS_PORT
@@ -236,7 +240,8 @@ public class VpnRulesHolder {
         } else if (vpnPreferences.getFirewallEnabled()
                 && isIpInLanRange(packet.daddr)) {
             packet.allowed = uidLanAllowed.contains(packet.uid);
-        } else if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
+        } else if (vpnPreferences.getFirewallEnabled()
+                && isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
             packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
         } else if (vpnPreferences.getFirewallEnabled()) {
 
@@ -244,7 +249,7 @@ public class VpnRulesHolder {
                 Boolean allow = mapUidAllowed.get(packet.uid);
                 if (allow != null) {
                     packet.allowed = allow;
-                    //Log.i(LOG_TAG, "Packet " + packet.toString() + " is allowed " + allow);
+                    //logi("Packet " + packet.toString() + " is allowed " + allow);
                 }
             } else if (packet.dport == PLAINTEXT_DNS_PORT
                     && packet.uid < 2000 && packet.uid != SPECIAL_UID_KERNEL) {
@@ -266,13 +271,13 @@ public class VpnRulesHolder {
                 allowed = new Allowed();
             } else if (mapForwardPort.containsKey(packet.dport)) {
                 Forward fwd = mapForwardPort.get(packet.dport);
-                if (fwd != null) {
+                if (fwd != null && networkAvailable) {
                     allowed = new Allowed(fwd.raddr, fwd.rport);
                     packet.data = "> " + fwd.raddr + "/" + fwd.rport;
                 }
             } else if (mapForwardAddress.containsKey(packet.daddr)) {
                 Forward fwd = mapForwardAddress.get(packet.daddr);
-                if (fwd != null) {
+                if (fwd != null && networkAvailable) {
                     allowed = new Allowed(fwd.raddr, fwd.rport);
                     packet.data = "> " + fwd.raddr + "/" + fwd.rport;
                 }
@@ -282,6 +287,17 @@ public class VpnRulesHolder {
         }
 
         lock.readLock().unlock();
+
+        if (packet.uid != vpn.vpnPreferences.getOwnUID()) {
+            vpn.addUIDtoDNSQueryRawRecords(
+                    packet.uid,
+                    packet.daddr,
+                    packet.dport,
+                    packet.saddr,
+                    packet.allowed,
+                    packet.protocol
+            );
+        }
 
         return allowed;
     }
@@ -312,19 +328,19 @@ public class VpnRulesHolder {
     }
 
     private boolean isSpecialAllowed(int uid, String destIp, int destPort) {
+        boolean allow = false;
         if (uid == 0 && destPort == PLAINTEXT_DNS_PORT) {
-            return true;
+            allow = true;
         } else if (uid == SPECIAL_UID_KERNEL) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_KERNEL);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_KERNEL);
         } else if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_NTP)
-                    || mapUidAllowed.containsKey(1000);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_NTP);
         } else if (destPort == SPECIAL_PORT_AGPS1 || destPort == SPECIAL_PORT_AGPS2) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
         } else if (connectivityCheckIps.contains(destIp)) {
-            return uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
+            allow = uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
         }
-        return false;
+        return allow || mapUidAllowed.containsKey(uid) && mapUidAllowed.get(uid) != null;
     }
 
     private boolean isPacketAllowedForCompatibilityMode(Packet packet, boolean fixTTLForPacket) {
@@ -348,6 +364,14 @@ public class VpnRulesHolder {
         }
 
         return false;
+    }
+
+    boolean isToTorTraffic(Packet packet) {
+        String dport = String.valueOf(packet.dport);
+        return (packet.daddr.equals(LOOPBACK_ADDRESS) || packet.daddr.equals(LOOPBACK_ADDRESS_IPv6))
+                && (pathVars.getTorSOCKSPort().equals(dport)
+                || pathVars.getTorHTTPTunnelPort().equals(dport)
+                || pathVars.getTorTransPort().equals(dport));
     }
 
 

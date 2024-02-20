@@ -1,0 +1,4 @@
+**InviZible Pro beta 2.0.6**
+* Various user interface fixes and improvements.
+* Improved switching speed between networks.
+* Fixes and optimizations.

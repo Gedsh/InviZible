@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
@@ -33,7 +33,6 @@ import android.net.NetworkRequest;
 import android.os.Build;
 import android.os.PowerManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
@@ -46,7 +45,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import dagger.Lazy;
-import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
@@ -57,9 +55,11 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 
@@ -112,7 +112,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
         if (action.equalsIgnoreCase(PowerManager.ACTION_DEVICE_IDLE_MODE_CHANGED)
                 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
-            Log.i(LOG_TAG, "ModulesBroadcastReceiver Received " + intent);
+            logi("ModulesBroadcastReceiver Received " + intent);
 
             idleStateChanged(context);
 
@@ -168,7 +168,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
             try {
                 listenNetworkChanges();
             } catch (Throwable ex) {
-                Log.w(LOG_TAG, ex.toString() + "\n" + Log.getStackTraceString(ex));
+                logw("ModulesBroadcastReceiver registerConnectivityChanges", ex);
                 listenConnectivityChanges();
             }
         } else {
@@ -211,7 +211,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenNetworkChanges() {
         // Listen for network changes
-        Log.i(LOG_TAG, "ModulesBroadcastReceiver Starting listening to network changes");
+        logi("ModulesBroadcastReceiver Starting listening to network changes");
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
         builder.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
@@ -225,7 +225,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
 
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.i(LOG_TAG, "ModulesBroadcastReceiver Available network=" + network);
+                logi("ModulesBroadcastReceiver Available network=" + network);
                 updateIptablesRules(false);
                 resetArpScanner(true);
                 setInternetAvailable(true);
@@ -246,11 +246,11 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                 List<InetAddress> dns = linkProperties.getDnsServers();
 
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !same(last_dns, dns)) {
-                    Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed link properties=" + linkProperties +
+                    logi("ModulesBroadcastReceiver Changed link properties=" + linkProperties +
                             "ModulesBroadcastReceiver cur=" + TextUtils.join(",", dns) +
                             "ModulesBroadcastReceiver prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
                     last_dns = dns;
-                    Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed link properties=" + linkProperties);
+                    logi("ModulesBroadcastReceiver Changed link properties=" + linkProperties);
                     updateIptablesRules(false);
                 }
 
@@ -274,13 +274,13 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                     resetArpScanner();
                     last_network = network.hashCode();
                     checkInternetConnection();
-                    Log.i(LOG_TAG, "ModulesBroadcastReceiver Changed capabilities=" + network);
+                    logi("ModulesBroadcastReceiver Changed capabilities=" + network);
                 }
             }
 
             @Override
             public void onLost(@NonNull Network network) {
-                Log.i(LOG_TAG, "ModulesBroadcastReceiver Lost network=" + network);
+                logi("ModulesBroadcastReceiver Lost network=" + network);
                 updateIptablesRules(false);
                 resetArpScanner(false);
                 last_network = 0;
@@ -308,7 +308,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
 
     private void listenConnectivityChanges() {
         // Listen for connectivity updates
-        Log.i(LOG_TAG, "ModulesBroadcastReceiver Starting listening to connectivity changes");
+        logi("ModulesBroadcastReceiver Starting listening to connectivity changes");
         IntentFilter ifConnectivity = new IntentFilter();
         ifConnectivity.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         context.registerReceiver(this, ifConnectivity);
@@ -319,7 +319,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     private void idleStateChanged(Context context) {
         PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (pm != null) {
-            Log.i(LOG_TAG, "ModulesBroadcastReceiver device idle=" + pm.isDeviceIdleMode());
+            logi("ModulesBroadcastReceiver device idle=" + pm.isDeviceIdleMode());
         }
 
         // Reload rules when coming from idle mode
@@ -332,7 +332,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
 
     private void connectivityStateChanged(Intent intent) {
         // Reload rules
-        Log.i(LOG_TAG, "ModulesBroadcastReceiver connectivityStateChanged Received " + intent);
+        logi("ModulesBroadcastReceiver connectivityStateChanged Received " + intent);
         updateIptablesRules(false);
 
         resetArpScanner();
@@ -379,11 +379,10 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                 usbTetherOn = checker.isUsbTetherOn();
 
             } catch (InterruptedException ignored) {
-                Log.i(LOG_TAG,
-                        "ModulesBroadcastReceiver checkInternetSharingState action "
+                logi("ModulesBroadcastReceiver checkInternetSharingState action "
                                 + action + " interrupted");
             } catch (Exception e) {
-                Log.e(LOG_TAG, "ModulesBroadcastReceiver checkInternetSharingState exception", e);
+                loge("ModulesBroadcastReceiver checkInternetSharingState exception", e);
             }
 
             PreferenceRepository preferences = preferenceRepository.get();
@@ -404,7 +403,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                 ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
             }
 
-            Log.i(LOG_TAG, "ModulesBroadcastReceiver " +
+            logi("ModulesBroadcastReceiver " +
                     "WiFi Access Point state is " + (wifiAccessPointOn ? "ON" : "OFF") + "\n"
                     + " USB modem state is " + (usbTetherOn ? "ON" : "OFF"));
         });
@@ -419,7 +418,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     }
 
     private void packageChanged() {
-        Log.i(LOG_TAG, "ModulesBroadcastReceiver packageChanged");
+        logi("ModulesBroadcastReceiver packageChanged");
         updateIptablesRules(true);
     }
 
@@ -452,7 +451,7 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
                     try {
                         TimeUnit.SECONDS.sleep(DELAY_BEFORE_UPDATING_IPTABLES_RULES_SEC);
                     } catch (InterruptedException e) {
-                        Log.w(LOG_TAG, "ModulesBroadcastReceiver sleep interruptedException " + e.getMessage());
+                        logw("ModulesBroadcastReceiver sleep interrupted", e);
                     }
 
                     if (modulesStatus.getMode() == ROOT_MODE && !modulesStatus.isUseModulesWithRoot()) {
@@ -495,9 +494,9 @@ public class ModulesBroadcastReceiver extends BroadcastReceiver implements OnInt
     @Override
     public void onConnectionChecked(boolean available) {
         if (available) {
-            Log.i(LOG_TAG, "Internet is available due to confirmation.");
+            logi("Internet is available due to confirmation.");
         } else {
-            Log.i(LOG_TAG, "Internet is not available due to confirmation.");
+            logi("Internet is not available due to confirmation.");
         }
     }
 

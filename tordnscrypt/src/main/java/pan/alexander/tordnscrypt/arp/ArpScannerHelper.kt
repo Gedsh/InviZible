@@ -14,22 +14,21 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.arp
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.di.arp.ArpScope
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
-import pan.alexander.tordnscrypt.utils.root.RootExecService
 import java.util.concurrent.locks.ReentrantLock
 import javax.inject.Inject
 import javax.inject.Named
@@ -66,9 +65,9 @@ class ArpScannerHelper @Inject constructor(
         }
 
         if (makePause) {
-            Log.i(RootExecService.LOG_TAG, "ArpScanner is paused")
+            logi("ArpScanner is paused")
         } else {
-            Log.i(RootExecService.LOG_TAG, "ArpScanner is active")
+            logi("ArpScanner is active")
         }
 
         if (attackDetected) {
@@ -114,7 +113,8 @@ class ArpScannerHelper @Inject constructor(
 
     fun isRootAvailable(): Boolean = modulesStatus.isRootAvailable
 
-    fun getArpSpoofingDetectionSupported() = !appPreferenceRepository.getBoolPreference(ARP_SPOOFING_NOT_SUPPORTED)
+    fun getArpSpoofingDetectionSupported() =
+        !appPreferenceRepository.getBoolPreference(ARP_SPOOFING_NOT_SUPPORTED)
 
     fun saveArpSpoofingDetectionNotSupported(supported: Boolean) {
         appPreferenceRepository.setBoolPreference(ARP_SPOOFING_NOT_SUPPORTED, supported)

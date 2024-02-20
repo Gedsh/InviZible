@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.backup;
@@ -28,16 +28,13 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -59,7 +56,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.backup.BackupFragment.CODE_WRITE;
 import static pan.alexander.tordnscrypt.backup.BackupFragment.TAGS_TO_CONVERT;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import javax.inject.Inject;
 
@@ -115,7 +112,7 @@ public class BackupHelper {
                 FileManager.deleteFile(activity, cacheDir, "/defaultSharedPref", "ignored");
                 FileManager.deleteFile(activity, cacheDir, "/sharedPreferences", "ignored");
             } catch (Exception e) {
-                Log.e(LOG_TAG, "BackupHelper saveAllToInternalDir fault " + e.getMessage() + " " + e.getCause());
+                loge("BackupHelper saveAllToInternalDir", e);
 
                 showError();
 
@@ -133,7 +130,7 @@ public class BackupHelper {
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(dst))) {
             output.writeObject(pref.getAll());
         } catch (Exception e) {
-            Log.e(LOG_TAG, "saveSharedPreferencesToFile fault " + e.getMessage() + " " + e.getCause());
+            loge("saveSharedPreferencesToFile", e);
         }
     }
 
@@ -164,7 +161,7 @@ public class BackupHelper {
     void copyData(OutputStream outputStream) {
 
         cachedExecutor.submit(() -> {
-            try (FileInputStream fileInputStream = new FileInputStream(cacheDir + "/InvizibleBackup.zip")) {
+            try (outputStream; FileInputStream fileInputStream = new FileInputStream(cacheDir + "/InvizibleBackup.zip")) {
                 byte[] buffer = new byte[8 * 1024];
 
                 for (int len; (len = fileInputStream.read(buffer)) > 0; ) {
@@ -172,16 +169,11 @@ public class BackupHelper {
                 }
                 outputStream.flush();
             } catch (Exception e) {
-                Log.e(LOG_TAG, "BackupHelper copyData fault " + e.getMessage() + " " + e.getCause());
+                loge("BackupHelper copyData", e);
 
                 showError();
 
                 FileManager.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
-            } finally {
-                try {
-                    outputStream.close();
-                } catch (IOException ignored) {
-                }
             }
 
         });
@@ -198,8 +190,7 @@ public class BackupHelper {
                     fragment.showToast(activity.getString(R.string.wrong));
                 }
             } catch (Exception ex) {
-                Log.e(LOG_TAG, "BackupHelper close progress fault " + ex.getMessage()
-                        + " " + ex.getCause() + " " + Arrays.toString(ex.getStackTrace()));
+                loge("BackupHelper close progress fault", ex, true);
             }
         }
     }

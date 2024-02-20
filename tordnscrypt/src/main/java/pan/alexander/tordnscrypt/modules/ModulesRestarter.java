@@ -14,14 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
 
 import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import java.io.File;
 import java.util.List;
@@ -31,11 +30,16 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class ModulesRestarter {
     public static void restartDNSCrypt(Context context) {
         ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_DNSCRYPT);
+        ModulesAux.speedupModulesStateLoopTimer(context);
+    }
+
+    public static void rebootTor(Context context) {
+        ModulesActionSender.INSTANCE.sendIntent(context, ModulesServiceActions.ACTION_RESTART_TOR);
         ModulesAux.speedupModulesStateLoopTimer(context);
     }
 
@@ -95,7 +99,7 @@ public class ModulesRestarter {
         try {
             android.os.Process.sendSignal(Integer.parseInt(pid), 1);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ModulesRestarter killWithPid exception " + e.getMessage() + " " + e.getCause());
+            loge("ModulesRestarter killWithPid", e);
         }
     }
 
@@ -104,7 +108,7 @@ public class ModulesRestarter {
         try {
             Shell.SU.run(commands);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Restart " + module + " with root exception " + e.getMessage() + " " + e.getCause());
+            loge("Restart " + module + " with root", e);
         }
     }
 
@@ -113,7 +117,7 @@ public class ModulesRestarter {
         try {
             Shell.SH.run(commands);
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Restart " + module + " without root exception " + e.getMessage() + " " + e.getCause());
+            loge("Restart " + module + " without root", e);
         }
     }
 

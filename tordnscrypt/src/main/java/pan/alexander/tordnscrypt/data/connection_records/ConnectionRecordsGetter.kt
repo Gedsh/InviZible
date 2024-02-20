@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.data.connection_records
@@ -57,17 +57,17 @@ class ConnectionRecordsGetter @Inject constructor(
     @Volatile
     private var serviceVPN: WeakReference<ServiceVPN?>? = null
 
-    fun getConnectionRawRecords(): Map<ConnectionData, Boolean> {
+    fun getConnectionRawRecords(): Map<ConnectionData, Long> {
         if (bound.compareAndSet(false, true)) {
             logi("ConnectionRecordsGetter bind to VPN service")
             bindToVPNService()
         }
 
         val rawRecords = try {
-            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyMap<ConnectionData, Boolean>()
+            serviceVPN?.get()?.dnsQueryRawRecords ?: emptyMap<ConnectionData, Long>()
         } catch (e: Exception) {
             logw("ConnectionRecordsGetter getConnectionRawRecords", e)
-            emptyMap<ConnectionData, Boolean>()
+            emptyMap<ConnectionData, Long>()
         }
 
         return rawRecords

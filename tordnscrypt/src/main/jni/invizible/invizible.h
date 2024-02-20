@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 #include <jni.h>
 #include <stdio.h>
@@ -507,7 +507,7 @@ jint restore_uid(const struct arguments *args,
                  const char *flags,
                  const uint8_t *payload);
 
-int protect_socket(const struct arguments *args, int socket);
+int protect_socket(const struct arguments *args, int socket, int uid);
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
 

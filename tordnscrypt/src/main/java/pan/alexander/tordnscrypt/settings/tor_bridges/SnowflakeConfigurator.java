@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_bridges;
@@ -71,8 +71,8 @@ public class SnowflakeConfigurator {
         if (!currentBridge.contains(" url=")) {
             bridgeBuilder.append(" url=").append(getURL(rendezvousType));
         }
-        if (!currentBridge.contains(" front=")) {
-            bridgeBuilder.append(" front=").append(getFront(rendezvousType));
+        if (!currentBridge.contains(" front=") && !currentBridge.contains(" fronts=")) {
+            bridgeBuilder.append(" fronts=").append(getFront(rendezvousType));
         }
         if (!currentBridge.contains(" ice=")) {
             bridgeBuilder.append(" ice=").append(getStunServers(stunServers));
@@ -98,9 +98,9 @@ public class SnowflakeConfigurator {
     private String getFront(int rendezvousType) {
         int rendezvous = getRendezvous(rendezvousType);
         if (rendezvous == AMP_CACHE) {
-            return "www.google.com";
+            return "www.google.com,accounts.google.com";
         } else if (rendezvous == FASTLY) {
-            return "foursquare.com";
+            return "foursquare.com,github.githubassets.com";
         } else {
             return "";
         }

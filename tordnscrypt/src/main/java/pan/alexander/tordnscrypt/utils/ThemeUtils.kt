@@ -14,18 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils
 
 import android.content.Context
-import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 
 object ThemeUtils {
@@ -46,10 +45,7 @@ object ThemeUtils {
                 "4" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         } catch (e: Exception) {
-            Log.e(
-                LOG_TAG,
-                "ThemeUtils setDayNightTheme ${e.javaClass} ${e.message}\n${e.cause}"
-            )
+            loge("ThemeUtils setDayNightTheme", e)
         }
     }
 }

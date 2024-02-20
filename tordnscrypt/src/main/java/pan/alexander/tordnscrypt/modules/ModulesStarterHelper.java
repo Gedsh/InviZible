@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -108,6 +110,8 @@ public class ModulesStarterHelper {
 
     private final ModulesStatus modulesStatus;
 
+    private final Lock lock;
+
     ModulesStarterHelper(Context context, Handler handler) {
         App.getInstance().getDaggerComponent().inject(this);
         this.context = context;
@@ -121,6 +125,7 @@ public class ModulesStarterHelper {
         obfsPath = pathVars.getObfsPath();
         itpdPath = pathVars.getITPDPath();
         this.modulesStatus = ModulesStatus.getInstance();
+        lock = new ReentrantLock();
     }
 
     Runnable getDNSCryptStarterRunnable() {
@@ -134,9 +139,15 @@ public class ModulesStarterHelper {
 
                 List<String> lines = readDnsCryptConfiguration();
 
-                checkDnsCryptPortsForBusyness(lines);
+                List<String> newLines = new ArrayList<>(lines);
 
-                saveDnsCryptConfiguration(lines);
+                checkDnsCryptPortsForBusyness(newLines);
+
+                if (lines.size() != newLines.size() || !new HashSet<>(lines).containsAll(newLines)) {
+                    saveDnsCryptConfiguration(newLines);
+                }
+
+                checkModulesConfigPatches(false);
 
                 dnsCmdString = busyboxPath + "nohup " + dnscryptPath
                         + " -config " + appDataDir
@@ -159,9 +170,15 @@ public class ModulesStarterHelper {
 
                 List<String> lines = readDnsCryptConfiguration();
 
-                checkDnsCryptPortsForBusyness(lines);
+                List<String> newLines = new ArrayList<>(lines);
 
-                saveDnsCryptConfiguration(lines);
+                checkDnsCryptPortsForBusyness(newLines);
+
+                if (lines.size() != newLines.size() || !new HashSet<>(lines).containsAll(newLines)) {
+                    saveDnsCryptConfiguration(newLines);
+                }
+
+                checkModulesConfigPatches(false);
 
                 dnsCmdString = dnscryptPath + " -config " + appDataDir
                         + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml -pidfile " + appDataDir + "/dnscrypt-proxy.pid";
@@ -185,7 +202,7 @@ public class ModulesStarterHelper {
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
-                    checkModulesConfigPatches();
+                    checkModulesConfigPatches(true);
 
                     sendAskRestoreDefaults(context, ModuleName.DNSCRYPT_MODULE);
                 }
@@ -224,13 +241,19 @@ public class ModulesStarterHelper {
 
                 List<String> lines = readTorConfiguration();
 
-                correctTorConfRunAsDaemon(lines, true);
+                List<String> newLines = new ArrayList<>(lines);
 
-                correctObfsModulePath(lines);
+                correctTorConfRunAsDaemon(newLines, true);
 
-                checkTorPortsForBusyness(lines);
+                correctObfsModulePath(newLines);
 
-                saveTorConfiguration(lines);
+                checkTorPortsForBusyness(newLines);
+
+                if (lines.size() != newLines.size() || !new HashSet<>(lines).containsAll(newLines)) {
+                    saveTorConfiguration(newLines);
+                }
+
+                checkModulesConfigPatches(false);
 
                 torCmdString = torPath
                         + " -f " + appDataDir + "/app_data/tor/tor.conf"
@@ -256,15 +279,21 @@ public class ModulesStarterHelper {
 
                 List<String> lines = readTorConfiguration();
 
-                correctTorConfRunAsDaemon(lines, false);
+                List<String> newLines = new ArrayList<>(lines);
 
-                useTorSchedulerVanilla(lines);
+                correctTorConfRunAsDaemon(newLines, false);
 
-                correctObfsModulePath(lines);
+                useTorSchedulerVanilla(newLines);
 
-                checkTorPortsForBusyness(lines);
+                correctObfsModulePath(newLines);
 
-                saveTorConfiguration(lines);
+                checkTorPortsForBusyness(newLines);
+
+                if (lines.size() != newLines.size() || !new HashSet<>(lines).containsAll(newLines)) {
+                    saveTorConfiguration(newLines);
+                }
+
+                checkModulesConfigPatches(false);
 
                 torCmdString = torPath
                         + " -f " + appDataDir + "/app_data/tor/tor.conf"
@@ -292,7 +321,7 @@ public class ModulesStarterHelper {
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
-                    checkModulesConfigPatches();
+                    checkModulesConfigPatches(true);
 
                     sendAskRestoreDefaults(context, ModuleName.TOR_MODULE);
 
@@ -339,6 +368,7 @@ public class ModulesStarterHelper {
             final CommandResult shellResult;
             if (modulesStatus.isUseModulesWithRoot()) {
                 correctITPDConfRunAsDaemon(context, appDataDir, true);
+                checkModulesConfigPatches(false);
 
                 Shell.SU.run(busyboxPath + "mkdir -p " + appDataDir + "/i2pd_data",
                         "cd " + appDataDir + "/app_data/i2pd",
@@ -362,6 +392,7 @@ public class ModulesStarterHelper {
 
             } else {
                 correctITPDConfRunAsDaemon(context, appDataDir, false);
+                checkModulesConfigPatches(false);
                 itpdCmdString = itpdPath + " --conf " + appDataDir
                         + "/app_data/i2pd/i2pd.conf --datadir " + appDataDir
                         + "/i2pd_data --pidfile " + appDataDir + "/i2pd.pid";
@@ -384,7 +415,7 @@ public class ModulesStarterHelper {
                                 + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
                     }
 
-                    checkModulesConfigPatches();
+                    checkModulesConfigPatches(true);
 
                     sendAskRestoreDefaults(context, ModuleName.ITPD_MODULE);
                 }
@@ -593,9 +624,17 @@ public class ModulesStarterHelper {
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
-    private void checkModulesConfigPatches() {
-        Patch patch = new Patch(context, pathVars);
-        patch.checkPatches(true);
+    private void checkModulesConfigPatches(boolean forceCheck) {
+        if (lock.tryLock()) {
+            try {
+                Patch patch = new Patch(context, pathVars);
+                patch.checkPatches(forceCheck);
+            } catch (Exception e) {
+                loge("ModulesStarterHelper checkModulesConfigPatches", e);
+            } finally {
+                lock.unlock();
+            }
+        }
     }
 
     private String getFakeSniHosts() {

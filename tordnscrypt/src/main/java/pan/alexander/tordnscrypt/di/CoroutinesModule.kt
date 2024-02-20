@@ -14,17 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.di
 
-import android.util.Log
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.*
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
-import pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Named
 
 @Module
@@ -60,10 +58,7 @@ class CoroutinesModule {
     @Provides
     fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
         return CoroutineExceptionHandler { coroutine, throwable ->
-            Log.e(
-                LOG_TAG,
-                "Coroutine ${coroutine[CoroutineName]} exception ${throwable.message} cause ${throwable.cause}"
-            )
+            loge("Coroutine ${coroutine[CoroutineName]}", throwable)
         }
     }
 

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs;
@@ -66,7 +66,7 @@ public class AskRestoreDefaultsDialog extends ExtendedDialogFragment {
             module = (ModuleName) arguments.getSerializable(MODULE_NAME_ARG);
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(
                         String.format(
                                 getString(R.string.ask_reset_settings_text),

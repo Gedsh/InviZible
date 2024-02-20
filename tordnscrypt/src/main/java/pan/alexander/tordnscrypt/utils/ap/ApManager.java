@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.ap;
@@ -27,7 +27,6 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -38,7 +37,8 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.utils.enums.AccessPointState;
 
 import static android.content.Context.CONNECTIVITY_SERVICE;
-import static pan.alexander.tordnscrypt.utils.root.RootExecService.LOG_TAG;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 
 import javax.inject.Inject;
 
@@ -91,7 +91,7 @@ public class ApManager {
                 result = configureHotspotOreoAndHigher();
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ApManager configApState Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+            loge("ApManager configApState", e);
         }
 
         return result;
@@ -114,7 +114,7 @@ public class ApManager {
                 result = true;
             }
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ApManager configApState M Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+            loge("ApManager configApState M", e);
         }
 
         return result;
@@ -145,7 +145,7 @@ public class ApManager {
             result = true;
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ApManager configApState N Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+            loge("ApManager configApState N", e);
         }
 
         return result;
@@ -167,20 +167,20 @@ public class ApManager {
                         @Override
                         public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation) {
                             super.onStarted(reservation);
-                            Log.d(LOG_TAG, "Wifi Hotspot is on now");
+                            logi("Wifi Hotspot is on now");
                             mReservation = reservation;
                         }
 
                         @Override
                         public void onStopped() {
                             super.onStopped();
-                            Log.d(LOG_TAG, "Wifi Hotspot onStopped: ");
+                            logi("Wifi Hotspot onStopped: ");
                         }
 
                         @Override
                         public void onFailed(int reason) {
                             super.onFailed(reason);
-                            Log.d(LOG_TAG, "Wifi Hotspot onFailed: ");
+                            logi("Wifi Hotspot onFailed: ");
                         }
                     }, new Handler());
                 }
@@ -196,7 +196,7 @@ public class ApManager {
             result = true;
 
         } catch (Exception e) {
-            Log.e(LOG_TAG, "ApManager configApState O Exception " + e.getMessage() + System.lineSeparator() + e.getCause());
+            loge("ApManager configApState O", e);
         }
 
         return result;

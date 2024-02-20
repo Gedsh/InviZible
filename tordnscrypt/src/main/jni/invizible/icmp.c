@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -322,7 +322,7 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
     }
 
     // Protect socket
-    if (protect_socket(args, sock) < 0)
+    if (protect_socket(args, sock, cur->uid) < 0)
         return -1;
 
 

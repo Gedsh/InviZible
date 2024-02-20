@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2023 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dialogs;
@@ -64,7 +64,7 @@ public class DialogSaveConfigChanges extends ExtendedDialogFragment {
             moduleName = getArguments().getString("moduleName");
         }
 
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(activity, R.style.CustomAlertDialogTheme);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(activity);
 
         alertDialog.setTitle(R.string.warning);
         alertDialog.setMessage(R.string.config_changes_dialog_message);
