@@ -92,11 +92,15 @@ Telegram channel: [InviZiblePro](https://t.me/InviZiblePro)
 
 Telegram group: [InviZiblePro_Group](https://t.me/InviZiblePro_Group)
 
+Matrix group: [Matrix](https://matrix.to/#/#invizible-pro-en:matrix.org)
+
 ### For Russian-speaking users:
 
 Telegram channel: [InviZiblePro](https://t.me/InviZibleProRus)
 
 Telegram group: [InviZiblePro_Group](https://t.me/InviZibleProRus_Group)
+
+Matrix group: [Matrix](https://matrix.to/#/#invizible-pro-ru:matrix.org)
 
 There is support for the latest version of **InviZible Pro** only.
 
