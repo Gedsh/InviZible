@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Starte beim Booten"</string>
     <string name="root_available">"Prüfe ob Root verfügbar ist…"</string>
     <string name="please_wait">"Bitte warten…"</string>
-    <string name="dont_show">"Nicht wieder anzeigen"</string>
+    <string name="dont_show">Nicht wieder anzeigen</string>
     <string name="tvDNSStop">"DNSCrypt gestoppt"</string>
     <string name="tvDNSInstalled">"DNSCrypt installiert"</string>
     <string name="tvDNSInstalling">"DNSCrypt wird installiert"</string>
@@ -122,8 +122,8 @@
     <string name="pref_common_wakelock_summ">"Zusätzlicher Schutz vor Schliessen der App durch Android mittels Kein Root Modus. Kann den Batterieverbrauch erhöhen"</string>
     <string name="pref_common_show_help">"Hilfe Messages"</string>
     <string name="pref_common_show_help_summ">"Hilfe Messages immer anzeigen"</string>
-    <string name="pref_common_notification_helper">"Bitte deaktiviere die Batterieoptimierung deines Telefons für InviZible Pro.
-Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein."</string>
+    <string name="pref_common_notification_helper">Bitte deaktiviere die Batterieoptimierung deines Telefons für InviZible Pro.
+\nAndernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein.</string>
     <string name="pref_common_use_busybox">"BusyBox auswählen"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimentell"</string>
     <string name="pref_common_tethering_autostart">"Starte Tethering beim Booten"</string>
@@ -335,7 +335,7 @@ Konfiguriere nach der Installation HOTSPOT neu, falls du ihn benutzt!"</string>
     <string name="verifier_error">"Dies sieht nach einer inoffiziellen Version von InviZible aus. Bitte pass auf!"</string>
     <string name="only_for_pro">"Nur in der PRO Version"</string>
     <string name="donate">"Spenden"</string>
-    <string name="donate_project">"InviZible Pro Project braucht deine Unterstützung. Bitte besuche die Spendenseite oder gib deinen Registrierungscode ein."</string>
+    <string name="donate_project">InviZible Pro Project braucht deine Unterstützung. Bitte besuche die Spendenseite oder gib deinen Registrierungscode ein.</string>
     <string name="donate_button">"Besuchen"</string>
     <string name="enter_code_button">"Code eingeben"</string>
     <string name="enter_code">"Code eingeben"</string>
@@ -352,28 +352,28 @@ Möchtest du den Download und das Upgrade auf PRO durchführen? Die Installation
     <string name="add_custom_server_title">"Eigenen Server hinzufügen"</string>
     <string name="add_custom_server_error">"Ungültige Server Konfiguration. Bitte überprüfe das SDNS Feld."</string>
     <string name="pending_purchase">"Bitte beachte, dass du momentan bereits einen Einkauf getätigt hast:"</string>
-    <string name="buy_premium_gp">"InviZible Pro Project braucht deine Unterstützung. Drücke OK um die Premium Features kostenpflichtig zu erwerben."</string>
+    <string name="buy_premium_gp">InviZible Pro Project braucht deine Unterstützung. Drücke OK um die Premium Features kostenpflichtig zu erwerben.</string>
     <string name="wrong_purchase_signature_gp">"Es tut mir leid, aber dein Einkauf kann leider nicht bestätigt werden. Eine Rückerstattung erolgt nach 3 tagen."</string>
     <string name="only_premium_feature">"Leider ist dieses Feature nur in der Premium Version verfügbar."</string>
     <string name="agreement_text">"
-        \t Vielen Dank, dass du dich für InviZible Pro entschieden hast. Ich hoffe, dass du dich damit gut geschützt und angenehm im Internet bewegen kannst.
-        
-\tInviZible Pro beinhaltet Tor, DNSCrypt und Purple I2P als Module.
-        
-\tInviZible Pro kann Root benutzen, falls dein Gerät dies erlaubt, oder alternativ ein lokales VPN anbieten, das Internetverkehr an Tor, DNSCrypt und I2P Netzwerke weiterleitet.
-        
-\tDieses Produkt wird unabhängig von Tor®, DNSCrypt und Purple I2P Software entwickelt und gibt bezüglich der erwähnten Projekte keinerlei Garantie im Hinblick auf Qualität, Tauglichkeit oder anderes.
-        
-\tInviZible Pro wird veröffentlicht in der Hoffnung etwas Nützliches zu schaffen, allerdings OHNE JEGLICHE GEWÄHRLEISTUNG; ferner ohne jegliche auch nur implizierte Zusicherung von Verwendbarkeit oder Gebrauchstauglichkeit für spezielle Einsatzzwecke.
-        
-\tCopyright © 2019-2024
-        
-\tGarmatin Oleksandr
-        
-\tinvizible.soft@gmail.com
-        
-\tinvizible.net/en/privacy
-    "</string>
+\n        \t Vielen Dank, dass du dich für InviZible Pro entschieden hast. Ich hoffe, dass du dich damit gut geschützt und angenehm im Internet bewegen kannst.
+\n
+\n\tInviZible Pro beinhaltet Tor, DNSCrypt und Purple I2P als Module.
+\n
+\n\tInviZible Pro kann Root benutzen, falls dein Gerät dies erlaubt, oder alternativ ein lokales VPN anbieten, das Internetverkehr an Tor, DNSCrypt und I2P Netzwerke weiterleitet.
+\n
+\n\tDieses Produkt wird unabhängig von Tor®, DNSCrypt und Purple I2P Software entwickelt und gibt bezüglich der erwähnten Projekte keinerlei Garantie im Hinblick auf Qualität, Tauglichkeit oder anderes.
+\n
+\n\tInviZible Pro wird veröffentlicht in der Hoffnung etwas Nützliches zu schaffen, allerdings OHNE JEGLICHE GEWÄHRLEISTUNG; ferner ohne jegliche auch nur implizierte Zusicherung von Verwendbarkeit oder Gebrauchstauglichkeit für spezielle Einsatzzwecke.
+\n
+\n\tCopyright © 2019-2024
+\n
+\n\tGarmatin Oleksandr
+\n
+\n\tinvizible.soft@gmail.com
+\n
+\n\tinvizible.net/en/privacy
+\n    "</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Ausgehender HTTP Proxy"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Ausgehender HTTP Proxy"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Ausgehender SOCKS Proxy"</string>

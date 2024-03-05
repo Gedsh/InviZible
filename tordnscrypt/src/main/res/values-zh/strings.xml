@@ -16,7 +16,7 @@
     <string name="swRunOnBoot">启动设备时启动</string>
     <string name="root_available">正在检查 Root 是否可用…</string>
     <string name="please_wait">"请稍侯…"</string>
-    <string name="dont_show">"不再显示"</string>
+    <string name="dont_show">不再询问</string>
     <string name="tvDNSStop">"DNSCrypt 已停止"</string>
     <string name="tvDNSInstalled">"DNSCrypt 已安装"</string>
     <string name="tvDNSInstalling">"DNSCrypt 正在安装"</string>
@@ -125,7 +125,7 @@
     <string name="pref_common_wakelock_summ">"无 Root 模式下的附加保护防止应用被 Android 系统杀死。可能消耗电池"</string>
     <string name="pref_common_show_help">"帮助信息"</string>
     <string name="pref_common_show_help_summ">"总是显示帮助信息"</string>
-    <string name="pref_common_notification_helper">"请对 InviZible Pro 关闭 Android 电池优化。 否则 Android 将随时杀死 DNSCrypt，Tor 或 I2P。在特定系统上，如 MIUI，需要一些额外步骤 。"</string>
+    <string name="pref_common_notification_helper">请将 InviZible Pro 从 Android 电池优化中排除，以防止系统在任何时候终止 DNSCrypt、Tor 或 I2P。对于某些特定系统，例如 MIUI，可能需要额外步骤。</string>
     <string name="pref_common_use_busybox">"选择 BusyBox"</string>
     <string name="pref_common_categ_hotspot">"热点-实验性"</string>
     <string name="pref_common_tethering_autostart">"设备启动时启动数据共享"</string>
@@ -328,7 +328,7 @@
     <string name="verifier_error">"似乎这是非官方版本的 InviZible。请小心！"</string>
     <string name="only_for_pro">"仅用于 PRO 版本"</string>
     <string name="donate">"捐助"</string>
-    <string name="donate_project">"InviZible Pro 项目需要您的帮助。请访问捐助页面或输入收到的注册码。"</string>
+    <string name="donate_project">InviZible Pro 项目寻求您的帮助。请访问捐助页面或输入您已经收到的注册码。</string>
     <string name="donate_button">"访问"</string>
     <string name="enter_code_button">"输入代码"</string>
     <string name="enter_code">"输入代码"</string>
@@ -345,7 +345,7 @@
     <string name="add_custom_server_title">"添加自定义服务器"</string>
     <string name="add_custom_server_error">"无效自定义服务器配置。请检查 SDNS 字段。"</string>
     <string name="pending_purchase">"请注意您有一个待完成的购买："</string>
-    <string name="buy_premium_gp">"InviZible Pro 项目需要您的帮助。点按 OK 购买高级功能。"</string>
+    <string name="buy_premium_gp">InviZible Pro 项目寻求您的帮助。点按 OK 购买高级功能。</string>
     <string name="wrong_purchase_signature_gp">"抱歉，无法确认您的购买。您将在 3 日后收到退款。"</string>
     <string name="only_premium_feature">"不幸的是，此功能仅高级版可用。"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP 出口代理"</string>
@@ -480,7 +480,7 @@
     <string name="notification_connecting">正在连接…</string>
     <string name="notification_waiting_network">等待网络…</string>
     <string name="tile_change_tor_ip">更改Tor IP</string>
-    <string name="tile_changing_tor_ip">ToR IP更改</string>
+    <string name="tile_changing_tor_ip">Tor IP 正在更改</string>
     <string name="tile_dialog_over_three_tiles_message">你在快捷设置中添加了超过3个磁贴。请只留下3个。添加超过3个磁贴会导致应用控制的问题。</string>
     <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
@@ -504,17 +504,18 @@
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
-    <string name="agreement_text">\\\t感谢您选择InviZible Pro。我希望它能对您的隐私和舒适地使用互联网有帮助。
+    <string name="agreement_text">\\感谢您选择InviZble Pro。我相信它将增强您的隐私，并提供流畅的在线体验。
 \n
-\n\tInviZible Pro包括Tor、DNSCrypt和Purple I2P等模块。
+\nInviZble Pro包括Tor、DNSCryt和Purple I2P作为模块。
 \n
-\n\t如果您的设备有root权限，InviZible Pro可以使用root，或者使用本地VPN将互联网流量传送到Tor、DNSCrypt和I2P网络。
+\n如果您的设备是root的，InviZble Pro可以使用root，或者使用本地VPN将互联网流量直接传递到Tor、DNSCryt和I2P网络。
 \n
-\n\t隐私政策：
-\n\tInviZible Pro不收集或分享任何私人或敏感的用户数据。
+\n隐私政策：
+\nInviZble Pro不收集或共享任何个人或敏感用户数据。
 \n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+\n版权所有©2019-2024。
+\nGarmatin Oleksandr。
+\n邮箱：invizible.soft@gmail.com。
+\nInvizible.net/en/privacy</string>
+    <string name="notification_exclude_data_restriction_message">请允许使用后台流量，并在流量节省程序开启时允许使用流量。这对于流畅的在线体验非常重要。</string>
 </resources>
