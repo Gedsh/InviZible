@@ -26,7 +26,6 @@ import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -66,33 +65,39 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_BYPASS_VPN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_DIRECT_UDP;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 
-public class UnlockTorAppsFragment extends Fragment implements InstalledApplicationsManager.OnAppAddListener,
-        CompoundButton.OnCheckedChangeListener, ChipGroup.OnCheckedChangeListener, SearchView.OnQueryTextListener {
-
-    public static final String UNLOCK_APPS = "unlockApps";
-    public static final String CLEARNET_APPS = "clearnetApps";
+public class UnlockTorAppsFragment extends Fragment
+        implements InstalledApplicationsManager.OnAppAddListener,
+        ChipGroup.OnCheckedChangeListener, SearchView.OnQueryTextListener {
 
     private Chip chipTorAppsUser;
     private Chip chipTorAppsSystem;
     private Chip chipTorAppsAll;
     private Chip chipTorAppsSortUid;
     private ProgressBar pbTorApp;
-    private RecyclerView rvListTorApps;
+    RecyclerView rvListTorApps;
     RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> mAdapter;
 
-    final CopyOnWriteArrayList<ApplicationData> appsUnlock = new CopyOnWriteArrayList<>();
-    CopyOnWriteArrayList<ApplicationData> savedAppsUnlockWhenSearch = null;
+    final CopyOnWriteArrayList<TorAppData> appsUnlock = new CopyOnWriteArrayList<>();
+    CopyOnWriteArrayList<TorAppData> savedAppsUnlockWhenSearch = null;
     private Set<String> setUnlockApps;
+    @Nullable
+    private Set<String> setDirectUdpApps;
+    @Nullable
+    private Set<String> setVpnBypassApps;
 
-    private String unlockAppsStr;
+    String unlockAppsStr;
     private FutureTask<?> futureTask;
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private volatile boolean appsListComplete = false;
@@ -142,6 +147,11 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         }
 
         setUnlockApps = preferenceRepository.get().getStringSetPreference(unlockAppsStr);
+
+        if (!bypassAppsProxy) {
+            setDirectUdpApps = preferenceRepository.get().getStringSetPreference(APPS_DIRECT_UDP);
+            setVpnBypassApps = preferenceRepository.get().getStringSetPreference(APPS_BYPASS_VPN);
+        }
     }
 
     @Override
@@ -236,21 +246,48 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             appsUnlock.addAll(savedAppsUnlockWhenSearch);
         }
 
-        Set<String> setAppUIDtoSave = new HashSet<>();
+        Set<String> setTorifyUidToSave = new HashSet<>();
+        Set<String> setDirectUdpUidToSave = new HashSet<>();
+        Set<String> setBypassVpnAppsToSave = new HashSet<>();
         for (int i = 0; i < appsUnlock.size(); i++) {
-            ApplicationData app = appsUnlock.get(i);
-            if (app.getActive())
-                setAppUIDtoSave.add(String.valueOf(app.getUid()));
+            TorAppData app = appsUnlock.get(i);
+            if (app.getTorifyApp()) {
+                setTorifyUidToSave.add(String.valueOf(app.getUid()));
+            }
+            if (setDirectUdpApps != null && app.getDirectUdp()) {
+                setDirectUdpUidToSave.add(String.valueOf(app.getUid()));
+            }
+            if (setVpnBypassApps != null && app.getExcludeFromAll()) {
+                setBypassVpnAppsToSave.add(app.getPack());
+            }
         }
 
-        if (setAppUIDtoSave.equals(setUnlockApps)) {
+        boolean settingsChanged = false;
+
+        if (!setTorifyUidToSave.equals(setUnlockApps)) {
+            preferenceRepository.get().setStringSetPreference(unlockAppsStr, setTorifyUidToSave);
+            setUnlockApps.clear();
+            setUnlockApps.addAll(setTorifyUidToSave);
+            settingsChanged = true;
+        }
+
+        if (setDirectUdpApps != null && !setDirectUdpUidToSave.equals(setDirectUdpApps)) {
+            preferenceRepository.get().setStringSetPreference(APPS_DIRECT_UDP, setDirectUdpUidToSave);
+            setDirectUdpApps.clear();
+            setDirectUdpApps.addAll(setDirectUdpUidToSave);
+            settingsChanged = true;
+        }
+
+        if (setVpnBypassApps != null && !setBypassVpnAppsToSave.equals(setVpnBypassApps)) {
+            preferenceRepository.get().setStringSetPreference(APPS_BYPASS_VPN, setBypassVpnAppsToSave);
+            setVpnBypassApps.clear();
+            setVpnBypassApps.addAll(setBypassVpnAppsToSave);
+            settingsChanged = true;
+        }
+
+        if (!settingsChanged) {
             return;
         }
-
-        preferenceRepository.get().setStringSetPreference(unlockAppsStr, setAppUIDtoSave);
-
-        setUnlockApps.clear();
-        setUnlockApps.addAll(setAppUIDtoSave);
 
         Toast.makeText(context, getString(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show();
 
@@ -282,27 +319,6 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         }
 
         handler.get().removeCallbacksAndMessages(null);
-    }
-
-    @Override
-    public void onCheckedChanged(CompoundButton compoundButton, boolean active) {
-        if (compoundButton.getId() == R.id.menu_switch && rvListTorApps != null
-                && !rvListTorApps.isComputingLayout() && mAdapter != null && appsListComplete) {
-            if (active) {
-                for (int i = 0; i < appsUnlock.size(); i++) {
-                    ApplicationData app = appsUnlock.get(i);
-                    app.setActive(true);
-                    appsUnlock.set(i, app);
-                }
-            } else {
-                for (int i = 0; i < appsUnlock.size(); i++) {
-                    ApplicationData app = appsUnlock.get(i);
-                    app.setActive(false);
-                    appsUnlock.set(i, app);
-                }
-            }
-            mAdapter.notifyDataSetChanged();
-        }
     }
 
     @Override
@@ -377,6 +393,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                 chipSelectSystemApps();
             } else if (userAppsSelected) {
                 chipSelectUserApps();
+            } else if (allAppsSelected) {
+                chipSelectAllApps();
             }
 
             return;
@@ -389,7 +407,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
         appsUnlock.clear();
 
         for (int i = 0; i < savedAppsUnlockWhenSearch.size(); i++) {
-            ApplicationData app = savedAppsUnlockWhenSearch.get(i);
+            TorAppData app = savedAppsUnlockWhenSearch.get(i);
             if (app.toString().toLowerCase().contains(text.toLowerCase().trim())
                     || app.getPack().toLowerCase().contains(text.toLowerCase().trim())) {
                 if (allAppsSelected
@@ -406,8 +424,8 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return;
         }
 
-        ApplicationData.Companion.sortListBy(appsUnlock, ApplicationData::compareTo);
-        ApplicationData.Companion.sortListBy(savedAppsUnlockWhenSearch, ApplicationData::compareTo);
+        TorAppData.sortByName(appsUnlock);
+        TorAppData.sortByName(savedAppsUnlockWhenSearch);
     }
 
     private void sortByUid() {
@@ -415,67 +433,23 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
             return;
         }
 
-        ApplicationData.Companion.sortListBy(appsUnlock, (o1, o2) -> {
-            if (!o1.getActive() && o2.getActive()) {
-                return 1;
-            } else if (o1.getActive() && !o2.getActive()) {
-                return -1;
-            } else {
-                return o1.getUid() - o2.getUid();
-            }
-        });
-
-        ApplicationData.Companion.sortListBy(savedAppsUnlockWhenSearch, (o1, o2) -> {
-            if (!o1.getActive() && o2.getActive()) {
-                return 1;
-            } else if (o1.getActive() && !o2.getActive()) {
-                return -1;
-            } else {
-                return o1.getUid() - o2.getUid();
-            }
-        });
+        TorAppData.sortByUid(appsUnlock);
+        TorAppData.sortByUid(savedAppsUnlockWhenSearch);
     }
 
     private void chipSelectAllApps() {
-        if (rvListTorApps.isComputingLayout() || !appsListComplete) {
-            return;
-        }
-
-        if (savedAppsUnlockWhenSearch != null) {
-            if (searchText == null || searchText.trim().isEmpty()) {
-                appsUnlock.clear();
-                appsUnlock.addAll(savedAppsUnlockWhenSearch);
-                savedAppsUnlockWhenSearch = null;
-            } else {
-                searchApps(searchText);
-            }
-        }
+        filterApps(null);
     }
 
     private void chipSelectSystemApps() {
-        if (rvListTorApps.isComputingLayout() || !appsListComplete) {
-            return;
-        }
-
-        if (savedAppsUnlockWhenSearch == null) {
-            savedAppsUnlockWhenSearch = new CopyOnWriteArrayList<>(appsUnlock);
-        }
-
-        appsUnlock.clear();
-
-        for (ApplicationData applicationData : savedAppsUnlockWhenSearch) {
-            if (applicationData.getSystem()) {
-                if (searchText == null || searchText.isEmpty()) {
-                    appsUnlock.add(applicationData);
-                } else if (applicationData.toString().toLowerCase().contains(searchText.toLowerCase().trim())
-                        || applicationData.getPack().toLowerCase().contains(searchText.toLowerCase().trim())) {
-                    appsUnlock.add(applicationData);
-                }
-            }
-        }
+        filterApps(true);
     }
 
     private void chipSelectUserApps() {
+        filterApps(false);
+    }
+
+    private void filterApps(Boolean filterSystem) {
         if (rvListTorApps.isComputingLayout() || !appsListComplete) {
             return;
         }
@@ -486,8 +460,10 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
         appsUnlock.clear();
 
-        for (ApplicationData applicationData : savedAppsUnlockWhenSearch) {
-            if (!applicationData.getSystem()) {
+        for (TorAppData applicationData : savedAppsUnlockWhenSearch) {
+            if (filterSystem == null
+                    || filterSystem && applicationData.getSystem()
+                    || !filterSystem && !applicationData.getSystem()) {
                 if (searchText == null || searchText.isEmpty()) {
                     appsUnlock.add(applicationData);
                 } else if (applicationData.toString().toLowerCase().contains(searchText.toLowerCase().trim())
@@ -500,20 +476,27 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     @Override
     public void onAppAdded(@NotNull ApplicationData application) {
-        if (handler == null || rvListTorApps == null
-                || mAdapter == null || rvListTorApps.isComputingLayout() || appsListComplete) {
+        if (rvListTorApps == null || mAdapter == null
+                || rvListTorApps.isComputingLayout() || appsListComplete) {
             return;
         }
 
-        appsUnlock.add(0, application);
-
-        handler.get().post(() -> {
+        rvListTorApps.post(() -> {
             if (rvListTorApps == null || mAdapter == null
                     || rvListTorApps.isComputingLayout() || appsListComplete) {
                 return;
             }
 
-            mAdapter.notifyDataSetChanged();
+            TorAppData torAppData = TorAppData.mapToTorAppData(application);
+            if (setDirectUdpApps != null) {
+                torAppData.setDirectUdp(setDirectUdpApps.contains(String.valueOf(application.getUid())));
+            }
+            if (setVpnBypassApps != null) {
+                torAppData.setExcludeFromAll(setVpnBypassApps.contains(application.getPack()));
+            }
+            appsUnlock.add(0, torAppData);
+            mAdapter.notifyItemInserted(0);
+            rvListTorApps.scrollToPosition(0);
         });
     }
 
@@ -561,7 +544,16 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                     appsListComplete = true;
 
                     appsUnlock.clear();
-                    appsUnlock.addAll(installedApps);
+                    for (ApplicationData data : installedApps) {
+                        TorAppData torAppData = TorAppData.mapToTorAppData(data);
+                        if (setDirectUdpApps != null) {
+                            torAppData.setDirectUdp(setDirectUdpApps.contains(String.valueOf(data.getUid())));
+                        }
+                        if (setVpnBypassApps != null) {
+                            torAppData.setExcludeFromAll(setVpnBypassApps.contains(data.getPack()));
+                        }
+                        appsUnlock.add(torAppData);
+                    }
 
                     if (handler != null && pbTorApp != null) {
                         handler.get().post(() -> {
@@ -569,14 +561,18 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
                                 pbTorApp.setIndeterminate(false);
                                 pbTorApp.setVisibility(View.GONE);
 
-                                if (chipTorAppsSortUid.isChecked()) {
-                                    sortByUid();
-                                }
-
                                 if (chipTorAppsSystem.isChecked()) {
                                     chipSelectSystemApps();
                                 } else if (chipTorAppsUser.isChecked()) {
                                     chipSelectUserApps();
+                                } else if (chipTorAppsAll.isChecked()) {
+                                    chipSelectAllApps();
+                                }
+
+                                if (chipTorAppsSortUid.isChecked()) {
+                                    sortByUid();
+                                } else {
+                                    sortByName();
                                 }
 
                                 mAdapter.notifyDataSetChanged();
@@ -605,7 +601,7 @@ public class UnlockTorAppsFragment extends Fragment implements InstalledApplicat
 
     private List<ApplicationData> filterUserAppsWithoutInternetPermission(List<ApplicationData> installedApps) {
         List<ApplicationData> filteredApps = new ArrayList<>(installedApps.size());
-        for (ApplicationData app: installedApps) {
+        for (ApplicationData app : installedApps) {
             if (app.getSystem() || app.getHasInternetPermission()) {
                 filteredApps.add(app);
             }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".settings.tor_apps.UnlockTorAppsFragment">
 
@@ -90,23 +90,24 @@
 
     </com.google.android.material.chip.ChipGroup>
 
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/pbTorApp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminateBehavior="cycle"
+        android:visibility="gone"
+        app:indicatorColor="@color/colorAccent"
+        app:trackThickness="3dp"
+        tools:visibility="visible" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTorApps"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="8dp"
         android:layout_weight="1"
-        android:scrollbars="vertical">
-    </androidx.recyclerview.widget.RecyclerView>
+        android:clipToPadding="false"
+        android:padding="4dp"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_tor_app" />
 
-    <ProgressBar
-        android:id="@+id/pbTorApp"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:indeterminateBehavior="cycle"
-        android:visibility="gone" />
 </androidx.appcompat.widget.LinearLayoutCompat>

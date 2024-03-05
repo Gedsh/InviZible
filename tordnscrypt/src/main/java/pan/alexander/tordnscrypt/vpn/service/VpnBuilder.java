@@ -42,6 +42,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_BYPASS_VPN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
@@ -66,6 +67,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.inject.Inject;
@@ -117,6 +119,7 @@ public class VpnBuilder {
         boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
         boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
+        Set<String> setVpnBypassApps = preferenceRepository.get().getStringSetPreference(APPS_BYPASS_VPN);
         boolean useProxy = prefs.getBoolean(USE_PROXY, false);
         if (useProxy && (prefs.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS).isEmpty()
                 || prefs.getString(PROXY_PORT, DEFAULT_PROXY_PORT).isEmpty())) {
@@ -232,7 +235,10 @@ public class VpnBuilder {
 
             try {
                 builder.addDisallowedApplication(context.getPackageName());
-                //logi("VPN Not routing " + getPackageName());
+                for (String pack: setVpnBypassApps) {
+                    builder.addDisallowedApplication(pack);
+                    logi("VPN Not routing " + pack);
+                }
             } catch (PackageManager.NameNotFoundException ex) {
                 loge("VPNBuilder", ex, true);
             }

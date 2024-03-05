@@ -554,4 +554,8 @@
     <string name="long_press_to_edit">Нажмите и удерживайте для редактирования.</string>
     <string name="anonymize_relays">Анонимные ретрансляторы</string>
     <string name="anonymize_relays_not_used">Анонимные ретрансляторы не используются.</string>
+    <string name="pref_fast_exclude_app_from_tor">Исключить из Tor</string>
+    <string name="pref_fast_route_to_tor">Использовать с Tor</string>
+    <string name="pref_fast_direct_udp_connection">Исключить UDP из Tor</string>
+    <string name="pref_fast_bypass_app">Исключить приложение</string>
 </resources>

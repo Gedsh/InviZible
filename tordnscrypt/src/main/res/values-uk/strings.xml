@@ -503,5 +503,9 @@
     <string name="donate_button">Відвідати</string>
     <string name="pref_itpd_addressbook">Адресна книга</string>
     <string name="ask_later">Запитати пізніше</string>
+    <string name="pref_fast_exclude_app_from_tor">Виключити з Tor</string>
+    <string name="pref_fast_route_to_tor">Використовувати з Tor</string>
+    <string name="pref_fast_direct_udp_connection">Виключити UDP з Tor</string>
+    <string name="pref_fast_bypass_app">Виключити додаток</string>
 </resources>
 

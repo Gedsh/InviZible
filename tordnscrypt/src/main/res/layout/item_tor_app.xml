@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~    This file is part of InviZible Pro.
+  ~
+  ~    InviZible Pro is free software: you can redistribute it and/or modify
+  ~    it under the terms of the GNU General Public License as published by
+  ~    the Free Software Foundation, either version 3 of the License, or
+  ~    (at your option) any later version.
+  ~
+  ~    InviZible Pro is distributed in the hope that it will be useful,
+  ~    but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~    GNU General Public License for more details.
+  ~
+  ~    You should have received a copy of the GNU General Public License
+  ~    along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
+  ~
+  ~    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+  -->
+
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llayoutTorApps"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="5dp"
+    android:orientation="vertical">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTorApp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        app:cardBackgroundColor="@color/cardsColor"
+        app:cardCornerRadius="8dp"
+        app:contentPadding="4dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imgTorApp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center|top"
+                android:adjustViewBounds="true"
+                android:contentDescription="Application"
+                android:cropToPadding="true"
+                android:scaleType="fitCenter"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@mipmap/ic_launcher" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvTorAppName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:fontFamily="serif"
+                android:singleLine="false"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toTopOf="@+id/tvTorAppPackage"
+                app:layout_constraintEnd_toStartOf="@+id/swTorApp"
+                app:layout_constraintStart_toEndOf="@+id/imgTorApp"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="InviZible Pro" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvTorAppPackage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:fontFamily="serif"
+                android:singleLine="true"
+                android:textAlignment="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/swTorApp"
+                app:layout_constraintStart_toEndOf="@+id/imgTorApp"
+                app:layout_constraintTop_toBottomOf="@+id/tvTorAppName"
+                tools:text="pan.alexander.tordnscrypt" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swTorApp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="8dp"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:checked="true"
+                tools:visibility="visible" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divTorApp">
+
+        <com.google.android.material.chip.ChipGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:selectionRequired="false"
+            app:singleLine="true"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTorAppExclude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                app:checkedIconTint="@color/colorChipIconTorify"
+                tools:checked="true"
+                tools:text="@string/pref_fast_exclude_app_from_tor" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTorAppDirectUdp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="@string/pref_fast_direct_udp_connection"
+                app:checkedIconTint="@color/colorChipIconDirectUdp"
+                tools:checked="true" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipTorAppExcludeFromAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="@string/pref_fast_bypass_app"
+                app:checkedIconTint="@color/colorChipIconBypassApp"
+                tools:checked="true" />
+
+        </com.google.android.material.chip.ChipGroup>
+
+    </HorizontalScrollView>
+</androidx.appcompat.widget.LinearLayoutCompat>

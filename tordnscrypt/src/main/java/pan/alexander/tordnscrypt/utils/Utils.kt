@@ -95,6 +95,7 @@ object Utils {
         return (dips * context.resources.displayMetrics.density + 0.5f).roundToInt()
     }
 
+    @JvmStatic
     fun dp2pixels(dp: Int) = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         dp.toFloat(),

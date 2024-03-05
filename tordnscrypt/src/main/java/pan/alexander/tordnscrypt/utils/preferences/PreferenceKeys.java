@@ -44,6 +44,12 @@ public interface PreferenceKeys {
     String OWN_BRIDGES_OBFS = "ownBridgesObfs";
     String RELAY_BRIDGES_REQUESTED = "relayBridgesRequested";
 
+    String UNLOCK_APPS = "unlockApps";
+    String CLEARNET_APPS = "clearnetApps";
+
+    String APPS_DIRECT_UDP = "directUdpApps";
+    String APPS_BYPASS_VPN = "bypassVpnApps";
+
     String IPS_TO_UNLOCK = "ipsToUnlock";
     String IPS_FOR_CLEARNET = "ipsForClearNet";
     String IPS_TO_UNLOCK_TETHER = "ipsToUnlockTether";

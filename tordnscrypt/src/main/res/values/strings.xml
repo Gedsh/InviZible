@@ -127,6 +127,10 @@
     <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly. This feature does not work for sites behind CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
+    <string name="pref_fast_exclude_app_from_tor">Exclude from Tor</string>
+    <string name="pref_fast_route_to_tor">Route to Tor</string>
+    <string name="pref_fast_direct_udp_connection">Exclude UDP from Tor</string>
+    <string name="pref_fast_bypass_app">Bypass app</string>
     <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
@@ -465,6 +469,8 @@
        Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
     <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
     <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
+    <string name="pref_tor_snowflake_cdn77" translatable="false">CDN77</string>
+    <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>

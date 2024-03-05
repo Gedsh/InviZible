@@ -152,6 +152,9 @@ public class VpnRulesHolder {
         if (torIsRunning) {
             redirectToTor = vpn.isRedirectToTor(packet.uid, packet.daddr, packet.dport);
         }
+        if (redirectToTor && packet.protocol != 6) {
+            redirectToTor = !vpnPreferences.getSetDirectUdpApps().contains(String.valueOf(packet.uid));
+        }
 
         boolean redirectToProxy = false;
         if (vpnPreferences.getUseProxy()) {

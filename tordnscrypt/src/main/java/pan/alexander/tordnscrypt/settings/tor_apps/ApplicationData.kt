@@ -22,16 +22,16 @@ package pan.alexander.tordnscrypt.settings.tor_apps
 import android.graphics.drawable.Drawable
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.Comparator
 
-data class ApplicationData(private val name: String = "",
-                           val pack: String = "",
-                           val uid: Int = -1000,
-                           val icon: Drawable? = null,
-                           val system: Boolean = false,
-                           val hasInternetPermission: Boolean = false,
-                           var active: Boolean = false): Comparable<ApplicationData> {
+data class ApplicationData(
+    private val name: String = "",
+    val pack: String = "",
+    val uid: Int = -1000,
+    val icon: Drawable? = null,
+    val system: Boolean = false,
+    val hasInternetPermission: Boolean = false,
+    var active: Boolean = false
+) : Comparable<ApplicationData> {
 
     val names = ConcurrentSkipListSet(setOf(name))
 
@@ -39,8 +39,8 @@ data class ApplicationData(private val name: String = "",
         names.add(name)
     }
 
-    fun addAllNames(_names: ConcurrentSkipListSet<String>) {
-        names.addAll(_names)
+    fun addAllNames(names: ConcurrentSkipListSet<String>) {
+        this.names.addAll(names)
     }
 
     companion object {
@@ -51,15 +51,6 @@ data class ApplicationData(private val name: String = "",
         const val SPECIAL_PORT_AGPS1 = 7275
         const val SPECIAL_PORT_AGPS2 = 7276
         const val SPECIAL_UID_CONNECTIVITY_CHECK = -16
-
-        fun <T> sortListBy(list: CopyOnWriteArrayList<T>?, comparator: Comparator<T>) {
-            if (list != null && list.size > 1) {
-                val sortedList = ArrayList(list)
-                sortedList.sortWith(comparator)
-                list.clear()
-                list.addAll(sortedList)
-            }
-        }
     }
 
     override fun compareTo(other: ApplicationData): Int {
@@ -68,8 +59,10 @@ data class ApplicationData(private val name: String = "",
         } else if (active && !other.active) {
             -1
         } else {
-            names.first().lowercase(Locale.getDefault()).compareTo(other.names.first()
-                .lowercase(Locale.getDefault()))
+            names.first().lowercase(Locale.getDefault()).compareTo(
+                other.names.first()
+                    .lowercase(Locale.getDefault())
+            )
         }
     }
 
@@ -79,9 +72,7 @@ data class ApplicationData(private val name: String = "",
 
         other as ApplicationData
 
-        if (uid != other.uid) return false
-
-        return true
+        return uid == other.uid
     }
 
     override fun hashCode(): Int {

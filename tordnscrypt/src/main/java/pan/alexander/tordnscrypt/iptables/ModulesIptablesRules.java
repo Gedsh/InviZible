@@ -54,8 +54,6 @@ import static pan.alexander.tordnscrypt.iptables.Tethering.usbModemAddressesRang
 import static pan.alexander.tordnscrypt.iptables.Tethering.vpnInterfaceName;
 import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
-import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.SNOWFLAKE_BRIDGES_OWN;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
@@ -70,10 +68,12 @@ import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_DIRECT_UDP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
@@ -84,6 +84,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
@@ -146,6 +147,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         Set<String> clearnetApps = preferences.getStringSetPreference(CLEARNET_APPS);
         Set<String> clearnetIPs = preferences.getStringSetPreference(IPS_FOR_CLEARNET);
         Set<String> clearnetAppsForProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
+        Set<String> directUdpApps = preferences.getStringSetPreference(APPS_DIRECT_UDP);
         boolean firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED) && !runModulesWithRoot;
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -191,6 +193,9 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             kernelRejectNonTCPFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " ! -p tcp -m owner ! --uid-owner 0:999999999 -j REJECT || true";
         }
 
+        String udpAppsBypassNat = "";
+        String udpAppsBypassFilter = "";
+
         String torSitesBypassNat = "";
         String torSitesBypassFilter = "";
         String torAppsBypassNat = "";
@@ -200,6 +205,21 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String torSitesRejectNonTCPFilter = "";
         String torAppsRedirectNat = "";
         String torAppsRejectNonTCPFilter = "";
+
+        if (!directUdpApps.isEmpty()) {
+            StringBuilder udpAppsBypassNatBuilder = new StringBuilder();
+            StringBuilder udpAppsBypassFilterBuilder = new StringBuilder();
+
+            for (String udpClearnetApp : directUdpApps) {
+                if (udpClearnetApp.matches("^\\d+$")) {
+                    udpAppsBypassNatBuilder.append(iptables).append("-t nat -A " + NAT_OUTPUT_CORE + " -p udp -m owner --uid-owner ").append(udpClearnetApp).append(" -j RETURN; ");
+                    udpAppsBypassFilterBuilder.append(iptables).append("-A " + FILTER_OUTPUT_CORE + " -p udp -m owner --uid-owner ").append(udpClearnetApp).append(" -j RETURN; ");
+                }
+            }
+
+            udpAppsBypassNat = removeRedundantSymbols(udpAppsBypassNatBuilder);
+            udpAppsBypassFilter = removeRedundantSymbols(udpAppsBypassFilterBuilder);
+        }
 
         if (routeAllThroughTor) {
 
@@ -413,12 +433,14 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
+                        udpAppsBypassNat,
                         //Redirect TCP sites to Tor
                         torSitesRedirectNat,
                         //Redirect TCP apps to Tor
                         torAppsRedirectNat,
                         kernelRedirectNatTCP,
                         proxyAppsBypassFilter,
+                        udpAppsBypassFilter,
                         bypassLanFilter,
                         //Block all except TCP for Tor sites
                         torSitesRejectNonTCPFilter,
@@ -476,6 +498,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
+                        udpAppsBypassNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         nflogDns,
@@ -493,6 +516,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassFilter,
                         kernelBypassFilter,
                         proxyAppsBypassFilter,
+                        udpAppsBypassFilter,
                         bypassLanFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
@@ -641,6 +665,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torRootDNSAllowedFilter,
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
+                        udpAppsBypassNat,
                         //Redirect TCP sites to Tor
                         torSitesRedirectNat,
                         //Redirect TCP apps to Tor
@@ -648,6 +673,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         kernelRedirectNatTCP,
                         //Bypass proxy apps
                         proxyAppsBypassFilter,
+                        udpAppsBypassFilter,
                         bypassLanFilter,
                         //Block all except TCP for Tor sites
                         torSitesRejectNonTCPFilter,
@@ -697,6 +723,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassNat,
                         kernelBypassNat,
                         proxyAppsBypassNat,
+                        udpAppsBypassNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorTransPort(),
                         iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                         nflogDns,
@@ -712,6 +739,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         torAppsBypassFilter,
                         kernelBypassFilter,
                         proxyAppsBypassFilter,
+                        udpAppsBypassFilter,
                         bypassLanFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -j REJECT",
                         iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
