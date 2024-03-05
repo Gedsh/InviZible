@@ -1043,3 +1043,10 @@
 * Updated DNSCrypt to save battery power when the network is unavailable.
 * Further improvements to save battery power when the network is unavailable.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.9**
+* Updated Tor Snowflake bridge to version v2.9.1.
+* Added CDN77 and Azure Snowflake rendezvous.
+* Added exclude UDP from Tor and Bypass app options.
+* Updated translations.
+* Fixes and optimizations.
