@@ -39,6 +39,8 @@ public class SnowflakeConfigurator {
 
     private static final int AMP_CACHE = 1;
     private static final int FASTLY = 2;
+    private static final int CDN77 = 3;
+    private static final int AZURE = 4;
 
     private final Context context;
     private final Lazy<SharedPreferences> defaultPreferences;
@@ -52,7 +54,7 @@ public class SnowflakeConfigurator {
         this.context = context;
         this.defaultPreferences = defaultPreferences;
     }
-    
+
     String getConfiguration(String currentBridge) {
         return getConfiguration(currentBridge, 0, "");
     }
@@ -90,6 +92,10 @@ public class SnowflakeConfigurator {
                     + " ampcache=https://cdn.ampproject.org/";
         } else if (rendezvous == FASTLY) {
             return "https://snowflake-broker.torproject.net.global.prod.fastly.net/";
+        } else if (rendezvous == CDN77) {
+            return "https://1098762253.rsc.cdn77.org/";
+        } else if (rendezvous == AZURE) {
+            return "https://snowflake-broker.azureedge.net/";
         } else {
             return "";
         }
@@ -100,7 +106,11 @@ public class SnowflakeConfigurator {
         if (rendezvous == AMP_CACHE) {
             return "www.google.com,accounts.google.com";
         } else if (rendezvous == FASTLY) {
-            return "foursquare.com,github.githubassets.com";
+            return "github.githubassets.com,www.shazam.com,www.cosmopolitan.com,www.esquire.com";
+        } else if (rendezvous == CDN77) {
+            return "docs.plesk.com,www.phpmyadmin.net,app.datapacket.com";
+        } else if (rendezvous == AZURE) {
+            return "ajax.aspnetcdn.com";
         } else {
             return "";
         }
