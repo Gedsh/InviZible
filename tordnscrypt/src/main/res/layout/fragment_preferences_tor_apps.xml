@@ -1,113 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".settings.tor_apps.UnlockTorAppsFragment">
+    android:layout_height="match_parent">
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chipGroupTorApps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        app:checkedChip="@id/chipTorAppsUser"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipTorAppsUser"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:text="@string/firewall_user_apps"
-            android:textColor="@color/buttonTextColor"
-            app:checkedIconVisible="false"
-            app:chipBackgroundColor="@drawable/chip_firewall_selector"
-            app:chipIconVisible="false"
-            app:closeIconVisible="false" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipTorAppsSystem"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:text="@string/firewall_system_apps"
-            android:textColor="@color/buttonTextColor"
-            app:checkedIconVisible="false"
-            app:chipBackgroundColor="@drawable/chip_firewall_selector"
-            app:chipIconVisible="false"
-            app:closeIconVisible="false" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipTorAppsAll"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:text="@string/firewall_all_apps"
-            android:textColor="@color/buttonTextColor"
-            app:checkedIconVisible="false"
-            app:chipBackgroundColor="@drawable/chip_firewall_selector"
-            app:chipIconVisible="false"
-            app:closeIconVisible="false" />
-    </com.google.android.material.chip.ChipGroup>
-
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chipGroupTorAppsSort"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        app:checkedChip="@id/chipTorAppsSortName"
-        app:selectionRequired="true"
-        app:singleSelection="true">
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipTorAppsSortName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:text="@string/firewall_sort_by_name"
-            android:textColor="@color/buttonTextColor"
-            app:checkedIconVisible="false"
-            app:chipBackgroundColor="@drawable/chip_firewall_selector"
-            app:chipIconVisible="false"
-            app:closeIconVisible="false" />
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipTorAppsSortUid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checkable="true"
-            android:text="@string/firewall_sort_by_uid"
-            android:textColor="@color/buttonTextColor"
-            app:checkedIconVisible="false"
-            app:chipBackgroundColor="@drawable/chip_firewall_selector"
-            app:chipIconVisible="false"
-            app:closeIconVisible="false" />
-
-    </com.google.android.material.chip.ChipGroup>
-
-    <com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/pbTorApp"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:indeterminateBehavior="cycle"
-        android:visibility="gone"
-        app:indicatorColor="@color/colorAccent"
-        app:trackThickness="3dp"
-        tools:visibility="visible" />
+        android:background="@color/colorBackground">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:expandedTitleGravity="center_horizontal|bottom"
+            app:layout_scrollFlags="scroll|enterAlways|exitUntilCollapsed">
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupTorApps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    app:checkedChip="@id/chipTorAppsUser"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTorAppsUser"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="@string/firewall_user_apps"
+                        android:textColor="@color/buttonTextColor"
+                        app:checkedIconVisible="false"
+                        app:chipBackgroundColor="@drawable/chip_firewall_selector"
+                        app:chipIconVisible="false"
+                        app:closeIconVisible="false" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTorAppsSystem"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="@string/firewall_system_apps"
+                        android:textColor="@color/buttonTextColor"
+                        app:checkedIconVisible="false"
+                        app:chipBackgroundColor="@drawable/chip_firewall_selector"
+                        app:chipIconVisible="false"
+                        app:closeIconVisible="false" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTorAppsAll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="@string/firewall_all_apps"
+                        android:textColor="@color/buttonTextColor"
+                        app:checkedIconVisible="false"
+                        app:chipBackgroundColor="@drawable/chip_firewall_selector"
+                        app:chipIconVisible="false"
+                        app:closeIconVisible="false" />
+                </com.google.android.material.chip.ChipGroup>
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupTorAppsSort"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    app:checkedChip="@id/chipTorAppsSortName"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTorAppsSortName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="@string/firewall_sort_by_name"
+                        android:textColor="@color/buttonTextColor"
+                        app:checkedIconVisible="false"
+                        app:chipBackgroundColor="@drawable/chip_firewall_selector"
+                        app:chipIconVisible="false"
+                        app:closeIconVisible="false" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTorAppsSortUid"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="@string/firewall_sort_by_uid"
+                        android:textColor="@color/buttonTextColor"
+                        app:checkedIconVisible="false"
+                        app:chipBackgroundColor="@drawable/chip_firewall_selector"
+                        app:chipIconVisible="false"
+                        app:closeIconVisible="false" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/pbTorApp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:indeterminateBehavior="cycle"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/colorAccent"
+                    app:trackThickness="2dp"
+                    tools:visibility="visible" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTorApps"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
         android:padding="4dp"
         android:scrollbars="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:listitem="@layout/item_tor_app" />
 
-</androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
