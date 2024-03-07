@@ -39,7 +39,9 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.transition.AutoTransition;
 import androidx.transition.TransitionManager;
+import androidx.transition.TransitionSet;
 
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.Chip;
@@ -90,7 +92,7 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
             implements View.OnClickListener, View.OnFocusChangeListener, CompoundButton.OnCheckedChangeListener {
         private final Context context;
 
-        private final MaterialCardView cardTorApps ;
+        private final MaterialCardView cardTorApps;
         private final ImageView imgTorApp;
         private final TextView tvTorAppName;
         private final TextView tvTorAppPackage;
@@ -149,7 +151,7 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
 
             TorAppData app = getItem(position);
 
-            tvTorAppName.setText(TextUtils.join(", " ,app.getNames()));
+            tvTorAppName.setText(TextUtils.join(", ", app.getNames()));
             if (app.getSystem() && app.getHasInternetPermission()) {
                 tvTorAppName.setTextColor(ContextCompat.getColor(context, R.color.colorAlert));
             } else if (app.getSystem()) {
@@ -176,21 +178,21 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                 }
 
                 if (app.getExcludeFromAll()) {
-                    TransitionManager.beginDelayedTransition((ViewGroup) chipTorAppExcludeFromAll.getParent());
+                    animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.GONE);
                     chipTorAppDirectUdp.setVisibility(View.GONE);
                 } else if (app.getTorifyApp() && fragment.unlockAppsStr.equals(CLEARNET_APPS)
                         || !app.getTorifyApp() && fragment.unlockAppsStr.equals(UNLOCK_APPS)) {
-                    TransitionManager.beginDelayedTransition((ViewGroup) chipTorAppDirectUdp.getParent());
+                    animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.VISIBLE);
                     chipTorAppDirectUdp.setVisibility(View.GONE);
                 } else if (!app.getTorifyApp() && fragment.unlockAppsStr.equals(CLEARNET_APPS)
                         || app.getTorifyApp() && fragment.unlockAppsStr.equals(UNLOCK_APPS)) {
-                    TransitionManager.beginDelayedTransition((ViewGroup) chipTorAppDirectUdp.getParent());
+                    animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.VISIBLE);
                     chipTorAppDirectUdp.setVisibility(View.VISIBLE);
                 } else if (!app.getExcludeFromAll()) {
-                    TransitionManager.beginDelayedTransition((ViewGroup) chipTorAppExcludeFromAll.getParent());
+                    animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.VISIBLE);
                     chipTorAppDirectUdp.setVisibility(View.VISIBLE);
                 }
@@ -209,6 +211,13 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                     chipTorAppExcludeFromAll.setVisibility(View.GONE);
                 }
             }
+        }
+
+        private void animateLayoutChanges() {
+            TransitionManager.beginDelayedTransition(
+                    (ViewGroup) chipTorAppExcludeFromAll.getParent(),
+                    new AutoTransition().setOrdering(TransitionSet.ORDERING_TOGETHER)
+            );
         }
 
         @Override
