@@ -507,7 +507,6 @@
     <string-array name="tor_snowflake_stun_servers">
         <item>stun.l.google.com:19302</item>
         <item>stun.sipgate.net:10000</item>
-        <item>stun.voip.blackberry.com:3478</item>
         <item>stun.antisip.com:3478</item>
         <item>stun.bluesip.net:3478</item>
         <item>stun.dus.net:3478</item>

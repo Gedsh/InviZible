@@ -20,12 +20,15 @@
 package pan.alexander.tordnscrypt.settings.tor_bridges;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +39,8 @@ import dagger.Lazy;
 import pan.alexander.tordnscrypt.R;
 
 public class SnowflakeConfigurator {
+
+    private static final int SOCKS_ARGUMENT_MAX_LENGTH = 510;
 
     private static final int AMP_CACHE = 1;
     private static final int FASTLY = 2;
@@ -76,12 +81,24 @@ public class SnowflakeConfigurator {
         if (!currentBridge.contains(" front=") && !currentBridge.contains(" fronts=")) {
             bridgeBuilder.append(" fronts=").append(getFront(rendezvousType));
         }
-        if (!currentBridge.contains(" ice=")) {
-            bridgeBuilder.append(" ice=").append(getStunServers(stunServers));
-        }
         if (!currentBridge.contains(" utls-imitate=")) {
             bridgeBuilder.append(" utls-imitate=").append(getUtlsClientID());
         }
+        if (!currentBridge.contains(" ice=")) {
+            bridgeBuilder.append(" ice=");
+
+            List<String> stunServersReady = getStunServers(stunServers);
+            String stunServersLine = TextUtils.join(",", stunServersReady);
+            while (bridgeBuilder.length() + stunServersLine.length() > SOCKS_ARGUMENT_MAX_LENGTH
+                    && stunServersReady.size() > 1) {
+                String stun = stunServersReady.remove(stunServersReady.size() - 1);
+                logw("Shorten too long snowflake line. Removed " + stun);
+                stunServersLine = TextUtils.join(",", stunServersReady);
+            }
+
+            bridgeBuilder.append(stunServersLine);
+        }
+
         return bridgeBuilder.toString();
     }
 
@@ -128,7 +145,7 @@ public class SnowflakeConfigurator {
         return rendezvous;
     }
 
-    private String getStunServers(String servers) {
+    private List<String> getStunServers(String servers) {
 
         String stunServers;
         if (servers.isEmpty()) {
@@ -153,19 +170,18 @@ public class SnowflakeConfigurator {
             stunServers = servers;
         }
 
-        StringBuilder stunServerBuilder = new StringBuilder();
+        List<String> stunServersReady = new ArrayList<>();
         String[] stunServersArr = stunServers.split(", ?");
 
         Pattern pattern = Pattern.compile(".+\\..+:\\d+");
         for (String server : stunServersArr) {
             Matcher matcher = pattern.matcher(server);
             if (matcher.matches()) {
-                stunServerBuilder.append("stun:").append(server.trim()).append(",");
+                stunServersReady.add("stun:" + server.trim());
             }
         }
-        stunServerBuilder.deleteCharAt(stunServerBuilder.lastIndexOf(","));
 
-        return stunServerBuilder.toString();
+        return stunServersReady;
     }
 
     @SuppressWarnings("unused")
