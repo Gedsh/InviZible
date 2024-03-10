@@ -8,7 +8,8 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorBackground">
+        android:background="@color/colorBackground"
+        app:layout_behavior="pan.alexander.tordnscrypt.views.FixedAppBarLayoutBehavior">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
@@ -122,11 +123,12 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTorApps"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:clipToPadding="false"
         android:padding="4dp"
         android:scrollbars="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:itemCount="1"
         tools:listitem="@layout/item_tor_app" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
