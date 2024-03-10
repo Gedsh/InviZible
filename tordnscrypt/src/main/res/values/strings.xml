@@ -759,6 +759,7 @@
     <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
         Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
     <string name="list_is_empty">List is Empty</string>
+    <string name="pull_to_refresh">\u2193 Pull to refresh \u2193</string>
     <string name="connectivity_check">Internet connectivity check</string>
     <string name="notifications_permission_rationale_message">Notifications are essential for displaying important information about the app\'s operation, app control, and detected attacks. Would you like to allow notifications for InviZible?</string>
     <string name="press_to_add">Press to add.</string>

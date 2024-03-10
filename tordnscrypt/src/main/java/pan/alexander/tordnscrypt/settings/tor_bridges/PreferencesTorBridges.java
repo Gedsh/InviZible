@@ -52,6 +52,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -425,7 +426,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             torConfCleaned.add("UseBridges 0");
         }
 
-        if (torConfCleaned.size() == tor_conf.size() && torConfCleaned.containsAll(tor_conf)) {
+        if (torConfCleaned.size() == tor_conf.size() && new HashSet<>(torConfCleaned).containsAll(tor_conf)) {
             return;
         }
 
@@ -894,15 +895,23 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             sortBridgesByPing();
 
             if (bridgesToDisplay.isEmpty()) {
-                tvBridgesListEmpty.setVisibility(View.VISIBLE);
+                tvBridgesListEmpty.setText(R.string.list_is_empty);
             } else {
-                tvBridgesListEmpty.setVisibility(View.GONE);
+                tvBridgesListEmpty.setText(R.string.pull_to_refresh);
 
                 viewModel.searchBridgeCountries(bridgesToDisplay);
 
                 if (modulesStatus.getTorState() == STOPPED
                         || areDefaultVanillaBridgesSelected()) {
                     viewModel.measureTimeouts(bridgesToDisplay);
+                } else {
+                    List<ObfsBridge> activeBridges = new ArrayList<>();
+                    for (ObfsBridge bridge : bridgesToDisplay) {
+                        if (bridge.active) {
+                            activeBridges.add(bridge);
+                        }
+                    }
+                    viewModel.measureTimeouts(activeBridges);
                 }
             }
         });
@@ -927,14 +936,22 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             sortBridgesByPing();
 
             if (bridgesToDisplay.isEmpty()) {
-                tvBridgesListEmpty.setVisibility(View.VISIBLE);
+                tvBridgesListEmpty.setText(R.string.list_is_empty);
             } else {
-                tvBridgesListEmpty.setVisibility(View.GONE);
+                tvBridgesListEmpty.setText(R.string.pull_to_refresh);
 
                 viewModel.searchBridgeCountries(bridgesToDisplay);
 
                 if (modulesStatus.getTorState() == STOPPED) {
                     viewModel.measureTimeouts(bridgesToDisplay);
+                } else {
+                    List<ObfsBridge> activeBridges = new ArrayList<>();
+                    for (ObfsBridge bridge : bridgesToDisplay) {
+                        if (bridge.active) {
+                            activeBridges.add(bridge);
+                        }
+                    }
+                    viewModel.measureTimeouts(activeBridges);
                 }
             }
         });
