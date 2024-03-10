@@ -1050,3 +1050,10 @@
 * Added exclude UDP from Tor and Bypass app options.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.1.0**
+* Improved Tor bridges screen.
+* Improved firewall screen.
+* Improved Tor apps screen.
+* Improved real-time connection logs.
+* Fixed Tor Snowflake bridge.
