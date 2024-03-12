@@ -36,6 +36,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
@@ -86,6 +87,8 @@ public class UnlockTorAppsFragment extends Fragment
     private Chip chipTorAppsAll;
     private Chip chipTorAppsSortUid;
     private ProgressBar pbTorApp;
+
+    private AppBarLayout appBarTorApps;
     RecyclerView rvListTorApps;
     RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> mAdapter;
 
@@ -172,6 +175,8 @@ public class UnlockTorAppsFragment extends Fragment
 
         pbTorApp = view.findViewById(R.id.pbTorApp);
 
+        appBarTorApps = view.findViewById(R.id.appBarTorApps);
+
         rvListTorApps = view.findViewById(R.id.rvTorApps);
 
         searchText = null;
@@ -198,7 +203,21 @@ public class UnlockTorAppsFragment extends Fragment
             return;
         }
 
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(context);
+        rvListTorApps.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(context) {
+
+            @Override
+            public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+                if (!rvListTorApps.isInTouchMode()) {
+                    onScrollWhenInNonTouchMode(dy);
+                }
+                return super.scrollVerticallyBy(dy, recycler, state);
+            }
+
+            private void onScrollWhenInNonTouchMode(int dy) {
+                appBarTorApps.setExpanded(dy <= 0, true);
+            }
+        };
         rvListTorApps.setLayoutManager(mLayoutManager);
 
         mAdapter = new TorAppsAdapter(this);
@@ -305,6 +324,7 @@ public class UnlockTorAppsFragment extends Fragment
         chipTorAppsSystem = null;
         chipTorAppsAll = null;
         chipTorAppsSortUid = null;
+        appBarTorApps = null;
         rvListTorApps = null;
         mAdapter = null;
         pbTorApp = null;

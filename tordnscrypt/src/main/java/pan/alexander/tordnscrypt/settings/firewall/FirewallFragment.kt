@@ -32,6 +32,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.chip.ChipGroup
 import pan.alexander.tordnscrypt.App
@@ -129,6 +130,22 @@ class FirewallFragment : Fragment(),
 
         (binding.rvFirewallApps.itemAnimator as SimpleItemAnimator)
             .supportsChangeAnimations = false
+        binding.rvFirewallApps.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+        binding.rvFirewallApps.layoutManager = object : LinearLayoutManager(context) {
+            override fun scrollVerticallyBy(
+                dy: Int,
+                recycler: RecyclerView.Recycler?,
+                state: RecyclerView.State?
+            ): Int {
+                if (!binding.rvFirewallApps.isInTouchMode) {
+                    onScrollWhenInNonTouchMode(dy)
+                }
+                return super.scrollVerticallyBy(dy, recycler, state)
+            }
+            private fun onScrollWhenInNonTouchMode(dy: Int) {
+                binding.appBarFirewall.setExpanded(dy <= 0, true)
+            }
+        }
         binding.rvFirewallApps.adapter = firewallAdapter
 
         if (firewallEnabled) {

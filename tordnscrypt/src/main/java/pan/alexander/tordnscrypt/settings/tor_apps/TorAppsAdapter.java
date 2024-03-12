@@ -30,7 +30,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -89,7 +88,7 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
     }
 
     class TorAppsViewHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener, View.OnFocusChangeListener, CompoundButton.OnCheckedChangeListener {
+            implements View.OnClickListener, View.OnFocusChangeListener {
         private final Context context;
 
         private final MaterialCardView cardTorApps;
@@ -131,12 +130,16 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
             } else {
                 swTorApp.setVisibility(View.GONE);
 
-                chipTorAppExclude.setOnCheckedChangeListener(this);
-                chipTorAppDirectUdp.setOnCheckedChangeListener(this);
-                chipTorAppExcludeFromAll.setOnCheckedChangeListener(this);
+                chipTorAppExclude.setFocusable(true);
+                chipTorAppDirectUdp.setFocusable(true);
+                chipTorAppExcludeFromAll.setFocusable(true);
+
+                chipTorAppExclude.setOnClickListener(this);
+                chipTorAppDirectUdp.setOnClickListener(this);
+                chipTorAppExcludeFromAll.setOnClickListener(this);
             }
 
-            if (context != null && fragment.unlockAppsStr.equals(CLEARNET_APPS_FOR_PROXY)) {
+            if (context != null) {
                 cardTorApps.setCardBackgroundColor(context.getResources().getColor(R.color.colorFirst));
                 cardTorApps.setOnClickListener(this);
                 cardTorApps.setFocusable(true);
@@ -229,7 +232,26 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
             if (position == NO_POSITION) {
                 return;
             }
-            toggleTorifyApp(position);
+
+            int id = v.getId();
+            if (id == R.id.cardTorApp || id == R.id.swTorApp) {
+                if (chipTorAppExclude.getVisibility() == View.VISIBLE) {
+                    toggleTorifyApp(position);
+                } else if (chipTorAppDirectUdp.getVisibility() == View.VISIBLE) {
+                    toggleDirectUdp(position);
+                } else if (chipTorAppExcludeFromAll.getVisibility() == View.VISIBLE) {
+                    toggleExcludeFromAll(position);
+                } else {
+                    toggleTorifyApp(position);
+                }
+            } else if (id == R.id.chipTorAppExclude) {
+                toggleTorifyApp(position);
+            } else if (id == R.id.chipTorAppDirectUdp) {
+                toggleDirectUdp(position);
+            } else if (id == R.id.chipTorAppExcludeFromAll) {
+                toggleExcludeFromAll(position);
+            }
+
         }
 
         @Override
@@ -244,25 +266,6 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                 ((CardView) view).setCardBackgroundColor(context.getResources().getColor(R.color.colorFirst));
             }
         }
-
-        @Override
-        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            if (fragment.rvListTorApps.isComputingLayout()) {
-                return;
-            }
-            int position = getBindingAdapterPosition();
-            if (position == NO_POSITION) {
-                return;
-            }
-            int id = buttonView.getId();
-            if (id == R.id.chipTorAppExclude) {
-                toggleTorifyApp(position);
-            } else if (id == R.id.chipTorAppDirectUdp) {
-                toggleDirectUdp(position, isChecked);
-            } else if (id == R.id.chipTorAppExcludeFromAll) {
-                toggleExcludeFromAll(position, isChecked);
-            }
-        }
     }
 
     private void toggleTorifyApp(int position) {
@@ -275,18 +278,20 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
         fragment.mAdapter.notifyItemChanged(position, new Object());
     }
 
-    private void toggleDirectUdp(int position, boolean checked) {
+    private void toggleDirectUdp(int position) {
+        boolean directUdp = getItem(position).getDirectUdp();
         TorAppData appData = fragment.appsUnlock.get(position);
-        appData.setDirectUdp(checked);
+        appData.setDirectUdp(!directUdp);
         fragment.appsUnlock.set(position, appData);
         toggleSearchResults(appData);
 
         fragment.mAdapter.notifyItemChanged(position, new Object());
     }
 
-    private void toggleExcludeFromAll(int position, boolean checked) {
+    private void toggleExcludeFromAll(int position) {
+        boolean exclude = getItem(position).getExcludeFromAll();
         TorAppData appData = fragment.appsUnlock.get(position);
-        appData.setExcludeFromAll(checked);
+        appData.setExcludeFromAll(!exclude);
         fragment.appsUnlock.set(position, appData);
         toggleSearchResults(appData);
 

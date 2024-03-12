@@ -111,6 +111,8 @@ import static pan.alexander.tordnscrypt.utils.enums.BridgeType.undefined;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 
+import com.google.android.material.appbar.AppBarLayout;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -146,6 +148,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private Spinner spOwnBridges;
     private TextView tvBridgesListEmpty;
     private RecyclerView rvBridges;
+    private AppBarLayout appBarBridges;
     private BridgeAdapter bridgeAdapter;
     private SwipeRefreshLayout swipeRefreshBridges;
 
@@ -246,7 +249,22 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         tvBridgesListEmpty = view.findViewById(R.id.tvBridgesListEmpty);
 
         rvBridges = view.findViewById(R.id.rvBridges);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
+        rvBridges.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        appBarBridges = view.findViewById(R.id.appBarBridges);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity) {
+
+            @Override
+            public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+                if (!rvBridges.isInTouchMode()) {
+                    onScrollWhenInNonTouchMode(dy);
+                }
+                return super.scrollVerticallyBy(dy, recycler, state);
+            }
+
+            private void onScrollWhenInNonTouchMode(int dy) {
+                appBarBridges.setExpanded(dy <= 0, true);
+            }
+        };
         rvBridges.setLayoutManager(mLayoutManager);
 
         swipeRefreshBridges = view.findViewById(R.id.swipeRefreshBridges);
@@ -466,6 +484,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         tvBridgesListEmpty = null;
         rvBridges = null;
+        appBarBridges = null;
         bridgeAdapter = null;
         savedBridgesSelector = null;
         swipeRefreshBridges = null;
