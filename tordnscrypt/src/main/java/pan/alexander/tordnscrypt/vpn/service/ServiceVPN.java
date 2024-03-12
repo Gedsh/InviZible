@@ -355,7 +355,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     private void addDnsToConnectionRecords(ResourceRecord rr) {
 
-        if (!vpnPreferences.getConnectionLogsEnabled()) {
+        if (!vpnPreferences.getConnectionLogsEnabled() || reloading) {
             return;
         }
 
@@ -874,7 +874,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             int protocol
     ) {
 
-        if (!vpnPreferences.getConnectionLogsEnabled()) {
+        if (!vpnPreferences.getConnectionLogsEnabled() || reloading) {
             return;
         }
 
