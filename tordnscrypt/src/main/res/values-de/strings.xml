@@ -146,7 +146,6 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_common_use_iptables">"iptables auswählen"</string>
     <string name="pref_common_log_root_commands">"Speichere Root Kommandos im Log"</string>
     <string name="notification_text">"DNSCrypt, Tor, I2P sind geschützt. Nicht verstecken."</string>
-    <string name="notification_exec_root_commands">"Führe Root Befehle aus..."</string>
     <string name="tvSettings_text">"Bitte warten…"</string>
     <string name="toastSettings_saved">"Einstellungen gespeichert"</string>
     <string name="pref_dnscrypt_global_settings_categ">"GLOBALE EINSTELLUNGEN"</string>
@@ -292,8 +291,8 @@ Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Gerät
 Deine Internetverbindung wurde wiederhergestellt. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_itpd_stopped">"Es sieht aus, als wäre I2P vom System beendet worden. Bitte überprüfe deine Geräteeinstellungen!"</string>
     <string name="helper_dnscrypt_no_internet">"Es sieht aus, als könnte sich DNSCrypt NICHT in das Internet verbinden. Du kannst versuchen einen anderen DNSCrypt Server auszuwählen. Die betreffende Auswahl findest du unter Menü-&gt;Schnelleinstellungen-&gt;DNSCrypt Server"</string>
-    <string name="helper_tor_use_bridges">"Es sieht aus, als könnte Tor NICHT ins INTERNET verbinden.
-Dein ISP könnte Tor Verbindungen blockieren. Du kannst versuchen Tor Bridges zu verwenden. Du findest diese in  MENÜ -&gt; Schnelleinstellungen -&gt; Bridges"</string>
+    <string name="helper_tor_use_bridges">"Es sieht aus, als könnte Tor NICHT ins Internet verbinden.
+Dein ISP könnte Tor Verbindungen blockieren. Du kannst versuchen, Tor Bridges zu verwenden. Du findest diese in  MENÜ -&gt; Schnelleinstellungen -&gt; Bridges"</string>
     <string name="action_mode_child_lock">"Kindersicherung"</string>
     <string name="action_mode_dialog_message_lock">"Du kannst die Konfiguration dieser App sperren. Bitte gib hierzu ein Passwort ein oder benutze das Bestehende."</string>
     <string name="action_mode_dialog_message_unlock">"Bitte Passwort eingeben."</string>
@@ -549,4 +548,20 @@ WLAN aus- und kurz darauf wieder anschalten. Die Verwendung des derzeitigen Hots
     <string name="ask_reset_settings_btn">"Zurücksetzen"</string>
     <string name="pref_fast_fake_sni">"SNI vortäuschen"</string>
     <string name="pref_tor_track_host_exits_summ">"Tor verfolgt die letzten Verbindungen zu Hosts und versucht, die jeweiligen Exit-Nodes wiederzuverwenden. Diese Option kann dazu beitragen, endlose Captchas zu vermeiden."</string>
+    <string name="notification_exclude_bat_optimisation_title">"Akku-Leistungsoptimierung stoppen?"</string>
+    <string name="notification_exclude_data_restriction_title">"Datensparmodus deaktivieren?"</string>
+    <string name="notification_exclude_data_restriction_message">"Bitte erlaube sowohl reguläre als auch Hintergrunddaten während der Datensparmodus aktiv ist. Dies ist für eine reibungslose Onlineerfahrung essentiell."</string>
+    <string name="notification_exec_root_commands">"Führe Root Befehle aus..."</string>
+    <string name="pref_tor_dormant_client_timeout_summ">"Tor geht in einen Ruhezustand über, wenn für eine bestimmte Zeit keine Client-Aktivität registriert wird. Mindestdauer hierbei 10 Minuten"</string>
+    <string name="press_to_add">"Drücken um hinzuzufügen."</string>
+    <string name="long_press_to_add">"Langes Drücken um hinzuzufügen."</string>
+    <string name="press_to_edit">"Drücken um zu bearbeiten."</string>
+    <string name="long_press_to_edit">"Langes Drücken um zu bearbeiten."</string>
+    <string name="anonymize_relays">"Anonymisiere Relays"</string>
+    <string name="anonymize_relays_not_used">"Anonymisierte Relays werden nicht verwendet."</string>
+    <string name="pref_fast_exclude_app_from_tor">"Von Tor ausschliessen"</string>
+    <string name="pref_fast_route_to_tor">"Route zu Tor"</string>
+    <string name="pref_fast_direct_udp_connection">"UDP von Tor ausschliessen"</string>
+    <string name="pref_fast_bypass_app">"App umgehen"</string>
+    <string name="pull_to_refresh">"\u2193 Ziehen zum Aktualisieren \u2193"</string>
 </resources>
