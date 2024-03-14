@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.utils.bootcomplete;
 import static pan.alexander.tordnscrypt.BootCompleteReceiver.MY_PACKAGE_REPLACED;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -33,6 +34,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVED_DNSCRYPT_STATE_PREF;
@@ -58,6 +60,7 @@ import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ap.ApManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
@@ -80,6 +83,7 @@ public class BootCompleteManager {
     private final Lazy<Handler> handler;
     private final Lazy<PathVars> pathVars;
     private final Lazy<ApManager> apManager;
+    private final Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
     private Context context;
     private String appDataDir;
 
@@ -90,14 +94,18 @@ public class BootCompleteManager {
             Lazy<PreferenceRepository> preferenceRepository,
             Lazy<Handler> handler,
             Lazy<PathVars> pathVars,
-            Lazy<ApManager> apManager
+            Lazy<ApManager> apManager,
+            Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster
     ) {
         this.defaultSharedPreferences = defaultSharedPreferences;
         this.preferenceRepository = preferenceRepository;
         this.handler = handler;
         this.pathVars = pathVars;
         this.apManager = apManager;
+        this.modulesStatusBroadcaster = modulesStatusBroadcaster;
     }
+
+    private ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     public void performAction(final Context context, Intent intent) {
 
@@ -116,7 +124,7 @@ public class BootCompleteManager {
             return;
         }
 
-        if (action.equals(SHELL_SCRIPT_CONTROL) && !defaultPreferences.getBoolean("pref_common_shell_control", false)) {
+        if (action.equals(SHELL_SCRIPT_CONTROL) && !defaultPreferences.getBoolean(REMOTE_CONTROL, false)) {
             logw("BootCompleteReceiver received SHELL_CONTROL, but the appropriate option is disabled!");
             return;
         }
@@ -155,14 +163,24 @@ public class BootCompleteManager {
             int startTor = intent.getIntExtra(MANAGE_TOR_EXTRA, -1);
             int startItpd = intent.getIntExtra(MANAGE_ITPD_EXTRA, -1);
 
-            if (startDnsCrypt < 0 || startTor < 0 || startItpd < 0) {
-                loge("SHELL_SCRIPT_CONTROL wrong command");
-                return;
+            if (startDnsCrypt < 0) {
+                autoStartDNSCrypt = savedDNSCryptStateRunning;
+            } else {
+                autoStartDNSCrypt = startDnsCrypt == 1;
+                broadcastDNSCryptState(autoStartDNSCrypt);
             }
-
-            autoStartDNSCrypt = startDnsCrypt == 1;
-            autoStartTor = startTor == 1;
-            autoStartITPD = startItpd == 1;
+            if (startTor < 0) {
+                autoStartTor = savedTorStateRunning;
+            } else {
+                autoStartTor = startTor == 1;
+                broadcastTorState(autoStartTor);
+            }
+            if (startItpd < 0) {
+                autoStartITPD = savedITPDStateRunning;
+            } else {
+                autoStartITPD = startItpd == 1;
+                broadcastItpdState(autoStartITPD);
+            }
 
             logi("SHELL_SCRIPT_CONTROL start: " +
                     "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
@@ -236,6 +254,42 @@ public class BootCompleteManager {
                     ServiceVPNHelper.start(reason, context);
                 }, 2000);
             }
+        }
+    }
+
+    private void broadcastDNSCryptState(boolean autoStartDNSCrypt) {
+        if (autoStartDNSCrypt && modulesStatus.getDnsCryptState() == RUNNING) {
+            modulesStatusBroadcaster.get().broadcastDNSCryptRunning();
+        }
+        if (autoStartDNSCrypt && modulesStatus.isDnsCryptReady()) {
+            modulesStatusBroadcaster.get().broadcastDNSCryptReady();
+        }
+        if (!autoStartDNSCrypt && modulesStatus.getDnsCryptState() == STOPPED) {
+            modulesStatusBroadcaster.get().broadcastDNSCryptStopped();
+        }
+    }
+
+    private void broadcastTorState(boolean autoStartTor) {
+        if (autoStartTor && modulesStatus.getTorState() == RUNNING) {
+            modulesStatusBroadcaster.get().broadcastTorRunning();
+        }
+        if (autoStartTor && modulesStatus.isTorReady()) {
+            modulesStatusBroadcaster.get().broadcastTorReady();
+        }
+        if (!autoStartTor && modulesStatus.getTorState() == STOPPED) {
+            modulesStatusBroadcaster.get().broadcastTorStopped();
+        }
+    }
+
+    private void broadcastItpdState(boolean autoStartItpd) {
+        if (autoStartItpd && modulesStatus.getItpdState() == RUNNING) {
+            modulesStatusBroadcaster.get().broadcastI2PDRunning();
+        }
+        if (autoStartItpd && modulesStatus.isItpdReady()) {
+            modulesStatusBroadcaster.get().broadcastI2PDReady();
+        }
+        if (!autoStartItpd && modulesStatus.getItpdState() == STOPPED) {
+            modulesStatusBroadcaster.get().broadcastI2PDStopped();
         }
     }
 

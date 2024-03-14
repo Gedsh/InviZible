@@ -194,12 +194,14 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
-                <action
-                    android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL"
-                    tools:node="remove" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL" />
             </intent-filter>
         </receiver>
 
