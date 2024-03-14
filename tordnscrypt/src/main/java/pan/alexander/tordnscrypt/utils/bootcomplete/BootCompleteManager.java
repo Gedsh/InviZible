@@ -125,7 +125,7 @@ public class BootCompleteManager {
         }
 
         if (action.equals(SHELL_SCRIPT_CONTROL) && !defaultPreferences.getBoolean(REMOTE_CONTROL, false)) {
-            logw("BootCompleteReceiver received SHELL_CONTROL, but the appropriate option is disabled!");
+            broadcastControlDisabled();
             return;
         }
 
@@ -291,6 +291,11 @@ public class BootCompleteManager {
         if (!autoStartItpd && modulesStatus.getItpdState() == STOPPED) {
             modulesStatusBroadcaster.get().broadcastI2PDStopped();
         }
+    }
+
+    private void broadcastControlDisabled() {
+        modulesStatusBroadcaster.get().broadcastRemoteControlDisabled();
+        logw("BootCompleteReceiver received SHELL_CONTROL, but the appropriate option is disabled!");
     }
 
     private void shortenTooLongITPDLog() {

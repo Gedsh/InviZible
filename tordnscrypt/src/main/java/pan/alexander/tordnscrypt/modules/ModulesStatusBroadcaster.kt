@@ -36,6 +36,7 @@ private const val STATUS_ARG = "STATUS"
 private const val STATUS_RUNNING = "RUNNING"
 private const val STATUS_READY = "READY"
 private const val STATUS_STOPPED = "STOPPED"
+private const val STATUS_DISABLED = "CONTROL_DISABLED"
 
 private const val MODULE_ARG = "MODULE"
 private const val DNSCRYPT = "DNSCRYPT"
@@ -176,6 +177,14 @@ class ModulesStatusBroadcaster @Inject constructor(
             it.putExtra(MODULE_ARG, I2PD)
             it.putExtra(I2PD_HTTP_PROXY_PORT_ARG, pathVars.itpdHttpProxyPort)
         }
+
+    fun broadcastRemoteControlDisabled() {
+        Intent().also {
+            it.setAction(STATUS_ACTION)
+            it.putExtra(STATUS_ARG, STATUS_DISABLED)
+            context.sendBroadcast(it)
+        }
+    }
 
     fun onRemoteControlChanged(enabled: Boolean) {
         remoteControlActive = enabled
