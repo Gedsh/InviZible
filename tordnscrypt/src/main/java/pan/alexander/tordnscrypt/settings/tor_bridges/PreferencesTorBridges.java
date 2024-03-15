@@ -713,7 +713,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./-]+ +front=[\\w./-]+( +utls=\\w+)?");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w./-]+)?(?: +ampcache=https://[\\w./-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?");
+                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w./-]+)?(?: +ampcache=https://[\\w./-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w./-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?");
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
                 pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");

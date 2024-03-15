@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -75,10 +76,12 @@ public class SnowflakeConfigurator {
     private String getConfiguration(String currentBridge, int rendezvousType, String stunServers) {
         StringBuilder bridgeBuilder = new StringBuilder();
         bridgeBuilder.append(currentBridge);
-        if (!currentBridge.contains(" url=")) {
+        if (!currentBridge.contains(" url=") && isNotSqsBridge(currentBridge)) {
             bridgeBuilder.append(" url=").append(getURL(rendezvousType));
         }
-        if (!currentBridge.contains(" front=") && !currentBridge.contains(" fronts=")) {
+        if (!currentBridge.contains(" front=")
+                && !currentBridge.contains(" fronts=")
+                && isNotSqsBridge(currentBridge)) {
             bridgeBuilder.append(" fronts=").append(getFront(rendezvousType));
         }
         if (!currentBridge.contains(" utls-imitate=")) {
@@ -121,7 +124,7 @@ public class SnowflakeConfigurator {
     private String getFront(int rendezvousType) {
         int rendezvous = getRendezvous(rendezvousType);
         if (rendezvous == AMP_CACHE) {
-            return "www.google.com,accounts.google.com";
+            return "www.google.com,cdn.ampproject.org";
         } else if (rendezvous == FASTLY) {
             return "github.githubassets.com,www.shazam.com,www.cosmopolitan.com,www.esquire.com";
         } else if (rendezvous == CDN77) {
@@ -154,7 +157,7 @@ public class SnowflakeConfigurator {
             );
 
             stunServers = defaultPreferences.get().getString(
-                    "pref_tor_snowflake_stun",
+                    STUN_SERVERS,
                     defaultStunServers
             );
 
@@ -162,9 +165,9 @@ public class SnowflakeConfigurator {
                 stunServers = null;
             }
 
-            if (stunServers == null) {
+            if (stunServers == null || stunServers.isEmpty()) {
                 stunServers = defaultStunServers;
-                defaultPreferences.get().edit().putString("pref_tor_snowflake_stun", stunServers).apply();
+                defaultPreferences.get().edit().putString(STUN_SERVERS, stunServers).apply();
             }
         } else {
             stunServers = servers;
@@ -203,5 +206,9 @@ public class SnowflakeConfigurator {
         final String helloios_12_1 = "helloios_12_1";
 
         return hellorandomizedalpn;
+    }
+
+    private boolean isNotSqsBridge(String bridge) {
+        return !bridge.contains(" sqsqueue=");
     }
 }

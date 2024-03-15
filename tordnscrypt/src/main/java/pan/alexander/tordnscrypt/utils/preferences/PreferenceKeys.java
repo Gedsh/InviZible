@@ -116,7 +116,6 @@ public interface PreferenceKeys {
     String KILL_SWITCH = "swKillSwitch";
     String USE_IPTABLES = "pref_common_use_iptables";
     String WAIT_IPTABLES = "pref_common_wait_iptables";
-
     String REMOTE_CONTROL = "pref_common_shell_control";
 
     //DNSCrypt Settings
@@ -146,7 +145,7 @@ public interface PreferenceKeys {
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
     String DORMANT_CLIENT_TIMEOUT = "DormantClientTimeout";
-
+    String STUN_SERVERS = "pref_tor_snowflake_stun";
     String TOR_USE_IPV6 = "ClientUseIPv6";
 
     //I2PD Settings
