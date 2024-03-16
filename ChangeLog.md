@@ -1057,3 +1057,10 @@
 * Improved Tor apps screen.
 * Improved real-time connection logs.
 * Fixed Tor Snowflake bridge.
+
+**InviZible Pro beta 2.1.1**
+* Updated Tor Snowflake bridge.
+* Fixed previously updated screens for use with Android TV.
+* Fixed and improved script control.
+* Updated German and Spanish translations.
+* Fixes and optimizations.
