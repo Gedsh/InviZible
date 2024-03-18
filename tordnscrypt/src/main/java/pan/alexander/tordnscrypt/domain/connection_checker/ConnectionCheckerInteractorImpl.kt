@@ -122,30 +122,23 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
     override fun checkInternetConnection() {
         if (checking.compareAndSet(false, true)) {
-            if (modulesStatus.torState == ModuleState.RUNNING
-                || modulesStatus.torState == ModuleState.STARTING
-                || modulesStatus.torState == ModuleState.RESTARTING
-            ) {
-                checkConnection(Via.TOR)
-            } else {
-                checkConnection(Via.DIRECT)
-            }
+            checkConnection()
         }
     }
 
     @Synchronized
-    private fun checkConnection(via: Via) {
+    private fun checkConnection() {
 
         if (task?.isCompleted == false) {
             task?.cancel()
         }
 
         task = coroutineScope.launch {
-            tryCheckConnection(via)
+            tryCheckConnection()
         }
     }
 
-    private suspend fun tryCheckConnection(via: Via) {
+    private suspend fun tryCheckConnection() {
         try {
             withTimeout(CHECKING_LOOP_TIMEOUT_MINT * 60_000L) {
                 while (isActive && !internetAvailable) {
@@ -154,6 +147,12 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                     if (!getNetworkConnectionResult()) {
                         makeDelay(CHECK_INTERVAL_SEC)
                         continue
+                    }
+
+                    val via = if (isTorAvailable()) {
+                        Via.TOR
+                    } else {
+                        Via.DIRECT
                     }
 
                     val available = try {
@@ -196,6 +195,11 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
             checking.compareAndSet(true, false)
         }
     }
+
+    private fun isTorAvailable() =
+        modulesStatus.torState == ModuleState.RUNNING
+                || modulesStatus.torState == ModuleState.STARTING
+                || modulesStatus.torState == ModuleState.RESTARTING
 
     private fun informListeners(available: Boolean) {
         val iterator = listenersMap.iterator()
