@@ -53,12 +53,7 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
         } else if (isFixTTL()) {
 
             (connectionRecordsGetter.getConnectionRawRecords() + nflogRecordsGetter.getConnectionRawRecords())
-                .filter {
-                    when (val record = it.key) {
-                        is PacketRecord -> record.uid != SPECIAL_UID_KERNEL
-                        is DnsRecord -> true
-                    }
-                }.toSortedKeysList()
+                .toSortedKeysList()
 
 
         } else if (isRootMode()) {
