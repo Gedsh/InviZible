@@ -180,7 +180,7 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                     chipTorAppExclude.setText(R.string.pref_fast_route_to_tor);
                 }
 
-                if (app.getExcludeFromAll()) {
+                if (app.getExcludeFromAll() && !isRootMode()) {
                     animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.GONE);
                     chipTorAppDirectUdp.setVisibility(View.GONE);
@@ -194,15 +194,13 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                     animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.VISIBLE);
                     chipTorAppDirectUdp.setVisibility(View.VISIBLE);
-                } else if (!app.getExcludeFromAll()) {
+                } else if (!app.getExcludeFromAll() || isRootMode()) {
                     animateLayoutChanges();
                     chipTorAppExclude.setVisibility(View.VISIBLE);
                     chipTorAppDirectUdp.setVisibility(View.VISIBLE);
                 }
 
-                boolean rootMode = ModulesStatus.getInstance().getMode() == OperationMode.ROOT_MODE;
-
-                if (!rootMode && app.getExcludeFromAll()) {
+                if (!isRootMode() && app.getExcludeFromAll()) {
                     cardTorApps.setStrokeWidth((int) Utils.dp2pixels(2));
                     cardTorApps.setStrokeColor(ContextCompat.getColor(context, R.color.colorChipIconBypassApp));
                 } else {
@@ -210,7 +208,7 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                     cardTorApps.setStrokeColor(ContextCompat.getColor(context, R.color.cardsColor));
                 }
 
-                if (rootMode) {
+                if (isRootMode()) {
                     chipTorAppExcludeFromAll.setVisibility(View.GONE);
                 }
             }
@@ -307,6 +305,10 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                 }
             }
         }
+    }
+
+    private boolean isRootMode() {
+        return ModulesStatus.getInstance().getMode() == OperationMode.ROOT_MODE;
     }
 }
 

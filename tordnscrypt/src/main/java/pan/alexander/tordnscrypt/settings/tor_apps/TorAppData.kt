@@ -20,6 +20,8 @@
 package pan.alexander.tordnscrypt.settings.tor_apps
 
 import android.graphics.drawable.Drawable
+import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import java.util.ArrayList
 import java.util.Locale
 import java.util.concurrent.CopyOnWriteArrayList
@@ -53,9 +55,9 @@ data class TorAppData(
 
         @JvmStatic
         fun CopyOnWriteArrayList<TorAppData>.sortByName() = sortListBy(this) { o1, o2 ->
-            if (!o1.excludeFromAll && o2.excludeFromAll) {
+            if (!o1.excludeFromAll && o2.excludeFromAll && !isRootMode()) {
                 1
-            } else if (o1.excludeFromAll && !o2.excludeFromAll) {
+            } else if (o1.excludeFromAll && !o2.excludeFromAll && !isRootMode()) {
                 -1
             } else if (!o1.torifyApp && o2.torifyApp) {
                 1
@@ -74,9 +76,9 @@ data class TorAppData(
 
         @JvmStatic
         fun CopyOnWriteArrayList<TorAppData>.sortByUid() = sortListBy(this) { o1, o2 ->
-            if (!o1.excludeFromAll && o2.excludeFromAll) {
+            if (!o1.excludeFromAll && o2.excludeFromAll && !isRootMode()) {
                 1
-            } else if (o1.excludeFromAll && !o2.excludeFromAll) {
+            } else if (o1.excludeFromAll && !o2.excludeFromAll && !isRootMode()) {
                 -1
             } else if (!o1.torifyApp && o2.torifyApp) {
                 1
@@ -113,5 +115,7 @@ data class TorAppData(
                 list.addAll(sortedList)
             }
         }
+
+        private fun isRootMode() = ModulesStatus.getInstance().mode == OperationMode.ROOT_MODE
     }
 }
