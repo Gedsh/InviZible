@@ -47,6 +47,7 @@ public class SnowflakeConfigurator {
     private static final int FASTLY = 2;
     private static final int CDN77 = 3;
     private static final int AZURE = 4;
+    private static final int AMAZON = 5;
 
     private final Context context;
     private final Lazy<SharedPreferences> defaultPreferences;
@@ -76,17 +77,24 @@ public class SnowflakeConfigurator {
     private String getConfiguration(String currentBridge, int rendezvousType, String stunServers) {
         StringBuilder bridgeBuilder = new StringBuilder();
         bridgeBuilder.append(currentBridge);
-        if (!currentBridge.contains(" url=") && isNotSqsBridge(currentBridge)) {
+        if (!currentBridge.contains(" url=") && !isSqsBridge(currentBridge, rendezvousType)) {
             bridgeBuilder.append(" url=").append(getURL(rendezvousType));
         }
         if (!currentBridge.contains(" front=")
                 && !currentBridge.contains(" fronts=")
-                && isNotSqsBridge(currentBridge)) {
+                && !isSqsBridge(currentBridge, rendezvousType)) {
             bridgeBuilder.append(" fronts=").append(getFront(rendezvousType));
         }
         if (!currentBridge.contains(" utls-imitate=")) {
             bridgeBuilder.append(" utls-imitate=").append(getUtlsClientID());
         }
+        if (!currentBridge.contains(" sqsqueue=") && isSqsBridge(currentBridge, rendezvousType)) {
+            bridgeBuilder.append(" sqsqueue=").append(getSqsQueue());
+        }
+        if (!currentBridge.contains(" sqscreds=") && isSqsBridge(currentBridge, rendezvousType)) {
+            bridgeBuilder.append(" sqscreds=").append(getSqsCredits());
+        }
+
         if (!currentBridge.contains(" ice=")) {
             bridgeBuilder.append(" ice=");
 
@@ -117,7 +125,7 @@ public class SnowflakeConfigurator {
         } else if (rendezvous == AZURE) {
             return "https://snowflake-broker.azureedge.net/";
         } else {
-            return "";
+            return "https://snowflake-broker.azureedge.net/";
         }
     }
 
@@ -132,7 +140,7 @@ public class SnowflakeConfigurator {
         } else if (rendezvous == AZURE) {
             return "ajax.aspnetcdn.com";
         } else {
-            return "";
+            return "ajax.aspnetcdn.com";
         }
     }
 
@@ -208,7 +216,16 @@ public class SnowflakeConfigurator {
         return hellorandomizedalpn;
     }
 
-    private boolean isNotSqsBridge(String bridge) {
-        return !bridge.contains(" sqsqueue=");
+    private String getSqsQueue() {
+        return "https://sqs.us-east-1.amazonaws.com/893902434899/snowflake-broker";
+    }
+
+    private String getSqsCredits() {
+        return "eyJhd3MtYWNjZXNzLWtleS1pZCI6IkFLSUE1QUlGNFdKSlhTN1lIRUczIiwiYXdzLXNlY3JldC1rZXkiOiI3U0RNc0pBNHM1RitXZWJ1L3pMOHZrMFFXV0lsa1c2Y1dOZlVsQ0tRIn0=";
+    }
+
+    private boolean isSqsBridge(String bridge, int rendezvousType) {
+        int rendezvous = getRendezvous(rendezvousType);
+        return bridge.contains(" sqsqueue=") || !bridge.contains(" url=") && rendezvous == AMAZON;
     }
 }

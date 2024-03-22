@@ -471,6 +471,7 @@
     <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
     <string name="pref_tor_snowflake_cdn77" translatable="false">CDN77</string>
     <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
+    <string name="pref_tor_snowflake_amazon" translatable="false">AMAZON</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
