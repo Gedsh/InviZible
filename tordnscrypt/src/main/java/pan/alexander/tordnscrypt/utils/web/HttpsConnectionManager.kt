@@ -19,9 +19,9 @@
 
 package pan.alexander.tordnscrypt.utils.web
 
+import android.content.Context
 import android.os.Build
 import kotlinx.coroutines.*
-import org.jetbrains.annotations.NotNull
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
@@ -44,6 +44,7 @@ import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLSession
 
 class HttpsConnectionManager @Inject constructor(
+    private val context: Context,
     private val pathVars: PathVars,
     @Named(CoroutinesModule.DISPATCHER_IO)
     private val dispatcherIo: CoroutineDispatcher
@@ -76,7 +77,6 @@ class HttpsConnectionManager @Inject constructor(
         }
     }
 
-    @NotNull
     @Throws(IOException::class)
     @Suppress("BlockingMethodInNonBlockingContext")
     suspend fun get(url: String, data: Map<String, String>): List<String> =
@@ -151,7 +151,6 @@ class HttpsConnectionManager @Inject constructor(
 
     }
 
-    @NotNull
     @Throws(IOException::class)
     fun post(url: String, data: Map<String, String>): List<String> {
 
@@ -243,7 +242,7 @@ class HttpsConnectionManager @Inject constructor(
                 }
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP && url.startsWith("https")) {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M && url.startsWith("https")) {
             tryGetCompatibleTlsSocketFactory()?.let {
                 httpsURLConnection.sslSocketFactory = it
             }
@@ -253,7 +252,7 @@ class HttpsConnectionManager @Inject constructor(
     }
 
     private fun tryGetCompatibleTlsSocketFactory() = try {
-        TLSSocketFactory()
+        TLSSocketFactory(context)
     } catch (e: Exception) {
         loge("HttpsConnectionManager tryGetCompatibleTlsSocketFactory", e)
         null

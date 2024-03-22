@@ -19,23 +19,37 @@
 
 package pan.alexander.tordnscrypt.utils.web;
 
+import android.content.Context;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
+import pan.alexander.tordnscrypt.R;
 
 public class TLSSocketFactory extends SSLSocketFactory {
 
+    private final Context appContext;
     private final SSLSocketFactory delegate;
 
-    public TLSSocketFactory() throws KeyManagementException, NoSuchAlgorithmException {
+    public TLSSocketFactory(Context appContext) throws KeyManagementException, NoSuchAlgorithmException,
+            CertificateException, KeyStoreException, IOException {
+        this.appContext = appContext;
         SSLContext context = SSLContext.getInstance("TLS");
-        context.init(null, null, null);
+        context.init(null, getTrustManagerFactory().getTrustManagers(), null);
         delegate = context.getSocketFactory();
     }
 
@@ -84,5 +98,35 @@ public class TLSSocketFactory extends SSLSocketFactory {
             ((SSLSocket) socket).setEnabledProtocols(new String[]{"TLSv1.1", "TLSv1.2"});
         }
         return socket;
+    }
+
+    public TrustManagerFactory getTrustManagerFactory() throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException {
+
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        Certificate isgCertificateX1 = cf.generateCertificate(appContext.getResources().openRawResource(R.raw.isrg_root_x1));
+        Certificate isgCertificateX2 = cf.generateCertificate(appContext.getResources().openRawResource(R.raw.isrg_root_x2));
+
+        // Create a KeyStore containing our trusted CAs
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(null, null);
+        keyStore.setCertificateEntry("isrg_root_x1", isgCertificateX1);
+        keyStore.setCertificateEntry("isrg_root_x2", isgCertificateX2);
+
+        //Default TrustManager to get device trusted CA
+        TrustManagerFactory defaultTmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        defaultTmf.init((KeyStore) null);
+
+        X509TrustManager trustManager = (X509TrustManager) defaultTmf.getTrustManagers()[0];
+        int number = 0;
+        for (Certificate cert : trustManager.getAcceptedIssuers()) {
+            keyStore.setCertificateEntry(Integer.toString(number), cert);
+            number++;
+        }
+
+        // Create a TrustManager that trusts the CAs in our KeyStore
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(keyStore);
+
+        return tmf;
     }
 }
