@@ -1064,3 +1064,11 @@
 * Fixed and improved script control.
 * Updated German and Spanish translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.1.2**
+* Updated Tor.
+* Updated Tor Snowflake bridge to version v2.9.2.
+* Attempt to improve Snowflake bridge censorship resistance.
+* Added Amazon Snowflake rendezvous.
+* Updated Tor Lirebird and WebTunnel bridges.
+* Fixes and optimizations.
