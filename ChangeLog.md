@@ -1072,3 +1072,7 @@
 * Added Amazon Snowflake rendezvous.
 * Updated Tor Lirebird and WebTunnel bridges.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.1.3**
+* Optimized performance and memory usage in VPN mode.
+* Fixes and optimizations.
