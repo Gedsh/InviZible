@@ -125,7 +125,6 @@ class InstalledApplicationsManager private constructor(
                     PackageManager.ApplicationInfoFlags.of(pkgManagerFlags.toLong())
                 )
             } else {
-                @Suppress("DEPRECATION")
                 packageManager.getInstalledApplications(pkgManagerFlags)
             }
 
@@ -136,10 +135,11 @@ class InstalledApplicationsManager private constructor(
             installedApps.forEach { applicationInfo ->
                 application = userAppsMap[applicationInfo.uid]
 
-                val name =
-                    packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
+                //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
+                val name = applicationInfo.loadLabel(packageManager)?.toString() ?: "Undefined"
                 val icon = if (iconIsRequired) {
-                    packageManager.getApplicationIcon(applicationInfo)
+                    //packageManager.getApplicationIcon(applicationInfo)
+                    applicationInfo.loadIcon(packageManager)
                 } else {
                     null
                 }
@@ -243,7 +243,6 @@ class InstalledApplicationsManager private constructor(
                     PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong())
                 )
             } else {
-                @Suppress("DEPRECATION")
                 packageManager.getPackageInfo(
                     applicationInfo.packageName,
                     PackageManager.GET_PERMISSIONS
