@@ -719,7 +719,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
             } else if (inputLinesStr.contains(webtunnel.toString())) {
                 inputBridgesType = webtunnel.toString();
-                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w./-]+");
+                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w./-]+(?: ver=[0-9.]+)?");
             } else {
                 pattern = Pattern.compile(bridgeBase);
             }
