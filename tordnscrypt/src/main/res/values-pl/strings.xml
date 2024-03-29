@@ -341,7 +341,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="add_custom_server_title">"Dodaj serwer"</string>
     <string name="add_custom_server_error">"Niepoprawna niestandardowa konfiguracja serwera. Sprawdź pole SDNS."</string>
     <string name="pending_purchase">"Pamiataj, ze masz oczekujacy zakup:"</string>
-    <string name="buy_premium_gp">Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium.</string>
+    <string name="buy_premium_gp">"Projekt InviZible Pro potrzebuje Twojego wsparcia. Naciśnij OK, aby kupić funkcje premium."</string>
     <string name="wrong_purchase_signature_gp">"Przepraszamy, ale nie mozna potwierdzic zakupu. Otrzymasz zwrot pieniedzy po 3 dniach."</string>
     <string name="only_premium_feature">"Niestety ta funkcja jest dostepna tylko w wersji premium."</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy wychodzace HTTP"</string>
@@ -512,7 +512,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="ask_reset_settings_btn">"Reset"</string>
     <string name="pref_fast_fake_sni">"Uruchom spoofing SNI"</string>
     <string name="pref_tor_track_host_exits_summ">"Tor zapamieta i zapisze niedawne polaczenia do hsotow i sprobuje uzyc tych samych exit node dla kazdego z nich. To moze pomoc uniknac petli captcha."</string>
-    <string name="agreement_text">\\ dziękujemy za wybranie InviZible Pro. Jestem pewien, że zwiększy to Twoją prywatność i zapewni płynne korzystanie z Internetu..
+    <string name="agreement_text">\\ Dziękujemy za wybranie InviZible Pro. Jestem pewien, że zwiększy to Twoją prywatność i zapewni płynne korzystanie z Internetu.
 \n
 \n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
 \n
