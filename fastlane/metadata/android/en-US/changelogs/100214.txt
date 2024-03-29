@@ -1,0 +1,4 @@
+**InviZible Pro beta 2.1.4**
+* Fixed adding Tor WebTunnel bridges.
+* Updated Polish translation.
+* Updated Chinese translation.

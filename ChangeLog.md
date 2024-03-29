@@ -1076,3 +1076,8 @@
 **InviZible Pro beta 2.1.3**
 * Optimized performance and memory usage in VPN mode.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.1.4**
+* Fixed adding Tor WebTunnel bridges.
+* Updated Polish translation.
+* Updated Chinese translation.
