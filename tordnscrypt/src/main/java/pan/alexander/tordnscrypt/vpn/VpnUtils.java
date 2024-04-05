@@ -36,10 +36,14 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
+import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -53,7 +57,7 @@ public class VpnUtils {
             "172.16.0.0/12",
             "192.168.0.0/16",
             /*Other IANA reserved blocks (These are not processed by tor)*/
-            "0.0.0.0/8",
+            META_ADDRESS,
             "100.64.0.0/10",
             "169.254.0.0/16",
             "192.0.0.0/24",
@@ -64,7 +68,34 @@ public class VpnUtils {
             "203.0.113.0/24",
             "224.0.0.0/4",
             "240.0.0.0/4",
-            "255.255.255.255/32"));
+            "255.255.255.255/32"
+    ));
+
+    public static final ArrayList<String> nonTorIPv6 = new ArrayList<>(Arrays.asList(
+            /*LAN destinations that shouldn't be routed through Tor*/
+            //https://www.rfc-editor.org/rfc/rfc3513.html
+            LOOPBACK_ADDRESS_IPv6, //Loopback Address
+            META_ADDRESS_IPv6, //Unspecified Address
+            "FEC0::/10", //Site-local unicast, equivalent to 10.0.0.0/8, ...
+            "FE80::/10", //Link-local unicast, equivalent to 169.254.0.0/16
+            "FD00::/8" //Unique local address
+    ));
+
+    public static final ArrayList<String> multicastIPv6 = new ArrayList<>(Arrays.asList(
+            //https://www.rfc-editor.org/rfc/rfc3513.html
+            //"FF00::/8" Multicast
+            "FF01::1", //All Nodes Addresses interface-local
+            "FF02::1", // All Nodes Addresses link-local
+            "FF01::2", // All Routers Addresses interface-local
+            "FF02::2", // All Routers Addresses link-local, SLAAC
+            "FF05::2", // All Routers Addresses site-local
+            "FF02::1:FF00:0/104", //Neighbor discovery
+            //https://source.android.com/docs/core/ota/modular-system/dns-resolver
+            "FF02::FB", //mDNS .local resolution A12
+            //https://datatracker.ietf.org/doc/html/rfc8415
+            "FF02::1:2", //All_DHCP_Relay_Agents_and_Servers
+            "FF05::1:3" //All_DHCP_Servers
+    ));
 
     public static final ArrayList<String> dnsRebindList = new ArrayList<>(Arrays.asList(
             "10.0.0.0/8",
@@ -221,7 +252,7 @@ public class VpnUtils {
         return (!"off".equals(dns_mode));
     }
 
-    public synchronized static boolean isIpInSubnet(final String ip, final String network) {
+    public static boolean isIpInSubnetOld(final String ip, final String network) {
         boolean result = false;
 
         try {
@@ -249,5 +280,79 @@ public class VpnUtils {
         }
 
         return result;
+    }
+
+    public static boolean isIpInSubnet(final String ip, final String network) {
+        try {
+            String net = network;
+            int prefix = -1;
+            if (network.contains("/")) {
+                net = network.substring(0, network.indexOf("/"));
+                prefix = Integer.parseInt(network.substring(network.indexOf("/") + 1));
+            }
+
+            if (prefix < 0) {
+                return ip.toLowerCase(Locale.ROOT).equals(net.toLowerCase(Locale.ROOT));
+            }
+
+            final byte[] ipBin = java.net.InetAddress.getByName(ip).getAddress();
+            final byte[] netBin = java.net.InetAddress.getByName(net).getAddress();
+            if (netBin.length * 8 < prefix) {
+                loge(String.format(
+                        Locale.ROOT,
+                        "IP address %s is too short for bitmask of length %d",
+                        network,
+                        prefix)
+                );
+                return false;
+            }
+
+            if (ipBin.length != netBin.length) return false;
+
+            int nMaskFullBytes = prefix / 8;
+            byte finalByte = (byte) (0xFF00 >> (prefix & 0x07));
+
+            for (int i = 0; i < nMaskFullBytes; i++) {
+                if (ipBin[i] != netBin[i]) {
+                    return false;
+                }
+            }
+
+            if (finalByte != 0) {
+                return (ipBin[nMaskFullBytes] & finalByte) == (netBin[nMaskFullBytes] & finalByte);
+            }
+
+            return true;
+
+        } catch (Exception e) {
+            loge("VpnUtils isIpInSubnet", e);
+        }
+
+        return false;
+    }
+
+    public static boolean isIpInLanRange(String destAddress) {
+
+        if (destAddress.isEmpty()) {
+            return false;
+        }
+
+        for (String address : nonTorList) {
+            if (isIpInSubnet(destAddress, address)) {
+                return true;
+            }
+        }
+        for (String address : nonTorIPv6) {
+            if (isIpInSubnet(destAddress, address)) {
+                return true;
+            }
+        }
+
+        for (String address : multicastIPv6) {
+            if (isIpInSubnet(destAddress, address)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

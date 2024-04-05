@@ -26,7 +26,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_61;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_62;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
-import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
+import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_CAPTURING;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
@@ -51,6 +51,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_A
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.vpn.VpnUtils.multicastIPv6;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
@@ -58,8 +59,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.IpPrefix;
 import android.os.Build;
 import android.text.TextUtils;
+
+import androidx.annotation.RequiresApi;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -219,8 +223,11 @@ public class VpnBuilder {
         if (lan && (!(blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED)
                 || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED
                 && modulesStatus.getTorState() != STOPPED)) {
-            //TODO bypass lan addresses
+
             builder.addRoute("::", 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                excludeIPv6Multicast(builder);
+            }
         } else {
             builder.addRoute("::", 0);
         }
@@ -272,6 +279,26 @@ public class VpnBuilder {
         return builder;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void excludeIPv6Multicast(BuilderVPN builder) {
+        try {
+            for (String line: multicastIPv6) {
+                String address;
+                int prefix;
+                if (line.contains("/")) {
+                    address = line.substring(0, line.indexOf("/"));
+                    prefix = Integer.parseInt(line.substring(line.indexOf("/") + 1));
+                } else {
+                    address = line;
+                    prefix = 128;
+                }
+                builder.excludeRoute(new IpPrefix(InetAddress.getByName(address), prefix));
+            }
+        } catch (Exception e) {
+            loge("VPNBuilder", e);
+        }
+    }
+
     private List<InetAddress> getDns() {
         String vpnDns1;
 
@@ -297,7 +324,7 @@ public class VpnBuilder {
         for (String resolver: resolvers.split(", ?")) {
             if (resolver.matches(IPv4_REGEX)) {
                 dnscryptBootstrapResolversIPv4.add(resolver);
-            } else if (resolver.matches(IPv6_REGEX)) {
+            } else if (resolver.matches(IPv6_REGEX_NO_CAPTURING)) {
                 dnscryptBootstrapResolversIPv6.add(resolver);
             }
         }
