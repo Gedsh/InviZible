@@ -1081,3 +1081,10 @@
 * Fixed adding Tor WebTunnel bridges.
 * Updated Polish translation.
 * Updated Chinese translation.
+
+**InviZible Pro beta 2.1.5**
+* Optimized performance and memory usage in VPN mode.
+* Improved handling of IPv6 networks.
+* Improved handling of the ICMP protocol.
+* Improved handling of resources in the local network.
+* Fixes and optimizations.
