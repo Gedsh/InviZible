@@ -20,9 +20,9 @@
 package pan.alexander.tordnscrypt.nflog
 
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.UNDEFINED
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
-import pan.alexander.tordnscrypt.domain.connection_records.entities.UNDEFINED
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.net.IDN

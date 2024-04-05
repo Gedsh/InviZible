@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.domain.connection_records.entities
 
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.UNDEFINED
+
 sealed class ConnectionLogEntry(
     var time: Long = 0,
     var blocked: Boolean = false
@@ -35,7 +37,6 @@ data class PacketLogEntry(
     val uid: Int,
     val saddr: String,
     val daddr: String,
-    @get:ConnectionProtocol
     val protocol: Int = UNDEFINED,
     var reverseDns: String? = null,
     var dnsLogEntry: DnsLogEntry? = null

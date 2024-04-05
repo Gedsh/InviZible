@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsLogEntry
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketLogEntry
 import pan.alexander.tordnscrypt.iptables.Tethering
@@ -33,7 +34,6 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Constants
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
@@ -139,12 +139,8 @@ class ConnectionRecordsParser @Inject constructor(
                         applicationContext.packageManager.getNameForUid(record.uid) ?: "Undefined"
                 }
 
-                val protocol = when (record.protocol) {
-                    6 -> " (TCP)"
-                    17 -> " (UDP)"
-                    1 -> " (ICMPv4)"
-                    58 -> " (ICMPv6)"
-                    else -> ""
+                val protocol = ConnectionProtocol.toString(record.protocol).let {
+                    " ($it)"
                 }
 
                 if (Tethering.apIsOn && fixTTL && record.saddr.contains(apAddresses)) {
