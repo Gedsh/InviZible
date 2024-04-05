@@ -82,40 +82,19 @@ public class ResourceRecord implements Serializable {
     }
 
     private String rCodeToString(int Rcode) {
-        String result = "";
-        switch (Rcode) {
-            case 0:
-                result = "DNS Query completed successfully";
-                break;
-            case 1:
-                result = "DNS Query Format Error";
-                break;
-            case 2:
-                result = "Server failed to complete the DNS request";
-                break;
-            case 3:
-                result = "Domain name does not exist";
-                break;
-            case 4:
-                result = "Function not implemented";
-                break;
-            case 5:
-                result = "The server refused to answer for the query";
-                break;
-            case 6:
-                result = "Name that should not exist, does exist";
-                break;
-            case 7:
-                result = "RRset that should not exist, does exist";
-                break;
-            case 8:
-                result = "Server not authoritative for the zone";
-                break;
-            case 9:
-                result = "Name not in zone";
-                break;
-        }
-        return result;
+        return switch (Rcode) {
+            case 0 -> "DNS Query completed successfully";
+            case 1 -> "DNS Query Format Error";
+            case 2 -> "Server failed to complete the DNS request";
+            case 3 -> "Domain name does not exist";
+            case 4 -> "Function not implemented";
+            case 5 -> "The server refused to answer for the query";
+            case 6 -> "Name that should not exist, does exist";
+            case 7 -> "RRset that should not exist, does exist";
+            case 8 -> "Server not authoritative for the zone";
+            case 9 -> "Name not in zone";
+            default -> "";
+        };
     }
 
     @NonNull
@@ -128,12 +107,14 @@ public class ResourceRecord implements Serializable {
                     " QName " + QName +
                     " AName " + AName +
                     " CName " + CName +
+                    " HINFO " + trimToNotASCIISymbols(HInfo) +
                     " " + rCodeToString(Rcode);
         } else if (!Resource.isEmpty()) {
             result = formatter.format(new Date(Time).getTime()) +
                     " QName " + QName +
                     " AName " + AName +
                     " Resource " + Resource +
+                    " HINFO " + trimToNotASCIISymbols(HInfo) +
                     " " + rCodeToString(Rcode);
         } else if (!HInfo.isEmpty()) {
             result = formatter.format(new Date(Time).getTime()) +
