@@ -51,7 +51,7 @@
 #include <android/log.h>
 #include <sys/system_properties.h>
 
-#define TAG "pan.alexander.tordnscrypt.JNI"
+#define TAG "pan.alexander.tordnscrypt.TPDCLogs"
 
 // #define PROFILE_JNI 5
 // #define PROFILE_MEMORY
@@ -415,6 +415,9 @@ jboolean handle_icmp(const struct arguments *args,
                      int uid,
                      const int epoll_fd);
 
+jboolean is_icmp_supported(const uint8_t *pkt,
+                           const uint8_t *payload);
+
 int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint8_t *payload);
 
 void block_udp(const struct arguments *args,
@@ -510,6 +513,10 @@ jint restore_uid(const struct arguments *args,
 int protect_socket(const struct arguments *args, int socket, int uid);
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
+
+uint16_t do_csum_generic(uint16_t start, const uint8_t *buffer, size_t length);
+
+uint16_t do_csum_neon(uint16_t start, const uint8_t *buffer, size_t length);
 
 jobject jniGlobalRef(JNIEnv *env, jobject cls);
 
