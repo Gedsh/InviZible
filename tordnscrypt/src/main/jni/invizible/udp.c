@@ -104,6 +104,10 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
             log_android(ANDROID_LOG_ERROR, "UDP SO_ERROR %d: %s", serr, strerror(serr));
 
         s->udp.state = UDP_FINISHING;
+
+        if (err >= 0 && (serr == ECONNREFUSED || serr == EHOSTUNREACH)) {
+            write_connection_unreach(args, s, serr);
+        }
     } else {
         // Check socket read
         if (ev->events & EPOLLIN) {
