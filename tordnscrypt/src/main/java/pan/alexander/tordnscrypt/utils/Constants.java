@@ -26,7 +26,7 @@ public interface Constants {
     String LOOPBACK_ADDRESS = "127.0.0.1";
     String LOOPBACK_ADDRESS_IPv6 = "::1";
     String META_ADDRESS = "0.0.0.0";
-
+    String META_ADDRESS_IPv6 = "::";
     String STANDARD_WIFI_INTERFACE_NAME = "wlan0";
     String STANDARD_ETHERNET_INTERFACE_NAME = "eth0";
     String STANDARD_VPN_INTERFACE_NAME = "tun0";
@@ -84,7 +84,7 @@ public interface Constants {
 
     String TOR_BRIDGES_ADDRESS = "https://bridges.torproject.org/";
 
-    String TOR_VIRTUAL_ADDR_NETWORK_IPV6 = "[FC00::]/7";
+    String TOR_VIRTUAL_ADDR_NETWORK_IPV6 = "[FC00::]/8";
 
     String DNSCRYPT_RESOLVERS_SOURCE_IPV6 = "https://ipv6.download.dnscrypt.info/resolvers-list/v3/public-resolvers.md";
     String DNSCRYPT_RELAYS_SOURCE_IPV6 = "https://ipv6.download.dnscrypt.info/resolvers-list/v3/relays.md";

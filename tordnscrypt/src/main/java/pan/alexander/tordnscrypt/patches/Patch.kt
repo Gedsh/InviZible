@@ -71,9 +71,9 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 updateITPDAddressBookDefaultUrl()
                 fallbackResolverToBootstrapResolvers()
                 removeDNSCryptDaemonize()
-                enableDNSCryptRequireNoFilterByDefault(currentVersionSaved)
                 clearFlagDoNotUpdateTorDefaultBridges()
                 addTorDormantOption()
+                fixTorIPv6VirtualAddresses()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -276,6 +276,16 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 "",
                 Regex("DormantCanceledByStartup .+"),
                 "DormantClientTimeout 15 minutes"
+            )
+        )
+    }
+
+    private fun fixTorIPv6VirtualAddresses() {
+        torConfigPatches.add(
+            AlterConfig.ReplaceLine(
+                "",
+                Regex("VirtualAddrNetworkIPv6 \\[FC00::]/7"),
+                "VirtualAddrNetworkIPv6 [FC00::]/8"
             )
         )
     }
