@@ -44,16 +44,17 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THR
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_LAN_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
+import static pan.alexander.tordnscrypt.vpn.VpnUtils.isIpInLanRange;
 import static pan.alexander.tordnscrypt.vpn.service.VpnBuilder.vpnDnsSet;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.inject.Inject;
@@ -86,17 +87,18 @@ public class VpnRulesHolder {
     private final Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
 
     @SuppressLint("UseSparseArrays")
-    final Map<Integer, Boolean> mapUidAllowed = new HashMap<>();
+    final Set<Integer> setUidAllowed = new ConcurrentSkipListSet<>();
     @SuppressLint("UseSparseArrays")
-    private final Map<Integer, Integer> mapUidKnown = new HashMap<>();
+    private final Set<Integer> setUidKnown = new ConcurrentSkipListSet<>();
     @SuppressLint("UseSparseArrays")
-    final Map<Integer, Forward> mapForwardPort = new HashMap<>();
-    private final Map<String, Forward> mapForwardAddress = new HashMap<>();
-    final Set<String> ipsForTor = new HashSet<>();
-    private final Set<Integer> uidLanAllowed = new HashSet<>();
-    final Set<Integer> uidSpecialAllowed = new HashSet<>();
+    final Map<Integer, Forward> mapForwardPort = new ConcurrentSkipListMap<>();
+    private final Map<String, Forward> mapForwardAddress = new ConcurrentSkipListMap<>();
+    final Set<String> ipsForTor = new ConcurrentSkipListSet<>();
+    private final Set<Integer> uidLanAllowed = new ConcurrentSkipListSet<>();
+    final Set<Integer> uidSpecialAllowed = new ConcurrentSkipListSet<>();
+    private final Set<Integer> uidSpecialLanAllowed = new ConcurrentSkipListSet<>();
 
-    private final Set<String> connectivityCheckIps = new HashSet<>();
+    private final Set<String> connectivityCheckIps = new ConcurrentSkipListSet<>();
 
     @Inject
     public VpnRulesHolder(@Named(DEFAULT_PREFERENCES_NAME) SharedPreferences defaultPreferences,
@@ -116,8 +118,8 @@ public class VpnRulesHolder {
 
     public Allowed isAddressAllowed(ServiceVPN vpn, Packet packet) {
 
-        if (packet.saddr == null || packet.sport == 0
-                || packet.daddr == null || packet.dport == 0
+        if (packet.saddr == null
+                || packet.daddr == null
                 || vpn.vpnPreferences == null) {
             return null;
         }
@@ -126,23 +128,7 @@ public class VpnRulesHolder {
                 || modulesStatus.getTorState() == STARTING
                 || modulesStatus.getTorState() == RESTARTING;
 
-        String apAddresses = Constants.STANDARD_AP_INTERFACE_RANGE;
-        if (Tethering.wifiAPAddressesRange.contains(".")) {
-            apAddresses = Tethering.wifiAPAddressesRange
-                    .substring(0, Tethering.wifiAPAddressesRange.lastIndexOf("."));
-        }
-
-        String usbModemAddresses = Constants.STANDARD_USB_MODEM_INTERFACE_RANGE;
-        if (Tethering.usbModemAddressesRange.contains(".")) {
-            usbModemAddresses = Tethering.usbModemAddressesRange
-                    .substring(0, Tethering.usbModemAddressesRange.lastIndexOf("."));
-        }
-
-        boolean fixTTLForPacket = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
-                && !modulesStatus.isUseModulesWithRoot()
-                && (Tethering.apIsOn && packet.saddr.contains(apAddresses)
-                || Tethering.usbTetherOn && packet.saddr.contains(usbModemAddresses)
-                || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
+        boolean fixTTLForPacket = isFixTTLForPacket(packet);
 
         lock.readLock().lock();
 
@@ -220,7 +206,7 @@ public class VpnRulesHolder {
                         || vpnPreferences.getTorTethering()
                         || fixTTLForPacket
                         || vpnPreferences.getCompatibilityMode()) &&
-                !mapUidKnown.containsKey(packet.uid)
+                !setUidKnown.contains(packet.uid)
                 && (vpnPreferences.getFixTTL()
                 || !torIsRunning && !vpnPreferences.getUseProxy()
                 || packet.protocol == 6 && packet.dport == PLAINTEXT_DNS_PORT)) {
@@ -242,18 +228,31 @@ public class VpnRulesHolder {
             logw("Disallowing non tcp traffic to proxy " + packet);
         } else if (vpnPreferences.getFirewallEnabled()
                 && isIpInLanRange(packet.daddr)) {
-            packet.allowed = uidLanAllowed.contains(packet.uid);
+            if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
+                packet.allowed = isSpecialAllowed(
+                        uidLanAllowed,
+                        uidSpecialLanAllowed,
+                        packet.uid,
+                        packet.daddr,
+                        packet.dport
+                );
+            } else {
+                packet.allowed = uidLanAllowed.contains(packet.uid);
+            }
         } else if (vpnPreferences.getFirewallEnabled()
                 && isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
-            packet.allowed = isSpecialAllowed(packet.uid, packet.daddr, packet.dport);
+            packet.allowed = isSpecialAllowed(
+                    setUidAllowed,
+                    uidSpecialAllowed,
+                    packet.uid,
+                    packet.daddr,
+                    packet.dport
+            );
         } else if (vpnPreferences.getFirewallEnabled()) {
 
-            if (mapUidAllowed.containsKey(packet.uid)) {
-                Boolean allow = mapUidAllowed.get(packet.uid);
-                if (allow != null) {
-                    packet.allowed = allow;
-                    //logi("Packet " + packet.toString() + " is allowed " + allow);
-                }
+            if (setUidAllowed.contains(packet.uid)) {
+                packet.allowed = true;
+                //logi("Packet " + packet.toString() + " is allowed " + allow);
             } else if (packet.dport == PLAINTEXT_DNS_PORT
                     && packet.uid < 2000 && packet.uid != SPECIAL_UID_KERNEL) {
                 //Allow connection check for system apps
@@ -305,20 +304,31 @@ public class VpnRulesHolder {
         return allowed;
     }
 
+    private boolean isFixTTLForPacket(Packet packet) {
+        String apAddresses = Constants.STANDARD_AP_INTERFACE_RANGE;
+        if (Tethering.wifiAPAddressesRange.contains(".")) {
+            apAddresses = Tethering.wifiAPAddressesRange
+                    .substring(0, Tethering.wifiAPAddressesRange.lastIndexOf("."));
+        }
+
+        String usbModemAddresses = Constants.STANDARD_USB_MODEM_INTERFACE_RANGE;
+        if (Tethering.usbModemAddressesRange.contains(".")) {
+            usbModemAddresses = Tethering.usbModemAddressesRange
+                    .substring(0, Tethering.usbModemAddressesRange.lastIndexOf("."));
+        }
+
+        return modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot()
+                && (Tethering.apIsOn && packet.saddr.contains(apAddresses)
+                || Tethering.usbTetherOn && packet.saddr.contains(usbModemAddresses)
+                || Tethering.ethernetOn && packet.saddr.contains(Tethering.addressLocalPC));
+    }
+
     private boolean isSupported(int protocol) {
         return (protocol == 1 /* ICMPv4 */ ||
                 protocol == 58 /* ICMPv6 */ ||
                 protocol == 6 /* TCP */ ||
                 protocol == 17 /* UDP */);
-    }
-
-    private boolean isIpInLanRange(String destAddress) {
-        for (String address : VpnUtils.nonTorList) {
-            if (VpnUtils.isIpInSubnet(destAddress, address)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private boolean isDestinationInSpecialRange(int uid, String destIp, int destPort) {
@@ -330,20 +340,26 @@ public class VpnRulesHolder {
                 || connectivityCheckIps.contains(destIp);
     }
 
-    private boolean isSpecialAllowed(int uid, String destIp, int destPort) {
+    private boolean isSpecialAllowed(
+            Set<Integer> uidAllowed,
+            Set<Integer> specialUidAllowed,
+            int uid,
+            String destIp,
+            int destPort
+    ) {
         boolean allow = false;
         if (uid == 0 && destPort == PLAINTEXT_DNS_PORT) {
             allow = true;
         } else if (uid == SPECIAL_UID_KERNEL) {
-            allow = uidSpecialAllowed.contains(SPECIAL_UID_KERNEL);
+            allow = specialUidAllowed.contains(SPECIAL_UID_KERNEL);
         } else if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
-            allow = uidSpecialAllowed.contains(SPECIAL_UID_NTP);
+            allow = specialUidAllowed.contains(SPECIAL_UID_NTP);
         } else if (destPort == SPECIAL_PORT_AGPS1 || destPort == SPECIAL_PORT_AGPS2) {
-            allow = uidSpecialAllowed.contains(SPECIAL_UID_AGPS);
+            allow = specialUidAllowed.contains(SPECIAL_UID_AGPS);
         } else if (connectivityCheckIps.contains(destIp)) {
-            allow = uidSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
+            allow = specialUidAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK);
         }
-        return allow || mapUidAllowed.containsKey(uid) && mapUidAllowed.get(uid) != null;
+        return allow || uidAllowed.contains(uid);
     }
 
     private boolean isPacketAllowedForCompatibilityMode(Packet packet, boolean fixTTLForPacket) {
@@ -384,27 +400,30 @@ public class VpnRulesHolder {
     ) {
         lock.writeLock().lock();
 
-        mapUidAllowed.clear();
+        setUidAllowed.clear();
         uidSpecialAllowed.clear();
         for (String uid : listAllowed) {
             if (uid != null && uid.matches("\\d+")) {
-                mapUidAllowed.put(Integer.valueOf(uid), true);
+                setUidAllowed.add(Integer.valueOf(uid));
             } else if (uid != null && uid.matches("-\\d+")) {
                 uidSpecialAllowed.add(Integer.valueOf(uid));
             }
         }
 
-        mapUidKnown.clear();
+        setUidKnown.clear();
         for (Rule rule : listRule) {
             if (rule.uid >= 0) {
-                mapUidKnown.put(rule.uid, rule.uid);
+                setUidKnown.add(rule.uid);
             }
         }
 
         uidLanAllowed.clear();
+        uidSpecialLanAllowed.clear();
         for (String uid : preferenceRepository.getStringSetPreference(APPS_ALLOW_LAN_PREF)) {
             if (uid != null && uid.matches("\\d+")) {
                 uidLanAllowed.add(Integer.valueOf(uid));
+            } else if (uid != null && uid.matches("-\\d+")) {
+                uidSpecialLanAllowed.add(Integer.valueOf(uid));
             }
         }
 
@@ -494,10 +513,11 @@ public class VpnRulesHolder {
 
     void unPrepare() {
         lock.writeLock().lock();
-        mapUidAllowed.clear();
-        mapUidKnown.clear();
+        setUidAllowed.clear();
+        setUidKnown.clear();
         ipsForTor.clear();
         uidLanAllowed.clear();
+        uidSpecialLanAllowed.clear();
         uidSpecialAllowed.clear();
         mapForwardPort.clear();
         mapForwardAddress.clear();
