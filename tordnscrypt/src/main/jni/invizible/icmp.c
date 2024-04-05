@@ -79,16 +79,28 @@ void write_connection_unreach(const struct arguments *args,
 
     struct icmp_session sicmp;
     memset(&sicmp, 0, sizeof(struct icmp_session));
-    sicmp.version = s->tcp.version;
-    if (s->tcp.version == 4) {
-        sicmp.saddr.ip4 = (__be32) s->tcp.saddr.ip4;
-        sicmp.daddr.ip4 = (__be32) s->tcp.daddr.ip4;
-    } else {
-        memcpy(&sicmp.saddr.ip6, &s->tcp.saddr.ip6, 16);
-        memcpy(&sicmp.daddr.ip6, &s->tcp.daddr.ip6, 16);
-    }
 
-    write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
+    if (s->protocol == IPPROTO_TCP) {
+        sicmp.version = s->tcp.version;
+        if (s->tcp.version == 4) {
+            sicmp.saddr.ip4 = (__be32) s->tcp.saddr.ip4;
+            sicmp.daddr.ip4 = (__be32) s->tcp.daddr.ip4;
+        } else {
+            memcpy(&sicmp.saddr.ip6, &s->tcp.saddr.ip6, 16);
+            memcpy(&sicmp.daddr.ip6, &s->tcp.daddr.ip6, 16);
+        }
+        write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
+    } else if (s->protocol == IPPROTO_UDP) {
+        sicmp.version = s->udp.version;
+        if (s->udp.version == 4) {
+            sicmp.saddr.ip4 = (__be32) s->udp.saddr.ip4;
+            sicmp.daddr.ip4 = (__be32) s->udp.daddr.ip4;
+        } else {
+            memcpy(&sicmp.saddr.ip6, &s->udp.saddr.ip6, 16);
+            memcpy(&sicmp.daddr.ip6, &s->udp.daddr.ip6, 16);
+        }
+        write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
+    }
 }
 
 void check_icmp_socket(const struct arguments *args, const struct epoll_event *ev) {
@@ -173,6 +185,31 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
     }
 }
 
+jboolean is_icmp_supported(const uint8_t *pkt,
+                     const uint8_t *payload) {
+    // Get headers
+    const uint8_t version = (*pkt) >> 4;
+    const struct iphdr *ip4 = (struct iphdr *) pkt;
+    const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
+    struct icmp *icmp = (struct icmp *) payload;
+
+    char source[INET6_ADDRSTRLEN + 1];
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (version == 4) {
+        inet_ntop(AF_INET, &ip4->saddr, source, sizeof(source));
+        inet_ntop(AF_INET, &ip4->daddr, dest, sizeof(dest));
+    } else {
+        inet_ntop(AF_INET6, &ip6->ip6_src, source, sizeof(source));
+        inet_ntop(AF_INET6, &ip6->ip6_dst, dest, sizeof(dest));
+    }
+
+    if (icmp->icmp_type != ICMP_ECHO && icmp->icmp_type != 128 /* ICMP_ECHOV6 */) {
+        return 0;
+    }
+
+    return 1;
+}
+
 jboolean handle_icmp(const struct arguments *args,
                      const uint8_t *pkt, size_t length,
                      const uint8_t *payload,
@@ -193,12 +230,6 @@ jboolean handle_icmp(const struct arguments *args,
     } else {
         inet_ntop(AF_INET6, &ip6->ip6_src, source, sizeof(source));
         inet_ntop(AF_INET6, &ip6->ip6_dst, dest, sizeof(dest));
-    }
-
-    if (icmp->icmp_type != ICMP_ECHO) {
-        log_android(ANDROID_LOG_WARN, "ICMP type %d code %d from %s to %s not supported",
-                    icmp->icmp_type, icmp->icmp_code, source, dest);
-        return 0;
     }
 
     // Search session
@@ -277,7 +308,7 @@ jboolean handle_icmp(const struct arguments *args,
     icmp->icmp_cksum = 0;
     icmp->icmp_cksum = ~calc_checksum(csum, (uint8_t *) icmp, icmplen);
 
-    log_android(ANDROID_LOG_INFO,
+    log_android(ANDROID_LOG_WARN,
                 "ICMP forward from tun %s to %s type %d code %d id %x seq %d data %d",
                 source, dest,
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq, icmplen);
@@ -315,7 +346,9 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
     int sock;
 
     // Get UDP socket
-    sock = socket(cur->version == 4 ? PF_INET : PF_INET6, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_ICMP);
+    sock = socket(cur->version == 4 ? PF_INET : PF_INET6,
+                  SOCK_DGRAM | SOCK_CLOEXEC,
+                  cur->version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
     if (sock < 0) {
         log_android(ANDROID_LOG_ERROR, "ICMP socket error %d: %s", errno, strerror(errno));
         return -1;
