@@ -29,11 +29,11 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.TCP
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsLogEntry
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketLogEntry
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
-import pan.alexander.tordnscrypt.domain.connection_records.entities.TCP
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesFirewall
@@ -52,7 +52,7 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
 import pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT
-import pan.alexander.tordnscrypt.vpn.VpnUtils
+import pan.alexander.tordnscrypt.vpn.VpnUtils.isIpInLanRange
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPN.LINES_IN_DNS_QUERY_RAW_RECORDS
 import pan.alexander.tordnscrypt.vpn.service.VpnBuilder
 import java.io.IOException
@@ -283,16 +283,14 @@ class ConnectionRecordsConverter @Inject constructor(
         }
     }
 
-    private fun isDnsBlocked(dnsRecord: DnsRecord) = dnsRecord.ip ==
-            META_ADDRESS
-            || dnsRecord.ip == LOOPBACK_ADDRESS
-            || dnsRecord.ip == "::"
-            || dnsRecord.ip.contains(":") && blockIPv6
-            || dnsRecord.hInfo.contains("dnscrypt")
-            || dnsRecord.rCode != 0
-            || dnsRecord.ip.isEmpty()
-            && dnsRecord.cName.isEmpty()
-            && !isPointerRecord(dnsRecord)
+    private fun isDnsBlocked(dnsRecord: DnsRecord) =
+        dnsRecord.ip == META_ADDRESS
+                || dnsRecord.ip == LOOPBACK_ADDRESS
+                || dnsRecord.ip == "::"
+                || dnsRecord.ip.contains(":") && blockIPv6
+                || dnsRecord.hInfo.contains("dnscrypt")
+                || dnsRecord.rCode != 0
+                || dnsRecord.ip.isEmpty() && dnsRecord.cName.isEmpty() && !isPointerRecord(dnsRecord)
 
     private fun isDnsBlockedByIPv6(dnsRecord: DnsRecord) =
         dnsRecord.hInfo.contains(DNSCRYPT_BLOCK_IPv6)
@@ -448,19 +446,6 @@ class ConnectionRecordsConverter @Inject constructor(
         }
 
         unregisterIptablesReceiver()
-    }
-
-    private fun isIpInLanRange(destAddress: String): Boolean {
-        if (destAddress.isEmpty()) {
-            return false
-        }
-
-        for (address in VpnUtils.nonTorList) {
-            if (VpnUtils.isIpInSubnet(destAddress, address)) {
-                return true
-            }
-        }
-        return false
     }
 
     private fun isFirewallEnabled() = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
