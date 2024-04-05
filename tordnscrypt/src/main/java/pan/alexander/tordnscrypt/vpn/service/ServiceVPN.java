@@ -176,7 +176,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native long jni_init(int sdk);
 
     @Keep
-    private native void jni_start(long context, int loglevel);
+    private native void jni_start(long context);
 
     @Keep
     private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous);
@@ -243,7 +243,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 }
 
                 logi("VPN Starting tunnel thread context=" + jni_context);
-                jni_start(jni_context, vpnPreferences.getNativeLogLevel());
+                jni_start(jni_context);
 
                 long local_jni_context = jni_context;
                 tunnelThread = new Thread(() -> {

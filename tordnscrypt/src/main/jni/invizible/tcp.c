@@ -34,7 +34,6 @@ extern char proxy_socks5_username[127 + 1];
 extern char proxy_socks5_password[127 + 1];
 
 extern int own_uid;
-extern int loglevel;
 
 void clear_tcp_data(struct tcp_session *cur) {
     struct segment *s = cur->forward;
@@ -325,7 +324,7 @@ void check_tcp_socket(const struct arguments *args,
                                     session, errno, strerror(errno));
                         write_rst(args, &s->tcp);
                     } else {
-                        if (loglevel < ANDROID_LOG_WARN) {
+                        if (LOG_LEVEL < ANDROID_LOG_WARN) {
                             char *h = hex(buffer, (const size_t) bytes);
                             log_android(ANDROID_LOG_INFO, "%s recv SOCKS5 %s", session, h);
                             ng_free(h, __FILE__, __LINE__);
@@ -392,7 +391,7 @@ void check_tcp_socket(const struct arguments *args,
 
             if (s->tcp.socks5 == SOCKS5_HELLO) {
                 uint8_t buffer[4] = {5, 2, 0, 2};
-                if (loglevel < ANDROID_LOG_WARN) {
+                if (LOG_LEVEL < ANDROID_LOG_WARN) {
                     char *h = hex(buffer, sizeof(buffer));
                     log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 hello: %s",
                                 session, h);
@@ -434,7 +433,7 @@ void check_tcp_socket(const struct arguments *args,
 
                 size_t len = 2 + ulen + 1 + plen;
 
-                if (loglevel < ANDROID_LOG_WARN) {
+                if (LOG_LEVEL < ANDROID_LOG_WARN) {
                     char *h = hex(buffer, len);
                     log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 auth: %s",
                                 session, h);
@@ -464,7 +463,7 @@ void check_tcp_socket(const struct arguments *args,
 
                 size_t len = (s->tcp.version == 4 ? 10 : 22);
 
-                if (loglevel < ANDROID_LOG_WARN) {
+                if (LOG_LEVEL < ANDROID_LOG_WARN) {
                     char *h = hex(buffer, len);
                     log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 connect: %s",
                                 session, h);

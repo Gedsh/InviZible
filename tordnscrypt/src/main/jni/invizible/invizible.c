@@ -38,7 +38,6 @@ int proxy_socks5_port = 0;
 char proxy_socks5_username[127 + 1];
 char proxy_socks5_password[127 + 1];
 int own_uid = -2;
-int loglevel = ANDROID_LOG_WARN;
 bool compatibility_mode = false;
 bool can_filter = true;
 
@@ -121,8 +120,6 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(
     struct context *ctx = ng_calloc(1, sizeof(struct context), "init");
     ctx->sdk = sdk;
 
-    loglevel = ANDROID_LOG_WARN;
-
     *tor_socks5_addr = 0;
     tor_socks5_port = 0;
     *tor_socks5_username = 0;
@@ -155,14 +152,13 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(
 
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1start(
-        JNIEnv *env, jobject instance, jlong context, jint loglevel_) {
+        JNIEnv *env, jobject instance, jlong context) {
     struct context *ctx = (struct context *) context;
 
-    loglevel = loglevel_;
     max_tun_msg = 0;
     ctx->stopping = 0;
 
-    log_android(ANDROID_LOG_WARN, "Starting level %d", loglevel);
+    log_android(ANDROID_LOG_WARN, "Starting level %d", LOG_LEVEL);
 
 }
 
@@ -172,7 +168,7 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1run(
         jboolean compatibility, jboolean filter) {
     struct context *ctx = (struct context *) context;
 
-    log_android(ANDROID_LOG_WARN, "Running tun %d fwd53 %d level %d", tun, fwd53, loglevel);
+    log_android(ANDROID_LOG_WARN, "Running tun %d fwd53 %d level %d", tun, fwd53, LOG_LEVEL);
 
     compatibility_mode = compatibility;
     can_filter = filter;

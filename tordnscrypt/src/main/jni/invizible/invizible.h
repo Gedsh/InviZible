@@ -52,6 +52,7 @@
 #include <sys/system_properties.h>
 
 #define TAG "pan.alexander.tordnscrypt.TPDCLogs"
+#define LOG_LEVEL ANDROID_LOG_ERROR
 
 // #define PROFILE_JNI 5
 // #define PROFILE_MEMORY

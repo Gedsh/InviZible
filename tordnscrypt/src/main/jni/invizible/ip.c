@@ -24,7 +24,6 @@
 #include "invizible.h"
 
 int max_tun_msg = 0;
-extern int loglevel;
 extern int own_uid;
 extern bool compatibility_mode;
 extern bool can_filter;
@@ -163,7 +162,7 @@ void handle_ip(const struct arguments *args,
             return;
         }
 
-        if (loglevel < ANDROID_LOG_WARN) {
+        if (LOG_LEVEL < ANDROID_LOG_WARN) {
             if (!calc_checksum(0, (uint8_t *) ip4hdr, sizeof(struct iphdr))) {
                 log_android(ANDROID_LOG_ERROR, "Invalid IP checksum");
                 return;

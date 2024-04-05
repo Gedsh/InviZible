@@ -41,7 +41,6 @@ class VpnPreferenceHolder @Inject constructor(
     preferenceRepository: PreferenceRepository,
     pathVars: PathVars
 ) {
-    val nativeLogLevel = Log.ERROR
     val dnsBlockedResponseCode = 3
     val itpdRedirectAddress = "10.191.0.1"
     val ownUID = pathVars.appUid
