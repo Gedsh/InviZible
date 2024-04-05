@@ -183,16 +183,16 @@
     <string name="open_query_log">"打开请求日志"</string>
     <string name="pref_dnscrypt_nx_log_categ">"记录可疑请求。"</string>
     <string name="pref_dnscrypt_nx_log_summ">记录不存在区域的请求。
-\n 这些请求将揭示恶意软件，损坏/过时应用，及向第三方显示存在的设备的存在。</string>
+\n 这些请求将揭示恶意软件，损坏/过时应用，及向第三方显示存在的设备。</string>
     <string name="pref_dnscrypt_nx_log">"启用可疑请求日志"</string>
     <string name="open_nx_log">"打开可疑请求日志"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"基于模式的阻止（黑名单）。"</string>
+    <string name="pref_dnscrypt_blacklist_categ">基于封锁列表模式的域名阻止（黑名单）。</string>
     <string name="pref_dnscrypt_blacklist">"黑名单"</string>
-    <string name="pref_dnscrypt_blacklist_summ">"黑名单由每行一个模式组成。"</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"基于模式的 IP 阻止（IP 黑名单）。"</string>
+    <string name="pref_dnscrypt_blacklist_summ">黑名单由每行一个域名或封锁列表组成。</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">基于IP块列表模式的 IP 阻止（IP 黑名单）。</string>
     <string name="pref_dnscrypt_ipblacklist">"IP 黑名单"</string>
-    <string name="pref_dnscrypt_ipblacklist_summ">"IP 黑名单由每行一个模式组成。"</string>
-    <string name="pref_dnscrypt_whitelist_categ">"基于模式的白名单（绕过黑名单）。"</string>
+    <string name="pref_dnscrypt_ipblacklist_summ">IP 黑名单由每行一个IP地址模式组成。</string>
+    <string name="pref_dnscrypt_whitelist_categ">基于允许列表模式的白名单（绕过黑名单）。</string>
     <string name="pref_dnscrypt_whitelist">"白名单"</string>
     <string name="pref_dnscrypt_whitelist_summ">"白名单支持与黑名单相同的模式。如果域名匹配白名单项，相应会话将绕过域名和 IP 过滤器。"</string>
     <string name="pref_dnscrypt_sources_categ">"服务器"</string>
@@ -377,7 +377,7 @@
     <string name="pref_dnscrypt_import_whitelist">"导入白名单"</string>
     <string name="pref_dnscrypt_import_whitelist_summ">"导入域名列表。您可以选择多个文件，重复行将被移除。"</string>
     <string name="pref_dnscrypt_erase_whitelist">"擦除白名单"</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">"立即使用空响应响应 IPv6 相关请求。 当没有 IPv6 连接时可以加快速度，但也会对一些解析器造成可靠性问题。"</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">立即使用空响应回答 IPv6 相关请求。 当没有 IPv6 连接时可以加快速度，但也会对一些解析器造成可靠性问题。</string>
     <string name="helper_dnscrypt_private_dns">"请在 Android 网络设置中关闭“私人 DNS”。此选项与 InviZible 冲突。"</string>
     <string name="import_dnscrypt_rules_dialog_title">"导入规则"</string>
     <string name="import_dnscrypt_rules_dialog_message">"请稍候…已导入 %d 条规则。"</string>
