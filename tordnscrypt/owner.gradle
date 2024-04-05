@@ -98,7 +98,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags ""
-                arguments "-DANDROID_PLATFORM=android-19", "-DANDROID_ARM_NEON=ON"
+                arguments "-DANDROID_PLATFORM=android-21", "-DANDROID_ARM_NEON=ON"
             }
         }
 
