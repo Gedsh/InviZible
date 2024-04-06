@@ -116,7 +116,7 @@ class DnsInteractorImpl @Inject constructor(
                                 val hostIp = triple.second.await()
                                 result.add(hostIp)
                                 if (result.size == domainIps.size) {
-                                    channel.close()
+                                    channel.close(CancellationException())
                                 }
                             } catch (e: IOException) {
                                 if (triple.third < ERROR_RETRY_COUNT) {
@@ -135,15 +135,17 @@ class DnsInteractorImpl @Inject constructor(
                                     )
 
                                 } else {
-                                    loge("DnsInteractor", e)
+                                    loge("DnsInteractor resolveDomainOrIp", e)
                                     result.add(triple.first)
                                     if (result.size == domainIps.size) {
-                                        channel.close()
+                                        channel.close(CancellationException())
                                     }
                                 }
+                            } catch (e: CancellationException) {
+                                channel.close(CancellationException())
                             } catch (e: Exception) {
-                                loge("DnsInteractor", e)
-                                channel.close()
+                                loge("DnsInteractor resolveDomainOrIp", e)
+                                channel.close(CancellationException())
                             }
                         }
                     }
@@ -154,6 +156,7 @@ class DnsInteractorImpl @Inject constructor(
                 domainIps.map {
                     Triple(it, async { resolveDomainOrIp(it, includeIPv6, timeout) }, 0)
                 }.map {
+                    ensureActive()
                     channel.send(it)
                 }
             }
