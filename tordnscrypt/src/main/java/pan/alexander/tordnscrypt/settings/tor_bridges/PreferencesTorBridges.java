@@ -97,6 +97,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
@@ -1317,7 +1318,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         doActionAndUpdateRecycler(() -> {
             bridgesToDisplay.clear();
             viewModel.requestRelayBridges(
-                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, true)
+                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, true),
+                    defaultPreferences.get().getBoolean(TOR_FASCIST_FIREWALL, true)
             );
         });
 

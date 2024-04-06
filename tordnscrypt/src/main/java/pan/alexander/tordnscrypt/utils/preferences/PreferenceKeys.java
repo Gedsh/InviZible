@@ -147,6 +147,7 @@ public interface PreferenceKeys {
     String DORMANT_CLIENT_TIMEOUT = "DormantClientTimeout";
     String STUN_SERVERS = "pref_tor_snowflake_stun";
     String TOR_USE_IPV6 = "ClientUseIPv6";
+    String TOR_FASCIST_FIREWALL = "FascistFirewall";
 
     //I2PD Settings
     String I2PD_OUTBOUND_PROXY = "Enable ntcpproxy";

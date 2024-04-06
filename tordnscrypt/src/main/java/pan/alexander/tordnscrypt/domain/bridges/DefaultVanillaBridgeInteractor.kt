@@ -50,30 +50,40 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
         withContext(dispatcherIo) {
             val semaphore = Semaphore(SIMULTANEOUS_CHECKS)
             val defers = mutableListOf<Deferred<Unit>>()
-            bridges.forEach {
-                try {
+            try {
+                bridges.forEach {
                     ensureActive()
-                    defers += async {
-                        semaphore.withPermit {
-                            timeouts.emit(
-                                BridgePingData(it.hashCode(), repository.getTimeout(it))
-                            )
+                    try {
+                        defers += async {
+                            semaphore.withPermit {
+                                timeouts.emit(
+                                    BridgePingData(it.hashCode(), repository.getTimeout(it))
+                                )
+                            }
                         }
+                    } catch (e: Exception) {
+                        loge("BridgeCheckerInteractor measureTimeouts", e)
                     }
-                } catch (ignored: CancellationException) {
-                } catch (e: Exception) {
-                    loge("BridgeCheckerInteractor measureTimeouts", e)
                 }
+                defers.awaitAll()
+            } catch (ignored: CancellationException) {
+            } finally {
+                timeouts.emit(PingCheckComplete)
             }
-            defers.awaitAll()
-            timeouts.emit(PingCheckComplete)
         }
 
     suspend fun requestRelays(
-        allowIPv6Relays: Boolean
+        allowIPv6Relays: Boolean,
+        fascistFirewall: Boolean
     ): List<RelayAddressFingerprint> = withContext(dispatcherIo) {
         repository.getRelaysWithFingerprintAndAddress(allowIPv6Relays)
-            .filter { !DESIGNATED_TOR_PORTS.contains(it.port) }
+            .filter {
+                if (fascistFirewall) {
+                    !DESIGNATED_TOR_PORTS.contains(it.port) && (it.port == "80" || it.port == "443")
+                } else {
+                    !DESIGNATED_TOR_PORTS.contains(it.port)
+                }
+            }
             .shuffled()
             .take(MAX_RELAY_COUNT)
     }

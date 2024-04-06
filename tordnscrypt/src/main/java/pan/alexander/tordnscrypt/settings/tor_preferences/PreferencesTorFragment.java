@@ -70,6 +70,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
@@ -145,7 +146,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ExitNodes"));
         preferences.add(findPreference("ExcludeNodes"));
         preferences.add(findPreference("StrictNodes"));
-        preferences.add(findPreference("FascistFirewall"));
+        preferences.add(findPreference(TOR_FASCIST_FIREWALL));
         preferences.add(findPreference("NewCircuitPeriod"));
         preferences.add(findPreference("MaxCircuitDirtiness"));
         preferences.add(findPreference("EnforceDistinctSubnets"));
