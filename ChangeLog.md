@@ -1093,6 +1093,6 @@
 * Updated Tor to version 4.8.11.
 * Updated Purple I2P to version 2.51.0.
 * ipv4only.arpa was excluded from the rebinding detection as a legitimate domain.
-* Show a warning when blocking the internet for critical system appls in the firewall.
+* Show a warning when blocking the internet for critical system apps in the firewall.
 * DNSCrypt server settings have been completely reworked.
 * Fixes and optimizations.
