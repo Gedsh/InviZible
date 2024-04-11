@@ -26,6 +26,7 @@ import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
@@ -79,7 +80,8 @@ class SendCrashReport : ExtendedDialogFragment() {
                                     val info = Utils.collectInfo(
                                         verifier.get().appSignature,
                                         pathVars.get().appVersion,
-                                        pathVars.get().appProcVersion
+                                        pathVars.get().appProcVersion,
+                                        Utils.getAppVersion(ctx, pathVars.get(), preferenceRepository.get())
                                     )
 
                                     if (saveLogCat(logsDirPath)) {

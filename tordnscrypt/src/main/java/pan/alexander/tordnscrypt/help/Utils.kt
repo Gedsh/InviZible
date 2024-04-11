@@ -25,8 +25,13 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import pan.alexander.tordnscrypt.BuildConfig
+import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.TopFragment
+import pan.alexander.tordnscrypt.assistance.AccelerateDevelop
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.util.*
 
@@ -78,7 +83,7 @@ object Utils {
         return false
     }
 
-    fun collectInfo(appSign: String, appVersion: String, appProcVersion: String): String {
+    fun collectInfo(appSign: String, appVersion: String, appProcVersion: String, version: String): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return "BRAND " + Build.BRAND + 10.toChar() +
                     "MODEL " + Build.MODEL + 10.toChar() +
@@ -92,6 +97,7 @@ object Utils {
                     "SUPPORTED_64_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS) + 10.toChar() +
                     "SDK_INT " + Build.VERSION.SDK_INT + 10.toChar() +
                     "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
+                    "VERSION " + version + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
                     "APP_PROC_VERSION " + appProcVersion + 10.toChar() +
@@ -111,6 +117,7 @@ object Utils {
                     "HARDWARE " + Build.HARDWARE + 10.toChar() +
                     "SDK_INT " + Build.VERSION.SDK_INT + 10.toChar() +
                     "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
+                    "VERSION " + version + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
                     "APP_PROC_VERSION " + appProcVersion + 10.toChar() +
@@ -122,4 +129,20 @@ object Utils {
                     "SIGN_VERSION " + appSign
         }
     }
+
+    @JvmStatic
+    fun getAppVersion(context: Context, pathVars: PathVars, preferences: PreferenceRepository) =
+        if (pathVars.appVersion.endsWith("p")) {
+            if (AccelerateDevelop.accelerated) {
+                context.getString(R.string.premium_version)
+            } else if (preferences.getStringPreference(PreferenceKeys.GP_DATA).isNotEmpty()) {
+                context.getString(R.string.refunded_version)
+            } else {
+                context.getString(R.string.free_version)
+            }
+        } else if (pathVars.appVersion.startsWith("p")) {
+            context.getString(R.string.premium_version)
+        } else {
+            context.getString(R.string.free_version)
+        }
 }
