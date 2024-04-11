@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">Автозагрузка</string>
     <string name="root_available">Проверка наличия Root…</string>
     <string name="please_wait">Пожалуйста подождите…</string>
-    <string name="dont_show">Больше не показывать</string>
+    <string name="dont_show">Не показывать</string>
     <string name="tvDNSStop">DNSCrypt остановлен</string>
     <string name="tvDNSInstalled">DNSCrypt установлен</string>
     <string name="tvDNSInstalling">DNSCrypt устанавливается</string>
@@ -557,4 +557,5 @@
     <string name="pref_fast_direct_udp_connection">Исключить UDP из Tor</string>
     <string name="pref_fast_bypass_app">Исключить приложение</string>
     <string name="pull_to_refresh">\u2193 Потяните, чтобы обновить \u2193</string>
+    <string name="firewall_critical_uid">Блокировка этого системного приложения может привести к нестабильному интернет-соединению!</string>
 </resources>

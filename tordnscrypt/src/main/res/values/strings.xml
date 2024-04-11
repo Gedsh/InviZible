@@ -31,7 +31,7 @@
     <string name="root_available">Checking if Root is available…</string>
 
     <string name="please_wait">Please wait…</string>
-    <string name="dont_show">Don\'t ask</string>
+    <string name="dont_show">Don\'t show</string>
 
 
     <string name="tvDNSStop">DNSCrypt Stopped</string>
@@ -278,6 +278,13 @@
     <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4</string>
     <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6</string>
+    <string name="pref_dnscrypt_dnscrypt_server" translatable="false">DNSCrypt Server</string>
+    <string name="pref_dnscrypt_doh_server" translatable="false">DoH Server</string>
+    <string name="pref_dnscrypt_non_filtering_server" translatable="false">Non-Filtering</string>
+    <string name="pref_dnscrypt_filtering_server" translatable="false">Filtering</string>
+    <string name="pref_dnscrypt_non_logging_server" translatable="false">Non-Logging</string>
+    <string name="pref_dnscrypt_keep_logs_server" translatable="false">Keep Logs</string>
+    <string name="pref_dnscrypt_dnssec_server" translatable="false">DNSSEC</string>
 
     <string name="pref_dnscrypt_require_servers_prop_categ">Require servers defined by remote sources to satisfy specific properties.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Server must support DNS security extensions (DNSSEC).</string>
@@ -593,6 +600,10 @@
     <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!
         After installation reconfigure HOTSPOT, if you use it!</string>
 
+    <string name="about_version" translatable="false">Version:</string>
+    <string name="free_version" translatable="false">Free</string>
+    <string name="premium_version" translatable="false">Premium</string>
+    <string name="refunded_version" translatable="false">Refunded</string>
     <string name="about_build_ver" translatable="false">Build Version:</string>
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
@@ -747,6 +758,7 @@
     <string name="firewall_btnTopVpnFirewall_tooltip">Allow connections with VPN enabled</string>
     <string name="firewall_btnTopCheckAllFirewall_tooltip">Select all</string>
     <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Unselect all</string>
+    <string name="firewall_critical_uid">Blocking this system app may result in an unstable internet connection!</string>
     <string name="firewall_item_button_tooltip">Green - allow, white - deny connections</string>
     <string name="pref_firewall_title">Firewall Settings</string>
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>

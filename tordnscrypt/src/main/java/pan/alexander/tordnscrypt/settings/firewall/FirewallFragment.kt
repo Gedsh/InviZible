@@ -24,7 +24,12 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.SwitchCompat
@@ -39,14 +44,17 @@ import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentFirewallBinding
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper
+import pan.alexander.tordnscrypt.dialogs.NotificationHelper.TAG_HELPER
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.OnBackPressListener
 import pan.alexander.tordnscrypt.settings.firewall.adapter.FirewallAdapter
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
-import java.util.*
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED
+import java.util.Locale
 import java.util.concurrent.ConcurrentSkipListSet
 import javax.inject.Inject
 import javax.inject.Named
@@ -107,6 +115,7 @@ class FirewallFragment : Fragment(),
         setHasOptionsMenu(true)
 
         firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)
+                && preferenceRepository.get().getBoolPreference(FIREWALL_WAS_STARTED)
     }
 
     override fun onCreateView(
@@ -850,6 +859,8 @@ class FirewallFragment : Fragment(),
                 allowLanForAll = true
                 updateLanIcon()
             }
+
+            checkCriticalSystemUid(uid, app.allowLan)
         }
     }
 
@@ -865,6 +876,8 @@ class FirewallFragment : Fragment(),
                 allowWifiForAll = true
                 updateWifiIcon()
             }
+
+            checkCriticalSystemUid(uid, app.allowWifi)
         }
     }
 
@@ -880,6 +893,8 @@ class FirewallFragment : Fragment(),
                 allowGsmForAll = true
                 updateGsmIcon()
             }
+
+            checkCriticalSystemUid(uid, app.allowGsm)
         }
     }
 
@@ -895,6 +910,8 @@ class FirewallFragment : Fragment(),
                 allowRoamingForAll = true
                 updateRoamingIcon()
             }
+
+            checkCriticalSystemUid(uid, app.allowRoaming)
         }
     }
 
@@ -909,6 +926,22 @@ class FirewallFragment : Fragment(),
             } else if (appsCurrentSet.count { it.allowVPN } == appsCurrentSet.size) {
                 allowVPNForAll = true
                 updateVpnIcon()
+            }
+
+            checkCriticalSystemUid(uid, app.allowVPN)
+        }
+    }
+
+    private fun checkCriticalSystemUid(uid: Int, active: Boolean) {
+        if (viewModel.criticalSystemUids.contains(uid) && !active) {
+            NotificationHelper.setHelperMessage(
+                context, getString(R.string.firewall_critical_uid), "firewall_critical_uid"
+            )?.let {
+                handler.get().post {
+                    if (isAdded) {
+                        it.show(parentFragmentManager, TAG_HELPER)
+                    }
+                }
             }
         }
     }

@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.settings.firewall
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -56,6 +57,7 @@ class FirewallNotification : BroadcastReceiver() {
     private var newAppsAreAllowed = false
 
     companion object {
+        @SuppressLint("UnspecifiedRegisterReceiverFlag")
         @JvmStatic
         fun registerFirewallReceiver(context: Context): FirewallNotification {
             val firewallNotification = FirewallNotification()
@@ -66,7 +68,18 @@ class FirewallNotification : BroadcastReceiver() {
             intentFilter.addAction(ALLOW_ACTION)
             intentFilter.addAction(DENY_ACTION)
             intentFilter.addDataScheme("package")
-            context.registerReceiver(firewallNotification, intentFilter)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(
+                    firewallNotification,
+                    intentFilter,
+                    Context.RECEIVER_NOT_EXPORTED
+                )
+            } else {
+                context.registerReceiver(
+                    firewallNotification,
+                    intentFilter
+                )
+            }
             return firewallNotification
         }
 

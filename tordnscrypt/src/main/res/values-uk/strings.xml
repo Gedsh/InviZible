@@ -6,7 +6,7 @@
     <string name="tvITPDNotInstalled">I2P не встановлено</string>
     <string name="swRunOnBoot">Автозавантаження</string>
     <string name="please_wait">Будь ласка зачекайте…</string>
-    <string name="dont_show">Не запитувати</string>
+    <string name="dont_show">Не показувати</string>
     <string name="tvDNSInstalled">DNSCrypt встановлено</string>
     <string name="tvDNSInstalling">DNSCrypt встановлюється</string>
     <string name="tvDNSNotInstalled">DNSCrypt не встановлено</string>
@@ -508,4 +508,5 @@
     <string name="pref_fast_direct_udp_connection">Виключити UDP з Tor</string>
     <string name="pref_fast_bypass_app">Виключити додаток</string>
     <string name="pull_to_refresh">\u2193 Потягніть, щоб оновити \u2193</string>
+    <string name="firewall_critical_uid">Блокування цього системного додатку може призвести до нестабільного інтернет-з\'єднання!</string>
 </resources>
