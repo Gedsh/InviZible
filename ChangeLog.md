@@ -1088,3 +1088,11 @@
 * Improved handling of the ICMP protocol.
 * Improved handling of resources in the local network.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.1.6**
+* Updated Tor to version 4.8.11.
+* Updated Purple I2P to version 2.51.0.
+* ipv4only.arpa was excluded from the rebinding detection as a legitimate domain.
+* Show a warning when blocking the internet for critical system appls in the firewall.
+* DNSCrypt server settings have been completely reworked.
+* Fixes and optimizations.
