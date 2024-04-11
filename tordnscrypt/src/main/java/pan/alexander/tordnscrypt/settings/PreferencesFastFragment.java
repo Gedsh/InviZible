@@ -77,6 +77,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_ST
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
@@ -137,7 +138,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
 
         getActivity().setTitle(R.string.drawer_menu_fastSettings);
 
-        setDnsCryptServersSumm(preferenceRepository.get().getStringPreference("DNSCrypt Servers"));
+        setDnsCryptServersSumm(preferenceRepository.get().getStringPreference(DNSCRYPT_SERVERS));
 
         Preference swAutostartTor = findPreference("swAutostartTor");
         if (swAutostartTor != null) {
@@ -220,7 +221,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
             handler.get().postDelayed(() -> {
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     setDnsCryptServersSumm(preferenceRepository.get()
-                            .getStringPreference("DNSCrypt Servers"));
+                            .getStringPreference(DNSCRYPT_SERVERS));
                 }
             }, 1000);
         }

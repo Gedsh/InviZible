@@ -84,6 +84,9 @@ public interface PreferenceKeys {
 
     String CRASH_REPORT = "CrashReport";
 
+    String GP_DATA = "gpData";
+    String GP_SIGNATURE = "gpSign";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
@@ -119,6 +122,7 @@ public interface PreferenceKeys {
     String REMOTE_CONTROL = "pref_common_shell_control";
 
     //DNSCrypt Settings
+    String DNSCRYPT_SERVERS = "DNSCrypt Servers";
     String DNSCRYPT_BLOCK_IPv6 = "block_ipv6";
     String DNSCRYPT_LISTEN_PORT = "listen_port";
 

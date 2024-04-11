@@ -19,56 +19,25 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
-import androidx.annotation.NonNull;
-
+import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
-class DNSRelayItem {
-    private final String name;
-    private final String description;
-    private boolean checked;
-
-    DNSRelayItem(String name, String description) {
-        this.name = name;
-        this.description = description;
-    }
-
-    String getName() {
-        return name;
-    }
-
-    String getDescription() {
-        return description;
-    }
-
-    boolean isChecked() {
-        return checked;
-    }
-
-    void setChecked(boolean checked) {
-        this.checked = checked;
-    }
+public record DnsServerRelay(
+        String dnsServerName,
+        List<String> dnsServerRelays
+) implements Serializable {
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DNSRelayItem that = (DNSRelayItem) o;
-        return name.equals(that.name) &&
-                description.equals(that.description);
+        DnsServerRelay that = (DnsServerRelay) o;
+        return dnsServerName.equals(that.dnsServerName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description);
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "DNSRelayItem{" +
-                "name='" + name + '\'' +
-                ", checked=" + checked +
-                '}';
+        return Objects.hash(dnsServerName);
     }
 }

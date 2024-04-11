@@ -891,7 +891,7 @@ public class FileManager {
             try (FileInputStream fstream = new FileInputStream(filePath);
                  BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
 
-                for (String tmp; (tmp = br.readLine()) != null; ) {
+                for (String tmp; (tmp = br.readLine()) != null && !Thread.currentThread().isInterrupted(); ) {
                     lines.add(tmp.trim());
                 }
             } catch (Exception ex) {
@@ -902,7 +902,7 @@ public class FileManager {
                     try (FileInputStream fstream = new FileInputStream(filePath);
                          BufferedReader br = new BufferedReader(new InputStreamReader(fstream))) {
 
-                        for (String tmp; (tmp = br.readLine()) != null; ) {
+                        for (String tmp; (tmp = br.readLine()) != null && !Thread.currentThread().isInterrupted(); ) {
                             lines.add(tmp.trim());
                         }
                     }
@@ -1058,7 +1058,7 @@ public class FileManager {
     private void waitRestoreAccessWithRoot() {
         latch = new CountDownLatch(1);
         try {
-            latch.await();
+            latch.await(3, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             logw("FileOperations latch interrupted", e);
         }

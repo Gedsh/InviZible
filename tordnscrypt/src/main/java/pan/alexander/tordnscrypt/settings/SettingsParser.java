@@ -28,12 +28,9 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
-import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
@@ -455,158 +452,6 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         }
     }
 
-    private void readPublicResolversMd(String path, List<String> lines) {
-        StringBuilder sb = new StringBuilder();
-        boolean lockServer = false;
-        boolean lockMD = false;
-        boolean lockTOML = false;
-        boolean lockRoutes = false;
-        ArrayList<String> dnsServerNames = new ArrayList<>();
-        ArrayList<String> dnsServerDescr = new ArrayList<>();
-        ArrayList<String> dnsServerSDNS = new ArrayList<>();
-        ArrayList<String> dnscrypt_proxy_toml = new ArrayList<>();
-        ArrayList<String> dnscrypt_servers = new ArrayList<>();
-        ArrayList<DNSServerRelays> routes = new ArrayList<>();
-
-        if (lines != null) {
-            for (String line : lines) {
-
-                if (path.contains("public-resolvers.md")) {
-                    lockMD = true;
-                    lockTOML = false;
-                }
-                if (path.contains("dnscrypt-proxy.toml")) {
-                    lockMD = false;
-                    lockTOML = true;
-                }
-
-                if ((line.contains("##") || lockServer) && lockMD && !line.trim().isEmpty()) {
-                    lockServer = fillDNSServersLists(line, dnsServerNames, dnsServerDescr, dnsServerSDNS, sb, lockServer);
-                }
-
-                if (lockTOML && !line.isEmpty()) {
-                    dnscrypt_proxy_toml.add(line);
-                    lockRoutes = parseCurrentDNSServersAndRoutes(line, dnscrypt_servers, routes, lockRoutes);
-                }
-
-            }
-
-            checkEqualsServerNames(dnsServerNames);
-
-            openDNSServersFragmentIfDataReady(dnsServerNames, dnsServerDescr, dnsServerSDNS, dnscrypt_proxy_toml, dnscrypt_servers, routes);
-
-        }
-    }
-
-    private void openDNSServersFragmentIfDataReady(ArrayList<String> dnsServerNames,
-                                                      ArrayList<String> dnsServerDescr,
-                                                      ArrayList<String> dnsServerSDNS,
-                                                      ArrayList<String> dnscrypt_proxy_toml,
-                                                      ArrayList<String> dnscrypt_servers,
-                                                      ArrayList<DNSServerRelays> routes) {
-        if (bundleForReadPublicResolversMdFunction == null) {
-            bundleForReadPublicResolversMdFunction = new Bundle();
-        }
-
-        if (!dnsServerNames.isEmpty())
-            bundleForReadPublicResolversMdFunction.putStringArrayList("dnsServerNames", dnsServerNames);
-        if (!dnsServerDescr.isEmpty())
-            bundleForReadPublicResolversMdFunction.putStringArrayList("dnsServerDescr", dnsServerDescr);
-        if (!dnsServerSDNS.isEmpty())
-            bundleForReadPublicResolversMdFunction.putStringArrayList("dnsServerSDNS", dnsServerSDNS);
-        if (!dnscrypt_proxy_toml.isEmpty())
-            bundleForReadPublicResolversMdFunction.putStringArrayList("dnscrypt_proxy_toml", dnscrypt_proxy_toml);
-        if (!dnscrypt_servers.isEmpty())
-            bundleForReadPublicResolversMdFunction.putStringArrayList("dnscrypt_servers", dnscrypt_servers);
-        if (!routes.isEmpty())
-            bundleForReadPublicResolversMdFunction.putSerializable("routes", routes);
-
-        if (bundleForReadPublicResolversMdFunction.get("dnsServerNames") != null
-                && bundleForReadPublicResolversMdFunction.get("dnsServerDescr") != null
-                && bundleForReadPublicResolversMdFunction.get("dnsServerSDNS") != null
-                && bundleForReadPublicResolversMdFunction.get("dnscrypt_proxy_toml") != null
-                && bundleForReadPublicResolversMdFunction.get("dnscrypt_servers") != null) {
-            PreferencesDNSCryptServers frag = new PreferencesDNSCryptServers();
-            frag.setArguments(bundleForReadPublicResolversMdFunction);
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
-            fTrans.replace(android.R.id.content, frag);
-            fTrans.commit();
-        }
-    }
-
-    private boolean parseCurrentDNSServersAndRoutes(String line,
-                                                    ArrayList<String> dnscrypt_servers,
-                                                    ArrayList<DNSServerRelays> routes,
-                                                    boolean lockRoutes) {
-
-
-
-        if (line.matches("server_names .+")) {
-            String temp = line.substring(line.indexOf("[") + 1, line.indexOf("]")).trim();
-            temp = temp.replace("\"", "").replace("'", "").trim();
-            dnscrypt_servers.addAll(Arrays.asList(temp.trim().split(", ?")));
-        } else if (line.contains("routes")) {
-            lockRoutes = true;
-        } else if (lockRoutes && line.contains("server_name")) {
-            String serverName = "";
-            ArrayList<String> routesList = new ArrayList<>();
-
-            String[] rawStrArr = line.split(",");
-
-            for (String route : rawStrArr) {
-                route = route.replaceAll("via *= *", "")
-                        .replaceAll("[^\\w\\-.=_]", "");
-
-                if (route.contains("server_name")) {
-                    serverName = route.replaceAll("server_name *= *", "");
-                } else {
-                    routesList.add(route);
-                }
-            }
-
-            if (!serverName.isEmpty() && routesList.size() > 0) {
-                routes.add(new DNSServerRelays(serverName, routesList));
-            }
-        } else if (lockRoutes) {
-            lockRoutes = false;
-        }
-
-        return lockRoutes;
-    }
-
-    private boolean fillDNSServersLists(String line,
-                                        ArrayList<String> dnsServerNames,
-                                        ArrayList<String> dnsServerDescr,
-                                        ArrayList<String> dnsServerSDNS,
-                                        StringBuilder sb, boolean lockServer) {
-        if (line.contains("##")) {
-            lockServer = true;
-            dnsServerNames.add(line.substring(2).replaceAll("\\s+", "").trim());
-        } else if (line.contains("sdns")) {
-            dnsServerSDNS.add(line.replace("sdns://", "").trim());
-            lockServer = false;
-            dnsServerDescr.add(sb.toString().replaceAll("\\s", " "));
-            sb.setLength(0);
-        } else if (!line.contains("##") || lockServer) {
-            sb.append(line).append((char) 10);
-        }
-
-        return lockServer;
-    }
-
-    private void checkEqualsServerNames(ArrayList<String> dnsServerNames) {
-        if (!dnsServerNames.isEmpty()) {
-            for (int i = 0; i < dnsServerNames.size(); i++) {
-                for (int j = 0; j < dnsServerNames.size(); j++) {
-                    String dnsServerName = dnsServerNames.get(i);
-                    if (dnsServerName.equals(dnsServerNames.get(j)) && j != i) {
-                        dnsServerNames.set(j, dnsServerName + "_repeat_server" + j);
-                    }
-                }
-            }
-        }
-    }
-
     private void readRules(String path, List<String> lines) {
         ArrayList<String> rules_file = new ArrayList<>();
         if (lines != null) {
@@ -659,9 +504,6 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                         break;
                     case SettingsActivity.itpd_conf_tag:
                         readITPDconf(lines);
-                        break;
-                    case SettingsActivity.public_resolvers_md_tag:
-                        readPublicResolversMd(path, lines);
                         break;
                     case SettingsActivity.rules_tag:
                         readRules(path, lines);

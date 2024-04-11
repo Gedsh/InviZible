@@ -29,11 +29,12 @@ import androidx.annotation.NonNull;
 import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import pan.alexander.tordnscrypt.R;
 
-public class DNSServerItem implements Comparable<DNSServerItem> {
+public class DnsServerItem implements Comparable<DnsServerItem> {
     private boolean checked = false;
     private boolean dnssec = false;
     private boolean nolog = false;
@@ -48,7 +49,7 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
     private boolean ownServer = false;
     private final ArrayList<String> routes = new ArrayList<>();
 
-    public DNSServerItem(Context context, String name, String description, String sdns) throws Exception {
+    public DnsServerItem(Context context, String name, String description, String sdns) throws IllegalArgumentException {
         this.name = name;
         this.description = description;
         this.sdns = sdns;
@@ -73,7 +74,7 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
         } else if (bin[0] == 0x02) {
             protoDoH = true;
         } else {
-            throw new Exception("Wrong sever type");
+            throw new IllegalArgumentException("Wrong sever type");
         }
 
         if (((bin[1]) & 1) == 1) {
@@ -140,7 +141,7 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
         return protoDNSCrypt;
     }
 
-    boolean isVisibility() {
+    boolean isVisible() {
         return visibility;
     }
 
@@ -172,6 +173,10 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
         return routes;
     }
 
+    void setRoutes(List<String> routes) {
+        this.routes.addAll(routes);
+    }
+
     public boolean isIpv6() {
         return ipv6;
     }
@@ -180,19 +185,20 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DNSServerItem that = (DNSServerItem) o;
+        DnsServerItem that = (DnsServerItem) o;
         return dnssec == that.dnssec &&
                 nolog == that.nolog &&
                 nofilter == that.nofilter &&
                 protoDoH == that.protoDoH &&
                 protoDNSCrypt == that.protoDNSCrypt &&
                 name.equals(that.name) &&
-                description.equals(that.description);
+                description.equals(that.description) &&
+                sdns.equals(that.sdns);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dnssec, nolog, nofilter, protoDoH, protoDNSCrypt, name, description);
+        return Objects.hash(dnssec, nolog, nofilter, protoDoH, protoDNSCrypt, name, description, sdns);
     }
 
     @NonNull
@@ -213,7 +219,7 @@ public class DNSServerItem implements Comparable<DNSServerItem> {
     }
 
     @Override
-    public int compareTo(DNSServerItem dnsServerItem) {
+    public int compareTo(DnsServerItem dnsServerItem) {
         if (!this.checked && dnsServerItem.checked) {
             return 1;
         } else if (this.checked && !dnsServerItem.checked) {

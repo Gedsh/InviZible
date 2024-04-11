@@ -50,6 +50,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.proxy.ProxyFragment;
+import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
@@ -74,7 +75,6 @@ public class SettingsActivity extends LangAppCompatActivity {
     public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
     public static final String itpd_conf_tag = "pan.alexander.tordnscrypt/app_data/itpd/itpd.conf";
     public static final String itpd_tunnels_tag = "pan.alexander.tordnscrypt/app_data/itpd/tunnels.conf";
-    public static final String public_resolvers_md_tag = "pan.alexander.tordnscrypt/app_data/dnscrypt-proxy/public-resolvers.md";
     public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
 
     @Inject
@@ -137,10 +137,8 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, new FirewallFragment(), FirewallFragment.TAG);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")) {
-            dialogFragment = PleaseWaitProgressDialog.getInstance();
-            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/dnscrypt-proxy.toml", public_resolvers_md_tag);
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md", public_resolvers_md_tag);
+            fSupportTrans.replace(android.R.id.content, new PreferencesDNSCryptServers());
+            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "open_qery_log")) {
             Bundle bundle = new Bundle();
             String path = appDataDir + "/cache/query.log";
