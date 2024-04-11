@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Esegui all'Avvio"</string>
     <string name="root_available">Controllo se il Root è disponibile…</string>
     <string name="please_wait">Per favore attendere…</string>
-    <string name="dont_show">Non mostrare di nuovo</string>
+    <string name="dont_show">"Non mostrare di nuovo"</string>
     <string name="tvDNSStop">"DNSCrypt Arrestato"</string>
     <string name="tvDNSInstalled">"DNSCrypt Installato"</string>
     <string name="tvDNSInstalling">"Installando DNSCrypt"</string>

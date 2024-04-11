@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Mulai Saat Boot"</string>
     <string name="root_available">Memeriksa ketersediaan Root…</string>
     <string name="please_wait">Silahkan tunggu…</string>
-    <string name="dont_show">Jangan tampilkan lagi</string>
+    <string name="dont_show">"Jangan tampilkan lagi"</string>
     <string name="tvDNSStop">"DNSCrypt Berhenti"</string>
     <string name="tvDNSInstalled">"DNSCrypt Terpasang"</string>
     <string name="tvDNSInstalling">"Memasang DNSCrypt"</string>

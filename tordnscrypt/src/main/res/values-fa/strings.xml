@@ -16,7 +16,7 @@
     <!-- ...بررسی در دسترس بودن روت -->
     <string name="root_available">بررسی روت بودن دستگاه…</string>
     <string name="please_wait">لطفاً صبر کنید…</string>
-    <string name="dont_show">مجدداً نشان داده نشود</string>
+    <string name="dont_show">"مجدداً نشان داده نشود"</string>
     <string name="tvDNSStop">"DNSCrypt متوقف شد"</string>
     <string name="tvDNSInstalled">"DNSCrypt نصب شد"</string>
     <!-- DNSCrypt در حال نصب -->

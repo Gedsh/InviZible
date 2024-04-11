@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"起動時に自動実行"</string>
     <string name="root_available">"Rootが利用可能か確認中です..."</string>
     <string name="please_wait">"お待ちください..."</string>
-    <string name="dont_show">二度と表示しない</string>
+    <string name="dont_show">"二度と表示しない"</string>
     <string name="tvDNSStop">"DNSCrypt 停止中"</string>
     <string name="tvDNSInstalled">"DNSCryptをインストールしました"</string>
     <string name="tvDNSInstalling">"DNSCryptをインストール中"</string>
