@@ -45,7 +45,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager.widget.ViewPager;
 
@@ -74,6 +73,7 @@ import pan.alexander.tordnscrypt.arp.ArpScannerKt;
 import pan.alexander.tordnscrypt.arp.DNSRebindProtectionKt;
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop;
 import pan.alexander.tordnscrypt.backup.BackupActivity;
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.dialogs.ChangeModeDialog;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment;
@@ -121,6 +121,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 public class MainActivity extends LangAppCompatActivity
@@ -128,6 +129,9 @@ public class MainActivity extends LangAppCompatActivity
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Handler handler;
     @Inject
@@ -138,9 +142,10 @@ public class MainActivity extends LangAppCompatActivity
     public Lazy<ApManager> apManager;
     @Inject
     public Lazy<CachedExecutor> executor;
+    @Inject
+    public Lazy<AccelerateDevelop> accelerateDevelop;
 
     public boolean childLockActive = false;
-    public AccelerateDevelop accelerateDevelop;
 
     private static final int CODE_IS_AP_ON = 100;
     private static final int CODE_IS_VPN_ALLOWED = 110;
@@ -243,9 +248,13 @@ public class MainActivity extends LangAppCompatActivity
         registerBroadcastReceiver();
 
         if (pathVars.get().getAppVersion().equals("gp")) {
-            accelerateDevelop = new AccelerateDevelop(this);
-            accelerateDevelop.initBilling();
+            initBilling();
         }
+    }
+
+    private void initBilling() {
+        accelerateDevelop.get().setActivity(this);
+        accelerateDevelop.get().initBilling();
     }
 
     @Override
@@ -384,7 +393,7 @@ public class MainActivity extends LangAppCompatActivity
 
     private void switchIconsDependingOnMode(Menu menu, boolean rootIsAvailable) {
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = defaultPreferences.get();
         boolean fixTTL = sharedPreferences.getBoolean(FIX_TTL, false);
         boolean useModulesWithRoot = sharedPreferences.getBoolean(RUN_MODULES_WITH_ROOT, false);
 
@@ -850,8 +859,8 @@ public class MainActivity extends LangAppCompatActivity
             startActivity(intent);
         } else if (id == R.id.nav_Donate) {
             if (pathVars.get().getAppVersion().startsWith("g")) {
-                if (accelerateDevelop != null && !accelerated) {
-                    accelerateDevelop.launchBilling(AccelerateDevelop.mSkuId);
+                if (!accelerated) {
+                    accelerateDevelop.get().launchBilling(AccelerateDevelop.mSkuId);
                 }
             } else {
                 String link;
@@ -931,7 +940,7 @@ public class MainActivity extends LangAppCompatActivity
     }
 
     private void startVPNService(int resultCode) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences prefs = defaultPreferences.get();
         prefs.edit().putBoolean(VPN_SERVICE_ENABLED, resultCode == RESULT_OK).apply();
         if (resultCode == RESULT_OK) {
             ServiceVPNHelper.start("VPN Service is Prepared", this);
@@ -1009,11 +1018,9 @@ public class MainActivity extends LangAppCompatActivity
 
         unregisterBroadcastReceiver();
 
-        if (accelerateDevelop != null) {
-            accelerateDevelop.removeActivity();
-            accelerateDevelop = null;
+        if (pathVars.get().getAppVersion().equals("gp")) {
+            accelerateDevelop.get().removeActivity();
         }
-
     }
 
     @Override

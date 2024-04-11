@@ -46,13 +46,12 @@ public class AskAccelerateDevelop extends ExtendedDialogFragment {
         builder.setMessage(R.string.buy_premium_gp)
                 .setTitle(getString(R.string.premium))
                 .setPositiveButton(R.string.ok, (dialog, which) -> {
-                    if (getActivity() != null && getActivity() instanceof MainActivity) {
-                        MainActivity mainActivity = (MainActivity) getActivity();
-                       if (mainActivity.accelerateDevelop != null) {
+                    if (getActivity() != null && getActivity() instanceof MainActivity mainActivity) {
+                        if (mainActivity.accelerateDevelop != null) {
                            Handler handler = new Handler(Looper.getMainLooper());
                            handler.post(() -> {
                                if (mainActivity.accelerateDevelop != null) {
-                                   mainActivity.accelerateDevelop.launchBilling(AccelerateDevelop.mSkuId);
+                                   mainActivity.accelerateDevelop.get().launchBilling(AccelerateDevelop.mSkuId);
                                }
                            });
                        }
