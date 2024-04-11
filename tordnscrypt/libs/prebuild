@@ -8,14 +8,14 @@ snowflake_version=v2.9.2
 libzmq_version=v4.3.5
 conjure_version=prod
 webtunnel_version=prod
-tor_openssl_version=openssl-3.1.5
+tor_openssl_version=openssl-3.3.0
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=prod
 i2pd_openssl_version=openssl-3.2.0
 miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.50.2
+i2pd_version=2.51.0
 
 git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
 
