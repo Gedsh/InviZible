@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Aloita käynnistyksessä"</string>
     <string name="root_available">"Tarkistetaan Rootin saatavuutta..."</string>
     <string name="please_wait">"Odota..."</string>
-    <string name="dont_show">"Älä näytä uudestaan"</string>
+    <string name="dont_show">Älä näytä uudestaan</string>
     <string name="tvDNSStop">"DNSCrypt pysäytettin"</string>
     <string name="tvDNSInstalled">"DNSCrypt asennettiin"</string>
     <string name="tvDNSInstalling">"DNSCryptiä asennetaan"</string>
