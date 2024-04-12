@@ -400,10 +400,6 @@ object NetworkChecker {
                         networks[1] = it
                     }
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && connectivityManager != null) {
-                connectivityManager.allNetworks.forEachIndexed { index, network ->
-                    networks[index] = network
-                }
             }
 
         } catch (e: Exception) {
