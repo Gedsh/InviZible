@@ -402,10 +402,11 @@ public class ServiceVPNHandler extends Handler {
             for (Network network: networks) {
                 logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(network));
             }
-        } else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
+        }/* else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {
+            Unfortunately, this code causes the Telegram messenger always connecting.
             logi("VPN Handler Setting underlying network=empty");
             serviceVPN.setUnderlyingNetworks(new Network[]{});
-        } else {
+        }*/ else {
             logi("VPN Handler Setting underlying network=default");
             serviceVPN.setUnderlyingNetworks(null);
         }
