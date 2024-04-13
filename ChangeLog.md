@@ -1096,3 +1096,6 @@
 * Show a warning when blocking the internet for critical system apps in the firewall.
 * DNSCrypt server settings have been completely reworked.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.1.7**
+* Fixed Telegram messenger always connecting.

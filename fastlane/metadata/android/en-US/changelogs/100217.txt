@@ -1,0 +1,2 @@
+**InviZible Pro beta 2.1.7**
+* Fixed Telegram messenger always connecting.
