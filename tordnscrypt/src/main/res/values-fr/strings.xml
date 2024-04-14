@@ -358,7 +358,7 @@
     <string name="buy_premium_gp">"Le Projet InviZible Pro a besoin de votre aide. Appuyez sur OK pour acheter les fonctionnalités premium."</string>
     <string name="wrong_purchase_signature_gp">"Désolé, mais il est impossible de confirmer votre achat. Vous serez remboursé au bout de 3 jours."</string>
     <string name="only_premium_feature">"Malheureusement, cette fonctionnalité n'est disponible que dans la version premium."</string>
-    <string name="agreement_text">" merci d\'avoir choisi InviZible Pro. J\'espère qu\'il vous sera utile pour le respect de votre vie privée et une utilisation confortable d\'Internet.
+    <string name="agreement_text">"\tMerci d\'avoir choisi InviZible Pro. J\'espère qu\'il vous sera utile pour le respect de votre vie privée et une utilisation confortable d\'Internet.
 \n
 \n\tInviZible Pro inclut Tor, DNSCrypt et Purple I2P comme modules.
 \n
