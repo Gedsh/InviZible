@@ -168,6 +168,7 @@
 
                 <data android:scheme="http" />
                 <data android:scheme="https" />
+                <data android:pathPattern="/app/.*" />
                 <data android:host="invizible.net" />
                 <data android:host="www.invizible.net" />
             </intent-filter>
