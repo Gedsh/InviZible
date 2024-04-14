@@ -104,6 +104,10 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
             return false;
         }
 
+        if (etOwnServerDescriptionText.isEmpty()) {
+            etOwnServerDescriptionText = etOwnServerNameText;
+        }
+
         try {
             Base64.decode(etOwnServerSDNSText.substring(0, 7).getBytes(), 16);
         } catch (Exception e) {
