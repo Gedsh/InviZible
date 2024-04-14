@@ -96,8 +96,6 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
         timeoutsMeasurementJob = viewModelScope.launch {
 
-            delay(500)
-
             if (bridges.firstOrNull()?.obfsType == BridgeType.webtunnel) {
                 val bridgesToMeasure = getRealIPFromWebTunnelBridges(ArrayList(bridges))
                 launch {
@@ -184,12 +182,12 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         }
     }
 
-    fun requestRelayBridges(allowIPv6Relays: Boolean) {
+    fun requestRelayBridges(allowIPv6Relays: Boolean, fascistFirewall: Boolean) {
         relayBridgesRequestJob?.cancel()
         relayBridgesRequestJob = viewModelScope.launch {
             try {
                 defaultVanillaBridgesMutableLiveData.value =
-                    defaultVanillaBridgeInteractor.requestRelays(allowIPv6Relays)
+                    defaultVanillaBridgeInteractor.requestRelays(allowIPv6Relays, fascistFirewall)
                         .map {
                             if (it.address.isIPv6Address()) {
                                 "[${it.address}]:${it.port} ${it.fingerprint}"

@@ -30,6 +30,8 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
@@ -49,12 +51,14 @@ import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
+import pan.alexander.tordnscrypt.dialogs.RequestIgnoreBatteryOptimizationDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster;
 import pan.alexander.tordnscrypt.proxy.ProxyHelper;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
@@ -86,6 +90,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SW
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
@@ -119,6 +124,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public Lazy<ProxyHelper> proxyHelper;
     @Inject
     public Lazy<Verifier> verifierLazy;
+    @Inject
+    public Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
 
     private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
@@ -249,7 +256,11 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         manageLANDeviceAddressPreference(fixTTL);
 
-        Preference shellControl = findPreference("pref_common_shell_control");
+        Preference shellControl = findPreference(REMOTE_CONTROL);
+        if (shellControl != null) {
+            shellControl.setSummary(String.format(getString(R.string.pref_common_shell_control_summ), activity.getPackageName()));
+            shellControl.setOnPreferenceChangeListener(this);
+        }
 
         if (pathVars.get().getAppVersion().startsWith("g")) {
             PreferenceCategory hotspotSettingsCategory = findPreference("HOTSPOT");
@@ -257,13 +268,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             if (hotspotSettingsCategory != null && blockHTTP != null) {
                 hotspotSettingsCategory.removePreference(blockHTTP);
             }
-
-            if (otherCategory != null && shellControl != null) {
-                otherCategory.removePreference(shellControl);
-            }
-
-        } else if (shellControl != null) {
-            shellControl.setSummary(String.format(getString(R.string.pref_common_shell_control_summ), activity.getPackageName()));
         }
 
         return super.onCreateView(inflater, container, savedInstanceState);
@@ -434,8 +438,31 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 break;
+            case REMOTE_CONTROL:
+                boolean enabled = Boolean.parseBoolean(newValue.toString());
+                modulesStatusBroadcaster.get().onRemoteControlChanged(enabled);
+                if (enabled) {
+                    showDisableBatteryOptimisationDialog();
+                }
+                break;
         }
         return true;
+    }
+
+    private void showDisableBatteryOptimisationDialog() {
+        Context context = getContext();
+        if (context == null) {
+            return;
+        }
+
+        DialogFragment batteryOptimizationDialog = RequestIgnoreBatteryOptimizationDialog.getInstance(
+                context, preferenceRepository.get(), true
+        );
+
+        FragmentManager fragmentManager = getParentFragmentManager();
+        if (batteryOptimizationDialog != null && !fragmentManager.isStateSaved()) {
+            batteryOptimizationDialog.show(fragmentManager, RequestIgnoreBatteryOptimizationDialog.TAG);
+        }
     }
 
     @Override

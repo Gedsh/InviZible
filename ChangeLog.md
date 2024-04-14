@@ -1043,3 +1043,59 @@
 * Updated DNSCrypt to save battery power when the network is unavailable.
 * Further improvements to save battery power when the network is unavailable.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.0.9**
+* Updated Tor Snowflake bridge to version v2.9.1.
+* Added CDN77 and Azure Snowflake rendezvous.
+* Added exclude UDP from Tor and Bypass app options.
+* Updated translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.0**
+* Improved Tor bridges screen.
+* Improved firewall screen.
+* Improved Tor apps screen.
+* Improved real-time connection logs.
+* Fixed Tor Snowflake bridge.
+
+**InviZible Pro beta 2.1.1**
+* Updated Tor Snowflake bridge.
+* Fixed previously updated screens for use with Android TV.
+* Fixed and improved script control.
+* Updated German and Spanish translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.2**
+* Updated Tor.
+* Updated Tor Snowflake bridge to version v2.9.2.
+* Attempt to improve Snowflake bridge censorship resistance.
+* Added Amazon Snowflake rendezvous.
+* Updated Tor Lirebird and WebTunnel bridges.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.3**
+* Optimized performance and memory usage in VPN mode.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.4**
+* Fixed adding Tor WebTunnel bridges.
+* Updated Polish translation.
+* Updated Chinese translation.
+
+**InviZible Pro beta 2.1.5**
+* Optimized performance and memory usage in VPN mode.
+* Improved handling of IPv6 networks.
+* Improved handling of the ICMP protocol.
+* Improved handling of resources in the local network.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.6**
+* Updated Tor to version 4.8.11.
+* Updated Purple I2P to version 2.51.0.
+* ipv4only.arpa was excluded from the rebinding detection as a legitimate domain.
+* Show a warning when blocking the internet for critical system apps in the firewall.
+* DNSCrypt server settings have been completely reworked.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.7**
+* Fixed Telegram messenger always connecting.

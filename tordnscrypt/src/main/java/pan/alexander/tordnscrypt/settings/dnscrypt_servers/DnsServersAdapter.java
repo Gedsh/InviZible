@@ -19,9 +19,10 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
 
+import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
+
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,25 +38,16 @@ import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DNSServerRelays;
-import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
 
-class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServersViewHolder> {
-    private final Context context;
-    private final FragmentManager fragmentManager;
+class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServersViewHolder> {
     private final PreferencesDNSCryptServers preferencesDNSCryptServers;
-    private final CopyOnWriteArrayList<DNSServerItem> list_dns_servers;
-    private final CopyOnWriteArrayList<DNSServerItem> list_dns_servers_saved;
-    private final CopyOnWriteArrayList<DNSServerRelays> routes_current;
-    private final LayoutInflater lInflater;
+    private final List<DnsServerItem> dnsServerItems;
+    private final List<DnsServerItem> dnsServerItemsSaved;
     private final boolean relaysMdExist;
     private final SearchView searchDNSServer;
 
@@ -66,29 +58,35 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
     private final String colorNonLoggingServer;
     private final String colorKeepLogsServer;
     private final String colorDNSSECServer;
+
+    private final int colorFirst;
+    private final int colorSecond;
+
     private final String pressToAdd;
     private final String longPressToAdd;
     private final String pressToEdit;
     private final String longPressToEdit;
     private final String anonymizeRelays;
     private final String relaysNotUsed;
+    private final String dnscryptServer;
+    private final String dohServer;
+    private final String nonFilteringServer;
+    private final String filteringServer;
+    private final String nonLoggingServer;
+    private final String keepLogsServer;
+    private final String dnssecServer;
 
-    DNSServersAdapter(Context context, SearchView searchDNSServer,
-                      PreferencesDNSCryptServers preferencesDNSCryptServers,
-                      FragmentManager fragmentManager,
-                      CopyOnWriteArrayList<DNSServerItem> list_dns_servers,
-                      CopyOnWriteArrayList<DNSServerItem> list_dns_servers_saved,
-                      CopyOnWriteArrayList<DNSServerRelays> routes_current, boolean relaysMdExist) {
-        this.context = context;
-        this.searchDNSServer = searchDNSServer;
+    private final boolean orientation;
+
+    DnsServersAdapter(PreferencesDNSCryptServers preferencesDNSCryptServers) {
+
+        Context context = preferencesDNSCryptServers.requireContext();
+
+        this.searchDNSServer = preferencesDNSCryptServers.searchView;
         this.preferencesDNSCryptServers = preferencesDNSCryptServers;
-        this.fragmentManager = fragmentManager;
-        this.list_dns_servers = list_dns_servers;
-        this.list_dns_servers_saved = list_dns_servers_saved;
-        this.routes_current = routes_current;
-        this.relaysMdExist = relaysMdExist;
-
-        lInflater = (LayoutInflater) Objects.requireNonNull(context).getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.dnsServerItems = preferencesDNSCryptServers.dnsServerItems;
+        this.dnsServerItemsSaved = preferencesDNSCryptServers.dnsServerItemsSaved;
+        this.relaysMdExist = preferencesDNSCryptServers.isRelaysMdExist();
 
         colorDNSCryptServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDNSCryptServer)));
         colorDohServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDohServer)));
@@ -98,49 +96,61 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
         colorKeepLogsServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorKeepLogsServer)));
         colorDNSSECServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDNSSECServer)));
 
+        colorFirst = context.getResources().getColor(R.color.colorFirst);
+        colorSecond = context.getResources().getColor(R.color.colorSecond);
+
         pressToAdd = ContextCompat.getString(context, R.string.press_to_add);
         longPressToAdd = ContextCompat.getString(context, R.string.long_press_to_add);
         pressToEdit = ContextCompat.getString(context, R.string.press_to_edit);
         longPressToEdit = ContextCompat.getString(context, R.string.long_press_to_edit);
         anonymizeRelays = ContextCompat.getString(context, R.string.anonymize_relays);
         relaysNotUsed = ContextCompat.getString(context, R.string.anonymize_relays_not_used);
+        dnscryptServer = ContextCompat.getString(context, R.string.pref_dnscrypt_dnscrypt_server);
+        dohServer = ContextCompat.getString(context, R.string.pref_dnscrypt_doh_server);
+        nonFilteringServer = ContextCompat.getString(context, R.string.pref_dnscrypt_non_filtering_server);
+        filteringServer = ContextCompat.getString(context, R.string.pref_dnscrypt_filtering_server);
+        nonLoggingServer = ContextCompat.getString(context, R.string.pref_dnscrypt_non_logging_server);
+        keepLogsServer = ContextCompat.getString(context, R.string.pref_dnscrypt_keep_logs_server);
+        dnssecServer = ContextCompat.getString(context, R.string.pref_dnscrypt_dnssec_server);
+
+        orientation = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
     }
 
 
     @NonNull
     @Override
-    public DNSServersAdapter.DNSServersViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = lInflater.inflate(R.layout.item_dns_server, viewGroup, false);
+    public DnsServersAdapter.DNSServersViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_dns_server, viewGroup, false);
         return new DNSServersViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull DNSServersAdapter.DNSServersViewHolder dnsServersViewHolder, int position) {
+    public void onBindViewHolder(@NonNull DnsServersAdapter.DNSServersViewHolder dnsServersViewHolder, int position) {
         dnsServersViewHolder.bind(position);
     }
 
     @Override
     public int getItemCount() {
-        return list_dns_servers.size();
+        return dnsServerItems.size();
     }
 
-    private DNSServerItem getItem(int position) {
-        return list_dns_servers.get(position);
+    private DnsServerItem getItem(int position) {
+        return dnsServerItems.get(position);
     }
 
-    private void setItem(int position, DNSServerItem dnsServer) {
-        int positionInSaved = list_dns_servers_saved.indexOf(getItem(position));
-        if (positionInSaved > 0) {
-            list_dns_servers_saved.set(positionInSaved, dnsServer);
+    private void setItem(int position, DnsServerItem dnsServer) {
+        int positionInSaved = dnsServerItemsSaved.indexOf(getItem(position));
+        if (positionInSaved >= 0) {
+            dnsServerItemsSaved.set(positionInSaved, dnsServer);
         }
-        list_dns_servers.set(position, dnsServer);
+        dnsServerItems.set(position, dnsServer);
     }
 
     private void removeItem(int position) {
         if (getItem(position) != null) {
-            list_dns_servers_saved.remove(getItem(position));
+            dnsServerItemsSaved.remove(getItem(position));
         }
-        list_dns_servers.remove(position);
+        dnsServerItems.remove(position);
     }
 
 
@@ -167,7 +177,7 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
             cardDNSServer.setOnClickListener(this);
             cardDNSServer.setOnLongClickListener(this);
-            cardDNSServer.setCardBackgroundColor(context.getResources().getColor(R.color.colorFirst));
+            cardDNSServer.setCardBackgroundColor(colorFirst);
             cardDNSServer.setOnFocusChangeListener(this);
 
             tvDNSServerName = itemView.findViewById(R.id.tvDNSServerName);
@@ -195,70 +205,41 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
                 llDNSServer.setPadding(0, 0, 0, 0);
             }
 
-            DNSServerItem dnsServer = list_dns_servers.get(position);
+            DnsServerItem dnsServer = dnsServerItems.get(position);
 
             tvDNSServerName.setText(dnsServer.getName());
             tvDNSServerDescription.setText(dnsServer.getDescription());
 
             StringBuilder sb = new StringBuilder();
             if (dnsServer.isProtoDNSCrypt()) {
-                sb.append("<font color='").append(colorDNSCryptServer).append("'>DNSCrypt Server </font>");
+                sb.append("<font color='").append(colorDNSCryptServer).append("'>").append(dnscryptServer).append(" </font>");
 
                 if (dnsServer.isChecked() && relaysMdExist) {
-                    StringBuilder routes = new StringBuilder();
-
-                    boolean orientation = context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
-
-                    if (dnsServer.getRoutes().size() > 0) {
-                        routes.append(anonymizeRelays).append(": ");
-
-                        for (String route : dnsServer.getRoutes()) {
-                            routes.append(route).append(", ");
-                        }
-
-                        routes.delete(routes.lastIndexOf(","), routes.length());
-
-
-                        if (orientation) {
-                            routes.append(".\n").append(longPressToEdit);
-                        } else {
-                            routes.append(".\n").append(pressToEdit);
-                        }
-
-
-                    } else {
-                        if (orientation) {
-                            routes.append(relaysNotUsed).append("\n").append(longPressToAdd);
-                        } else {
-                            routes.append(relaysNotUsed).append("\n").append(pressToAdd);
-                        }
-
-                    }
-
+                    String routes = getRoutes(dnsServer).toString();
                     btnDNSServerRelay.setVisibility(View.VISIBLE);
-                    btnDNSServerRelay.setText(routes.toString());
+                    btnDNSServerRelay.setText(routes);
                 } else {
                     btnDNSServerRelay.setVisibility(View.GONE);
                     btnDNSServerRelay.setText("");
                 }
 
             } else if (dnsServer.isProtoDoH()) {
-                sb.append("<font color='").append(colorDohServer).append("'>DoH Server </font>");
+                sb.append("<font color='").append(colorDohServer).append("'>").append(dohServer).append(" </font>");
                 btnDNSServerRelay.setVisibility(View.GONE);
             }
             if (dnsServer.isNofilter()) {
-                sb.append("<font color='").append(colorNonFilteringServer).append("'>Non-Filtering </font>");
+                sb.append("<font color='").append(colorNonFilteringServer).append("'>").append(nonFilteringServer).append(" </font>");
             } else {
-                sb.append("<font color='").append(colorFilteringServer).append("'>Filtering </font>");
+                sb.append("<font color='").append(colorFilteringServer).append("'>").append(filteringServer).append(" </font>");
             }
             if (dnsServer.isNolog()) {
-                sb.append("<font color='").append(colorNonLoggingServer).append("'>Non-Logging </font>");
+                sb.append("<font color='").append(colorNonLoggingServer).append("'>").append(nonLoggingServer).append(" </font>");
             } else {
-                sb.append("<font color='").append(colorKeepLogsServer).append("'>Keep Logs </font>");
+                sb.append("<font color='").append(colorKeepLogsServer).append("'>").append(keepLogsServer).append(" </font>");
             }
 
             if (dnsServer.isDnssec()) {
-                sb.append("<font color='").append(colorDNSSECServer).append("'>DNSSEC</font>");
+                sb.append("<font color='").append(colorDNSSECServer).append("'>").append(dnssecServer).append("</font>");
             }
 
             tvDNSServerFlags.setText(Html.fromHtml(sb.toString()));
@@ -275,73 +256,96 @@ class DNSServersAdapter extends RecyclerView.Adapter<DNSServersAdapter.DNSServer
 
         @Override
         public void onClick(View view) {
+            int position = getBindingAdapterPosition();
+            if (position == NO_POSITION) {
+                return;
+            }
+
             int id = view.getId();
             if (id == R.id.cardDNSServer) {
-                int position = getAdapterPosition();
-                DNSServerItem dnsServer = getItem(position);
+                DnsServerItem dnsServer = getItem(position);
                 dnsServer.setChecked(!dnsServer.isChecked());
                 setItem(position, dnsServer);
-                DNSServersAdapter.this.notifyItemChanged(position);
+                DnsServersAdapter.this.notifyItemChanged(position);
             } else if (id == R.id.btnDNSServerRelay) {
-                int position;
-                position = getAdapterPosition();
-                openDNSRelaysPref(position);
+                preferencesDNSCryptServers.openDNSRelaysPref(getItem(position));
             } else if (id == R.id.delBtnDNSServer) {
-                int position;
-                position = getAdapterPosition();
                 removeItem(position);
-                DNSServersAdapter.this.notifyItemRemoved(position);
+                DnsServersAdapter.this.notifyItemRemoved(position);
             }
         }
 
         @Override
-        public void onFocusChange(View view, boolean b) {
-            if (b) {
-                ((CardView) view).setCardBackgroundColor(context.getResources().getColor(R.color.colorSecond));
-                view.findViewById(R.id.btnDNSServerRelay).setBackgroundColor(context.getResources().getColor(R.color.colorSecond));
+        public void onFocusChange(View view, boolean hasFocus) {
+            if (hasFocus) {
+                ((CardView) view).setCardBackgroundColor(colorSecond);
+                view.findViewById(R.id.btnDNSServerRelay).setBackgroundColor(colorSecond);
             } else {
-                ((CardView) view).setCardBackgroundColor(context.getResources().getColor(R.color.colorFirst));
-                view.findViewById(R.id.btnDNSServerRelay).setBackgroundColor(context.getResources().getColor(R.color.colorFirst));
+                ((CardView) view).setCardBackgroundColor(colorFirst);
+                view.findViewById(R.id.btnDNSServerRelay).setBackgroundColor(colorFirst);
             }
         }
 
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-            int position = getAdapterPosition();
-            DNSServerItem dnsServer = getItem(position);
+            int position = getBindingAdapterPosition();
+            if (position == NO_POSITION) {
+                return;
+            }
+
+            DnsServerItem dnsServer = getItem(position);
             if (dnsServer.isChecked() != checked) {
                 dnsServer.setChecked(checked);
                 setItem(position, dnsServer);
-                DNSServersAdapter.this.notifyItemChanged(position);
+                DnsServersAdapter.this.notifyItemChanged(position);
             }
         }
 
         @Override
         public boolean onLongClick(View view) {
+            int position = getBindingAdapterPosition();
+            if (position == NO_POSITION) {
+                return true;
+            }
+
             if (view.getId() == R.id.cardDNSServer
                     || view.getId() == R.id.btnDNSServerRelay) {
-                int position = getAdapterPosition();
-                openDNSRelaysPref(position);
+                preferencesDNSCryptServers.openDNSRelaysPref(getItem(position));
             }
             return true;
         }
     }
 
-    private void openDNSRelaysPref(int position) {
-        DNSServerItem dnsServer = getItem(position);
-        Bundle bundle = new Bundle();
-        bundle.putString("dnsServerName", dnsServer.getName());
-        bundle.putSerializable("routesCurrent", routes_current);
-        bundle.putBoolean("dnsServerIPv6", dnsServer.isIpv6());
-        PreferencesDNSCryptRelays preferencesDNSCryptRelays = new PreferencesDNSCryptRelays();
-        preferencesDNSCryptRelays.setOnRoutesChangeListener(preferencesDNSCryptServers);
-        preferencesDNSCryptRelays.setArguments(bundle);
-        if (fragmentManager != null) {
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-            fragmentTransaction.replace(android.R.id.content, preferencesDNSCryptRelays);
-            fragmentTransaction.addToBackStack("preferencesDNSCryptRelaysTag");
-            fragmentTransaction.commit();
+    @NonNull
+    private StringBuilder getRoutes(DnsServerItem dnsServer) {
+        StringBuilder routes = new StringBuilder();
+
+
+        if (!dnsServer.getRoutes().isEmpty()) {
+            routes.append(anonymizeRelays).append(": ");
+
+            for (String route : dnsServer.getRoutes()) {
+                routes.append(route).append(", ");
+            }
+
+            routes.delete(routes.lastIndexOf(","), routes.length());
+
+
+            if (orientation) {
+                routes.append(".\n").append(longPressToEdit);
+            } else {
+                routes.append(".\n").append(pressToEdit);
+            }
+
+
+        } else {
+            if (orientation) {
+                routes.append(relaysNotUsed).append("\n").append(longPressToAdd);
+            } else {
+                routes.append(relaysNotUsed).append("\n").append(pressToAdd);
+            }
+
         }
+        return routes;
     }
 }

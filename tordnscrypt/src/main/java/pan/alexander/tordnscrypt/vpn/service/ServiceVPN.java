@@ -41,11 +41,11 @@ import androidx.annotation.Keep;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import dagger.Lazy;
@@ -56,7 +56,6 @@ import pan.alexander.tordnscrypt.arp.DNSRebindProtection;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData;
-import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol;
 import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord;
 import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -77,6 +76,10 @@ import pan.alexander.tordnscrypt.vpn.VpnUtils;
 import static java.net.IDN.ALLOW_UNASSIGNED;
 import static java.net.IDN.toUnicode;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.ICMPv4;
+import static pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.ICMPv6;
+import static pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.TCP;
+import static pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.UDP;
 import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKED_EXTRA;
 import static pan.alexander.tordnscrypt.modules.ModulesReceiver.VPN_REVOKE_ACTION;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
@@ -85,7 +88,9 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_KERNEL;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
 import static pan.alexander.tordnscrypt.utils.Constants.PLAINTEXT_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
@@ -97,6 +102,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.vpn.VpnUtils.isIpInLanRange;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 import static pan.alexander.tordnscrypt.vpn.service.VpnBuilder.vpnDnsSet;
 
@@ -162,7 +168,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     volatile boolean reloading;
 
-    private final Set<String> dnsRebindHosts = new HashSet<>();
+    private final Set<Integer> dnsRebindHosts = new ConcurrentSkipListSet<>();
 
     private final VPNBinder binder = new VPNBinder();
 
@@ -170,7 +176,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native long jni_init(int sdk);
 
     @Keep
-    private native void jni_start(long context, int loglevel);
+    private native void jni_start(long context);
 
     @Keep
     private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous);
@@ -227,71 +233,89 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             jni_socks5_for_proxy("", 0, "", "");
         }
 
-        if (tunnelThread == null) {
-            logi("VPN Starting tunnel thread context=" + jni_context);
-            jni_start(jni_context, vpnPreferences.getNativeLogLevel());
+        synchronized (jni_lock) {
+            if (tunnelThread == null) {
 
-            tunnelThread = new Thread(() -> {
-                try {
-                    logi("VPN Running tunnel context=" + jni_context);
-                    boolean canFilterSynchronous = true;
-                    if (vpnPreferences.getCompatibilityMode() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        canFilterSynchronous = VpnUtils.canFilter();
-                    }
-                    jni_run(
-                            jni_context,
-                            vpn.getFd(),
-                            vpnRulesHolder.get().mapForwardPort.containsKey(PLAINTEXT_DNS_PORT),
-                            vpnPreferences.getDnsBlockedResponseCode(),
-                            vpnPreferences.getCompatibilityMode(),
-                            canFilterSynchronous
-                    );
-                    logi("VPN Tunnel exited");
-                    tunnelThread = null;
-                } catch (Exception e) {
-                    handler.get().post(() ->
-                            Toast.makeText(
-                                    ServiceVPN.this,
-                                    e.getMessage() + " " + e.getCause(),
-                                    Toast.LENGTH_LONG
-                            ).show());
-                    loge("ServiceVPN startNative exception", e);
+                if (jni_context == 0) {
+                    jni_context = jni_init(Build.VERSION.SDK_INT);
+                    service_jni_context = jni_context;
+                    logi("VPN Created context=" + jni_context);
                 }
 
-            });
+                logi("VPN Starting tunnel thread context=" + jni_context);
+                jni_start(jni_context);
 
-            tunnelThread.setName("VPN tunnel thread");
-            tunnelThread.start();
+                long local_jni_context = jni_context;
+                tunnelThread = new Thread(() -> {
+                    try {
+                        logi("VPN Running tunnel context=" + local_jni_context);
+                        boolean canFilterSynchronous = true;
+                        if (vpnPreferences.getCompatibilityMode() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            canFilterSynchronous = VpnUtils.canFilter();
+                        }
+                        jni_run(
+                                local_jni_context,
+                                vpn.getFd(),
+                                vpnRulesHolder.get().mapForwardPort.containsKey(PLAINTEXT_DNS_PORT),
+                                vpnPreferences.getDnsBlockedResponseCode(),
+                                vpnPreferences.getCompatibilityMode(),
+                                canFilterSynchronous
+                        );
+                        if (Thread.currentThread().equals(tunnelThread)) {
+                            tunnelThread = null;
+                            logi("VPN Tunnel exited");
+                        }
+                    } catch (Exception e) {
+                        handler.get().post(() ->
+                                Toast.makeText(
+                                        ServiceVPN.this,
+                                        e.getMessage() + " " + e.getCause(),
+                                        Toast.LENGTH_LONG
+                                ).show());
+                        loge("ServiceVPN startNative exception", e);
+                    }
 
-            logi("VPN Started tunnel thread");
+                });
+
+                tunnelThread.setName("VPN tunnel thread");
+                tunnelThread.start();
+
+                logi("VPN Started tunnel thread");
+            }
         }
     }
 
     synchronized void stopNative() {
         logi("VPN Stop native");
 
-        if (tunnelThread != null) {
-            logi("VPN Stopping tunnel thread");
+        synchronized (jni_lock) {
+            if (tunnelThread != null) {
+                logi("VPN Stopping tunnel thread");
 
-            jni_stop(jni_context);
-
-            Thread thread = tunnelThread;
-            while (thread != null && thread.isAlive()) {
-                try {
-                    logi("VPN Joining tunnel thread context=" + jni_context);
-                    thread.join();
-                } catch (InterruptedException e) {
-                    logi("VPN Joined tunnel interrupted");
+                if (jni_context != 0) {
+                    jni_stop(jni_context);
                 }
-                thread = tunnelThread;
-            }
-            tunnelThread = null;
 
-            synchronized (jni_lock) {
-                jni_clear(jni_context);
-            }
+                Thread thread = tunnelThread;
+                int counter = 0;
+                while (thread != null && thread.isAlive() && counter < 3) {
+                    try {
+                        logi("VPN Joining tunnel thread context=" + jni_context);
+                        thread.join(3000);
+                    } catch (InterruptedException e) {
+                        logi("VPN Joined tunnel interrupted");
+                    }
+                    thread = tunnelThread;
+                    counter++;
+                }
+                tunnelThread = null;
 
-            logi("VPN Stopped tunnel thread");
+                if (jni_context != 0) {
+                    jni_clear(jni_context);
+                }
+
+                logi("VPN Stopped tunnel thread");
+            }
         }
     }
 
@@ -335,15 +359,17 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 if (!qname.isEmpty() && !destAddress.isEmpty()
                         && !qname.endsWith(".onion")
                         && !qname.endsWith(".i2p")
-                        && !dnsRebindHosts.contains(qname)) {
-                    if (isIpInDNSRebindRange(destAddress)) {
-                        dnsRebindHosts.add(qname);
-                        DNSRebindProtection.INSTANCE.sendNotification(this, qname);
-                        logw("ServiseVPN DNS rebind attack detected " + rr);
-                    } else if ((destAddress.equals(META_ADDRESS) || destAddress.equals(LOOPBACK_ADDRESS))
+                        && !qname.equals("ipv4only.arpa") //https://datatracker.ietf.org/doc/html/rfc7050
+                        && !dnsRebindHosts.contains(qname.hashCode())) {
+                    if ((destAddress.equals(META_ADDRESS) || destAddress.equals(LOOPBACK_ADDRESS)
+                            || destAddress.equals(LOOPBACK_ADDRESS_IPv6) || destAddress.equals(META_ADDRESS_IPv6))
                             && rr.Rcode == 0 && !rr.HInfo.contains("dnscrypt")) {
-                        logw("ServiseVPN DNS rebind attack detected " + rr);
-                        dnsRebindHosts.add(qname);
+                        logw("ServiseVPN DNS rebind attack detected " + rr + " " + destAddress);
+                        dnsRebindHosts.add(qname.hashCode());
+                    } else if (isIpInDNSRebindRange(destAddress)) {
+                        dnsRebindHosts.add(qname.hashCode());
+                        DNSRebindProtection.INSTANCE.sendNotification(this, qname);
+                        logw("ServiseVPN DNS rebind attack detected " + rr + " " + destAddress);
                     }
                 }
             }
@@ -355,7 +381,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     private void addDnsToConnectionRecords(ResourceRecord rr) {
 
-        if (!vpnPreferences.getConnectionLogsEnabled()) {
+        if (!vpnPreferences.getConnectionLogsEnabled() || reloading) {
             return;
         }
 
@@ -405,7 +431,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         try {
-            if (vpnPreferences.getDnsRebindProtection() && dnsRebindHosts.contains(name)) {
+            if (vpnPreferences.getDnsRebindProtection() && dnsRebindHosts.contains(name.hashCode())) {
                 return true;
             }
         } catch (Exception e) {
@@ -438,10 +464,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         if (vpnPreferences.getLan() || uid == NETWORK_STACK_DEFAULT_UID) {
-            for (String address : VpnUtils.nonTorList) {
-                if (VpnUtils.isIpInSubnet(destAddress, address)) {
-                    return false;
-                }
+            if (isIpInLanRange(destAddress)) {
+                return false;
             }
         }
 
@@ -454,7 +478,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
             return !(vpnRulesHolder.get().uidSpecialAllowed.contains(SPECIAL_UID_NTP)
-                    || vpnRulesHolder.get().mapUidAllowed.containsKey(1000));
+                    || vpnRulesHolder.get().setUidAllowed.contains(1000));
         }
 
         List<Rule> listRule = commandHandler.getAppsList();
@@ -487,28 +511,21 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         if (vpnPreferences.getLan() || uid == NETWORK_STACK_DEFAULT_UID) {
-            for (String address : VpnUtils.nonTorList) {
-                if (VpnUtils.isIpInSubnet(destAddress, address)) {
-                    return false;
-                }
+            if (isIpInLanRange(destAddress)) {
+                return false;
             }
         }
 
         if (uid == 1000 && destPort == SPECIAL_PORT_NTP) {
             return !(vpnRulesHolder.get().uidSpecialAllowed.contains(SPECIAL_UID_NTP)
-                    || vpnRulesHolder.get().mapUidAllowed.containsKey(1000));
+                    || vpnRulesHolder.get().setUidAllowed.contains(1000));
         }
 
         return !vpnPreferences.getSetBypassProxy().contains(String.valueOf(uid));
     }
 
     private boolean isIpInDNSRebindRange(String destAddress) {
-        for (String address : VpnUtils.dnsRebindList) {
-            if (VpnUtils.isIpInSubnet(destAddress, address)) {
-                return true;
-            }
-        }
-        return false;
+        return isIpInLanRange(destAddress);
     }
 
     // Called from native code
@@ -519,8 +536,14 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             return Process.INVALID_UID;
         }
 
-        if (protocol != 6 /* TCP */ && protocol != 17 /* UDP */)
+        //Workaround for ICMP
+        if (protocol == ICMPv4 || protocol == ICMPv6) {
+            sport = 0;
+            dport = 0;
+            protocol = UDP;
+        } else if (protocol != TCP && protocol != UDP) {
             return Process.INVALID_UID;
+        }
 
         ConnectivityManager cm = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         if (cm == null)
@@ -564,19 +587,19 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         VpnUtils.canFilterAsynchronous(this);
 
-        if (jni_context != 0) {
-            logw("VPN Create with context=" + jni_context);
-            jni_stop(jni_context);
-            synchronized (jni_lock) {
+        synchronized (jni_lock) {
+            if (jni_context != 0) {
+                logw("VPN Create with context=" + jni_context);
+                jni_stop(jni_context);
                 jni_done(jni_context);
                 jni_context = 0;
             }
-        }
 
-        // Native init
-        jni_context = jni_init(Build.VERSION.SDK_INT);
-        service_jni_context = jni_context;
-        logi("VPN Created context=" + jni_context);
+            // Native init
+            jni_context = jni_init(Build.VERSION.SDK_INT);
+            service_jni_context = jni_context;
+            logi("VPN Created context=" + jni_context);
+        }
 
         super.onCreate();
 
@@ -600,7 +623,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         App.getInstance().getSubcomponentsManager().modulesServiceSubcomponent().inject(this);
 
         HandlerThread commandThread = new HandlerThread(
-                getString(R.string.app_name) + " command",
+                "VPN handler thread",
                 Process.THREAD_PRIORITY_FOREGROUND
         );
         commandThread.start();
@@ -766,17 +789,24 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     vpn = null;
                     vpnRulesHolder.get().unPrepare();
                 }
+
+                if (localJniContext == jni_context) {
+                    synchronized (jni_lock) {
+                        jni_done(jni_context);
+                        logi("VPN Destroy context=" + jni_context);
+                        jni_context = 0;
+                        service_jni_context = 0;
+                    }
+                } else {
+                    jni_done(localJniContext);
+                    logi("VPN Destroy context=" + localJniContext);
+                    service_jni_context = 0;
+                }
+
             } catch (Throwable ex) {
                 loge("VPN Destroy", ex, true);
             }
 
-            synchronized (jni_lock) {
-                if (localJniContext == jni_context) {
-                    jni_done(jni_context);
-                    logi("VPN Destroy context=" + jni_context);
-                    jni_context = 0;
-                }
-            }
         });
 
         super.onDestroy();
@@ -870,11 +900,10 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             int destinationPort,
             String sourceAddress,
             boolean allowed,
-            @ConnectionProtocol
             int protocol
     ) {
 
-        if (!vpnPreferences.getConnectionLogsEnabled()) {
+        if (!vpnPreferences.getConnectionLogsEnabled() || reloading) {
             return;
         }
 
@@ -909,6 +938,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Override
     public void onLowMemory() {
         clearDnsQueryRawRecords();
+        dnsRebindHosts.clear();
         loge("ServiceVPN low memory");
     }
 

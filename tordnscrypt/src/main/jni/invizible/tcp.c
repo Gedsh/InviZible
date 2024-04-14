@@ -324,10 +324,11 @@ void check_tcp_socket(const struct arguments *args,
                                     session, errno, strerror(errno));
                         write_rst(args, &s->tcp);
                     } else {
-                        char *h = hex(buffer, (const size_t) bytes);
-                        log_android(ANDROID_LOG_INFO, "%s recv SOCKS5 %s", session, h);
-                        ng_free(h, __FILE__, __LINE__);
-
+                        if (LOG_LEVEL < ANDROID_LOG_WARN) {
+                            char *h = hex(buffer, (const size_t) bytes);
+                            log_android(ANDROID_LOG_INFO, "%s recv SOCKS5 %s", session, h);
+                            ng_free(h, __FILE__, __LINE__);
+                        }
                         if (s->tcp.socks5 == SOCKS5_HELLO &&
                             bytes == 2 && buffer[0] == 5) {
                             if (buffer[1] == 0)
@@ -390,10 +391,12 @@ void check_tcp_socket(const struct arguments *args,
 
             if (s->tcp.socks5 == SOCKS5_HELLO) {
                 uint8_t buffer[4] = {5, 2, 0, 2};
-                char *h = hex(buffer, sizeof(buffer));
-                log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 hello: %s",
-                            session, h);
-                ng_free(h, __FILE__, __LINE__);
+                if (LOG_LEVEL < ANDROID_LOG_WARN) {
+                    char *h = hex(buffer, sizeof(buffer));
+                    log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 hello: %s",
+                                session, h);
+                    ng_free(h, __FILE__, __LINE__);
+                }
                 ssize_t sent = send(s->socket, buffer, sizeof(buffer), MSG_NOSIGNAL);
                 if (sent < 0) {
                     log_android(ANDROID_LOG_ERROR, "%s send SOCKS5 hello error %d: %s",
@@ -430,10 +433,12 @@ void check_tcp_socket(const struct arguments *args,
 
                 size_t len = 2 + ulen + 1 + plen;
 
-                char *h = hex(buffer, len);
-                log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 auth: %s",
-                            session, h);
-                ng_free(h, __FILE__, __LINE__);
+                if (LOG_LEVEL < ANDROID_LOG_WARN) {
+                    char *h = hex(buffer, len);
+                    log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 auth: %s",
+                                session, h);
+                    ng_free(h, __FILE__, __LINE__);
+                }
                 ssize_t sent = send(s->socket, buffer, len, MSG_NOSIGNAL);
                 if (sent < 0) {
                     log_android(ANDROID_LOG_ERROR,
@@ -458,10 +463,12 @@ void check_tcp_socket(const struct arguments *args,
 
                 size_t len = (s->tcp.version == 4 ? 10 : 22);
 
-                char *h = hex(buffer, len);
-                log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 connect: %s",
-                            session, h);
-                ng_free(h, __FILE__, __LINE__);
+                if (LOG_LEVEL < ANDROID_LOG_WARN) {
+                    char *h = hex(buffer, len);
+                    log_android(ANDROID_LOG_INFO, "%s sending SOCKS5 connect: %s",
+                                session, h);
+                    ng_free(h, __FILE__, __LINE__);
+                }
                 ssize_t sent = send(s->socket, buffer, len, MSG_NOSIGNAL);
                 if (sent < 0) {
                     log_android(ANDROID_LOG_ERROR,

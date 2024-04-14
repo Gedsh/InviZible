@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.installer;
 
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 
 import android.annotation.SuppressLint;
@@ -48,7 +49,9 @@ public class InstallerHelper {
     @SuppressLint("SdCardPath")
     public List<String> prepareDNSCryptForGP(List<String> lines) {
 
-        defaultPreferences.edit().putBoolean("require_nofilter", true).apply();
+        if (!accelerated) {
+            defaultPreferences.edit().putBoolean("require_nofilter", true).apply();
+        }
 
         ArrayList<String> prepared = new ArrayList<>();
 
@@ -67,7 +70,7 @@ public class InstallerHelper {
             } else if (line.matches("(^| )server_names([ =]).+")) {
                 String[] servers = context.getResources().getStringArray(R.array.default_dnscrypt_servers_gp);
                 line = "server_names = ['" + TextUtils.join("', '", servers) + "']";
-            } else if (line.contains("require_nofilter")) {
+            } else if (line.contains("require_nofilter") && !accelerated) {
                 line = "require_nofilter = true";
             }
 

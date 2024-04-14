@@ -94,6 +94,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AGREEMENT_ACCEPTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CRASH_REPORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_READY_PREF;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_READY_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
@@ -621,7 +622,7 @@ public class TopFragment extends Fragment
         preferences.setStringPreference("DNSCryptVersion", DNSCryptVersion);
         preferences.setStringPreference("TorVersion", TorVersion);
         preferences.setStringPreference("ITPDVersion", ITPDVersion);
-        preferences.setStringPreference("DNSCrypt Servers", "");
+        preferences.setStringPreference(DNSCRYPT_SERVERS, "");
         SharedPreferences sPref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sPref.edit();
         editor.putBoolean(TOR_TETHERING, false);

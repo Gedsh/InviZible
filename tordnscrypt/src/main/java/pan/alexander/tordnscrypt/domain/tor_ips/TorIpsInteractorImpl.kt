@@ -84,19 +84,13 @@ class TorIpsInteractorImpl @Inject constructor(
         val preferences = preferenceRepository.get()
         if (domainIp is IpEntity) {
             val ipSet = preferences.getStringSetPreference(unlockIPsStr)
-            if (domainIp.isActive) {
-                ipSet.remove(domainIp.ip)
-            } else {
-                ipSet.remove("#" + domainIp.ip)
-            }
+            ipSet.remove(domainIp.ip)
+            ipSet.remove("#${domainIp.ip}")
             preferences.setStringSetPreference(unlockIPsStr, ipSet)
         } else if (domainIp is DomainEntity) {
             val hostSet = preferences.getStringSetPreference(unlockHostsStr)
-            if (domainIp.isActive) {
-                hostSet.remove(domainIp.domain)
-            } else {
-                hostSet.remove("#" + domainIp.domain)
-            }
+            hostSet.remove(domainIp.domain)
+            hostSet.remove("#${domainIp.domain}")
             preferences.setStringSetPreference(unlockHostsStr, hostSet)
         }
     }
@@ -107,24 +101,24 @@ class TorIpsInteractorImpl @Inject constructor(
         unlockHostsStr: String
     ) {
         val hostsSet = preferenceRepository.get().getStringSetPreference(unlockHostsStr)
+        hostsSet.remove(oldDomain)
+        hostsSet.remove("#$oldDomain")
         if (active) {
-            hostsSet.remove("#$oldDomain")
             hostsSet.add(oldDomain.replace("#", ""))
         } else {
-            hostsSet.remove(oldDomain)
-            hostsSet.add("#$oldDomain")
+            hostsSet.add("#${oldDomain.replace("#", "")}")
         }
         preferenceRepository.get().setStringSetPreference(unlockHostsStr, hostsSet)
     }
 
     override fun saveIpActiveInPreferences(oldIp: String, active: Boolean, unlockIPsStr: String) {
         val ipsSet = preferenceRepository.get().getStringSetPreference(unlockIPsStr)
+        ipsSet.remove(oldIp)
+        ipsSet.remove("#$oldIp")
         if (active) {
-            ipsSet.remove("#$oldIp")
             ipsSet.add(oldIp.replace("#", ""))
         } else {
-            ipsSet.remove(oldIp)
-            ipsSet.add("#$oldIp")
+            ipsSet.add("#${oldIp.replace("#", "")}")
         }
         preferenceRepository.get().setStringSetPreference(unlockIPsStr, ipsSet)
     }

@@ -267,7 +267,13 @@ object NetworkChecker {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 capabilities?.let {
-                    !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+                    if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)) {
+                        false
+                    } else if (connectivityManager != null) {
+                        ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager)
+                    } else {
+                        isCellularActive(context)
+                    }
                 } ?: isCellularActive(context)
             } else if (connectivityManager != null) {
                 ConnectivityManagerCompat.isActiveNetworkMetered(connectivityManager)
@@ -393,10 +399,6 @@ object NetworkChecker {
                     connectivityManager.activeNetwork?.let {
                         networks[1] = it
                     }
-                }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && connectivityManager != null) {
-                connectivityManager.allNetworks.forEachIndexed { index, network ->
-                    networks[index] = network
                 }
             }
 

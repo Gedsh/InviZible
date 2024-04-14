@@ -50,6 +50,33 @@
                 android:orientation="horizontal">
 
                 <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvPremiumStatusLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/about_version"
+                    android:textAlignment="viewEnd"
+                    android:typeface="serif" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvPremiumStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/free_version"
+                    android:textAlignment="viewStart"
+                    android:textAllCaps="true"
+                    android:textStyle="bold"
+                    android:typeface="serif" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/textView7"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -24,7 +24,6 @@
 #include "invizible.h"
 
 int max_tun_msg = 0;
-extern int loglevel;
 extern int own_uid;
 extern bool compatibility_mode;
 extern bool can_filter;
@@ -163,7 +162,7 @@ void handle_ip(const struct arguments *args,
             return;
         }
 
-        if (loglevel < ANDROID_LOG_WARN) {
+        if (LOG_LEVEL < ANDROID_LOG_WARN) {
             if (!calc_checksum(0, (uint8_t *) ip4hdr, sizeof(struct iphdr))) {
                 log_android(ANDROID_LOG_ERROR, "Invalid IP checksum");
                 return;
@@ -292,12 +291,6 @@ void handle_ip(const struct arguments *args,
         (protocol == IPPROTO_TCP && syn)) {
         if (args->ctx->sdk <= 28 || (compatibility_mode && can_filter)) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
-
-            if (uid < 0 && args->ctx->sdk < 21) {
-                usleep(100000);
-                uid = get_uid(version, protocol, saddr, sport, daddr, dport);
-            }
-
         } else {
             uid = get_uid_q(args, version, protocol, source, sport, dest, dport);
         }
@@ -330,6 +323,15 @@ void handle_ip(const struct arguments *args,
     } else if (protocol == IPPROTO_TCP
                && (!syn || (!args->fwd53 && uid == 0 && dport == 53))) {
         allowed = 1; // assume existing session
+    } else if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6)
+                && !is_icmp_supported(pkt, payload)) {
+        //Only ICMP ping traffic can be routed through the Android VPN service
+        log_android(ANDROID_LOG_WARN, "ICMP v%d p%d %s/%u uid %d not supported",
+                    version, protocol, dest, dport, uid);
+    } else if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP
+                && protocol != IPPROTO_ICMP && protocol != IPPROTO_ICMPV6) {
+        log_android(ANDROID_LOG_ERROR, "PROTOCOL v%d p%d %s/%u uid %d not supported",
+                    version, protocol, dest, dport, uid);
     } else {
         jobject objPacket = create_packet(
                 args, version, protocol, flags, source, sport, dest, dport, data, uid, 0);
@@ -353,8 +355,8 @@ void handle_ip(const struct arguments *args,
         else if (protocol == IPPROTO_TCP)
             handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
 
-        log_android(ANDROID_LOG_WARN, "Address v%d p%d %s/%u syn %d not allowed",
-                    version, protocol, dest, dport, syn);
+        log_android(ANDROID_LOG_WARN, "Address v%d p%d %s/%u syn %d uid %d not allowed",
+                    version, protocol, dest, dport, syn, uid);
     }
 }
 
@@ -445,7 +447,7 @@ jint get_uid_sub(const int version, const int protocol,
     char *fn = NULL;
     if (protocol == IPPROTO_ICMP && version == 4)
         fn = "/proc/net/icmp";
-    else if (protocol == IPPROTO_ICMPV6 && version == 6)
+    else if (protocol == IPPROTO_ICMPV6 && version == 6 && !access("/proc/net/icmp6", F_OK))
         fn = "/proc/net/icmp6";
     else if (protocol == IPPROTO_TCP)
         fn = (version == 4 ? "/proc/net/tcp" : "/proc/net/tcp6");
@@ -588,7 +590,7 @@ jint restore_uid(const struct arguments *args,
 
         struct icmp *icmp = (struct icmp *) payload;
 
-        if (icmp->icmp_type != ICMP_ECHO) {
+        if (icmp->icmp_type != ICMP_ECHO && icmp->icmp_type != 128 /* ICMP_ECHOV6 */) {
             log_android(ANDROID_LOG_WARN, "ICMP type %d code %d from %s to %s not supported",
                         icmp->icmp_type, icmp->icmp_code, source, dest);
             return uid;

@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.assistance;
 
+import javax.inject.Inject;
+
 import pan.alexander.tordnscrypt.MainActivity;
 
 public class AccelerateDevelop {
@@ -26,7 +28,10 @@ public class AccelerateDevelop {
 
     public static volatile boolean accelerated = true;
 
-    public AccelerateDevelop(MainActivity activity) {
+    public @Inject AccelerateDevelop() {
+    }
+
+    public void setActivity(MainActivity activity) {
     }
 
     public void removeActivity() {

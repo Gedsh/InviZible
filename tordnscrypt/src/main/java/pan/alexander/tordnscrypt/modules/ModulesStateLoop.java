@@ -106,6 +106,8 @@ public class ModulesStateLoop implements Runnable,
     public Lazy<NflogManager> nflogManager;
     @Inject
     public Lazy<ConnectivityCheckManager> connectivityCheckManager;
+    @Inject
+    public Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
 
     private boolean iptablesUpdateTemporaryBlocked;
 
@@ -319,11 +321,13 @@ public class ModulesStateLoop implements Runnable,
                     if (dnsCryptInteractor != null) {
                         dnsCryptInteractor.addOnDNSCryptLogUpdatedListener(this);
                     }
+                    modulesStatusBroadcaster.get().broadcastDNSCryptRunning();
                     startNflogIfRootMode();
                 } else {
                     if (dnsCryptInteractor != null) {
                         dnsCryptInteractor.removeOnDNSCryptLogUpdatedListener(this);
                     }
+                    modulesStatusBroadcaster.get().broadcastDNSCryptStopped();
                     setDNSCryptReady(false);
                     denySystemDNS();
                     stopNflogIfRootMode();
@@ -338,10 +342,12 @@ public class ModulesStateLoop implements Runnable,
                     if (torInteractor != null) {
                         torInteractor.addOnTorLogUpdatedListener(this);
                     }
+                    modulesStatusBroadcaster.get().broadcastTorRunning();
                 } else {
                     if (torInteractor != null) {
                         torInteractor.removeOnTorLogUpdatedListener(this);
                     }
+                    modulesStatusBroadcaster.get().broadcastTorStopped();
                     setTorReady(false);
                     denySystemDNS();
                 }
@@ -354,10 +360,12 @@ public class ModulesStateLoop implements Runnable,
                     if (itpdInteractor != null) {
                         itpdInteractor.addOnITPDHtmlUpdatedListener(this);
                     }
+                    modulesStatusBroadcaster.get().broadcastI2PDRunning();
                 } else {
                     if (itpdInteractor != null) {
                         itpdInteractor.removeOnITPDHtmlUpdatedListener(this);
                     }
+                    modulesStatusBroadcaster.get().broadcastI2PDStopped();
                     setITPDReady(false);
                 }
             }
@@ -564,6 +572,9 @@ public class ModulesStateLoop implements Runnable,
 
         preferenceRepository.get().setBoolPreference(DNSCRYPT_READY_PREF, ready);
         modulesStatus.setDnsCryptReady(ready);
+        if (ready) {
+            modulesStatusBroadcaster.get().broadcastDNSCryptReady();
+        }
 
         if (ready && !savedReady) {
             connectivityCheckManager.get().refreshConnectivityCheckIPs();
@@ -598,6 +609,9 @@ public class ModulesStateLoop implements Runnable,
 
         preferenceRepository.get().setBoolPreference(TOR_READY_PREF, ready);
         modulesStatus.setTorReady(ready);
+        if (ready) {
+            modulesStatusBroadcaster.get().broadcastTorReady();
+        }
 
         if (ready && !savedReady) {
             startRefreshTorUnlockIPs(modulesService.getApplicationContext());
@@ -638,6 +652,9 @@ public class ModulesStateLoop implements Runnable,
     private void setITPDReady(boolean ready) {
         preferenceRepository.get().setBoolPreference(ITPD_READY_PREF, ready);
         modulesStatus.setItpdReady(ready);
+        if (ready) {
+            modulesStatusBroadcaster.get().broadcastI2PDReady();
+        }
     }
 
     @Override

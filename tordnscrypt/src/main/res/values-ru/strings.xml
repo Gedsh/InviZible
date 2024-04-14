@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">Автозагрузка</string>
     <string name="root_available">Проверка наличия Root…</string>
     <string name="please_wait">Пожалуйста подождите…</string>
-    <string name="dont_show">Больше не показывать</string>
+    <string name="dont_show">Не показывать</string>
     <string name="tvDNSStop">DNSCrypt остановлен</string>
     <string name="tvDNSInstalled">DNSCrypt установлен</string>
     <string name="tvDNSInstalling">DNSCrypt устанавливается</string>
@@ -104,9 +104,7 @@
     <string name="pref_common_show_help">Показывать справку</string>
     <string name="pref_common_show_help_summ">Всегда показывать справочные сообщения</string>
     <string name="notification_exclude_bat_optimisation_title">Выключить оптимизацию батареи?</string>
-    <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления.
-        Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент.
-        Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
+    <string name="pref_common_notification_helper">Пожалуйста, исключите InviZible Pro из списка оптимизации энергопотребления. Иначе андроид может завершить DNSCrypt, Tor или I2P в любой момент. Для некоторых оболочек, например MIUI, могут потребоваться дополнительные настройки.</string>
     <string name="notification_exclude_data_restriction_title">Отключить экономию трафика?</string>
     <string name="notification_exclude_data_restriction_message">Разрешите передачу данных в фоновом режиме и передачу данных в режиме экономии энергии. Это важно для бесперебойной работы приложения.</string>
     <string name="pref_common_use_busybox">Выбрать BusyBox</string>
@@ -334,7 +332,7 @@
     <string name="donate">Поддержка проекта</string>
     <string name="donate_button">Посетить</string>
     <string name="enter_code_button">Ввести код</string>
-    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите         страницу поддержки или введите уже полученный PRO код.</string>
+    <string name="donate_project">Проект InviZible Pro нуждается в Вашей помощи. Пожалуйста, посетите страницу поддержки или введите уже полученный PRO код.</string>
     <string name="thanks_for_donate">Проект InviZible Pro и его автор благодарен за помощь. Загрузить и обновить до PRO? Обновление будет продолжено в фоновом режиме.</string>
     <string name="thanks_for_donate_gp">Проект InviZible Pro и его автор благодарен за помощь!</string>
     <string name="enter_code">Введите код</string>
@@ -554,4 +552,10 @@
     <string name="long_press_to_edit">Нажмите и удерживайте для редактирования.</string>
     <string name="anonymize_relays">Анонимные ретрансляторы</string>
     <string name="anonymize_relays_not_used">Анонимные ретрансляторы не используются.</string>
+    <string name="pref_fast_exclude_app_from_tor">Исключить из Tor</string>
+    <string name="pref_fast_route_to_tor">Использовать с Tor</string>
+    <string name="pref_fast_direct_udp_connection">Исключить UDP из Tor</string>
+    <string name="pref_fast_bypass_app">Исключить приложение</string>
+    <string name="pull_to_refresh">\u2193 Потяните, чтобы обновить \u2193</string>
+    <string name="firewall_critical_uid">Блокировка этого системного приложения может привести к нестабильному интернет-соединению!</string>
 </resources>

@@ -31,7 +31,7 @@
     <string name="root_available">Checking if Root is available…</string>
 
     <string name="please_wait">Please wait…</string>
-    <string name="dont_show">Don\'t ask</string>
+    <string name="dont_show">Don\'t show</string>
 
 
     <string name="tvDNSStop">DNSCrypt Stopped</string>
@@ -127,6 +127,10 @@
     <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly. This feature does not work for sites behind CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
+    <string name="pref_fast_exclude_app_from_tor">Exclude from Tor</string>
+    <string name="pref_fast_route_to_tor">Route to Tor</string>
+    <string name="pref_fast_direct_udp_connection">Exclude UDP from Tor</string>
+    <string name="pref_fast_bypass_app">Bypass app</string>
     <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
@@ -274,6 +278,13 @@
     <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4</string>
     <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6</string>
+    <string name="pref_dnscrypt_dnscrypt_server" translatable="false">DNSCrypt Server</string>
+    <string name="pref_dnscrypt_doh_server" translatable="false">DoH Server</string>
+    <string name="pref_dnscrypt_non_filtering_server" translatable="false">Non-Filtering</string>
+    <string name="pref_dnscrypt_filtering_server" translatable="false">Filtering</string>
+    <string name="pref_dnscrypt_non_logging_server" translatable="false">Non-Logging</string>
+    <string name="pref_dnscrypt_keep_logs_server" translatable="false">Keep Logs</string>
+    <string name="pref_dnscrypt_dnssec_server" translatable="false">DNSSEC</string>
 
     <string name="pref_dnscrypt_require_servers_prop_categ">Require servers defined by remote sources to satisfy specific properties.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Server must support DNS security extensions (DNSSEC).</string>
@@ -465,6 +476,9 @@
        Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
     <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
     <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
+    <string name="pref_tor_snowflake_cdn77" translatable="false">CDN77</string>
+    <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
+    <string name="pref_tor_snowflake_amazon" translatable="false">AMAZON</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
@@ -586,6 +600,10 @@
     <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!
         After installation reconfigure HOTSPOT, if you use it!</string>
 
+    <string name="about_version" translatable="false">Version:</string>
+    <string name="free_version" translatable="false">Free</string>
+    <string name="premium_version" translatable="false">Premium</string>
+    <string name="refunded_version" translatable="false">Refunded</string>
     <string name="about_build_ver" translatable="false">Build Version:</string>
     <string name="about_app_ver" translatable="false">Application Version:</string>
     <string name="about_build_date" translatable="false">Build Date:</string>
@@ -740,6 +758,7 @@
     <string name="firewall_btnTopVpnFirewall_tooltip">Allow connections with VPN enabled</string>
     <string name="firewall_btnTopCheckAllFirewall_tooltip">Select all</string>
     <string name="firewall_btnTopUnCheckAllFirewall_tooltip">Unselect all</string>
+    <string name="firewall_critical_uid">Blocking this system app may result in an unstable internet connection!</string>
     <string name="firewall_item_button_tooltip">Green - allow, white - deny connections</string>
     <string name="pref_firewall_title">Firewall Settings</string>
     <string name="pref_firewall_allow_internet_for_new_apps">Allow connections for new apps</string>
@@ -753,6 +772,7 @@
     <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
         Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
     <string name="list_is_empty">List is Empty</string>
+    <string name="pull_to_refresh">\u2193 Pull to refresh \u2193</string>
     <string name="connectivity_check">Internet connectivity check</string>
     <string name="notifications_permission_rationale_message">Notifications are essential for displaying important information about the app\'s operation, app control, and detected attacks. Would you like to allow notifications for InviZible?</string>
     <string name="press_to_add">Press to add.</string>

@@ -35,14 +35,14 @@ import java.util.ArrayList;
 
 import pan.alexander.tordnscrypt.R;
 
-class DNSRelaysAdapter extends RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysViewHolder> {
+class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysViewHolder> {
 
     private final Context context;
-    private final ArrayList<DNSRelayItem> dnsRelayItems;
+    private final ArrayList<DnsRelayItem> dnsRelayItems;
     private final LayoutInflater lInflater;
 
 
-    DNSRelaysAdapter(Context context, ArrayList<DNSRelayItem> dnsRelayItems) {
+    DnsRelaysAdapter(Context context, ArrayList<DnsRelayItem> dnsRelayItems) {
         this.context = context;
         this.dnsRelayItems = dnsRelayItems;
         this.lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -65,11 +65,11 @@ class DNSRelaysAdapter extends RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysVi
         return dnsRelayItems.size();
     }
 
-    private DNSRelayItem getItem(int position) {
+    private DnsRelayItem getItem(int position) {
         return dnsRelayItems.get(position);
     }
 
-    private void setItem(int position, DNSRelayItem dnsRelayItem) {
+    private void setItem(int position, DnsRelayItem dnsRelayItem) {
         dnsRelayItems.set(position, dnsRelayItem);
     }
 
@@ -96,7 +96,7 @@ class DNSRelaysAdapter extends RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysVi
         }
 
         private void bind(int position) {
-            DNSRelayItem dnsRelayItem = getItem(position);
+            DnsRelayItem dnsRelayItem = getItem(position);
 
             tvDNSRelayName.setText(dnsRelayItem.getName());
             tvDNSRelayDescription.setText(dnsRelayItem.getDescription());
@@ -107,7 +107,7 @@ class DNSRelaysAdapter extends RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysVi
         public void onClick(View view) {
             if (view.getId() == R.id.cardDNSRelay) {
                 int position = getAdapterPosition();
-                DNSRelayItem dnsRelayItem = getItem(position);
+                DnsRelayItem dnsRelayItem = getItem(position);
                 dnsRelayItem.setChecked(!dnsRelayItem.isChecked());
                 setItem(position, dnsRelayItem);
                 notifyItemChanged(position);
@@ -117,7 +117,7 @@ class DNSRelaysAdapter extends RecyclerView.Adapter<DNSRelaysAdapter.DNSRelaysVi
         @Override
         public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
             int position = getAdapterPosition();
-            DNSRelayItem dnsRelayItem = getItem(position);
+            DnsRelayItem dnsRelayItem = getItem(position);
             if (dnsRelayItem.isChecked() != newValue) {
                 dnsRelayItem.setChecked(newValue);
                 setItem(position, dnsRelayItem);

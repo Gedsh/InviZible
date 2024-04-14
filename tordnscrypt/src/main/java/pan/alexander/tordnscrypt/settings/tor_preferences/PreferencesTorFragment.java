@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -55,6 +56,8 @@ import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
@@ -65,7 +68,9 @@ import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
@@ -79,6 +84,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 public class PreferencesTorFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
@@ -99,6 +105,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
+    @Inject
     public Lazy<PathVars> pathVars;
     @Inject
     public CachedExecutor cachedExecutor;
@@ -112,6 +121,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
+
+        setDefaultStunServers();
 
         addPreferencesFromResource(R.xml.preferences_tor);
 
@@ -135,7 +146,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference("ExitNodes"));
         preferences.add(findPreference("ExcludeNodes"));
         preferences.add(findPreference("StrictNodes"));
-        preferences.add(findPreference("FascistFirewall"));
+        preferences.add(findPreference(TOR_FASCIST_FIREWALL));
         preferences.add(findPreference("NewCircuitPeriod"));
         preferences.add(findPreference("MaxCircuitDirtiness"));
         preferences.add(findPreference("EnforceDistinctSubnets"));
@@ -149,7 +160,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         preferences.add(findPreference(TOR_DNS_PORT));
         preferences.add(findPreference("ClientUseIPv4"));
         preferences.add(findPreference(TOR_USE_IPV6));
-        preferences.add(findPreference("pref_tor_snowflake_stun"));
+        preferences.add(findPreference(STUN_SERVERS));
         preferences.add(findPreference(TOR_OUTBOUND_PROXY));
         preferences.add(findPreference(TOR_OUTBOUND_PROXY_ADDRESS));
         preferences.add(findPreference("pref_tor_isolate_dest_address"));
@@ -312,7 +323,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return false;
         }
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences sharedPreferences = defaultPreferences.get();
         boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
         boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
         boolean allowTorTethering = sharedPreferences.getBoolean(TOR_TETHERING, false);
@@ -459,35 +470,28 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "pref_tor_snowflake_stun")) {
+        } else if (Objects.equals(preference.getKey(), STUN_SERVERS)) {
 
             String serversStr = newValue.toString().trim();
 
             if (serversStr.isEmpty()) {
+                serversStr = TextUtils.join(
+                        ",", context.getResources().getStringArray(R.array.tor_snowflake_stun_servers)
+                );
+                updateCurrentSnowflakeBridges(serversStr);
+                sharedPreferences.edit().putString(STUN_SERVERS, serversStr).apply();
                 return false;
             }
 
             String[] servers = serversStr.split(", ?");
             for (String server: servers) {
-                if (!server.matches(".+\\..+:\\d+")) {
+                if (!server.matches(HOST_NAME_REGEX + ":\\d+")) {
                     return false;
                 }
             }
 
-            for (int i = 0; i < key_tor.size(); i++) {
-                if (key_tor.get(i).contains("Bridge") && val_tor.get(i).contains("snowflake")) {
-                    String bridgeBaseRegex = getBridgeBaseRegex(val_tor.get(i));
-                    Pattern bridgePattern = Pattern.compile("snowflake +" + bridgeBaseRegex + "( +fingerprint=\\w+)?");
-                    Matcher matcher = bridgePattern.matcher(val_tor.get(i));
-                    if (matcher.find()) {
-                        String bridgeBase = matcher.group();
-                        val_tor.set(i, snowflakeConfigurator.get()
-                                .getConfiguration(bridgeBase, serversStr));
-                    } else {
-                        return false;
-                    }
-                }
-            }
+            updateCurrentSnowflakeBridges(serversStr);
+
             return true;
         } else if (Objects.equals(preference.getKey(), TOR_SOCKS_PORT)
                 || Objects.equals(preference.getKey(), TOR_HTTP_TUNNEL_PORT)
@@ -861,6 +865,36 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         Preference editTorConfDirectly = findPreference("editTorConfDirectly");
         if (otherCategory != null && editTorConfDirectly != null) {
             otherCategory.removePreference(editTorConfDirectly);
+        }
+    }
+
+    private void setDefaultStunServers() {
+        if (defaultPreferences.get().getString(STUN_SERVERS, "").isEmpty()) {
+            String defaultServers = TextUtils.join(
+                    ",", getResources().getStringArray(R.array.tor_snowflake_stun_servers)
+            );
+            defaultPreferences.get().edit().putString(STUN_SERVERS, defaultServers).apply();
+        }
+    }
+
+    private void updateCurrentSnowflakeBridges(String servers) {
+
+        boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
+        if (!useDefaultBridges) {
+            return;
+        }
+
+        for (int i = 0; i < key_tor.size(); i++) {
+            if (key_tor.get(i).contains("Bridge") && val_tor.get(i).contains("snowflake")) {
+                String bridgeBaseRegex = getBridgeBaseRegex(val_tor.get(i));
+                Pattern bridgePattern = Pattern.compile("snowflake +" + bridgeBaseRegex + "( +fingerprint=\\w+)?");
+                Matcher matcher = bridgePattern.matcher(val_tor.get(i));
+                if (matcher.find()) {
+                    String bridgeBase = matcher.group();
+                    val_tor.set(i, snowflakeConfigurator.get()
+                            .getConfiguration(bridgeBase, servers));
+                }
+            }
         }
     }
 

@@ -44,6 +44,7 @@ import pan.alexander.tordnscrypt.modules.ModulesService
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_NTP
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.utils.Constants.DNS_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
@@ -95,6 +96,7 @@ object Utils {
         return (dips * context.resources.displayMetrics.density + 0.5f).roundToInt()
     }
 
+    @JvmStatic
     fun dp2pixels(dp: Int) = TypedValue.applyDimension(
         TypedValue.COMPLEX_UNIT_DIP,
         dp.toFloat(),
@@ -321,9 +323,14 @@ object Utils {
 
     fun getCriticalSystemUids(ownUid: Int): List<Int> =
         arrayListOf(
+            getUidForName("system", Process.SYSTEM_UID + ownUid / 100_000 * 100_000),
             getUidForName("dns", DNS_DEFAULT_UID + ownUid / 100_000 * 100_000),
             getUidForName("network_stack", NETWORK_STACK_DEFAULT_UID + ownUid / 100_000 * 100_000),
-            SPECIAL_UID_CONNECTIVITY_CHECK
+            getUidForName("mdnsr", 1020 + ownUid / 100_000 * 100_000),
+            getUidForName("clat", 1029 + ownUid / 100_000 * 100_000),
+            getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000),
+            SPECIAL_UID_CONNECTIVITY_CHECK,
+            SPECIAL_UID_NTP
         )
 
     fun getDnsTetherUid(ownUid: Int) =

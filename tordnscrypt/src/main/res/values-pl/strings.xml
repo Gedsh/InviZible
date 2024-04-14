@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Uruchom podczas startu urzadzenia"</string>
     <string name="root_available">"Sprawdzam czy Root jest dostepny…"</string>
     <string name="please_wait">"Prosze czekac…"</string>
-    <string name="dont_show">"Nie pokazuj ponownie"</string>
+    <string name="dont_show">Nie pokazuj</string>
     <string name="tvDNSStop">"DNSCrypt zatrzymany"</string>
     <string name="tvDNSInstalled">"DNSCrypt zainstalowany"</string>
     <string name="tvDNSInstalling">"Instalacja DNSCrypt"</string>
@@ -122,7 +122,7 @@
     <string name="pref_common_wakelock_summ">"Dodatkowa ochrona bez trybu rootowania, aby zapobiec uspieniu aplikacji przez Androida. Moze wyczeprac baterie"</string>
     <string name="pref_common_show_help">"Podpowiedzi"</string>
     <string name="pref_common_show_help_summ">"Zawsze pokazuj podpowiedzi"</string>
-    <string name="pref_common_notification_helper">"Prosze wykluczyc InviZible Pro z optymalizacji baterii. W innym przypadku Android moze zatrzymac proces DNSCrypt, Tor or I2P w kazdej chwili. Systemy niestandardowe jak MIUI, wymagaja dodatkowych czynnosci."</string>
+    <string name="pref_common_notification_helper">Wyklucz InviZible Pro z optymalizacji baterii Androida, aby uniemożliwić systemowi zakończenie DNSCrypt, Tor lub I2P w dowolnym momencie. Niektóre specjalne systemy, takie jak MIUI, mogą wymagać dodatkowych kroków.</string>
     <string name="pref_common_use_busybox">"Wybierz BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Punkt dostepu - eksperymentalnie"</string>
     <string name="pref_common_tethering_autostart">"Autostart udostepniania polaczenia przy starcie systemu"</string>
@@ -325,7 +325,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="verifier_error">"To chyba nie jest oficjalna wersja InviZible. Uwazaj!"</string>
     <string name="only_for_pro">"Tylko wersja PRO"</string>
     <string name="donate">"Dotacja"</string>
-    <string name="donate_project">"Projekt InviZible Pro potrzebuje Twojego wsparcia. Prosze odwiedz strone dotacji lub wprowadz otrzymany kod rejestracyjny."</string>
+    <string name="donate_project">Projekt InviZible Pro potrzebuje Twojego wsparcia. Odwiedź stronę dotacji lub wprowadź otrzymany kod rejestracyjny.</string>
     <string name="donate_button">"Odwiedz"</string>
     <string name="enter_code_button">"Wprowadz kod"</string>
     <string name="enter_code">"Wprowadz kod"</string>
@@ -512,11 +512,11 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="ask_reset_settings_btn">"Reset"</string>
     <string name="pref_fast_fake_sni">"Uruchom spoofing SNI"</string>
     <string name="pref_tor_track_host_exits_summ">"Tor zapamieta i zapisze niedawne polaczenia do hsotow i sprobuje uzyc tych samych exit node dla kazdego z nich. To moze pomoc uniknac petli captcha."</string>
-    <string name="agreement_text">\\ Dziękujemy za wybranie InviZible Pro. Mamy nadzieję, że przysłuży się on Twojej prywatności i umożliwi wygodneg korzystanie z Internetu.
+    <string name="agreement_text">\\ Dziękujemy za wybranie InviZible Pro. Jestem pewien, że zwiększy to Twoją prywatność i zapewni płynne korzystanie z Internetu.
 \n
 \n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
 \n
-\n\tInviZible Pro może używać roota, jeśli twoje urządzenie ma takie uprawnienia, lub używać lokalnej sieci VPN do dostarczania ruchu internetowego do sieci Tor, DNSCrypt i I2P.
+\n\tInviZible Pro może korzystać z roota, jeśli Twoje urządzenie jest zrootowane lub korzysta z lokalnej sieci VPN, aby dostarczać ruch internetowy bezpośrednio do sieci Tor, DNSCrypt i I2P.
 \n
 \n\tPolityka prywatności:
 \n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych lub wrażliwych danych użytkownika.
@@ -525,4 +525,19 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
 \n\tGarmatin Oleksandr
 \n\tinvizible.soft@gmail.com
 \n\tinvizible.net/en/privacy</string>
+    <string name="press_to_add">Naciśnij, aby dodać.</string>
+    <string name="notification_exclude_bat_optimisation_title">Zaprzestać optymalizacji zużycia baterii?</string>
+    <string name="pref_fast_exclude_app_from_tor">Wyklucz z sieci Tor</string>
+    <string name="pref_fast_direct_udp_connection">Wyklucz UDP z sieci Tor</string>
+    <string name="pref_fast_bypass_app">Omiń aplikację</string>
+    <string name="pref_fast_route_to_tor">Trasa do Tor</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor przechodzi w stan uśpienia, jeśli nie widzi aktywności klienta przez określony czas. Musi on wynosić co najmniej 10 minut</string>
+    <string name="notification_exclude_data_restriction_title">Wyłączyć oszczędzanie danych sieciowych?</string>
+    <string name="notification_exclude_data_restriction_message">Zezwól na korzystanie z danych w tle i zezwól na korzystanie z danych, gdy włączone jest oszczędzanie danych. Jest to niezbędne do płynnego korzystania z Internetu.</string>
+    <string name="anonymize_relays_not_used">Anonimizacja przekaźników nie jest używana.</string>
+    <string name="long_press_to_add">Naciśnij i przytrzymaj, aby dodać.</string>
+    <string name="anonymize_relays">Anonimizacja przekaźników</string>
+    <string name="pull_to_refresh">↓ Przeciągnięcie odświeża ↓</string>
+    <string name="press_to_edit">Naciśnij, aby edytować.</string>
+    <string name="long_press_to_edit">Naciśnij i przytrzymaj, aby edytować.</string>
 </resources>

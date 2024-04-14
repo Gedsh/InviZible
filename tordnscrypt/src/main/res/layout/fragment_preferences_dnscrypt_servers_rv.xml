@@ -7,6 +7,16 @@
     android:orientation="vertical"
     tools:context=".settings.dnscrypt_servers.PreferencesDNSCryptServers">
 
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/pbDnsCryptServers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminateBehavior="cycle"
+        android:visibility="gone"
+        app:indicatorColor="@color/colorAccent"
+        app:trackThickness="2dp"
+        tools:visibility="visible" />
+
     <androidx.cardview.widget.CardView
         android:id="@+id/cardSearchDNSServer"
         android:layout_width="wrap_content"
@@ -44,16 +54,20 @@
         android:id="@+id/rvDNSServers"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_dns_server" />
 
-    <androidx.appcompat.widget.AppCompatImageButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/ibAddOwnServer"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="10dp"
-        android:background="@drawable/button_main_selector"
-        android:scaleType="center"
-        app:srcCompat="@drawable/ic_add_circle_black_24dp" />
+        android:layout_margin="20dp"
+        android:contentDescription="Add resolver"
+        app:backgroundTint="@color/colorBackground"
+        app:borderWidth="1dp"
+        app:rippleColor="@color/colorAccent"
+        app:srcCompat="@drawable/ic_add_white_24dp"
+        app:tint="@color/colorText" />
 
 </FrameLayout>

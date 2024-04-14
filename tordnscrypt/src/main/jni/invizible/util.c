@@ -21,11 +21,22 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+#include <arm_neon.h>
 #include "invizible.h"
 
-extern int loglevel;
+#define CSUM_NEON_THRESHOLD 1
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length) {
+
+    if (length > CSUM_NEON_THRESHOLD) {
+        log_android(ANDROID_LOG_DEBUG, "Checksum buffer length %d", length);
+        return do_csum_neon(start, buffer, length);
+    }
+
+    return (uint16_t) do_csum_generic(start, buffer, length);
+}
+
+uint16_t do_csum_generic(uint16_t start, const uint8_t *buffer, size_t length) {
     register uint32_t sum = start;
     register uint16_t *buf = (uint16_t *) buffer;
     register size_t len = length;
@@ -42,6 +53,106 @@ uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length) {
         sum = (sum & 0xFFFF) + (sum >> 16);
 
     return (uint16_t) sum;
+}
+
+static inline uint16_t from64to16(uint64_t x) {
+    x = (x & 0xffffffff) + (x >> 32);
+    x = (x & 0xffffffff) + (x >> 32);
+    x = ((uint32_t) x & 0xffff) + ((uint32_t) x >> 16);
+    x = ((uint32_t) x & 0xffff) + ((uint32_t) x >> 16);
+    return x;
+}
+
+uint16_t do_csum_neon(uint16_t start, const uint8_t *buff, size_t len) {
+    unsigned int odd, count;
+    uint64_t result = start;
+    unsigned int count64;
+    uint32x4_t vzero = (uint32x4_t) {0, 0, 0, 0};
+
+    register uint32x4_t v0, v1, v2, v3;
+
+    if (len <= 0)
+        return result;
+
+    odd = 1 & (unsigned long) buff;
+    if (odd) {
+        result += *(unsigned short *) buff;
+        len--;
+        buff++;
+    }
+
+    count = len >> 1;
+    if (count) {
+        if (2 & (unsigned long) buff) {
+            result += *(unsigned short *) buff;
+            count--;
+            len -= 2;
+            buff += 2;
+        }
+        count >>= 1;            /* nr of 32-bit words.. */
+        if (count) {
+            if (4 & (unsigned long) buff) {
+                result += *(unsigned int *) buff;
+                count--;
+                len -= 4;
+                buff += 4;
+            }
+            count >>= 1;    /* nr of 64-bit words.. */
+
+            v0 = vzero;
+            v1 = vzero;
+            v2 = vzero;
+            v3 = vzero;
+
+            count64 = count >> 3;  /* compute 64 Byte circle */
+            while (count64) {
+                v0 = vpadalq_u16(v0,
+                                 +vld1q_u16((uint16_t *) buff + 0));
+                v1 = vpadalq_u16(v1,
+                                 +vld1q_u16((uint16_t *) buff + 8));
+                v2 = vpadalq_u16(v2,
+                                 +vld1q_u16((uint16_t *) buff + 16));
+                v3 = vpadalq_u16(v3,
+                                 +vld1q_u16((uint16_t *) buff + 24));
+                buff += 64;
+                count64--;
+            }
+            v0 = vaddq_u32(v0, v1);
+            v2 = vaddq_u32(v2, v3);
+            v0 = vaddq_u32(v0, v2);
+
+            count %= 8;
+            while (count >= 2) { /* compute 16 byte circle */
+                v0 = vpadalq_u16(v0,
+                                 +vld1q_u16((uint16_t *) buff + 0));
+                buff += 16;
+                count -= 2;
+            }
+
+            result += vgetq_lane_u32(v0, 0);
+            result += vgetq_lane_u32(v0, 1);
+            result += vgetq_lane_u32(v0, 2);
+            result += vgetq_lane_u32(v0, 3);
+            if (count & 1) {
+                result += *(unsigned long long *) buff;
+                buff += 8;
+            }
+            if (len & 4) {
+                result += *(unsigned int *) buff;
+                buff += 4;
+            }
+        }
+        if (len & 2) {
+            result += *(unsigned short *) buff;
+            buff += 2;
+        }
+    }
+    if (len & 1)
+        result += *buff;
+    result = from64to16(result);
+    if (odd)
+        result = ((result >> 8) & 0xff) | ((result & 0xff) << 8);
+    return result;
 }
 
 int compare_u32(uint32_t s1, uint32_t s2) {
@@ -65,7 +176,7 @@ int sdk_int(JNIEnv *env) {
 }
 
 void log_android(int prio, const char *fmt, ...) {
-    if (prio >= loglevel) {
+    if (prio >= LOG_LEVEL) {
         char line[1024];
         va_list argptr;
         va_start(argptr, fmt);

@@ -27,6 +27,7 @@ import dagger.multibindings.IntoMap
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import pan.alexander.tordnscrypt.TopFragmentViewModel
+import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DnsServerViewModel
 import pan.alexander.tordnscrypt.settings.firewall.FirewallViewModel
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
@@ -67,5 +68,12 @@ abstract class ViewModelModule {
     @ViewModelKey(TopFragmentViewModel::class)
     abstract fun provideTopFragmentViewModel(
         topFragmentViewModel: TopFragmentViewModel
+    ): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(DnsServerViewModel::class)
+    abstract fun provideDnsServerViewModel(
+        dnsServerViewModel: DnsServerViewModel
     ): ViewModel
 }

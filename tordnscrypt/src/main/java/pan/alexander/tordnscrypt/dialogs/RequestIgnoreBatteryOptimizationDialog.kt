@@ -25,6 +25,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
@@ -87,9 +88,12 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
 
     companion object {
         @JvmStatic
+        @JvmOverloads
+        @Nullable
         fun getInstance(
             context: Context,
-            preferenceRepository: PreferenceRepository
+            preferenceRepository: PreferenceRepository,
+            forceShow: Boolean = true
         ): DialogFragment? {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             val packageName = context.packageName
@@ -97,7 +101,8 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                 || pm?.isIgnoringBatteryOptimizations(packageName) == true
                 || (preferenceRepository.getBoolPreference(PreferenceKeys.DO_NOT_SHOW_IGNORE_BATTERY_OPTIMIZATION_DIALOG)
-                        && !pref.getBoolean(PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES, false))
+                        && !pref.getBoolean(PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES, false)
+                        && !forceShow)
             ) {
                 return null
             }

@@ -33,18 +33,32 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.Date;
 
+import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GP_DATA;
 
+import javax.inject.Inject;
+
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.LangAppCompatActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.settings.PathVars;
 
 public class AboutActivity extends LangAppCompatActivity implements View.OnClickListener {
+
+    @Inject
+    public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<PreferenceRepository> preferenceRepository;
 
 
     @SuppressLint({"NewApi"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_about);
@@ -67,6 +81,18 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
     public void onResume() {
         super.onResume();
         setTitle(R.string.drawer_menu_about);
+
+        TextView tvVersion = findViewById(R.id.tvPremiumStatus);
+        if (pathVars.get().getAppVersion().endsWith("p")) {
+            if (accelerated) {
+                tvVersion.setText(R.string.premium_version);
+            } else if (!preferenceRepository.get().getStringPreference(GP_DATA).isEmpty()) {
+                tvVersion.setText(R.string.refunded_version);
+                tvVersion.setOnClickListener(this);
+            }
+        } else if (pathVars.get().getAppVersion().startsWith("p")) {
+            tvVersion.setText(R.string.premium_version);
+        }
 
         TextView tvHelpBuildNo = findViewById(R.id.tvHelpBuildNo);
         TextView tvHelpBuildDate = findViewById(R.id.tvHelpBuildDate);

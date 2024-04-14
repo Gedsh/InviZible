@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -35,10 +37,10 @@ import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
-import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
 
 public class Rule {
@@ -46,6 +48,8 @@ public class Rule {
     public String packageName;
     public String appName;
     public boolean apply = true;
+    private static final ReentrantLock lock = new ReentrantLock();
+    private static final List<Rule> savedRules = new ArrayList<>();
 
     private static boolean isSystem(String packageName, Context context) {
         return VpnUtils.isSystem(packageName, context);
@@ -66,56 +70,69 @@ public class Rule {
     }
 
     public static List<Rule> getRules(Context context) {
-        synchronized (context.getApplicationContext()) {
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean routeAllThroughIniZible = prefs.getBoolean(ALL_THROUGH_TOR, true);
-
-            String unlockAppsStr;
-            if (!routeAllThroughIniZible) {
-                unlockAppsStr = UNLOCK_APPS;
-            } else {
-                unlockAppsStr = CLEARNET_APPS;
+        try {
+            if (lock.tryLock(3, TimeUnit.SECONDS)) {
+                savedRules.clear();
+                savedRules.addAll(getAppRules(context));
             }
-
-            final PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
-
-            Set<String> setUnlockApps = preferences.getStringSetPreference(unlockAppsStr);
-
-            boolean useProxy = prefs.getBoolean(USE_PROXY, false);
-            Set<String> setBypassProxy;
-            if (useProxy) {
-                setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
-            } else {
-                setBypassProxy = new HashSet<>();
+        } catch (Exception e) {
+            loge("Rule getAppRules", e);
+        } finally {
+            if (lock.isLocked() && lock.isHeldByCurrentThread()) {
+                lock.unlock();
             }
+        }
+        return new ArrayList<>(savedRules);
+    }
 
-            // Build rule list
-            List<Rule> listRules = new ArrayList<>();
+    private static List<Rule> getAppRules(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean routeAllThroughIniZible = prefs.getBoolean(ALL_THROUGH_TOR, true);
 
-            List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
-                    .build()
-                    .getInstalledApps();
+        String unlockAppsStr;
+        if (!routeAllThroughIniZible) {
+            unlockAppsStr = UNLOCK_APPS;
+        } else {
+            unlockAppsStr = CLEARNET_APPS;
+        }
+
+        final PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
+
+        Set<String> setUnlockApps = preferences.getStringSetPreference(unlockAppsStr);
+
+        boolean useProxy = prefs.getBoolean(USE_PROXY, false);
+        Set<String> setBypassProxy;
+        if (useProxy) {
+            setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
+        } else {
+            setBypassProxy = new HashSet<>();
+        }
+
+        // Build rule list
+        List<Rule> listRules = new ArrayList<>();
+
+        List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
+                .build()
+                .getInstalledApps();
 
 
-            for (ApplicationData info : installedApps)
-                try {
+        for (ApplicationData info : installedApps)
+            try {
 
-                    Rule rule = new Rule(info);
+                Rule rule = new Rule(info);
 
-                    String UID = String.valueOf(info.getUid());
-                    if (routeAllThroughIniZible) {
-                        rule.apply = !setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
-                    } else {
-                        rule.apply = setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
-                    }
-
-                    listRules.add(rule);
-                } catch (Throwable ex) {
-                    loge("Rule getRules", ex, true);
+                String UID = String.valueOf(info.getUid());
+                if (routeAllThroughIniZible) {
+                    rule.apply = !setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
+                } else {
+                    rule.apply = setUnlockApps.contains(UID) && !setBypassProxy.contains(UID);
                 }
 
-            return listRules;
-        }
+                listRules.add(rule);
+            } catch (Throwable ex) {
+                loge("Rule getRules", ex, true);
+            }
+
+        return listRules;
     }
 }

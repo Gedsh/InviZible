@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.domain.connection_records.entities
 
+import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.UNDEFINED
+
 sealed class ConnectionData(val time: Long) {
     override fun toString(): String {
         return "ConnectionData(time=$time)"
@@ -73,7 +75,6 @@ class PacketRecord(
     val uid: Int,
     val saddr: String,
     val daddr: String,
-    @get:ConnectionProtocol
     val protocol: Int = UNDEFINED,
     val allowed: Boolean
 ): ConnectionData(time) {

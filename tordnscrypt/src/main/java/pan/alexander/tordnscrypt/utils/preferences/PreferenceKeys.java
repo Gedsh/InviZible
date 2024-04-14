@@ -44,6 +44,12 @@ public interface PreferenceKeys {
     String OWN_BRIDGES_OBFS = "ownBridgesObfs";
     String RELAY_BRIDGES_REQUESTED = "relayBridgesRequested";
 
+    String UNLOCK_APPS = "unlockApps";
+    String CLEARNET_APPS = "clearnetApps";
+
+    String APPS_DIRECT_UDP = "directUdpApps";
+    String APPS_BYPASS_VPN = "bypassVpnApps";
+
     String IPS_TO_UNLOCK = "ipsToUnlock";
     String IPS_FOR_CLEARNET = "ipsForClearNet";
     String IPS_TO_UNLOCK_TETHER = "ipsToUnlockTether";
@@ -78,6 +84,9 @@ public interface PreferenceKeys {
 
     String CRASH_REPORT = "CrashReport";
 
+    String GP_DATA = "gpData";
+    String GP_SIGNATURE = "gpSign";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
@@ -110,8 +119,10 @@ public interface PreferenceKeys {
     String KILL_SWITCH = "swKillSwitch";
     String USE_IPTABLES = "pref_common_use_iptables";
     String WAIT_IPTABLES = "pref_common_wait_iptables";
+    String REMOTE_CONTROL = "pref_common_shell_control";
 
     //DNSCrypt Settings
+    String DNSCRYPT_SERVERS = "DNSCrypt Servers";
     String DNSCRYPT_BLOCK_IPv6 = "block_ipv6";
     String DNSCRYPT_LISTEN_PORT = "listen_port";
 
@@ -138,8 +149,9 @@ public interface PreferenceKeys {
     String TOR_OUTBOUND_PROXY_ADDRESS = "Socks5Proxy";
     String SNOWFLAKE_RENDEZVOUS = "SnowflakeRendezvous";
     String DORMANT_CLIENT_TIMEOUT = "DormantClientTimeout";
-
+    String STUN_SERVERS = "pref_tor_snowflake_stun";
     String TOR_USE_IPV6 = "ClientUseIPv6";
+    String TOR_FASCIST_FIREWALL = "FascistFirewall";
 
     //I2PD Settings
     String I2PD_OUTBOUND_PROXY = "Enable ntcpproxy";

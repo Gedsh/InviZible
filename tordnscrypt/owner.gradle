@@ -34,7 +34,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.5.0"
+            versionName "6.6.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -42,7 +42,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.5.0"
+            versionName "6.6.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -50,7 +50,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "2.0.8"
+            versionName "2.1.7"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -59,7 +59,7 @@ android {
         google_play {
             minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
-            versionName "6.5.0"
+            versionName "6.6.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -91,14 +91,14 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 33
-        versionCode 208
+        versionCode 217
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk"
 
         externalNativeBuild {
             cmake {
                 cppFlags ""
-                arguments "-DANDROID_PLATFORM=android-19"
+                arguments "-DANDROID_PLATFORM=android-21", "-DANDROID_ARM_NEON=ON"
             }
         }
 
@@ -197,14 +197,14 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-process:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
-    google_playImplementation 'com.android.billingclient:billing:6.0.1'
+    google_playImplementation 'com.android.billingclient:billing:6.2.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'eu.chainfire:libsuperuser:1.1.1'
     implementation 'com.jrummyapps:android-shell:1.0.1'
     implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'
     implementation project(':filepicker')
 
     //DI

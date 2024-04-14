@@ -26,6 +26,7 @@ import dagger.Component
 import pan.alexander.tordnscrypt.BootCompleteReceiver
 import pan.alexander.tordnscrypt.MainActivity
 import pan.alexander.tordnscrypt.TopFragment
+import pan.alexander.tordnscrypt.about.AboutActivity
 import pan.alexander.tordnscrypt.backup.BackupFragment
 import pan.alexander.tordnscrypt.backup.BackupHelper
 import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
@@ -94,6 +95,7 @@ interface AppComponent {
     fun inject(activity: MainActivity)
     fun inject(activity: SettingsActivity)
     fun inject(activity: HelpActivity)
+    fun inject(activity: AboutActivity)
     fun inject(fragment: TopFragment)
     fun inject(fragment: MainFragment)
     fun inject(fragment: UnlockTorAppsFragment)

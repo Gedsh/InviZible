@@ -67,8 +67,6 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsComplet
 
 import static android.app.Activity.RESULT_OK;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
-import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.CLEARNET_APPS;
-import static pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -79,6 +77,9 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_AL
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.deleteFile;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.moveBinaryFile;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_DIRECT_UDP;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 
 import javax.inject.Inject;
 
@@ -102,7 +103,8 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
             APPS_ALLOW_VPN,
             CLEARNET_APPS_FOR_PROXY,
             UNLOCK_APPS,
-            CLEARNET_APPS
+            CLEARNET_APPS,
+            APPS_DIRECT_UDP
     ));
 
     final static int CODE_READ = 10;

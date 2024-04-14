@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Arranque en Reinicio"</string>
     <string name="root_available">"Comprobando acceso root…"</string>
     <string name="please_wait">"Un momento…"</string>
-    <string name="dont_show">"Descartar mensaje"</string>
+    <string name="dont_show">No mostrar</string>
     <string name="tvDNSStop">"DNSCrypt parado"</string>
     <string name="tvDNSInstalled">"DNSCrypt Instalado"</string>
     <string name="tvDNSInstalling">"Instalando DNSCrypt"</string>
@@ -122,9 +122,7 @@
     <string name="pref_common_wakelock_summ">"Añade una protección adicional que previene la parada súbita de la aplicación por Android en modos no Root. Puede gastar batería."</string>
     <string name="pref_common_show_help">"Mensajes de ayuda"</string>
     <string name="pref_common_show_help_summ">"Muestra siempre los mensajes de ayuda."</string>
-    <string name="pref_common_notification_helper">"Por favor, desactiva para InviZible Pro la optimización de bateria de Android.
-De otra manera Android parará los procesos de DNSCrypt, Tor e I2P en cualquier momento.
-En otros sistemas, como MIUI, se requieren ajustes adicionales."</string>
+    <string name="pref_common_notification_helper">Por favor, excluye InviZible Pro de la optimización de batería de Android para evitar que el sistema termine DNSCrypt, Tor o I2P en cualquier momento. Algunos sistemas especiales, como MIUI, pueden requerir pasos adicionales.</string>
     <string name="pref_common_use_busybox">"Seleccionar binario BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Compartir Internet-En pruebas"</string>
     <string name="pref_common_tethering_autostart">"Arrancar Compartir Internet al inicio del dispositivo"</string>
@@ -327,7 +325,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="verifier_error">"¡Cuidado! Esta versión de InviZible no es la original."</string>
     <string name="only_for_pro">"Solo versión PRO"</string>
     <string name="donate">"Donaciones"</string>
-    <string name="donate_project">"El proyecto InviZible Pro necesita de tu ayuda. Por favor, visita la página para donaciones o introduce el código de registro recibido."</string>
+    <string name="donate_project">El Proyecto InviZible Pro busca tu ayuda. Visita la página de donaciones o introduce el código premium que ya has recibido.</string>
     <string name="donate_button">"Visita"</string>
     <string name="enter_code_button">"Introducir código"</string>
     <string name="enter_code">"Introducir código"</string>
@@ -344,22 +342,22 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="add_custom_server_title">"Añadir servidor personalizado"</string>
     <string name="add_custom_server_error">"Configuración del servidor personalizado erronea. Por favor, comprueba el campo SDNS."</string>
     <string name="pending_purchase">"Te recordamos que tienes pendiente una compra incompleta:"</string>
-    <string name="buy_premium_gp">"InviZible Pro necesita de tu ayuda. Pulsa OK para comprar y obtener funciones exclusivas."</string>
+    <string name="buy_premium_gp">El Proyecto InviZible Pro solicita su ayuda. Pulse OK para adquirir funciones premium.</string>
     <string name="wrong_purchase_signature_gp">"Lo sentimos, pero no hemos podido verificar tu compra. Recibiras un reembolso en los próximos días (3 días, al menos)."</string>
     <string name="only_premium_feature">"Lo sentimos, pero esa función solo esta disponible en la versión exclusiva."</string>
-    <string name="agreement_text">"\Gracias por elegir InviZible Pro. Espero que sea útil para su privacidad y uso cómodo de Internet.
-
-InviZible Pro incluye Tor, DNSCrypt y Purple I2P como módulos.
-
-InviZible Pro puede usar la raíz, si su dispositivo tiene privilegios de raíz, o usa una VPN local para enviar tráfico de Internet a las redes Tor, DNSCrypt e I2P.
-
-Política de privacidad:
-InviZible Pro no recopila ni comparte ningún dato personal o confidencial del usuario.
-
-Derechos de autor © 2019-2024
-Garmatina Oleksandr
-invizible.soft@gmail.com
-invizible.net/en/privacy"</string>
+    <string name="agreement_text">Muchas gracias por elegir InviZible Pro. Estoy seguro de que mejorará su privacidad y le proporcionará una experiencia en línea sin problemas.
+\n
+\n\tInviZible Pro incluye Tor, DNSCrypt y Purple I2P como módulos.
+\n
+\n\tInviZible Pro puede usar root si tu dispositivo está rooteado, o usa una VPN local para entregar el tráfico de internet directamente a las redes Tor, DNSCrypt e I2P.
+\n
+\n\tPolítica de privacidad:
+\n\tInviZible Pro no recopila ni comparte ningún dato personal o sensible del usuario.
+\n
+\n\tDerechos de autor © 2019-2024
+\n\tGarmatin Oleksandr
+\n\tinvizible.soft@gmail.com
+\n\tinvizible.net/en/privacy</string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy HTTP exterior"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Dirección del proxy HTTP exterior"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Proxy SOCKS exterior"</string>
@@ -517,4 +515,30 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
+    <string name="notification_exclude_data_restriction_message">Por favor, permite el uso de datos en segundo plano y permite el uso de datos mientras el Economizador de datos está activado. Esto es esencial para una experiencia en línea sin problemas.</string>
+    <string name="ask_later">Preguntar después</string>
+    <string name="press_to_add">Pulsa para añadir.</string>
+    <string name="pref_itpd_com_ssu2_summ">Activar el protocolo de transporte SSU2 (utilizar UDP).</string>
+    <string name="notification_exclude_bat_optimisation_title">¿Dejar de optimizar el uso de la batería?</string>
+    <string name="pref_dnscrypt_http3_summ">Habilitar el soporte para HTTP/3 (DoH3, HTTP sobre QUIC). Tenga en cuenta que, al igual que DNSCrypt pero a diferencia de otras versiones HTTP, esta utiliza UDP y (normalmente) el puerto 443 en lugar de TCP.</string>
+    <string name="long_press_to_add">Mantenga pulsado para añadir.</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">Puentes IPv6</string>
+    <string name="pref_fast_route_to_tor">Ruta de Tor</string>
+    <string name="pref_fast_bypass_app">Aplicación de bypass</string>
+    <string name="pref_fast_exclude_app_from_tor">Excluir de Tor</string>
+    <string name="pref_fast_direct_udp_connection">Excluir UDP de Tor</string>
+    <string name="notification_exclude_data_restriction_title">¿Desactivar el ahorro de datos?</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">Conjunto de prefijos IPv6 estáticos utilizados.</string>
+    <string name="pref_dnscrypt_dns64_summ">Activa esta opción si estás en una red sólo ipv6 y los sitios ipv4 dejan de estar disponibles. De lo contrario, no la actives o no podrás conectarte a nada.</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor entra en un estado inactivo si no ve actividad de clientes durante un tiempo especificado. Debe ser de al menos 10 minutos</string>
+    <string name="pref_tor_track_host_exits_summ">Tor rastreará conexiones recientes a hosts e intentará reutilizar el mismo nodo de salida para cada una. Esta opción puede ayudar a evitar captchas interminables.</string>
+    <string name="ask_reset_settings_text">¡InviZible Pro no puede iniciar %1$s! Intente restablecer la configuración de %2$s. Si esto no ayuda, reinicie el dispositivo.</string>
+    <string name="ask_reset_settings_btn">Restablecer</string>
+    <string name="pref_fast_fake_sni">Falsificar SNI</string>
+    <string name="notifications_permission_rationale_message">Las notificaciones son esenciales para mostrar información importante sobre el funcionamiento de la aplicación, el control de la aplicación y los ataques detectados. ¿Desea permitir las notificaciones para InviZible?</string>
+    <string name="press_to_edit">Pulse para editar.</string>
+    <string name="anonymize_relays">Retransmisiones anónimas</string>
+    <string name="anonymize_relays_not_used">No se utilizan relés anónimos.</string>
+    <string name="pull_to_refresh">↓ Tira para actualizar ↓</string>
+    <string name="long_press_to_edit">Mantenga pulsado para editar.</string>
 </resources>

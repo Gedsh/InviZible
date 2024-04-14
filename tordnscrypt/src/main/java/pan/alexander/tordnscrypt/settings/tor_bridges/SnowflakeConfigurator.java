@@ -20,12 +20,16 @@
 package pan.alexander.tordnscrypt.settings.tor_bridges;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,8 +41,13 @@ import pan.alexander.tordnscrypt.R;
 
 public class SnowflakeConfigurator {
 
+    private static final int SOCKS_ARGUMENT_MAX_LENGTH = 510;
+
     private static final int AMP_CACHE = 1;
     private static final int FASTLY = 2;
+    private static final int CDN77 = 3;
+    private static final int AZURE = 4;
+    private static final int AMAZON = 5;
 
     private final Context context;
     private final Lazy<SharedPreferences> defaultPreferences;
@@ -52,7 +61,7 @@ public class SnowflakeConfigurator {
         this.context = context;
         this.defaultPreferences = defaultPreferences;
     }
-    
+
     String getConfiguration(String currentBridge) {
         return getConfiguration(currentBridge, 0, "");
     }
@@ -68,18 +77,39 @@ public class SnowflakeConfigurator {
     private String getConfiguration(String currentBridge, int rendezvousType, String stunServers) {
         StringBuilder bridgeBuilder = new StringBuilder();
         bridgeBuilder.append(currentBridge);
-        if (!currentBridge.contains(" url=")) {
+        if (!currentBridge.contains(" url=") && !isSqsBridge(currentBridge, rendezvousType)) {
             bridgeBuilder.append(" url=").append(getURL(rendezvousType));
         }
-        if (!currentBridge.contains(" front=") && !currentBridge.contains(" fronts=")) {
+        if (!currentBridge.contains(" front=")
+                && !currentBridge.contains(" fronts=")
+                && !isSqsBridge(currentBridge, rendezvousType)) {
             bridgeBuilder.append(" fronts=").append(getFront(rendezvousType));
-        }
-        if (!currentBridge.contains(" ice=")) {
-            bridgeBuilder.append(" ice=").append(getStunServers(stunServers));
         }
         if (!currentBridge.contains(" utls-imitate=")) {
             bridgeBuilder.append(" utls-imitate=").append(getUtlsClientID());
         }
+        if (!currentBridge.contains(" sqsqueue=") && isSqsBridge(currentBridge, rendezvousType)) {
+            bridgeBuilder.append(" sqsqueue=").append(getSqsQueue());
+        }
+        if (!currentBridge.contains(" sqscreds=") && isSqsBridge(currentBridge, rendezvousType)) {
+            bridgeBuilder.append(" sqscreds=").append(getSqsCredits());
+        }
+
+        if (!currentBridge.contains(" ice=")) {
+            bridgeBuilder.append(" ice=");
+
+            List<String> stunServersReady = getStunServers(stunServers);
+            String stunServersLine = TextUtils.join(",", stunServersReady);
+            while (bridgeBuilder.length() + stunServersLine.length() > SOCKS_ARGUMENT_MAX_LENGTH
+                    && stunServersReady.size() > 1) {
+                String stun = stunServersReady.remove(stunServersReady.size() - 1);
+                logw("Shorten too long snowflake line. Removed " + stun);
+                stunServersLine = TextUtils.join(",", stunServersReady);
+            }
+
+            bridgeBuilder.append(stunServersLine);
+        }
+
         return bridgeBuilder.toString();
     }
 
@@ -90,19 +120,27 @@ public class SnowflakeConfigurator {
                     + " ampcache=https://cdn.ampproject.org/";
         } else if (rendezvous == FASTLY) {
             return "https://snowflake-broker.torproject.net.global.prod.fastly.net/";
+        } else if (rendezvous == CDN77) {
+            return "https://1098762253.rsc.cdn77.org/";
+        } else if (rendezvous == AZURE) {
+            return "https://snowflake-broker.azureedge.net/";
         } else {
-            return "";
+            return "https://snowflake-broker.azureedge.net/";
         }
     }
 
     private String getFront(int rendezvousType) {
         int rendezvous = getRendezvous(rendezvousType);
         if (rendezvous == AMP_CACHE) {
-            return "www.google.com,accounts.google.com";
+            return "www.google.com,cdn.ampproject.org";
         } else if (rendezvous == FASTLY) {
-            return "foursquare.com,github.githubassets.com";
+            return "github.githubassets.com,www.shazam.com,www.cosmopolitan.com,www.esquire.com";
+        } else if (rendezvous == CDN77) {
+            return "docs.plesk.com,www.phpmyadmin.net,app.datapacket.com";
+        } else if (rendezvous == AZURE) {
+            return "ajax.aspnetcdn.com";
         } else {
-            return "";
+            return "ajax.aspnetcdn.com";
         }
     }
 
@@ -118,7 +156,7 @@ public class SnowflakeConfigurator {
         return rendezvous;
     }
 
-    private String getStunServers(String servers) {
+    private List<String> getStunServers(String servers) {
 
         String stunServers;
         if (servers.isEmpty()) {
@@ -127,7 +165,7 @@ public class SnowflakeConfigurator {
             );
 
             stunServers = defaultPreferences.get().getString(
-                    "pref_tor_snowflake_stun",
+                    STUN_SERVERS,
                     defaultStunServers
             );
 
@@ -135,27 +173,26 @@ public class SnowflakeConfigurator {
                 stunServers = null;
             }
 
-            if (stunServers == null) {
+            if (stunServers == null || stunServers.isEmpty()) {
                 stunServers = defaultStunServers;
-                defaultPreferences.get().edit().putString("pref_tor_snowflake_stun", stunServers).apply();
+                defaultPreferences.get().edit().putString(STUN_SERVERS, stunServers).apply();
             }
         } else {
             stunServers = servers;
         }
 
-        StringBuilder stunServerBuilder = new StringBuilder();
+        List<String> stunServersReady = new ArrayList<>();
         String[] stunServersArr = stunServers.split(", ?");
 
         Pattern pattern = Pattern.compile(".+\\..+:\\d+");
         for (String server : stunServersArr) {
             Matcher matcher = pattern.matcher(server);
             if (matcher.matches()) {
-                stunServerBuilder.append("stun:").append(server.trim()).append(",");
+                stunServersReady.add("stun:" + server.trim());
             }
         }
-        stunServerBuilder.deleteCharAt(stunServerBuilder.lastIndexOf(","));
 
-        return stunServerBuilder.toString();
+        return stunServersReady;
     }
 
     @SuppressWarnings("unused")
@@ -177,5 +214,18 @@ public class SnowflakeConfigurator {
         final String helloios_12_1 = "helloios_12_1";
 
         return hellorandomizedalpn;
+    }
+
+    private String getSqsQueue() {
+        return "https://sqs.us-east-1.amazonaws.com/893902434899/snowflake-broker";
+    }
+
+    private String getSqsCredits() {
+        return "eyJhd3MtYWNjZXNzLWtleS1pZCI6IkFLSUE1QUlGNFdKSlhTN1lIRUczIiwiYXdzLXNlY3JldC1rZXkiOiI3U0RNc0pBNHM1RitXZWJ1L3pMOHZrMFFXV0lsa1c2Y1dOZlVsQ0tRIn0=";
+    }
+
+    private boolean isSqsBridge(String bridge, int rendezvousType) {
+        int rendezvous = getRendezvous(rendezvousType);
+        return bridge.contains(" sqsqueue=") || !bridge.contains(" url=") && rendezvous == AMAZON;
     }
 }

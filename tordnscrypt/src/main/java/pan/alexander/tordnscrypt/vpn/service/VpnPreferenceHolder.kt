@@ -41,7 +41,6 @@ class VpnPreferenceHolder @Inject constructor(
     preferenceRepository: PreferenceRepository,
     pathVars: PathVars
 ) {
-    val nativeLogLevel = Log.ERROR
     val dnsBlockedResponseCode = 3
     val itpdRedirectAddress = "10.191.0.1"
     val ownUID = pathVars.appUid
@@ -53,6 +52,7 @@ class VpnPreferenceHolder @Inject constructor(
     val useIPv6Tor = defaultPreferences.getBoolean(TOR_USE_IPV6, true)
 
     val setBypassProxy = preferenceRepository.getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
+    val setDirectUdpApps = preferenceRepository.getStringSetPreference(APPS_DIRECT_UDP)
 
     val compatibilityMode = if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
         true

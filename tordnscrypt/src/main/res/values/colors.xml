@@ -64,4 +64,7 @@
     <color name="liveLogEntryDnsUnused">@color/colorGrey</color>
     <color name="liveLogEntryDnsUsed">@color/colorGreen</color>
     <color name="itemDnsServerRelayTextButton">@color/colorGreyBlue</color>
+    <color name="colorChipIconTorify">@color/colorGreen</color>
+    <color name="colorChipIconDirectUdp">@color/colorAccent</color>
+    <color name="colorChipIconBypassApp">@color/colorRed</color>
 </resources>

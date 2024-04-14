@@ -372,6 +372,18 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/captive-portals.txt";
     }
 
+    public String getDNSCryptPublicResolversPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/public-resolvers.md";
+    }
+
+    public String getDNSCryptRelaysPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/relays.md";
+    }
+
+    public String getDNSCryptOwnResolversPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/own-resolvers.md";
+    }
+
     public String getCacheDirPath(Context context) {
         String cacheDirPath = "/storage/emulated/0/Android/data/" + context.getPackageName() + "/cache";
 

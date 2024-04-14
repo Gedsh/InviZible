@@ -52,6 +52,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -96,6 +97,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
@@ -109,6 +111,8 @@ import static pan.alexander.tordnscrypt.utils.enums.BridgeType.snowflake;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.undefined;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+
+import com.google.android.material.appbar.AppBarLayout;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -145,6 +149,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private Spinner spOwnBridges;
     private TextView tvBridgesListEmpty;
     private RecyclerView rvBridges;
+    private AppBarLayout appBarBridges;
     private BridgeAdapter bridgeAdapter;
     private SwipeRefreshLayout swipeRefreshBridges;
 
@@ -245,7 +250,22 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         tvBridgesListEmpty = view.findViewById(R.id.tvBridgesListEmpty);
 
         rvBridges = view.findViewById(R.id.rvBridges);
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity);
+        rvBridges.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
+        appBarBridges = view.findViewById(R.id.appBarBridges);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(activity) {
+
+            @Override
+            public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
+                if (!rvBridges.isInTouchMode()) {
+                    onScrollWhenInNonTouchMode(dy);
+                }
+                return super.scrollVerticallyBy(dy, recycler, state);
+            }
+
+            private void onScrollWhenInNonTouchMode(int dy) {
+                appBarBridges.setExpanded(dy <= 0, true);
+            }
+        };
         rvBridges.setLayoutManager(mLayoutManager);
 
         swipeRefreshBridges = view.findViewById(R.id.swipeRefreshBridges);
@@ -425,7 +445,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             torConfCleaned.add("UseBridges 0");
         }
 
-        if (torConfCleaned.size() == tor_conf.size() && torConfCleaned.containsAll(tor_conf)) {
+        if (torConfCleaned.size() == tor_conf.size() && new HashSet<>(torConfCleaned).containsAll(tor_conf)) {
             return;
         }
 
@@ -465,6 +485,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         tvBridgesListEmpty = null;
         rvBridges = null;
+        appBarBridges = null;
         bridgeAdapter = null;
         savedBridgesSelector = null;
         swipeRefreshBridges = null;
@@ -693,13 +714,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./-]+ +front=[\\w./-]+( +utls=\\w+)?");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w./-]+)?(?: +ampcache=https://[\\w./-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?");
+                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w./-]+)?(?: +ampcache=https://[\\w./-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w./-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?");
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
                 pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
             } else if (inputLinesStr.contains(webtunnel.toString())) {
                 inputBridgesType = webtunnel.toString();
-                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w./-]+");
+                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w./-]+(?: ver=[0-9.]+)?");
             } else {
                 pattern = Pattern.compile(bridgeBase);
             }
@@ -894,15 +915,23 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             sortBridgesByPing();
 
             if (bridgesToDisplay.isEmpty()) {
-                tvBridgesListEmpty.setVisibility(View.VISIBLE);
+                tvBridgesListEmpty.setText(R.string.list_is_empty);
             } else {
-                tvBridgesListEmpty.setVisibility(View.GONE);
+                tvBridgesListEmpty.setText(R.string.pull_to_refresh);
 
                 viewModel.searchBridgeCountries(bridgesToDisplay);
 
                 if (modulesStatus.getTorState() == STOPPED
                         || areDefaultVanillaBridgesSelected()) {
                     viewModel.measureTimeouts(bridgesToDisplay);
+                } else {
+                    List<ObfsBridge> activeBridges = new ArrayList<>();
+                    for (ObfsBridge bridge : bridgesToDisplay) {
+                        if (bridge.active) {
+                            activeBridges.add(bridge);
+                        }
+                    }
+                    viewModel.measureTimeouts(activeBridges);
                 }
             }
         });
@@ -927,14 +956,22 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             sortBridgesByPing();
 
             if (bridgesToDisplay.isEmpty()) {
-                tvBridgesListEmpty.setVisibility(View.VISIBLE);
+                tvBridgesListEmpty.setText(R.string.list_is_empty);
             } else {
-                tvBridgesListEmpty.setVisibility(View.GONE);
+                tvBridgesListEmpty.setText(R.string.pull_to_refresh);
 
                 viewModel.searchBridgeCountries(bridgesToDisplay);
 
                 if (modulesStatus.getTorState() == STOPPED) {
                     viewModel.measureTimeouts(bridgesToDisplay);
+                } else {
+                    List<ObfsBridge> activeBridges = new ArrayList<>();
+                    for (ObfsBridge bridge : bridgesToDisplay) {
+                        if (bridge.active) {
+                            activeBridges.add(bridge);
+                        }
+                    }
+                    viewModel.measureTimeouts(activeBridges);
                 }
             }
         });
@@ -1281,7 +1318,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         doActionAndUpdateRecycler(() -> {
             bridgesToDisplay.clear();
             viewModel.requestRelayBridges(
-                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, true)
+                    defaultPreferences.get().getBoolean(TOR_USE_IPV6, true),
+                    defaultPreferences.get().getBoolean(TOR_FASCIST_FIREWALL, true)
             );
         });
 

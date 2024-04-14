@@ -180,12 +180,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data
-                    android:host="www.invizible.net"
-                    android:scheme="https" />
-                <data
-                    android:host="invizible.net"
-                    android:scheme="http" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:pathPattern="/app/.*" />
+                <data android:host="invizible.net" />
+                <data android:host="www.invizible.net" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
@@ -200,10 +199,14 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
-                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL" />
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
                 <action android:name="android.intent.action.REBOOT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="pan.alexander.tordnscrypt.ALWAYS_ON_VPN" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL" />
             </intent-filter>
         </receiver>
 

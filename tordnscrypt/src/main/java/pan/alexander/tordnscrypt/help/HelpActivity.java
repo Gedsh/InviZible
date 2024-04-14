@@ -190,7 +190,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
                 info = Utils.INSTANCE.collectInfo(
                         verifier.get().getAppSignature(),
                         pathVarsLazy.get().getAppVersion(),
-                        pathVarsLazy.get().getAppProcVersion()
+                        pathVarsLazy.get().getAppProcVersion(),
+                        Utils.getAppVersion(this, pathVarsLazy.get(), preferenceRepository.get())
                 );
             } catch (Exception ignored) {
             }

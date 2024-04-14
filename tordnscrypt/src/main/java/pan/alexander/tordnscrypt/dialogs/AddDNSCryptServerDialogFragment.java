@@ -28,7 +28,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DNSServerItem;
+import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DnsServerItem;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -46,7 +46,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
     }
 
     public interface OnServerAddedListener {
-        void onServerAdded(DNSServerItem dnsServerItem);
+        void onServerAdded(DnsServerItem dnsServerItem);
     }
 
     public void setOnServerAddListener(OnServerAddedListener onServerAddedListener) {
@@ -104,6 +104,10 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
             return false;
         }
 
+        if (etOwnServerDescriptionText.isEmpty()) {
+            etOwnServerDescriptionText = etOwnServerNameText;
+        }
+
         try {
             Base64.decode(etOwnServerSDNSText.substring(0, 7).getBytes(), 16);
         } catch (Exception e) {
@@ -114,7 +118,7 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
         }
 
         try {
-            DNSServerItem item = new DNSServerItem(context, etOwnServerNameText, etOwnServerDescriptionText, etOwnServerSDNSText);
+            DnsServerItem item = new DnsServerItem(context, etOwnServerNameText, etOwnServerDescriptionText, etOwnServerSDNSText);
             item.setOwnServer(true);
 
             if (onServerAddedListener != null) {

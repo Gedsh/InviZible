@@ -26,4 +26,4 @@ data class BridgePingData(
     val ping: Int
 ) : BridgePingResult()
 
-object PingCheckComplete : BridgePingResult()
+data object PingCheckComplete : BridgePingResult()

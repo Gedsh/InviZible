@@ -125,7 +125,6 @@ class InstalledApplicationsManager private constructor(
                     PackageManager.ApplicationInfoFlags.of(pkgManagerFlags.toLong())
                 )
             } else {
-                @Suppress("DEPRECATION")
                 packageManager.getInstalledApplications(pkgManagerFlags)
             }
 
@@ -136,10 +135,11 @@ class InstalledApplicationsManager private constructor(
             installedApps.forEach { applicationInfo ->
                 application = userAppsMap[applicationInfo.uid]
 
-                val name =
-                    packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
+                //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
+                val name = applicationInfo.loadLabel(packageManager)?.toString() ?: "Undefined"
                 val icon = if (iconIsRequired) {
-                    packageManager.getApplicationIcon(applicationInfo)
+                    //packageManager.getApplicationIcon(applicationInfo)
+                    applicationInfo.loadIcon(packageManager)
                 } else {
                     null
                 }
@@ -243,7 +243,6 @@ class InstalledApplicationsManager private constructor(
                     PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong())
                 )
             } else {
-                @Suppress("DEPRECATION")
                 packageManager.getPackageInfo(
                     applicationInfo.packageName,
                     PackageManager.GET_PERMISSIONS
@@ -326,7 +325,7 @@ class InstalledApplicationsManager private constructor(
         val media = getUidForName("media", 1013 + userId * 100_000)
         val vpn = getUidForName("vpn", 1016 + userId * 100_000)
         val drm = getUidForName("drm", 1019 + userId * 100_000)
-        val mdns = getUidForName("mdns", 1020 + userId * 100_000)
+        val mdns = getUidForName("mdnsr", 1020 + userId * 100_000)
         val gps = getUidForName("gps", 1021 + userId * 100_000)
         val dns = getUidForName("dns", 1051 + userId * 100_000)
         val dnsTether = getUidForName("dns_tether", 1052 + userId * 100_000)
@@ -335,7 +334,7 @@ class InstalledApplicationsManager private constructor(
         val specialDataApps = arrayListOf(
             ApplicationData(
                 "Kernel",
-                "UID -1",
+                "uid -1",
                 -1,
                 defaultIcon,
                 system = true,
@@ -389,7 +388,7 @@ class InstalledApplicationsManager private constructor(
             ),
             ApplicationData(
                 "Multicast DNS",
-                "mDNS",
+                "mdnsr",
                 mdns,
                 defaultIcon,
                 system = true,

@@ -16,7 +16,7 @@
     <string name="swRunOnBoot">启动设备时启动</string>
     <string name="root_available">正在检查 Root 是否可用…</string>
     <string name="please_wait">"请稍侯…"</string>
-    <string name="dont_show">"不再显示"</string>
+    <string name="dont_show">不再询问</string>
     <string name="tvDNSStop">"DNSCrypt 已停止"</string>
     <string name="tvDNSInstalled">"DNSCrypt 已安装"</string>
     <string name="tvDNSInstalling">"DNSCrypt 正在安装"</string>
@@ -125,7 +125,7 @@
     <string name="pref_common_wakelock_summ">"无 Root 模式下的附加保护防止应用被 Android 系统杀死。可能消耗电池"</string>
     <string name="pref_common_show_help">"帮助信息"</string>
     <string name="pref_common_show_help_summ">"总是显示帮助信息"</string>
-    <string name="pref_common_notification_helper">"请对 InviZible Pro 关闭 Android 电池优化。 否则 Android 将随时杀死 DNSCrypt，Tor 或 I2P。在特定系统上，如 MIUI，需要一些额外步骤 。"</string>
+    <string name="pref_common_notification_helper">请将 InviZible Pro 从 Android 电池优化中排除，以防止系统在任何时候终止 DNSCrypt、Tor 或 I2P。对于某些特定系统，例如 MIUI，可能需要额外步骤。</string>
     <string name="pref_common_use_busybox">"选择 BusyBox"</string>
     <string name="pref_common_categ_hotspot">"热点-实验性"</string>
     <string name="pref_common_tethering_autostart">"设备启动时启动数据共享"</string>
@@ -183,16 +183,16 @@
     <string name="open_query_log">"打开请求日志"</string>
     <string name="pref_dnscrypt_nx_log_categ">"记录可疑请求。"</string>
     <string name="pref_dnscrypt_nx_log_summ">记录不存在区域的请求。
-\n 这些请求将揭示恶意软件，损坏/过时应用，及向第三方显示存在的设备的存在。</string>
+\n 这些请求将揭示恶意软件，损坏/过时应用，及向第三方显示存在的设备。</string>
     <string name="pref_dnscrypt_nx_log">"启用可疑请求日志"</string>
     <string name="open_nx_log">"打开可疑请求日志"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"基于模式的阻止（黑名单）。"</string>
+    <string name="pref_dnscrypt_blacklist_categ">基于封锁列表模式的域名阻止（黑名单）。</string>
     <string name="pref_dnscrypt_blacklist">"黑名单"</string>
-    <string name="pref_dnscrypt_blacklist_summ">"黑名单由每行一个模式组成。"</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"基于模式的 IP 阻止（IP 黑名单）。"</string>
+    <string name="pref_dnscrypt_blacklist_summ">黑名单由每行一个域名或封锁列表组成。</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">基于IP块列表模式的 IP 阻止（IP 黑名单）。</string>
     <string name="pref_dnscrypt_ipblacklist">"IP 黑名单"</string>
-    <string name="pref_dnscrypt_ipblacklist_summ">"IP 黑名单由每行一个模式组成。"</string>
-    <string name="pref_dnscrypt_whitelist_categ">"基于模式的白名单（绕过黑名单）。"</string>
+    <string name="pref_dnscrypt_ipblacklist_summ">IP 黑名单由每行一个IP地址模式组成。</string>
+    <string name="pref_dnscrypt_whitelist_categ">基于允许列表模式的白名单（绕过黑名单）。</string>
     <string name="pref_dnscrypt_whitelist">"白名单"</string>
     <string name="pref_dnscrypt_whitelist_summ">"白名单支持与黑名单相同的模式。如果域名匹配白名单项，相应会话将绕过域名和 IP 过滤器。"</string>
     <string name="pref_dnscrypt_sources_categ">"服务器"</string>
@@ -328,7 +328,7 @@
     <string name="verifier_error">"似乎这是非官方版本的 InviZible。请小心！"</string>
     <string name="only_for_pro">"仅用于 PRO 版本"</string>
     <string name="donate">"捐助"</string>
-    <string name="donate_project">"InviZible Pro 项目需要您的帮助。请访问捐助页面或输入收到的注册码。"</string>
+    <string name="donate_project">InviZible Pro 项目寻求您的帮助。请访问捐助页面或输入您已经收到的注册码。</string>
     <string name="donate_button">"访问"</string>
     <string name="enter_code_button">"输入代码"</string>
     <string name="enter_code">"输入代码"</string>
@@ -345,7 +345,7 @@
     <string name="add_custom_server_title">"添加自定义服务器"</string>
     <string name="add_custom_server_error">"无效自定义服务器配置。请检查 SDNS 字段。"</string>
     <string name="pending_purchase">"请注意您有一个待完成的购买："</string>
-    <string name="buy_premium_gp">"InviZible Pro 项目需要您的帮助。点按 OK 购买高级功能。"</string>
+    <string name="buy_premium_gp">InviZible Pro 项目寻求您的帮助。点按 OK 购买高级功能。</string>
     <string name="wrong_purchase_signature_gp">"抱歉，无法确认您的购买。您将在 3 日后收到退款。"</string>
     <string name="only_premium_feature">"不幸的是，此功能仅高级版可用。"</string>
     <string name="pref_itpd_use_HTTP_outproxy">"HTTP 出口代理"</string>
@@ -377,7 +377,7 @@
     <string name="pref_dnscrypt_import_whitelist">"导入白名单"</string>
     <string name="pref_dnscrypt_import_whitelist_summ">"导入域名列表。您可以选择多个文件，重复行将被移除。"</string>
     <string name="pref_dnscrypt_erase_whitelist">"擦除白名单"</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">"立即使用空响应响应 IPv6 相关请求。 当没有 IPv6 连接时可以加快速度，但也会对一些解析器造成可靠性问题。"</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">立即使用空响应回答 IPv6 相关请求。 当没有 IPv6 连接时可以加快速度，但也会对一些解析器造成可靠性问题。</string>
     <string name="helper_dnscrypt_private_dns">"请在 Android 网络设置中关闭“私人 DNS”。此选项与 InviZible 冲突。"</string>
     <string name="import_dnscrypt_rules_dialog_title">"导入规则"</string>
     <string name="import_dnscrypt_rules_dialog_message">"请稍候…已导入 %d 条规则。"</string>
@@ -480,41 +480,67 @@
     <string name="notification_connecting">正在连接…</string>
     <string name="notification_waiting_network">等待网络…</string>
     <string name="tile_change_tor_ip">更改Tor IP</string>
-    <string name="tile_changing_tor_ip">ToR IP更改</string>
+    <string name="tile_changing_tor_ip">Tor IP 正在更改</string>
     <string name="tile_dialog_over_three_tiles_message">你在快捷设置中添加了超过3个磁贴。请只留下3个。添加超过3个磁贴会导致应用控制的问题。</string>
-    <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
-    <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
-    <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
-    <string name="pref_tor_snowflake_select_rendezvous_summ">"Hides the broker's domain name from the Internet provider. The broker is used to establish a connection."</string>
-    <string name="pref_firewall_show_all_apps">"Show all apps"</string>
-    <string name="pref_firewall_show_all_apps_on_summ">"Apps are shown regardless of whether the app can connect to the Internet or not."</string>
-    <string name="pref_firewall_show_all_apps_off_summ">"Only apps that can connect to the Internet are shown."</string>
-    <string name="pref_common_kill_switch">"Kill switch"</string>
-    <string name="pref_common_kill_switch_summ">"Block internet connection when Tor, DNSCrypt and Purple I2P are stopped"</string>
-    <string name="notification_internet_blocked_message">"Internet blocked due to the Kill switch. Start Tor, DNSCrypt or I2P to allow the connection. Or disable the Kill switch in Common Settings."</string>
-    <string name="list_is_empty">"List is Empty"</string>
+    <string name="pref_common_rogue_dhcp_detection">恶意 DHCP 检测</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">检测Wi-Fi网络中的中间人恶意DHCP攻击。</string>
+    <string name="pref_tor_snowflake_select_rendezvous">选择会合</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">在互联网提供商处隐藏代理的域名。代理用于建立连接。</string>
+    <string name="pref_firewall_show_all_apps">显示所有应用</string>
+    <string name="pref_firewall_show_all_apps_on_summ">无论应用程序是否可以连接到互联网，都会显示应用程序。</string>
+    <string name="pref_firewall_show_all_apps_off_summ">仅显示可连接到互联网的应用程序。</string>
+    <string name="pref_common_kill_switch">切断开关</string>
+    <string name="pref_common_kill_switch_summ">当Tor、DNSCrypt和Purple I2P停止时，阻止互联网连接</string>
+    <string name="notification_internet_blocked_message">由于关闭开关，互联网被阻止。启动Tor、DNSCrypt或I2P以允许连接。或者在“常用设置”中禁用关闭开关。</string>
+    <string name="list_is_empty">列表为空</string>
     <string name="pref_common_use_busybox_auto">"Auto"</string>
-    <string name="pref_common_use_busybox_device">"Use device BusyBox"</string>
-    <string name="pref_common_use_busybox_app">"Use application BusyBox"</string>
-    <string name="pref_common_use_busybox_not_use">"Not use BusyBox"</string>
-    <string name="pref_common_use_iptables_app">"Use application iptables"</string>
-    <string name="pref_common_use_iptables_device">"Use device iptables"</string>
-    <string name="pref_common_wait_iptables">"Wait for the xtables lock"</string>
-    <string name="pref_common_wait_iptables_summ">"Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules."</string>
-    <string name="connectivity_check">"Internet connectivity check"</string>
-    <string name="pref_fast_logs">"Real-time logs"</string>
-    <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
-    <string name="agreement_text">\\\t感谢您选择InviZible Pro。我希望它能对您的隐私和舒适地使用互联网有帮助。
+    <string name="pref_common_use_busybox_device">使用设备BusyBox</string>
+    <string name="pref_common_use_busybox_app">使用应用程序BusyBox</string>
+    <string name="pref_common_use_busybox_not_use">不使用BusyBox</string>
+    <string name="pref_common_use_iptables_app">使用应用程序 iptables</string>
+    <string name="pref_common_use_iptables_device">使用设备 iptables</string>
+    <string name="pref_common_wait_iptables">等待 xtables 锁定</string>
+    <string name="pref_common_wait_iptables_summ">等待获得独占的 iptables 锁，以防止对 iptables 规则的并发修改。</string>
+    <string name="connectivity_check">互联网连接检查</string>
+    <string name="pref_fast_logs">实时日志</string>
+    <string name="pref_fast_logs_summ">在DNS选项卡中显示应用程序连接日志</string>
+    <string name="agreement_text">\\感谢您选择InviZble Pro。我相信它将增强您的隐私，并提供流畅的在线体验。
 \n
-\n\tInviZible Pro包括Tor、DNSCrypt和Purple I2P等模块。
+\nInviZble Pro包括Tor、DNSCryt和Purple I2P作为模块。
 \n
-\n\t如果您的设备有root权限，InviZible Pro可以使用root，或者使用本地VPN将互联网流量传送到Tor、DNSCrypt和I2P网络。
+\n如果您的设备是root的，InviZble Pro可以使用root，或者使用本地VPN将互联网流量直接传递到Tor、DNSCryt和I2P网络。
 \n
-\n\t隐私政策：
-\n\tInviZible Pro不收集或分享任何私人或敏感的用户数据。
+\n隐私政策：
+\nInviZble Pro不收集或共享任何个人或敏感用户数据。
 \n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+\n版权所有©2019-2024。
+\nGarmatin Oleksandr。
+\n邮箱：invizible.soft@gmail.com。
+\nInvizible.net/en/privacy</string>
+    <string name="notification_exclude_data_restriction_message">请允许使用后台流量，并在流量节省程序开启时允许使用流量。这对于流畅的在线体验非常重要。</string>
+    <string name="ask_later">稍后询问</string>
+    <string name="notification_exclude_bat_optimisation_title">停止优化电池使用？</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">已使用的静态 IPv6 前缀集。</string>
+    <string name="anonymize_relays">匿名中继器</string>
+    <string name="long_press_to_edit">长按可编辑。</string>
+    <string name="pref_fast_exclude_app_from_tor">从Tor中排除</string>
+    <string name="pref_fast_route_to_tor">通向Tor的路线</string>
+    <string name="pref_fast_direct_udp_connection">从Tor中排除UDP</string>
+    <string name="pref_fast_bypass_app">绕过应用程序</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">IPv6网桥</string>
+    <string name="pref_fast_fake_sni">伪造 SNI</string>
+    <string name="pref_dnscrypt_http3_summ">启用对 HTTP/3（DoH3，QUIC 上的 HTTP）的支持。请注意，与 DNSCrypt 不同，与其他 HTTP 版本不同，此版本使用 UDP 和（通常）端口 443 而不是 TCP。</string>
+    <string name="pref_tor_track_host_exits_summ">Tor会追踪最近与主机的连接，并尝试为每个连接重用相同的出口节点。此选项可能有助于避免无休止的验证码。</string>
+    <string name="ask_reset_settings_text">InviZible Pro 无法启动 %1$s！请尝试重置 %2$s 设置。如果这不起作用，请重新启动设备。</string>
+    <string name="press_to_add">按下可添加。</string>
+    <string name="long_press_to_add">长按即可添加。</string>
+    <string name="pref_itpd_com_ssu2_summ">启用SSU2传输协议（使用UDP）。</string>
+    <string name="pull_to_refresh">↓拉取以刷新↓</string>
+    <string name="notifications_permission_rationale_message">通知对于显示有关应用程序操作、应用程序控制和检测到的攻击的重要信息至关重要。您是否要允许InviZible的通知？</string>
+    <string name="anonymize_relays_not_used">不使用匿名中继。</string>
+    <string name="ask_reset_settings_btn">重新设置</string>
+    <string name="notification_exclude_data_restriction_title">禁用网络数据节省程序？</string>
+    <string name="pref_dnscrypt_dns64_summ">如果您在仅支持ipv6的网络上，并且ipv4站点不可用，请激活此选项。否则，请不要启用它，否则您将无法连接到任何东西。</string>
+    <string name="pref_tor_dormant_client_timeout_summ">如果 Tor 在指定时间内没有看到客户端活动，它将进入休眠状态。必须至少 10 分钟</string>
+    <string name="press_to_edit">按下可编辑。</string>
 </resources>

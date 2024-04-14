@@ -22,10 +22,7 @@ package pan.alexander.tordnscrypt.data.connection_records
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsRepository
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
-import pan.alexander.tordnscrypt.domain.connection_records.entities.DnsRecord
-import pan.alexander.tordnscrypt.domain.connection_records.entities.PacketRecord
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import javax.inject.Inject
 
@@ -53,12 +50,7 @@ class ConnectionRecordsRepositoryImpl @Inject constructor(
         } else if (isFixTTL()) {
 
             (connectionRecordsGetter.getConnectionRawRecords() + nflogRecordsGetter.getConnectionRawRecords())
-                .filter {
-                    when (val record = it.key) {
-                        is PacketRecord -> record.uid != SPECIAL_UID_KERNEL
-                        is DnsRecord -> true
-                    }
-                }.toSortedKeysList()
+                .toSortedKeysList()
 
 
         } else if (isRootMode()) {
