@@ -137,4 +137,24 @@ public class OwnFileReader {
         }
     }
 
+    long getFileLength() {
+        try {
+            reentrantLock.lockInterruptibly();
+
+            File file = new File(filePath);
+            if (!file.isFile() || !file.canRead()) {
+                return -1;
+            }
+
+            return file.length();
+        } catch (Exception e) {
+            loge("OwnFileReader getFileSize", e);
+        } finally {
+            if (reentrantLock.isLocked() && reentrantLock.isHeldByCurrentThread()) {
+                reentrantLock.unlock();
+            }
+        }
+        return -1;
+    }
+
 }

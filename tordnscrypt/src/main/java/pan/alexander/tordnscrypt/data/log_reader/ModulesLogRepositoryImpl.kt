@@ -22,7 +22,10 @@ package pan.alexander.tordnscrypt.data.log_reader
 import android.content.Context
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
+
+private val asciiVisibleSymbols = 32..126
 
 class ModulesLogRepositoryImpl @Inject constructor(
     val applicationContext: Context,
@@ -35,12 +38,36 @@ class ModulesLogRepositoryImpl @Inject constructor(
     private var itpdLogFileReader: OwnFileReader? = null
     private var itpdHtmlFileReader: HtmlReader? = null
 
+    private val dnsCryptLog: MutableList<String> = arrayListOf()
+    private val torLog: MutableList<String> = arrayListOf()
+    private val itpdLog: MutableList<String> = arrayListOf()
+
+    @Volatile
+    private var dnsCryptLogLength = 0L
+
+    @Volatile
+    private var torLogLength = 0L
+
+    @Volatile
+    private var itpdLogLength = 0L
+
     override fun getDNSCryptLog(): List<String> {
         dnsCryptLogFileReader = dnsCryptLogFileReader ?: OwnFileReader(
             applicationContext,
             "$appDataDir/logs/DnsCrypt.log"
         )
-        return dnsCryptLogFileReader?.readLastLines() ?: emptyList()
+
+        return dnsCryptLogFileReader?.let { reader ->
+            val length = reader.fileLength
+            if (length < 0 || length > 0 && length != dnsCryptLogLength) {
+                dnsCryptLogLength = length
+                dnsCryptLog.clear()
+                dnsCryptLog.addAll(
+                    reader.readLastLines().map { it.removeNonVisibleSymbols() }
+                )
+            }
+            dnsCryptLog
+        } ?: emptyList()
     }
 
     override fun getTorLog(): List<String> {
@@ -48,7 +75,16 @@ class ModulesLogRepositoryImpl @Inject constructor(
             applicationContext,
             "$appDataDir/logs/Tor.log"
         )
-        return torLogFileReader?.readLastLines() ?: emptyList()
+
+        return torLogFileReader?.let { reader ->
+            val length = reader.fileLength
+            if (length < 0 || length > 0 && length != torLogLength) {
+                torLogLength = length
+                torLog.clear()
+                torLog.addAll(reader.readLastLines())
+            }
+            torLog
+        } ?: emptyList()
     }
 
     override fun getITPDLog(): List<String> {
@@ -56,11 +92,41 @@ class ModulesLogRepositoryImpl @Inject constructor(
             applicationContext,
             "$appDataDir/logs/i2pd.log"
         )
-        return itpdLogFileReader?.readLastLines() ?: emptyList()
+
+        return itpdLogFileReader?.let { reader ->
+            val length = reader.fileLength
+            if (length < 0 || length > 0 && length != itpdLogLength) {
+                itpdLogLength = length
+                itpdLog.clear()
+                itpdLog.addAll(reader.readLastLines())
+            }
+            itpdLog
+        } ?: emptyList()
     }
 
     override fun getITPDHtmlData(): List<String> {
         itpdHtmlFileReader = itpdHtmlFileReader ?: HtmlReader(7070)
         return itpdHtmlFileReader?.readLines() ?: emptyList()
+    }
+
+    private fun String.removeNonVisibleSymbols(): String {
+        var result: StringBuilder? = null
+        for (ch in toCharArray()) {
+            if (ch.code !in asciiVisibleSymbols) {
+                result = StringBuilder()
+                loge("DNSCrypt log contains non-visible symbols: ${ch.code} Line: $this")
+                break
+            }
+        }
+        if (result != null) {
+            for (ch in toCharArray()) {
+                if (ch.code in asciiVisibleSymbols) {
+                    result.append(ch)
+                }
+            }
+        }
+        return result?.let {
+            result.toString()
+        } ?: this
     }
 }
