@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
@@ -56,7 +57,6 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.write
 public class SettingsParser implements OnTextFileOperationsCompleteListener {
     private final SettingsActivity settingsActivity;
     private final String appDataDir;
-    private Bundle bundleForReadPublicResolversMdFunction;
 
     public SettingsParser(SettingsActivity settingsActivity, String appDataDir) {
         this.settingsActivity = settingsActivity;
@@ -188,7 +188,12 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             }
             editor.apply();
 
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+            FragmentManager manager = settingsActivity.getSupportFragmentManager();
+            if (manager.isDestroyed()) {
+                return;
+            }
+
+            FragmentTransaction fTrans = manager.beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_toml", key_toml);
             bundle.putStringArrayList("val_toml", val_toml);
@@ -320,12 +325,17 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             }
             editor.apply();
 
+            FragmentManager manager = settingsActivity.getSupportFragmentManager();
+            if (manager.isDestroyed()) {
+                return;
+            }
+
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_tor", key_tor);
             bundle.putStringArrayList("val_tor", val_tor);
             PreferencesTorFragment frag = new PreferencesTorFragment();
             frag.setArguments(bundle);
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+            FragmentTransaction fTrans = manager.beginTransaction();
             fTrans.replace(android.R.id.content, frag);
             fTrans.commit();
         }
@@ -441,7 +451,12 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             }
             editor.apply();
 
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+            FragmentManager manager = settingsActivity.getSupportFragmentManager();
+            if (manager.isDestroyed()) {
+                return;
+            }
+
+            FragmentTransaction fTrans = manager.beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_itpd", key_itpd);
             bundle.putStringArrayList("val_itpd", val_itpd);
@@ -459,7 +474,11 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         } else {
             rules_file.add("");
         }
-        FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+        FragmentManager manager = settingsActivity.getSupportFragmentManager();
+        if (manager.isDestroyed()) {
+            return;
+        }
+        FragmentTransaction fTrans = manager.beginTransaction();
         Bundle bundle = new Bundle();
         bundle.putStringArrayList("rules_file", rules_file);
         bundle.putString("path", path);
@@ -474,10 +493,6 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     }
 
     public void deactivateSettingsParser() {
-        if (bundleForReadPublicResolversMdFunction != null) {
-            bundleForReadPublicResolversMdFunction.clear();
-        }
-
         FileManager.deleteOnFileOperationCompleteListener(this);
     }
 
