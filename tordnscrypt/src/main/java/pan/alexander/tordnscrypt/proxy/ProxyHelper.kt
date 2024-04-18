@@ -30,7 +30,7 @@ import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY
@@ -48,7 +48,7 @@ private const val CHECK_CONNECTION_TIMEOUT_MSEC = 500
 class ProxyHelper @Inject constructor(
     private val context: Context,
     private val pathVars: PathVars,
-    private val cachedExecutor: CachedExecutor,
+    private val executor: CoroutineExecutor,
     @Named(DEFAULT_PREFERENCES_NAME) private val defaultPreferences: SharedPreferences
 ) {
 
@@ -107,7 +107,7 @@ class ProxyHelper @Inject constructor(
             "$LOOPBACK_ADDRESS:$DEFAULT_PROXY_PORT"
         }
 
-        cachedExecutor.submit {
+        executor.submit("ProxyHelper manageProxy") {
             if ((enableDNSCryptProxy xor dnsCryptProxified) || serverOrPortChanged) {
                 manageDNSCryptProxy(pathVars.dnscryptConfPath, proxyAddr, enableDNSCryptProxy)
                 defaultPreferences.edit().putBoolean(DNSCRYPT_OUTBOUND_PROXY, enableDNSCryptProxy)

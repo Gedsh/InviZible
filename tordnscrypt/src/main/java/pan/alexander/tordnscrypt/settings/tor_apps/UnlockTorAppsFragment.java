@@ -46,20 +46,21 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import dagger.Lazy;
+import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -101,7 +102,7 @@ public class UnlockTorAppsFragment extends Fragment
     private Set<String> setVpnBypassApps;
 
     String unlockAppsStr;
-    private FutureTask<?> futureTask;
+    private Job task;
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private volatile boolean appsListComplete = false;
     private String searchText;
@@ -111,7 +112,7 @@ public class UnlockTorAppsFragment extends Fragment
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Handler> handler;
     @Inject
@@ -226,7 +227,7 @@ public class UnlockTorAppsFragment extends Fragment
 
         getDeviceApps(setUnlockApps);
 
-        cachedExecutor.submit(() -> {
+        executor.submit("UnlockTorAppsFragment verifier", () -> {
             try {
                 Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
@@ -247,6 +248,7 @@ public class UnlockTorAppsFragment extends Fragment
                 }
                 loge("UnlockTorAppsFragment fault", e, true);
             }
+            return null;
         });
     }
 
@@ -334,8 +336,8 @@ public class UnlockTorAppsFragment extends Fragment
     public void onDestroy() {
         super.onDestroy();
 
-        if (futureTask != null && futureTask.cancel(true)) {
-            return;
+        if (task != null) {
+            task.cancel(new CancellationException());
         }
 
         handler.get().removeCallbacksAndMessages(null);
@@ -526,8 +528,7 @@ public class UnlockTorAppsFragment extends Fragment
             return;
         }
 
-        futureTask = new FutureTask<>(() -> {
-
+        task = executor.submit("UnlockTorAppsFragment getDeviceApps", () -> {
             try {
 
                 reentrantLock.lockInterruptibly();
@@ -614,8 +615,6 @@ public class UnlockTorAppsFragment extends Fragment
 
             return null;
         });
-
-        cachedExecutor.submit(futureTask);
 
     }
 

@@ -26,11 +26,10 @@ import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
-import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.Utils
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -49,7 +48,7 @@ class SendCrashReport : ExtendedDialogFragment() {
     @Inject
     lateinit var pathVars: dagger.Lazy<PathVars>
     @Inject
-    lateinit var cachedExecutor: CachedExecutor
+    lateinit var executor: CoroutineExecutor
     @Inject
     lateinit var verifier: dagger.Lazy<Verifier>
 
@@ -68,7 +67,7 @@ class SendCrashReport : ExtendedDialogFragment() {
                 .setTitle(R.string.helper_dialog_title)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     if (activity != null && activity?.isFinishing == false) {
-                        cachedExecutor.submit {
+                        executor.submit("SendCrashReport assignBuilder") {
 
                             val ctx = activity as Context
 

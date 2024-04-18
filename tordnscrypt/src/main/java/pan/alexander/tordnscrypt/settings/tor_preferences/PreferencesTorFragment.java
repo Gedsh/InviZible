@@ -53,7 +53,7 @@ import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_bridges.SnowflakeConfigurator;
 import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
@@ -110,7 +110,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
 
@@ -452,7 +452,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
                     "onion 127.0.0.1:" + dnsPort.trim());
-            cachedExecutor.submit(modifyForwardingRules.getRunnable());
+            executor.submit("PreferencesTorFragment modifyForwardingRules", () -> {
+                modifyForwardingRules.getRunnable().run();
+                return null;
+            });
             return true;
         } else if (Objects.equals(preference.getKey(), SNOWFLAKE_RENDEZVOUS)) {
             for (int i = 0; i < key_tor.size(); i++) {
@@ -817,10 +820,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
 
-            cachedExecutor.submit(() -> {
+            executor.submit("PreferencesTorFragment cleanTorFolder", () -> {
                 Activity activity = getActivity();
                 if (activity == null) {
-                    return;
+                    return null;
                 }
 
                 boolean successfully = FileManager.deleteDirSynchronous(activity, appDataDir + "/tor_data");
@@ -830,6 +833,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 } else {
                     activity.runOnUiThread(() -> Toast.makeText(activity, R.string.wrong, Toast.LENGTH_SHORT).show());
                 }
+                return null;
             });
 
 

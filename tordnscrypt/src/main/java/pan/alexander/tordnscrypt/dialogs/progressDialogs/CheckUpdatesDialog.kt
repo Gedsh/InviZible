@@ -23,12 +23,13 @@ import android.app.Dialog
 import android.os.Bundle
 import android.widget.ProgressBar
 import androidx.appcompat.app.AlertDialog
+import kotlinx.coroutines.Job
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import java.util.concurrent.Future
 
 class CheckUpdatesDialog: ExtendedDialogFragment() {
-    var checkUpdatesTask: Future<*>? = null
+    var checkUpdatesTask: Job? = null
 
     override fun assignBuilder(): AlertDialog.Builder? {
 
@@ -42,7 +43,7 @@ class CheckUpdatesDialog: ExtendedDialogFragment() {
         builder.setMessage(R.string.update_checking_message)
         builder.setIcon(R.drawable.ic_visibility_off_black_24dp)
         builder.setPositiveButton(R.string.cancel) { dialogInterface, _ ->
-            checkUpdatesTask?.cancel(true)
+            checkUpdatesTask?.cancel()
             dialogInterface.dismiss()
             checkUpdatesTask = null
         }
@@ -57,7 +58,7 @@ class CheckUpdatesDialog: ExtendedDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
 
-        if (checkUpdatesTask?.isDone == true) {
+        if (checkUpdatesTask?.isCompleted == true) {
             dialog.dismiss()
         } else {
             dialog.setCanceledOnTouchOutside(false)
@@ -68,7 +69,7 @@ class CheckUpdatesDialog: ExtendedDialogFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        checkUpdatesTask?.cancel(true)
+        checkUpdatesTask?.cancel()
         checkUpdatesTask = null
     }
 }

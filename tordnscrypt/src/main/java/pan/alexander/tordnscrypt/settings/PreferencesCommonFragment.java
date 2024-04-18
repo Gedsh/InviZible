@@ -60,8 +60,8 @@ import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster;
 import pan.alexander.tordnscrypt.proxy.ProxyHelper;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -114,7 +114,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Handler> handler;
     @Inject
@@ -308,7 +308,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
-        cachedExecutor.submit(() -> {
+        executor.submit("PreferencesCommonFragment verifier", () -> {
             try {
                 Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
@@ -329,6 +329,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
                 loge("PreferencesCommonFragment fault", e, true);
             }
+            return null;
         });
 
     }

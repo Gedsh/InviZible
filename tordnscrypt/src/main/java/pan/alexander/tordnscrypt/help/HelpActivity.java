@@ -57,8 +57,8 @@ import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialo
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsCompleteListener;
@@ -84,7 +84,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Verifier> verifier;
 
@@ -171,7 +171,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
         etLogsPath.setText(pathToSaveLogs);
 
-        cachedExecutor.submit(() -> new File(cacheDir + "/logs").mkdirs());
+        executor.submit("HelpActivity onResume", () -> {
+            new File(cacheDir + "/logs").mkdirs();
+            return null;
+        });
 
         FileManager.setOnFileOperationCompleteListener(this);
     }
@@ -204,7 +207,10 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             if (modulesStatus.isRootAvailable()) {
                 collectLogsMethodOne(info);
             } else {
-                cachedExecutor.submit(br.saveLogs(getApplicationContext(), null));
+                executor.submit("HelpActivity onClick", () -> {
+                    br.saveLogs(getApplicationContext(), null).run();
+                    return null;
+                });
             }
         } else if (id == R.id.etLogsPath) {
             chooseOutputFolder();
@@ -339,7 +345,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     }
 
     private void hideSelectionEditTextIfRequired() {
-        cachedExecutor.submit(() -> {
+        executor.submit("HelpActivity hideSelectionEditTextIfRequired", () -> {
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logsDirAccessible = pan.alexander.tordnscrypt.utils.Utils.INSTANCE.isLogsDirAccessible();
@@ -354,6 +360,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
 
                 });
             }
+            return null;
         });
     }
 }

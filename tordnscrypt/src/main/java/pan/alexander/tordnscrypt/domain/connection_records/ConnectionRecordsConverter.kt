@@ -27,6 +27,7 @@ import android.content.SharedPreferences
 import android.os.Build
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.Job
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionData
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionLogEntry
 import pan.alexander.tordnscrypt.domain.connection_records.entities.ConnectionProtocol.TCP
@@ -47,7 +48,7 @@ import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
@@ -58,7 +59,6 @@ import pan.alexander.tordnscrypt.vpn.service.VpnBuilder
 import java.io.IOException
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.Future
 import javax.inject.Inject
 
 private const val REVERSE_LOOKUP_QUEUE_CAPACITY = 32
@@ -69,7 +69,7 @@ class ConnectionRecordsConverter @Inject constructor(
     private val context: Context,
     private val preferenceRepository: PreferenceRepository,
     private val dnsInteractor: dagger.Lazy<DnsInteractor>,
-    private val cachedExecutor: CachedExecutor,
+    private val executor: CoroutineExecutor,
     private val connectivityCheckManager: ConnectivityCheckManager,
     private val iptablesFirewall: dagger.Lazy<IptablesFirewall>
 ) {
@@ -97,7 +97,7 @@ class ConnectionRecordsConverter @Inject constructor(
     private val logRecords = ArrayList<ConnectionLogEntry>()
     private val reverseLookupQueue = ArrayBlockingQueue<String>(REVERSE_LOOKUP_QUEUE_CAPACITY, true)
     private val ipToHostAddressMap = mutableMapOf<IpToTime, String>()
-    private var futureTask: Future<*>? = null
+    private var task: Job? = null
 
     private var firewallEnabled = isFirewallEnabled()
 
@@ -118,7 +118,7 @@ class ConnectionRecordsConverter @Inject constructor(
 
     init {
         if (isRootMode()) {
-            cachedExecutor.submit {
+            executor.submit("ConnectionRecordsConverter init") {
                 try {
                     updateVars()
                 } catch (e: Exception) {
@@ -400,11 +400,11 @@ class ConnectionRecordsConverter @Inject constructor(
 
     private fun startReverseLookupQueue() {
 
-        if (futureTask?.isDone == false) {
+        if (task?.isCompleted == false) {
             return
         }
 
-        futureTask = cachedExecutor.submit {
+        task = executor.submit("ConnectionRecordsConverter startReverseLookupQueue") {
             try {
 
                 while (!Thread.currentThread().isInterrupted) {
@@ -438,10 +438,10 @@ class ConnectionRecordsConverter @Inject constructor(
     }
 
     fun onStop() {
-        futureTask?.let {
-            if (!it.isDone) {
-                it.cancel(true)
-                futureTask = null
+        task?.let {
+            if (!it.isCompleted) {
+                it.cancel()
+                task = null
             }
         }
 
@@ -482,7 +482,7 @@ class ConnectionRecordsConverter @Inject constructor(
                 ) {
                     val result = goAsync()
 
-                    cachedExecutor.submit {
+                    executor.submit("ConnectionRecordsConverter iptablesReceiver") {
                         try {
                             updateVars()
                         } catch (e: Exception) {

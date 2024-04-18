@@ -98,7 +98,7 @@ class RestoreHelper extends Installer {
 
     void restoreAll(InputStream inputStream, boolean logsDirAccessible) {
 
-        cachedExecutor.submit(() -> {
+        executor.submit("RestoreHelper restoreAll", () -> {
             try {
 
                 if (!logsDirAccessible) {
@@ -174,6 +174,7 @@ class RestoreHelper extends Installer {
 
                 }
             }
+            return null;
         });
     }
 

@@ -50,7 +50,7 @@ import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
@@ -81,7 +81,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     @Inject
     public Lazy<TorInteractorInterface> torInteractor;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Verifier> verifierLazy;
     @Inject
@@ -568,15 +568,15 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        cachedExecutor.submit(() -> {
+        executor.submit("TorFragmentPresenter verifier", () -> {
 
             if (!isActive() || activity == null) {
-                return;
+                return null;
             }
 
             FragmentManager fragmentManager = view.getFragmentFragmentManager();
             if (fragmentManager == null) {
-                return;
+                return null;
             }
 
             try {
@@ -599,6 +599,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
                 }
                 loge("TorRunFragment fault", e, true);
             }
+            return null;
         });
 
         if (modulesStatus.getTorState() != RUNNING) {

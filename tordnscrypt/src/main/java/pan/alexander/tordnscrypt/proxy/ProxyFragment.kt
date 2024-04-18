@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import kotlinx.coroutines.Job
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
@@ -44,7 +45,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_I2PD
@@ -54,7 +55,6 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
-import java.util.concurrent.Future
 import javax.inject.Inject
 
 const val CLEARNET_APPS_FOR_PROXY = "clearnetAppsForProxy"
@@ -68,7 +68,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     lateinit var preferenceRepository: dagger.Lazy<PreferenceRepository>
 
     @Inject
-    lateinit var cachedExecutor: CachedExecutor
+    lateinit var executor: CoroutineExecutor
 
     @Inject
     lateinit var handler: dagger.Lazy<Handler>
@@ -82,7 +82,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     private var sharedPreferences: SharedPreferences? = null
 
     private var etBackground: Drawable? = null
-    private var futureTask: Future<*>? = null
+    private var task: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -236,7 +236,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         handler.get().removeCallbacksAndMessages(null)
 
-        futureTask?.let { if (it.isCancelled) it.cancel(true) }
+        task?.let { if (!it.isCompleted) it.cancel() }
 
         _binding = null
     }
@@ -311,7 +311,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             return
         }
 
-        futureTask = cachedExecutor.submit {
+        task = executor.submit("ProxyFragment checkProxy") {
             try {
                 val result = proxyHelper.checkProxyConnectivity(server, port.toInt())
 

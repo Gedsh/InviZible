@@ -38,7 +38,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
@@ -62,7 +62,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Verifier> verifierLazy;
 
@@ -98,7 +98,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
         if (intent != null) {
             final String action = intent.getAction();
             if (action == null
-                    || action.equals("")
+                    || action.isEmpty()
                     || ((intent.getIntExtra("Mark", 0) != DNSCRYPT_RUN_FRAGMENT_MARK) &&
                     !action.equals(TOP_BROADCAST))) return;
 
@@ -112,7 +112,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                 RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-                if (comResult != null && comResult.getCommands().size() == 0) {
+                if (comResult != null && comResult.getCommands().isEmpty()) {
                     presenter.setDnsCryptSomethingWrong();
                     modulesStatus.setDnsCryptState(FAULT);
                     return;
@@ -172,10 +172,10 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 FragmentManager fragmentManager = view.getFragmentFragmentManager();
                 Activity activity = view.getFragmentActivity();
 
-                cachedExecutor.submit(() -> {
+                executor.submit("DNSCryptFragmentReceiver onReceive", () -> {
                     try {
                         if (activity == null || activity.isFinishing()) {
-                            return;
+                            return null;
                         }
 
                         Verifier verifier = verifierLazy.get();
@@ -202,6 +202,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                         }
                         loge("DNSCryptRunFragment fault", e, true);
                     }
+                    return null;
                 });
 
             }

@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.dialogs
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AlertDialog
+import kotlinx.coroutines.Job
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
@@ -31,7 +32,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.concurrent.Future
 import java.util.zip.ZipInputStream
 
 class UpdateDefaultBridgesDialog private constructor() {
@@ -64,8 +64,9 @@ class UpdateDefaultBridgesDialog private constructor() {
             return builder.create()
         }
 
-        private fun updateDefaultBridges(activity: Activity, useDefaultBridges: Boolean): Future<*>? {
-            return App.instance.daggerComponent.getCachedExecutor().submit {
+        private fun updateDefaultBridges(activity: Activity, useDefaultBridges: Boolean): Job {
+            return App.instance.daggerComponent
+                .getCoroutineExecutor().submit("UpdateDefaultBridgesDialog updateDefaultBridges") {
                 val pathVars = App.instance.daggerComponent.getPathVars().get()
                 val outputFile = File(pathVars.appDataDir + "/app_data/tor/bridges_default.lst")
                 val installedBridgesSize = outputFile.length()

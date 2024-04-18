@@ -39,7 +39,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.iptables.Tethering;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
@@ -57,7 +57,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
 
     private final Handler mHandler;
     private final String appDataDir;
@@ -84,13 +84,16 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
         RootCommands comResult = (RootCommands) intent.getSerializableExtra("CommandsResult");
 
-        if (comResult != null && comResult.getCommands().size() == 0) {
+        if (comResult != null && comResult.getCommands().isEmpty()) {
             closeProgressDialog();
             showSomethingWrongToast(context);
             return;
         }
 
-        cachedExecutor.submit(saveLogs(context, comResult));
+        executor.submit("HelpActivityReceiver onReceive", () -> {
+            saveLogs(context, comResult).run();
+            return null;
+        });
     }
 
     Runnable saveLogs(final Context context, final RootCommands comResult) {
@@ -223,7 +226,7 @@ public class HelpActivityReceiver extends BroadcastReceiver {
 
         String action = intent.getAction();
 
-        if ((action == null) || (action.equals(""))) {
+        if (action == null || action.isEmpty()) {
             return false;
         }
 

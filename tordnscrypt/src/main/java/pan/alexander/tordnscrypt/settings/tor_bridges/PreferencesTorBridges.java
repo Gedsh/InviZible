@@ -57,13 +57,14 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
+import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import dagger.Lazy;
+import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.BridgesCaptchaDialogFragment;
@@ -81,10 +82,10 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
@@ -166,7 +167,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private BridgeType currentBridgesType = undefined;
     private String requestedBridgesToAdd;
     private BridgesSelector savedBridgesSelector;
-    private Future<?> verifyDefaultBridgesTask;
+    private Job verifyDefaultBridgesTask;
 
     private PreferencesTorBridgesViewModel viewModel;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -179,7 +180,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Handler> handlerLazy;
     @Inject
@@ -497,8 +498,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         handlerLazy.get().removeCallbacksAndMessages(null);
 
-        if (verifyDefaultBridgesTask != null && !verifyDefaultBridgesTask.isCancelled()) {
-            verifyDefaultBridgesTask.cancel(false);
+        if (verifyDefaultBridgesTask != null && !verifyDefaultBridgesTask.isCompleted()) {
+            verifyDefaultBridgesTask.cancel(new CancellationException());
             verifyDefaultBridgesTask = null;
         }
 
@@ -1143,9 +1144,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         return currentBridgesFilePath;
     }
 
-    private Future<?> verifyNewDefaultBridgesExist(Context context, boolean useDefaultBridges) {
+    private Job verifyNewDefaultBridgesExist(Context context, boolean useDefaultBridges) {
 
-        return cachedExecutor.submit(() -> {
+        return executor.submit("PreferencesTorBridges verifyNewDefaultBridgesExist", () -> {
             File outputFile = new File(appDataDir + "/app_data/tor/bridges_default.lst");
             long installedBridgesSize = outputFile.length();
 
@@ -1174,6 +1175,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } catch (Exception e) {
                 loge("PreferencesTorBridges verifyNewDefaultBridgesExist", e);
             }
+            return null;
         });
     }
 

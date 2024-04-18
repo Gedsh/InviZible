@@ -63,7 +63,7 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DnsServerRelay;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -85,7 +85,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Verifier> verifierLazy;
     @Inject
@@ -123,7 +123,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             return;
         }
 
-        cachedExecutor.submit(() -> {
+        executor.submit("PreferencesDNSCryptServers verifier", () -> {
             try {
                 Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
@@ -144,6 +144,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 }
                 loge("PreferencesDNSCryptServers fault", e, true);
             }
+            return null;
         });
 
     }

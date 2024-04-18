@@ -61,6 +61,7 @@ import pan.alexander.tordnscrypt.update.UpdateCheck
 import pan.alexander.tordnscrypt.update.UpdateService
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
 import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.root.RootExecService
@@ -84,6 +85,7 @@ interface AppComponent {
     fun getPathVars(): dagger.Lazy<PathVars>
     fun getPreferenceRepository(): dagger.Lazy<PreferenceRepository>
     fun getCachedExecutor(): CachedExecutor
+    fun getCoroutineExecutor(): CoroutineExecutor
 
     @Component.Builder
     interface Builder {

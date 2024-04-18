@@ -58,9 +58,9 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.vpn.service.VpnBuilder;
 
@@ -105,7 +105,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     @Named(DEFAULT_PREFERENCES_NAME)
     public SharedPreferences defaultPreferences;
@@ -904,7 +904,13 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     private void checkRootDirAccessible() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            cachedExecutor.submit(() -> rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible());
+            executor.submit(
+                    "PreferencesDNSFragment checkRootDirAccessible",
+                    () -> {
+                        rootDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
+                        return null;
+                    }
+            );
         }
     }
 
@@ -929,7 +935,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             return;
         }
 
-        cachedExecutor.submit(() -> {
+        executor.submit("PreferencesDNSFragment cleanModuleFolder", () -> {
 
             boolean successfully1 = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md");
@@ -942,7 +948,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
             Activity activity = getActivity();
             if (activity == null) {
-                return;
+                return null;
             }
 
             if (successfully1 || successfully2 || successfully3 || successfully4) {
@@ -950,6 +956,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             } else {
                 activity.runOnUiThread(() -> Toast.makeText(activity, R.string.wrong, Toast.LENGTH_SHORT).show());
             }
+            return null;
         });
     }
 }

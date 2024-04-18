@@ -70,7 +70,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.Future;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -81,6 +81,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import dagger.Lazy;
+import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.arp.ArpScanner;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractor;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
@@ -91,7 +92,7 @@ import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.privatedns.PrivateDnsProxyManager;
@@ -120,7 +121,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private final Lazy<SharedPreferences> defaultPreferences;
     private final Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor;
     private final Provider<InternetSharingChecker> internetSharingChecker;
-    private final CachedExecutor cachedExecutor;
+    private final CoroutineExecutor executor;
     private final Lazy<Handler> handler;
     private final Lazy<TorRestarterReconnector> torRestarterReconnector;
     private final Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
@@ -136,7 +137,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private volatile boolean rootReceiversRegistered = false;
     private volatile boolean rootVpnReceiverRegistered = false;
     private volatile boolean lock = false;
-    private volatile Future<?> checkTetheringTask;
+    private volatile Job checkTetheringTask;
     private volatile boolean vpnRevoked = false;
 
     private static final int CHECK_INTERNET_CONNECTION_DELAY_SEC = 30;
@@ -149,7 +150,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Named(DEFAULT_PREFERENCES_NAME) Lazy<SharedPreferences> defaultSharedPreferences,
             Lazy<ConnectionCheckerInteractor> connectionCheckerInteractor,
             Provider<InternetSharingChecker> internetSharingChecker,
-            CachedExecutor cachedExecutor,
+            CoroutineExecutor executor,
             Lazy<Handler> handler,
             Lazy<TorRestarterReconnector> torRestarterReconnector,
             Lazy<InstalledAppNamesStorage> installedAppNamesStorage,
@@ -159,7 +160,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         this.defaultPreferences = defaultSharedPreferences;
         this.connectionCheckerInteractor = connectionCheckerInteractor;
         this.internetSharingChecker = internetSharingChecker;
-        this.cachedExecutor = cachedExecutor;
+        this.executor = executor;
         this.handler = handler;
         this.torRestarterReconnector = torRestarterReconnector;
         this.installedAppNamesStorage = installedAppNamesStorage;
@@ -197,7 +198,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
         PendingResult pendingResult = goAsync();
 
-        cachedExecutor.submit(() -> {
+        executor.submit("ModulesReceiver onReceive", () -> {
             try {
                 intentOnReceive(intent, action);
             } catch (Exception e) {
@@ -205,6 +206,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             } finally {
                 pendingResult.finish();
             }
+            return null;
         });
 
 
@@ -648,7 +650,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
 
             void updateDNSCryptNat64Prefix(String prefix) {
-                cachedExecutor.submit(() -> {
+                executor.submit("ModulesReceiver updateDNSCryptNat64Prefix", () -> {
                     boolean consumed = false;
                     Pattern pattern = Pattern.compile("prefix ?= ?\\['" + IPv6_REGEX_NO_BOUNDS + "/\\d+']");
                     List<String> conf = FileManager.readTextFileSynchronous(
@@ -668,7 +670,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         }
                     }
                     if (!consumed) {
-                        return;
+                        return null;
                     }
                     FileManager.writeTextFileSynchronous(
                             context,
@@ -680,6 +682,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         logi("Restart DNSCrypt on network Nat64Prefix change");
                         ModulesRestarter.restartDNSCrypt(context);
                     }
+                    return null;
                 });
             }
         };
@@ -883,15 +886,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     @SuppressWarnings("unchecked")
     private synchronized void checkInternetSharingState(Intent intent) {
 
-        if (checkTetheringTask != null && !checkTetheringTask.isDone()) {
+        if (checkTetheringTask != null && !checkTetheringTask.isCompleted()) {
             if (TETHER_STATE_FILTER_ACTION.equals(intent.getAction())) {
-                checkTetheringTask.cancel(true);
+                checkTetheringTask.cancel(new CancellationException());
             } else {
                 return;
             }
         }
 
-        checkTetheringTask = cachedExecutor.submit(() -> {
+        checkTetheringTask = executor.execute("ModulesReceiver checkTetheringTask", () -> {
             boolean wifiAccessPointOn = false;
             boolean usbTetherOn = false;
             String action = intent.getAction();
@@ -943,6 +946,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             logi("ModulesReceiver " +
                     "WiFi Access Point state is " + (wifiAccessPointOn ? "ON" : "OFF") + "\n"
                     + " USB modem state is " + (usbTetherOn ? "ON" : "OFF"));
+            return null;
         });
     }
 
@@ -1050,7 +1054,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 && !modulesStatus.isUseModulesWithRoot()
                 && !lock) {
 
-            cachedExecutor.submit(() -> {
+            executor.submit("ModulesReceiver updateIptablesRules", () -> {
                 if (!lock) {
 
                     lock = true;
@@ -1067,7 +1071,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                     lock = false;
                 }
-
+                return null;
             });
         }
     }

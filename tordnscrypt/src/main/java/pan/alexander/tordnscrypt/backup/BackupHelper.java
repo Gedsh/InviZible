@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 import dagger.Lazy;
@@ -49,8 +50,8 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.zipUtil.ZipFileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
@@ -65,7 +66,7 @@ public class BackupHelper {
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
 
     private Activity activity;
     private String pathBackup;
@@ -82,7 +83,7 @@ public class BackupHelper {
 
     void saveAll(boolean logsDirAccessible) {
 
-        cachedExecutor.submit(() -> {
+        executor.submit("BackupHelper saveAll", () -> {
             try {
                 convertSharedPreferencesUIDsToPackageNames();
 
@@ -103,6 +104,10 @@ public class BackupHelper {
                     throw new IllegalStateException("Backup file not exist " + backup.getAbsolutePath());
                 }
 
+                if (isTreadInterrupted()) {
+                    throw new CancellationException();
+                }
+
                 if (logsDirAccessible) {
                     saveFile();
                 } else {
@@ -118,6 +123,7 @@ public class BackupHelper {
 
                 FileManager.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
             }
+            return null;
         });
     }
 
@@ -159,8 +165,7 @@ public class BackupHelper {
     }
 
     void copyData(OutputStream outputStream) {
-
-        cachedExecutor.submit(() -> {
+        executor.submit("BackupHelper copyData", () -> {
             try (outputStream; FileInputStream fileInputStream = new FileInputStream(cacheDir + "/InvizibleBackup.zip")) {
                 byte[] buffer = new byte[8 * 1024];
 
@@ -175,7 +180,7 @@ public class BackupHelper {
 
                 FileManager.deleteFile(activity, cacheDir, "/InvizibleBackup.zip", "ignored");
             }
-
+            return null;
         });
     }
 
@@ -241,6 +246,10 @@ public class BackupHelper {
         for (String tag : TAGS_TO_CONVERT) {
             preferenceRepository.get().setStringSetPreference(tag + "Backup", Collections.emptySet());
         }
+    }
+
+    private boolean isTreadInterrupted() {
+        return Thread.currentThread().isInterrupted();
     }
 
     void setPathBackup(String pathBackup) {

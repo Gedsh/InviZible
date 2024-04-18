@@ -42,7 +42,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
@@ -58,7 +58,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
 
     private ArrayList<String> key_itpd;
     private ArrayList<String> val_itpd;
@@ -425,7 +425,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 return true;
             }
 
-            cachedExecutor.submit(() -> {
+            executor.submit("PreferencesITPDFragment onPreferenceClick", () -> {
                 boolean successfully = false;
                 if (getActivity() != null) {
                     successfully = FileManager.deleteDirSynchronous(getActivity(), appDataDir + "/i2pd_data");
@@ -439,9 +439,8 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     }
 
                 }
+                return null;
             });
-
-
             return true;
         } else if ("editITPDConfDirectly".equals(preference.getKey()) && isAdded()) {
             ConfigEditorFragment.openEditorFragment(getParentFragmentManager(), "i2pd.conf");

@@ -63,9 +63,9 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesServiceNotificationManager;
 import pan.alexander.tordnscrypt.modules.UsageStatistics;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.vpn.Allowed;
 import pan.alexander.tordnscrypt.vpn.Packet;
 import pan.alexander.tordnscrypt.vpn.ResourceRecord;
@@ -136,7 +136,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Inject
     public Lazy<Handler> handler;
     @Inject
-    public Lazy<CachedExecutor> cachedExecutor;
+    public Lazy<CoroutineExecutor> executor;
     @Inject
     public Provider<VpnPreferenceHolder> vpnPreferenceHolder;
     volatile VpnPreferenceHolder vpnPreferences;
@@ -780,7 +780,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         final long localJniContext = service_jni_context;
 
-        cachedExecutor.get().submit(() -> {
+        executor.get().submit("ServiceVPN onDestroy", () -> {
 
             try {
                 if (vpn != null) {
@@ -806,7 +806,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             } catch (Throwable ex) {
                 loge("VPN Destroy", ex, true);
             }
-
+            return null;
         });
 
         super.onDestroy();
@@ -876,7 +876,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     }
 
     public void clearDnsQueryRawRecords() {
-        cachedExecutor.get().submit(() -> {
+        executor.get().submit("ServiceVPN clearDnsQueryRawRecords", () -> {
             try {
                 lock.writeLock().lockInterruptibly();
 
@@ -891,6 +891,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     lock.writeLock().unlock();
                 }
             }
+            return null;
         });
     }
 
