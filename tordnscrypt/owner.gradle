@@ -178,6 +178,12 @@ android {
         jvmTarget = '17'
     }
 
+    kapt {
+        javacOptions {
+            option("-Adagger.fastInit=enabled")
+        }
+    }
+
 }
 
 
