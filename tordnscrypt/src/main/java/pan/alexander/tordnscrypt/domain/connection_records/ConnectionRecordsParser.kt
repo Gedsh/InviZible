@@ -179,9 +179,6 @@ class ConnectionRecordsParser @Inject constructor(
                 if (record.blocked && record.blockedByIpv6) {
                     lines.append(" ipv6")
                 }
-                if (!record.blocked && record.ips.isNotEmpty()) {
-                    lines.append(" -> ").append(record.ips.joinToString(", "))
-                }
             }
 
             lines.append("</font>")
