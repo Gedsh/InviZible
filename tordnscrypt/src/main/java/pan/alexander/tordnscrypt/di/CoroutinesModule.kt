@@ -24,6 +24,7 @@ import dagger.Provides
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Named
+import javax.inject.Singleton
 
 @Module
 class CoroutinesModule {
@@ -45,6 +46,15 @@ class CoroutinesModule {
     }
 
     @Provides
+    @Singleton
+    @Named(SUPERVISOR_JOB_IO_DISPATCHER_SCOPE_SINGLETON)
+    fun provideSupervisorIoDispatcherCoroutineScopeSingleton(
+        @Named(DISPATCHER_IO) dispatcherIo: CoroutineDispatcher
+    ): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + dispatcherIo)
+    }
+
+    @Provides
     fun provideDispatcherMain(): MainCoroutineDispatcher = Dispatchers.Main.immediate
 
     @Provides
@@ -58,13 +68,14 @@ class CoroutinesModule {
     @Provides
     fun provideCoroutineExceptionHandler(): CoroutineExceptionHandler {
         return CoroutineExceptionHandler { coroutine, throwable ->
-            loge("Coroutine ${coroutine[CoroutineName]}", throwable)
+            loge("Coroutine ${coroutine[CoroutineName]} unhandled exception", throwable)
         }
     }
 
     companion object {
         const val SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE = "SUPERVISOR_JOB_MAIN_DISPATCHER_SCOPE"
         const val SUPERVISOR_JOB_IO_DISPATCHER_SCOPE = "SUPERVISOR_JOB_IO_DISPATCHER_SCOPE"
+        const val SUPERVISOR_JOB_IO_DISPATCHER_SCOPE_SINGLETON = "SUPERVISOR_JOB_IO_DISPATCHER_SCOPE_SINGLETON"
         const val DISPATCHER_IO = "DISPATCHER_IO"
         const val DISPATCHER_COMPUTATION = "DISPATCHER_COMPUTATION"
     }
