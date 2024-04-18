@@ -24,29 +24,32 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.plus
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withTimeout
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.parsers.DnsCryptConfigurationParser
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.coroutines.CoroutineContext
 
 class DnsServerViewModel @Inject constructor(
     private val dnsCryptConfigurationParser: DnsCryptConfigurationParser,
     @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher
+    private val dispatcherIo: CoroutineDispatcher,
+    @Named(CoroutinesModule.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
+    private val baseCoroutineScope: CoroutineScope,
+    coroutineExceptionHandler: CoroutineExceptionHandler
 ) : ViewModel() {
 
-    private val coroutineContext: CoroutineContext =
-        SupervisorJob() + dispatcherIo + CoroutineName("DnsServerViewModelCoroutine")
+    private val scope: CoroutineScope =
+        baseCoroutineScope + CoroutineName("DnsServerViewModelCoroutine") + coroutineExceptionHandler
 
     var searchQuery: String? = ""
 
@@ -62,6 +65,7 @@ class DnsServerViewModel @Inject constructor(
 
                 dnsCryptConfigurationMutable.value = DnsCryptConfigurationResult.Loading
 
+                ensureActive()
                 val dnsCryptProxyToml = executeOnWorkerThread {
                     dnsCryptConfigurationParser.dnsCryptProxyToml
                 }
@@ -73,13 +77,13 @@ class DnsServerViewModel @Inject constructor(
                 }
                 dnsCryptConfigurationMutable.value =
                     DnsCryptConfigurationResult.DnsCryptServers(dnsCryptServers)
-
+                ensureActive()
                 val dnsCryptRoutes = executeOnWorkerThread {
                     dnsCryptConfigurationParser.getDnsCryptRoutes(dnsCryptProxyToml)
                 }
                 dnsCryptConfigurationMutable.value =
                     DnsCryptConfigurationResult.DnsCryptRoutes(dnsCryptRoutes)
-
+                ensureActive()
                 val publicResolversMd = executeOnWorkerThread {
                     dnsCryptConfigurationParser.publicResolversMd
                 }
@@ -88,7 +92,7 @@ class DnsServerViewModel @Inject constructor(
                 }
                 dnsCryptConfigurationMutable.value =
                     DnsCryptConfigurationResult.DnsCryptPublicResolvers(dnsCryptPublicResolvers.toList())
-
+                ensureActive()
                 val ownResolversMd = executeOnWorkerThread {
                     dnsCryptConfigurationParser.ownResolversMd
                 }
@@ -108,7 +112,7 @@ class DnsServerViewModel @Inject constructor(
     }
 
     private suspend fun <T> executeOnWorkerThread(block: () -> T): T =
-        withContext(coroutineContext) {
+        runInterruptible(viewModelScope.coroutineContext + dispatcherIo) {
             block()
         }
 
@@ -121,22 +125,14 @@ class DnsServerViewModel @Inject constructor(
     }
 
     fun saveOwnResolversMd(lines: List<String>) {
-        CoroutineScope(coroutineContext).launch {
+        scope.launch {
             dnsCryptConfigurationParser.saveOwnResolversMd(lines)
         }
     }
 
     fun saveDnsCryptProxyToml(lines: List<String>) {
-        CoroutineScope(coroutineContext).launch {
+        scope.launch {
             dnsCryptConfigurationParser.saveDnsCryptProxyToml(lines)
-        }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        CoroutineScope(coroutineContext).launch {
-            delay(3000)
-            coroutineContext.cancel()
         }
     }
 }
