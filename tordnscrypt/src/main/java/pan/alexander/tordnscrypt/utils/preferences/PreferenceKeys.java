@@ -157,6 +157,7 @@ public interface PreferenceKeys {
     String I2PD_OUTBOUND_PROXY = "Enable ntcpproxy";
 
     //Firewall Settings
+    String FIREWALL_NO_BLOCK_NEW_APP = "NewAppsInternetAllowed";
     String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";
 
     //Logs

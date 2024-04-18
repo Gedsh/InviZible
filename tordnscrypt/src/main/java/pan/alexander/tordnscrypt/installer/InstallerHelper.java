@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.installer;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_NO_BLOCK_NEW_APP;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -49,9 +50,12 @@ public class InstallerHelper {
     @SuppressLint("SdCardPath")
     public List<String> prepareDNSCryptForGP(List<String> lines) {
 
+        SharedPreferences.Editor preferences = defaultPreferences.edit();
+        preferences.putBoolean(FIREWALL_NO_BLOCK_NEW_APP, true);
         if (!accelerated) {
-            defaultPreferences.edit().putBoolean("require_nofilter", true).apply();
+            preferences.putBoolean("require_nofilter", true);
         }
+        preferences.apply();
 
         ArrayList<String> prepared = new ArrayList<>();
 

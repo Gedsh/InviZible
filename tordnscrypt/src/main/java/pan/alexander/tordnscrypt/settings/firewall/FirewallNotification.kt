@@ -99,7 +99,7 @@ class FirewallNotification : BroadcastReceiver() {
             context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        newAppsAreAllowed = sharedPreferences.getBoolean("NewAppsInternetAllowed", false)
+        newAppsAreAllowed = sharedPreferences.getBoolean(FIREWALL_NO_BLOCK_NEW_APP, false)
 
         val action = intent?.action ?: return
 
