@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.settings.tor_bridges
 
+import android.content.SharedPreferences
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -27,7 +28,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeInteractor
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.net.InetAddress
 import java.util.concurrent.ConcurrentHashMap
@@ -40,6 +43,8 @@ class BridgePingHelper @Inject constructor(
     @Named(CoroutinesModule.DISPATCHER_IO)
     private val dispatcherIo: CoroutineDispatcher,
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
+    @Named(DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences
 ) {
 
     private val webTunnelBridgePattern by lazy {
@@ -197,22 +202,23 @@ class BridgePingHelper @Inject constructor(
         }.mapNotNull { it.hostAddress }
     } catch (ignored: Exception) {
         emptyList()
-    }.filter { !VpnUtils.isIpInLanRange(it) }
-        .let { ips ->
-            coroutineScope {
-                ips.map { ip ->
-                    async {
-                        try {
-                            if (isAddressReachable(ip, port)) ip else ""
-                        } catch (e: Exception) {
-                            ""
-                        }
+    }.filter {
+        !VpnUtils.isIpInLanRange(it) && (isUseIPv6() || !it.isIPv6Address())
+    }.let { ips ->
+        coroutineScope {
+            ips.map { ip ->
+                async {
+                    try {
+                        if (isAddressReachable(ip, port)) ip else ""
+                    } catch (e: Exception) {
+                        ""
                     }
-                }.awaitAll()
-                    .filter { it.isNotEmpty() }
-                    .minByOrNull { it.isIPv6Address() } ?: ""
-            }
+                }
+            }.awaitAll()
+                .filter { it.isNotEmpty() }
+                .minByOrNull { it.isIPv6Address() } ?: ""
         }
+    }
 
 
     private suspend fun isAddressReachable(ip: String, port: Int): Boolean =
@@ -225,4 +231,6 @@ class BridgePingHelper @Inject constructor(
     }
 
     private fun String.isIPv6Address() = contains(":")
+
+    private fun isUseIPv6() = defaultPreferences.getBoolean(TOR_USE_IPV6, true)
 }
