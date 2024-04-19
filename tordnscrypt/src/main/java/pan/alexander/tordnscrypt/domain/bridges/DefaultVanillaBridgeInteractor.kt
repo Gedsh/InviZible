@@ -87,4 +87,8 @@ class DefaultVanillaBridgeInteractor @Inject constructor(
             .shuffled()
             .take(MAX_RELAY_COUNT)
     }
+
+    suspend fun isAddressReachable(ip: String, port: Int): Boolean = withContext(dispatcherIo) {
+        repository.isAddressReachable(ip, port)
+    }
 }

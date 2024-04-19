@@ -33,7 +33,9 @@ class SocketInternetChecker @Inject constructor() {
         ip: String,
         port: Int,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        connectTimeout: Int = CONNECT_TIMEOUT_SEC,
+        reachableTimeout: Int = CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC
     ): Boolean {
 
         var socket: Socket? = null
@@ -53,11 +55,11 @@ class SocketInternetChecker @Inject constructor() {
             val sockAddress: SocketAddress =
                 InetSocketAddress(InetAddress.getByName(ip), port)
 
-            socket.connect(sockAddress, CONNECT_TIMEOUT_SEC * 1000)
+            socket.connect(sockAddress, connectTimeout * 1000)
             socket.soTimeout = 100
 
             return if (isProxyUsed(proxyAddress, proxyPort)) {
-                socket.inetAddress.isReachable(CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC * 1000)
+                socket.inetAddress.isReachable(reachableTimeout * 1000)
             } else {
                 socket.isConnected
             }

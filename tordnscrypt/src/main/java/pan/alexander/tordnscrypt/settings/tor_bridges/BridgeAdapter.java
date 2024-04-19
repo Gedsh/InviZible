@@ -120,7 +120,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         bridgeList.set(position, brg);
     }
 
-    class BridgeViewHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener,
+    public class BridgeViewHolder extends RecyclerView.ViewHolder implements CompoundButton.OnCheckedChangeListener,
             View.OnClickListener {
 
         private final TextView tvBridge;
@@ -174,9 +174,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                 tvBridgeText = bridgeComponents[0];
             }
 
-            if (obfsType.contains(meek_lite.toString())
-                    || obfsType.contains(snowflake.toString())
-                    || obfsBridge.ping == 0) {
+            if (obfsBridge.ping == 0) {
                 tvPing.setVisibility(View.GONE);
             } else {
                 tvPing.setText(formatPing(obfsBridge.ping));

@@ -20,33 +20,46 @@
 package pan.alexander.tordnscrypt.settings.tor_bridges
 
 import android.graphics.Bitmap
-import androidx.lifecycle.*
-import kotlinx.coroutines.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import pan.alexander.tordnscrypt.di.CoroutinesModule
-import pan.alexander.tordnscrypt.domain.bridges.*
-import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
+import kotlinx.coroutines.launch
+import pan.alexander.tordnscrypt.domain.bridges.BridgeCountryData
+import pan.alexander.tordnscrypt.domain.bridges.BridgePingData
+import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult
+import pan.alexander.tordnscrypt.domain.bridges.BridgesCountriesInteractor
+import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeInteractor
+import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult
+import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete
+import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesInteractor
 import pan.alexander.tordnscrypt.utils.enums.BridgeType
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.util.concurrent.ConcurrentHashMap
-import java.util.regex.Pattern
 import javax.inject.Inject
-import javax.inject.Named
-
-private const val DNS_RESOLVE_TIMEOUT_SEC = 3
+import kotlin.collections.ArrayList
+import kotlin.collections.List
+import kotlin.collections.first
+import kotlin.collections.firstOrNull
+import kotlin.collections.map
+import kotlin.collections.mutableListOf
 
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel @Inject constructor(
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
     private val requestBridgesInteractor: RequestBridgesInteractor,
     private val bridgesCountriesInteractor: BridgesCountriesInteractor,
-    private val dnsInteractor: DnsInteractor,
-    @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher
+    private val bridgePingHelper: BridgePingHelper
 ) : ViewModel() {
 
     private val timeouts = mutableListOf<BridgePingResult>()
@@ -74,11 +87,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
     private val errorsMutableLiveData = MutableLiveData<String>()
     val errorsLiveData: LiveData<String> get() = errorsMutableLiveData
 
-    private val webTunnelBridgePattern by lazy {
-        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.-]+)(?:/[\\w.-]+)*/?")
-    }
-
-    private val webTunnelBridgesMatcherMap by lazy { ConcurrentHashMap<Int, Int>() }
+    private val bridgesMatcherMap by lazy { ConcurrentHashMap<Int, Int>() }
 
     fun measureTimeouts(bridges: List<ObfsBridge>) {
 
@@ -92,68 +101,72 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             initBridgeCheckerObserver()
         }
 
-        webTunnelBridgesMatcherMap.clear()
+        bridgesMatcherMap.clear()
 
         timeoutsMeasurementJob = viewModelScope.launch {
 
-            if (bridges.firstOrNull()?.obfsType == BridgeType.webtunnel) {
-                val bridgesToMeasure = getRealIPFromWebTunnelBridges(ArrayList(bridges))
-                launch {
-                    defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
-                }
-                searchBridgeCountries(ArrayList(bridgesToMeasure).map {
-                    ObfsBridge(
-                        it,
-                        BridgeType.vanilla,
-                        false
-                    )
-                })
-            } else {
-                defaultVanillaBridgeInteractor.measureTimeouts(bridges.map { it.bridge })
+            when (bridges.firstOrNull()?.obfsType) {
+                BridgeType.webtunnel -> handleWebTunnelBridgesTimeout(bridges)
+                BridgeType.meek_lite -> handleMeekLiteBridgesTimeout(bridges)
+                BridgeType.snowflake -> handleSnowFlakeBridgesTimeout(bridges)
+                else -> handleOtherBridgesTimeout(bridges)
             }
         }
     }
 
-    private suspend fun getRealIPFromWebTunnelBridges(bridges: List<ObfsBridge>) = try {
-        withContext(dispatcherIo) {
-            val bridgesToMeasure = mutableListOf<String>()
-            for (bridge in bridges) {
-
-                val matcher = webTunnelBridgePattern.matcher(bridge.bridge)
-                if (matcher.find()) {
-                    val ipWithPort = matcher.group(1) ?: continue
-                    val domain = matcher.group(2) ?: continue
-                    val port = if (domain.startsWith("https")) {
-                        443
-                    } else {
-                        80
-                    }
-
-                    val ips = try {
-                        dnsInteractor.resolveDomain(domain, true, DNS_RESOLVE_TIMEOUT_SEC).toList()
-                    } catch (ignored: Exception) {
-                        emptyList()
-                    }
-                    ensureActive()
-                    if (ips.isEmpty()) {
-                        continue
-                    }
-                    val ipsSorted = ips.sortedBy { it.isIPv6Address() }
-                    val address = if (ipsSorted.first().isIPv6Address()) {
-                        "[${ipsSorted.first()}]:$port"
-                    } else {
-                        "${ipsSorted.first()}:$port"
-                    }
-                    val bridgeLine = bridge.bridge.replace(ipWithPort, address)
-                    bridgesToMeasure.add(bridgeLine)
-                    webTunnelBridgesMatcherMap[bridgeLine.hashCode()] =
-                        bridge.bridge.hashCode()
-                }
-            }
-            bridgesToMeasure
+    private suspend fun handleWebTunnelBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
+        val bridgesToMeasure = bridgePingHelper.getRealIPFromWebTunnelBridges(
+            ArrayList(bridges),
+            bridgesMatcherMap
+        )
+        launch {
+            defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
         }
-    } catch (ignored: Exception) {
-        emptyList()
+        searchBridgeCountries(ArrayList(bridgesToMeasure).map {
+            ObfsBridge(
+                it,
+                BridgeType.vanilla,
+                false
+            )
+        })
+    }
+
+    private suspend fun handleMeekLiteBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
+        val bridgesToMeasure = bridgePingHelper.getRealIPFromMeekLiteBridges(
+            ArrayList(bridges),
+            bridgesMatcherMap
+        )
+        launch {
+            defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
+        }
+        searchBridgeCountries(ArrayList(bridgesToMeasure).map {
+            ObfsBridge(
+                it,
+                BridgeType.vanilla,
+                false
+            )
+        })
+    }
+
+    private suspend fun handleSnowFlakeBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
+        val bridgesToMeasure = bridgePingHelper.getRealIPFromSnowFlakeBridges(
+            ArrayList(bridges),
+            bridgesMatcherMap
+        )
+        launch {
+            defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
+        }
+        searchBridgeCountries(ArrayList(bridgesToMeasure).map {
+            ObfsBridge(
+                it,
+                BridgeType.vanilla,
+                false
+            )
+        })
+    }
+
+    private suspend fun handleOtherBridgesTimeout(bridges: List<ObfsBridge>) {
+        defaultVanillaBridgeInteractor.measureTimeouts(bridges.map { it.bridge })
     }
 
     fun cancelMeasuringTimeouts() {
@@ -170,8 +183,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                         is PingCheckComplete -> true
                     }
                 }.map {
-                    if (it is BridgePingData && webTunnelBridgesMatcherMap.containsKey(it.bridgeHash)) {
-                        BridgePingData(webTunnelBridgesMatcherMap[it.bridgeHash] ?: 0, it.ping)
+                    if (it is BridgePingData && bridgesMatcherMap.containsKey(it.bridgeHash)) {
+                        BridgePingData(bridgesMatcherMap[it.bridgeHash] ?: 0, it.ping)
                     } else {
                         it
                     }
@@ -301,7 +314,10 @@ class PreferencesTorBridgesViewModel @Inject constructor(
             return
         }
 
-        if (bridges.first().obfsType == BridgeType.webtunnel) {
+        if (bridges.first().obfsType == BridgeType.webtunnel
+            || bridges.first().obfsType == BridgeType.meek_lite
+            || bridges.first().obfsType == BridgeType.snowflake
+        ) {
             return
         }
 
@@ -320,9 +336,9 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         bridgeCountriesObserveJob = viewModelScope.launch {
             bridgesCountriesInteractor.observeBridgeCountries()
                 .map {
-                    if (webTunnelBridgesMatcherMap.containsKey(it.bridgeHash)) {
+                    if (bridgesMatcherMap.containsKey(it.bridgeHash)) {
                         BridgeCountryData(
-                            webTunnelBridgesMatcherMap[it.bridgeHash] ?: 0,
+                            bridgesMatcherMap[it.bridgeHash] ?: 0,
                             it.country
                         )
                     } else {
