@@ -19,15 +19,17 @@
 
 package pan.alexander.tordnscrypt.dnscrypt_fragment;
 
+import static androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.text.Html;
 import android.text.Spanned;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.text.HtmlCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
@@ -317,12 +319,12 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         Spanned htmlLines;
         if (savedConnectionRecords.isEmpty()) {
-            htmlLines = Html.fromHtml(dnsCryptLogData.getLines());
+            htmlLines = HtmlCompat.fromHtml(dnsCryptLogData.getLines(), FROM_HTML_MODE_LEGACY);
         } else {
-            htmlLines = Html.fromHtml(dnsCryptLogData.getLines() + "<br />" + savedConnectionRecords);
+            htmlLines = HtmlCompat.fromHtml(dnsCryptLogData.getLines() + "<br />" + savedConnectionRecords, FROM_HTML_MODE_LEGACY);
         }
 
-        if (!isActive() || htmlLines == null) {
+        if (!isActive()) {
             return;
         }
 
@@ -418,14 +420,14 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             if (!savedConnectionRecords.isEmpty()) {
                 savedConnectionRecords = "";
 
-                Spanned htmlLines = Html.fromHtml(savedLogLines);
+                Spanned htmlLines = HtmlCompat.fromHtml(savedLogLines, FROM_HTML_MODE_LEGACY);
 
                 if (!isActive()) {
                     return;
                 }
 
                 view.getFragmentActivity().runOnUiThread(() -> {
-                    if (isActive() && htmlLines != null) {
+                    if (isActive()) {
                         view.setDNSCryptLogViewText(htmlLines);
                         view.scrollDNSCryptLogViewToBottom();
                     }
@@ -443,7 +445,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        Spanned htmlLines = Html.fromHtml(savedLogLines + "<br />" + connectionRecords);
+        Spanned htmlLines = HtmlCompat.fromHtml(savedLogLines + "<br />" + connectionRecords, FROM_HTML_MODE_LEGACY);
 
         if (!isActive()) {
             return;
@@ -451,7 +453,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         view.getFragmentActivity().runOnUiThread(() -> {
             if (isActive()) {
-                if (htmlLines != null && dnsCryptLogAutoScroll) {
+                if (dnsCryptLogAutoScroll) {
                     view.setDNSCryptLogViewText(htmlLines);
                     view.scrollDNSCryptLogViewToBottom();
                     if (!savedLogLines.isEmpty()) {
