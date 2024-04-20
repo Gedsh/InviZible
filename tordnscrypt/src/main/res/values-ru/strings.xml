@@ -146,6 +146,7 @@
     <string name="pref_dnscrypt_require_servers_categ">Фильтровать сервера по параметрам.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Использовать сервера, которые поддерживают протокол DNSCrypt.</string>
     <string name="pref_dnscrypt_doh_servers_summ">Использовать сервера, которые поддерживают протокол DNS-over-HTTPS.</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Использовать сервера, которые поддерживают протокол Oblivious DNS-over-HTTPS.</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">Фильтровать сервера по параметрам.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Использовать сервера, которые поддерживают безопасное расширение DNS - (DNSSEC).</string>
     <string name="pref_dnscrypt_require_nolog_summ">Использовать сервера, которые не логируют запросы (обещают:)).</string>

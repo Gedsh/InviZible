@@ -36,6 +36,7 @@ class ConfigUtil(private val context: Context) {
         readFromFile(pathVars.dnscryptConfPath).run {
             addLinesToFile(dnsCryptConfigPatches.filterIsInstance<AlterConfig.AddLine>())
                 .replaceLinesInFile(dnsCryptConfigPatches.filterIsInstance<AlterConfig.ReplaceLine>())
+                .addOdohDNSCryptSection(getOdohSection())
                 .takeIf { it.size != this.size || !it.containsAll(this) }
                 ?.writeToFile(pathVars.dnscryptConfPath)
         }
@@ -153,6 +154,50 @@ class ConfigUtil(private val context: Context) {
 
         return newLines
     }
+
+    private fun List<String>.addOdohDNSCryptSection(lines: List<String>): List<String> {
+
+        if (this.contains(lines.first())) {
+            return this
+        }
+
+        val newLines = mutableListOf<String>()
+
+        this.forEach { line -> newLines.add(line.trim()) }
+
+        var currentHeader = ""
+        for (index: Int in newLines.indices) {
+
+            val line = newLines[index]
+
+            if (line.matches(Regex("\\[.+]"))) {
+                currentHeader = line
+            }
+
+            if (currentHeader == "[sources.'relays']" && line == "prefix = ''") {
+                newLines.addAll(index + 1, lines)
+                break
+            }
+        }
+
+        return newLines
+    }
+
+    private fun getOdohSection() =
+        """
+            [sources.'odoh-servers']
+            urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/odoh-servers.md', 'https://download.dnscrypt.info/resolvers-list/v3/odoh-servers.md', 'https://ipv6.download.dnscrypt.info/resolvers-list/v3/odoh-servers.md']
+            cache_file = 'odoh-servers.md'
+            minisign_key = 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+            refresh_delay = 72
+            prefix = ''
+            [sources.'odoh-relays']
+            urls = ['https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/odoh-relays.md', 'https://download.dnscrypt.info/resolvers-list/v3/odoh-relays.md', 'https://ipv6.download.dnscrypt.info/resolvers-list/v3/odoh-relays.md']
+            cache_file = 'odoh-relays.md'
+            minisign_key = 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+            refresh_delay = 72
+            prefix = ''
+        """.trimIndent().split("\n")
 
     fun updateTorGeoip() {
         val geoip = File(pathVars.appDataDir + "/app_data/tor/geoip")

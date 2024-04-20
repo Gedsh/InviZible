@@ -8,7 +8,7 @@
     android:focusable="false"
     android:orientation="vertical">
 
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardDNSRelay"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -52,6 +52,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp" />
         </androidx.appcompat.widget.LinearLayoutCompat>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

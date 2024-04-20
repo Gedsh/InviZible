@@ -273,13 +273,16 @@
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Use servers implementing the DNSCrypt protocol.</string>
     <string name="pref_dnscrypt_dnscrypt_servers" translatable="false">dnscrypt_servers</string>
     <string name="pref_dnscrypt_doh_servers_summ">Use servers implementing the DNS-over-HTTPS protocol.</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Use servers implementing the Oblivious DNS-over-HTTPS protocol.</string>
     <string name="pref_dnscrypt_doh_servers" translatable="false">doh_servers</string>
+    <string name="pref_dnscrypt_odoh_servers" translatable="false">odoh_servers</string>
     <string name="pref_dnscrypt_ipv4_servers" translatable="false">ipv4_servers</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4</string>
     <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6</string>
     <string name="pref_dnscrypt_dnscrypt_server" translatable="false">DNSCrypt Server</string>
     <string name="pref_dnscrypt_doh_server" translatable="false">DoH Server</string>
+    <string name="pref_dnscrypt_odoh_server" translatable="false">ODoH Server</string>
     <string name="pref_dnscrypt_non_filtering_server" translatable="false">Non-Filtering</string>
     <string name="pref_dnscrypt_filtering_server" translatable="false">Filtering</string>
     <string name="pref_dnscrypt_non_logging_server" translatable="false">Non-Logging</string>

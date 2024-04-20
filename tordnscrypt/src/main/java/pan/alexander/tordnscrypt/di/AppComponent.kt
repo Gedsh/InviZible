@@ -127,6 +127,7 @@ interface AppComponent {
     fun inject(dialogFragment: RequestIgnoreBatteryOptimizationDialog)
     fun inject(dialogFragment: RequestIgnoreDataRestrictionDialog)
     fun inject(dialogFragment: SendCrashReport)
+    fun inject(dialogFragment: AddDNSCryptServerDialogFragment)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
     fun inject(contextUIDUpdater: ContextUIDUpdater)

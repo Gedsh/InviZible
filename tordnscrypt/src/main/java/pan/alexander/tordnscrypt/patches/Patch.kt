@@ -74,6 +74,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 clearFlagDoNotUpdateTorDefaultBridges()
                 addTorDormantOption()
                 fixTorIPv6VirtualAddresses()
+                addDNSCryptOdohServers()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -286,6 +287,16 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 "",
                 Regex("VirtualAddrNetworkIPv6 \\[FC00::]/7"),
                 "VirtualAddrNetworkIPv6 [FC00::]/8"
+            )
+        )
+    }
+
+    private fun addDNSCryptOdohServers() {
+        dnsCryptConfigPatches.add(
+            AlterConfig.AddLine(
+                "",
+                Regex("doh_servers = .+"),
+                "odoh_servers = true"
             )
         )
     }

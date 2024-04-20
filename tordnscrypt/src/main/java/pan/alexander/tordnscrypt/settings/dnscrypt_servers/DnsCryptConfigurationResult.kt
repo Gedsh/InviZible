@@ -28,6 +28,7 @@ sealed interface DnsCryptConfigurationResult {
     data class DnsCryptRoutes(val routes: List<DnsServerRelay>): DnsCryptConfigurationResult
     data class DnsCryptPublicResolvers(val resolvers: List<DnsCryptResolver>): DnsCryptConfigurationResult
     data class DnsCryptOwnResolvers(val resolvers: List<DnsCryptResolver>): DnsCryptConfigurationResult
+    data class DnsCryptOdohResolvers(val resolvers: List<DnsCryptResolver>): DnsCryptConfigurationResult
     data object Finished: DnsCryptConfigurationResult
     data object Undefined: DnsCryptConfigurationResult
 }

@@ -29,16 +29,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.annotation.ColorRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
 
@@ -53,6 +55,7 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
 
     private final String colorDNSCryptServer;
     private final String colorDohServer;
+    private final String colorODohServer;
     private final String colorNonFilteringServer;
     private final String colorFilteringServer;
     private final String colorNonLoggingServer;
@@ -70,6 +73,7 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
     private final String relaysNotUsed;
     private final String dnscryptServer;
     private final String dohServer;
+    private final String odohServer;
     private final String nonFilteringServer;
     private final String filteringServer;
     private final String nonLoggingServer;
@@ -88,13 +92,14 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
         this.dnsServerItemsSaved = preferencesDNSCryptServers.dnsServerItemsSaved;
         this.relaysMdExist = preferencesDNSCryptServers.isRelaysMdExist();
 
-        colorDNSCryptServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDNSCryptServer)));
-        colorDohServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDohServer)));
-        colorNonFilteringServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorNonFilteringServer)));
-        colorFilteringServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorFilteringServer)));
-        colorNonLoggingServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorNonLoggingServer)));
-        colorKeepLogsServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorKeepLogsServer)));
-        colorDNSSECServer = String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, R.color.colorDNSSECServer)));
+        colorDNSCryptServer = getHexFromColors(context, R.color.colorDNSCryptServer);
+        colorDohServer = getHexFromColors(context, R.color.colorDohServer);
+        colorODohServer = getHexFromColors(context, R.color.colorODohServer);
+        colorNonFilteringServer = getHexFromColors(context, R.color.colorNonFilteringServer);
+        colorFilteringServer = getHexFromColors(context, R.color.colorFilteringServer);
+        colorNonLoggingServer = getHexFromColors(context, R.color.colorNonLoggingServer);
+        colorKeepLogsServer = getHexFromColors(context, R.color.colorKeepLogsServer);
+        colorDNSSECServer = getHexFromColors(context, R.color.colorDNSSECServer);
 
         colorFirst = context.getResources().getColor(R.color.colorFirst);
         colorSecond = context.getResources().getColor(R.color.colorSecond);
@@ -107,6 +112,7 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
         relaysNotUsed = ContextCompat.getString(context, R.string.anonymize_relays_not_used);
         dnscryptServer = ContextCompat.getString(context, R.string.pref_dnscrypt_dnscrypt_server);
         dohServer = ContextCompat.getString(context, R.string.pref_dnscrypt_doh_server);
+        odohServer = ContextCompat.getString(context, R.string.pref_dnscrypt_odoh_server);
         nonFilteringServer = ContextCompat.getString(context, R.string.pref_dnscrypt_non_filtering_server);
         filteringServer = ContextCompat.getString(context, R.string.pref_dnscrypt_filtering_server);
         nonLoggingServer = ContextCompat.getString(context, R.string.pref_dnscrypt_non_logging_server);
@@ -138,6 +144,11 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
         return dnsServerItems.get(position);
     }
 
+    @Override
+    public long getItemId(int position) {
+        return getItem(position).hashCode();
+    }
+
     private void setItem(int position, DnsServerItem dnsServer) {
         int positionInSaved = dnsServerItemsSaved.indexOf(getItem(position));
         if (positionInSaved >= 0) {
@@ -157,10 +168,9 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
     class DNSServersViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener,
             View.OnLongClickListener,
-            CompoundButton.OnCheckedChangeListener,
             View.OnFocusChangeListener {
 
-        private final CardView cardDNSServer;
+        private final MaterialCardView cardDNSServer;
         private final TextView tvDNSServerName;
         private final CheckBox chbDNSServer;
         private final TextView tvDNSServerDescription;
@@ -184,7 +194,7 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
             chbDNSServer = itemView.findViewById(R.id.chbDNSServer);
             chbDNSServer.setFocusable(false);
 
-            chbDNSServer.setOnCheckedChangeListener(this);
+            chbDNSServer.setOnClickListener(this);
             tvDNSServerDescription = itemView.findViewById(R.id.tvDNSServerDescription);
             tvDNSServerFlags = itemView.findViewById(R.id.tvDNSServerFlags);
             btnDNSServerRelay = itemView.findViewById(R.id.btnDNSServerRelay);
@@ -226,6 +236,16 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
             } else if (dnsServer.isProtoDoH()) {
                 sb.append("<font color='").append(colorDohServer).append("'>").append(dohServer).append(" </font>");
                 btnDNSServerRelay.setVisibility(View.GONE);
+            } else if (dnsServer.isProtoODoH()) {
+                sb.append("<font color='").append(colorODohServer).append("'>").append(odohServer).append(" </font>");
+                if (dnsServer.isChecked()) {
+                    String routes = getRoutes(dnsServer).toString();
+                    btnDNSServerRelay.setVisibility(View.VISIBLE);
+                    btnDNSServerRelay.setText(routes);
+                } else {
+                    btnDNSServerRelay.setVisibility(View.GONE);
+                    btnDNSServerRelay.setText("");
+                }
             }
             if (dnsServer.isNofilter()) {
                 sb.append("<font color='").append(colorNonFilteringServer).append("'>").append(nonFilteringServer).append(" </font>");
@@ -262,11 +282,14 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
             }
 
             int id = view.getId();
-            if (id == R.id.cardDNSServer) {
+            if (id == R.id.cardDNSServer || id == R.id.chbDNSServer) {
                 DnsServerItem dnsServer = getItem(position);
                 dnsServer.setChecked(!dnsServer.isChecked());
                 setItem(position, dnsServer);
-                DnsServersAdapter.this.notifyItemChanged(position);
+                DnsServersAdapter.this.notifyItemChanged(position, new Object());
+                if (dnsServer.isChecked() && dnsServer.isProtoODoH() && dnsServer.getRoutes().isEmpty()) {
+                    preferencesDNSCryptServers.openDNSRelaysPref(dnsServer);
+                }
             } else if (id == R.id.btnDNSServerRelay) {
                 preferencesDNSCryptServers.openDNSRelaysPref(getItem(position));
             } else if (id == R.id.delBtnDNSServer) {
@@ -283,21 +306,6 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
             } else {
                 ((CardView) view).setCardBackgroundColor(colorFirst);
                 view.findViewById(R.id.btnDNSServerRelay).setBackgroundColor(colorFirst);
-            }
-        }
-
-        @Override
-        public void onCheckedChanged(CompoundButton compoundButton, boolean checked) {
-            int position = getBindingAdapterPosition();
-            if (position == NO_POSITION) {
-                return;
-            }
-
-            DnsServerItem dnsServer = getItem(position);
-            if (dnsServer.isChecked() != checked) {
-                dnsServer.setChecked(checked);
-                setItem(position, dnsServer);
-                DnsServersAdapter.this.notifyItemChanged(position);
             }
         }
 
@@ -347,5 +355,9 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
 
         }
         return routes;
+    }
+
+    private String getHexFromColors(Context context, @ColorRes int colorRes) {
+        return String.format("#%06X", (0xFFFFFF & ContextCompat.getColor(context, colorRes)));
     }
 }

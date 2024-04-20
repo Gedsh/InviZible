@@ -27,53 +27,46 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
-import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
-import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
-import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
+import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import javax.inject.Inject;
 
 
-public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOperationsCompleteListener {
+public class PreferencesDNSCryptRelays extends Fragment {
+
+    public static String RELAY_TYPE_ARG = "pan.alexander.tordnscrypt.RELAY_TYPE_ARG";
+    public static String SERVER_NAME_ARG = "pan.alexander.tordnscrypt.SERVER_NAME_ARG";
+    public static String IPV6_SERVER_ARG = "pan.alexander.tordnscrypt.IPV6_SERVER_ARG";
+    public static String ROUTES_ARG = "pan.alexander.tordnscrypt.ROUTES_ARG";
 
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public ViewModelProvider.Factory viewModelFactory;
 
-    private String dnsServerName;
-    private final ArrayList<DnsRelayItem> dnsRelayItems = new ArrayList<>();
-    private List<DnsServerRelay> routesCurrent = new ArrayList<>();
-    private RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysViewHolder> adapter;
-    private OnRoutesChangeListener onRoutesChangeListener;
-    private DialogFragment pleaseWaitDialog;
-    private boolean serverIPv6;
-
+    private DnsRelayViewModel viewModel;
+    private DnsRelaysAdapter adapter;
+    private LinearProgressIndicator pbDnsCryptRelays;
 
     public PreferencesDNSCryptRelays() {
     }
 
     public interface OnRoutesChangeListener {
-        void onRoutesChange(CopyOnWriteArrayList<DnsServerRelay> routesNew);
-    }
-
-    public void setOnRoutesChangeListener(OnRoutesChangeListener onRoutesChangeListener) {
-        this.onRoutesChangeListener = onRoutesChangeListener;
+        void onRoutesChange(List<DnsServerRelay> routes, String currentServer);
     }
 
     @Override
@@ -81,11 +74,7 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
-        setRetainInstance(true);
-
-        takeArguments(getArguments());
-
-        openPleaseWaitDialog();
+        viewModel = new ViewModelProvider(this, viewModelFactory).get(DnsRelayViewModel.class);
     }
 
     @Override
@@ -101,63 +90,42 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
         View view = inflater.inflate(R.layout.fragment_preferences_dnscrypt_relays, container, false);
 
+        pbDnsCryptRelays = view.findViewById(R.id.pbDnsCryptRelays);
         RecyclerView rvDNSRelay = view.findViewById(R.id.rvDNSRelays);
 
         RecyclerView.LayoutManager manager = new LinearLayoutManager(activity);
         rvDNSRelay.setLayoutManager(manager);
 
-        adapter = new DnsRelaysAdapter(activity, dnsRelayItems);
+        adapter = new DnsRelaysAdapter(activity);
+        adapter.setHasStableIds(true);
         rvDNSRelay.setAdapter(adapter);
 
         return view;
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        FileManager.setOnFileOperationCompleteListener(this);
-
-        if (dnsRelayItems.isEmpty()) {
-            FileManager.readTextFile(
-                    requireContext(),
-                    pathVars.get().getAppDataDir() + "/app_data/dnscrypt-proxy/relays.md", "relays.md"
-            );
-        }
-    }
-
-    @Override
-    public void OnFileOperationComplete(FileOperationsVariants currentFileOperation, boolean fileOperationResult, String path, String tag, List<String> lines) {
-        closePleaseWaitDialog();
-        if (currentFileOperation == FileOperationsVariants.readTextFile && fileOperationResult && tag.equals("relays.md")) {
-            fillDnsRelaysList(new ArrayList<>(lines));
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        FileManager.deleteOnFileOperationCompleteListener(this);
+        observeConfigurationState();
+        requestRelaysConfiguration();
     }
 
     @Override
     public void onStop() {
         super.onStop();
 
-        if (dnsServerName == null || dnsRelayItems.isEmpty()) {
+        List<DnsRelayItem> dnsRelayItems = adapter.getItems();
+
+        if (dnsRelayItems.isEmpty()) {
             return;
         }
 
-        if (routesCurrent == null) {
-            routesCurrent = new CopyOnWriteArrayList<>();
-        }
+        DnsServerRelay serverRoutes = getRelaysForCurrentServer(dnsRelayItems);
 
-        DnsServerRelay dnsServerRelaysNew = createRelaysObjForCurrentServer();
+        List<DnsServerRelay> allRoutes = updateAndGetRelaysForAllServers(serverRoutes);
 
-        CopyOnWriteArrayList<DnsServerRelay> routesNew = updateRelaysListForAllServers(dnsServerRelaysNew);
-
-        callbackToPreferencesDNSCryptServers(routesNew);
+        saveRoutes(allRoutes);
     }
 
     @Override
@@ -165,98 +133,94 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         super.onDestroyView();
 
         adapter = null;
-        pleaseWaitDialog = null;
+        pbDnsCryptRelays = null;
+    }
+
+    private void requestRelaysConfiguration() {
+        Bundle bundle = getArguments();
+        if (bundle == null) {
+            return;
+        }
+        Object type = bundle.get(RELAY_TYPE_ARG);
+        if (type != null) {
+            viewModel.getRelaysConfiguration((RelayType) type);
+        }
+    }
+
+    private void observeConfigurationState() {
+        viewModel.getRelaysConfigurationState().observe(getViewLifecycleOwner(), state -> {
+            if (state instanceof RelayConfigurationResult.Loading) {
+                showProgress();
+            } else if (state instanceof RelayConfigurationResult.Relays) {
+                List<DnsRelay> relays = ((RelayConfigurationResult.Relays) state).getRelays();
+                fillDnsRelaysList(relays);
+            } else if (state instanceof RelayConfigurationResult.Finished) {
+                hideProgress();
+            }
+        });
+    }
+
+    private void fillDnsRelaysList(List<DnsRelay> relays) {
+        List<DnsRelayItem> recyclerItems = new ArrayList<>();
+        String dnsServerName = getServerName();
+        boolean ipv6Server = isServerIPv6();
+        List<DnsServerRelay> routes = getRoutes();
+        for (DnsRelay relay : relays) {
+            if (ipv6Server && isRelayIPv6(relay) || !ipv6Server && !isRelayIPv6(relay)) {
+                DnsRelayItem item = new DnsRelayItem(relay.getName(), relay.getDescription());
+                item.setChecked(isDnsRelaySelected(routes, dnsServerName, relay.getName()));
+                recyclerItems.add(item);
+            }
+        }
+        adapter.addItems(recyclerItems);
+    }
+
+    private String getServerName() {
+        Bundle bundle = getArguments();
+        if (bundle == null) {
+            return "";
+        }
+        return bundle.getString(SERVER_NAME_ARG);
+    }
+
+    private boolean isServerIPv6() {
+        Bundle bundle = getArguments();
+        if (bundle == null) {
+            return false;
+        }
+        return bundle.getBoolean(IPV6_SERVER_ARG);
     }
 
     @SuppressWarnings("unchecked")
-    private void takeArguments(Bundle args) {
-        if (args != null) {
-            dnsServerName = args.getString("dnsServerName");
-
-            ArrayList<DnsServerRelay> routesCurrentTmp = (ArrayList<DnsServerRelay>) args.getSerializable("routesCurrent");
-
-            if (routesCurrentTmp != null) {
-                routesCurrent = routesCurrentTmp;
-            }
-
-            serverIPv6 = args.getBoolean("dnsServerIPv6");
-
+    private List<DnsServerRelay> getRoutes() {
+        Bundle bundle = getArguments();
+        if (bundle == null) {
+            return Collections.emptyList();
         }
+        Object routes = bundle.getSerializable(ROUTES_ARG);
+        if (routes != null) {
+            return (ArrayList<DnsServerRelay>) routes;
+        }
+        return Collections.emptyList();
     }
 
-    private void fillDnsRelaysList(List<String> lines) {
-        String name = "";
-        String description = "";
-        boolean lockRelay = false;
-
-        for (String line : lines) {
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            if (line.contains("##")) {
-                name = line.replace("##", "").trim();
-                lockRelay = true;
-            } else if (lockRelay && line.contains("sdns://")) {
-                lockRelay = false;
-            } else if (lockRelay) {
-                description = line.replaceAll("\\s", " ").trim();
-            }
-
-            if (!name.isEmpty() && !description.isEmpty() && !lockRelay) {
-                DnsRelayItem dnsRelayItem = new DnsRelayItem(name, description);
-
-                dnsRelayItem.setChecked(isDnsRelaySelected(name));
-
-                boolean addServer;
-
-                boolean relayIPv6 = name.contains("ipv6");
-
-                if (serverIPv6) {
-                    addServer = relayIPv6;
-                } else {
-                    addServer = !relayIPv6;
-                }
-
-                if (addServer) {
-                    dnsRelayItems.add(dnsRelayItem);
-                }
-
-
-                name = "";
-                description = "";
-            }
-        }
-        Collections.sort(dnsRelayItems);
-
-        Activity activity = getActivity();
-        if (activity != null) {
-            activity.runOnUiThread(() -> adapter.notifyDataSetChanged());
-        }
+    private boolean isRelayIPv6(DnsRelay relay) {
+        return relay.getName().contains("ipv6");
     }
 
-    private boolean isDnsRelaySelected(String name) {
-        boolean result = false;
-
-        if (routesCurrent == null || dnsServerName == null) {
-            return false;
-        }
-
-        for (int i = 0; i < routesCurrent.size(); i++) {
-            DnsServerRelay dnsServerRelays = routesCurrent.get(i);
-            if (dnsServerRelays.dnsServerName().equals(dnsServerName)) {
-                if (dnsServerRelays.dnsServerRelays().contains(name)) {
-                    result = true;
-                    break;
-                }
+    private boolean isDnsRelaySelected(List<DnsServerRelay> routes, String serverName, String relayName) {
+        for (int i = 0; i < routes.size(); i++) {
+            DnsServerRelay route = routes.get(i);
+            if (route.dnsServerName().equals(serverName)
+                    && route.dnsServerRelays().contains(relayName)) {
+                return true;
             }
         }
-
-        return result;
+        return false;
     }
 
-    private DnsServerRelay createRelaysObjForCurrentServer() {
-        ArrayList<String> dnsRelaysNamesForCurrentServer = new ArrayList<>();
+    private DnsServerRelay getRelaysForCurrentServer(List<DnsRelayItem> dnsRelayItems) {
+        List<String> dnsRelaysNamesForCurrentServer = new ArrayList<>();
         for (DnsRelayItem dnsRelayItem : dnsRelayItems) {
             if (dnsRelayItem.isChecked()) {
                 dnsRelaysNamesForCurrentServer.add(dnsRelayItem.getName());
@@ -265,15 +229,17 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
 
         DnsServerRelay dnsServerRelaysNew = null;
         if (!dnsRelaysNamesForCurrentServer.isEmpty()) {
-            dnsServerRelaysNew = new DnsServerRelay(dnsServerName, dnsRelaysNamesForCurrentServer);
+            dnsServerRelaysNew = new DnsServerRelay(getServerName(), dnsRelaysNamesForCurrentServer);
         }
 
         return dnsServerRelaysNew;
     }
 
-    private CopyOnWriteArrayList<DnsServerRelay> updateRelaysListForAllServers(DnsServerRelay dnsServerRelaysNew) {
-        CopyOnWriteArrayList<DnsServerRelay> routesNew = new CopyOnWriteArrayList<>();
+    private List<DnsServerRelay> updateAndGetRelaysForAllServers(DnsServerRelay dnsServerRelaysNew) {
+        List<DnsServerRelay> routesNew = new ArrayList<>();
 
+        List<DnsServerRelay> routesCurrent = getRoutes();
+        String dnsServerName = getServerName();
         for (int i = 0; i < routesCurrent.size(); i++) {
 
             DnsServerRelay dnsServerRelays = routesCurrent.get(i);
@@ -294,28 +260,29 @@ public class PreferencesDNSCryptRelays extends Fragment implements OnTextFileOpe
         return routesNew;
     }
 
-    private void callbackToPreferencesDNSCryptServers(CopyOnWriteArrayList<DnsServerRelay> routesNew) {
-        if (onRoutesChangeListener != null) {
-            onRoutesChangeListener.onRoutesChange(routesNew);
-        }
-    }
-
-    private void openPleaseWaitDialog() {
-        if (isAdded()) {
-            pleaseWaitDialog = new PleaseWaitProgressDialog();
-            pleaseWaitDialog.show(getParentFragmentManager(), "PleaseWaitProgressDialog");
-        }
-    }
-
-    private void closePleaseWaitDialog() {
-        if (pleaseWaitDialog != null && pleaseWaitDialog.isAdded()) {
-            try {
-                pleaseWaitDialog.dismiss();
-                pleaseWaitDialog = null;
-            } catch (Exception e) {
-                logw("PreferencesDNSCryptRelays closePleaseWaitDialog", e);
+    private void saveRoutes(List<DnsServerRelay> routesNew) {
+        String server = getServerName();
+        for (Fragment fragment: getParentFragmentManager().getFragments()) {
+            if (fragment instanceof OnRoutesChangeListener) {
+                ((OnRoutesChangeListener) fragment).onRoutesChange(routesNew, server);
+                break;
             }
         }
+    }
+
+    private void showProgress() {
+        pbDnsCryptRelays.setVisibility(View.VISIBLE);
+        pbDnsCryptRelays.setIndeterminate(true);
+    }
+
+    private void hideProgress() {
+        pbDnsCryptRelays.setIndeterminate(false);
+        pbDnsCryptRelays.setVisibility(View.GONE);
+    }
+
+    public enum RelayType {
+        DNSCRYPT_RELAY,
+        ODOH_RELAY
     }
 
 }

@@ -19,39 +19,59 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
+import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.card.MaterialCardView;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 
 class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysViewHolder> {
 
-    private final Context context;
-    private final ArrayList<DnsRelayItem> dnsRelayItems;
-    private final LayoutInflater lInflater;
+    private final List<DnsRelayItem> dnsRelayItems = new ArrayList<>();
 
+    private final int colorFirst;
+    private final int colorSecond;
 
-    DnsRelaysAdapter(Context context, ArrayList<DnsRelayItem> dnsRelayItems) {
-        this.context = context;
-        this.dnsRelayItems = dnsRelayItems;
-        this.lInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    DnsRelaysAdapter(Context context) {
+        colorFirst = context.getResources().getColor(R.color.colorFirst);
+        colorSecond = context.getResources().getColor(R.color.colorSecond);
+    }
+
+    void addItems(List<DnsRelayItem> items) {
+        dnsRelayItems.clear();
+        dnsRelayItems.addAll(items);
+        Collections.sort(dnsRelayItems);
+        notifyItemRangeInserted(0, items.size());
+    }
+
+    List<DnsRelayItem> getItems() {
+        return new ArrayList<>(dnsRelayItems);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return getItem(position).hashCode();
     }
 
     @NonNull
     @Override
     public DNSRelaysViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = lInflater.inflate(R.layout.item_dns_relay, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_dns_relay, parent, false);
         return new DNSRelaysViewHolder(view);
     }
 
@@ -73,9 +93,8 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
         dnsRelayItems.set(position, dnsRelayItem);
     }
 
-
-
-    class DNSRelaysViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, View.OnFocusChangeListener {
+    class DNSRelaysViewHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener, View.OnFocusChangeListener {
         private final TextView tvDNSRelayName;
         private final TextView tvDNSRelayDescription;
         private final CheckBox chbDNSRelay;
@@ -83,8 +102,8 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
         DNSRelaysViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            CardView cardDNSRelay = itemView.findViewById(R.id.cardDNSRelay);
-            cardDNSRelay.setCardBackgroundColor(context.getResources().getColor(R.color.colorFirst));
+            MaterialCardView cardDNSRelay = itemView.findViewById(R.id.cardDNSRelay);
+            cardDNSRelay.setCardBackgroundColor(colorFirst);
             cardDNSRelay.setFocusable(true);
             cardDNSRelay.setOnClickListener(this);
             cardDNSRelay.setOnFocusChangeListener(this);
@@ -92,7 +111,7 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
             tvDNSRelayName = itemView.findViewById(R.id.tvDNSRelayName);
             tvDNSRelayDescription = itemView.findViewById(R.id.tvDNSRelayDescription);
             chbDNSRelay = itemView.findViewById(R.id.chbDNSRelay);
-            chbDNSRelay.setOnCheckedChangeListener(this);
+            chbDNSRelay.setOnClickListener(this);
         }
 
         private void bind(int position) {
@@ -105,31 +124,26 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
 
         @Override
         public void onClick(View view) {
-            if (view.getId() == R.id.cardDNSRelay) {
-                int position = getAdapterPosition();
+            int position = getBindingAdapterPosition();
+            if (position == NO_POSITION) {
+                return;
+            }
+
+            int id = view.getId();
+            if (id == R.id.cardDNSRelay || id == R.id.chbDNSRelay) {
                 DnsRelayItem dnsRelayItem = getItem(position);
                 dnsRelayItem.setChecked(!dnsRelayItem.isChecked());
                 setItem(position, dnsRelayItem);
-                notifyItemChanged(position);
-            }
-        }
-
-        @Override
-        public void onCheckedChanged(CompoundButton compoundButton, boolean newValue) {
-            int position = getAdapterPosition();
-            DnsRelayItem dnsRelayItem = getItem(position);
-            if (dnsRelayItem.isChecked() != newValue) {
-                dnsRelayItem.setChecked(newValue);
-                setItem(position, dnsRelayItem);
+                notifyItemChanged(position, new Object());
             }
         }
 
         @Override
         public void onFocusChange(View view, boolean newValue) {
             if (newValue) {
-                ((CardView) view).setCardBackgroundColor(context.getResources().getColor(R.color.colorSecond));
+                ((CardView) view).setCardBackgroundColor(colorSecond);
             } else {
-                ((CardView) view).setCardBackgroundColor(context.getResources().getColor(R.color.colorFirst));
+                ((CardView) view).setCardBackgroundColor(colorFirst);
             }
         }
     }

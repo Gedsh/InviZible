@@ -375,6 +375,7 @@
     <string name="pref_common_multi_user">Підтримувати багатокористувацький режим</string>
     <string name="pref_tor_enable_transparent_proxy">Увімкнути прозорий проксі</string>
     <string name="pref_dnscrypt_doh_servers_summ">Використовуйте сервери з підтримкою протоколу DNS-over-HTTPS.</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Використовуйте сервери з підтримкою протоколу Oblivious DNS-over-HTTPS.</string>
     <string name="pref_tor_not_exist">У файлі tor.conf немає параметра преференцій!</string>
     <string name="pref_tor_unlock">Хост або IP для розблокування</string>
     <string name="pref_dnscrypt_force_tcp_categ">Завжди використовувати TCP для підключення до висхідних серверів.</string>

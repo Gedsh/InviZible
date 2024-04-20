@@ -23,6 +23,7 @@
     <color name="colorRedDarkFaint">#D45E5E</color>
     <color name="colorDNSCryptServer">#7F4E52</color>
     <color name="colorDohServer">#614051</color>
+    <color name="colorODohServer">#40614F</color>
     <color name="colorNonFilteringServer">#728FCE</color>
     <color name="colorFilteringServer">#4C787E</color>
     <color name="colorNonLoggingServer">#4863A0</color>

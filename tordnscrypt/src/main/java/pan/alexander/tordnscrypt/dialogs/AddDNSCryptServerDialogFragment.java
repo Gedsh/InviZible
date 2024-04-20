@@ -21,19 +21,33 @@ package pan.alexander.tordnscrypt.dialogs;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.util.Base64;
 import android.widget.EditText;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DnsServerFeatures;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DnsServerItem;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
+
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
 
     private EditText etOwnServerName;
     private EditText etOwnServerDescription;
@@ -51,6 +65,12 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
 
     public void setOnServerAddListener(OnServerAddedListener onServerAddedListener) {
         this.onServerAddedListener = onServerAddedListener;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
+        super.onCreate(savedInstanceState);
     }
 
     @Override
@@ -118,7 +138,8 @@ public class AddDNSCryptServerDialogFragment extends ExtendedDialogFragment {
         }
 
         try {
-            DnsServerItem item = new DnsServerItem(context, etOwnServerNameText, etOwnServerDescriptionText, etOwnServerSDNSText);
+            DnsServerFeatures features = new DnsServerFeatures(context, defaultPreferences.get());
+            DnsServerItem item = new DnsServerItem(etOwnServerNameText, etOwnServerDescriptionText, etOwnServerSDNSText, features);
             item.setOwnServer(true);
 
             if (onServerAddedListener != null) {

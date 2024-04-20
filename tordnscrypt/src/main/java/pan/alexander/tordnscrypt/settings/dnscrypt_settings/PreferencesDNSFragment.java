@@ -138,6 +138,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference(DNSCRYPT_LISTEN_PORT));
         preferences.add(findPreference("dnscrypt_servers"));
         preferences.add(findPreference("doh_servers"));
+        preferences.add(findPreference("odoh_servers"));
         preferences.add(findPreference("require_dnssec"));
         preferences.add(findPreference("require_nolog"));
         preferences.add(findPreference("require_nofilter"));

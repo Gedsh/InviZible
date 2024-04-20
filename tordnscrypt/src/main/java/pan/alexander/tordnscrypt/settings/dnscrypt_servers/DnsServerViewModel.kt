@@ -61,14 +61,13 @@ class DnsServerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
 
-                waitForObserverBecomeActive()
-
                 dnsCryptConfigurationMutable.value = DnsCryptConfigurationResult.Loading
 
                 ensureActive()
                 val dnsCryptProxyToml = executeOnWorkerThread {
                     dnsCryptConfigurationParser.dnsCryptProxyToml
                 }
+                waitForObserverBecomeActive()
                 dnsCryptConfigurationMutable.value =
                     DnsCryptConfigurationResult.DnsCryptProxyToml(dnsCryptProxyToml)
 
@@ -92,6 +91,15 @@ class DnsServerViewModel @Inject constructor(
                 }
                 dnsCryptConfigurationMutable.value =
                     DnsCryptConfigurationResult.DnsCryptPublicResolvers(dnsCryptPublicResolvers.toList())
+                ensureActive()
+                val odohServersMd = executeOnWorkerThread {
+                    dnsCryptConfigurationParser.odohServersMd
+                }
+                val dnsCryptOdohResolvers = executeOnWorkerThread {
+                    dnsCryptConfigurationParser.parseDnsCryptResolversMd(odohServersMd)
+                }
+                dnsCryptConfigurationMutable.value =
+                    DnsCryptConfigurationResult.DnsCryptOdohResolvers(dnsCryptOdohResolvers.toList())
                 ensureActive()
                 val ownResolversMd = executeOnWorkerThread {
                     dnsCryptConfigurationParser.ownResolversMd
