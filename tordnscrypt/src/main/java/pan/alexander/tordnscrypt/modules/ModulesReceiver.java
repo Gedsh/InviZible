@@ -466,7 +466,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 List<InetAddress> dns = linkProperties.getDnsServers();
 
                 String nat64 = "";
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                if (isRootMode()) {
+                    nat64 = "";
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                         && linkProperties.getNat64Prefix() != null) {
                     nat64 = linkProperties.getNat64Prefix().toString();
                 } else if (linkProperties.toString().contains("Nat64Prefix:")) {
