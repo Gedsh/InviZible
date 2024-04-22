@@ -126,8 +126,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "Relays";
                 } else if (header.matches("\\[sources\\.'?relays'?]") && key.equals("refresh_delay")) {
                     key = "refresh_delay_relays";
-                } else if (header.equals("[dns64]") && key.equals("prefix")) {
-                    key = DNSCRYPT_DNS64_PREFIX;
+                } else if (header.equals("[dns64]") && key.matches("#?prefix")) {
+                    if (key.equals("prefix")) {
+                        editor.putBoolean("dns64", true);
+                    } else if (key.equals("#prefix")) {
+                        editor.putBoolean("dns64", false);
+                    }
+                    key = "dns64_prefix";
                     StringBuilder dns64Prefixes = new StringBuilder();
                     for (String dns64Prefix: val.split(", ?")) {
                         dns64Prefix = dns64Prefix
@@ -162,27 +167,21 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 if (val_saved_str != null && !val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
-                }
-                if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
+                } else if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
                     editor.putBoolean(key, Boolean.parseBoolean(val));
                 }
 
                 if (key.equals("#proxy") && sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
                     editor.putBoolean(DNSCRYPT_OUTBOUND_PROXY, false);
-                }
-                if (key.equals("proxy_port") && !sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
+                } else if (key.equals("proxy_port") && !sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
                     editor.putBoolean(DNSCRYPT_OUTBOUND_PROXY, true);
-                }
-                if (val.contains(appDataDir + "/cache/query.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/query.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Query logging", true);
-                }
-                if (val.contains(appDataDir + "/cache/query.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/query.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Query logging", false);
-                }
-                if (val.contains(appDataDir + "/cache/nx.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/nx.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Suspicious logging", true);
-                }
-                if (val.contains(appDataDir + "/cache/nx.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/nx.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Suspicious logging", false);
                 }
             }
