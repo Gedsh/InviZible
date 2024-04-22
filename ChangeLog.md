@@ -1099,3 +1099,11 @@
 
 **InviZible Pro beta 2.1.7**
 * Fixed Telegram messenger always connecting.
+
+**InviZible Pro beta 2.1.8**
+* Added DNSCrypt ODoH servers support.
+* Updated default Tor bridges.
+* App shows IP and country for all types of bridges.
+* Improved handling of IPv6-only networks.
+* Performance improvements.
+* Fixes and optimizations.
