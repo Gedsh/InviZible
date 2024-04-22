@@ -367,8 +367,7 @@ jboolean handle_udp(const struct arguments *args,
 
     cur->udp.time = time(NULL);
 
-    //handle onion websites
-    if (ntohs(udphdr->dest) == 53 && tor_dns_port > 0) {
+    if (ntohs(udphdr->dest) == 53) {
         struct dns_header *dns = (struct dns_header *) data;
         int qcount = ntohs(dns->q_count);
         if (dns->qr == 0 && dns->opcode == 0 && qcount > 0) {
@@ -397,9 +396,16 @@ jboolean handle_udp(const struct arguments *args,
                 }
             }
 
-            char *suffix = strrchr(qname, '.');
-            if (redirect != NULL && suffix != NULL && strcmp(suffix, ".onion") == 0) {
-                redirect->rport = tor_dns_port;
+            //handle onion websites
+            if (tor_dns_port > 0) {
+                char *suffix = strrchr(qname, '.');
+                if (redirect != NULL && suffix != NULL && strcmp(suffix, ".onion") == 0) {
+                    redirect->rport = tor_dns_port;
+                }
+            }
+            //https://datatracker.ietf.org/doc/html/rfc7050
+            if (redirect != NULL && strcmp(qname, "ipv4only.arpa") == 0) {
+                redirect = NULL;
             }
         }
     }
