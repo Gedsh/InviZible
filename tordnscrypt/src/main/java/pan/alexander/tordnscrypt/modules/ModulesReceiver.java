@@ -403,26 +403,29 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
             private final Pattern SIGNAL_STRENGTH_PATTERN = Pattern.compile("SignalStrength: ?-(\\d+)");
             private static final int SIGNAL_STRENGTH_THRESHOLD = 20;
-            private volatile Boolean last_connected = null;
-            private volatile List<InetAddress> last_dns = null;
-            private volatile int last_network = 0;
-            private volatile int last_signal_strength = 0;
+            private volatile Boolean lastConnected = null;
+            private volatile List<InetAddress> lastDns = null;
+            private volatile String lastNat64 = "";
+            private volatile boolean dnsChanged;
+            private volatile int lastNetwork = 0;
+            private volatile int lastSignalStrength = 0;
+            private volatile boolean restartLocked = false;
 
             @Override
             public void onAvailable(@NonNull Network network) {
 
                 if (isVpnNetwork(cm, network)) {
-                    logi("ModulesReceiver available VPN network=" + network + " connected=" + last_connected);
+                    logi("ModulesReceiver available VPN network=" + network + " connected=" + lastConnected);
                     return;
                 } else {
-                    logi("ModulesReceiver available network=" + network + " connected=" + last_connected);
+                    logi("ModulesReceiver available network=" + network + " connected=" + lastConnected);
                 }
 
-                last_connected = true;
+                lastConnected = true;
                 setNetworkAvailable(true);
 
-                if (!last_connected) {
-                    last_connected = true;
+                if (!lastConnected) {
+                    lastConnected = true;
 
                     if (isVpnMode() || isRootMode()) {
                         setInternetAvailable(true);
@@ -438,13 +441,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     resetArpScanner(true);
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && last_network != network.hashCode()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && lastNetwork != network.hashCode()) {
                     PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
                             context, null
                     );
                 }
 
-                last_network = network.hashCode();
+                lastNetwork = network.hashCode();
 
             }
 
@@ -462,41 +465,66 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 // Make sure the right DNS servers are being used
                 List<InetAddress> dns = linkProperties.getDnsServers();
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !same(last_dns, dns)) {
-                    logi(" DNS cur=" + (dns == null ? null : TextUtils.join(",", dns)) +
-                            " DNS prv=" + (last_dns == null ? null : TextUtils.join(",", last_dns)));
-
-                    String nat64 = "";
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
-                            && linkProperties.getNat64Prefix() != null) {
-                        nat64 = linkProperties.getNat64Prefix().toString();
+                String nat64 = "";
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                        && linkProperties.getNat64Prefix() != null) {
+                    nat64 = linkProperties.getNat64Prefix().toString();
+                } else if (linkProperties.toString().contains("Nat64Prefix:")) {
+                    Pattern pattern = Pattern.compile("Nat64Prefix: +(" + IPv6_REGEX_NO_BOUNDS + "/\\d+)");
+                    Matcher matcher = pattern.matcher(linkProperties.toString());
+                    if (matcher.find()) {
+                        nat64 = matcher.group(1);
                     }
+                    if (nat64 == null) {
+                        nat64 = "";
+                    }
+                }
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+                        || !same(lastDns, dns) || !nat64.equals(lastNat64)) {
+                    logi("DNS cur: " + TextUtils.join(",", dns) +
+                            " prv: " + (lastDns == null ? null : TextUtils.join(",", lastDns)) +
+                            " NAT64 cur: " + nat64 + " prev: " + lastNat64);
+
                     boolean restartRequested = false;
-                    if (!nat64.isEmpty() && isNat64Active() && !getSavedNat64Prefix().equals(nat64)) {
-                        updateDNSCryptNat64Prefix(nat64);
+                    if (nat64.isEmpty() && isNat64Active()) {
+                        restartRequested = true;
+                    } else if (!nat64.isEmpty() && (!isNat64Active() || !nat64.equals(getSavedNat64Prefix()))) {
                         restartRequested = true;
                     }
 
-                    if (!restartRequested
-                            && modulesStatus.getDnsCryptState() == RUNNING
-                            && isRestartNeeded(last_dns, dns)) {
+                    if (isRestartNeeded(lastDns, dns)) {
+                        dnsChanged = true;
+                        restartRequested = true;
+                    }
+
+                    if (restartRequested && !restartLocked) {
+                        restartLocked = true;
                         handler.get().postDelayed(() -> {
-                            if (modulesStatus.getDnsCryptState() == RUNNING) {
-                                logi("Restart DNSCrypt on network DNS change");
-                                ModulesRestarter.restartDNSCrypt(context);
+                            if (lastNat64.isEmpty() && isNat64Active()) {
+                                updateDNSCryptNat64Prefix(false, getSavedNat64Prefix());
+                                restartDNSCryptIfRunning();
+                            } else if (!lastNat64.isEmpty() && (!isNat64Active() || !lastNat64.equals(getSavedNat64Prefix()))) {
+                                updateDNSCryptNat64Prefix(true, lastNat64);
+                                restartDNSCryptIfRunning();
+                            } else if (dnsChanged) {
+                                restartDNSCryptIfRunning();
                             }
+                            restartLocked = false;
+                            dnsChanged = false;
                         }, RESTART_DNSCRYPT_DELAY_SEC * 1000);
 
                     }
 
-                    last_dns = dns;
+                    lastDns = dns;
+                    lastNat64 = nat64;
 
                     if (isRootMode()) {
                         updateIptablesRules(false);
                     }
 
-                    if (network.hashCode() != last_network) {
-                        last_network = network.hashCode();
+                    if (network.hashCode() != lastNetwork) {
+                        lastNetwork = network.hashCode();
 
                         if (isVpnMode() && !vpnRevoked) {
                             setInternetAvailable(false);
@@ -527,9 +555,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 setNetworkAvailable(true);
 
-                if (last_connected == null || !last_connected) {
+                if (lastConnected == null || !lastConnected) {
 
-                    last_connected = true;
+                    lastConnected = true;
 
                     if (isVpnMode()) {
                         if (vpnRevoked) {
@@ -540,7 +568,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                             reload("Connected state changed", context);
                         }
                         logi("ModulesReceiver changed capabilities=" + network);
-                    } else if (isRootMode() && last_network != network.hashCode()) {
+                    } else if (isRootMode() && lastNetwork != network.hashCode()) {
                         updateIptablesRules(false);
                         resetArpScanner();
                         checkInternetConnection();
@@ -556,16 +584,16 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         String signalStrength = matcher.group(1);
                         if (signalStrength != null) {
                             int signal_strength = Integer.parseInt(signalStrength);
-                            if (Math.abs(signal_strength - last_signal_strength) > SIGNAL_STRENGTH_THRESHOLD
+                            if (Math.abs(signal_strength - lastSignalStrength) > SIGNAL_STRENGTH_THRESHOLD
                                     && isCheckingInternetConnection.compareAndSet(false, true)) {
                                 checkInternetConnectionWithDelay();
                                 logi("ModulesReceiver changed signal strength. "
                                         + "Network " + network + " "
                                         + "SignalStrength " + signalStrength);
                             }
-                            last_signal_strength = signal_strength;
+                            lastSignalStrength = signal_strength;
                         }
-                    } else if (network.hashCode() != last_network
+                    } else if (network.hashCode() != lastNetwork
                             && isCheckingInternetConnection.compareAndSet(false, true)) {
                         checkInternetConnectionWithDelay();
                         logi("ModulesReceiver network has changed. "
@@ -573,7 +601,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     }
                 }
 
-                last_network = network.hashCode();
+                lastNetwork = network.hashCode();
 
             }
 
@@ -587,7 +615,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     logi("ModulesReceiver lost network=" + network + " connected=false");
                 }
 
-                last_connected = false;
+                lastConnected = false;
                 setNetworkAvailable(false);
 
                 if (isVpnMode() && !vpnRevoked) {
@@ -604,7 +632,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     resetArpScanner(false);
                 }
 
-                last_network = 0;
+                lastNetwork = 0;
             }
 
             boolean same(List<InetAddress> last, List<InetAddress> current) {
@@ -641,6 +669,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 return defaultPreferences.get().getBoolean(DNSCRYPT_DNS64, false);
             }
 
+            void saveNat64Active(boolean active) {
+                defaultPreferences.get().edit().putBoolean(DNSCRYPT_DNS64, active).apply();
+            }
+
             String getSavedNat64Prefix() {
                 return defaultPreferences.get().getString(DNSCRYPT_DNS64_PREFIX, "64:ff9b::/96");
             }
@@ -649,41 +681,52 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 defaultPreferences.get().edit().putString(DNSCRYPT_DNS64_PREFIX, prefix).apply();
             }
 
-            void updateDNSCryptNat64Prefix(String prefix) {
+            void updateDNSCryptNat64Prefix(boolean active, String prefix) {
                 executor.submit("ModulesReceiver updateDNSCryptNat64Prefix", () -> {
                     boolean consumed = false;
-                    Pattern pattern = Pattern.compile("prefix ?= ?\\['" + IPv6_REGEX_NO_BOUNDS + "/\\d+']");
+                    Pattern pattern = Pattern.compile("#?prefix ?= ?\\['" + IPv6_REGEX_NO_BOUNDS + "/\\d+']");
                     List<String> conf = FileManager.readTextFileSynchronous(
                             context,
                             pathVars.get().getDnscryptConfPath()
                     );
-                    for (int i = 0; i < conf.size(); i++) {
-                        String line = conf.get(i);
-                        if (line.startsWith("prefix =")) {
-                            Matcher matcher = pattern.matcher(line);
-                            if (matcher.matches()) {
-                                line = "prefix = ['" + prefix + "']";
-                                conf.set(i, line);
-                                consumed = true;
-                                break;
-                            }
-                        }
+                    String prefixLine;
+                    if (active) {
+                        prefixLine = "prefix = ['" + prefix + "']";
+                    } else {
+                        prefixLine = "#prefix = ['" + prefix + "']";
                     }
-                    if (!consumed) {
+                    if (!pattern.matcher(prefixLine).matches()) {
                         return null;
                     }
-                    FileManager.writeTextFileSynchronous(
-                            context,
-                            pathVars.get().getDnscryptConfPath(),
-                            conf
-                    );
-                    saveNat64Prefix(prefix);
-                    if (modulesStatus.getDnsCryptState() == RUNNING) {
-                        logi("Restart DNSCrypt on network Nat64Prefix change");
-                        ModulesRestarter.restartDNSCrypt(context);
+                    for (int i = 0; i < conf.size(); i++) {
+                        String line = conf.get(i);
+                        if (pattern.matcher(line).matches() && !line.equals(prefixLine)) {
+                            conf.set(i, prefixLine);
+                            consumed = true;
+                            break;
+                        }
                     }
+
+                    if (consumed) {
+                        saveNat64Active(active);
+                        saveNat64Prefix(prefix);
+
+                        FileManager.writeTextFileSynchronous(
+                                context,
+                                pathVars.get().getDnscryptConfPath(),
+                                conf
+                        );
+                    }
+
                     return null;
                 });
+            }
+
+            private void restartDNSCryptIfRunning() {
+                if (modulesStatus.getDnsCryptState() == RUNNING) {
+                    logi("Restart DNSCrypt on network DNS change");
+                    ModulesRestarter.restartDNSCrypt(context);
+                }
             }
         };
 
