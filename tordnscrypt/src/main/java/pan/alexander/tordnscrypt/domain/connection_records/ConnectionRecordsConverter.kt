@@ -336,7 +336,7 @@ class ConnectionRecordsConverter @Inject constructor(
         if (consumed) {
             logRecords.add(packetLogEntry)
         } else if (vpnDNS == null || !vpnDNS.contains(packetRecord.daddr) || !packetRecord.allowed) {
-            if (!meteredNetwork && packetRecord.daddr.isNotEmpty()) {
+            if (!meteredNetwork && packetRecord.daddr.isNotEmpty() && !isIpInLanRange(packetRecord.daddr)) {
                 val host = ipToHostAddressMap[IpToTime(packetRecord.daddr)]
                 if (host == null) {
                     makeReverseLookup(packetRecord.daddr)
