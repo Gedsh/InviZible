@@ -30,6 +30,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BLOCK_IPv6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
@@ -466,7 +467,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 List<InetAddress> dns = linkProperties.getDnsServers();
 
                 String nat64 = "";
-                if (isRootMode()) {
+                if (isRootMode() || isDNSCryptBlockIPv6()) {
                     nat64 = "";
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                         && linkProperties.getNat64Prefix() != null) {
@@ -681,6 +682,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
             void saveNat64Prefix(String prefix) {
                 defaultPreferences.get().edit().putString(DNSCRYPT_DNS64_PREFIX, prefix).apply();
+            }
+
+            boolean isDNSCryptBlockIPv6() {
+                return defaultPreferences.get().getBoolean(DNSCRYPT_BLOCK_IPv6, false);
             }
 
             void updateDNSCryptNat64Prefix(boolean active, String prefix) {
