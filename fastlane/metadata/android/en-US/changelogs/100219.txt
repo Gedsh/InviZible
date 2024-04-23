@@ -1,0 +1,2 @@
+**InviZible Pro beta 2.1.9**
+* Updated Purple I2P with the latest patch to mitigate the ongoing DoS attack on the I2P network.
