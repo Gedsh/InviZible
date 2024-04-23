@@ -151,7 +151,7 @@
     <string name="tvSettings_text">"S'il vous plaît, patientez..."</string>
     <string name="toastSettings_saved">"Paramètres sauvegardés"</string>
     <string name="pref_dnscrypt_global_settings_categ">"PARAMÈTRES GLOBAUX"</string>
-    <string name="pref_advanced">" Pour les utilisateurs expérimentés uniquement!"</string>
+    <string name="pref_advanced">Pour les utilisateurs expérimentés uniquement!</string>
     <string name="pref_dnscrypt_select_server_names">"Sélectionner au moins un serveur!"</string>
     <string name="pref_dnscrypt_local_port_summ">"Port local à écouter."</string>
     <string name="pref_dnscrypt_require_servers_categ">"Exiger des serveurs (de sources statiques + distantes) pour satisfaire à des propriétés spécifiques."</string>
@@ -162,8 +162,8 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Le serveur ne doit pas enregistrer les requêtes des utilisateurs (déclaratif)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Le serveur ne doit pas appliquer sa propre liste noire (pour le contrôle parental, le blocage des publicités...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">" Cela peut être utile si vous avez besoin de tout faire passer par Tor.
-                Sinon, laissez cela sur faux (false), car cela n'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l'UDP), et ne peut qu'augmenter la latence."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Cela peut être utile si vous avez besoin de tout faire passer par Tor.
+\n                Sinon, laissez cela sur faux (false), car cela n\'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l\'UDP), et ne peut qu\'augmenter la latence."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Mandataire SOCKS."</string>
     <string name="pref_dnscrypt_use_proxy">"Activer le mandataire"</string>
     <string name="pref_dnscrypt_proxy_summ">"Router toutes les connexions TCP vers un noeud Tor local.
@@ -445,7 +445,7 @@
     <string name="proxy_server_empty_field_hint">"Ce champ peut être laissé vide"</string>
     <string name="proxy_exclude_apps_from_proxy">"Exclure des applications"</string>
     <string name="proxy_exclude_apps_from_proxy_summ">"Liste d'applications à ouvrir directement. Celle-ci n'utiliseront ni Tor ni mandataire pour se connecter à Internet!"</string>
-    <string name="proxy_select_proxy_app">" Veuillez sélectionner au moins l'application du propriétaire du mandataire, si vous utilisez un mandataire local."</string>
+    <string name="proxy_select_proxy_app">Veuillez sélectionner au moins l\'application du propriétaire du mandataire, si vous utilisez un mandataire local.</string>
     <string name="proxy_use_for_dnscrypt">"Utiliser un mandataire pour DNSCrypt"</string>
     <string name="proxy_use_for_tor">"Utiliser un mandataire pour Tor"</string>
     <string name="proxy_use_for_itpd">"Utiliser un mandataire pour Purple I2P"</string>
