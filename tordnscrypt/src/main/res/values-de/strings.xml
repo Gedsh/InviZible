@@ -426,10 +426,10 @@ Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann a
     <string name="pref_common_compatibility_mode">"Kompatibilitätsmodus"</string>
     <string name="pref_common_compatibility_mode_summ">"Aktivieren falls du ein Gerät mit Custom-ROM nutzt, bei dem die Verbindung abbricht sobald du den START Knopf drückst"</string>
     <string name="pref_common_shell_control">"Aktiviere Skript Kontrolle"</string>
-    <string name="pref_common_shell_control_summ">"Nutze den folgenden Befehl um Module zu verwalten:
-\"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\"
-1 = Modulstart, 0 = Modulstopp"</string>
+    <string name="pref_common_shell_control_summ">Nutze den folgenden Befehl um Module zu verwalten:
+\n\"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
+\n --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\"
+\n1 = Modulstart, 0 = Modulstopp</string>
     <string name="pref_common_local_eth_device_addr">"Lokale IP Adresse"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Aktiviere Fix TTL und konfiguriere das LAN Gerät InviZible zu nutzen. Benutze den Standard Gateway: %1$s, DNS Server: %2$s."</string>
     <string name="pref_common_multi_user">"Unterstützung für Multi-User"</string>
