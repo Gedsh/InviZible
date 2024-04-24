@@ -68,4 +68,5 @@
     <color name="colorChipIconTorify">@color/colorGreen</color>
     <color name="colorChipIconDirectUdp">@color/colorAccent</color>
     <color name="colorChipIconBypassApp">@color/colorRed</color>
+    <color name="colorIconGreen">#4CAF50</color>
 </resources>

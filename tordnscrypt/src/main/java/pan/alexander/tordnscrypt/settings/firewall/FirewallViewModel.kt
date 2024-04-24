@@ -33,6 +33,7 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
+import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.util.concurrent.ConcurrentSkipListSet
@@ -58,6 +59,7 @@ class FirewallViewModel @Inject constructor(
     var appsAllowGsm = mutableSetOf<Int>()
     var appsAllowRoaming = mutableSetOf<Int>()
     var appsAllowVpn = mutableSetOf<Int>()
+    private val appsBypassVpn = mutableSetOf<String>()
 
     val criticalSystemUids = hashSetOf<Int>()
 
@@ -90,6 +92,11 @@ class FirewallViewModel @Inject constructor(
             appsAllowVpn.addAll(
                 preferences.getStringSetPreference(APPS_ALLOW_VPN).toIntSet()
             )
+            if (modulesStatus.mode == OperationMode.VPN_MODE) {
+                appsBypassVpn.addAll(
+                    preferences.getStringSetPreference(APPS_BYPASS_VPN)
+                )
+            }
 
             val installedApps = InstalledApplicationsManager.Builder()
                 .setOnAppAddListener(this)
@@ -112,7 +119,8 @@ class FirewallViewModel @Inject constructor(
                         appsAllowWifi.contains(uid),
                         appsAllowGsm.contains(uid),
                         appsAllowRoaming.contains(uid),
-                        appsAllowVpn.contains(uid)
+                        appsAllowVpn.contains(uid),
+                        appsBypassVpn.contains(applicationData.pack)
                     )
                 )
             }
@@ -133,7 +141,8 @@ class FirewallViewModel @Inject constructor(
                 appsAllowWifi.contains(uid),
                 appsAllowGsm.contains(uid),
                 appsAllowRoaming.contains(uid),
-                appsAllowVpn.contains(uid)
+                appsAllowVpn.contains(uid),
+                appsBypassVpn.contains(application.pack)
             )
         )
         firewallStateMutableLiveData.postValue(FirewallState.Preparing)
