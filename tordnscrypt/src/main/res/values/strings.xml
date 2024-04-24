@@ -130,7 +130,7 @@
     <string name="pref_fast_exclude_app_from_tor">Exclude from Tor</string>
     <string name="pref_fast_route_to_tor">Route to Tor</string>
     <string name="pref_fast_direct_udp_connection">Exclude UDP from Tor</string>
-    <string name="pref_fast_bypass_app">Bypass app</string>
+    <string name="pref_fast_bypass_app">Exclude entirely</string>
     <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
     <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>

@@ -556,7 +556,7 @@
     <string name="pref_fast_exclude_app_from_tor">Исключить из Tor</string>
     <string name="pref_fast_route_to_tor">Использовать с Tor</string>
     <string name="pref_fast_direct_udp_connection">Исключить UDP из Tor</string>
-    <string name="pref_fast_bypass_app">Исключить приложение</string>
+    <string name="pref_fast_bypass_app">Исключить полностью</string>
     <string name="pull_to_refresh">\u2193 Потяните, чтобы обновить \u2193</string>
     <string name="firewall_critical_uid">Блокировка этого системного приложения может привести к нестабильному интернет-соединению!</string>
 </resources>
