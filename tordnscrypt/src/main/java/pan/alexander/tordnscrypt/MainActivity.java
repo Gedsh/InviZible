@@ -46,10 +46,12 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.widget.Toolbar;
+import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import android.text.InputType;
 import android.util.Base64;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -61,6 +63,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
@@ -201,19 +205,18 @@ public class MainActivity extends LangAppCompatActivity
         if (viewPager != null) {
             viewPager.setOffscreenPageLimit(4);
 
-            ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), ViewPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+            List<Pair<ViewPagerAdapter.PagerTitle, Fragment>> fragments = getAdapterFragments(
+                    savedInstanceState == null
+            );
 
-            MainFragment mainFragment = new MainFragment();
+            ViewPagerAdapter adapter = new ViewPagerAdapter(
+                    getSupportFragmentManager(),
+                    ViewPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
+            );
 
-            DNSCryptRunFragment dnsCryptRunFragment = new DNSCryptRunFragment();
-
-            TorRunFragment torRunFragment = new TorRunFragment();
-            ITPDRunFragment itpdRunFragment = new ITPDRunFragment();
-
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("Main", mainFragment));
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("DNS", dnsCryptRunFragment));
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("Tor", torRunFragment));
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("I2P", itpdRunFragment));
+            for (Pair<ViewPagerAdapter.PagerTitle, Fragment> pair: fragments) {
+                adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment(pair.first, pair.second));
+            }
 
             viewPager.setAdapter(adapter);
 
@@ -223,6 +226,80 @@ public class MainActivity extends LangAppCompatActivity
             viewPager.setCurrentItem(viewPagerPosition);
         }
 
+        if (viewPager != null && savedInstanceState != null) {
+            PagerAdapter adapter = viewPager.getAdapter();
+            if (adapter != null) {
+                viewPager.post(adapter::notifyDataSetChanged);
+            }
+        }
+    }
+
+    private List<Pair<ViewPagerAdapter.PagerTitle, Fragment>> getAdapterFragments(boolean initialise) {
+
+        boolean dnsCryptRunning = isDNSCryptRunning();
+        boolean torRunning = isTorRunning();
+        boolean itpdRunning = isI2PDRunning();
+
+        List<Pair<ViewPagerAdapter.PagerTitle, Fragment>> fragments = new ArrayList<>();
+
+        MainFragment mainFragment;
+        if (initialise) {
+            mainFragment = new MainFragment();
+        } else {
+            mainFragment = null;
+        }
+        DNSCryptRunFragment dnsCryptRunFragment;
+        if (initialise) {
+            dnsCryptRunFragment = new DNSCryptRunFragment();
+        } else {
+            dnsCryptRunFragment = null;
+        }
+        TorRunFragment torRunFragment;
+        if (initialise) {
+            torRunFragment = new TorRunFragment();
+        } else {
+            torRunFragment = null;
+        }
+        ITPDRunFragment itpdRunFragment;
+        if (initialise) {
+            itpdRunFragment = new ITPDRunFragment();
+        } else {
+            itpdRunFragment = null;
+        }
+
+        fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.MAIN, mainFragment));
+
+        if (dnsCryptRunning) {
+            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.DNS, dnsCryptRunFragment));
+        }
+        if (torRunning) {
+            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.TOR, torRunFragment));
+        }
+        if (itpdRunning) {
+            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.I2P, itpdRunFragment));
+        }
+        if (!dnsCryptRunning) {
+            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.DNS, dnsCryptRunFragment));
+        }
+        if (!torRunning) {
+            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.TOR, torRunFragment));
+        }
+        if (!itpdRunning) {
+            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.I2P, itpdRunFragment));
+        }
+        return fragments;
+    }
+
+    private boolean isDNSCryptRunning() {
+        return modulesStatus.getDnsCryptState() == RUNNING;
+    }
+
+    private boolean isTorRunning() {
+        return modulesStatus.getTorState() == RUNNING;
+    }
+
+    private boolean isI2PDRunning() {
+        return modulesStatus.getItpdState() == RUNNING;
     }
 
     @Override
