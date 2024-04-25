@@ -90,6 +90,7 @@ class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
         lines.forEach { line ->
             var formattedLine = line
             if (line.contains("<b>Network status:</b>")
+                || line.contains("<b>Network status v6:</b>")
                 || line.contains("<b>Tunnel creation success rate:</b>")
                 || line.contains("<b>Received:</b> ")
                 || line.contains("<b>Sent:</b>")

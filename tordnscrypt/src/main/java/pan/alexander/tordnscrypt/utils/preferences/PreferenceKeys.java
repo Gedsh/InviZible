@@ -154,6 +154,7 @@ public interface PreferenceKeys {
     String TOR_FASCIST_FIREWALL = "FascistFirewall";
 
     //I2PD Settings
+    String I2PD_USE_IPV6 = "ipv6";
     String I2PD_OUTBOUND_PROXY = "Enable ntcpproxy";
 
     //Firewall Settings

@@ -50,6 +50,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_USE_IPV6;
 
 import javax.inject.Inject;
 
@@ -86,7 +87,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
         preferences.add(findPreference("incoming port"));
         preferences.add(findPreference("incoming host"));
         preferences.add(findPreference("ipv4"));
-        preferences.add(findPreference("ipv6"));
+        preferences.add(findPreference(I2PD_USE_IPV6));
         preferences.add(findPreference("notransit"));
         preferences.add(findPreference("floodfill"));
         preferences.add(findPreference("bandwidth"));
