@@ -526,7 +526,7 @@
     <string name="pref_fast_exclude_app_from_tor">从Tor中排除</string>
     <string name="pref_fast_route_to_tor">通向Tor的路线</string>
     <string name="pref_fast_direct_udp_connection">从Tor中排除UDP</string>
-    <string name="pref_fast_bypass_app">绕过应用程序</string>
+    <string name="pref_fast_bypass_app">完全排除</string>
     <string name="pref_fast_use_tor_bridges_ipv6">IPv6网桥</string>
     <string name="pref_fast_fake_sni">伪造 SNI</string>
     <string name="pref_dnscrypt_http3_summ">启用对 HTTP/3（DoH3，QUIC 上的 HTTP）的支持。请注意，与 DNSCrypt 不同，与其他 HTTP 版本不同，此版本使用 UDP 和（通常）端口 443 而不是 TCP。</string>
@@ -543,4 +543,6 @@
     <string name="pref_dnscrypt_dns64_summ">如果您在仅支持ipv6的网络上，并且ipv4站点不可用，请激活此选项。否则，请不要启用它，否则您将无法连接到任何东西。</string>
     <string name="pref_tor_dormant_client_timeout_summ">如果 Tor 在指定时间内没有看到客户端活动，它将进入休眠状态。必须至少 10 分钟</string>
     <string name="press_to_edit">按下可编辑。</string>
+    <string name="firewall_critical_uid">阻止此系统应用程序可能会导致互联网连接不稳定！</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">使用实现了Oblivious DNS-over-HTTPS 协议的服务器。</string>
 </resources>
