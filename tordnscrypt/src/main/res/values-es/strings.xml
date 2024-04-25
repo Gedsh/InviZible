@@ -524,7 +524,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="long_press_to_add">Mantenga pulsado para añadir.</string>
     <string name="pref_fast_use_tor_bridges_ipv6">Puentes IPv6</string>
     <string name="pref_fast_route_to_tor">Ruta de Tor</string>
-    <string name="pref_fast_bypass_app">Aplicación de bypass</string>
+    <string name="pref_fast_bypass_app">excluir por completo</string>
     <string name="pref_fast_exclude_app_from_tor">Excluir de Tor</string>
     <string name="pref_fast_direct_udp_connection">Excluir UDP de Tor</string>
     <string name="notification_exclude_data_restriction_title">¿Desactivar el ahorro de datos?</string>
@@ -541,4 +541,6 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="anonymize_relays_not_used">No se utilizan relés anónimos.</string>
     <string name="pull_to_refresh">↓ Tira para actualizar ↓</string>
     <string name="long_press_to_edit">Mantenga pulsado para editar.</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Utilice servidores que admitan el protocolo DNS sobre HTTPS de Oblivious.</string>
+    <string name="firewall_critical_uid">¡Bloquear esta aplicación del sistema puede provocar una conexión a Internet inestable!</string>
 </resources>
