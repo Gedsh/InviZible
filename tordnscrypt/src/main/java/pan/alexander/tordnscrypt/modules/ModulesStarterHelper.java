@@ -31,10 +31,15 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.jrummyapps.android.shell.CommandResult;
 import com.jrummyapps.android.shell.Shell;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -197,9 +202,7 @@ public class ModulesStarterHelper {
                 if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED) {
 
                     if (pathVars.getAppVersion().startsWith("b") && handler != null) {
-                        handler.post(() -> Toast.makeText(context, "DNSCrypt Module Fault: "
-                                + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
-                                + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                        showErrorToast("DNSCrypt Module Fault:", shellResult);
                     }
 
                     checkModulesConfigPatches(true);
@@ -210,6 +213,8 @@ public class ModulesStarterHelper {
                 loge("Error DNSCrypt: "
                         + shellResult.exitCode + " ERR=" + shellResult.getStderr()
                         + " OUT=" + shellResult.getStdout());
+
+                logNativeCrash();
 
                 if (!getApp(context).isAppForeground()
                         && modulesStatus.getDnsCryptState() == RUNNING
@@ -315,10 +320,9 @@ public class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED) {
+
                     if (pathVars.getAppVersion().startsWith("b") && handler != null) {
-                        handler.post(() -> Toast.makeText(context, "Tor Module Fault: " + shellResult.exitCode
-                                + "\n\n ERR = " + shellResult.getStderr()
-                                + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                        showErrorToast("Tor Module Fault:", shellResult);
                     }
 
                     checkModulesConfigPatches(true);
@@ -334,6 +338,8 @@ public class ModulesStarterHelper {
 
                 loge("Error Tor: " + shellResult.exitCode
                         + " ERR=" + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                logNativeCrash();
 
                 if (!getApp(context).isAppForeground()
                         && modulesStatus.getTorState() == RUNNING) {
@@ -409,10 +415,9 @@ public class ModulesStarterHelper {
                 }
 
                 if (modulesStatus.getItpdState() != STOPPING && modulesStatus.getItpdState() != STOPPED) {
+
                     if (pathVars.getAppVersion().startsWith("b") && handler != null) {
-                        handler.post(() -> Toast.makeText(context, "Purple I2P Module Fault: "
-                                + shellResult.exitCode + "\n\n ERR = " + shellResult.getStderr()
-                                + "\n\n OUT = " + shellResult.getStdout(), Toast.LENGTH_LONG).show());
+                        showErrorToast("Purple I2P Module Fault:", shellResult);
                     }
 
                     checkModulesConfigPatches(true);
@@ -422,6 +427,8 @@ public class ModulesStarterHelper {
 
                 loge("Error ITPD: " + shellResult.exitCode + " ERR="
                         + shellResult.getStderr() + " OUT=" + shellResult.getStdout());
+
+                logNativeCrash();
 
                 if (!getApp(context).isAppForeground()
                         && modulesStatus.getItpdState() == RUNNING
@@ -647,6 +654,42 @@ public class ModulesStarterHelper {
             );
         }
         return TextUtils.join(",", hosts);
+    }
+
+    private void showErrorToast(String prefix, CommandResult shellResult) {
+        StringBuilder builder = new StringBuilder(prefix);
+        builder.append(" ").append(shellResult.exitCode);
+        if (!shellResult.getStderr().isEmpty()) {
+            builder.append("\n\n ERR: ").append(shellResult.getStderr());
+        }
+        if (!shellResult.getStdout().isEmpty()) {
+            builder.append("\n\n OUT: ").append(shellResult.getStdout());
+        }
+        handler.post(() -> Toast.makeText(context, builder.toString(), Toast.LENGTH_LONG).show());
+    }
+
+    private void logNativeCrash() {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm:ss.SSS", Locale.getDefault());
+            String time = sdf.format(new Date(System.currentTimeMillis() - 3000));
+            Process process = new ProcessBuilder(
+                    "logcat",
+                    "-d",
+                    "*:F",
+                    "-t",
+                    time
+            ).start();
+            try(InputStreamReader is = new InputStreamReader(process.getInputStream());
+                BufferedReader br = new BufferedReader(is)) {
+                String line = br.readLine();
+                while (line != null) {
+                    loge(line);
+                    line = br.readLine();
+                }
+            }
+        } catch (Exception e) {
+            loge("ModulesStarterHelper logNativeCrash" ,e);
+        }
     }
 
 }
