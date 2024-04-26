@@ -1,0 +1,6 @@
+**InviZible Pro beta 2.2.0**
+* Updated Purple I2P with the latest patch to mitigate the ongoing DoS attack on the I2P network.
+* Display the IPv6 network status for Purple I2P.
+* Sort tabs depending on running modules.
+* Fixed WebTunnel connection via IPv6.
+* Fixes and optimizations.
