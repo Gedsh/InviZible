@@ -133,8 +133,8 @@
     <string name="pref_common_use_iptables">Виберіть iptables</string>
     <string name="pref_dnscrypt_other_categ">Інші налаштування.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для початкового завантаження. Це звичайний сервер, не який підтримує шифрування. Використовується лише для завантаження списку серверів, які підтримують шифрування, якщо системний сервер DNS не працює. Він ніколи не використовується, якщо завантажено список серверів, які підтримують шифрування.</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">Не дозволяти dnscrypt-proxy використовувати системні установки DNS. Використовувати сервер для відновлення..</string>
-    <string name="pref_dnscrypt_filters_categ">ФІЛЬТРИ</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Не дозволяти DNSCrypt використовувати системні установки DNS. Використовувати Сервер для початкового завантаження.</string>
+    <string name="pref_dnscrypt_filters_categ">Фільтри</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресації</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Перенаправити запити до вибраних сайтів на певні сервери.</string>
     <string name="pref_dnscrypt_blacklist">Чорний список</string>
@@ -177,7 +177,7 @@
     <string name="toastSettings_saved">Налаштування збережені</string>
     <string name="pref_common_wakelock_summ">Додатковий захист у Безрутовому Режимі, щоб андроїд не закрив додаток. Може призвести до підвищеного розряду батареї</string>
     <string name="pref_common_compatibility_mode">Режим сумісності</string>
-    <string name="pref_dnscrypt_global_settings_categ">ЗАГАЛЬНІ НАЛАШТУВАННЯ</string>
+    <string name="pref_dnscrypt_global_settings_categ">Загальні налаштування</string>
     <string name="pref_common_compatibility_mode_summ">Увімкніть якщо у Вас кастомна прошивка, та інтернет зникає при натисканні кнопки START</string>
     <string name="notification_text">DNSCrypt, Tor, I2P захищені. Не приховуйте сповіщення.</string>
     <string name="pref_dnscrypt_erase_whitelist">Видалити білий список</string>
@@ -196,7 +196,7 @@
     <string name="add_custom_server_error">Неправильна конфігурація сервера. Будь ласка, перевірте поле SDNS.</string>
     <string name="notification_channel_services">Запуск служб</string>
     <string name="notification_channel_update">Оновлення сповіщень</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">Блокування IP-адрес на основі шаблонів (чорний список IP-адрес).</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Блокування IP-адрес на основі шаблонів (чорний список IP-адрес)</string>
     <string name="pref_common_block_http">Заблокувати HOTSPOT http</string>
     <string name="pref_common_proxy_categ">Проксі</string>
     <string name="pref_common_proxy">Використовувати socks5 proxy</string>
@@ -221,25 +221,22 @@
     <string name="pref_common_excludes_from_tor_summ">Список веб-сайтів, які відкривати безпосередньо через HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Дозволити прив\'язку I2P</string>
     <string name="pref_common_log_root_commands">Зберігати рут-команди до журналу</string>
-    <string name="pref_dnscrypt_require_servers_categ">Вимагати, щоб сервери (зі статичних + віддалених джерел) відповідали певним властивостям.</string>
+    <string name="pref_dnscrypt_require_servers_categ">Вимагати, щоб сервери (зі статичних + віддалених джерел) відповідали певним властивостям</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Використовувати сервери з підтримкою протоколу DNSCrypt.</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Використовувати сервери, доступні через IPv6</string>
     <string name="pref_dnscrypt_require_nolog_summ">Сервер не має реєструвати запити користувачів (декларативно).</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Може бути корисно, якщо вам потрібно направляти все через Tor.
-\n В іншому разі залиште опцію вимкненою, оскільки це не покращує безпеку (dnscrypt-proxy завжди буде шифрувати все, навіть використовуючи UDP), і може лише збільшити затримку.</string>
-    <string name="pref_dnscrypt_proxy">proxy_port</string>
-    <string name="pref_dnscrypt_proxy_summ">Перенаправляти всі TCP-з\'єднання на локальний вузол Tor. Tor не підтримує UDP, а отже ввімкніть force_tcp також.</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Маскування повертає заздалегідь визначену адресу для певного імені.
-\n Окрім того, що воно діє як файл HOSTS, це також може повертати IP-адресу іншого імені. Також виконує вирівнювання CNAME.</string>
-    <string name="pref_dnscrypt_query_log">Увімкнути журнали запитів</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Використовувати TCP замість UDP для підключення до серверів DNSCrypt. Цей параметр повинен бути увімкнений, якщо ви використовуєте DNSCrypt через Tor.</string>
+    <string name="pref_dnscrypt_proxy">Порт проксі</string>
+    <string name="pref_dnscrypt_proxy_summ">Перенаправляти всі TCP-з\'єднання на вхідний Socks5 проксі Tor. Tor не підтримує UDP, а отже ввімкніть Force TCP також.</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Маскування повертає заздалегідь визначену адресу для певного імені. Окрім того, що воно діє як файл HOSTS, це також може повертати IP-адресу іншого імені. Також виконує вирівнювання CNAME.</string>
+    <string name="pref_dnscrypt_query_log">Журнали запитів</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">Не записувати ці типи запитів, щоб зменшити багатослівність. Залишає порожній рядок, щоб записати все.</string>
     <string name="pref_dnscrypt_query_log_summ">Записує клієнтські запити у файл.</string>
-    <string name="pref_dnscrypt_nx_log_summ">Журналювати запити для неіснуючих зон.
-\n Ці запити можуть виявити наявний шкідливого програмного забезпечення, зламаних/застарілих програм і пристроїв, що сигналізують про свою присутність третім особам.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Журналювати запити для неіснуючих зон. Ці запити можуть виявити наявність шкідливого програмного забезпечення, зламаних/застарілих програм і пристроїв, що сигналізують про свою присутність третім особам.</string>
     <string name="pref_dnscrypt_ipblacklist_summ">Чорний список IP складається з одного шаблону на рядок.</string>
     <string name="pref_dnscrypt_import_ipblacklist">Імпортувати чорний список IP-адрес</string>
     <string name="pref_dnscrypt_import_ipblacklist_summ">Імпортує чорний список IP-адрес. Ви можете вибрати декілька файлів, повторювані рядки видаляться.</string>
-    <string name="pref_dnscrypt_whitelist_categ">Білий список на основі шаблонів (обхід чорних списків).</string>
+    <string name="pref_dnscrypt_whitelist_categ">Білий список на основі шаблонів (обхід чорних списків)</string>
     <string name="pref_dnscrypt_whitelist">Білий список</string>
     <string name="pref_dnscrypt_erase_ipblacklist">Видалити чорний список IP-адрес</string>
     <string name="pref_dnscrypt_not_exist">У файлі dnscrypt-proxy.txt немає параметра преференцій!</string>
@@ -353,8 +350,8 @@
     <string name="pref_dnscrypt_ipblacklist">Чорний список IP-адрес</string>
     <string name="pref_dnscrypt_import_whitelist">Імпортувати білий список</string>
     <string name="pref_dnscrypt_import_whitelist_summ">Імпортує список доменів. Ви можете вибрати кілька файлів, повторювані рядки видаляться.</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">Список джерел закінчується після refresh_delay.</string>
-    <string name="pref_dnscrypt_relays_delay_summ">Список реле закінчується через годину refresh_delay.</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Список серверів буде оновлений після зазначеної затримки у годинах.</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Список ретрансляторів буде оновлений після зазначеної затримки у годинах.</string>
     <string name="pref_dnscrypt_relays_title">Реле DNSCrypt</string>
     <string name="title_dnscrypt_query_log">Журнал запитів DNSCrypt</string>
     <string name="pref_tor_trans_port_summ">Відкриває цей порт для прослуховування прозорих проксі-з\'єднань.</string>
@@ -365,7 +362,7 @@
     <string name="update_interrupt_notification">Завантаження було зупинено</string>
     <string name="pending_purchase">Зверніть увагу, що у вас відкладена покупка:</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Для керування модулями програми використовуйте наступну команду: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Де 1 - запускає, 0 - зупиняє модуль.</string>
-    <string name="pref_dnscrypt_require_servers_prop_categ">Вимагати, щоб сервери, визначені віддаленими джерелами, відповідали певним властивостям.</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">Вимагати, щоб сервери, визначені віддаленими джерелами, відповідали певним властивостям</string>
     <string name="pref_common_tor_route_all_summ">Увесь вхідний трафік через Тор</string>
     <string name="pref_common_unblock_with_tor_summ">Список веб-сайтів, які потрібно відкрити за допомогою Tor для HOTSPOT</string>
     <string name="pref_common_fix_ttl_summ">TTL буде зафіксовано на 64 за допомогою локальної VPN. Підтримка ядра не потрібна. Його можна використовувати лише у \"рут-режимі\" з вимкненою опцією \"Запускати модулі з правами рута\". Щоб зафіксувати TTL, будь ласка, запустіть DNSCrypt та/або Tor.</string>
@@ -378,17 +375,17 @@
     <string name="pref_dnscrypt_odoh_servers_summ">Використовуйте сервери з підтримкою протоколу Oblivious DNS-over-HTTPS.</string>
     <string name="pref_tor_not_exist">У файлі tor.conf немає параметра преференцій!</string>
     <string name="pref_tor_unlock">Хост або IP для розблокування</string>
-    <string name="pref_dnscrypt_force_tcp_categ">Завжди використовувати TCP для підключення до висхідних серверів.</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS проксі.</string>
-    <string name="pref_dnscrypt_use_proxy">Увімкнути проксі</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Завжди використовувати TCP для підключення до висхідних серверів</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS проксі</string>
+    <string name="pref_dnscrypt_use_proxy">Вихідний проксі</string>
     <string name="pref_dnscrypt_import_cloaking_rules">Імпортувати правила маскування</string>
     <string name="pref_dnscrypt_import_cloaking_rules_summ">Імпортує файл правил маскування. Ви можете вибрати декілька файлів, повторювані рядки видаляться.</string>
-    <string name="pref_dnscrypt_query_log_categ">Журналізація запитів.</string>
+    <string name="pref_dnscrypt_query_log_categ">Журналізація запитів</string>
     <string name="pref_itpd_use_Socks_outproxy">SOCKS аутпроксі</string>
-    <string name="pref_dnscrypt_nx_log_categ">Журналізація підозрілих запитів.</string>
-    <string name="pref_dnscrypt_nx_log">Увімкнути журналювання підозрілих подій</string>
+    <string name="pref_dnscrypt_nx_log_categ">Журналізація підозрілих запитів</string>
+    <string name="pref_dnscrypt_nx_log">Журнал підозрілих запитів</string>
     <string name="open_nx_log">Відкрити журнал підозрілих подій</string>
-    <string name="pref_dnscrypt_blacklist_categ">Блокування на основі шаблонів (чорний список).</string>
+    <string name="pref_dnscrypt_blacklist_categ">Блокування на основі шаблонів (чорний список)</string>
     <string name="pref_dnscrypt_import_blacklist_summ">Імпортує список доменів або файл hosts. Ви можете вибрати кілька файлів, повторювані рядки видаляться.</string>
     <string name="action_mode_dialog_message_lock">Ви можете заблокувати доступ до цієї програми. Будь ласка, введіть пароль або використовуйте попередній.</string>
     <string name="pref_dnscrypt_relays">Джерела</string>

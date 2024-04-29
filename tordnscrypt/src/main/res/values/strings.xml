@@ -261,24 +261,24 @@
     <string name="toastSettings_saved">Settings saved</string>
 
 
-    <string name="pref_dnscrypt_global_settings_categ">GLOBAL SETTINGS</string>
+    <string name="pref_dnscrypt_global_settings_categ">Global settings</string>
 
     <string name="pref_advanced"> For advanced user only!</string>
 
     <string name="pref_dnscrypt_select_server_names">Select at least one server!</string>
     <string name="pref_dnscrypt_local_port_summ">Local port to listen to.</string>
-    <string name="pref_dnscrypt_local_port" translatable="false">listen_port</string>
+    <string name="pref_dnscrypt_local_port" translatable="false">Listen port</string>
 
-    <string name="pref_dnscrypt_require_servers_categ">Require servers (from static + remote sources) to satisfy specific properties.</string>
+    <string name="pref_dnscrypt_require_servers_categ">Require servers (from static + remote sources) to satisfy specific properties</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Use servers implementing the DNSCrypt protocol.</string>
-    <string name="pref_dnscrypt_dnscrypt_servers" translatable="false">dnscrypt_servers</string>
+    <string name="pref_dnscrypt_dnscrypt_servers" translatable="false">DNSCrypt servers</string>
     <string name="pref_dnscrypt_doh_servers_summ">Use servers implementing the DNS-over-HTTPS protocol.</string>
     <string name="pref_dnscrypt_odoh_servers_summ">Use servers implementing the Oblivious DNS-over-HTTPS protocol.</string>
-    <string name="pref_dnscrypt_doh_servers" translatable="false">doh_servers</string>
-    <string name="pref_dnscrypt_odoh_servers" translatable="false">odoh_servers</string>
-    <string name="pref_dnscrypt_ipv4_servers" translatable="false">ipv4_servers</string>
+    <string name="pref_dnscrypt_doh_servers" translatable="false">DoH servers</string>
+    <string name="pref_dnscrypt_odoh_servers" translatable="false">ODoH_servers</string>
+    <string name="pref_dnscrypt_ipv4_servers" translatable="false">IPv4 servers</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4</string>
-    <string name="pref_dnscrypt_ipv6_servers" translatable="false">ipv6_servers</string>
+    <string name="pref_dnscrypt_ipv6_servers" translatable="false">IPv6 servers</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Use servers reachable over IPv6</string>
     <string name="pref_dnscrypt_dnscrypt_server" translatable="false">DNSCrypt Server</string>
     <string name="pref_dnscrypt_doh_server" translatable="false">DoH Server</string>
@@ -289,72 +289,68 @@
     <string name="pref_dnscrypt_keep_logs_server" translatable="false">Keep Logs</string>
     <string name="pref_dnscrypt_dnssec_server" translatable="false">DNSSEC</string>
 
-    <string name="pref_dnscrypt_require_servers_prop_categ">Require servers defined by remote sources to satisfy specific properties.</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">Require servers defined by remote sources to satisfy specific properties</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Server must support DNS security extensions (DNSSEC).</string>
-    <string name="pref_dnscrypt_require_dnssec" translatable="false">require_dnssec</string>
+    <string name="pref_dnscrypt_require_dnssec" translatable="false">Require DNSSEC</string>
     <string name="pref_dnscrypt_require_nolog_summ">Server must not log user queries (declarative).</string>
-    <string name="pref_dnscrypt_require_nolog" translatable="false">require_nolog</string>
+    <string name="pref_dnscrypt_require_nolog" translatable="false">Require no log</string>
     <string name="pref_dnscrypt_require_nofilter_summ">Server must not enforce its own blacklist (for parental control, ads blocking…).</string>
-    <string name="pref_dnscrypt_require_nofilter" translatable="false">require_nofilter</string>
+    <string name="pref_dnscrypt_require_nofilter" translatable="false">Require no filter</string>
 
-    <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers.</string>
-    <string name="pref_dnscrypt_force_tcp_summ"> This can be can be useful if you need to route everything through Tor.\n
-        Otherwise, leave this to false, as it doesn\'t improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency.
-    </string>
-    <string name="pref_dnscrypt_force_tcp" translatable="false">force_tcp</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Always use TCP to connect to upstream servers</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Use TCP instead of UDP to connect to DNSCrypt servers. This option should be enabled if you are using DNSCrypt over Tor.</string>
+    <string name="pref_dnscrypt_force_tcp" translatable="false">Force TCP</string>
 
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
-    <string name="pref_dnscrypt_use_proxy">Enable proxy</string>
-    <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor node.
-        Tor doesn\'t support UDP, so set force_tcp to true as well.</string>
-    <string name="pref_dnscrypt_proxy">proxy_port</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy</string>
+    <string name="pref_dnscrypt_use_proxy">Outbound proxy</string>
+    <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor inbound Socks5 proxy.
+        Tor doesn\'t support UDP, so set Force TCP to true as well.</string>
+    <string name="pref_dnscrypt_proxy">Proxy port</string>
 
-    <string name="pref_dnscrypt_other_categ">Other Settings.</string>
+    <string name="pref_dnscrypt_other_categ">Other Settings</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Bootstrap resolver.
         This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries
         when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work.
         It will never be used if lists have already been cached.</string>
-    <string name="pref_dnscrypt_fallback_resolver" translatable="false">bootstrap_resolvers</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver..</string>
-    <string name="pref_dnscrypt_ignore_system_dns" translatable="false">ignore_system_dns</string>
+    <string name="pref_dnscrypt_fallback_resolver" translatable="false">Bootstrap resolvers</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Do not let DNSCrypt try to use system DNS settings. Unconditionally use the Bootstrap resolvers.</string>
+    <string name="pref_dnscrypt_ignore_system_dns" translatable="false">Ignore system DNS</string>
     <string name="pref_dnscrypt_http3_summ">Enable support for HTTP/3 (DoH3, HTTP over QUIC). Note that, like DNSCrypt but unlike other HTTP versions, this uses UDP and (usually) port 443 instead of TCP.</string>
-    <string name="pref_dnscrypt_http3" translatable="false">http3</string>
-    <string name="pref_dnscrypt_dns64" translatable="false">dns64</string>
-    <string name="pref_dnscrypt_dns64_summ">Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don\'t enable it otherwise, or you won\'t be able to connect to anything at all.</string>
-    <string name="pref_dnscrypt_dns64_prefix" translatable="false">dns64 prefix</string>
+    <string name="pref_dnscrypt_http3" translatable="false">HTTP3</string>
+    <string name="pref_dnscrypt_dns64" translatable="false">DNS64</string>
+    <string name="pref_dnscrypt_dns64_summ">Activate this option if you are on an IPv6-only network and IPv4 sites become unavailable. Don\'t enable it otherwise, or you won\'t be able to connect to anything at all.</string>
+    <string name="pref_dnscrypt_dns64_prefix" translatable="false">DNS64 prefix</string>
     <string name="pref_dnscrypt_dns64_prefix_summ">Set of used static IPv6 prefixes.</string>
 
-    <string name="pref_dnscrypt_filters_categ">FILTERS</string>
+    <string name="pref_dnscrypt_filters_categ">Filters</string>
 
     <string name="pref_dnscrypt_forwarding_rules_categ">Forwarding rules</string>
-    <string name="pref_dnscrypt_forwarding_rules" translatable="false">forwarding_rules</string>
+    <string name="pref_dnscrypt_forwarding_rules" translatable="false">Forwarding rules</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Route queries for specific domains to a dedicated set of servers.</string>
     <string name="pref_dnscrypt_import_forwarding_rules">Import forwarding rules</string>
     <string name="pref_dnscrypt_import_forwarding_rules_summ">Import a forwarding rules file. You can select multiple files, duplicate lines will be removed.</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">Erase forwarding rules</string>
 
     <string name="pref_dnscrypt_cloaking_rules_categ">Cloaking rules</string>
-    <string name="pref_dnscrypt_cloaking_rules" translatable="false">cloaking_rules</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name.\n
-        In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening..</string>
+    <string name="pref_dnscrypt_cloaking_rules" translatable="false">Cloaking rules</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking returns a predefined address for a specific name. In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening.</string>
     <string name="pref_dnscrypt_import_cloaking_rules">Import cloaking rules</string>
     <string name="pref_dnscrypt_import_cloaking_rules_summ">Import a cloaking rules file. You can select multiple files, duplicate lines will be removed.</string>
     <string name="pref_dnscrypt_erase_cloaking_rules">Erase cloaking rules</string>
 
-    <string name="pref_dnscrypt_query_log_categ">Query logging.</string>
+    <string name="pref_dnscrypt_query_log_categ">Query logging</string>
     <string name="pref_dnscrypt_query_log_summ">Log client queries to a file.</string>
-    <string name="pref_dnscrypt_query_log">Enable Query logging</string>
+    <string name="pref_dnscrypt_query_log">Query logging</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">Do not log these query types, to reduce verbosity. Keep empty to log everything.</string>
-    <string name="pref_dnscrypt_ignored_qtypes" translatable="false">ignored_qtypes</string>
+    <string name="pref_dnscrypt_ignored_qtypes" translatable="false">Ignored qtypes</string>
     <string name="open_query_log">Open Query Log</string>
 
-    <string name="pref_dnscrypt_nx_log_categ">Suspicious queries logging.</string>
-    <string name="pref_dnscrypt_nx_log_summ">Log queries for nonexistent zones.\n
-        These queries can reveal the presence of malware, broken/obsolete applications, and devices signaling their presence to 3rd parties..</string>
-    <string name="pref_dnscrypt_nx_log">Enable Suspicious logging</string>
+    <string name="pref_dnscrypt_nx_log_categ">Suspicious queries logging</string>
+    <string name="pref_dnscrypt_nx_log_summ">Log queries for nonexistent zones. These queries can reveal the presence of malware, broken/obsolete applications, and devices signaling their presence to 3rd parties.</string>
+    <string name="pref_dnscrypt_nx_log">Suspicious logging</string>
     <string name="open_nx_log">Open Suspicious Log</string>
 
-    <string name="pref_dnscrypt_blacklist_categ">Pattern-based blocking (blacklist).</string>
+    <string name="pref_dnscrypt_blacklist_categ">Pattern-based blocking (blacklist)</string>
     <string name="pref_dnscrypt_blacklist">Blacklist</string>
     <string name="pref_dnscrypt_blacklist_summ">Blacklist are made of one pattern per line.</string>
     <string name="pref_dnscrypt_import_blacklist">Import blacklist</string>
@@ -362,14 +358,14 @@
     <string name="pref_dnscrypt_erase_blacklist">Erase blacklist</string>
 
 
-    <string name="pref_dnscrypt_ipblacklist_categ">Pattern-based IP blocking (IP blacklist).</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Pattern-based IP blocking (IP blacklist)</string>
     <string name="pref_dnscrypt_ipblacklist">IP Blacklist</string>
     <string name="pref_dnscrypt_ipblacklist_summ">IP Blacklist are made of one pattern per line.</string>
     <string name="pref_dnscrypt_import_ipblacklist">Import IP blacklist</string>
     <string name="pref_dnscrypt_import_ipblacklist_summ">Import IP blacklist. You can select multiple files, duplicate lines will be removed.</string>
     <string name="pref_dnscrypt_erase_ipblacklist">Erase IP blacklist</string>
 
-    <string name="pref_dnscrypt_whitelist_categ">Pattern-based whitelisting (blacklists bypass).</string>
+    <string name="pref_dnscrypt_whitelist_categ">Pattern-based whitelisting (blacklists bypass)</string>
     <string name="pref_dnscrypt_whitelist">Whitelist</string>
     <string name="pref_dnscrypt_whitelist_summ">Whitelist support the same patterns as blacklists. If a name matches a whitelist entry, the corresponding session will bypass names and IP filters.</string>
     <string name="pref_dnscrypt_import_whitelist">Import whitelist</string>
@@ -379,13 +375,13 @@
     <string name="pref_dnscrypt_sources_categ">Servers</string>
     <string name="pref_dnscrypt_sources">Sources</string>
     <string name="pref_dnscrypt_sources_summ">Remote lists of available servers.</string>
-    <string name="pref_dnscrypt_refresh_delay" translatable="false">refresh_delay</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">Sources list expiring after refresh_delay hours.</string>
+    <string name="pref_dnscrypt_refresh_delay" translatable="false">Refresh delay</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Server list will be updated after the specified delay in hours.</string>
 
     <string name="pref_dnscrypt_relays_categ">Relays</string>
     <string name="pref_dnscrypt_relays">Sources</string>
-    <string name="pref_dnscrypt_relays_delay" translatable="false">refresh_delay</string>
-    <string name="pref_dnscrypt_relays_delay_summ">Relays list expiring after refresh_delay hours.</string>
+    <string name="pref_dnscrypt_relays_delay" translatable="false">Refresh delay</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Relay list will be updated after the specified delay in hours.</string>
     <string name="pref_dnscrypt_relays_title">DNSCrypt Relays</string>
 
 
@@ -401,12 +397,12 @@
     <string name="title_dnscrypt_ip_blacklist" translatable="false">DNSCrypt IP Blacklist</string>
     <string name="title_dnscrypt_whitelist" translatable="false">DNSCrypt Whitelist</string>
 
-    <string name="pref_dnscrypt_block_unqualified" translatable="false">block_unqualified</string>
+    <string name="pref_dnscrypt_block_unqualified" translatable="false">Block unqualified</string>
     <string name="pref_dnscrypt_block_unqualified_summ">Immediately respond to A and AAAA queries for host names without a domain name.</string>
-    <string name="pref_dnscrypt_block_undelegated" translatable="false">block_undelegated</string>
+    <string name="pref_dnscrypt_block_undelegated" translatable="false">Block undelegated</string>
     <string name="pref_dnscrypt_block_undelegated_summ">Immediately respond to queries for local zones instead of leaking them to upstream resolvers (always causing errors or timeouts).</string>
     <string name="pref_dnscrypt_edit_toml">Edit dnscrypt-proxy.toml directly</string>
-    <string name="pref_dnscrypt_block_ipv6" translatable="false">block_ipv6</string>
+    <string name="pref_dnscrypt_block_ipv6" translatable="false">Block IPv6</string>
     <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response.
         This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
 
@@ -483,7 +479,7 @@
     <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
     <string name="pref_tor_snowflake_amazon" translatable="false">AMAZON</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS outbound proxy</string>
     <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>

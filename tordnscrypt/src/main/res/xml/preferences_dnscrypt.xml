@@ -3,7 +3,7 @@
     android:key="dnscrypt_settings">
 
     <PreferenceCategory
-        android:layout="@layout/preferences_category_custom"
+        android:layout="@layout/preferences_category_advanced"
         android:title="@string/pref_advanced" />
 
     <PreferenceCategory

@@ -347,6 +347,26 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
+            }
+            if (Objects.equals(preference.getKey(), "dnscrypt_servers")) {
+                if (!defaultPreferences.getBoolean("doh_servers", true)) {
+                    return false;
+                }
+            }
+            if (Objects.equals(preference.getKey(), "doh_servers")) {
+                if (!defaultPreferences.getBoolean("dnscrypt_servers", true)) {
+                    return false;
+                }
+            }
+            if (Objects.equals(preference.getKey(), "ipv4_servers")) {
+                if (!defaultPreferences.getBoolean("ipv6_servers", true)) {
+                    return false;
+                }
+            }
+            if (Objects.equals(preference.getKey(), "ipv6_servers")) {
+                if (!defaultPreferences.getBoolean("ipv4_servers", true)) {
+                    return false;
+                }
             } else if (Objects.equals(preference.getKey(), DNSCRYPT_BOOTSTRAP_RESOLVERS)) {
 
                 List<String> resolvers = getDNSCryptBootstrapResolvers(newValue.toString());
@@ -471,7 +491,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 return true;
             } else if (Objects.equals(preference.getKey().trim(), DNSCRYPT_DNS64_PREFIX)) {
                 StringBuilder dns64Prefixes = new StringBuilder("[");
-                for (String dns64Prefix: newValue.toString().split(", ?")) {
+                for (String dns64Prefix : newValue.toString().split(", ?")) {
                     if (dns64Prefix.matches(IPv6_REGEX_WITH_MASK)) {
                         if (!dns64Prefixes.toString().equals("[")) {
                             dns64Prefixes.append(", ");
@@ -510,7 +530,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     changeDNSCryptBootstrapResolvers(resolvers);
                 } else if (!Boolean.parseBoolean(newValue.toString())) {
                     boolean containsIPv6Resolver = false;
-                    for (String resolver: resolvers) {
+                    for (String resolver : resolvers) {
                         if (resolver.matches(IPv6_REGEX)) {
                             containsIPv6Resolver = true;
                             break;
@@ -543,7 +563,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
     private List<String> getDNSCryptBootstrapResolvers(String newValue) {
         List<String> resolvers = new ArrayList<>();
-        for (String resolver: newValue.split(", ?")) {
+        for (String resolver : newValue.split(", ?")) {
             if ((resolver.matches(IPv4_REGEX) || resolver.matches(IPv6_REGEX))
                     && !resolver.equals(LOOPBACK_ADDRESS) && !resolver.equals(META_ADDRESS)) {
                 resolvers.add(resolver);
@@ -583,7 +603,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             ipv4address = QUAD_DNS_41;
         }
         StringBuilder val = new StringBuilder();
-        val.append("'").append(ipv4address).append( ":53'");
+        val.append("'").append(ipv4address).append(":53'");
         if (key_toml.indexOf(DNSCRYPT_NETPROBE_ADDRESS) > 0) {
             val_toml.set(key_toml.indexOf(DNSCRYPT_NETPROBE_ADDRESS), val.toString());
         }
@@ -637,7 +657,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     && val_toml.get(i).contains(DNSCRYPT_RESOLVERS_SOURCE_IPV6)) {
                 urls.setLength(0);
                 String resolvers = clearUrlsLine(val_toml.get(i));
-                for (String resolver: resolvers.split(", ?")) {
+                for (String resolver : resolvers.split(", ?")) {
                     if (!resolver.equals(DNSCRYPT_RESOLVERS_SOURCE_IPV6)) {
                         if (urls.length() == 0) {
                             urls.append("[");
@@ -657,7 +677,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     && !val_toml.get(i).contains(DNSCRYPT_RESOLVERS_SOURCE_IPV6)) {
                 urls.setLength(0);
                 String resolvers = clearUrlsLine(val_toml.get(i));
-                for (String resolver: resolvers.split(", ?")) {
+                for (String resolver : resolvers.split(", ?")) {
                     if (urls.length() == 0) {
                         urls.append("[");
                     } else {
@@ -674,7 +694,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     && val_toml.get(i).contains(DNSCRYPT_RELAYS_SOURCE_IPV6)) {
                 urls.setLength(0);
                 String relays = clearUrlsLine(val_toml.get(i));
-                for (String relay: relays.split(", ?")) {
+                for (String relay : relays.split(", ?")) {
                     if (!relay.equals(DNSCRYPT_RELAYS_SOURCE_IPV6)) {
                         if (urls.length() == 0) {
                             urls.append("[");
@@ -694,7 +714,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     && !val_toml.get(i).contains(DNSCRYPT_RELAYS_SOURCE_IPV6)) {
                 urls.setLength(0);
                 String relays = clearUrlsLine(val_toml.get(i));
-                for (String relay: relays.split(", ?")) {
+                for (String relay : relays.split(", ?")) {
                     if (urls.length() == 0) {
                         urls.append("[");
                     } else {
@@ -900,6 +920,20 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         if (otherCategory != null && editDNSTomlDirectly != null) {
             otherCategory.removePreference(editDNSTomlDirectly);
+        }
+
+        PreferenceCategory dnsCryptServersCategory = findPreference("pref_dnscrypt_servers");
+        Preference serverSources = findPreference("Sources");
+
+        if (dnsCryptServersCategory != null && serverSources != null) {
+            dnsCryptServersCategory.removePreference(serverSources);
+        }
+
+        PreferenceCategory dnsCryptRelaysCategory = findPreference("pref_dnscrypt_relays");
+        Preference relaySources = findPreference("Relays");
+
+        if (dnsCryptRelaysCategory != null && relaySources != null) {
+            dnsCryptRelaysCategory.removePreference(relaySources);
         }
     }
 
