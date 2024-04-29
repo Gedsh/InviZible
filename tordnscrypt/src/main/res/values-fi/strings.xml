@@ -150,66 +150,66 @@
     <string name="notification_exec_root_commands">"Suoritetaan root-komentoja ..."</string>
     <string name="tvSettings_text">"Odota..."</string>
     <string name="toastSettings_saved">"Asetukset tallennettiin"</string>
-    <string name="pref_dnscrypt_global_settings_categ">"YLEISET ASETUKSET"</string>
+    <string name="pref_dnscrypt_global_settings_categ">YLEISET ASETUKSET</string>
     <string name="pref_advanced">"Vain kokeneille käyttäjille!"</string>
     <string name="pref_dnscrypt_select_server_names">"Valitse ainakin yksi palvelin!"</string>
     <string name="pref_dnscrypt_local_port_summ">"Paikallinen portti jota kuunnella."</string>
-    <string name="pref_dnscrypt_require_servers_categ">"Vaadi palvelimia (staattisilta + etälähteiltä) tiettyjen ominaisuuksien tyydyttämiseksi."</string>
+    <string name="pref_dnscrypt_require_servers_categ">Vaadi palvelimia (staattisilta + etälähteiltä) tiettyjen ominaisuuksien tyydyttämiseksi.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">"Käytä palvelimia, jotka toteuttavat DNSCrypt-protokollan."</string>
     <string name="pref_dnscrypt_doh_servers_summ">"Käytä palvelimia, jotka toteuttavat DNS-over-HTTPS-protokollan."</string>
-    <string name="pref_dnscrypt_require_servers_prop_categ">"Vaadi etälähteiden määrittelemiä palvelimia tiettyjen ominaisuuksien tyydyttämiseksi."</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">Vaadi etälähteiden määrittelemiä palvelimia tiettyjen ominaisuuksien tyydyttämiseksi.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">"Palvelimen on tuettava DNSSEC-laajennuksia."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Palvelin ei saa kirjata käyttäjän kyselyjä (deklaratiivinen)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Palvelin ei saa valvoa omaa blacklistiä (Vanhempien valvontaa varten, mainosten esto)."</string>
-    <string name="pref_dnscrypt_force_tcp_categ">"Käytä aina TCP:tä yhteyden muodostamiseen ylävirran (upstream) palvelimiin."</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Käytä aina TCP:tä yhteyden muodostamiseen ylävirran (upstream) palvelimiin.</string>
     <string name="pref_dnscrypt_force_tcp_summ">"Tästä voi olla hyötyä, jos joudut reitittämään kaiken Tor:in läpi.
-
-        Muussa tapauksessa jätä tämä vääriksi (False), koska se ei paranna turvallisuutta (DNSCrypt-proxy salaa kaiken jopa UDP:tä käytettäessä), ja se voi vain lisätä viivettä."</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS proxy (välityspalvelin)"</string>
-    <string name="pref_dnscrypt_use_proxy">"Ota proxy käyttöön."</string>
+\n
+\n        Muussa tapauksessa jätä tämä vääriksi (False), koska se ei paranna turvallisuutta (DNSCrypt-proxy salaa kaiken jopa UDP:tä käytettäessä), ja se voi vain lisätä viivettä."</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">HTTP / SOCKS proxy (välityspalvelin)</string>
+    <string name="pref_dnscrypt_use_proxy">Ota proxy käyttöön.</string>
     <string name="pref_dnscrypt_proxy_summ">"Reititä kaikki TCP-yhteydet paikalliseen Tor-solmuun. (Tor node)
-        Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
-    <string name="pref_dnscrypt_proxy">"Proxy_portti"</string>
-    <string name="pref_dnscrypt_other_categ">"Muut asetukset"</string>
+\n        Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
+    <string name="pref_dnscrypt_proxy">Proxy_portti</string>
+    <string name="pref_dnscrypt_other_categ">Muut asetukset</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Varaehtoinen resolveri.
         Tämä on normaali, salaamaton DNS-ratkaisu, jota käytetään vain yhden kuvan kyselyihin (one-shot queries)
         noudettaessa alkuperäisiä resolveri-listaa vain, jos järjestelmän DNS-määritykset eivät toimi.
         Sitä ei koskaan käytetä, jos luettelot on jo välimuistissa.
         Kiinassa asuvien on ehkä käytettävä tätä numeroa 114.114.114.114:53."</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">"Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria..."</string>
-    <string name="pref_dnscrypt_filters_categ">"SUODATUKSET"</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria...</string>
+    <string name="pref_dnscrypt_filters_categ">SUODATUKSET</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Reititä tiettyjen verkkotunnusten kyselyt omistettuun palvelinjoukkoon."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen.
-
-        Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
-    <string name="pref_dnscrypt_query_log_categ">"Kyselyloki."</string>
+\n
+\n        Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
+    <string name="pref_dnscrypt_query_log_categ">Kyselyloki.</string>
     <string name="pref_dnscrypt_query_log_summ">"Tallenna asiakkaan(clientin) kyselyt tiedostoon."</string>
-    <string name="pref_dnscrypt_query_log">"Ota kyselyloki käyttöön"</string>
+    <string name="pref_dnscrypt_query_log">Ota kyselyloki käyttöön</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Älä kirjaa näitä kyselytyyppejä vähentääksesi verbiittisuutta. Pidä tyhjänä kirjataksesi kaiken lokiin."</string>
     <string name="open_query_log">"Avaa kyselyloki"</string>
-    <string name="pref_dnscrypt_nx_log_categ">"Epäilyttävien kysymysten kirjaaminen."</string>
+    <string name="pref_dnscrypt_nx_log_categ">Epäilyttävien kysymysten kirjaaminen.</string>
     <string name="pref_dnscrypt_nx_log_summ">"Tallenna kyselyt puuttuville vyöhykkeille lokiin.
-        Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
-    <string name="pref_dnscrypt_nx_log">"Ota epäilyttävä kirjaaminen käyttöön"</string>
+\n        Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
+    <string name="pref_dnscrypt_nx_log">Ota epäilyttävä kirjaaminen käyttöön</string>
     <string name="open_nx_log">"Avaa epäilyttävä loki"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Kuviopohjainen estäminen (Musta lista)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">Kuviopohjainen estäminen (Musta lista).</string>
     <string name="pref_dnscrypt_blacklist">"Blacklist/Musta lista"</string>
     <string name="pref_dnscrypt_blacklist_summ">"Musta lista on tehty yhdestä kuviosta riviä kohti."</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"Kuviopohjainen IP-esto (IP-musta lista)."</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Kuviopohjainen IP-esto (IP-musta lista).</string>
     <string name="pref_dnscrypt_ipblacklist">"IP-musta lista"</string>
     <string name="pref_dnscrypt_ipblacklist_summ">"IP-mustalla listalla on yksi malli riviä kohti."</string>
-    <string name="pref_dnscrypt_whitelist_categ">"Kuviopohjainen valkoinen lista (mustien listojen ohitus)."</string>
+    <string name="pref_dnscrypt_whitelist_categ">Kuviopohjainen valkoinen lista (mustien listojen ohitus).</string>
     <string name="pref_dnscrypt_whitelist">"Valkoinen lista"</string>
     <string name="pref_dnscrypt_whitelist_summ">"Valkoiset listat tukevat samoja malleja kuin mustat listat. Jos nimi vastaa valkoisen listan merkintää, vastaava istunto ohittaa nimet ja IP-suodattimet."</string>
     <string name="pref_dnscrypt_sources_categ">"Palvelimet"</string>
     <string name="pref_dnscrypt_sources">"Lähteet"</string>
     <string name="pref_dnscrypt_sources_summ">"Etäluettelot käytettävissä olevista palvelimista."</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">"Lähdeluettelo vanhentuu refresh_delay tunnin kuluttua."</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Lähdeluettelo vanhentuu refresh_delay tunnin kuluttua.</string>
     <string name="pref_dnscrypt_relays_categ">"Releet"</string>
     <string name="pref_dnscrypt_relays">"Lähteet"</string>
-    <string name="pref_dnscrypt_relays_delay_summ">"Rele-lista vanhentuu refresh_delay tunnin kuluttua."</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Rele-lista vanhentuu refresh_delay tunnin kuluttua.</string>
     <string name="pref_dnscrypt_relays_title">"DNSCrypt releet"</string>
     <string name="pref_dnscrypt_not_exist">"Preferenssiä ei ole dnscrypt-proxy.toml!"</string>
     <string name="btn_dnscrypt_delete_log">"Poista loki"</string>
@@ -418,7 +418,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s."</string>
     <string name="pref_common_multi_user">"Multi-user support"</string>
     <string name="pref_common_multi_user_summ">"Support for Dual Apps, MIUI, Island, Shelter and Work profile applications"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Enable SOCKS output proxy"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor will make all OR connections through the SOCKS 5 proxy."</string>
     <string name="notification_channel_services">"Running services"</string>
     <string name="notification_channel_update">"Update notifications"</string>
