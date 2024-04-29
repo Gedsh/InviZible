@@ -160,7 +160,7 @@
     <string name="notification_exec_root_commands">درحال اجرای فرمانهای روت…</string>
     <string name="tvSettings_text">لطفا صبر کنید…</string>
     <string name="toastSettings_saved">"تنظیمات ذخیره شد"</string>
-    <string name="pref_dnscrypt_global_settings_categ">"تنظیمات جامع"</string>
+    <string name="pref_dnscrypt_global_settings_categ">تنظیمات جامع</string>
     <string name="pref_advanced">"فقط برای کاربران حرفه‌ای!"</string>
     <string name="pref_dnscrypt_select_server_names">"حداقل یک سرور انتخاب کنید!"</string>
     <string name="pref_dnscrypt_local_port_summ">"پورت محلی به منظور شنود."</string>
@@ -171,49 +171,49 @@
     <string name="pref_dnscrypt_require_dnssec_summ">"سرور می‌بایست از پسوندهای محافظتی DNS به نام DNSSEC پشتیبانی نماید."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"سرور نمی‌بایست Queryهای کاربر را در وقایع‌نگار ثبت نماید (جهت اطلاع)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"سرور نمی‌بایست بلک ‌لیست خود را برای مواردی همچون کنترل خانوادگی، بلوکه کردن تبلیغات و غیره اجرا نماید."</string>
-    <string name="pref_dnscrypt_force_tcp_categ">"استفاده همیشه از TCP برای اتصال به سرورهای بالادستی."</string>
+    <string name="pref_dnscrypt_force_tcp_categ">استفاده همیشه از TCP برای اتصال به سرورهای بالادستی.</string>
     <string name="pref_dnscrypt_force_tcp_summ">اگر نیازمند به تعیین مسیر تمام فعالیت‌ها از طریق TOR هستید، این مورد می‌توانند مفید واقع شود.
 \nدر غیر این صورت، آن را در حالت False قرار دهید، چرا که حفاظت را بهبود نمی‌بخشد (پروکسی Dnscrypt همیشه تمام موارد را رمزگذاری می‌نماید حتی در زمان استفاده از UDP)، و تنها می‌تواند تأخیر را افزایش دهد.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">پروکسی ساکس.</string>
-    <string name="pref_dnscrypt_use_proxy">"فعال کردن پروکسی"</string>
-    <string name="pref_dnscrypt_proxy_summ">"تعیین مسیر تمام اتصالات TCP به یک گره TOR محلی.
-بدانید که TOR از UDP پشتیبانی نمی‌کند، لذا force-tcp را همچنین در حالت True قرار دهید."</string>
-    <string name="pref_dnscrypt_proxy">"پورت پروکسی"</string>
+    <string name="pref_dnscrypt_use_proxy">فعال کردن پروکسی</string>
+    <string name="pref_dnscrypt_proxy_summ">تعیین مسیر تمام اتصالات TCP به یک گره TOR محلی.
+\nبدانید که TOR از UDP پشتیبانی نمی‌کند، لذا force-tcp را همچنین در حالت True قرار دهید.</string>
+    <string name="pref_dnscrypt_proxy">پورت پروکسی</string>
     <string name="pref_dnscrypt_other_categ">تنظیمات دیگر.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">رفع اشکال کنندۀ مجدد پشتیبان. این یک رفع اشکال کنندۀ مجدد عادی و DNS-رمزنگاری نشده است، که تنها برای Queryهای تک‌شات در زمان بازیابی لیست ابتدایی رفع اشکال‌کنندۀ مجدد، و تنها اگر تنظیمات DNS سیستم کار نکند استفاده خواهد شد. این مورد هرگز زمانی که لیست‌ها تماماً ذخیره شده‌ باشند استفاده نخواهد شد.</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">"هرگز به پروکسی Dnscrypt اجازه ندهید تا از تنظیمات DNS سیستم استفاده کند. بی قید و شرط، از رفع اشکال‌کنندۀ مجدد پشتیبان استفاده کنید."</string>
-    <string name="pref_dnscrypt_filters_categ">"فیلترها"</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">هرگز به پروکسی Dnscrypt اجازه ندهید تا از تنظیمات DNS سیستم استفاده کند. بی قید و شرط، از رفع اشکال‌کنندۀ مجدد پشتیبان استفاده کنید.</string>
+    <string name="pref_dnscrypt_filters_categ">فیلترها</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">قوانین هدایت</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"جست‌و‌جوهای مربوط به دامنه های خاص را به یک مجموعه اختصاصی از سرورها هدایت کنید."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">قوانین پنهان‌کاری</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking یک آدرس از پیش تعریف شده برای یک نام خاص را برمی‌گرداند.
 \n علاوه بر اینکه به عنوان یک فایل HOSTS عمل می‌کند، می‌تواند آدرس IP یک نام متفاوت را نیز برگرداند. همچنین مسطح‌سازی CNAME را نیز انجام خواهد داد.</string>
-    <string name="pref_dnscrypt_query_log_categ">"واقعه‌نگاری Query."</string>
+    <string name="pref_dnscrypt_query_log_categ">واقعه‌نگاری Query.</string>
     <string name="pref_dnscrypt_query_log_summ">"ثبت شدن Queryهای کلاینت در یک فایل."</string>
-    <string name="pref_dnscrypt_query_log">"فعال کردن واقعه‌نگاری Query"</string>
+    <string name="pref_dnscrypt_query_log">فعال کردن واقعه‌نگاری Query</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"به منظور کاهش حشو، این نوع Queryها را ثبت ننمایید. خالی نگه دارید تا تمام موارد را ثبت کنید."</string>
     <string name="open_query_log">"باز کردن وقایع Query"</string>
-    <string name="pref_dnscrypt_nx_log_categ">"وقایع مشکوک Query."</string>
+    <string name="pref_dnscrypt_nx_log_categ">وقایع مشکوک Query.</string>
     <string name="pref_dnscrypt_nx_log_summ">وقایع Query برای مناطقی که وجود ندارد.
 \n این Queryها می‌توانند بیانگر وجود بدافزارها، برنامه‌های خراب/منسوخ، و دستگاه‌های نشان‌دهندۀ حضور شخص ثالث خود باشد..</string>
-    <string name="pref_dnscrypt_nx_log">"واقعه‌نگاری مشکوک را فعال نمایید"</string>
+    <string name="pref_dnscrypt_nx_log">واقعه‌نگاری مشکوک را فعال نمایید</string>
     <string name="open_nx_log">"باز کردن وقایع مشکوک"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"مسدودسازی بر اساس الگو (بلک ‌لیست)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">مسدودسازی بر اساس الگو (بلک ‌لیست).</string>
     <string name="pref_dnscrypt_blacklist">"بلک‌ لیست"</string>
     <string name="pref_dnscrypt_blacklist_summ">"بلک لیست از یک الگوی در هر خط ساخته شده است."</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"مسدودسازی IP بر اساس الگو ( بلک‌لیست IP)."</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">مسدودسازی IP بر اساس الگو ( بلک‌لیست IP).</string>
     <string name="pref_dnscrypt_ipblacklist">"ip بلک لیست"</string>
     <string name="pref_dnscrypt_ipblacklist_summ">"بلک لیست IP از یک الگو در هر خط ساخته شده است."</string>
-    <string name="pref_dnscrypt_whitelist_categ">"لیست مجاز مبتنی بر الگو (دور زدن لیست‌های سیاه)."</string>
+    <string name="pref_dnscrypt_whitelist_categ">لیست مجاز مبتنی بر الگو (دور زدن لیست‌های سیاه).</string>
     <string name="pref_dnscrypt_whitelist">"لیست مجاز"</string>
     <string name="pref_dnscrypt_whitelist_summ">"لیست مجاز از الگوهای مشابه لیست‌های سیاه پشتیبانی می‌کند. اگر یک نام با لیست مجاز مطابقت داشته باشد، جلسه مربوطه اقدام به دور زدن نام‌ها و فیلترهای IP می‌کند."</string>
     <string name="pref_dnscrypt_sources_categ">"سرورها"</string>
     <string name="pref_dnscrypt_sources">"منابع"</string>
     <string name="pref_dnscrypt_sources_summ">"لیست‌های ریموت از سرورهای موجود."</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">"لیست منابع بعد از ساعت‌های refresh_delay منقضی می‌شود."</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">لیست منابع بعد از ساعت‌های refresh_delay منقضی می‌شود.</string>
     <string name="pref_dnscrypt_relays_categ">"رله‌ها"</string>
     <string name="pref_dnscrypt_relays">"منابع"</string>
-    <string name="pref_dnscrypt_relays_delay_summ">"لیست رله‌ها بعد از ساعت‌های refresh_delay منقضی می‌شود."</string>
+    <string name="pref_dnscrypt_relays_delay_summ">لیست رله‌ها بعد از ساعت‌های refresh_delay منقضی می‌شود.</string>
     <string name="pref_dnscrypt_relays_title">"رله‌های DNSCrypt"</string>
     <string name="pref_dnscrypt_not_exist">"اولویت در dnscrypt-proxy.toml وجود ندارد!"</string>
     <string name="btn_dnscrypt_delete_log">"حذف واقعه"</string>
@@ -425,7 +425,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"مشکل TTL را برطرف کرده و دستگاه LAN را برای اتصال به InviZible پیکربندی کنید. از درگاه پیش فرض استفاده کنید: %2$s، دی‌ان‌اس سرور: %1$s."</string>
     <string name="pref_common_multi_user">"پشتیبانی از چند کاربر"</string>
     <string name="pref_common_multi_user_summ">"پشتیبانی از برنامه‌های دوتایی، MIUI، جزیره، پناهگاه و برنامه‌های نمایه‌کاری"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"پراکسی خروجی SOCKS را فعال کنید"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">پراکسی خروجی SOCKS را فعال کنید</string>
     <string name="pref_tor_SOCKS_output_address_summ">"تور تمام ارتباطات OR را از طریق پروکسی SOCKS 5 برقرار می کند."</string>
     <string name="notification_channel_services">"خدمات در حال اجرا"</string>
     <string name="notification_channel_update">"اعلان ها را به روز کنید"</string>
