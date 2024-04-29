@@ -150,64 +150,65 @@
     <string name="notification_exec_root_commands">"Exécution des commandes Administrateurs…"</string>
     <string name="tvSettings_text">"S'il vous plaît, patientez..."</string>
     <string name="toastSettings_saved">"Paramètres sauvegardés"</string>
-    <string name="pref_dnscrypt_global_settings_categ">"PARAMÈTRES GLOBAUX"</string>
+    <string name="pref_dnscrypt_global_settings_categ">PARAMÈTRES GLOBAUX</string>
     <string name="pref_advanced">Pour les utilisateurs expérimentés uniquement!</string>
     <string name="pref_dnscrypt_select_server_names">"Sélectionner au moins un serveur!"</string>
     <string name="pref_dnscrypt_local_port_summ">"Port local à écouter."</string>
-    <string name="pref_dnscrypt_require_servers_categ">"Exiger des serveurs (de sources statiques + distantes) pour satisfaire à des propriétés spécifiques."</string>
+    <string name="pref_dnscrypt_require_servers_categ">Exiger des serveurs (de sources statiques + distantes) pour satisfaire à des propriétés spécifiques.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">"Utiliser des serveurs mettant en œuvre le protocole DNSCrypt."</string>
     <string name="pref_dnscrypt_doh_servers_summ">"Utiliser des serveurs mettant en œuvre le protocole DNS-sur-HTTPS."</string>
-    <string name="pref_dnscrypt_require_servers_prop_categ">"Exiger des serveurs définis par des sources distantes pour satisfaire à des propriétés spécifiques."</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">Exiger des serveurs définis par des sources distantes pour satisfaire à des propriétés spécifiques.</string>
     <string name="pref_dnscrypt_require_dnssec_summ">"Le serveur doit prendre en charge les extensions de sécurité DNS (DNSSEC)."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Le serveur ne doit pas enregistrer les requêtes des utilisateurs (déclaratif)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Le serveur ne doit pas appliquer sa propre liste noire (pour le contrôle parental, le blocage des publicités...)."</string>
-    <string name="pref_dnscrypt_force_tcp_categ">"Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont."</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Utilisez toujours le protocole TCP pour vous connecter aux serveurs en amont.</string>
     <string name="pref_dnscrypt_force_tcp_summ">"Cela peut être utile si vous avez besoin de tout faire passer par Tor.
+\n
 \n                Sinon, laissez cela sur faux (false), car cela n\'améliore pas la sécurité (dnscrypt-proxy chiffrera toujours tout, même en utilisant l\'UDP), et ne peut qu\'augmenter la latence."</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Mandataire SOCKS."</string>
-    <string name="pref_dnscrypt_use_proxy">"Activer le mandataire"</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">Mandataire SOCKS.</string>
+    <string name="pref_dnscrypt_use_proxy">Activer le mandataire</string>
     <string name="pref_dnscrypt_proxy_summ">"Router toutes les connexions TCP vers un noeud Tor local.
-                Tor ne supporte pas l'UDP, donc réglez force_tcp sur vrai (true) également."</string>
-    <string name="pref_dnscrypt_proxy">"port_proxy"</string>
-    <string name="pref_dnscrypt_other_categ">"Autres Réglages."</string>
+\n                Tor ne supporte pas l\'UDP, donc réglez force_tcp sur vrai (true) également."</string>
+    <string name="pref_dnscrypt_proxy">port_proxy</string>
+    <string name="pref_dnscrypt_other_categ">Autres Réglages.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Résolveur de secours.
                 Il s'agit d'un résolveur DNS normal, non chiffré, qui ne sera utilisé que pour des requêtes ponctuelles
                 lors de la récupération de la liste initiale des résolveurs, et seulement si la configuration DNS du système ne fonctionne pas.
                 Il ne sera jamais utilisé si les listes ont déjà été mises en cache.
                 Les personnes en Chine peuvent avoir besoin d'utiliser 114.114.114.114:53 ici."</string>
-    <string name="pref_dnscrypt_ignore_system_dns_summ">"Ne laissez jamais dnscrypt-proxy essayer d'utiliser les paramètres DNS du système. Utilisez sans condition le résolveur de secours.."</string>
-    <string name="pref_dnscrypt_filters_categ">"FILTRES"</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Ne laissez jamais dnscrypt-proxy essayer d\'utiliser les paramètres DNS du système. Utilisez sans condition le résolveur de secours..</string>
+    <string name="pref_dnscrypt_filters_categ">FILTRES</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Règles de Réacheminement"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Acheminez les requêtes de domaines spécifiques vers un ensemble de serveurs dédié."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Règles de Masquage"</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">"Le masquage (cloaking) renvoie une adresse prédéfinie pour un nom spécifique.
-                En plus d'agir comme un fichier HOSTS, il peut également renvoyer l'adresse IP d'un nom différent. Il fera également l'aplatissement CNAME.."</string>
-    <string name="pref_dnscrypt_query_log_categ">"Journalisation des requêtes."</string>
+\n                En plus d\'agir comme un fichier HOSTS, il peut également renvoyer l\'adresse IP d\'un nom différent. Il fera également l\'aplatissement CNAME.."</string>
+    <string name="pref_dnscrypt_query_log_categ">Journalisation des requêtes.</string>
     <string name="pref_dnscrypt_query_log_summ">"Enregistrer les requêtes des clients dans un fichier."</string>
-    <string name="pref_dnscrypt_query_log">"Activer la journalisation des requêtes"</string>
+    <string name="pref_dnscrypt_query_log">Activer la journalisation des requêtes</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Ne pas enregistrez ces types de requêtes afin de réduire la verbosité. Gardez les champs vides pour tout enregistrer."</string>
     <string name="open_query_log">"Ouvrir le Journal des Requêtes"</string>
-    <string name="pref_dnscrypt_nx_log_categ">"Journalisation des requêtes suspectes."</string>
+    <string name="pref_dnscrypt_nx_log_categ">Journalisation des requêtes suspectes.</string>
     <string name="pref_dnscrypt_nx_log_summ">"Journaliser les requêtes pour les zones inexistantes.
-         Ces requêtes peuvent révéler la présence de logiciels malveillants, d'applications endommagées/obsolètes et d'appareils signalant leur présence à des tiers."</string>
-    <string name="pref_dnscrypt_nx_log">"Activer la journalisation de donnée suspecte"</string>
+\n         Ces requêtes peuvent révéler la présence de logiciels malveillants, d\'applications endommagées/obsolètes et d\'appareils signalant leur présence à des tiers."</string>
+    <string name="pref_dnscrypt_nx_log">Activer la journalisation de donnée suspecte</string>
     <string name="open_nx_log">"Ouvrir le journal de suspicion"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Blocage basé sur un modèle (liste noire)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">Blocage basé sur un modèle (liste noire).</string>
     <string name="pref_dnscrypt_blacklist">"Liste Noire"</string>
     <string name="pref_dnscrypt_blacklist_summ">"Les listes noires sont composées d'un modèle par ligne."</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"Blocage d'IP basé sur un modèle (liste noire d'IP)."</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Blocage d\'IP basé sur un modèle (liste noire d\'IP).</string>
     <string name="pref_dnscrypt_ipblacklist">"Liste Noire d'IP"</string>
     <string name="pref_dnscrypt_ipblacklist_summ">"Les listes noires d'IP sont composées d'un modèle par ligne."</string>
-    <string name="pref_dnscrypt_whitelist_categ">"Liste blanche basée sur des modèles (contournement des listes noires)."</string>
+    <string name="pref_dnscrypt_whitelist_categ">Liste blanche basée sur des modèles (contournement des listes noires).</string>
     <string name="pref_dnscrypt_whitelist">"Liste Blanche"</string>
     <string name="pref_dnscrypt_whitelist_summ">"Les listes blanches soutiennent les mêmes modèles que les listes noires. Si un nom correspond à une entrée de la liste blanche, la session correspondante contournera les noms et filtres IP."</string>
     <string name="pref_dnscrypt_sources_categ">"Serveurs"</string>
     <string name="pref_dnscrypt_sources">"Sources"</string>
     <string name="pref_dnscrypt_sources_summ">"Listes distante de serveurs disponibles."</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">"Liste des sources expirant après les heures défini par refresh_delay."</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Liste des sources expirant après les heures défini par refresh_delay.</string>
     <string name="pref_dnscrypt_relays_categ">"Relais"</string>
     <string name="pref_dnscrypt_relays">"Sources"</string>
-    <string name="pref_dnscrypt_relays_delay_summ">"Liste des relais expirant après les heures défini par refresh_delay."</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Liste des relais expirant après les heures défini par refresh_delay.</string>
     <string name="pref_dnscrypt_relays_title">"Relais DNSCrypt"</string>
     <string name="pref_dnscrypt_not_exist">"La préférence n'existe pas dans dnscrypt-proxy.toml!"</string>
     <string name="btn_dnscrypt_delete_log">"Supprimer le journal"</string>
@@ -430,7 +431,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"Activez Fixer la DDV et configurez le périphérique LAN pour qu'il se connecte à InviZible. Utilisez la passerelle par défaut: %1$s, serveur DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Support multi-utilisateurs"</string>
     <string name="pref_common_multi_user_summ">"Soutien des applications doubles, MIUI, Island, Shelter et utilisant le Profil Professionnel"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Activer le mandataire SOCKS de sortie"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Activer le mandataire SOCKS de sortie</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor établira toutes les connexions OR via le mandataire SOCKS 5."</string>
     <string name="notification_channel_services">"Services en cours d'exécution"</string>
     <string name="notification_channel_update">"Notifications de mise à jour"</string>
@@ -535,7 +536,7 @@
     <string name="pref_itpd_com_ssu2_summ">"Activer le protocole de transport SSU2 (utilise l'UDP)."</string>
     <string name="ask_later">"Demandez plus tard"</string>
     <string name="notifications_permission_rationale_message">"Les notifications sont essentielles pour afficher des informations importantes sur le fonctionnement de l'application, son contrôle et les attaques détectées. Voulez-vous autoriser les notifications pour InviZible?"</string>
-    <string name="pref_dnscrypt_dns64_summ">"Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don't enable it otherwise, or you won't be able to connect to anything at all."</string>
+    <string name="pref_dnscrypt_dns64_summ">Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don\'t enable it otherwise, or you won\'t be able to connect to anything at all.</string>
     <string name="pref_dnscrypt_dns64_prefix_summ">"Set of used static IPv6 prefixes."</string>
     <string name="pref_fast_use_tor_bridges_ipv6">"IPv6 bridges"</string>
 </resources>
