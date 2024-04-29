@@ -153,11 +153,11 @@
     <string name="notification_exec_root_commands">Executando comandos de Root…</string>
     <string name="tvSettings_text">"Por favor, aguarde…"</string>
     <string name="toastSettings_saved">"Configurações salvas"</string>
-    <string name="pref_dnscrypt_global_settings_categ">"CONFIGURAÇÕES GLOBAIS"</string>
+    <string name="pref_dnscrypt_global_settings_categ">CONFIGURAÇÕES GLOBAIS</string>
     <string name="pref_advanced">Somente para usuários avançados!</string>
     <string name="pref_dnscrypt_select_server_names">"Selecione pelo menos um servidor!"</string>
     <string name="pref_dnscrypt_local_port_summ">"Porta local de escuta."</string>
-    <string name="pref_dnscrypt_require_servers_categ">"Requer servidores (de fontes estáticas + remotas) para satisfazer propriedades específicas."</string>
+    <string name="pref_dnscrypt_require_servers_categ">Requer servidores (de fontes estáticas + remotas) para satisfazer propriedades específicas.</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">"Use servidores que implementam o protocolo DNSCrypt."</string>
     <string name="pref_dnscrypt_doh_servers_summ">"Use servidores que implementam o protocolo DNS-over-HTTPS."</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">Requer servidores de fontes remotas para satisfazer propriedades específicas.</string>
@@ -165,58 +165,58 @@
     <string name="pref_dnscrypt_require_nolog_summ">"O servidor não deve manter log das queries do usuário (declarativo)."</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_require_nofilter_summ">O servidor não deve forçar sua própria lista negra (para controle parental, bloqueio de propaganda…).</string>
-    <string name="pref_dnscrypt_force_tcp_categ">"Sempre usar TCP para conectar com os servidores upstream."</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Sempre usar TCP para conectar com os servidores upstream.</string>
     <string name="pref_dnscrypt_force_tcp_summ">Isso pode ser útil se você precisar rotear tudo através do Tor..
 \n Caso contrário, deixe como falso, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só aumentará a latência.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS Proxy.</string>
-    <string name="pref_dnscrypt_use_proxy">"Ativar proxy"</string>
-    <string name="pref_dnscrypt_proxy_summ">"Roteie todas as conexões TCP para um nó Tor local. Tor não suporta UDP, então defina force_tcp como true também."</string>
-    <string name="pref_dnscrypt_proxy">"Porta de Proxy"</string>
+    <string name="pref_dnscrypt_use_proxy">Ativar proxy</string>
+    <string name="pref_dnscrypt_proxy_summ">Roteie todas as conexões TCP para um nó Tor local. Tor não suporta UDP, então defina force_tcp como true também.</string>
+    <string name="pref_dnscrypt_proxy">Porta de Proxy</string>
     <string name="pref_dnscrypt_other_categ">Outras configurações.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Resolvedor substituto. Este é um resolvedor DNS normal, não criptografado, que só será usado para consultas únicas ao recuperar a lista inicial de resolvedores e somente se a configuração DNS do sistema não funcionar. Nunca será usado se as listas já tiverem sido armazenadas em cache.</string>
     <!-- Nunca deixar o dnscrypt-proxy tentar utilizar as definições DNS do sistema. Utilizar incondicionalmente o resolvedor de falhas. -->
-    <string name="pref_dnscrypt_ignore_system_dns_summ">"Nunca deixe dnscrypt-proxy tentar usar as configurações de DNS do sistema. Use incondicionalmente o resolvedor de fallback."</string>
-    <string name="pref_dnscrypt_filters_categ">"FILTROS"</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">Nunca deixe dnscrypt-proxy tentar usar as configurações de DNS do sistema. Use incondicionalmente o resolvedor de fallback.</string>
+    <string name="pref_dnscrypt_filters_categ">FILTROS</string>
     <!-- Regras de encaminhamento -->
     <string name="pref_dnscrypt_forwarding_rules_categ">Regras de encaminhamento</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Roteie as consultas de domínios específicos para um conjunto dedicado de servidores."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Regras de camuflagem</string>
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking retorna um endereço predefinido para um nome específico.
 \n Além de atuar como um arquivo HOSTS, ele também pode retornar o endereço IP de um nome diferente. Ele também fará o nivelamento de CNAME.</string>
-    <string name="pref_dnscrypt_query_log_categ">"Log de consulta."</string>
+    <string name="pref_dnscrypt_query_log_categ">Log de consulta.</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_query_log_summ">Salvar logs das queries do cliente para um arquivo.</string>
     <!-- Fuzzy -->
-    <string name="pref_dnscrypt_query_log">"Ativar log de consultas"</string>
+    <string name="pref_dnscrypt_query_log">Ativar log de consultas</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Para reduzir o detalhamento, não registrar esses tipos de consulta. Mantenha vazio para logar tudo."</string>
     <!-- Fuzzy -->
     <string name="open_query_log">"Abrir log de consulta"</string>
-    <string name="pref_dnscrypt_nx_log_categ">"Log de consultas suspeitas."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Log de consultas para zonas inexistentes.
-Essas consultas podem revelar a presença de malware, aplicativos quebrados / obsoletos e dispositivos sinalizando sua presença para terceiros."</string>
+    <string name="pref_dnscrypt_nx_log_categ">Log de consultas suspeitas.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Log de consultas para zonas inexistentes.
+\nEssas consultas podem revelar a presença de malware, aplicativos quebrados / obsoletos e dispositivos sinalizando sua presença para terceiros.</string>
     <!-- Fuzzy -->
-    <string name="pref_dnscrypt_nx_log">"Ativar log de consultas suspeitas"</string>
+    <string name="pref_dnscrypt_nx_log">Ativar log de consultas suspeitas</string>
     <string name="open_nx_log">"Abrir log de consultas suspeitas"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Bloqueio baseado em padrões (lista negra)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">Bloqueio baseado em padrões (lista negra).</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_blacklist">"Lista negra"</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_blacklist_summ">"A lista negra é composta de uma regra a cada linha."</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"Bloqueio de IP baseado em padrões (lista negra de IP)."</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Bloqueio de IP baseado em padrões (lista negra de IP).</string>
     <string name="pref_dnscrypt_ipblacklist">"Lista negra de IPs"</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_ipblacklist_summ">"A lista negra de IP é composta de uma regra por linha."</string>
-    <string name="pref_dnscrypt_whitelist_categ">"Lista de permissões baseada em padrões (ignorar listas negras)."</string>
+    <string name="pref_dnscrypt_whitelist_categ">Lista de permissões baseada em padrões (ignorar listas negras).</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_whitelist">Lista branca</string>
     <string name="pref_dnscrypt_whitelist_summ">"A lista branca suporta os mesmos padrões das listas negras. Se um nome corresponder a uma entrada da lista de permissões, a sessão correspondente irá ignorar nomes e filtros de IP."</string>
     <string name="pref_dnscrypt_sources_categ">"Servidores"</string>
     <string name="pref_dnscrypt_sources">"Fontes"</string>
     <string name="pref_dnscrypt_sources_summ">"Listas remotas de servidores disponíveis."</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">"Lista de fontes expirando após horas de refresh_delay."</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">Lista de fontes expirando após horas de refresh_delay.</string>
     <string name="pref_dnscrypt_relays_categ">"Retransmissores"</string>
     <string name="pref_dnscrypt_relays">"Fontes"</string>
-    <string name="pref_dnscrypt_relays_delay_summ">"Lista de Retransmissores expirarár depois de refresh_delay horas."</string>
+    <string name="pref_dnscrypt_relays_delay_summ">Lista de Retransmissores expirarár depois de refresh_delay horas.</string>
     <string name="pref_dnscrypt_relays_title">"DNSCrypt Retransmissores"</string>
     <string name="pref_dnscrypt_not_exist">"Não existe preferência em dnscrypt-proxy.toml!"</string>
     <string name="btn_dnscrypt_delete_log">"Apagar log"</string>
@@ -419,7 +419,7 @@ Essas consultas podem revelar a presença de malware, aplicativos quebrados / ob
     <string name="pref_common_local_eth_device_addr_summ">"Habilite Fix TTL e configure o dispositivo LAN para se conectar ao InviZible. Use o gateway padrão: %1$s, servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Suporte multiusuário"</string>
     <string name="pref_common_multi_user_summ">"Suporte para aplicativos duplos, MIUI, Island, Shelter e aplicativos de perfil de trabalho"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Habilitar proxy de saída SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Habilitar proxy de saída SOCKS</string>
     <string name="pref_tor_SOCKS_output_address_summ">"O Tor fará todas as conexões OR por meio do proxy SOCKS 5."</string>
     <string name="notification_channel_services">"Serviços Rodando"</string>
     <string name="notification_channel_update">"Notificações de atualização"</string>
