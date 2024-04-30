@@ -218,13 +218,13 @@
     <string name="pref_tor_new_circuit_period_summ">"Número de segundos X a considerar cuando construir un nuevo circuito."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Éste valor indica la reutilización de circuitos creados hasta un número X máximo de segundos de vida."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Determina la separación obligatoria, en distintos circuitos, de conexiones hacia destinos que tengan direcciones IP demasiado cerca entre sí. Se considera que dos direcciones IP están demasiado cerca entre sí, si pertenecen al mismo rango de red /16."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">Activar proxy SOCKS5</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Poxy SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">"Indica el puerto donde abrir el proxy SOCKS5."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">Activar proxy HTTP</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Túnel HTTP</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Indica el puerto del proxy HTTP (el proxy funciona exclusivamente con la directiva HTTP CONNECT)."</string>
-    <string name="pref_tor_enable_transparent_proxy">Activar proxy transparente</string>
+    <string name="pref_tor_enable_transparent_proxy">Proxy transparente</string>
     <string name="pref_tor_trans_port_summ">"Indica el puerto donde abrir el proxy transparente."</string>
-    <string name="pref_tor_enable_DNS">Activar puerto DNS</string>
+    <string name="pref_tor_enable_DNS">Resolver DNS</string>
     <string name="pref_tor_DNS_port_summ">"Indica el puerto donde Tor abrirá un servidor de escucha para resolución de nombres (UDP), realizando dichas peticiones de forma anónima."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Determina el uso de IPv4 al conectar al directorio de servidores y nodos de entrada."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Determina el uso de IPv6 al conectar al directorio de servidores y nodos de entrada."</string>
@@ -413,7 +413,7 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %1$s, y como servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Modo Multi-usuario"</string>
     <string name="pref_common_multi_user_summ">"Busca e identifica apps de otros usuarios como apps duplicadas, duplicación MIUI, o en el perfil de trabajo, como en la app Insular."</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">Activar proxy de salida SOCKS</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS proxy de salida</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor remitirá todas las conexiones OR al proxy SOCKS5 indicado."</string>
     <string name="notification_channel_services">"Servicios en marcha"</string>
     <string name="notification_channel_update">"Actualización de notificaciones"</string>
