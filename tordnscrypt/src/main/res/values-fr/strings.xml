@@ -227,13 +227,13 @@
     <string name="pref_tor_new_circuit_period_summ">"Toutes les NUM secondes, envisagez de construire un nouveau circuit."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Réutilisation possible d'un circuit qui a été utilisé pour la première fois il y a tout au plus NUM secondes, mais n'attachez jamais un nouveau flux à un circuit trop ancien."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Si activé, Tor ne placera pas deux serveurs dont les adresses IP sont trop proches sur le même circuit. Actuellement, deux adresses sont trop proches si elles se trouvent dans la même plage /16."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Activer le mandataire SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Activer le mandataire SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">"Ouvrez ce port pour écouter les connexions des applications parlant au SOCKS."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Activer HTTPTunnel"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Activer HTTPTunnel</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Ouvrez ce port pour écouter les connexions au mandataire en utilisant le protocole HTTP CONNECT au lieu de SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Activer le mandataire Transparent"</string>
+    <string name="pref_tor_enable_transparent_proxy">Activer le mandataire Transparent</string>
     <string name="pref_tor_trans_port_summ">"Ouvrez ce port pour écouter les connexions aux mandataire transparent."</string>
-    <string name="pref_tor_enable_DNS">"Activer le DNS"</string>
+    <string name="pref_tor_enable_DNS">Activer le DNS</string>
     <string name="pref_tor_DNS_port_summ">"Ouvrez ce port pour écouter les requêtes DNS UDP et les résoudre de manière anonyme."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Si désactivée, Tor évitera de se connecter aux serveurs de répertoire ou à des nœuds d'entrée via l'IPv4."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Si activé, Tor pourra se connecter à des serveurs de répertoire ou à des nœuds d'entrée via l'IPv6."</string>
@@ -428,7 +428,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"Activez Fixer la DDV et configurez le périphérique LAN pour qu'il se connecte à InviZible. Utilisez la passerelle par défaut: %1$s, serveur DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Support multi-utilisateurs"</string>
     <string name="pref_common_multi_user_summ">"Soutien des applications doubles, MIUI, Island, Shelter et utilisant le Profil Professionnel"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Activer le mandataire SOCKS de sortie"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Activer le mandataire SOCKS de sortie</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor établira toutes les connexions OR via le mandataire SOCKS 5."</string>
     <string name="notification_channel_services">"Services en cours d'exécution"</string>
     <string name="notification_channel_update">"Notifications de mise à jour"</string>

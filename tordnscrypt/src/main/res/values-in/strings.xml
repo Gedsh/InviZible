@@ -227,13 +227,13 @@
     <string name="pref_tor_new_circuit_period_summ">"Setiap NUM detik pertimbangkan apakah akan membangun sirkuit baru."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Jangan ragu untuk menggunakan kembali sirkuit yang pertama kali digunakan paling banyak NUM detik yang lalu, tetapi jangan pernah pasang stream baru ke sirkuit yang terlalu lama."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Jika diaktifkan, Tor tidak akan menempatkan dua server yang alamat IP-nya terlalu dekat pada sirkuit yang sama. Saat ini, dua alamat terlalu dekat jika mereka berada dalam kisaran yang sama /16 range."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Aktifkan proxy SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Aktifkan proxy SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">"Buka port ini untuk mendengarkan koneksi dari aplikasi yang berbicara SOCKS."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Aktifkan Terowongan HTTP"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Aktifkan Terowongan HTTP</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Buka port ini untuk mendengarkan koneksi proxy menggunakan protokol HTTP CONNECT daripada SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Aktifkan proxy transparan"</string>
+    <string name="pref_tor_enable_transparent_proxy">Aktifkan proxy transparan</string>
     <string name="pref_tor_trans_port_summ">"Buka port ini untuk mendengarkan koneksi proxy transparan."</string>
-    <string name="pref_tor_enable_DNS">"Aktifkan DNS"</string>
+    <string name="pref_tor_enable_DNS">Aktifkan DNS</string>
     <string name="pref_tor_DNS_port_summ">"Buka port ini untuk mendengarkan permintaan DNS UDP, dan menyelesaikannya secara anonim."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Jika dinonaktifkan, Tor akan menghindari koneksi ke server direktori dan entri node melalui IPv4."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Jika diaktifkan, Tor mungkin terhubung ke server direktori atau entri node melalui IPv6."</string>
@@ -410,7 +410,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"Hidupkan fitur perbaikan TTL dan atur LAN agar dapat terhubung ke InviZibleUse default gateway: %1$s, DNS server: %2$s."</string>
     <string name="pref_common_multi_user">"Dukungan multi-pengguna"</string>
     <string name="pref_common_multi_user_summ">"Cocok untuk aplikasi profil kerja, misal MIUI, Island, Shelter, dsb"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Hidupkan Proxy keluaran SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Hidupkan Proxy keluaran SOCKS</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor akan mengalihkan semua koneksi melalui Proxy SOCKS5.</string>
     <string name="notification_channel_services">"Layanan yang berjalan"</string>
     <string name="notification_channel_update">"Pemberitahuan update"</string>

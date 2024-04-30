@@ -229,13 +229,13 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_tor_new_circuit_period_summ">"Κάθε NUM δευτερόλεπτα εξετάζετε εάν θα δημιουργείται ένα νέο κύκλωμα."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Μη διστάσετε να επαναχρησιμοποιήσετε ένα κύκλωμα που χρησιμοποιήθηκε για πρώτη φορά το πολύ πριν από NUM δευτερόλεπτα, αλλά ποτέ μην συνδέσετε μια νέα ροή σε ένα κύκλωμα που είναι πολύ παλιό."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Εάν είναι ενεργοποιημένο, το Tor δεν θα τοποθετήσει δύο διακομιστές των οποίων οι διευθύνσεις IP είναι πολύ κοντά στο ίδιο κύκλωμα. Επί του παρόντος, δύο διευθύνσεις είναι πολύ κοντά εάν βρίσκονται στο ίδιο εύρος /16."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Ενεργοποίηση διακομιστή μεσολάβησης SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Ενεργοποίηση διακομιστή μεσολάβησης SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">"Ανοίξτε αυτήν τη θύρα για να δέχεστε συνδέσεις από εφαρμογές που επικοινωνούν με πρωτόκολλο SOCKS."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Ενεργοποίηση HTTPTtunnel"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Ενεργοποίηση HTTPTtunnel</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Ανοίξτε αυτήν τη θύρα για να δέχεστε συνδέσεις διακομιστή μεσολάβησης χρησιμοποιώντας το πρωτόκολλο HTTP CONNECT αντί για SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Ενεργοποίηση Διαφανούς διακομιστή μεσολάβησης"</string>
+    <string name="pref_tor_enable_transparent_proxy">Ενεργοποίηση Διαφανούς διακομιστή μεσολάβησης</string>
     <string name="pref_tor_trans_port_summ">"Ανοίξτε αυτήν τη θύρα για να δέχεστε διαφανείς συνδέσεις διακομιστή μεσολάβησης."</string>
-    <string name="pref_tor_enable_DNS">"Ενεργοποίηση DNS"</string>
+    <string name="pref_tor_enable_DNS">Ενεργοποίηση DNS</string>
     <string name="pref_tor_DNS_port_summ">"Ανοίξτε αυτήν τη θύρα για να αποδέχεστε αιτήματα UDP DNS και επιλύστε τα ανώνυμα."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Εάν απενεργοποιηθεί, το Tor θα αποφύγει τη σύνδεση με διακομιστές καταλόγου και κόμβους εισόδου μέσω IPv4."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Εάν είναι ενεργοποιημένο, το Tor ενδέχεται να συνδεθεί με διακομιστές καταλόγου ή κόμβους εισόδου μέσω IPv6."</string>
@@ -428,7 +428,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_common_local_eth_device_addr_summ">"Ενεργοποιήστε τη διόρθωση TTL και διαμορφώστε τη συσκευή LAN για σύνδεση στο InviZible. Χρησιμοποιήστε την προεπιλεγμένη πύλη: %1$s, και διακομιστή DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Υποστήριξη πολλών χρηστών"</string>
     <string name="pref_common_multi_user_summ">"Υποστήριξη για εφαρμογές Dual Apps, MIUI, Island, Shelter και προφίλ Work"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Ενεργοποίηση διακομιστή μεσολάβησης εξόδου SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Ενεργοποίηση διακομιστή μεσολάβησης εξόδου SOCKS</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Το Tor θα κάνει όλες τις συνδέσεις OR μέσω του διακομιστή μεσολάβησης SOCKS 5."</string>
     <string name="notification_channel_services">"Ενεργές υπηρεσίες"</string>
     <string name="notification_channel_update">"Ενημέρωση ειδοποιήσεων"</string>

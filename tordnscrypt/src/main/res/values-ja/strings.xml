@@ -220,13 +220,13 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="pref_tor_new_circuit_period_summ">"Every NUM seconds consider whether to build a new circuit."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Feel free to reuse a circuit that was first used at most NUM seconds ago, but never attach a new stream to a circuit that is too old."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"If enabled, Tor will not put two servers whose IP addresses are too close on the same circuit. Currently, two addresses are too close if they lie in the same /16 range."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Socksプロキシを有効化"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Socksプロキシを有効化</string>
     <string name="pref_tor_SOCKS_port_summ">"Open this port to listen for connections from SOCKS-speaking applications."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"HTTPトンネルを有効化"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTPトンネルを有効化</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Socksの代わりにHTTPプロキシによる接続を待ち受けるためにこのポートを使用します。"</string>
-    <string name="pref_tor_enable_transparent_proxy">"透過プロキシを有効化"</string>
+    <string name="pref_tor_enable_transparent_proxy">透過プロキシを有効化</string>
     <string name="pref_tor_trans_port_summ">"透過プロキシによる接続を待ち受けるためこのポートを使用します。"</string>
-    <string name="pref_tor_enable_DNS">"DNSを有効化"</string>
+    <string name="pref_tor_enable_DNS">DNSを有効化</string>
     <string name="pref_tor_DNS_port_summ">"UDPのDNSリクエストを待ち受け、匿名で解決するためにこのポートを使用します。"</string>
     <string name="pref_tor_client_use_IPv4_summ">"無効にした場合、ディレクトリサーバーやエントリーノードにIPv4を利用して接続しないようになります。"</string>
     <string name="pref_tor_client_use_IPv6_summ">"有効にした場合、TorはディレクトリサーバーやエントリーノードにIPv6を利用して接続しようとします。"</string>
@@ -401,7 +401,7 @@ These queries can reveal the presence of malware, broken/obsolete applications, 
     <string name="pref_common_local_eth_device_addr_summ">"TTLを防止し、LAN内デバイスがInvizibleに接続するように設定します。デフォルトゲートウェイ:  %1$s DNSサーバー: %2$s"</string>
     <string name="pref_common_multi_user">"マルチユーザーサポート"</string>
     <string name="pref_common_multi_user_summ">"Island、ShelterやMIUIのデュアルアプリ機能などで仕事用プロファイル内で利用できるようにします。"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Socks出力プロキシを有効化"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Socks出力プロキシを有効化</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor will make all OR connections through the SOCKS 5 proxy."</string>
     <string name="notification_channel_services">"サービスを実行中"</string>
     <string name="notification_channel_update">"アップデート通知"</string>

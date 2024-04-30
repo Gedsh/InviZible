@@ -225,13 +225,13 @@
     <string name="pref_tor_new_circuit_period_summ">"Harkitaan uuden piirin rakentamista joka NUM sekunti."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Voit käyttää uudestaan ​​piiriä, jota käytettiin ensin korkeintaan NUM sekuntia sitten, mutta älä koskaan kiinnitä uutta virtaa piiriin, joka on liian vanha."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Jos tämä on käytössä, Tor ei aseta kahta palvelinta, joiden IP-osoitteet ovat liian lähellä samaa piiriä. Tällä hetkellä kaksi osoitetta on liian lähellä, jos ne sijaitsevat samalla / 16 alueella."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Ota SOCKS-proxy käyttöön"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Ota SOCKS-proxy käyttöön</string>
     <string name="pref_tor_SOCKS_port_summ">"Avaa tämä portti kuunnellaksesi yhteyksiä SOCKSia puhuvista sovelluksista."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Ota HTTPTunnel käyttöön"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Ota HTTPTunnel käyttöön</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Avaa tämä portti, kun haluat kuunnella välityspalvelinyhteyksiä käyttämällä HTTP CONNECT -protokollaa SOCKS: n sijaan."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Ota läpinäkyvä proxy käyttöön"</string>
+    <string name="pref_tor_enable_transparent_proxy">Ota läpinäkyvä proxy käyttöön</string>
     <string name="pref_tor_trans_port_summ">"Avaa tämä portti kuunnellaksesi läpinäkyviä proxy-yhteyksiä."</string>
-    <string name="pref_tor_enable_DNS">"Ota DNS käyttöön"</string>
+    <string name="pref_tor_enable_DNS">Ota DNS käyttöön</string>
     <string name="pref_tor_DNS_port_summ">"Avaa tämä portti kuunnellaksesi UDP DNS -pyyntöjä ja ratkaista ne nimettömästi."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Jos tämä ei ole käytössä, Tor välttää yhteyksiä proxy ja sisääntulosolmuihin IPv4:n kautta."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Jos tämä on käytössä, Tor saattaa muodostaa yhteyden proxyihin tai sisääntulosolmuihin IPv6:n kautta."</string>
@@ -412,7 +412,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s."</string>
     <string name="pref_common_multi_user">"Multi-user support"</string>
     <string name="pref_common_multi_user_summ">"Support for Dual Apps, MIUI, Island, Shelter and Work profile applications"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Enable SOCKS output proxy"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS output proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor will make all OR connections through the SOCKS 5 proxy."</string>
     <string name="notification_channel_services">"Running services"</string>
     <string name="notification_channel_update">"Update notifications"</string>

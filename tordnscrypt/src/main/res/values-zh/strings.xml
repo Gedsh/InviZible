@@ -220,13 +220,13 @@
     <string name="pref_tor_new_circuit_period_summ">"每 NUM 决定是否构建新链路。"</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"随意重用最多 NUM 秒前初次使用的链路，但从不附加新流到太旧的链路。"</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"如果已启用，Tor 将不会将 IP “过于接近”的两台服务器置于相同链路。当前，如果两个地址处于同一 /16 区间则“过于接近”。"</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"启用 SOCKS 代理"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">启用 SOCKS 代理</string>
     <string name="pref_tor_SOCKS_port_summ">"打开此端口监听来自使用 SOCKS 的应用的连接。"</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"启用 HTTP 隧道"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">启用 HTTP 隧道</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"打开此端口监听使用 HTTP CONNECT 而不是 SOCKS 协议的代理连接。"</string>
-    <string name="pref_tor_enable_transparent_proxy">"启用透明代理"</string>
+    <string name="pref_tor_enable_transparent_proxy">启用透明代理</string>
     <string name="pref_tor_trans_port_summ">"打开此端口监听透明代理连接。"</string>
-    <string name="pref_tor_enable_DNS">"启用 DNS"</string>
+    <string name="pref_tor_enable_DNS">启用 DNS</string>
     <string name="pref_tor_DNS_port_summ">"打开此端口监听 UDP DNS 请求，并匿名解析他们。"</string>
     <string name="pref_tor_client_use_IPv4_summ">"如果禁用，Tor 将避免通过 IPv4 连接到目录服务器和入口节点。"</string>
     <string name="pref_tor_client_use_IPv6_summ">"如果已启用，Tor 可能通过 IPv6 连接到目录服务器或入口节点。"</string>
@@ -401,7 +401,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"启用固定 TTL 并配置 LAN 设备连接到 InviZible。使用默认网关：%1$s，DNS 服务器：%2$s。"</string>
     <string name="pref_common_multi_user">"多用户支持"</string>
     <string name="pref_common_multi_user_summ">"支持双应用，MIUI，Island，Shelter 和工作资料应用"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"启用 SOCKS 出站代理"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">启用 SOCKS 出站代理</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor 将使全部 OR 连接通过 SOCKS 5 代理。"</string>
     <string name="notification_channel_services">"正在运行服务"</string>
     <string name="notification_channel_update">"更新规则"</string>

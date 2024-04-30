@@ -220,13 +220,13 @@ Er wird nie benutzt sobald sich Listen im Cache befinden."</string>
     <string name="pref_tor_new_circuit_period_summ">"Überlege alle NUM Sekunden ob ein neuer Circuit aufgebaut werden soll"</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Erlaube einen Circuit wiederzuverwenden, der mindestens NUM Sekunden zuvor erstmalig benutzt wurde, aber füge nie einen neuen Stream einem veralteten Circuit hinzu."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Falls aktiviert, wird Tor nie 2 Server, deren IPs zu nahe beinander sind,in denselben Circuit aufnehmen. Momentan sind zwei Adressen zu nahe wenn sie sich im gleichen /16 Bereich befinden."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"SOCKS Proxy aktivieren"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">SOCKS Proxy aktivieren</string>
     <string name="pref_tor_SOCKS_port_summ">"Öffne diesen Port um auf Verbindungen von SOCKS Applikationen zu lauschen."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"HTTPTunnel aktivieren"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTPTunnel aktivieren</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Öffne diesen Port um auf Proxy Verbindungen, die anstelle von SOCKS das HTTP CONNECT Protokoll verwenden, zu lauschen."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Transparenten Proxy aktivieren"</string>
+    <string name="pref_tor_enable_transparent_proxy">Transparenten Proxy aktivieren</string>
     <string name="pref_tor_trans_port_summ">"Öffne diesen Port um auf transparente Proxy Verbindungen zu lauschen."</string>
-    <string name="pref_tor_enable_DNS">"DNS aktivieren"</string>
+    <string name="pref_tor_enable_DNS">DNS aktivieren</string>
     <string name="pref_tor_DNS_port_summ">"Öffne diesen Port um auf UDP DNS Anfragen zu lauschen und sie anonym aufzulösen."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Wenn deaktiviert, wird Tor kein IPv4 nutzen, um zu Verzeichnisservern oder Einstiegsknoten zu verbinden."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Wenn aktiviert, wird Tor versuchen IPv6 zu nutzen, um zu Verzeichnisservern oder Einstiegsknoten zu verbinden."</string>
@@ -430,7 +430,7 @@ Dies beschleunigt Abläufe, wenn keine IPv6 Konnektivität vorhanden ist, kann a
     <string name="pref_common_local_eth_device_addr_summ">"Aktiviere Fix TTL und konfiguriere das LAN Gerät InviZible zu nutzen. Benutze den Standard Gateway: %1$s, DNS Server: %2$s."</string>
     <string name="pref_common_multi_user">"Unterstützung für Multi-User"</string>
     <string name="pref_common_multi_user_summ">"Unterstützung für Dual Apps, MIUI, Island, Shelter und Apps mit Arbeitsprofilen"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Aktiviere SOCKS Ausgabe Proxy"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Aktiviere SOCKS Ausgabe Proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor wird alle OR Verbindungen durch den SOCKS5 Proxy leiten"</string>
     <string name="notification_channel_services">"Laufende Dienste"</string>
     <string name="notification_channel_update">"Update Benachrichtigungen"</string>

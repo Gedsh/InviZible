@@ -235,13 +235,13 @@
     <string name="pref_tor_new_circuit_period_summ">"هر NUM ثانیه در نظر بگیرید که آیا باید یک مدار جدید بسازید یا خیر."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"در استفاده مجدد از یک مدار که برای اولین بار حداکثر NUM ثانیه قبل استفاده شد راحت باشید، اما هرگز یک جریان جدید را به مدار قدیمی که کهنه است وصل نکنید."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"در صورت فعال بودن، TOR دو سروری که آدرس IP آن‌ها خیلی نزدیک است را در یک مدار مشابه قرار نخواهد داد. در حال حاضر، اگر در یک محدوده / 16 قرار داشته باشند، دو آدرس خیلی نزدیک هستند."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"فعال کردن پروکسی ساکس"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">فعال کردن پروکسی ساکس</string>
     <string name="pref_tor_SOCKS_port_summ">"برای شنود به اتصالات برنامه‌های SOCKS-SOC، این پورت را باز کنید."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"فعال کردن تونل HTTP"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">فعال کردن تونل HTTP</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"این پورت را باز کنید تا به جای SOCKS، از پروتکل HTTP CONNECT برای شنود اتصالات پروکسی استفاده کنید."</string>
-    <string name="pref_tor_enable_transparent_proxy">"پروکسی ترانسپرنت را فعال کنید"</string>
+    <string name="pref_tor_enable_transparent_proxy">پروکسی ترانسپرنت را فعال کنید</string>
     <string name="pref_tor_trans_port_summ">"برای شنود اتصالات پروکسی ترانسپرنت، این پورت را باز کنید."</string>
-    <string name="pref_tor_enable_DNS">"فعال کردن DNS"</string>
+    <string name="pref_tor_enable_DNS">فعال کردن DNS</string>
     <string name="pref_tor_DNS_port_summ">"برای شنود درخواست‌های UDP DNS، این پورت را باز کنید و آن‌ها را به‌صورت ناشناس حل کنید."</string>
     <string name="pref_tor_client_use_IPv4_summ">"در صورت غیرفعال کردن، TOR از اتصال به سرورهای دایرکتوری و گره‌های ورودی از طریق IPv4 جلوگیری می‌کند."</string>
     <string name="pref_tor_client_use_IPv6_summ">"در صورت فعال بودن، TOR ممکن است به سرورهای دایرکتوری یا گره‌های ورودی از طریق IPv6 متصل شود."</string>
@@ -425,7 +425,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"مشکل TTL را برطرف کرده و دستگاه LAN را برای اتصال به InviZible پیکربندی کنید. از درگاه پیش فرض استفاده کنید: %2$s، دی‌ان‌اس سرور: %1$s."</string>
     <string name="pref_common_multi_user">"پشتیبانی از چند کاربر"</string>
     <string name="pref_common_multi_user_summ">"پشتیبانی از برنامه‌های دوتایی، MIUI، جزیره، پناهگاه و برنامه‌های نمایه‌کاری"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"پراکسی خروجی SOCKS را فعال کنید"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">پراکسی خروجی SOCKS را فعال کنید</string>
     <string name="pref_tor_SOCKS_output_address_summ">"تور تمام ارتباطات OR را از طریق پروکسی SOCKS 5 برقرار می کند."</string>
     <string name="notification_channel_services">"خدمات در حال اجرا"</string>
     <string name="notification_channel_update">"اعلان ها را به روز کنید"</string>

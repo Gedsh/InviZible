@@ -236,13 +236,13 @@
     <string name="pref_tor_new_circuit_period_summ">"A cada X segundos, considere se deve construir um novo circuito."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Sinta-se à vontade para reutilizar um circuito que foi usado pela primeira vez no máximo NUM segundos atrás, mas nunca conecte um novo fluxo a um circuito que seja muito antigo."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Se habilitado, o Tor não colocará dois servidores cujos endereços IP estão muito próximos no mesmo circuito. Atualmente, dois endereços estão muito próximos se estiverem no mesmo intervalo / 16."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Ativar SOCKS proxy"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Ativar SOCKS proxy</string>
     <string name="pref_tor_SOCKS_port_summ">Abra esta porta para ouvir conexões de aplicativos de fala SOCKS.</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Ativar HTTPTunnel"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Ativar HTTPTunnel</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Abra esta porta para ouvir conexões de aplicativos de fala SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Ativar proxy transparente"</string>
+    <string name="pref_tor_enable_transparent_proxy">Ativar proxy transparente</string>
     <string name="pref_tor_trans_port_summ">Abra esta porta para ouvir conexões de proxy transparentes.</string>
-    <string name="pref_tor_enable_DNS">"Ativar DNS"</string>
+    <string name="pref_tor_enable_DNS">Ativar DNS</string>
     <string name="pref_tor_DNS_port_summ">"Abra esta porta para escutar as solicitações UDP DNS e resolvê-las anonimamente."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Se desabilitado, o Tor evitará a conexão com servidores de diretório e nós de entrada via IPv4."</string>
     <string name="pref_tor_client_use_IPv6_summ">Se ativado, o Tor pode se conectar a servidores de diretório ou nós de entrada por IPv6.</string>
@@ -417,7 +417,7 @@
     <string name="pref_common_local_eth_device_addr_summ">"Habilite Fix TTL e configure o dispositivo LAN para se conectar ao InviZible. Use o gateway padrão: %1$s, servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Suporte multiusuário"</string>
     <string name="pref_common_multi_user_summ">"Suporte para aplicativos duplos, MIUI, Island, Shelter e aplicativos de perfil de trabalho"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Habilitar proxy de saída SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Habilitar proxy de saída SOCKS</string>
     <string name="pref_tor_SOCKS_output_address_summ">"O Tor fará todas as conexões OR por meio do proxy SOCKS 5."</string>
     <string name="notification_channel_services">"Serviços Rodando"</string>
     <string name="notification_channel_update">"Notificações de atualização"</string>

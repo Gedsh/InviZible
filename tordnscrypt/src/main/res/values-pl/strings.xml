@@ -218,13 +218,13 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="pref_tor_new_circuit_period_summ">"Sprawdza czy tworzyc nowy obwod co kazde NUM sekund."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Umozliwia uzycie obwodu utworzonego maksymalnie NUM sekund temu, ale nigdy nie dolacza nowego strumienia do obwodu zbyt starego."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Jesli zaznaczone, Tor nie uzyje dwoch serwerow ktorych adresy IP znajduja sie zbyt blisko w tym samym obwodzie. Obecnie adresy sa zbyt blisko jesli oba sa w tym samym /16 zakresie."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Uruchom proxy SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Uruchom proxy SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">"Otworz port nasluchujacy polaczenia z aplikacji uzywajacych SOCKS."</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Wlacz HTTPTunnel"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Wlacz HTTPTunnel</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Otworz port nasluchujacy polaczen aplikacji stosujacych protokol HTTP CONNECT zamiast SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Uruchom transparentne proxy"</string>
+    <string name="pref_tor_enable_transparent_proxy">Uruchom transparentne proxy</string>
     <string name="pref_tor_trans_port_summ">"Otworz port dla nasluchu polaczen transparentnych."</string>
-    <string name="pref_tor_enable_DNS">"Uruchom DNS"</string>
+    <string name="pref_tor_enable_DNS">Uruchom DNS</string>
     <string name="pref_tor_DNS_port_summ">"Otworz ten port do nasluchu zapytan DNS po UDP i rozwiaz anonimowo."</string>
     <string name="pref_tor_client_use_IPv4_summ">"Jesli zablokowane, Tor bedzie unikal wysylania zapytan do directory servers i nodow wejsciowych po IPv4."</string>
     <string name="pref_tor_client_use_IPv6_summ">"Jesli zaznaczone, Tor moze komunikowac sie z directory servers i nodami wejsciowymi po IPv6."</string>
@@ -398,7 +398,7 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="pref_common_local_eth_device_addr_summ">"Aktywuj Fix TTL i skonfiguruj urzadzenie LAN dla polaczenia InviZible. Uzyj domyslnie: gateway: %1$s, Serwer DNS: %2$s"</string>
     <string name="pref_common_multi_user">"Wsparcie trybu multi-user"</string>
     <string name="pref_common_multi_user_summ">"Wsparcie Dual Apps, MIUI, profili Island, Shelter i Work"</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">"Aktywuj proxy wychozace SOCKS"</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Aktywuj proxy wychozace SOCKS</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor przekieruje wszystkie polaczenia OR przez proxy SOCKS 5"</string>
     <string name="notification_channel_services">"Uruchomione uslugi"</string>
     <string name="notification_channel_update">"Powiadomienie o aktualizacji"</string>
