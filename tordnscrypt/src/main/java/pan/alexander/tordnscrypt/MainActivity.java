@@ -51,7 +51,6 @@ import androidx.viewpager.widget.ViewPager;
 
 import android.text.InputType;
 import android.util.Base64;
-import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -63,8 +62,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Timer;
@@ -107,6 +104,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter.MAIN_SCREEN_FRAGMENT_QUANTITY;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
@@ -161,7 +159,7 @@ public class MainActivity extends LangAppCompatActivity
     private TorRunFragment torRunFragment;
     private ITPDRunFragment iTPDRunFragment;
     private MainFragment mainFragment;
-    private ModulesStatus modulesStatus;
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private ViewPager viewPager;
     private static int viewPagerPosition = 0;
     private MenuItem newIdentityMenuItem;
@@ -199,24 +197,20 @@ public class MainActivity extends LangAppCompatActivity
         navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
 
-        modulesStatus = ModulesStatus.getInstance();
+        initViewPager(savedInstanceState == null);
+    }
 
+    private void initViewPager(boolean initialiseFragments) {
         viewPager = findViewById(R.id.viewPager);
         if (viewPager != null) {
-            viewPager.setOffscreenPageLimit(4);
-
-            List<Pair<ViewPagerAdapter.PagerTitle, Fragment>> fragments = getAdapterFragments(
-                    savedInstanceState == null
-            );
+            viewPager.setOffscreenPageLimit(MAIN_SCREEN_FRAGMENT_QUANTITY);
 
             ViewPagerAdapter adapter = new ViewPagerAdapter(
                     getSupportFragmentManager(),
                     ViewPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
             );
 
-            for (Pair<ViewPagerAdapter.PagerTitle, Fragment> pair: fragments) {
-                adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment(pair.first, pair.second));
-            }
+            adapter.addFragments(initialiseFragments);
 
             viewPager.setAdapter(adapter);
 
@@ -225,89 +219,25 @@ public class MainActivity extends LangAppCompatActivity
 
             viewPager.setCurrentItem(viewPagerPosition);
         }
-
-        if (viewPager != null && savedInstanceState != null) {
-            PagerAdapter adapter = viewPager.getAdapter();
-            if (adapter != null) {
-                viewPager.post(adapter::notifyDataSetChanged);
-            }
-        }
-    }
-
-    private List<Pair<ViewPagerAdapter.PagerTitle, Fragment>> getAdapterFragments(boolean initialise) {
-
-        boolean dnsCryptRunning = isDNSCryptRunning();
-        boolean torRunning = isTorRunning();
-        boolean itpdRunning = isI2PDRunning();
-
-        List<Pair<ViewPagerAdapter.PagerTitle, Fragment>> fragments = new ArrayList<>();
-
-        MainFragment mainFragment;
-        if (initialise) {
-            mainFragment = new MainFragment();
-        } else {
-            mainFragment = null;
-        }
-        DNSCryptRunFragment dnsCryptRunFragment;
-        if (initialise) {
-            dnsCryptRunFragment = new DNSCryptRunFragment();
-        } else {
-            dnsCryptRunFragment = null;
-        }
-        TorRunFragment torRunFragment;
-        if (initialise) {
-            torRunFragment = new TorRunFragment();
-        } else {
-            torRunFragment = null;
-        }
-        ITPDRunFragment itpdRunFragment;
-        if (initialise) {
-            itpdRunFragment = new ITPDRunFragment();
-        } else {
-            itpdRunFragment = null;
-        }
-
-        fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.MAIN, mainFragment));
-
-        if (dnsCryptRunning) {
-            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.DNS, dnsCryptRunFragment));
-        }
-        if (torRunning) {
-            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.TOR, torRunFragment));
-        }
-        if (itpdRunning) {
-            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.I2P, itpdRunFragment));
-        }
-        if (!dnsCryptRunning) {
-            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.DNS, dnsCryptRunFragment));
-        }
-        if (!torRunning) {
-            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.TOR, torRunFragment));
-        }
-        if (!itpdRunning) {
-            fragments.add(new Pair<>(ViewPagerAdapter.PagerTitle.I2P, itpdRunFragment));
-        }
-        return fragments;
-    }
-
-    private boolean isDNSCryptRunning() {
-        return modulesStatus.getDnsCryptState() == RUNNING;
-    }
-
-    private boolean isTorRunning() {
-        return modulesStatus.getTorState() == RUNNING;
-    }
-
-    private boolean isI2PDRunning() {
-        return modulesStatus.getItpdState() == RUNNING;
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
+        refreshViewPager();
+
         NavigationView navigationView = findViewById(R.id.nav_view);
         changeDrawerWithVersionAndDestination(navigationView);
+    }
+
+    private void refreshViewPager() {
+        if (viewPager != null) {
+            PagerAdapter adapter = viewPager.getAdapter();
+            if (adapter != null) {
+                viewPager.post(adapter::notifyDataSetChanged);
+            }
+        }
     }
 
     @Override
