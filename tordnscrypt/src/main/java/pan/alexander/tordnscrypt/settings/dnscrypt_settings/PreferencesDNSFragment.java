@@ -347,23 +347,19 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
                 val_toml.set(key_toml.indexOf("listen_addresses"), val);
                 return true;
-            }
-            if (Objects.equals(preference.getKey(), "dnscrypt_servers")) {
+            } else if (Objects.equals(preference.getKey(), "dnscrypt_servers") && !Boolean.parseBoolean(newValue.toString())) {
                 if (!defaultPreferences.getBoolean("doh_servers", true)) {
                     return false;
                 }
-            }
-            if (Objects.equals(preference.getKey(), "doh_servers")) {
+            } else if (Objects.equals(preference.getKey(), "doh_servers") && !Boolean.parseBoolean(newValue.toString())) {
                 if (!defaultPreferences.getBoolean("dnscrypt_servers", true)) {
                     return false;
                 }
-            }
-            if (Objects.equals(preference.getKey(), "ipv4_servers")) {
+            } else if (Objects.equals(preference.getKey(), "ipv4_servers") && !Boolean.parseBoolean(newValue.toString())) {
                 if (!defaultPreferences.getBoolean("ipv6_servers", true)) {
                     return false;
                 }
-            }
-            if (Objects.equals(preference.getKey(), "ipv6_servers")) {
+            } else if (Objects.equals(preference.getKey(), "ipv6_servers") && !Boolean.parseBoolean(newValue.toString())) {
                 if (!defaultPreferences.getBoolean("ipv4_servers", true)) {
                     return false;
                 }
