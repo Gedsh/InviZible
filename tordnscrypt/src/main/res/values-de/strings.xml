@@ -160,12 +160,10 @@ Um TTL festzulegen starte bitte DNSCrypt und/oder Tor."</string>
     <string name="pref_dnscrypt_require_nolog_summ">"Server darf Useranfragen nicht speichern (deklarativ)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server darf keine eigene Blacklist erzwingen (Elterliche Kontrolle, Blockieren von Werbung…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Benutze immer TCP um zu Upstream Servern zu verbinden."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Dies kann nützlich sein, wenn jeglicher Datenverkehr durch Tor geleitet werden soll.
-Andernfalls sollte dies nicht aktiviert werden, da die Sicherheit dadurch nicht verbessert, die Latenz jedoch erhöht wird (DNSCrypt-Proxy wird immer alles verschlüsseln, auch wenn UDP verwendet wird)."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Dies kann nützlich sein, wenn jeglicher Datenverkehr durch Tor geleitet werden soll. Andernfalls sollte dies nicht aktiviert werden, da die Sicherheit dadurch nicht verbessert, die Latenz jedoch erhöht wird (DNSCrypt-Proxy wird immer alles verschlüsseln, auch wenn UDP verwendet wird)."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS Proxy."</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
-    <string name="pref_dnscrypt_proxy_summ">"Route alle TCP Verbindungen zu einem lokalen Tor Knoten.
-Da Tor UDP nicht unterstützt, setze force_tcp ebenfalls auf aktiv."</string>
+    <string name="pref_dnscrypt_proxy_summ">"Route alle TCP Verbindungen zu einem lokalen Tor Knoten. Da Tor UDP nicht unterstützt, setze force_tcp ebenfalls auf aktiv."</string>
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"Andere Einstellungen."</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Bootstrap Resolver. Dies ist ein normaler, nicht verschlüsselter DNS Resolver, der nur für einmalige Anfragen benutzt wird, um die Liste von Eingangsresolvern zu beziehen, und dies nur, wenn die System DNS Konfiguration nicht funktioniert.
@@ -175,16 +173,14 @@ Er wird nie benutzt sobald sich Listen im Cache befinden."</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding Regeln"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Route Anfragen für spezifische Domains zu festgelegten Servern weiter."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking Regeln"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück.
-Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück. Zusätzlich zur Funktion als HOSTS Datei, kann Cloaking auch die IP Adresse eines unterschiedlichen Namens zurückgeben. CNAME Flattening wird ebenso durchgeführt.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Logging von Anfragen."</string>
     <string name="pref_dnscrypt_query_log_summ">"Logge Client-Anfragen in eine Datei."</string>
     <string name="pref_dnscrypt_query_log">"Aktiviere das Logging von Anfragen"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Folgende Anfragetypen nicht loggen, um die Informationsmenge zu reduzieren. Leerlassen um alles zu loggen."</string>
     <string name="open_query_log">"Öffne das Anfragen Log"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Logging von verdächtigen Anfragen."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Logge Anfragen für nichtexistente Zonen.
-Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder Geräten an Dritte melden bzw aufdecken.."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Logge Anfragen für nichtexistente Zonen. Die Anfragen können das Vorhandensein von Malware, kaputten Applikationen oder Geräten an Dritte melden bzw aufdecken.."</string>
     <string name="pref_dnscrypt_nx_log">"Aktiviere Verdächtiges Logging"</string>
     <string name="open_nx_log">"Öffne das Verdächtigen Log"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Schema gestütztes Blocking (Blacklist)."</string>

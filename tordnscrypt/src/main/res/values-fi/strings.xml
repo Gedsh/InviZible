@@ -162,13 +162,10 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Palvelin ei saa kirjata käyttäjän kyselyjä (deklaratiivinen)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Palvelin ei saa valvoa omaa blacklistiä (Vanhempien valvontaa varten, mainosten esto)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Käytä aina TCP:tä yhteyden muodostamiseen ylävirran (upstream) palvelimiin."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Tästä voi olla hyötyä, jos joudut reitittämään kaiken Tor:in läpi.
-
-        Muussa tapauksessa jätä tämä vääriksi (False), koska se ei paranna turvallisuutta (DNSCrypt-proxy salaa kaiken jopa UDP:tä käytettäessä), ja se voi vain lisätä viivettä."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Tästä voi olla hyötyä, jos joudut reitittämään kaiken Tor:in läpi. Muussa tapauksessa jätä tämä vääriksi (False), koska se ei paranna turvallisuutta (DNSCrypt-proxy salaa kaiken jopa UDP:tä käytettäessä), ja se voi vain lisätä viivettä."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS proxy (välityspalvelin)"</string>
     <string name="pref_dnscrypt_use_proxy">"Ota proxy käyttöön."</string>
-    <string name="pref_dnscrypt_proxy_summ">"Reititä kaikki TCP-yhteydet paikalliseen Tor-solmuun. (Tor node)
-        Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
+    <string name="pref_dnscrypt_proxy_summ">"Reititä kaikki TCP-yhteydet paikalliseen Tor-solmuun. (Tor node) Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
     <string name="pref_dnscrypt_proxy">"Proxy_portti"</string>
     <string name="pref_dnscrypt_other_categ">"Muut asetukset"</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">"Varaehtoinen resolveri.
@@ -181,17 +178,14 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Reititä tiettyjen verkkotunnusten kyselyt omistettuun palvelinjoukkoon."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen.
-
-        Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen. Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
     <string name="pref_dnscrypt_query_log_categ">"Kyselyloki."</string>
     <string name="pref_dnscrypt_query_log_summ">"Tallenna asiakkaan(clientin) kyselyt tiedostoon."</string>
     <string name="pref_dnscrypt_query_log">"Ota kyselyloki käyttöön"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Älä kirjaa näitä kyselytyyppejä vähentääksesi verbiittisuutta. Pidä tyhjänä kirjataksesi kaiken lokiin."</string>
     <string name="open_query_log">"Avaa kyselyloki"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Epäilyttävien kysymysten kirjaaminen."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Tallenna kyselyt puuttuville vyöhykkeille lokiin.
-        Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Tallenna kyselyt puuttuville vyöhykkeille lokiin. Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
     <string name="pref_dnscrypt_nx_log">"Ota epäilyttävä kirjaaminen käyttöön"</string>
     <string name="open_nx_log">"Avaa epäilyttävä loki"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Kuviopohjainen estäminen (Musta lista)."</string>

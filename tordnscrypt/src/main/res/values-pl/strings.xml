@@ -158,8 +158,7 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Serwer nie moze logowac zapytan (deklarajca serwera!)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Serwer nie moze stosowac wlasnej blacklisty (kontrola rodzicielska, blok reklam…)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Zawsze stosuj TCP do polaczenia z serwerem."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Moze byc przydatne jesli przekierowujesz caly ruch przez Tor.
-W innym przypadku zostaw odznaczone, i tak nie zwieksza ochrony prywatnosci (proksy dnscrypt i tak zaszyfruje wszytko nawet po UDP), i moze tylko zwiekszyc lagi."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Moze byc przydatne jesli przekierowujesz caly ruch przez Tor. W innym przypadku zostaw odznaczone, i tak nie zwieksza ochrony prywatnosci (proksy dnscrypt i tak zaszyfruje wszytko nawet po UDP), i moze tylko zwiekszyc lagi."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS"</string>
     <string name="pref_dnscrypt_use_proxy">"Uruchom proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Przekieruj calosc ruchu TCP do Tora. Tor nie wspiera UDP - nalezy ustawic rowniez force_tcp."</string>
@@ -171,8 +170,7 @@ W innym przypadku zostaw odznaczone, i tak nie zwieksza ochrony prywatnosci (pro
     <string name="pref_dnscrypt_forwarding_rules_categ">"Reguly przekierowan"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Przekierowuj zapytania do wybranych domen przez wybrana grupe serwerow."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Reguly maskujace"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Maskowanie zwraca predefiniowany adres dla specyficznych nazw.
-Pracuje jak plik HOSTS, a takze zwraca adres IP innej nazwy. Wykonuje tez flattening CNAME."</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Maskowanie zwraca predefiniowany adres dla specyficznych nazw. Pracuje jak plik HOSTS, a takze zwraca adres IP innej nazwy. Wykonuje tez flattening CNAME."</string>
     <string name="pref_dnscrypt_query_log_categ">"Logowanie zapytan."</string>
     <string name="pref_dnscrypt_query_log_summ">"Zapisuj log zapytan klientow do pliku."</string>
     <string name="pref_dnscrypt_query_log">"Uruchom logowanie zapytan"</string>

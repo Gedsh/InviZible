@@ -541,4 +541,6 @@ Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="anonymize_relays_not_used">No se utilizan relés anónimos.</string>
     <string name="pull_to_refresh">↓ Tira para actualizar ↓</string>
     <string name="long_press_to_edit">Mantenga pulsado para editar.</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Utilice servidores que admitan el protocolo DNS sobre HTTPS de Oblivious.</string>
+    <string name="firewall_critical_uid">¡Bloquear esta aplicación del sistema puede provocar una conexión a Internet inestable!</string>
 </resources>

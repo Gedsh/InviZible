@@ -180,16 +180,14 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">"Règles de Réacheminement"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Acheminez les requêtes de domaines spécifiques vers un ensemble de serveurs dédié."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Règles de Masquage"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Le masquage (cloaking) renvoie une adresse prédéfinie pour un nom spécifique.
-                En plus d'agir comme un fichier HOSTS, il peut également renvoyer l'adresse IP d'un nom différent. Il fera également l'aplatissement CNAME.."</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Le masquage (cloaking) renvoie une adresse prédéfinie pour un nom spécifique. En plus d'agir comme un fichier HOSTS, il peut également renvoyer l'adresse IP d'un nom différent. Il fera également l'aplatissement CNAME.."</string>
     <string name="pref_dnscrypt_query_log_categ">"Journalisation des requêtes."</string>
     <string name="pref_dnscrypt_query_log_summ">"Enregistrer les requêtes des clients dans un fichier."</string>
     <string name="pref_dnscrypt_query_log">"Activer la journalisation des requêtes"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Ne pas enregistrez ces types de requêtes afin de réduire la verbosité. Gardez les champs vides pour tout enregistrer."</string>
     <string name="open_query_log">"Ouvrir le Journal des Requêtes"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Journalisation des requêtes suspectes."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Journaliser les requêtes pour les zones inexistantes.
-         Ces requêtes peuvent révéler la présence de logiciels malveillants, d'applications endommagées/obsolètes et d'appareils signalant leur présence à des tiers."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Journaliser les requêtes pour les zones inexistantes. Ces requêtes peuvent révéler la présence de logiciels malveillants, d'applications endommagées/obsolètes et d'appareils signalant leur présence à des tiers."</string>
     <string name="pref_dnscrypt_nx_log">"Activer la journalisation de donnée suspecte"</string>
     <string name="open_nx_log">"Ouvrir le journal de suspicion"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Blocage basé sur un modèle (liste noire)."</string>

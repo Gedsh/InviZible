@@ -166,8 +166,7 @@
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_require_nofilter_summ">O servidor não deve forçar sua própria lista negra (para controle parental, bloqueio de propaganda…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Sempre usar TCP para conectar com os servidores upstream."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Isso pode ser útil se você precisar rotear tudo através do Tor..
-\n Caso contrário, deixe como falso, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só aumentará a latência.</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Isso pode ser útil se você precisar rotear tudo através do Tor.. Caso contrário, deixe como falso, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só aumentará a latência.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS Proxy.</string>
     <string name="pref_dnscrypt_use_proxy">"Ativar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Roteie todas as conexões TCP para um nó Tor local. Tor não suporta UDP, então defina force_tcp como true também."</string>
@@ -192,8 +191,7 @@
     <!-- Fuzzy -->
     <string name="open_query_log">"Abrir log de consulta"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Log de consultas suspeitas."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Log de consultas para zonas inexistentes.
-Essas consultas podem revelar a presença de malware, aplicativos quebrados / obsoletos e dispositivos sinalizando sua presença para terceiros."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Log de consultas para zonas inexistentes. Essas consultas podem revelar a presença de malware, aplicativos quebrados / obsoletos e dispositivos sinalizando sua presença para terceiros."</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_nx_log">"Ativar log de consultas suspeitas"</string>
     <string name="open_nx_log">"Abrir log de consultas suspeitas"</string>
