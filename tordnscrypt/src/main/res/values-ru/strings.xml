@@ -198,6 +198,8 @@
         предотвращения некоторых форм анализа трафика. Выключите, чтоб уменьшить траффик.</string>
     <string name="pref_tor_reduced_connections_padding_summ">Если активированно, Tor не будет слишком
         долго удерживать соединение. Включите, чтоб уменьшить траффик.</string>
+    <string name="pref_tor_nodes_categ">Ноды</string>
+    <string name="pref_tor_isolation_categ">Настройки изолирования</string>
     <string name="pref_tor_exclude_exit_nodes_summ">Список стран, которые НЕ будут использоваться для ВЫХОДНОГО сервера.</string>
     <string name="pref_tor_exit_nodes_summ">Список стран, которые будут использоваться для ВЫХОДНОГО сервера.</string>
     <string name="pref_tor_exclude_nodes_summ">Список стран, которые НЕ будут использоваться для построения цепочки в сети Tor.</string>
@@ -209,13 +211,13 @@
     <string name="pref_tor_max_circuit_dirtiness_summ">Свободно переиспользовать цепочку через заданное
         количество секунд, но никогда не присоединяться к цепочке, если она слишком старая.</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">Если активированно, Tor никогда не будет выбирать два сервера, чьи IP адреса слишком близко, для одной и той же цепочки. На данный момент IP серверов считается слишком близкими, если они находятся в одном /16 диаппазоне.</string>
-    <string name="pref_tor_enable_SOCKS_proxy">Включить SOCKS прокси</string>
+    <string name="pref_tor_enable_SOCKS_proxy">SOCKS прокси</string>
     <string name="pref_tor_SOCKS_port_summ">Открыть этот порт для приложений, поддерживающих SOCKS проксификацию.</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">Активировать HTTPTunnel</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTP Tunnel</string>
     <string name="pref_tor_HTTPTunnel_port_summ">Открыть этот порт для приложений, поддерживающих HTTP CONNECT проксификацию, вместо SOCKS.</string>
-    <string name="pref_tor_enable_transparent_proxy">Активировать Прозрачный прокси</string>
+    <string name="pref_tor_enable_transparent_proxy">Прозрачный прокси</string>
     <string name="pref_tor_trans_port_summ">Открыть этот порт для Прозрачного прокси.</string>
-    <string name="pref_tor_enable_DNS">Включить DNS</string>
+    <string name="pref_tor_enable_DNS">Разрешать DNS</string>
     <string name="pref_tor_DNS_port_summ">Открыть этот порт для UDP DNS запросов, и анонимного ответа.</string>
     <string name="pref_tor_client_use_IPv4_summ">Если ВЫКЛЮЧИТЬ, Tor будет избегать соединений с входными серверами, использующими IPv4.</string>
     <string name="pref_tor_client_use_IPv6_summ">Если ВКЛЮЧИТЬ, Tor может пытаться соединиться с входными серверами, использующими IPv6.</string>
@@ -230,7 +232,7 @@
     <string name="pref_tor_dormant_client_timeout_summ">Tor переходит в режим ожидания, если не видит активности клиента в течении заданного времени. Должно быть не менее 10 минут.</string>
     <string name="country_select_select_all">Активировать все</string>
     <string name="country_select_unselect_all">Деактивировать все</string>
-    <string name="pref_itpd_common">Общие Настройки</string>
+    <string name="pref_itpd_common">Общие настройки</string>
     <string name="pref_itpd_com_incom_connect">Разрешить входящие соединения</string>
     <string name="pref_itpd_com_port_summ">Порт для входных подключений.</string>
     <string name="pref_itpd_com_host_summ">Внешний IP для входящих соединений.</string>
@@ -445,7 +447,7 @@
     <string name="dialog_send_crash_report">Обнаружен отчет аварийного завершения приложения. Хотите его отправить разработчику, чтобы сделать InviZible лучше?</string>
     <string name="btn_new_tor_identity">Новая цепочка Tor</string>
     <string name="toast_new_tor_identity">Сервер Tor изменился</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">Включить выходной SOCKS прокси</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Выходной SOCKS прокси</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor будет выполнять все соединения через SOCKS5 прокси.</string>
     <string name="pref_common_proxy_categ">Прокси</string>
     <string name="pref_common_proxy">Использовать socks5 прокси</string>

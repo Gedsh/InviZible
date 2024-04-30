@@ -417,52 +417,54 @@
     <string name="dnscrypt_many_rules_dialog_message">Too many rules to display. Only the first 1000 is shown.</string>
 
 
-    <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">VirtualAddrNetwork</string>
+    <string name="pref_tor_virtual_addr_network_IPv4" translatable="false">Virtual Addr Network</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">When Tor needs to assign a virtual (unused) address because of a MAPADDRESS command from the controller or the AutomapHostsOnResolve feature, Tor picks an unassigned address from this range.</string>
-    <string name="pref_tor_hardware_accel" translatable="false">HardwareAccel</string>
+    <string name="pref_tor_hardware_accel" translatable="false">Hardware Accel</string>
     <string name="pref_tor_hardware_accel_summ">Try to use built-in crypto hardware acceleration when available.</string>
-    <string name="pref_tor_avoid_disc_writes" translatable="false">AvoidDiskWrites</string>
+    <string name="pref_tor_avoid_disc_writes" translatable="false">Avoid Disk Writes</string>
     <string name="pref_tor_avoid_disc_writes_summ">If non-zero, try to write to disk less frequently.</string>
-    <string name="pref_tor_connections_padding" translatable="false">ConnectionPadding</string>
+    <string name="pref_tor_connections_padding" translatable="false">Connection Padding</string>
     <string name="pref_tor_connections_padding_summ">This option governs Tor’s use of padding to defend against some forms of traffic analysis. Disable to save bandwidth.</string>
-    <string name="pref_tor_reduced_connections_padding" translatable="false">ReducedConnectionPadding</string>
+    <string name="pref_tor_reduced_connections_padding" translatable="false">Reduced Connection Padding</string>
     <string name="pref_tor_reduced_connections_padding_summ">If set enabled, Tor will not hold OR connections open for very long, and will send less padding on these connections. Enable to save bandwidth.</string>
-    <string name="pref_tor_exclude_exit_nodes" translatable="false">ExcludeExitNodes</string>
+    <string name="pref_tor_nodes_categ">Nodes</string>
+    <string name="pref_tor_isolation_categ">Isolation Settings</string>
+    <string name="pref_tor_exclude_exit_nodes" translatable="false">Exclude Exit Nodes</string>
     <string name="pref_tor_exclude_exit_nodes_summ">A list of country codes to never use when picking an exit node, that delivers traffic for you outside the Tor network.</string>
-    <string name="pref_tor_exit_nodes" translatable="false">ExitNodes</string>
+    <string name="pref_tor_exit_nodes" translatable="false">Exit Nodes</string>
     <string name="pref_tor_exit_nodes_summ">A list of country codes to use as exit node - that is, a node that delivers traffic for you outside the Tor network.</string>
-    <string name="pref_tor_exclude_nodes" translatable="false">ExcludeNodes</string>
+    <string name="pref_tor_exclude_nodes" translatable="false">Exclude Nodes</string>
     <string name="pref_tor_exclude_nodes_summ">A list of country codes to avoid when building a circuit.</string>
-    <string name="pref_tor_entry_nodes" translatable="false">EntryNodes</string>
+    <string name="pref_tor_entry_nodes" translatable="false">Entry Nodes</string>
     <string name="pref_tor_entry_nodes_summ">A list of country codes of nodes to use for the first hop in your normal circuits.</string>
     <string name="pref_tor_entry_nodes_alt_summ">Disable Tor bridges if you want to select entry nodes.</string>
-    <string name="pref_tor_strict_nodes" translatable="false">StrictNodes</string>
+    <string name="pref_tor_strict_nodes" translatable="false">Strict Nodes</string>
     <string name="pref_tor_strict_nodes_summ">If StrictNodes enabled, Tor will treat solely the ExcludeNodes option as a requirement to follow for all the circuits you generate, even if doing so will break functionality for you.</string>
-    <string name="pref_tor_fascist_firewall" translatable="false">FascistFirewall</string>
+    <string name="pref_tor_fascist_firewall" translatable="false">Fascist Firewall</string>
     <string name="pref_tor_fascist_firewall_summ">If enabled, Tor will only create outgoing connections to ORs running on ports that your firewall allows (defaults to 80 and 443).</string>
-    <string name="pref_tor_new_circuit_period" translatable="false">NewCircuitPeriod</string>
+    <string name="pref_tor_new_circuit_period" translatable="false">New Circuit Period</string>
     <string name="pref_tor_new_circuit_period_summ">Every NUM seconds consider whether to build a new circuit.</string>
-    <string name="pref_tor_max_circuit_dirtiness" translatable="false">MaxCircuitDirtiness</string>
+    <string name="pref_tor_max_circuit_dirtiness" translatable="false">Max Circuit Dirtiness</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">Feel free to reuse a circuit that was first used at most NUM seconds ago, but never attach a new stream to a circuit that is too old.</string>
-    <string name="pref_tor_dormant_client_timeout" translatable="false">DormantClientTimeout</string>
+    <string name="pref_tor_dormant_client_timeout" translatable="false">Dormant Client Timeout</string>
     <string name="pref_tor_dormant_client_timeout_summ">Tor enters a dormant state if it does not see client activity for a specified time. Must be at least 10 minutes</string>
-    <string name="pref_tor_enforce_distinct_subnets" translatable="false">EnforceDistinctSubnets</string>
+    <string name="pref_tor_enforce_distinct_subnets" translatable="false">Enforce Distinct Subnets</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">If enabled, Tor will not put two servers whose IP addresses are "too close" on the same circuit. Currently, two addresses are "too close" if they lie in the same /16 range.</string>
-    <string name="pref_tor_enable_SOCKS_proxy">Enable SOCKS proxy</string>
-    <string name="pref_tor_SOCKS_port" translatable="false">SOCKSPort</string>
+    <string name="pref_tor_enable_SOCKS_proxy">SOCKS proxy</string>
+    <string name="pref_tor_SOCKS_port" translatable="false">SOCKS Port</string>
     <string name="pref_tor_SOCKS_port_summ">Open this port to listen for connections from SOCKS-speaking applications.</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">Enable HTTPTunnel</string>
-    <string name="pref_tor_HTTPTunnel_port" translatable="false">HTTPTunnelPort</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTP Tunnel</string>
+    <string name="pref_tor_HTTPTunnel_port" translatable="false">HTTP Tunnel Port</string>
     <string name="pref_tor_HTTPTunnel_port_summ">Open this port to listen for proxy connections using the "HTTP CONNECT" protocol instead of SOCKS.</string>
-    <string name="pref_tor_enable_transparent_proxy">Enable Transparent proxy</string>
-    <string name="pref_tor_trans_port" translatable="false">TransPort</string>
+    <string name="pref_tor_enable_transparent_proxy">Transparent proxy</string>
+    <string name="pref_tor_trans_port" translatable="false">Trans Port</string>
     <string name="pref_tor_trans_port_summ">Open this port to listen for transparent proxy connections.</string>
-    <string name="pref_tor_enable_DNS">Enable DNS</string>
-    <string name="pref_tor_DNS_port" translatable="false">DNSPort</string>
+    <string name="pref_tor_enable_DNS">Resolve DNS</string>
+    <string name="pref_tor_DNS_port" translatable="false">DNS Port</string>
     <string name="pref_tor_DNS_port_summ">Open this port to listen for UDP DNS requests, and resolve them anonymously.</string>
-    <string name="pref_tor_client_use_IPv4" translatable="false">ClientUseIPv4</string>
+    <string name="pref_tor_client_use_IPv4" translatable="false">Client Use IPv4</string>
     <string name="pref_tor_client_use_IPv4_summ">If disable, Tor will avoid connecting to directory servers and entry nodes over IPv4.</string>
-    <string name="pref_tor_client_use_IPv6" translatable="false">ClientUseIPv6</string>
+    <string name="pref_tor_client_use_IPv6" translatable="false">Client Use IPv6</string>
     <string name="pref_tor_client_use_IPv6_summ">If enabled, Tor might connect to directory servers or entry nodes over IPv6.</string>
     <string name="pref_tor_not_exist">Preference does not exist in tor.conf!</string>
     <string name="pref_tor_unlock">Host or IP to unblock</string>
@@ -479,16 +481,16 @@
     <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
     <string name="pref_tor_snowflake_amazon" translatable="false">AMAZON</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">Enable SOCKS outbound proxy</string>
-    <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5Proxy</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS outbound proxy</string>
+    <string name="pref_tor_SOCKS_output_address" translatable="false">Socks5 Proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor will make all OR connections through the SOCKS 5 proxy.</string>
     <string name="pref_tor_edit_conf">Edit tor.conf directly</string>
     <string name="pref_tor_clean_module_folder">Clear cache</string>
-    <string name="pref_tor_track_host_exits" translatable="false">TrackHostExits</string>
+    <string name="pref_tor_track_host_exits" translatable="false">Track Host Exits</string>
     <string name="pref_tor_track_host_exits_summ">Tor will track recent connections to hosts and attempt to reuse the same exit node for each. This option may help avoid endless captcha.</string>
-    <string name="pref_tor_isolate_dest_address" translatable="false">IsolateDestAddr</string>
+    <string name="pref_tor_isolate_dest_address" translatable="false">Isolate Dest Addr</string>
     <string name="pref_tor_isolate_dest_address_summ">Don’t share circuits with streams targeting a different destination address.</string>
-    <string name="pref_tor_isolate_dest_port" translatable="false">IsolateDestPort</string>
+    <string name="pref_tor_isolate_dest_port" translatable="false">Isolate Dest Port</string>
     <string name="pref_tor_isolate_dest_port_summ">Don’t share circuits with streams targeting a different destination port.</string>
 
     <string name="pref_routing_unlock_app">Apps to use with InviZible</string>

@@ -262,10 +262,10 @@
     <string name="pref_tor_max_circuit_dirtiness_summ">Не соромтеся повторно застосовувати контур, який використовувався не більше кількох секунд тому, але ніколи не приєднуйте новий потік до занадто старого контуру.</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">Якщо увімкнено, Tor не буде розміщувати два сервери, IP-адреси яких знаходяться надто близько в одному ланцюзі. Наразі дві адреси вважаються занадто близькими, якщо вони лежать в одному діапазоні /16.</string>
     <string name="pref_tor_SOCKS_port_summ">Відкрити цей порт для прослуховування з\'єднань від SOCKS-програм.</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">Увімкнути HTTP-тунель</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTP-тунель</string>
     <string name="pref_tor_HTTPTunnel_port_summ">Відкриває цей порт для прослуховування проксі-з\'єднань за протоколом HTTP CONNECT замість SOCKS.</string>
     <string name="pref_tor_DNS_port_summ">Відкриває цей порт для прослуховування UDP DNS-запитів та їх анонімного вирішення.</string>
-    <string name="pref_tor_enable_DNS">Увімкнути DNS</string>
+    <string name="pref_tor_enable_DNS">Розв\'язувати DNS</string>
     <string name="pref_tor_client_use_IPv4_summ">Якщо вимкнено, Tor уникатиме з\'єднання з серверами каталогів і вузлами входу через IPv4.</string>
     <string name="pref_tor_client_use_IPv6_summ">Якщо увімкнено, Tor може підключатися до серверів каталогів або вузлів входу через IPv6.</string>
     <string name="pref_tor_snowflake_stun">STUN-сервери для мостів SnowFlake</string>
@@ -370,7 +370,7 @@
     <string name="pref_tor_avoid_disc_writes_summ">Якщо ненульове, намагайтеся рідше записувати на диск.</string>
     <string name="pref_common_tethering_settings">Відкрити налаштування прив\'язки</string>
     <string name="pref_common_multi_user">Підтримувати багатокористувацький режим</string>
-    <string name="pref_tor_enable_transparent_proxy">Увімкнути прозорий проксі</string>
+    <string name="pref_tor_enable_transparent_proxy">Прозорий проксі</string>
     <string name="pref_dnscrypt_doh_servers_summ">Використовуйте сервери з підтримкою протоколу DNS-over-HTTPS.</string>
     <string name="pref_dnscrypt_odoh_servers_summ">Використовуйте сервери з підтримкою протоколу Oblivious DNS-over-HTTPS.</string>
     <string name="pref_tor_not_exist">У файлі tor.conf немає параметра преференцій!</string>
@@ -400,11 +400,11 @@
     <string name="erase_dnscrypt_rules_dialog_message">Готово! Правила стерто.</string>
     <string name="dnscrypt_many_rules_dialog_message">Занадто багато правил. Буде показано лише перші 1000.</string>
     <string name="pref_tor_hardware_accel_summ">Намагатися використовувати вбудоване криптографічне апаратне прискорення, якщо воно доступне.</string>
-    <string name="pref_tor_enable_SOCKS_proxy">Увімкнути SOCKS проксі</string>
+    <string name="pref_tor_enable_SOCKS_proxy">SOCKS проксі</string>
     <string name="pref_dnscrypt_sources">Джерела</string>
-    <string name="pref_tor_enable_SOCKS_output_proxy">Увімкнути проксі для виводу SOCKS</string>
+    <string name="pref_tor_enable_SOCKS_output_proxy">Вихідний SOCKS проксі</string>
     <string name="pref_routing_clearnet_app">Застосунки для обходу InviZible</string>
-    <string name="pref_itpd_common">Видалити виділення</string>
+    <string name="pref_itpd_common">Загальні налаштування</string>
     <string name="pref_itpd_com_incom_connect">Дозволити вхідні з\'єднання</string>
     <string name="pref_itpd_com_port_summ">Порт для прослуховування вхідних з\'єднань.</string>
     <string name="pref_itpd_com_ipv4_summ">Увімкніть зв\'язок через IPv4.</string>
@@ -507,4 +507,6 @@
     <string name="pref_fast_bypass_app">Виключити повністю</string>
     <string name="pull_to_refresh">\u2193 Потягніть, щоб оновити \u2193</string>
     <string name="firewall_critical_uid">Блокування цього системного додатку може призвести до нестабільного інтернет-з\'єднання!</string>
+    <string name="pref_tor_nodes_categ">Ноди</string>
+    <string name="pref_tor_isolation_categ">Налаштування ізолювання</string>
 </resources>

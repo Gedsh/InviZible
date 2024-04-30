@@ -32,7 +32,6 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -181,7 +180,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         Preference entryNodesPref = findPreference("EntryNodes");
         boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
         boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
-        boolean entryNodesActive = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
+        boolean entryNodesActive = defaultPreferences.get().getBoolean("EntryNodes", false);
         if (entryNodesPref != null) {
             if (useDefaultBridges || useOwnBridges) {
                 if (entryNodesActive) {
@@ -362,7 +361,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return true;
         } else if (Objects.equals(preference.getKey(), "HardwareAccel")) {
             if (Boolean.parseBoolean(newValue.toString())
-                    && !key_tor.contains("HardwareAccel") && key_tor.contains("Schedulers") ) {
+                    && !key_tor.contains("HardwareAccel") && key_tor.contains("Schedulers")) {
                 key_tor.add(key_tor.indexOf("Schedulers"), "HardwareAccel");
                 val_tor.add(key_tor.indexOf("HardwareAccel"), newValue.toString());
             }
@@ -487,7 +486,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
 
             String[] servers = serversStr.split(", ?");
-            for (String server: servers) {
+            for (String server : servers) {
                 if (!server.matches(HOST_NAME_REGEX + ":\\d+")) {
                     return false;
                 }
@@ -546,18 +545,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 String key = key_tor.get(i);
                 String val = val_tor.get(i);
 
-                String proxyType = "";
-                switch (key) {
-                    case "SOCKSPort":
-                        proxyType = "SOCKSPort";
-                        break;
-                    case "HTTPTunnelPort":
-                        proxyType = "HTTPTunnelPort";
-                        break;
-                    case "TransPort":
-                        proxyType = "TransPort";
-                        break;
-                }
+                String proxyType = switch (key) {
+                    case "SOCKSPort" -> "SOCKSPort";
+                    case "HTTPTunnelPort" -> "HTTPTunnelPort";
+                    case "TransPort" -> "TransPort";
+                    default -> "";
+                };
 
                 if (proxyType.isEmpty()) {
                     continue;
@@ -598,18 +591,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 String key = key_tor.get(i);
                 String val = val_tor.get(i);
 
-                String proxyType = "";
-                switch (key) {
-                    case "SOCKSPort":
-                        proxyType = "SOCKSPort";
-                        break;
-                    case "HTTPTunnelPort":
-                        proxyType = "HTTPTunnelPort";
-                        break;
-                    case "TransPort":
-                        proxyType = "TransPort";
-                        break;
-                }
+                String proxyType = switch (key) {
+                    case "SOCKSPort" -> "SOCKSPort";
+                    case "HTTPTunnelPort" -> "HTTPTunnelPort";
+                    case "TransPort" -> "TransPort";
+                    default -> "";
+                };
 
                 if (proxyType.isEmpty()) {
                     continue;
@@ -700,7 +687,16 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if (Objects.equals(preference.getKey(), "Socks5Proxy")
                 && !newValue.toString().matches(IPv4_REGEX_WITH_PORT)) {
             return false;
+        } else if (Objects.equals(preference.getKey(), "ClientUseIPv4") && !Boolean.parseBoolean(newValue.toString())) {
+            if (!defaultPreferences.get().getBoolean(TOR_USE_IPV6, true)) {
+                return false;
+            }
         } else if (Objects.equals(preference.getKey(), TOR_USE_IPV6)) {
+
+            if (!defaultPreferences.get().getBoolean("ClientUseIPv4", true)
+                    && !Boolean.parseBoolean(newValue.toString())) {
+                return false;
+            }
 
             boolean useIPv6 = Boolean.parseBoolean(newValue.toString());
 
@@ -715,7 +711,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                             allowTorTethering,
                             isolateDestAddress,
                             isolateDestPort));
-                    if (i < key_tor.size() -1 && !key_tor.get(i + 1).equals("SOCKSPort")) {
+                    if (i < key_tor.size() - 1 && !key_tor.get(i + 1).equals("SOCKSPort")) {
                         key_tor.add(i + 1, "SOCKSPort");
                         proxyLine = "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + pathVars.get().getTorSOCKSPort();
                         val_tor.add(i + 1, addIsolateFlags(
@@ -725,11 +721,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                                 isolateDestPort));
                     }
                 } else if (!useIPv6 && key.equals("SOCKSPort") && val.contains(LOOPBACK_ADDRESS_IPv6)) {
-                   key_tor.set(i, "");
-                   val_tor.set(i, "");
+                    key_tor.set(i, "");
+                    val_tor.set(i, "");
                 } else if (useIPv6 && key.equals("DNSPort") && !val.contains(LOOPBACK_ADDRESS_IPv6)) {
                     val_tor.set(i, LOOPBACK_ADDRESS + ":" + pathVars.get().getTorDNSPort());
-                    if (i < key_tor.size() -1 && !key_tor.get(i + 1).equals("DNSPort")) {
+                    if (i < key_tor.size() - 1 && !key_tor.get(i + 1).equals("DNSPort")) {
                         key_tor.add(i + 1, "DNSPort");
                         val_tor.add(
                                 i + 1,
@@ -846,13 +842,50 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     }
 
     private void changePreferencesForGPVersion() {
-        PreferenceCategory torSettingsCategory = findPreference("tor_settings");
+        removePreferencesFromTorSettingsCategory();
 
-        if (torSettingsCategory != null) {
+        removeDependenciesFromTorProxySettingsCategory();
+
+        removePreferencesFromTorProxySettingsCategory();
+
+        removePreferencesFromTorSnowflakeCategory();
+
+        removePreferencesFromTorOtherCategory();
+    }
+
+    private void removePreferencesFromTorSettingsCategory() {
+        PreferenceCategory category = findPreference("tor_settings");
+        if (category != null) {
             ArrayList<Preference> preferences = new ArrayList<>();
             preferences.add(findPreference("AvoidDiskWrites"));
             preferences.add(findPreference("ConnectionPadding"));
             preferences.add(findPreference("ReducedConnectionPadding"));
+
+            for (Preference preference : preferences) {
+                if (preference != null) {
+                    category.removePreference(preference);
+                }
+            }
+        }
+    }
+
+    private void removeDependenciesFromTorProxySettingsCategory() {
+        ArrayList<Preference> preferences = new ArrayList<>();
+        preferences.add(findPreference("SOCKSPort"));
+        preferences.add(findPreference("HTTPTunnelPort"));
+        preferences.add(findPreference("TransPort"));
+        preferences.add(findPreference("DNSPort"));
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setDependency(null);
+            }
+        }
+    }
+
+    private void removePreferencesFromTorProxySettingsCategory() {
+        PreferenceCategory category = findPreference("tor_proxy_settings");
+        if (category != null) {
+            ArrayList<Preference> preferences = new ArrayList<>();
             preferences.add(findPreference("Enable SOCKS proxy"));
             preferences.add(findPreference("Enable HTTPTunnel"));
             preferences.add(findPreference("Enable Transparent proxy"));
@@ -860,11 +893,21 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             for (Preference preference : preferences) {
                 if (preference != null) {
-                    torSettingsCategory.removePreference(preference);
+                    category.removePreference(preference);
                 }
             }
         }
+    }
 
+    private void removePreferencesFromTorSnowflakeCategory() {
+        PreferenceCategory category = findPreference("pref_tor_snowflake_categ");
+        Preference preference = findPreference("pref_tor_snowflake_stun");
+        if (category != null && preference != null) {
+            category.removePreference(preference);
+        }
+    }
+
+    private void removePreferencesFromTorOtherCategory() {
         PreferenceCategory otherCategory = findPreference("pref_tor_other");
         Preference editTorConfDirectly = findPreference("editTorConfDirectly");
         if (otherCategory != null && editTorConfDirectly != null) {
