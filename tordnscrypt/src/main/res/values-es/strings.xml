@@ -136,7 +136,7 @@
     <string name="pref_common_itpd_tethering">"Compartir tráfico I2P"</string>
     <!-- Not sure about this translation. ¿What is it literal meaning, to repair, or to stick a value? -->
     <string name="pref_common_fix_ttl">"Establecer TTL"</string>
-    <string name="pref_common_fix_ttl_summ">Establece el TTL a 64 usando la VPN local. No se necesita compatibilidad en el Kernel. Solo funciona en \"modo root\" con la opción \"Ejecutar Modulos como Root\" desactivada. Para que el valor tome efecto, por favor, arranca DNSCrypt y/o Tor.</string>
+    <string name="pref_common_fix_ttl_summ">El TTL se fijará en 64 utilizando una VPN local. No se requiere soporte de kernel. Para fijar TTL por favor inicie DNSCrypt o/y Tor.</string>
     <string name="pref_common_tethering_settings">"Abrir configuración de Compartir Internet"</string>
     <string name="pref_common_restart_dnscrypt">"Por favor, reinicie DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Por favor, reinicie Tor"</string>
@@ -165,7 +165,7 @@
     <string name="pref_dnscrypt_proxy_summ">Redirige todas las conexiones TCP a un proxy Socks5 entrante de Tor local. Tor no soporta UDP, así que configura Force TCP en verdadero también.</string>
     <string name="pref_dnscrypt_proxy">Puerto proxy</string>
     <string name="pref_dnscrypt_other_categ">Otros ajustes</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">Servidor de resolución de último recurso. Éste debe ser un servidor DNS normal, no cifrado, que se utilizará en el arranque inicial para poder resolver los nombres de la lista de servidores de la configuración de dnscrypt-proxy, y solo si la configuración de DNSs del sistema no funciona. No se usará si las listas han sido resueltas anteriormente. Personas residentes en China probablemente tengan que usar el valor 114.114.114.114:53 aquí.</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Resolutores de arranque. Este es un solucionador de DNS normal y sin cifrar, que se usa solo para solicitudes únicas para obtener la lista de solucionadores entrantes, y solo cuando la configuración de DNS del sistema no funciona. Nunca se usa una vez que las listas están en el caché.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">No permita que DNSCrypt intente utilizar la configuración DNS del sistema. Utilice incondicionalmente los solucionadores Bootstrap.</string>
     <string name="pref_dnscrypt_filters_categ">Filtros</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Reglas de reenvío"</string>
