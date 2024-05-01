@@ -1117,3 +1117,8 @@
 * Sort tabs depending on running modules.
 * Fixed WebTunnel connection via IPv6.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.1**
+* Revised app settings.
+* Updated translations.
+* Fixes and optimizations.

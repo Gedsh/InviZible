@@ -1,0 +1,4 @@
+**InviZible Pro beta 2.2.1**
+* Revised app settings.
+* Updated translations.
+* Fixes and optimizations.
