@@ -93,7 +93,7 @@ class RequestIgnoreBatteryOptimizationDialog : ExtendedDialogFragment() {
         fun getInstance(
             context: Context,
             preferenceRepository: PreferenceRepository,
-            forceShow: Boolean = true
+            forceShow: Boolean = false
         ): DialogFragment? {
             val pref = PreferenceManager.getDefaultSharedPreferences(context)
             val packageName = context.packageName
