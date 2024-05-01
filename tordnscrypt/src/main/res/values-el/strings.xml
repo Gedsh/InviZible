@@ -357,20 +357,17 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="buy_premium_gp">Το InviZible Pro Project χρειάζεται τη βοήθειά σας. Πατήστε OK για να αγοράσετε λειτουργίες μέσω έκδοσης premium.</string>
     <string name="wrong_purchase_signature_gp">"Λυπούμαστε, αλλά είναι αδύνατο να επιβεβαιώσετε την αγορά σας. Θα λάβετε επιστροφή χρημάτων μετά από 3 ημέρες."</string>
     <string name="only_premium_feature">"Δυστυχώς, αυτή η δυνατότητα είναι διαθέσιμη μόνο για την έκδοση premium."</string>
-    <string name="agreement_text">\tΕυχαριστούμε που επιλέξατε το InviZible Pro. Ελπίζω ότι θα είναι χρήσιμο για την ιδιωτικότητά σας και την άνετη χρήση του Διαδικτύου.
-\n
-\n\tΤο InviZible Pro περιλαμβάνει το Tor, DNSCrypt και Purple I2P ως λειτουργικές μονάδες.
-\n
-\n\tΤο InviZible Pro μπορεί να χρησιμοποιήσει δικαιώματα root, εάν η συσκευή σας έχει δικαιώματα root, ή χρησιμοποιεί ένα τοπικό VPN για να παρέχει κίνηση Διαδικτύου σε δίκτυα μέσω Tor, DNSCrypt και I2P.
-\n
-\n\tΠολιτική απορρήτου:
-\n\tΤο InviZible Pro δεν συλλέγει ούτε κοινοποιεί προσωπικά ή ευαίσθητα δεδομένα χρήστη.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy
-\n</string>
+    <string name="agreement_text">
+        \tΕυχαριστούμε που επιλέξατε το InviZible Pro. Ελπίζω ότι θα είναι χρήσιμο για την ιδιωτικότητά σας και την άνετη χρήση του Διαδικτύου.
+        \n\n\tΤο InviZible Pro περιλαμβάνει το Tor, DNSCrypt και Purple I2P ως λειτουργικές μονάδες.
+        \n\n\tΤο InviZible Pro μπορεί να χρησιμοποιήσει δικαιώματα root, εάν η συσκευή σας έχει δικαιώματα root, ή χρησιμοποιεί ένα τοπικό VPN για να παρέχει κίνηση Διαδικτύου σε δίκτυα μέσω Tor, DNSCrypt και I2P.
+        \n\n\tΠολιτική απορρήτου:
+        \n\tΤο InviZible Pro δεν συλλέγει ούτε κοινοποιεί προσωπικά ή ευαίσθητα δεδομένα χρήστη.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="pref_itpd_use_HTTP_outproxy">"Μεσολαβητής εξόδου HTTP"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Διεύθυνση μεσολαβητή εξόδου HTTP"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Μεσολαβητής εξόδου SOCKS"</string>

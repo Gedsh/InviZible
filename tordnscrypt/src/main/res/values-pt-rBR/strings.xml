@@ -180,8 +180,7 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">Regras de encaminhamento</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Roteie as consultas de domínios específicos para um conjunto dedicado de servidores."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Regras de camuflagem</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking retorna um endereço predefinido para um nome específico.
-\n Além de atuar como um arquivo HOSTS, ele também pode retornar o endereço IP de um nome diferente. Ele também fará o nivelamento de CNAME.</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking retorna um endereço predefinido para um nome específico. Além de atuar como um arquivo HOSTS, ele também pode retornar o endereço IP de um nome diferente. Ele também fará o nivelamento de CNAME.</string>
     <string name="pref_dnscrypt_query_log_categ">"Log de consulta."</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_query_log_summ">Salvar logs das queries do cliente para um arquivo.</string>
@@ -517,17 +516,15 @@
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
-    <string name="agreement_text">\tObrigado porescolher o InviZible Pro. Espero que seja útil para a sua privacidade e conforto no uso da Internet.
-\n
-\n\tInviZible Pro inclui Tor, DNSCrypt e Purple I2P como módulos.
-\n
-\n\tO InviZible Pro pode usar root, se seu dispositivo tiver privilégios de root, ou usa uma VPN local para transmitir tráfego de Internet para redes Tor, DNSCrypt e I2P.
-\n
-\n\tPolítica de Privacidade:
-\n\tO InviZible Pro não coleta ou compartilha nenhum dado pessoal ou sensível do usuário.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tObrigado porescolher o InviZible Pro. Espero que seja útil para a sua privacidade e conforto no uso da Internet.
+        \n\n\tInviZible Pro inclui Tor, DNSCrypt e Purple I2P como módulos.
+        \n\n\tO InviZible Pro pode usar root, se seu dispositivo tiver privilégios de root, ou usa uma VPN local para transmitir tráfego de Internet para redes Tor, DNSCrypt e I2P.
+        \n\n\tPolítica de Privacidade:
+        \n\tO InviZible Pro não coleta ou compartilha nenhum dado pessoal ou sensível do usuário.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
 </resources>

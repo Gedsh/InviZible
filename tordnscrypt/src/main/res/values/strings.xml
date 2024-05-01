@@ -176,8 +176,7 @@
 
     <string name="pref_common_categ_run_with_root">Use Root Privileges</string>
     <string name="pref_common_run_with_root">Run Modules With Root</string>
-    <string name="pref_common_run_with_root_summ">Use Root privileges for DNSCrypt, Tor and I2P modules.
-        Enabling this feature leaves modules unmanaged and may cause connection problems!</string>
+    <string name="pref_common_run_with_root_summ">Use Root privileges for DNSCrypt, Tor and I2P modules. Enabling this feature leaves modules unmanaged and may cause connection problems!</string>
     <string name="pref_common_categ_other">Other</string>
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
@@ -206,9 +205,7 @@
     <string name="pref_common_show_help">Help messages</string>
     <string name="pref_common_show_help_summ">Always Show Help messages</string>
     <string name="pref_common_shell_control">Enable script control</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules:
-        \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
     <string name="notification_exclude_bat_optimisation_title">Stop optimizing battery usage?</string>
     <string name="pref_common_notification_helper">Please exclude InviZible Pro from Android battery optimization to prevent the system from terminating DNSCrypt, Tor, or I2P at any time. Some special systems, such as MIUI, may require additional steps.</string>
     <string name="notification_exclude_data_restriction_title">Disable network data saver?</string>
@@ -229,9 +226,7 @@
     <string name="pref_common_excludes_from_tor_summ">WebSites list to open directly for HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Allow I2P Tethering</string>
     <string name="pref_common_fix_ttl">Fix TTL</string>
-    <string name="pref_common_fix_ttl_summ">TTL will be fixed to 64 using a local VPN. Kernel support is not required.
-        It can only be used in \"root mode\" with the \"Run Modules With Root\" option disabled.
-        To fix TTL please start DNSCrypt or/and Tor.</string>
+    <string name="pref_common_fix_ttl_summ">TTL will be fixed to 64 using a local VPN. Kernel support is not required. To fix TTL please start DNSCrypt or/and Tor.</string>
     <string name="pref_common_local_eth_device_addr">LAN device IP address</string>
     <string name="pref_common_local_eth_device_addr_summ">Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s.</string>
     <string name="pref_common_tethering_settings">Open Tethering config</string>
@@ -303,15 +298,11 @@
 
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy</string>
     <string name="pref_dnscrypt_use_proxy">Outbound proxy</string>
-    <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor inbound Socks5 proxy.
-        Tor doesn\'t support UDP, so set Force TCP to true as well.</string>
+    <string name="pref_dnscrypt_proxy_summ">Route all TCP connections to a local Tor inbound Socks5 proxy. Tor doesn\'t support UDP, so set Force TCP to true as well.</string>
     <string name="pref_dnscrypt_proxy">Proxy port</string>
 
     <string name="pref_dnscrypt_other_categ">Other Settings</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">Bootstrap resolver.
-        This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries
-        when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work.
-        It will never be used if lists have already been cached.</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work. It will never be used if lists have already been cached.</string>
     <string name="pref_dnscrypt_fallback_resolver" translatable="false">Bootstrap resolvers</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Do not let DNSCrypt try to use system DNS settings. Unconditionally use the Bootstrap resolvers.</string>
     <string name="pref_dnscrypt_ignore_system_dns" translatable="false">Ignore system DNS</string>
@@ -403,8 +394,7 @@
     <string name="pref_dnscrypt_block_undelegated_summ">Immediately respond to queries for local zones instead of leaking them to upstream resolvers (always causing errors or timeouts).</string>
     <string name="pref_dnscrypt_edit_toml">Edit dnscrypt-proxy.toml directly</string>
     <string name="pref_dnscrypt_block_ipv6" translatable="false">Block IPv6</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response.
-        This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Immediately respond to IPv6-related queries with an empty response. This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers.</string>
 
     <string name="helper_dnscrypt_private_dns">Please turn off \"Private DNS\" in Android network settings. This option interferes with InviZible.</string>
     <string name="helper_dnscrypt_proxy_wifi">Please disable proxy in Android WiFi network settings. This option interferes with InviZible.</string>
@@ -473,8 +463,7 @@
     <string name="pref_tor_unlock_disabled">Disabled</string>
     <string name="pref_tor_snowflake_categ" translatable="false">Snowflake</string>
     <string name="pref_tor_snowflake_select_rendezvous">Select rendezvous</string>
-    <string name="pref_tor_snowflake_select_rendezvous_summ">
-       Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
     <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
     <string name="pref_tor_snowflake_fastly" translatable="false">Fastly</string>
     <string name="pref_tor_snowflake_cdn77" translatable="false">CDN77</string>
@@ -571,14 +560,11 @@
     <string name="pref_itpd_edit_tunnels">Edit tunnels.conf directly</string>
 
     <string name="helper_dialog_title">Info</string>
-    <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system.
-        Your internet connection was restored. Check device Settings!</string>
-    <string name="helper_tor_stopped">Looks like Tor was killed by android system.
-        Your internet connection was restored. Check device Settings!</string>
+    <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system. Your internet connection was restored. Check device Settings!</string>
+    <string name="helper_tor_stopped">Looks like Tor was killed by android system. Your internet connection was restored. Check device Settings!</string>
     <string name="helper_itpd_stopped">Looks like I2P was killed by android system. Check device Settings!</string>
     <string name="helper_dnscrypt_no_internet">Looks like DNSCrypt can\'t connect to the internet. You can try to choose another DNSCrypt servers. Please find them in MENU -> Fast Settings -> Select DNSCrypt servers</string>
-    <string name="helper_tor_use_bridges">Looks like Tor can\'t connect to the internet.
-        ISP may blocks Tor connections. You can try to use Tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
+    <string name="helper_tor_use_bridges">Looks like Tor can\'t connect to the internet. ISP may blocks Tor connections. You can try to use Tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
 
     <string name="action_mode_child_lock">Child Lock</string>
     <string name="action_mode_dialog_message_lock">You can lock control of this application. Please enter password, or use previous.</string>
@@ -594,12 +580,11 @@
     <string name="help_activity_logs_saved">Logs Saved. Please send InvizibleLogs.txt to developer. You can find logs in the folder:</string>
 
     <string name="update_core_title">Update</string>
-    <string name="update_core_message">Some of InviZible modules are ready for update.         Do you want to update its? This will overwrite your modules settings!</string>
+    <string name="update_core_message">Some of InviZible modules are ready for update. Do you want to update its? This will overwrite your modules settings!</string>
     <string name="update_core_yes">Update</string>
     <string name="update_core_no">Later</string>
     <string name="update_core_not_show_again">Not ask again</string>
-    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation!
-        After installation reconfigure HOTSPOT, if you use it!</string>
+    <string name="update_core_restart">Please restart InviZible Pro and allow complete installation! After installation reconfigure HOTSPOT, if you use it!</string>
 
     <string name="about_version" translatable="false">Version:</string>
     <string name="free_version" translatable="false">Free</string>
@@ -665,8 +650,7 @@
     <string name="donate_button">Visit</string>
     <string name="enter_code_button">Enter Code</string>
     <string name="enter_code">Enter Code</string>
-    <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation
-        for the assistance. Would you like to download and upgrade to PRO? The update will continue in the background.</string>
+    <string name="thanks_for_donate">InviZible Pro Project and its author express appreciation for the assistance. Would you like to download and upgrade to PRO? The update will continue in the background.</string>
     <string name="thanks_for_donate_gp">InviZible Pro Project and its author express appreciation for the assistance!</string>
     <string name="pref_dnscrypt_relays_summ">Remote lists of available relays.</string>
 
@@ -683,8 +667,7 @@
 
     <string name="reset_settings_title">Attention</string>
     <string name="ask_reset_settings_btn">Reset</string>
-    <string name="ask_reset_settings_text">InviZible Pro cannot start %1$s! Please try resetting %2$s settings.
-        If this does not help, please reboot your device.</string>
+    <string name="ask_reset_settings_text">InviZible Pro cannot start %1$s! Please try resetting %2$s settings. If this does not help, please reboot your device.</string>
 
     <string name="add_custom_server_title">Add custom server</string>
     <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>
@@ -735,8 +718,7 @@
     <string name="proxy_successful_connection">Successful connection. Ping %s ms.</string>
     <string name="notification_arp_spoofing">ARP spoofing detected!</string>
     <string name="notification_rogue_dhcp">Rogue DHCP detected!</string>
-    <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
-        Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
+    <string name="notification_mitm">Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network. Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!</string>
     <string name="toast_arp_detection_not_supported">ARP spoofing detection is not supported for your device!</string>
     <string name="notification_dns_rebinding_title">DNS rebinding</string>
     <string name="notification_dns_rebinding_text">Potential DNS Rebinding Attack Detected! Site %s has been blocked.</string>
@@ -770,8 +752,7 @@
     <string name="pref_firewall_show_all_apps_off_summ">Only apps that can connect to the Internet are shown.</string>
     <string name="tile_change_tor_ip">Change Tor IP</string>
     <string name="tile_changing_tor_ip">Tor IP changing</string>
-    <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings.
-        Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
+    <string name="tile_dialog_over_three_tiles_message">You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control.</string>
     <string name="list_is_empty">List is Empty</string>
     <string name="pull_to_refresh">\u2193 Pull to refresh \u2193</string>
     <string name="connectivity_check">Internet connectivity check</string>

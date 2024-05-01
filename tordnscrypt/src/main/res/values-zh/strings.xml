@@ -501,19 +501,17 @@
     <string name="connectivity_check">互联网连接检查</string>
     <string name="pref_fast_logs">实时日志</string>
     <string name="pref_fast_logs_summ">在DNS选项卡中显示应用程序连接日志</string>
-    <string name="agreement_text">\\感谢您选择InviZble Pro。我相信它将增强您的隐私，并提供流畅的在线体验。
-\n
-\nInviZble Pro包括Tor、DNSCryt和Purple I2P作为模块。
-\n
-\n如果您的设备是root的，InviZble Pro可以使用root，或者使用本地VPN将互联网流量直接传递到Tor、DNSCryt和I2P网络。
-\n
-\n隐私政策：
-\nInviZble Pro不收集或共享任何个人或敏感用户数据。
-\n
-\n版权所有©2019-2024。
-\nGarmatin Oleksandr。
-\n邮箱：invizible.soft@gmail.com。
-\nInvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \t感谢您选择InviZble Pro。我相信它将增强您的隐私，并提供流畅的在线体验。
+        \n\n\tInviZble Pro包括Tor、DNSCryt和Purple I2P作为模块。
+        \n\n\t如果您的设备是root的，InviZble Pro可以使用root，或者使用本地VPN将互联网流量直接传递到Tor、DNSCryt和I2P网络。
+        \n\n\t隐私政策：
+        \n\tInviZble Pro不收集或共享任何个人或敏感用户数据。
+        \n\n\t版权所有©2019-2024。
+        \n\tGarmatin Oleksandr。
+        \n\t邮箱：invizible.soft@gmail.com。
+        \n\tInvizible.net/en/privacy
+    </string>
     <string name="notification_exclude_data_restriction_message">请允许使用后台流量，并在流量节省程序开启时允许使用流量。这对于流畅的在线体验非常重要。</string>
     <string name="ask_later">稍后询问</string>
     <string name="notification_exclude_bat_optimisation_title">停止优化电池使用？</string>

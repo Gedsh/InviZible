@@ -122,9 +122,7 @@
     <string name="pref_common_wakelock_summ">"Lisäsuojaus ilman Root-tilaa, jotta android ei sulje sovellusta. Saattaa tyhjentää akkua"</string>
     <string name="pref_common_show_help">"Ohjeviestit"</string>
     <string name="pref_common_show_help_summ">"Näytä ohjeviestit aina"</string>
-    <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista.
-\n        Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä,
-\n        kuten MIUI, vaati joitain lisävaiheita."</string>
+    <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista. Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä, kuten MIUI, vaati joitain lisävaiheita."</string>
     <string name="pref_common_use_busybox">"Valitse BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Kokeellinen-HOTSPOT"</string>
     <string name="pref_common_tethering_autostart">"Aloita tethering käynnistyksessä"</string>
@@ -137,9 +135,7 @@
     <string name="pref_common_excludes_from_tor_summ">"Nettisivustolista, joka avataan suoraan HOTSPOTTIIN"</string>
     <string name="pref_common_itpd_tethering">"Salli I2P tethering"</string>
     <string name="pref_common_fix_ttl">"Korjaa TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL tullaan korjaamaan 64:n käyttämällä paikallista VPN:nää. Kernelitukea ei tarvita.
-        Sitä voidaan käyttää vain \"Root tilassa\", kun \"Suorita moduulit rootilla\" -asetus on poistettu käytöstä.
-        Korjaa TTL käynnistämällä DNSCrypt tai / ja Tor."</string>
+    <string name="pref_common_fix_ttl_summ">"TTL tullaan korjaamaan 64:n käyttämällä paikallista VPN:nää. Kernelitukea ei tarvita. Sitä voidaan käyttää vain \"Root tilassa\", kun \"Suorita moduulit rootilla\" -asetus on poistettu käytöstä. Korjaa TTL käynnistämällä DNSCrypt tai / ja Tor."</string>
     <string name="pref_common_tethering_settings">"Avaa tethering config"</string>
     <string name="pref_common_restart_dnscrypt">"Käynnistä DNSCrypt uudelleen"</string>
     <string name="pref_common_restart_tor">"Käynnistä Tor uudelleen"</string>
@@ -168,11 +164,7 @@
     <string name="pref_dnscrypt_proxy_summ">"Reititä kaikki TCP-yhteydet paikalliseen Tor-solmuun. (Tor node) Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
     <string name="pref_dnscrypt_proxy">"Proxy_portti"</string>
     <string name="pref_dnscrypt_other_categ">"Muut asetukset"</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Varaehtoinen resolveri.
-        Tämä on normaali, salaamaton DNS-ratkaisu, jota käytetään vain yhden kuvan kyselyihin (one-shot queries)
-        noudettaessa alkuperäisiä resolveri-listaa vain, jos järjestelmän DNS-määritykset eivät toimi.
-        Sitä ei koskaan käytetä, jos luettelot on jo välimuistissa.
-        Kiinassa asuvien on ehkä käytettävä tätä numeroa 114.114.114.114:53."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">"Varaehtoinen resolveri. Tämä on normaali, salaamaton DNS-ratkaisu, jota käytetään vain yhden kuvan kyselyihin (one-shot queries) noudettaessa alkuperäisiä resolveri-listaa vain, jos järjestelmän DNS-määritykset eivät toimi. Sitä ei koskaan käytetä, jos luettelot on jo välimuistissa."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria..."</string>
     <string name="pref_dnscrypt_filters_categ">"SUODATUKSET"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
@@ -286,14 +278,11 @@
     <string name="pref_itpd_addressbook_subscriptions_summ">"Osoitekirjatilausten (AddressBook) URL-osoitteet."</string>
     <string name="pref_itpd_not_exist">"Preferenssiä ei ole i2pd.conf!"</string>
     <string name="helper_dialog_title">"Tietoja"</string>
-    <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin.
-        Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
-    <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in.
-        Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
+    <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
+    <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
     <string name="helper_itpd_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki I2P:n. Tarkista laitteen asetukset!"</string>
     <string name="helper_dnscrypt_no_internet">"Näyttää siltä, ​​että DNSCrypt EI voi muodostaa yhteyttä Internetiin."</string>
-    <string name="helper_tor_use_bridges">"Näyttää siltä, ​​että Tor EI voi muodostaa yhteyttä Internetiin.
-        Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat"</string>
+    <string name="helper_tor_use_bridges">"Näyttää siltä, ​​että Tor EI voi muodostaa yhteyttä Internetiin. Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat"</string>
     <string name="action_mode_child_lock">"Lapsilukko"</string>
     <string name="action_mode_dialog_message_lock">"Voit lukita tämän sovelluksen hallinnan. Anna salasana tai käytä edellistä."</string>
     <string name="action_mode_dialog_message_unlock">"Anna salasana."</string>
@@ -382,8 +371,7 @@
     <string name="pref_dnscrypt_import_whitelist">"Tuo sallittujen luettelo (valkoinen lista)"</string>
     <string name="pref_dnscrypt_import_whitelist_summ">"Tuo verkkotunnusluettelo. Voit valita useita tiedostoja, kaksoisrivit poistetaan."</string>
     <string name="pref_dnscrypt_erase_whitelist">"Poista sallittujen luettelo (valkoinen lista)"</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">"Vastaa heti IPv6-kyselyihin tyhjällä vastauksella.
-        Tämä nopeuttaa asioita, kun IPv6-yhteyttä ei ole, mutta voi myös aiheuttaa luotettavuusongelmia joihinkin tynkäratkaisureihin."</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">"Vastaa heti IPv6-kyselyihin tyhjällä vastauksella. Tämä nopeuttaa asioita, kun IPv6-yhteyttä ei ole, mutta voi myös aiheuttaa luotettavuusongelmia joihinkin tynkäratkaisureihin."</string>
     <string name="helper_dnscrypt_private_dns">"Poista \"Yksityinen DNS\" käytöstä Android-verkkoasetuksissa. Tämä vaihtoehto häiritsee DNSCryptia."</string>
     <string name="import_dnscrypt_rules_dialog_title">"Tuo sännöt"</string>
     <string name="import_dnscrypt_rules_dialog_message">"Odota ... %d -sääntöä tuotu."</string>
@@ -405,9 +393,7 @@
     <string name="pref_common_compatibility_mode">"Compatibility mode"</string>
     <string name="pref_common_compatibility_mode_summ">"Enable if your device with a custom ROM and the connection is lost when you press the START button"</string>
     <string name="pref_common_shell_control">"Enable script control"</string>
-    <string name="pref_common_shell_control_summ">"Use the following command to manage application modules:
-        \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
+    <string name="pref_common_shell_control_summ">"Use the following command to manage application modules: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
     <string name="pref_common_local_eth_device_addr">"LAN device IP address"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s."</string>
     <string name="pref_common_multi_user">"Multi-user support"</string>
@@ -436,8 +422,7 @@
     <string name="proxy_successful_connection">"Successful connection. Ping %s ms."</string>
     <string name="notification_arp_spoofing">"ARP spoofing detected!"</string>
     <string name="notification_rogue_dhcp">"Rogue DHCP detected!"</string>
-    <string name="notification_mitm">"Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
-        Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!"</string>
+    <string name="notification_mitm">"Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network. Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!"</string>
     <string name="toast_arp_detection_not_supported">"ARP spoofing detection is not supported for your device!"</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges."</string>
     <string name="pref_fast_tor_bypass_lan">"Bypass LAN addresses"</string>

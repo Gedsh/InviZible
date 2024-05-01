@@ -197,8 +197,7 @@
     <string name="pref_dnscrypt_require_nolog_summ">Sunucu, kullanıcı sorgularını günlüğe kaydetmemelidir (bildirime dayalı).</string>
     <string name="pref_dnscrypt_require_nofilter_summ">Sunucu kendi kara listesini zorlamamalıdır (ebeveyn denetimi, reklam engelleme… için).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Yukarı akış sunucularına bağlanmak için her zaman TCP kullan.</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Her şeyi Tor üzerinden yönlendirmeniz gerekiyorsa bu yararlı olabilir.
-\n Aksi takdirde, güvenliği artırmadığından (dnscrypt-proxy, UDP kullanırken bile her şeyi şifreleyecektir) ve yalnızca gecikmeyi artırabileceğinden bunu devre dışı olarak bırakın.</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Her şeyi Tor üzerinden yönlendirmeniz gerekiyorsa bu yararlı olabilir. Aksi takdirde, güvenliği artırmadığından (dnscrypt-proxy, UDP kullanırken bile her şeyi şifreleyecektir) ve yalnızca gecikmeyi artırabileceğinden bunu devre dışı olarak bırakın.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS vekili.</string>
     <string name="pref_dnscrypt_use_proxy">Vekili etkinleştir</string>
     <string name="pref_dnscrypt_proxy_summ">Tüm TCP bağlantılarını yerel bir Tor düğümüne yönlendirin. Tor, UDP\'yi desteklemez, bu nedenle force_tcp\'yi de etkin olarak ayarlayın.</string>
@@ -213,8 +212,7 @@
     <string name="pref_dnscrypt_import_forwarding_rules_summ">Yönlendirme kuralları dosyasını içe aktarın. Birden fazla dosya seçebilirsiniz, yinelenen satırlar kaldırılacaktır.</string>
     <string name="pref_dnscrypt_erase_forwarding_rules">Yönlendirme kurallarını sil</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Gizleme kuralları</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Gizleme, belirli bir ad için önceden tanımlanan bir adres döndürür.
-\n HOSTS dosyası olarak işlev görmenin yanı sıra, farklı bir adın IP adresini de döndürebilir. Ayrıca CNAME düzleştirme yapacaktır..</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Gizleme, belirli bir ad için önceden tanımlanan bir adres döndürür. HOSTS dosyası olarak işlev görmenin yanı sıra, farklı bir adın IP adresini de döndürebilir. Ayrıca CNAME düzleştirme yapacaktır..</string>
     <string name="pref_dnscrypt_import_cloaking_rules">Gizleme kurallarını içe aktar</string>
     <string name="pref_dnscrypt_import_cloaking_rules_summ">Gizleme kuralları dosyasını içe aktarın. Birden fazla dosya seçebilirsiniz, yinelenen satırlar kaldırılacaktır.</string>
     <string name="pref_dnscrypt_erase_cloaking_rules">Gizleme kurallarını sil</string>
@@ -224,8 +222,7 @@
     <string name="pref_dnscrypt_ignored_qtypes_summ">Ayrıntıyı azaltmak için bu sorgu türlerini günlüğe kaydetme. Her şeyi günlüğe kaydetmek için boş bırakın.</string>
     <string name="open_query_log">Sorgu Günlüğünü Aç</string>
     <string name="pref_dnscrypt_nx_log_categ">Şüpheli sorgular günlüğü.</string>
-    <string name="pref_dnscrypt_nx_log_summ">Var olmayan bölgeler için sorguları günlüğe kaydet.
-\n Bu sorgular, kötü amaçlı yazılımların, bozuk/eski uygulamaların ve varlıklarını 3. taraflara bildiren aygıtların varlığını ortaya çıkarabilir.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Var olmayan bölgeler için sorguları günlüğe kaydet. Bu sorgular, kötü amaçlı yazılımların, bozuk/eski uygulamaların ve varlıklarını 3. taraflara bildiren aygıtların varlığını ortaya çıkarabilir.</string>
     <string name="pref_dnscrypt_nx_log">Şüpheli günlüğünü etkinleştir</string>
     <string name="open_nx_log">Şüpheli Günlüğünü Aç</string>
     <string name="pref_dnscrypt_blacklist_categ">Kalıp tabanlı engelleme (kara liste).</string>
@@ -424,19 +421,17 @@
     <string name="buy_premium_gp">InviZible Pro projesinin yardımınıza ihtiyacı var. Ücretli özellikleri satın almak için Tamam düğmesine basın.</string>
     <string name="wrong_purchase_signature_gp">Üzgünüm, ancak satın alma işleminiz onaylanamıyor. 3 gün sonra geri ödeme alacaksınız.</string>
     <string name="only_premium_feature">Ne yazık ki, bu özellik yalnızca ücretli sürümde kullanılabilir.</string>
-    <string name="agreement_text">InviZible Pro\'yu seçtiğiniz için teşekkürler. Umarım gizliliğiniz ve internetin rahat kullanımı için faydalı olur
-\n
-\n\tInviZible Pro, modül olarak Tor, DNSCrypt ve Purple I2P\'yi içerir.
-\n
-\n\tInviZible Pro, aygıtınız root ayrıcalıklarına sahipse root kullanabilir veya İnternet trafiğini Tor, DNSCrypt ve I2P ağlarına iletmek için yerel bir VPN kullanır.
-\n
-\n\tGizlilik Politikası:
-\n\tInviZible Pro, kişisel veya hassas kullanıcı verilerini toplamaz veya paylaşmaz.
-\n
-\n\tTelif Hakkı © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tInviZible Pro\'yu seçtiğiniz için teşekkürler. Umarım gizliliğiniz ve internetin rahat kullanımı için faydalı olur
+        \n\n\tInviZible Pro, modül olarak Tor, DNSCrypt ve Purple I2P\'yi içerir.
+        \n\n\tInviZible Pro, aygıtınız root ayrıcalıklarına sahipse root kullanabilir veya İnternet trafiğini Tor, DNSCrypt ve I2P ağlarına iletmek için yerel bir VPN kullanır.
+        \n\n\tGizlilik Politikası:
+        \n\tInviZible Pro, kişisel veya hassas kullanıcı verilerini toplamaz veya paylaşmaz.
+        \n\n\tTelif Hakkı © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="config_changes_dialog_message">Değişiklikleri kaydetmek istiyor musunuz\? Bu, InviZible Pro\'yu bozabilir.</string>
     <string name="notification_channel_services">Çalışan hizmetler</string>
     <string name="notification_channel_update">Güncelleme bildirimleri</string>

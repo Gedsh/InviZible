@@ -401,19 +401,17 @@
     <string name="buy_premium_gp">O Projeto InviZible Pro precisa da sua ajuda. Pressione OK para adquirir recursos premium.</string>
     <string name="wrong_purchase_signature_gp">Desculpe, mas é impossível confirmar a sua compra. Receberá um reembolso após 3 dias.</string>
     <string name="only_premium_feature">Infelizmente, esse recurso está disponível apenas para a versão premium.</string>
-    <string name="agreement_text">\\\tObrigado porescolher o InviZible Pro. Espero que seja útil para a sua privacidade e conforto no uso da Internet.
-\n
-\n\tInviZible Pro inclui Tor, DNSCrypt e Purple I2P como módulos.
-\n
-\n\tO InviZible Pro pode usar root, se o seu aparelho tiver privilégios de root, ou usa uma VPN local para transmitir tráfego de Internet para redes Tor, DNSCrypt e I2P.
-\n
-\n\tPolítica de Privacidade:
-\n\tO InviZible Pro não coleta ou compartilha nenhum dado pessoal ou sensível do utilizador.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tObrigado porescolher o InviZible Pro. Espero que seja útil para a sua privacidade e conforto no uso da Internet.
+        \n\n\tInviZible Pro inclui Tor, DNSCrypt e Purple I2P como módulos.
+        \n\n\tO InviZible Pro pode usar root, se o seu aparelho tiver privilégios de root, ou usa uma VPN local para transmitir tráfego de Internet para redes Tor, DNSCrypt e I2P.
+        \n\n\tPolítica de Privacidade:
+        \n\tO InviZible Pro não coleta ou compartilha nenhum dado pessoal ou sensível do utilizador.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="config_changes_dialog_message">Quer gravar as alterações\? Ele pode quebrar o InviZible Pro.</string>
     <string name="notification_channel_services">Serviços A executar</string>
     <string name="notification_channel_update">Notificações de atualização</string>
@@ -470,15 +468,12 @@
     <string name="dialog_new_tor_default_bridges_available">Novas pontes padrão de Tor estão disponíveis. Deseja atualizá-las\?</string>
     <string name="pref_common_proxy">Usar proxy socks5</string>
     <string name="pref_common_categ_hotspot">HOTSPOT-Experimental</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Isto pode ser útil se precisar de rotear tudo através do Tor.
-\n Caso contrário, deixe-o em falso, pois não melhora a segurança (o dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só pode aumentar a latência.</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Isto pode ser útil se precisar de rotear tudo através do Tor. Caso contrário, deixe-o em falso, pois não melhora a segurança (o dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só pode aumentar a latência.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">Proxy SOCKS.</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">Regras de encaminhamento</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Regras de camuflagem</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">A cmulfagem retorna um endereço predefinido para um nome específico.
-\n Além de atuar como um ficheiro HOSTS, também pode retornar o endereço IP de um nome diferente. Também fará o achatamento do CNAME..</string>
-    <string name="pref_dnscrypt_nx_log_summ">Registar consultas para regiões inexistentes.
-\n Essts consultas podem revelar a presença de malware, aplicações quebradas/obsoletas e aparelhos sinalizando a presença deles a terceiros.</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">A cmulfagem retorna um endereço predefinido para um nome específico. Além de atuar como um ficheiro HOSTS, também pode retornar o endereço IP de um nome diferente. Também fará o achatamento do CNAME..</string>
+    <string name="pref_dnscrypt_nx_log_summ">Registar consultas para regiões inexistentes. Essts consultas podem revelar a presença de malware, aplicações quebradas/obsoletas e aparelhos sinalizando a presença deles a terceiros.</string>
     <string name="pref_dnscrypt_whitelist">Lista de permissões</string>
     <string name="pref_tor_exit_nodes_summ">Uma lista de códigos de país a usar como nó de saída - ou seja, um nó que entrega tráfego para si para fora da rede Tor.</string>
     <string name="pref_tor_SOCKS_port_summ">Abra esta porta para escutar conexões de aplicações que falam SOCKS.</string>

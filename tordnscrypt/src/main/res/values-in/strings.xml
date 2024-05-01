@@ -165,8 +165,7 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Server tidak boleh mencatat permintaan pengguna (deklaratif)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Server tidak boleh menerapkan daftar hitamnya sendiri (untuk kontrol orang tua, pemblokiran iklan ...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Selalu gunakan TCP untuk terhubung ke server upstream."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Hal ini akan berguna jika anda ingin mengalihkan semua lalu lintas data melalui Tor.
-\nAtau anda bisa mengabaikan fitur tersebut, karena tak serta-merta meningkatkan keamanan (dnscrypt-proxy akan mengenkripsi apapun, bahkan UDP sekalipun), yang ada malah menambah latensi.</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Hal ini akan berguna jika anda ingin mengalihkan semua lalu lintas data melalui Tor. Atau anda bisa mengabaikan fitur tersebut, karena tak serta-merta meningkatkan keamanan (dnscrypt-proxy akan mengenkripsi apapun, bahkan UDP sekalipun), yang ada malah menambah latensi.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy HTTP / SOCKS."</string>
     <string name="pref_dnscrypt_use_proxy">"Aktifkan proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">Mengalihkan semua koneksi TCP ke node Tor lokal. Tor tidak mendukung UDP, jadi setel force_tcp ke true juga.</string>
@@ -178,16 +177,14 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">Aturan pemindahan</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Merutekan query untuk domain tertentu ke dedicated server khusus.</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Aturan paksa</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking mengembalikan alamat yang telah ditentukan untuk nama tertentu.
-\n Selain bertindak sebagai file HOSTS, ia juga dapat mengembalikan alamat IP dari nama yang berbeda. Ini juga akan melakukan perataan CNAME..</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking mengembalikan alamat yang telah ditentukan untuk nama tertentu. Selain bertindak sebagai file HOSTS, ia juga dapat mengembalikan alamat IP dari nama yang berbeda. Ini juga akan melakukan perataan CNAME..</string>
     <string name="pref_dnscrypt_query_log_categ">"Pencatatan kueri."</string>
     <string name="pref_dnscrypt_query_log_summ">"Catat permintaan klien ke file."</string>
     <string name="pref_dnscrypt_query_log">"Aktifkan Pencatatan kueri"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">Jangan catat jenis kueri berikut. Kosongi bidang ini agar semua pesan log tercatat.</string>
     <string name="open_query_log">"Buka Log Kueri"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Pencatatan kueri yang mencurigakan."</string>
-    <string name="pref_dnscrypt_nx_log_summ">Catatan kueri untuk zona yang tidak ada.
-\nKueri ini dapat mengungkapkan keberadaan malware, aplikasi yang rusak / usang, dan perangkat yang memberi sinyal keberadaannya kepada pihak ketiga.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Catatan kueri untuk zona yang tidak ada. Kueri ini dapat mengungkapkan keberadaan malware, aplikasi yang rusak / usang, dan perangkat yang memberi sinyal keberadaannya kepada pihak ketiga.</string>
     <string name="pref_dnscrypt_nx_log">"Aktifkan Pencatatan yang Mencurigakan"</string>
     <string name="open_nx_log">"Buka Log Mencurigakan"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Pemblokiran berbasis pola (daftar hitam)."</string>
@@ -293,8 +290,7 @@
     <string name="helper_tor_stopped">Sepertinya Tor dimatikan Sistem Android. Koneksi internet anda dipulihkan. Periksa pengaturan perangkat!</string>
     <string name="helper_itpd_stopped">Sepertinya I2P dimatikan Sistem Android. Koneksi internet anda dipulihkan. Periksa pengaturan perangkat!</string>
     <string name="helper_dnscrypt_no_internet">"Sepertinya DNSCrypt TIDAK BISA terhubung ke INTERNET."</string>
-    <string name="helper_tor_use_bridges">"Sepertinya Tor TIDAK BISA terhubung ke INTERNET.
-        Penyedia jasa Internet anda mungkin memblokir koneksi Tor. Aktifkan fitur Bridge di Tor dengan cara tekan Menu -&gt; Pengaturan Cepat -&gt; Bridge"</string>
+    <string name="helper_tor_use_bridges">"Sepertinya Tor TIDAK BISA terhubung ke INTERNET. Penyedia jasa Internet anda mungkin memblokir koneksi Tor. Aktifkan fitur Bridge di Tor dengan cara tekan Menu -&gt; Pengaturan Cepat -&gt; Bridge"</string>
     <string name="action_mode_child_lock">Kunci dini</string>
     <string name="action_mode_dialog_message_lock">Anda dapat mengunci kontrol aplikasi ini. Silakan masukkan kata sandi.</string>
     <string name="action_mode_dialog_message_unlock">"Silakan masukkan kata sandi."</string>
@@ -434,8 +430,7 @@
     <string name="proxy_successful_connection">"Koneksi berhasil. Ping %s ms."</string>
     <string name="notification_arp_spoofing">"spoofing ARP terdeteksi!"</string>
     <string name="notification_rogue_dhcp">"DHCP Rogue terdeteksi!"</string>
-    <string name="notification_mitm">"Serangan MITM terdeteksi! Data anda dapat disadap oleh perangkat lain di jaringan yang sama dengan anda.
-Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini mungkin tidak aman!"</string>
+    <string name="notification_mitm">"Serangan MITM terdeteksi! Data anda dapat disadap oleh perangkat lain di jaringan yang sama dengan anda. Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini mungkin tidak aman!"</string>
     <string name="toast_arp_detection_not_supported">"Deteksi ARP spoofing tidak didukung di perangkat anda!"</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Mohon matikan Noda masuk di Pengaturan Tor atau fitur bridge tidak berfungsi."</string>
     <string name="pref_fast_tor_bypass_lan">"Bypass alamat LAN"</string>
@@ -489,17 +484,15 @@ Matikan dan hidupkan wifi beberapa saat, hotspot Wi-Fi yang anda akses saat ini 
     <string name="pref_tor_hardware_accel_summ">Coba gunakan akselerasi perangkat keras kripto bawaan jika tersedia.</string>
     <string name="tile_changing_tor_ip">Mengganti IP Tor</string>
     <string name="tile_dialog_over_three_tiles_message">Kamu sudah menambahkan lebih dari 3 ubin ke Pengaturan Cepat. Disarankan hanya menambahkan 3. Menambahkan lebih dari 3 ubin dapat menyebabkan masalah dengan kontrol aplikasi.</string>
-    <string name="agreement_text">\\\tTerima kasih sudah memilih InviZible Pro. Saya harap ini dapat berguna untuk privasi dan kenyamanan berinternet anda.
-\n
-\n\tInviZible Pro menggunakan Tor, DNSCrypt dan Purple I2P sebagai modulnya
-\n
-\n\tInviZible Pro bisa menggunakanroot, juka penrangkat mu memeliki izin root, atau menggunakan VPN lokal untuk Tor, DNSCrypt dan I2P.
-\n
-\n\tKebijakan privasi:
-\n\tInviZible Pro tidak mengumpulkan dan membagikan data sensitif pengguna.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tTerima kasih sudah memilih InviZible Pro. Saya harap ini dapat berguna untuk privasi dan kenyamanan berinternet anda.
+        \n\n\tInviZible Pro menggunakan Tor, DNSCrypt dan Purple I2P sebagai modulnya
+        \n\n\tInviZible Pro bisa menggunakanroot, juka penrangkat mu memeliki izin root, atau menggunakan VPN lokal untuk Tor, DNSCrypt dan I2P.
+        \n\n\tKebijakan privasi:
+        \n\tInviZible Pro tidak mengumpulkan dan membagikan data sensitif pengguna.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
 </resources>

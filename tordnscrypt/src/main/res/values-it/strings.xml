@@ -158,8 +158,7 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Il server non deve registrare le query dell'utente (dichiarativo)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Il server non deve imporre la propria lista nera (per il controllo parentale, il blocco degli annunci...)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Usa sempre TCP per connetterti ai server upstream."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Questo può essere utile se hai bisogno di instradare tutto il traffico attraverso Tor.
-\n Altrimenti, lascialo su false, poiché non migliora la sicurezza (dnscrypt-proxy crittograferà sempre tutto anche usando UDP) e può solo aumentare la latenza.</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Questo può essere utile se hai bisogno di instradare tutto il traffico attraverso Tor. Altrimenti, lascialo su false, poiché non migliora la sicurezza (dnscrypt-proxy crittograferà sempre tutto anche usando UDP) e può solo aumentare la latenza.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS."</string>
     <string name="pref_dnscrypt_use_proxy">"Abilita proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Instrada tutte le connessioni TCP a un nodo Tor locale. Tor non supporta UDP, quindi imposta anche force_tcp su true."</string>
@@ -171,16 +170,14 @@
     <string name="pref_dnscrypt_forwarding_rules_categ">"Regole di inoltro"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Instrada le query per domini specifici a un set di server dedicato."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Regole di cloaking"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Il cloaking restituisce un indirizzo predefinito per un nome specifico.
-\n Oltre a fungere da file HOSTS, può anche restituire l\'indirizzo IP con un nome diverso. Farà anche l\'appiattimento CNAME..</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Il cloaking restituisce un indirizzo predefinito per un nome specifico. Oltre a fungere da file HOSTS, può anche restituire l\'indirizzo IP con un nome diverso. Farà anche l\'appiattimento CNAME..</string>
     <string name="pref_dnscrypt_query_log_categ">"Registrazione delle query."</string>
     <string name="pref_dnscrypt_query_log_summ">"Registra le query del client in un file."</string>
     <string name="pref_dnscrypt_query_log">"Abilita registrazione Query"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Non registrare questi tipi di query per ridurre la verbosità. Mantieni vuoto per registrare tutto."</string>
     <string name="open_query_log">"Apri registro query"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Registrazione delle query sospette."</string>
-    <string name="pref_dnscrypt_nx_log_summ">Registra le query per le zone inesistenti.
-\n Queste query possono rivelare la presenza di malware, applicazioni danneggiate/obsolete e dispositivi che segnalano la loro presenza a terze parti..</string>
+    <string name="pref_dnscrypt_nx_log_summ">Registra le query per le zone inesistenti. Queste query possono rivelare la presenza di malware, applicazioni danneggiate/obsolete e dispositivi che segnalano la loro presenza a terze parti..</string>
     <string name="pref_dnscrypt_nx_log">"Abilita registrazione Sospetta"</string>
     <string name="open_nx_log">"Apri Registrazione Sospetta"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Blocco basato su pattern (lista nera)."</string>
@@ -345,19 +342,17 @@
     <string name="buy_premium_gp">InviZible Pro Project ha bisogno del tuo supporto. Scegli OK per acquistare le caratteristiche premium.</string>
     <string name="wrong_purchase_signature_gp">"Spiacente, è impossibile confermare il tuo acquisto. Riceverai un rimborso fra 3 giorni."</string>
     <string name="only_premium_feature">"Sfortunatamente questa funzione è disponibile solo nella versione premium."</string>
-    <string name="agreement_text">\tGrazie per aver scelto InviZible Pro. Spero che ti aiuterà a preservare la tua privacy e a rendere più comodo l\'utilizzo di Internet.
-\n
-\n\tInviZible Pro include i moduli Tor, DNSCrypt e Purple I2P.
-\n
-\n\tInviZible Pro può funzionare in modalità root, se il tuo dispositivo ha i privilegi di root, o utilizzare una VPN locale per reindirizzare il traffico Internet a Tor, DNSCrypt e alla rete I2P.
-\n
-\n\tPolitica della Privacy:
-\n\tInviZible Pro non raccoglie o condivide nessun dato utente personale o sensibile.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tGrazie per aver scelto InviZible Pro. Spero che ti aiuterà a preservare la tua privacy e a rendere più comodo l\'utilizzo di Internet.
+        \n\n\tInviZible Pro include i moduli Tor, DNSCrypt e Purple I2P.
+        \n\n\tInviZible Pro può funzionare in modalità root, se il tuo dispositivo ha i privilegi di root, o utilizzare una VPN locale per reindirizzare il traffico Internet a Tor, DNSCrypt e alla rete I2P.
+        \n\n\tPolitica della Privacy:
+        \n\tInviZible Pro non raccoglie o condivide nessun dato utente personale o sensibile.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="pref_itpd_use_HTTP_outproxy">HTTP outproxy</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Indirizzo HTTP outproxy"</string>
     <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
@@ -493,8 +488,7 @@
     <string name="tile_changing_tor_ip">"Sto cambiando IP Tor"</string>
     <string name="tile_dialog_over_three_tiles_message">"Hai aggiunto più di 3 opzioni delle Impostazioni Rapide. Per favore scegline solo 3. Aggiungerne più di 3 può creare problemi con il controllo dell'app."</string>
     <string name="pref_common_rogue_dhcp_detection">"Rilevamento Rogue DHCP"</string>
-    <string name="pref_common_rogue_dhcp_detection_summ">"Rileva attacchi Man-in-the-middle e rogue DHCP nelle reti Wi-Fi.
-"</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">"Rileva attacchi Man-in-the-middle e rogue DHCP nelle reti Wi-Fi."</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Seleziona rendezvous"</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">"Nascondi il nome dominio del broker al provider internet. Il broker è utilizzato per stabilire una connessione."</string>
     <string name="pref_firewall_show_all_apps">"Mostra tutte le app"</string>

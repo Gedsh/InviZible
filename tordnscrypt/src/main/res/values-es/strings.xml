@@ -159,8 +159,7 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Requiere que los servidores no registren las peticiones DNS."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Requiere que los servidores no utilicen ningún tipo de filtro (anuncios, control parental, bloqueos…) para las peticiones DNS."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Habilitar comunicación TCP para conectar a los servidores"</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Esto es útil para redirigir todo el tráfico hacia Tor.
-Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejorará en ningún aspecto el nivel de seguridad (dnscrypt-proxy siempre utiliza cifrado de extremo a extremo, incluso con UDP). Si lo activa sin verdaderamente necesitarlo únicamente obtendra un incremento en la latencia de resolución de las peticiones DNS, lo que puede derivar en un impacto en el rendimiento de la conexión."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Esto es útil para redirigir todo el tráfico hacia Tor. Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejorará en ningún aspecto el nivel de seguridad (dnscrypt-proxy siempre utiliza cifrado de extremo a extremo, incluso con UDP). Si lo activa sin verdaderamente necesitarlo únicamente obtendra un incremento en la latencia de resolución de las peticiones DNS, lo que puede derivar en un impacto en el rendimiento de la conexión."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Proxy SOCKS"</string>
     <string name="pref_dnscrypt_use_proxy">"Activar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Redirige todas las conexiones TCP a traves del nodo local de Tor. Tor no soporta UDP, así que active force_tcp también."</string>
@@ -179,8 +178,7 @@ Si no es lo que desea, por favor, deje éste valor desactivado, ya que no mejora
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Tipos de peticiones a omitir, para reducir ruido, en los registros. Un valor vacío indica registrar todo."</string>
     <string name="open_query_log">"Abrir registro de peticiones"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Registro de peticiones de dudosa naturaleza."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Registrar peticiones para zonas inexistentes.
-Con estas peticiones se puede descubrir la presencia de malware, aplicaciones defectuosas u obsoletas, y dispositivos revelando señales de presencia a terceros…"</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Registrar peticiones para zonas inexistentes. Con estas peticiones se puede descubrir la presencia de malware, aplicaciones defectuosas u obsoletas, y dispositivos revelando señales de presencia a terceros…"</string>
     <string name="pref_dnscrypt_nx_log">"Activar registro dudoso"</string>
     <string name="open_nx_log">"Abrir registro dudoso"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista de bloqueo)."</string>
@@ -345,19 +343,17 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="buy_premium_gp">El Proyecto InviZible Pro solicita su ayuda. Pulse OK para adquirir funciones premium.</string>
     <string name="wrong_purchase_signature_gp">"Lo sentimos, pero no hemos podido verificar tu compra. Recibiras un reembolso en los próximos días (3 días, al menos)."</string>
     <string name="only_premium_feature">"Lo sentimos, pero esa función solo esta disponible en la versión exclusiva."</string>
-    <string name="agreement_text">Muchas gracias por elegir InviZible Pro. Estoy seguro de que mejorará su privacidad y le proporcionará una experiencia en línea sin problemas.
-\n
-\n\tInviZible Pro incluye Tor, DNSCrypt y Purple I2P como módulos.
-\n
-\n\tInviZible Pro puede usar root si tu dispositivo está rooteado, o usa una VPN local para entregar el tráfico de internet directamente a las redes Tor, DNSCrypt e I2P.
-\n
-\n\tPolítica de privacidad:
-\n\tInviZible Pro no recopila ni comparte ningún dato personal o sensible del usuario.
-\n
-\n\tDerechos de autor © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tMuchas gracias por elegir InviZible Pro. Estoy seguro de que mejorará su privacidad y le proporcionará una experiencia en línea sin problemas.
+        \n\n\tInviZible Pro incluye Tor, DNSCrypt y Purple I2P como módulos.
+        \n\n\tInviZible Pro puede usar root si tu dispositivo está rooteado, o usa una VPN local para entregar el tráfico de internet directamente a las redes Tor, DNSCrypt e I2P.
+        \n\n\tPolítica de privacidad:
+        \n\tInviZible Pro no recopila ni comparte ningún dato personal o sensible del usuario.
+        \n\n\tDerechos de autor © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="pref_itpd_use_HTTP_outproxy">"Proxy HTTP exterior"</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Dirección del proxy HTTP exterior"</string>
     <string name="pref_itpd_use_Socks_outproxy">"Proxy SOCKS exterior"</string>
@@ -409,8 +405,7 @@ Con estas peticiones se puede descubrir la presencia de malware, aplicaciones de
     <string name="pref_common_compatibility_mode">"Modo de compatibilidad"</string>
     <string name="pref_common_compatibility_mode_summ">"Activalo si la conectividad se pierde en tu dispositivo con una ROM personal cuando inicias el programa."</string>
     <string name="pref_common_shell_control">"Activar control de scripts"</string>
-    <string name="pref_common_shell_control_summ">"Utiliza éste comando para controlar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\".
-Donde 1 - arranca el módulo, y 0 - lo para."</string>
+    <string name="pref_common_shell_control_summ">"Utiliza éste comando para controlar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %1$s, y como servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Modo Multi-usuario"</string>

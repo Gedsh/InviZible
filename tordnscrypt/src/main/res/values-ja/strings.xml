@@ -158,8 +158,7 @@
     <string name="pref_dnscrypt_require_nolog_summ">"使用するサーバーにログなしポリシーを要求する(自己申告)"</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"サーバーが自身のブラックリストを強制しないようにします(ペアレンタルコントロール、広告ブロックなど)"</string>
     <string name="pref_dnscrypt_force_tcp_categ">"アップストリームのサーバーへの接続に常にTCPを使用する"</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"This can be can be useful if you need to route everything through Tor.
-Otherwise, leave this to false, as it doesn't improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"This can be can be useful if you need to route everything through Tor. Otherwise, leave this to false, as it doesn't improve security (dnscrypt-proxy will always encrypt everything even using UDP), and can only increase latency."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"Socksプロキシ"</string>
     <string name="pref_dnscrypt_use_proxy">"プロキシを有効化"</string>
     <string name="pref_dnscrypt_proxy_summ">"Route all TCP connections to a local Tor node. Tor doesn't support UDP, so set force_tcp to true as well."</string>
@@ -171,16 +170,14 @@ Otherwise, leave this to false, as it doesn't improve security (dnscrypt-proxy w
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Route queries for specific domains to a dedicated set of servers."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking returns a predefined address for a specific name.
-In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening.."</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Cloaking returns a predefined address for a specific name. In addition to acting as a HOSTS file, it can also return the IP address of a different name. It will also do CNAME flattening.."</string>
     <string name="pref_dnscrypt_query_log_categ">"ログの記録"</string>
     <string name="pref_dnscrypt_query_log_summ">"ファイルにログを書き出す"</string>
     <string name="pref_dnscrypt_query_log">"ログ記録を有効化"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Do not log these query types, to reduce verbosity. Keep empty to log everything."</string>
     <string name="open_query_log">"ログ記録を開く"</string>
     <string name="pref_dnscrypt_nx_log_categ">"疑わしいログ"</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Log queries for nonexistent zones.
-These queries can reveal the presence of malware, broken/obsolete applications, and devices signaling their presence to 3rd parties.."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Log queries for nonexistent zones. These queries can reveal the presence of malware, broken/obsolete applications, and devices signaling their presence to 3rd parties.."</string>
     <string name="pref_dnscrypt_nx_log">"疑わしいログの記録を有効化"</string>
     <string name="open_nx_log">"疑わしいログを確認"</string>
     <string name="pref_dnscrypt_blacklist_categ">"パターンベースブロッキング(ブラックリスト)"</string>

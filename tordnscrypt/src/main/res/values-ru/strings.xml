@@ -96,8 +96,7 @@
     <string name="pref_fast_language">Выбрать язык</string>
     <string name="pref_common_categ_run_with_root">Использовать Root привилегии</string>
     <string name="pref_common_run_with_root">Запуск модулей с Root</string>
-    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для модулей DNSCrypt, Tor и I2P.
-        Включение этой функции оставляет модули неуправляемыми, и может вызвать проблемы с подключением!</string>
+    <string name="pref_common_run_with_root_summ">Использовать Root привилегии для модулей DNSCrypt, Tor и I2P. Включение этой функции оставляет модули неуправляемыми, и может вызвать проблемы с подключением!</string>
     <string name="pref_common_categ_other">Другие</string>
     <string name="pref_common_notification_summ">Защитите приложение в Безрутовом Режиме, чтоб андроид не завершил его</string>
     <string name="pref_common_show_notification">Показывать уведомление</string>
@@ -123,9 +122,7 @@
     <string name="pref_common_excludes_from_tor_summ">Список сайтов, которые открываются в обход Tor, для точки доступа</string>
     <string name="pref_common_itpd_tethering">Разрешить раздачу I2P</string>
     <string name="pref_common_fix_ttl">Зафиксировать TTL</string>
-    <string name="pref_common_fix_ttl_summ">TTL будет зафиксирован на 64 с помощью локального VPN. Поддержка ядра не требуется.
-        Можно использовать только в \"root mode\" и с выключенной опцией \"Запуск модулей с Root\".
-        Чтобы зафиксировать TTL запустите DNSCrypt и/или Tor.</string>
+    <string name="pref_common_fix_ttl_summ">TTL будет зафиксирован на 64 с помощью локального VPN. Поддержка ядра не требуется. Чтобы зафиксировать TTL запустите DNSCrypt и/или Tor.</string>
     <string name="pref_common_tethering_settings">Открыть настройки точки доступа</string>
     <string name="pref_common_restart_tor">Пожалуйста, перезапустите Tor</string>
     <string name="pref_common_restart_itpd">Пожалуйста, перезапустите I2P</string>
@@ -194,22 +191,18 @@
     <string name="pref_dnscrypt_block_undelegated_summ">Немедленно отвечать на запросы к локальным зонам вместо их утечки резолверам, что всегда приводит к ошибкам и лагам.</string>
     <string name="pref_tor_virtual_addr_network_IPv4_summ">Необходимо, чтоб Tor назначил неиспользованный виртуальный диаппазон адресов, для доступа к сайтам в зоне .onion.</string>
     <string name="pref_tor_avoid_disc_writes_summ">Попытаться уменьшить частоту записи на диск.</string>
-    <string name="pref_tor_connections_padding_summ">Эта опция указывает Tor использовать padding, для
-        предотвращения некоторых форм анализа трафика. Выключите, чтоб уменьшить траффик.</string>
-    <string name="pref_tor_reduced_connections_padding_summ">Если активированно, Tor не будет слишком
-        долго удерживать соединение. Включите, чтоб уменьшить траффик.</string>
+    <string name="pref_tor_connections_padding_summ">Эта опция указывает Tor использовать padding, для предотвращения некоторых форм анализа трафика. Выключите, чтоб уменьшить траффик.</string>
+    <string name="pref_tor_reduced_connections_padding_summ">Если активированно, Tor не будет слишком долго удерживать соединение. Включите, чтоб уменьшить траффик.</string>
     <string name="pref_tor_nodes_categ">Ноды</string>
     <string name="pref_tor_isolation_categ">Настройки изолирования</string>
     <string name="pref_tor_exclude_exit_nodes_summ">Список стран, которые НЕ будут использоваться для ВЫХОДНОГО сервера.</string>
     <string name="pref_tor_exit_nodes_summ">Список стран, которые будут использоваться для ВЫХОДНОГО сервера.</string>
     <string name="pref_tor_exclude_nodes_summ">Список стран, которые НЕ будут использоваться для построения цепочки в сети Tor.</string>
     <string name="pref_tor_entry_nodes_summ">Список стран, которые будут использоваться как ВХОДНЫЕ сервера.</string>
-    <string name="pref_tor_strict_nodes_summ">Если активированно, Tor будет строго следовать правилам
-        ExcludeNodes, даже если будет невозможно установить соединение.</string>
+    <string name="pref_tor_strict_nodes_summ">Если активированно, Tor будет строго следовать правилам ExcludeNodes, даже если будет невозможно установить соединение.</string>
     <string name="pref_tor_fascist_firewall_summ">Если активированно, Tor будет создавать исходящие соединения только на разрешенных портах (80 и 443 по умолчанию).</string>
     <string name="pref_tor_new_circuit_period_summ">Количество секунд перед построением новой цепочки.</string>
-    <string name="pref_tor_max_circuit_dirtiness_summ">Свободно переиспользовать цепочку через заданное
-        количество секунд, но никогда не присоединяться к цепочке, если она слишком старая.</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">Свободно переиспользовать цепочку через заданное количество секунд, но никогда не присоединяться к цепочке, если она слишком старая.</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">Если активированно, Tor никогда не будет выбирать два сервера, чьи IP адреса слишком близко, для одной и той же цепочки. На данный момент IP серверов считается слишком близкими, если они находятся в одном /16 диаппазоне.</string>
     <string name="pref_tor_enable_SOCKS_proxy">SOCKS прокси</string>
     <string name="pref_tor_SOCKS_port_summ">Открыть этот порт для приложений, поддерживающих SOCKS проксификацию.</string>
@@ -273,14 +266,11 @@
     <string name="pref_itpd_addressbook_subscriptions_summ">Каталог адресов.</string>
     <string name="pref_itpd_not_exist">Настройка не существует в i2pd.conf!</string>
     <string name="helper_dialog_title">Инфо</string>
-    <string name="helper_dnscrypt_stopped">Похоже андроид закрыл модуль DNSCrypt. Ваше интернет
-        соединение восстановлено. Проверьте настройки устройства!</string>
-    <string name="helper_tor_stopped">Похоже андроид закрыл модуль Tor. Ваше интернет
-        соединение восстановлено. Проверьте настройки устройства!</string>
+    <string name="helper_dnscrypt_stopped">Похоже андроид закрыл модуль DNSCrypt. Ваше интернет соединение восстановлено. Проверьте настройки устройства!</string>
+    <string name="helper_tor_stopped">Похоже андроид закрыл модуль Tor. Ваше интернет соединение восстановлено. Проверьте настройки устройства!</string>
     <string name="helper_itpd_stopped">Похоже андроид закрыл модуль I2P. Проверьте настройки устройства!</string>
     <string name="helper_dnscrypt_no_internet">Похоже DNSCrypt не может подключиться к интернету. Можете попробовать выбрать другие сервера DNSCrypt. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Выбрать сервера DNSCrypt</string>
-    <string name="helper_tor_use_bridges">Похоже Tor не може подключиться к интернету.
-        Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Мосты</string>
+    <string name="helper_tor_use_bridges">Похоже Tor не може подключиться к интернету. Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Мосты</string>
     <string name="action_mode_child_lock">Детский замок</string>
     <string name="action_mode_dialog_message_lock">Вы можете заблокировать интерфейс этого приложения. Пожалуйста, введите пароль или используйте предыдущий.</string>
     <string name="action_mode_dialog_message_unlock">Пожалуйста, введите пароль.</string>
@@ -341,10 +331,8 @@
     <string name="update_wrong_code">Похоже Ваш PRO код неверный. Пожалуйста, свяжитесь с разработчиком.</string>
     <string name="pref_common_wakelock">Запретить сон устройства</string>
     <string name="pref_common_wakelock_summ">Дополнительная защита в Безрутовом Режиме, чтоб андроид не закрыл приложение. Может привести к повышенному разряду батареи</string>
-    <string name="message_no_root_used">Вы можете использовать
-        InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
-    <string name="message_no_root_used_kitkat">Вы можете использовать
-        InviZible Pro совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
+    <string name="message_no_root_used">Вы можете использовать InviZible Pro в режиме локального VPN или совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
+    <string name="message_no_root_used_kitkat">Вы можете использовать InviZible Pro совместно с приложениями с функцией прокси или собственным локальным VPN.</string>
     <string name="pref_dnscrypt_relays">Источники</string>
     <string name="pref_dnscrypt_relays_delay_summ">Список ретрансляторов будет обновлен после указанной задержки в часах.</string>
     <string name="pref_dnscrypt_relays_categ">Реле</string>
@@ -428,15 +416,11 @@
     <string name="dnscrypt_many_rules_dialog_message">Слишком много правил для отображения. Показана только первая 1000.</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">Использовать IPv4 сервера</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">Использовать IPv6 сервера</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом.
-        Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">Немедленно отвечать на IPv6 запросы пустым ответом. Это ускоряет работу при отсутствии подключения по протоколу IPv6, но иногда может вызывать проблемы.</string>
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
-    <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible.
-        Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
+    <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible. Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
     <string name="pref_common_shell_control">Включить управление скриптами</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями:
-        \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль.</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль.</string>
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
@@ -476,8 +460,7 @@
     <string name="pref_common_arp_block_internet_summ">Интернет соединение будет заблокировано во время атаки</string>
     <string name="notification_arp_spoofing">Обнаружена атака ARP-спуфинг!</string>
     <string name="notification_rogue_dhcp">Обнаружен мошеннический DHCP!</string>
-    <string name="notification_mitm">Обнаружена атака «человек посередине»! Ваши данные могут быть перехвачены другим устройством в локальной сети.
-        Выключите, подождите несколько секунд и включите Wi-Fi. Использование текущей Wi-Fi точки доступа может быть небезопасным!</string>
+    <string name="notification_mitm">Обнаружена атака «человек посередине»! Ваши данные могут быть перехвачены другим устройством в локальной сети. Выключите, подождите несколько секунд и включите Wi-Fi. Использование текущей Wi-Fi точки доступа может быть небезопасным!</string>
     <string name="toast_arp_detection_not_supported">Обнаружение ARP-спуфинг атак не поддерживается на вашем устройстве!</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">Пожалуйста, выключите Entry Nodes в настройках Tor, иначе Вы не сможете использовать мосты.</string>
     <string name="pref_tor_entry_nodes_alt_summ">Выключите мосты Tor, если хотите выбрать Entry Nodes.</string>
@@ -519,8 +502,7 @@
     <string name="notification_waiting_network">Ожидание сети…</string>
     <string name="tile_change_tor_ip">Изменить Tor IP</string>
     <string name="tile_changing_tor_ip">Смена Tor IP</string>
-    <string name="tile_dialog_over_three_tiles_message">Вы добавили более 3-х ярлыков в быстрые настройки.
-         Оставьте только 3. Добавление более 3-х ярлыков может вызвать проблемы с управлением приложением.</string>
+    <string name="tile_dialog_over_three_tiles_message">Вы добавили более 3-х ярлыков в быстрые настройки. Оставьте только 3. Добавление более 3-х ярлыков может вызвать проблемы с управлением приложением.</string>
     <string name="pref_common_rogue_dhcp_detection">Обнаружение мошеннических DHCP</string>
     <string name="pref_common_rogue_dhcp_detection_summ">Обнаружение мошеннических DHCP в Wi-Fi сетях.</string>
     <string name="pref_tor_snowflake_select_rendezvous">Выбрать точку рандеву</string>

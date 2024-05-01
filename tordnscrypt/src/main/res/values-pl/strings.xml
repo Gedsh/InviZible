@@ -177,8 +177,7 @@
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Nie zapisuj zapytan tego typu by zredukowac nadmiarowe dane. Zostaw puste by logowac wszystko."</string>
     <string name="open_query_log">"Otworz log zapytan"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Logowanie podejrzanych zapytan."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Logowanie zapytan do nieistniejacych stref.
-Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych aplikacji, oraz raportowanie obecnosci przez urzadzenie do innych podmiotow."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Logowanie zapytan do nieistniejacych stref. Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych aplikacji, oraz raportowanie obecnosci przez urzadzenie do innych podmiotow."</string>
     <string name="pref_dnscrypt_nx_log">"Wlacz logowanie podejrzanych"</string>
     <string name="open_nx_log">"Otworz log podejrzanych zapytan"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Lista blokowania (blacklista)."</string>
@@ -510,19 +509,17 @@ Takie zapytania moga wskazywac na obecnosc malware, uszkodzonych/przestarzalych 
     <string name="ask_reset_settings_btn">"Reset"</string>
     <string name="pref_fast_fake_sni">"Uruchom spoofing SNI"</string>
     <string name="pref_tor_track_host_exits_summ">"Tor zapamieta i zapisze niedawne polaczenia do hsotow i sprobuje uzyc tych samych exit node dla kazdego z nich. To moze pomoc uniknac petli captcha."</string>
-    <string name="agreement_text">\\ Dziękujemy za wybranie InviZible Pro. Jestem pewien, że zwiększy to Twoją prywatność i zapewni płynne korzystanie z Internetu.
-\n
-\n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
-\n
-\n\tInviZible Pro może korzystać z roota, jeśli Twoje urządzenie jest zrootowane lub korzysta z lokalnej sieci VPN, aby dostarczać ruch internetowy bezpośrednio do sieci Tor, DNSCrypt i I2P.
-\n
-\n\tPolityka prywatności:
-\n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych lub wrażliwych danych użytkownika.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tDziękujemy za wybranie InviZible Pro. Jestem pewien, że zwiększy to Twoją prywatność i zapewni płynne korzystanie z Internetu.
+        \n\n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
+        \n\n\tInviZible Pro może korzystać z roota, jeśli Twoje urządzenie jest zrootowane lub korzysta z lokalnej sieci VPN, aby dostarczać ruch internetowy bezpośrednio do sieci Tor, DNSCrypt i I2P.
+        \n\n\tPolityka prywatności:
+        \n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych lub wrażliwych danych użytkownika.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="press_to_add">Naciśnij, aby dodać.</string>
     <string name="notification_exclude_bat_optimisation_title">Zaprzestać optymalizacji zużycia baterii?</string>
     <string name="pref_fast_exclude_app_from_tor">Wyklucz z sieci Tor</string>
