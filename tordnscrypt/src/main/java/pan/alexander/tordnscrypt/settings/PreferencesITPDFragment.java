@@ -46,6 +46,7 @@ import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -53,6 +54,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OU
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_USE_IPV6;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class PreferencesITPDFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener {
 
@@ -60,6 +62,9 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     public Lazy<PathVars> pathVars;
     @Inject
     public CoroutineExecutor executor;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
 
     private ArrayList<String> key_itpd;
     private ArrayList<String> val_itpd;
@@ -317,6 +322,11 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     }
                 }
             } else if (Objects.equals(preference.getKey(), "ssu2 enabled")) {
+
+                if (!defaultPreferences.get().getBoolean("ntcp2 enabled", true) && !Boolean.parseBoolean(newValue.toString())) {
+                    return false;
+                }
+
                 if (!key_itpd.contains("[ssu2]") && key_itpd.contains("[ntcp2]")) {
                     int positionNtcp2 = key_itpd.indexOf("[ntcp2]");
                     key_itpd.add(positionNtcp2, "[ssu2]");
@@ -331,6 +341,18 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     } else {
                         val_itpd.add(positionNtcp2 + 2, "false");
                     }
+                }
+            } else if (Objects.equals(preference.getKey(), "ntcp2 enabled") && !Boolean.parseBoolean(newValue.toString())) {
+                if (!defaultPreferences.get().getBoolean("ssu2 enabled", true)) {
+                    return false;
+                }
+            } else if (Objects.equals(preference.getKey(), "ipv4") && !Boolean.parseBoolean(newValue.toString())) {
+                if (!defaultPreferences.get().getBoolean(I2PD_USE_IPV6, true)) {
+                    return false;
+                }
+            } else if (Objects.equals(preference.getKey(), I2PD_USE_IPV6) && !Boolean.parseBoolean(newValue.toString())) {
+                if (!defaultPreferences.get().getBoolean("ipv4", true)) {
+                    return false;
                 }
             }
 
@@ -454,28 +476,25 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
     }
 
     private void changePreferencesForGPVersion() {
-        PreferenceCategory categoryCommon = findPreference("itpd_settings_common");
 
-        if (categoryCommon != null) {
-            ArrayList<Preference> preferences = new ArrayList<>();
-            preferences.add(findPreference("Allow incoming connections"));
-            preferences.add(findPreference("incoming host"));
-            preferences.add(findPreference("incoming port"));
+        removeCategories();
 
-            for (Preference preference : preferences) {
-                if (preference != null) {
-                    categoryCommon.removePreference(preference);
-                }
-            }
-        }
+        removePreferencesFromLimitsCategory();
 
+        removePreferencesFromSocksProxyCategory();
+
+        removePreferencesFromHttpProxyCategory();
+
+        removePreferencesFromHttpOtherCategory();
+    }
+
+    private void removeCategories() {
         PreferenceScreen preferenceScreen = findPreference("itpd_settings_screen");
 
         if (preferenceScreen != null) {
             ArrayList<PreferenceCategory> categories = new ArrayList<>();
-            categories.add(findPreference("category_itpd_sam_interface"));
+            categories.add(findPreference("itpd_settings_incoming"));
             categories.add(findPreference("category_itpd_cryptography"));
-            categories.add(findPreference("category_itpd_upnp"));
             categories.add(findPreference("category_itpd_reseeding"));
 
             for (PreferenceCategory category : categories) {
@@ -484,7 +503,9 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 }
             }
         }
+    }
 
+    private void removePreferencesFromLimitsCategory() {
         PreferenceCategory categoryLimits = findPreference("category_itpd_limits");
 
         if (categoryLimits != null) {
@@ -498,24 +519,37 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                 }
             }
         }
+    }
 
+    private void removePreferencesFromSocksProxyCategory() {
+        Preference proxyPort = findPreference("Socks proxy port");
+        if (proxyPort != null) {
+            proxyPort.setDependency(null);
+        }
         PreferenceCategory categorySocksProxy = findPreference("itpd_category_socks_proxy");
         Preference enableSocks = findPreference("Socks proxy");
         if (categorySocksProxy != null && enableSocks != null) {
             categorySocksProxy.removePreference(enableSocks);
         }
+    }
 
+    private void removePreferencesFromHttpProxyCategory() {
+        Preference proxyPort = findPreference("HTTP proxy port");
+        if (proxyPort != null) {
+            proxyPort.setDependency(null);
+        }
         PreferenceCategory categoryHTTPProxy = findPreference("itpd_category_http_proxy");
         Preference enableHTTP = findPreference("HTTP proxy");
         if (categoryHTTPProxy != null && enableHTTP != null) {
             categoryHTTPProxy.removePreference(enableHTTP);
         }
+    }
 
+    private void removePreferencesFromHttpOtherCategory() {
         PreferenceCategory otherCategory = findPreference("pref_itpd_other");
         Preference editITPDConfDirectly = findPreference("editITPDConfDirectly");
         if (otherCategory != null && editITPDConfDirectly != null) {
             otherCategory.removePreference(editITPDConfDirectly);
         }
-
     }
 }

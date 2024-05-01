@@ -3,7 +3,7 @@
     android:key="itpd_settings_screen">
 
     <PreferenceCategory
-        android:layout="@layout/preferences_category_custom"
+        android:layout="@layout/preferences_category_advanced"
         android:title="@string/pref_advanced" />
 
     <PreferenceCategory
@@ -11,27 +11,6 @@
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_itpd_common">
 
-        <SwitchPreference
-            android:id="@+id/pref_itpd_com_incom_connect"
-            android:defaultValue="false"
-            android:key="Allow incoming connections"
-            android:title="@string/pref_itpd_com_incom_connect" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_com_host"
-            android:defaultValue="1.2.3.4"
-            android:key="incoming host"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_itpd_com_host_summ"
-            android:title="@string/pref_itpd_com_host" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_com_port"
-            android:defaultValue="4567"
-            android:key="incoming port"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_itpd_com_port_summ"
-            android:title="@string/pref_itpd_com_port" />
         <CheckBoxPreference
             android:id="@+id/pref_itpd_com_ipv4"
             android:defaultValue="true"
@@ -84,6 +63,88 @@
             android:key="ntcp2 enabled"
             android:summary="@string/pref_itpd_com_ntcp_summ"
             android:title="@string/pref_itpd_ntcp2" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="itpd_category_http_proxy"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_itpd_HTTP_proxy">
+
+        <SwitchPreference
+            android:id="@+id/pref_itpd_HTTP_proxy_enabled"
+            android:defaultValue="true"
+            android:key="HTTP proxy"
+            android:title="@string/pref_itpd_HTTP_proxy_enabled" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_HTTP_proxy_port"
+            android:defaultValue="4444"
+            android:dependency="HTTP proxy"
+            android:key="HTTP proxy port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_HTTP_proxy_port_summ"
+            android:title="@string/pref_itpd_HTTP_proxy_port" />
+        <SwitchPreference
+            android:id="@+id/pref_itpd_use_HTTP_outproxy"
+            android:defaultValue="false"
+            android:key="HTTP outproxy"
+            android:summary="@string/pref_itpd_use_HTTP_outproxy_summ"
+            android:title="@string/pref_itpd_use_HTTP_outproxy" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_HTTP_outproxy_address"
+            android:defaultValue="http://false.i2p"
+            android:dependency="HTTP outproxy"
+            android:key="HTTP outproxy address"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_HTTP_outproxy_address_summ"
+            android:title="@string/pref_itpd_HTTP_outproxy_address" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="itpd_category_socks_proxy"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_itpd_Socks_proxy">
+
+        <SwitchPreference
+            android:id="@+id/pref_itpd_Socks_proxy_enabled"
+            android:defaultValue="true"
+            android:key="Socks proxy"
+            android:title="@string/pref_itpd_Socks_proxy_enabled" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_Socks_proxy_port"
+            android:defaultValue="4447"
+            android:dependency="Socks proxy"
+            android:key="Socks proxy port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_itpd_Socks_proxy_port_summ"
+            android:title="@string/pref_itpd_Socks_proxy_port" />
+        <SwitchPreference
+            android:id="@+id/pref_itpd_use_Socks_outproxy"
+            android:defaultValue="false"
+            android:key="Socks outproxy"
+            android:summary="@string/pref_itpd_use_Socks_outproxy_summ"
+            android:title="@string/pref_itpd_use_Socks_outproxy" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_Socks_outproxy_address"
+            android:defaultValue="127.0.0.1"
+            android:dependency="Socks outproxy"
+            android:key="Socks outproxy address"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_itpd_Socks_outproxy_address" />
+        <EditTextPreference
+            android:id="@+id/pref_itpd_Socks_outproxy_port"
+            android:defaultValue="9050"
+            android:dependency="Socks outproxy"
+            android:key="Socks outproxy port"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:title="@string/pref_itpd_Socks_outproxy_port" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="itpd_settings_oubound_proxy"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_itpd_com_use_ntcpproxy">
         <SwitchPreference
             android:id="@+id/pref_itpd_com_use_ntcpproxy"
             android:defaultValue="false"
@@ -100,73 +161,32 @@
             android:title="@string/pref_itpd_com_ntcpproxy" />
     </PreferenceCategory>
     <PreferenceCategory
-        android:key="itpd_category_http_proxy"
+        android:key="itpd_settings_incoming"
         android:layout="@layout/preferences_category_custom"
-        android:title="@string/pref_itpd_HTTP_proxy">
-
+        android:title="@string/pref_itpd_com_incom_connect">
         <SwitchPreference
-            android:id="@+id/pref_itpd_HTTP_proxy_enabled"
-            android:defaultValue="true"
-            android:key="HTTP proxy"
-            android:title="@string/pref_itpd_HTTP_proxy_enabled" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_HTTP_proxy_port"
-            android:defaultValue="4444"
-            android:key="HTTP proxy port"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_itpd_HTTP_proxy_port_summ"
-            android:title="@string/pref_itpd_HTTP_proxy_port" />
-        <SwitchPreference
-            android:id="@+id/pref_itpd_use_HTTP_outproxy"
+            android:id="@+id/pref_itpd_com_incom_connect"
             android:defaultValue="false"
-            android:key="HTTP outproxy"
-            android:title="@string/pref_itpd_use_HTTP_outproxy" />
+            android:key="Allow incoming connections"
+            android:title="@string/pref_itpd_com_incom_connect" />
         <EditTextPreference
-            android:id="@+id/pref_itpd_HTTP_outproxy_address"
-            android:defaultValue="http://false.i2p"
-            android:key="HTTP outproxy address"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:title="@string/pref_itpd_HTTP_outproxy_address" />
-    </PreferenceCategory>
-    <PreferenceCategory
-        android:key="itpd_category_socks_proxy"
-        android:layout="@layout/preferences_category_custom"
-        android:title="@string/pref_itpd_Socks_proxy">
-
-        <SwitchPreference
-            android:id="@+id/pref_itpd_Socks_proxy_enabled"
-            android:defaultValue="true"
-            android:key="Socks proxy"
-            android:title="@string/pref_itpd_Socks_proxy_enabled" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_Socks_proxy_port"
-            android:defaultValue="4447"
-            android:key="Socks proxy port"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_itpd_Socks_proxy_port_summ"
-            android:title="@string/pref_itpd_Socks_proxy_port" />
-        <SwitchPreference
-            android:id="@+id/pref_itpd_use_Socks_outproxy"
-            android:defaultValue="false"
-            android:key="Socks outproxy"
-            android:title="@string/pref_itpd_use_Socks_outproxy" />
-        <EditTextPreference
-            android:id="@+id/pref_itpd_Socks_outproxy_address"
+            android:id="@+id/pref_itpd_com_host"
             android:defaultValue="127.0.0.1"
-            android:key="Socks outproxy address"
+            android:dependency="Allow incoming connections"
+            android:key="incoming host"
             android:selectAllOnFocus="false"
             android:singleLine="true"
-            android:title="@string/pref_itpd_Socks_outproxy_address" />
+            android:summary="@string/pref_itpd_com_host_summ"
+            android:title="@string/pref_itpd_com_host" />
         <EditTextPreference
-            android:id="@+id/pref_itpd_Socks_outproxy_port"
-            android:defaultValue="9050"
-            android:key="Socks outproxy port"
+            android:id="@+id/pref_itpd_com_port"
+            android:defaultValue="4567"
+            android:dependency="Allow incoming connections"
+            android:key="incoming port"
             android:selectAllOnFocus="false"
             android:singleLine="true"
-            android:title="@string/pref_itpd_Socks_outproxy_port" />
+            android:summary="@string/pref_itpd_com_port_summ"
+            android:title="@string/pref_itpd_com_port" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="category_itpd_sam_interface"
