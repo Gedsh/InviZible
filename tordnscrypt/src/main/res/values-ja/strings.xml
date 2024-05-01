@@ -135,7 +135,7 @@
     <string name="pref_common_excludes_from_tor_summ">"ホットスポット(公衆Wi-Fi)で直接接続するウェブサイト "</string>
     <string name="pref_common_itpd_tethering">"I2P経由のテザリングを許可する"</string>
     <string name="pref_common_fix_ttl">"TTLを防止する"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL will be fixed to 64 using a local VPN. Kernel support is not required. It can only be used in \"root mode\" with the \"Run Modules With Root\" option disabled. To fix TTL please start DNSCrypt or/and Tor."</string>
+    <string name="pref_common_fix_ttl_summ">TTL will be fixed to 64 using a local VPN. Kernel support is not required. It can only be used in \"root mode\" with the \"Run Modules With Root\" option disabled. To fix TTL please start DNSCrypt or/and Tor.</string>
     <string name="pref_common_tethering_settings">"テザリング設定を開く"</string>
     <string name="pref_common_restart_dnscrypt">"DNSCryptを再起動してください"</string>
     <string name="pref_common_restart_tor">"Torを再起動してください"</string>
@@ -164,7 +164,7 @@
     <string name="pref_dnscrypt_proxy_summ">"Route all TCP connections to a local Tor node. Tor doesn't support UDP, so set force_tcp to true as well."</string>
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"その他の設定"</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Fallback resolver. This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries when retrieving the initial resolvers list, and only if the system DNS configuration doesn't work. It will never be used if lists have already been cached. People in China may need to use 114.114.114.114:53 here."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Fallback resolver. This is a normal, non-encrypted DNS resolver, that will be only used for one-shot queries when retrieving the initial resolvers list, and only if the system DNS configuration doesn\'t work. It will never be used if lists have already been cached. People in China may need to use 114.114.114.114:53 here.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Never let dnscrypt-proxy try to use the system DNS settings. Unconditionally use the fallback resolver.."</string>
     <string name="pref_dnscrypt_filters_categ">"フィルタ"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>

@@ -135,7 +135,7 @@
     <string name="pref_common_excludes_from_tor_summ">"Stony otwierane bezposrednio przez Punkt Dostepu"</string>
     <string name="pref_common_itpd_tethering">"Zezwol na udostepnianie I2P"</string>
     <string name="pref_common_fix_ttl">"Naprawić TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL zostanie ustawione na 64 przy uzyciu lokalnej sieci VPN. Obsluga jadra nie jest wymagana. Mozna go uzywac tylko w \"root mode\" z wyłączoną opcją \"Run Modules With Root\". Aby naprawic TTL, uruchom DNSCrypt lub / i Tor."</string>
+    <string name="pref_common_fix_ttl_summ">TTL zostanie ustawione na 64 przy uzyciu lokalnej sieci VPN. Obsluga jadra nie jest wymagana. Mozna go uzywac tylko w \"root mode\" z wyłączoną opcją \"Run Modules With Root\". Aby naprawic TTL, uruchom DNSCrypt lub / i Tor.</string>
     <string name="pref_common_tethering_settings">"Otworz ustawienia Punktu Dostepu"</string>
     <string name="pref_common_restart_dnscrypt">"Prosze zrestartowac DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Prosze zrestartowac Tor"</string>
@@ -164,7 +164,7 @@
     <string name="pref_dnscrypt_proxy_summ">"Przekieruj calosc ruchu TCP do Tora. Tor nie wspiera UDP - nalezy ustawic rowniez force_tcp."</string>
     <string name="pref_dnscrypt_proxy">"port_proxy"</string>
     <string name="pref_dnscrypt_other_categ">"Inne ustawienia."</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Serwer zapasowy. To jest normalny, nieszyfroway serwer DNS, ktory bedzie wykorzystwany tylko dla jednorazowych zapytan przy pobieraniu listy serwerow TYLKO jesli systemowy DNS nie bedzie dostepny. Nie zostanie uzyty jesli bedzie istniala kopia listy serwerow."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Serwer zapasowy. To jest normalny, nieszyfroway serwer DNS, ktory bedzie wykorzystwany tylko dla jednorazowych zapytan przy pobieraniu listy serwerow TYLKO jesli systemowy DNS nie bedzie dostepny. Nie zostanie uzyty jesli bedzie istniala kopia listy serwerow.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Nie zezwalaj proxy dnscrypt uzywac systemowego DNS. Bezwarunkowo stosuj serwer zapasowy."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTRY"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Reguly przekierowan"</string>

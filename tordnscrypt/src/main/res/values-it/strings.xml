@@ -135,7 +135,7 @@
     <string name="pref_common_excludes_from_tor_summ">"Lista di Siti Web da aprire direttamente per l'HOTSPOT"</string>
     <string name="pref_common_itpd_tethering">"Consenti Tethering I2P"</string>
     <string name="pref_common_fix_ttl">"Correggi TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL verrà fissato a 64 utilizzando una VPN locale. Il supporto del kernel non è richiesto. Può essere utilizzato solo in \"modalità root\" con l'opzione \"Esegui moduli con root\" disabilitata. Per correggere TTL, avvia DNSCrypt o/e Tor."</string>
+    <string name="pref_common_fix_ttl_summ">TTL verrà fissato a 64 utilizzando una VPN locale. Il supporto del kernel non è richiesto. Può essere utilizzato solo in \"modalità root\" con l\'opzione \"Esegui moduli con root\" disabilitata. Per correggere TTL, avvia DNSCrypt o/e Tor.</string>
     <string name="pref_common_tethering_settings">"Apri configurazione Tethering"</string>
     <string name="pref_common_restart_dnscrypt">"Riavvia DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Riavvia Tor"</string>
@@ -164,7 +164,7 @@
     <string name="pref_dnscrypt_proxy_summ">"Instrada tutte le connessioni TCP a un nodo Tor locale. Tor non supporta UDP, quindi imposta anche force_tcp su true."</string>
     <string name="pref_dnscrypt_proxy">"porta_proxy"</string>
     <string name="pref_dnscrypt_other_categ">"Altre Impostazioni."</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Risolutore di fallback. Questo è un normale risolutore DNS non crittografato, che verrà utilizzato solo per query one-shot quando si recupera l'elenco iniziale dei risolutori e solo se la configurazione DNS del sistema non funziona. Non verrà mai utilizzato se le liste sono già state memorizzate nella cache."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Risolutore di fallback. Questo è un normale risolutore DNS non crittografato, che verrà utilizzato solo per query one-shot quando si recupera l\'elenco iniziale dei risolutori e solo se la configurazione DNS del sistema non funziona. Non verrà mai utilizzato se le liste sono già state memorizzate nella cache.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Non permettere mai a dnscrypt-proxy di provare a utilizzare le impostazioni DNS di sistema. Usa incondizionatamente il risolutore di fallback.."</string>
     <string name="pref_dnscrypt_filters_categ">"FILTRI"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Regole di inoltro"</string>

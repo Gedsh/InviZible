@@ -147,9 +147,9 @@
     <string name="pref_common_excludes_from_tor_summ">"لیست وب‌سایت‌ها به‌منظور باز شدن خودکار برای هات اسپات"</string>
     <string name="pref_common_itpd_tethering">"اجازه دادن به Tethering I2p"</string>
     <string name="pref_common_fix_ttl">"رفع مشکل TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL از طریق VPN محلی بر روی 64 ثابت خواهد شد. به پشتیبانی از Kernel نیاز نیست.
-این مورد تنها در \"حالت روت\" همراه با غیرفعال بودن گزینه \"اجزای ماژول‌ها همراه با روت\" می‌تواند استفاده شود.
-برای رفع مشکل TTL لطفاً DNSCrypt و یا TOR را راه‌اندازی نمایید."</string>
+    <string name="pref_common_fix_ttl_summ">TTL از طریق VPN محلی بر روی 64 ثابت خواهد شد. به پشتیبانی از Kernel نیاز نیست.
+\nاین مورد تنها در \"حالت روت\" همراه با غیرفعال بودن گزینه \"اجزای ماژول‌ها همراه با روت\" می‌تواند استفاده شود.
+\nبرای رفع مشکل TTL لطفاً DNSCrypt و یا TOR را راه‌اندازی نمایید.</string>
     <string name="pref_common_tethering_settings">"باز کردن تنظیمات Tethering"</string>
     <string name="pref_common_restart_dnscrypt">"لطفاً DNSCrypt را مجدداً راه‌اندازی کنید"</string>
     <string name="pref_common_restart_tor">"لطفا TOR را مجدداً راه‌اندازی نمایید"</string>

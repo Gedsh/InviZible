@@ -138,7 +138,7 @@
     <string name="pref_common_excludes_from_tor_summ">"热点直接打开的网站列表"</string>
     <string name="pref_common_itpd_tethering">"允许 I2P 数据共享"</string>
     <string name="pref_common_fix_ttl">"固定 TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL 将使用本地 VPN 固定为 64。不需要内核支持。 仅在“root 模式”下且禁用“使用 Root 运行模块”选项时可用。 为固定 TTL 请启动 DNSCrypt 或/和 Tor。"</string>
+    <string name="pref_common_fix_ttl_summ">TTL 将使用本地 VPN 固定为 64。不需要内核支持。 仅在“root 模式”下且禁用“使用 Root 运行模块”选项时可用。 为固定 TTL 请启动 DNSCrypt 或/和 Tor。</string>
     <string name="pref_common_tethering_settings">"打开数据共享配置"</string>
     <string name="pref_common_restart_dnscrypt">"请重启 DNSCrypt"</string>
     <string name="pref_common_restart_tor">"请重启 Tor"</string>
@@ -167,7 +167,7 @@
     <string name="pref_dnscrypt_proxy_summ">"路由全部 TCP 连接到本地 Tor 节点。 Tor 不支持 UDP，因此也设置 force_tcp 为 true。"</string>
     <string name="pref_dnscrypt_proxy">"proxy_port"</string>
     <string name="pref_dnscrypt_other_categ">"其他设置。"</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"回退解析器。 这是一个普通无加密 DNS 解析器，将用于获取初始解析器列表时的单发请求，且仅在系统 DNS 配置不工作时。 如果列表已缓存它将不会使用。中国用户可能需要在此使用 114.114.114.114:53。"</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">回退解析器。 这是一个普通无加密 DNS 解析器，将用于获取初始解析器列表时的单发请求，且仅在系统 DNS 配置不工作时。 如果列表已缓存它将不会使用。中国用户可能需要在此使用 114.114.114.114:53。</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"从不让 dnscrypt-proxy 尝试使用系统 DNS 设置。无条件使用回退解析器。"</string>
     <string name="pref_dnscrypt_filters_categ">"过滤器"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"转发规则"</string>

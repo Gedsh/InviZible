@@ -146,7 +146,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_common_excludes_from_tor_summ">"Λίστα ιστοτόπων για άνοιγμα απευθείας για HOTSPOT"</string>
     <string name="pref_common_itpd_tethering">"Να επιτρέπετται πρόσδεση I2P"</string>
     <string name="pref_common_fix_ttl">"Διόρθωση TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"Το TTL θα διορθωθεί σε 64 χρησιμοποιώντας τοπικό VPN. Δεν απαιτείται υποστήριξη πυρήνα. Μπορεί να χρησιμοποιηθεί μόνο σε \"λειτουργία root\" με απενεργοποιημένη την επιλογή \"Εκτέλεση Μονάδων ως Root\". Για να διορθώσετε το TTL, ξεκινήστε το DNSCrypt ή/και το Tor."</string>
+    <string name="pref_common_fix_ttl_summ">Το TTL θα διορθωθεί σε 64 χρησιμοποιώντας τοπικό VPN. Δεν απαιτείται υποστήριξη πυρήνα. Μπορεί να χρησιμοποιηθεί μόνο σε \"λειτουργία root\" με απενεργοποιημένη την επιλογή \"Εκτέλεση Μονάδων ως Root\". Για να διορθώσετε το TTL, ξεκινήστε το DNSCrypt ή/και το Tor.</string>
     <string name="pref_common_tethering_settings">"Ανοίξτε ρυθμίσεις της πρόσδεσης"</string>
     <string name="pref_common_restart_dnscrypt">"Παρακαλώ επανεκκινήστε το DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Παρακαλώ επανεκκινήστε το Tor"</string>
@@ -175,7 +175,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_dnscrypt_proxy_summ">"Δρομολογήστε όλες τις συνδέσεις TCP σε έναν τοπικό κόμβο Tor. Το Tor δεν υποστηρίζει UDP, οπότε ορίστε και το force_tcp σε ενεργό."</string>
     <string name="pref_dnscrypt_proxy">"Θύρα διακομιστή"</string>
     <string name="pref_dnscrypt_other_categ">"Λοιπές Ρυθμίσεις."</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Επίλυση με Bootstrap. Αυτή είναι μια κανονική, μη κρυπτογραφημένη λύση επίλυσης DNS, η οποία θα χρησιμοποιηθεί για ερωτήματα μιας μόνο λήψης κατά την ανάκτηση της αρχικής λίστας επιλυτών και μόνο εάν η διαμόρφωση DNS του συστήματος δεν λειτουργεί. Δεν θα χρησιμοποιηθεί ποτέ εάν οι λίστες έχουν ήδη αποθηκευτεί προσωρινά."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Επίλυση με Bootstrap. Αυτή είναι μια κανονική, μη κρυπτογραφημένη λύση επίλυσης DNS, η οποία θα χρησιμοποιηθεί για ερωτήματα μιας μόνο λήψης κατά την ανάκτηση της αρχικής λίστας επιλυτών και μόνο εάν η διαμόρφωση DNS του συστήματος δεν λειτουργεί. Δεν θα χρησιμοποιηθεί ποτέ εάν οι λίστες έχουν ήδη αποθηκευτεί προσωρινά.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Μην αφήνετε ποτέ το dnscrypt-proxy να προσπαθήσει να χρησιμοποιήσει τις ρυθμίσεις DNS του συστήματος. Χρησιμοποιήστε άνευ όρων την εναλλακτική λύση επίλυσης.."</string>
     <string name="pref_dnscrypt_filters_categ">"ΦΙΛΤΡΑ"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Κανόνες προώθησης"</string>

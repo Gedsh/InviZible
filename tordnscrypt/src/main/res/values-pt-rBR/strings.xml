@@ -142,7 +142,7 @@
     <string name="pref_common_itpd_tethering">"Permitir I2P Tethering"</string>
     <!-- Fuzzy -->
     <string name="pref_common_fix_ttl">"Corrigir TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"O TTL será fixado em 64 usando uma VPN local. O suporte ao kernel não é necessário. Ele só pode ser usado no \"modo Root\" com a opção \"Executar módulos com Root\" desabilitada. Para corrigir o TTL, inicie DNSCrypt ou / e Tor."</string>
+    <string name="pref_common_fix_ttl_summ">O TTL será fixado em 64 usando uma VPN local. O suporte ao kernel não é necessário. Ele só pode ser usado no \"modo Root\" com a opção \"Executar módulos com Root\" desabilitada. Para corrigir o TTL, inicie DNSCrypt ou / e Tor.</string>
     <string name="pref_common_tethering_settings">"Abrir configurações do Tethering"</string>
     <string name="pref_common_restart_dnscrypt">"Por favor, reinicie o DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Por favor, reinicie o Tor"</string>
