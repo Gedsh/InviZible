@@ -270,7 +270,7 @@
     <string name="pref_dnscrypt_doh_servers_summ">Use servers implementing the DNS-over-HTTPS protocol.</string>
     <string name="pref_dnscrypt_odoh_servers_summ">Use servers implementing the Oblivious DNS-over-HTTPS protocol.</string>
     <string name="pref_dnscrypt_doh_servers" translatable="false">DoH servers</string>
-    <string name="pref_dnscrypt_odoh_servers" translatable="false">ODoH_servers</string>
+    <string name="pref_dnscrypt_odoh_servers" translatable="false">ODoH servers</string>
     <string name="pref_dnscrypt_ipv4_servers" translatable="false">IPv4 servers</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">Use servers reachable over IPv4</string>
     <string name="pref_dnscrypt_ipv6_servers" translatable="false">IPv6 servers</string>
