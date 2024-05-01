@@ -948,6 +948,13 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         loge("VPN service task removed " + this.hashCode());
 
+        boolean vpnEnabled = defaultPreferences.get().getBoolean(VPN_SERVICE_ENABLED, false);
+        if (vpnEnabled) {
+            Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
+            starterIntent.setAction(ALWAYS_ON_VPN);
+            sendBroadcast(starterIntent);
+        }
+
         super.onTaskRemoved(rootIntent);
     }
 }
