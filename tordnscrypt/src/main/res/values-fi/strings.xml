@@ -266,9 +266,8 @@
     <string name="pref_itpd_Cryptography">"Salaustekniikka"</string>
     <string name="pref_itpd_elgamal_summ">"Käytä ElGamalin esikomputoituja taulukoita."</string>
     <string name="pref_itpd_UPNP_summ">"Ota UPnP käyttöön tai poista se käytöstä."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 käytössä"</string>
     <string name="pref_itpd_reseeding">"Reseeding"</string>
-    <string name="pref_itpd_reseeding_summ">"Varmista .su3-allekirjoitus."</string>
+    <string name="pref_itpd_reseeding_summ">"Varmista su3-allekirjoitus."</string>
     <string name="pref_itpd_limits">"Rajat"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Ohita kauttakulun tunnelien enimmäismäärä. 2500 oletuksena."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Rajoita avoimien tiedostokuvausten lukumäärä (0 - käytä järjestelmän rajaa)."</string>

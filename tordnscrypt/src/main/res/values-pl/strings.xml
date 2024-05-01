@@ -266,9 +266,8 @@
     <string name="pref_itpd_Cryptography">"Kryptografia"</string>
     <string name="pref_itpd_elgamal_summ">"Uzyj predefiniowanych tablic ElGamal."</string>
     <string name="pref_itpd_UPNP_summ">"Udostepnij lub zablokuj UPnP."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 udostepnione"</string>
     <string name="pref_itpd_reseeding">"Reseeding"</string>
-    <string name="pref_itpd_reseeding_summ">"Zweryfikuj podpis .su3."</string>
+    <string name="pref_itpd_reseeding_summ">"Zweryfikuj podpis su3."</string>
     <string name="pref_itpd_limits">"Ograniczenia"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Zmien maksymalna ilosc tuneli tranzytowych. Domyslnie 2500."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Ogranicz ilosc deskryptorow plikow (0 - zastosuj ograniczenie systemowe)."</string>

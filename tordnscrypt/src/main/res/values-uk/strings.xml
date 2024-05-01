@@ -113,11 +113,11 @@
     <string name="pref_common_run_with_root">Запуск модулів з Root</string>
     <string name="pref_common_run_with_root_summ">Використовувати Root привілеї для модулів DNSCrypt, Tor та I2P. Увімкнення цієї функції залишає модулі некерованими і може викликати проблеми з підключенням!</string>
     <string name="pref_common_categ_other">Інші</string>
-    <string name="pref_common_notification_summ">Захистіть програму в Безрутовому Режимі, щоб андроїд не завершив його</string>
+    <string name="pref_common_notification_summ">Захистіть програму, щоб андроїд не завершив її</string>
     <string name="pref_common_dns_rebind_protection_summ">Заблокувати сайт при виявленні атаки повторного зв\'язування DNS</string>
     <string name="pref_common_show_notification">Показувати повідомлення</string>
     <string name="pref_common_wakelock">Заборонити сон пристрою</string>
-    <string name="pref_common_show_help_summ">Завжди показувати довідкові повідомлення</string>
+    <string name="pref_common_show_help_summ">Показувати всі повідомлення, раніше зазначені як недозволені для показу</string>
     <string name="pref_common_shell_control">Увімкнути керування скриптами</string>
     <string name="notification_exclude_bat_optimisation_title">Вимкнути оптимізацію батареї?</string>
     <string name="pref_common_notification_helper">Будь ласка, виключіть InviZible Pro з оптимізації заряду батареї Android, щоб система не припиняла роботу DNSCrypt, Tor або I2P в будь-яку мить. Деякі спеціальні системи, такі як MIUI, можуть вимагати додаткових кроків.</string>
@@ -129,7 +129,7 @@
     <string name="pref_common_restart_dnscrypt">Будь ласка, перезапустіть DNSCrypt</string>
     <string name="pref_common_restart_tor">Будь ласка, перезапустіть Tor</string>
     <string name="pref_common_restart_itpd">Будь ласка, перезапустіть I2P</string>
-    <string name="pref_common_multi_user_summ">Підтримка подвійних додатків, MIUI, Island, Shelter та додатків робочого профілю</string>
+    <string name="pref_common_multi_user_summ">Підтримка подвійних додатків, MIUI, Island, Shelter та додатків робочого профілю. Може бути неефективним у режимі VPN</string>
     <string name="pref_common_use_iptables">Виберіть iptables</string>
     <string name="pref_dnscrypt_other_categ">Інші налаштування.</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Сервер для початкового завантаження. Це звичайний сервер, не який підтримує шифрування. Використовується лише для завантаження списку серверів, які підтримують шифрування, якщо системний сервер DNS не працює. Він ніколи не використовується, якщо завантажено список серверів, які підтримують шифрування.</string>
@@ -175,7 +175,7 @@
     <string name="pref_common_refresh_rules_summ">Оновити правила під час зміни підключення</string>
     <string name="pref_common_unblock_with_tor">Вибрати сайти</string>
     <string name="toastSettings_saved">Налаштування збережені</string>
-    <string name="pref_common_wakelock_summ">Додатковий захист у Безрутовому Режимі, щоб андроїд не закрив додаток. Може призвести до підвищеного розряду батареї</string>
+    <string name="pref_common_wakelock_summ">Не дозволяти пристрою переходити в режим сну. Може бути корисним при використанні точки доступу. Розряджає батарею!</string>
     <string name="pref_common_compatibility_mode">Режим сумісності</string>
     <string name="pref_dnscrypt_global_settings_categ">Загальні налаштування</string>
     <string name="pref_common_compatibility_mode_summ">Увімкніть якщо у Вас кастомна прошивка, та інтернет зникає при натисканні кнопки START</string>
@@ -185,10 +185,9 @@
     <string name="pref_tor_clearnet">Хост або IP для обходу</string>
     <string name="country_select_select_all">Вибрати все</string>
     <string name="country_select_unselect_all">Прибрати вибране</string>
-    <string name="pref_itpd_com_host_summ">Зовнішній IP роутера для вхідних з\'єднань.</string>
-    <string name="pref_itpd_ntcp2_enabled">ntcp2 увімкнено</string>
+    <string name="pref_itpd_com_host_summ">Зовнішній IP роутера для вхідних з\'єднань (по замовчуванню: auto якщо включений SSU2).</string>
     <string name="pref_itpd_reseeding">Ресідінґ</string>
-    <string name="pref_itpd_reseeding_summ">Перевірте підпис .su3.</string>
+    <string name="pref_itpd_reseeding_summ">Перевіряти підпис su3.</string>
     <string name="helper_itpd_stopped">Схоже, що I2P було вбито системою Android. Перевірте налаштування пристрою!</string>
     <string name="update_notification">Завантаження файлу</string>
     <string name="update_ipro_has_apdate">Доступне оновлення InviZible Pro. Бажаєте завантажити та оновити його\? Оновлення продовжиться у фоновому режимі.</string>
@@ -280,13 +279,15 @@
     <string name="pref_itpd_com_bandwidth_summ">Обмеження пропускної здатності в Кбіт/с.</string>
     <string name="pref_itpd_com_share_summ">Максимальний % від ліміту пропускної здатності для транзиту. 0-100.</string>
     <string name="pref_itpd_com_ssu_summ">Увімкніть транспортний протокол SSU (використовуйте UDP).</string>
-    <string name="pref_itpd_com_use_ntcpproxy">Увімкнути ntcpproxy</string>
+    <string name="pref_itpd_com_use_ntcpproxy">Вихідний проксі</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Вкажіть проксі-сервер для NTCP. Має бути http://address:port або socks://address:port.</string>
     <string name="pref_itpd_HTTP_proxy">HTTP-проксі</string>
     <string name="pref_itpd_HTTP_proxy_enabled">HTTP-проксі</string>
     <string name="pref_itpd_HTTP_proxy_port_summ">Порт для прослуховування (HTTP-проксі).</string>
     <string name="pref_itpd_use_HTTP_outproxy">HTTP-аутпроксі</string>
+    <string name="pref_itpd_use_HTTP_outproxy_summ">Шлюз у звичайний інтернет</string>
     <string name="pref_itpd_HTTP_outproxy_address">Адреса HTTP-аутпроксі</string>
+    <string name="pref_itpd_HTTP_outproxy_address_summ">URL адреса вихідного HTTP проксі (наприклад http://false.i2p)</string>
     <string name="pref_itpd_HTTP_proxy_port">Порт HTTP-проксі</string>
     <string name="pref_itpd_Socks_proxy_port">Порт сокс-проксі</string>
     <string name="pref_itpd_Socks_proxy_enabled">Сокс проксі</string>
@@ -331,7 +332,7 @@
     <string name="vpn_mode_off">Режим VPN вимкнено</string>
     <string name="vpn_mode_active">Режим VPN активовано</string>
     <string name="thanks_for_donate_gp">Проект InviZible Pro та його автор висловлюють подяку за допомогу!</string>
-    <string name="vpn_tor_tether_summ">Будь ласка, налаштуйте використання проксі-сервера в налаштуваннях підключеного пристрою. Типове значення: IP:10.1.10.1 Port:8118</string>
+    <string name="vpn_tor_tether_summ">Будь ласка, налаштуйте використання проксі в налаштуваннях підключеного пристрою. Типове значення: IP:10.1.10.1 Port:8118</string>
     <string name="vpn_mode_error">Помилка режиму VPN!</string>
     <string name="main_fragment_access_i2p">Доступ до мережі I2P з Purple I2P</string>
     <string name="add_custom_server_title">Додати власний сервер</string>
@@ -361,7 +362,7 @@
     <string name="pref_itpd_addressbook_subscriptions_summ">URL підписки AddressBook.</string>
     <string name="update_interrupt_notification">Завантаження було зупинено</string>
     <string name="pending_purchase">Зверніть увагу, що у вас відкладена покупка:</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Для керування модулями програми використовуйте наступну команду: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Де 1 - запускає, 0 - зупиняє модуль.</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Для керування модулями програми використовуйте наступну команду: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Де 1 - запускає, 0 - зупиняє модуль</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">Вимагати, щоб сервери, визначені віддаленими джерелами, відповідали певним властивостям</string>
     <string name="pref_common_tor_route_all_summ">Увесь вхідний трафік через Тор</string>
     <string name="pref_common_unblock_with_tor_summ">Список веб-сайтів, які потрібно відкрити за допомогою Tor для HOTSPOT</string>
@@ -382,6 +383,7 @@
     <string name="pref_dnscrypt_import_cloaking_rules_summ">Імпортує файл правил маскування. Ви можете вибрати декілька файлів, повторювані рядки видаляться.</string>
     <string name="pref_dnscrypt_query_log_categ">Журналізація запитів</string>
     <string name="pref_itpd_use_Socks_outproxy">SOCKS аутпроксі</string>
+    <string name="pref_itpd_use_Socks_outproxy_summ">Адреса проксі (IP або локальна). Туди надходитимуть запити, які йдуть за межі мережі I2P.</string>
     <string name="pref_dnscrypt_nx_log_categ">Журналізація підозрілих запитів</string>
     <string name="pref_dnscrypt_nx_log">Журнал підозрілих запитів</string>
     <string name="open_nx_log">Відкрити журнал підозрілих подій</string>
@@ -405,8 +407,8 @@
     <string name="pref_tor_enable_SOCKS_output_proxy">Вихідний SOCKS проксі</string>
     <string name="pref_routing_clearnet_app">Застосунки для обходу InviZible</string>
     <string name="pref_itpd_common">Загальні налаштування</string>
-    <string name="pref_itpd_com_incom_connect">Дозволити вхідні з\'єднання</string>
-    <string name="pref_itpd_com_port_summ">Порт для прослуховування вхідних з\'єднань.</string>
+    <string name="pref_itpd_com_incom_connect">Вхідні з\'єднання</string>
+    <string name="pref_itpd_com_port_summ">Порт для прослуховування вхідних з\'єднань (по замовчуванню: auto (random)).</string>
     <string name="pref_itpd_com_ipv4_summ">Увімкніть зв\'язок через IPv4.</string>
     <string name="pref_itpd_com_ipv6_summ">Увімкніть зв\'язок через IPv6.</string>
     <string name="pref_itpd_com_ntcp_summ">Увімкніть транспортний протокол NTCP2 (використовуйте TCP).</string>

@@ -331,8 +331,7 @@
     <string name="pref_itpd_Cryptography">Criptografia</string>
     <string name="pref_itpd_elgamal_summ">Use tabelas pré-computadas ElGamal.</string>
     <string name="pref_itpd_UPNP_summ">Ative ou desative o UPnP.</string>
-    <string name="pref_itpd_ntcp2_enabled">Ative ntcp2</string>
-    <string name="pref_itpd_reseeding_summ">Verifique a assinatura .su3.</string>
+    <string name="pref_itpd_reseeding_summ">Verifique a assinatura su3.</string>
     <string name="pref_itpd_limits">Limites</string>
     <string name="pref_itpd_limits_transittunnels_summ">Substitua a quantidade máxima de túneis de trânsito. 2500 por padrão.</string>
     <string name="pref_itpd_limits_openfiles_summ">Limite a quantidade de descritores de ficheiros abertos (0 - uso limite do sistema).</string>

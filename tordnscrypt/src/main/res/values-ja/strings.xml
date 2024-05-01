@@ -266,9 +266,8 @@
     <string name="pref_itpd_Cryptography">"暗号方式"</string>
     <string name="pref_itpd_elgamal_summ">"Use ElGamal precomputated tables."</string>
     <string name="pref_itpd_UPNP_summ">"UPnPを有効化または無効します。"</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2は有効です。"</string>
     <string name="pref_itpd_reseeding">"Reseeding"</string>
-    <string name="pref_itpd_reseeding_summ">".su3署名を検証する"</string>
+    <string name="pref_itpd_reseeding_summ">"su3署名を検証する"</string>
     <string name="pref_itpd_limits">"制限"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Override maximum number of transit tunnels. 2500 by default."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Limit number of open file descriptors (0 - use system limit)."</string>

@@ -285,7 +285,6 @@
     <string name="pref_itpd_Cryptography">"رمزنگاری"</string>
     <string name="pref_itpd_elgamal_summ">"از جداول از پیش محاسبه شده ElGamal استفاده کنید."</string>
     <string name="pref_itpd_UPNP_summ">"فعال‌کردن یا غیرفعال‌کردن UPnP."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 فعال شد"</string>
     <!-- در حال تحقیق -->
     <string name="pref_itpd_reseeding">در حال تحقیق</string>
     <string name="pref_itpd_reseeding_summ">"امضای su3. را تأیید کنید."</string>

@@ -280,9 +280,8 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_itpd_Cryptography">"Κρυπτογράφηση"</string>
     <string name="pref_itpd_elgamal_summ">"Χρησιμοποιήστε προυπολογισμένους πίνακες ElGamal."</string>
     <string name="pref_itpd_UPNP_summ">"Ενεργοποιήστε ή απενεργοποιήστε το UPnP."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 ενεργό"</string>
     <string name="pref_itpd_reseeding">"επανατροφοδότηση"</string>
-    <string name="pref_itpd_reseeding_summ">"Επαληθεύστε την υπογραφή .su3."</string>
+    <string name="pref_itpd_reseeding_summ">"Επαληθεύστε την υπογραφή su3."</string>
     <string name="pref_itpd_limits">"Περιορισμοί"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Παράκαμψη μέγιστου αριθμού καναλιών διέλευσης. 2500 από προεπιλογή."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Όριο αριθμού περιγραφών ανοιχτών αρχείων (0 - χρήση ορίου συστήματος)."</string>

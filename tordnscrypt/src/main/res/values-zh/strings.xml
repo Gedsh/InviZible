@@ -269,9 +269,8 @@
     <string name="pref_itpd_Cryptography">"密码学"</string>
     <string name="pref_itpd_elgamal_summ">"使用 ElGamal 预计算表。"</string>
     <string name="pref_itpd_UPNP_summ">"启用或禁用 UPnP。"</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 已启用"</string>
     <string name="pref_itpd_reseeding">"正在补种"</string>
-    <string name="pref_itpd_reseeding_summ">"验证 .su3 签名。"</string>
+    <string name="pref_itpd_reseeding_summ">"验证 su3 签名。"</string>
     <string name="pref_itpd_limits">"限制"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"覆盖最大中转隧道数。默认为 2500。"</string>
     <string name="pref_itpd_limits_openfiles_summ">"打开文件描述符限制数量（0 - 使用系统限制）。"</string>

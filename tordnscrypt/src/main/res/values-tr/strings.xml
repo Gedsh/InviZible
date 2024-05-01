@@ -342,9 +342,8 @@
     <string name="pref_itpd_Cryptography">Şifreleme</string>
     <string name="pref_itpd_elgamal_summ">Önceden hesaplanan ElGamal tabloları kullan.</string>
     <string name="pref_itpd_UPNP_summ">UPnP\'yi etkinleştir veya devre dışı bırak.</string>
-    <string name="pref_itpd_ntcp2_enabled">ntcp2 etkin</string>
     <string name="pref_itpd_reseeding">Yeniden tohumlama</string>
-    <string name="pref_itpd_reseeding_summ">.su3 imzasını doğrula.</string>
+    <string name="pref_itpd_reseeding_summ">su3 imzasını doğrula.</string>
     <string name="pref_itpd_limits">Sınırlar</string>
     <string name="pref_itpd_limits_transittunnels_summ">Azami geçiş tüneli sayısını geçersiz kıl. Öntanımlı olarak 2500.</string>
     <string name="pref_itpd_limits_openfiles_summ">Açık dosya tanımlayıcılarının sayısını sınırla (0 - sistem sınırını kullan).</string>

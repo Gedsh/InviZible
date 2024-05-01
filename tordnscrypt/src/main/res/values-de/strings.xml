@@ -265,9 +265,8 @@
     <string name="pref_itpd_Cryptography">"Kryptographie"</string>
     <string name="pref_itpd_elgamal_summ">"Benutze vorberechnete ElGamal Tabellen."</string>
     <string name="pref_itpd_UPNP_summ">"UPnP aktivieren/deaktivieren."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 aktiv"</string>
     <string name="pref_itpd_reseeding">"Reseeding"</string>
-    <string name="pref_itpd_reseeding_summ">"Verifiziere .su3 Signatur."</string>
+    <string name="pref_itpd_reseeding_summ">"Verifiziere su3 Signatur."</string>
     <string name="pref_itpd_limits">"Begrenzungen"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Setze maximale Anzahl von Transit Tunnels ausser Kraft. 2500 Standard."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Begrenze die Anzahl an offenen Dateien (0 - Benutze Systemgrenze)."</string>

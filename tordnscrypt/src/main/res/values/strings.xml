@@ -107,9 +107,9 @@
     <string name="title_activity_settings">Settings</string>
 
     <string name="pref_fast_categ_autostart">Autostart</string>
-    <string name="pref_fast_dns_autostart">Start DNSCrypt On Boot</string>
-    <string name="pref_fast_tor_autostart">Start Tor On Boot</string>
-    <string name="pref_fast_itpd_autostart">Start I2P On Boot</string>
+    <string name="pref_fast_dns_autostart">Autostart DNSCrypt</string>
+    <string name="pref_fast_tor_autostart">Autostart Tor</string>
+    <string name="pref_fast_itpd_autostart">Autostart I2P</string>
     <string name="pref_fast_autostart_delay">Delay</string>
     <string name="pref_fast_autostart_delay_summ">Use a delay (secs) only if Autostart does not work correctly</string>
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
@@ -118,21 +118,21 @@
     <string name="pref_fast_routing">Routing Settings</string>
     <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
     <string name="pref_fast_all_through_ipro">Route All traffic through InviZible</string>
-    <string name="pref_fast_unlock_with_tor">Select WebSites</string>
-    <string name="pref_fast_unlock_with_tor_summ">WebSites list to open with Tor. This feature does not work for sites behind CDN</string>
-    <string name="pref_fast_unlock_apps_with_tor">Select Applications</string>
+    <string name="pref_fast_unlock_with_tor">Select sites</string>
+    <string name="pref_fast_unlock_with_tor_summ">Sites list to open with Tor. This feature does not work for sites behind CDN</string>
+    <string name="pref_fast_unlock_apps_with_tor">Select applications</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">Applications list to use with Tor</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">Applications list to use with InviZible</string>
-    <string name="pref_fast_exclude_from_tor">Exclude WebSites</string>
-    <string name="pref_fast_exclude_from_tor_summ">WebSites list to open directly. This feature does not work for sites behind CDN</string>
-    <string name="pref_fast_exclude_apps_from_tor">Exclude Applications</string>
+    <string name="pref_fast_exclude_from_tor">Exclude sites</string>
+    <string name="pref_fast_exclude_from_tor_summ">Sites list to open directly. This feature does not work for sites behind CDN</string>
+    <string name="pref_fast_exclude_apps_from_tor">Exclude applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Applications list to open directly</string>
     <string name="pref_fast_exclude_app_from_tor">Exclude from Tor</string>
     <string name="pref_fast_route_to_tor">Route to Tor</string>
     <string name="pref_fast_direct_udp_connection">Exclude UDP from Tor</string>
     <string name="pref_fast_bypass_app">Exclude entirely</string>
-    <string name="pref_fast_site_refresh_interval">Refresh Interval</string>
-    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh WebSites IPs. For Android 5.1 and higher. Put 0 to stop refresh.</string>
+    <string name="pref_fast_site_refresh_interval">Refresh interval</string>
+    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh sites IP. For Android 5.1 and higher. Put 0 to stop refresh.</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
     <string name="pref_fast_use_tor_bridges_summ">Use it if you can not connect to Tor network</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges.</string>
@@ -154,22 +154,22 @@
     <string name="pref_fast_use_tor_bridges_close_dialog">Close</string>
     <string name="pref_fast_fake_sni">Spoof SNI</string>
     <string name="pref_fast_unlock_host_wrong">Wrong host name!</string>
-    <string name="pref_fast_theme">Select Theme</string>
+    <string name="pref_fast_theme">Select theme</string>
     <string name="pref_fast_theme_titles_day_mode">Day Mode</string>
     <string name="pref_fast_theme_titles_night_mode">Night Mode</string>
     <string name="pref_fast_theme_titles_auto_mode">Auto</string>
     <string name="pref_fast_theme_titles_default_mode">System default</string>
     <string name="pref_fast_tor_bypass_lan">Bypass LAN addresses</string>
     <string name="pref_fast_tor_bypass_lan_summ">Do not use Tor for LAN destinations and IANA reserved IP blocks</string>
-    <string name="pref_fast_language">Select Language</string>
+    <string name="pref_fast_language">Select language</string>
     <string name="pref_fast_logs">Real-time logs</string>
     <string name="pref_fast_logs_summ">Show application connection logs in the DNS tab</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
     <string name="pref_fast_categ_update">Update</string>
-    <string name="pref_fast_auto_update">Automatic Updates</string>
-    <string name="pref_fast_auto_update_summ">Check InviZible Pro and modules Updates daily</string>
-    <string name="pref_fast_chek_update">Check Update</string>
+    <string name="pref_fast_auto_update">Automatic updates</string>
+    <string name="pref_fast_auto_update_summ">Check InviZible Pro and modules updates daily</string>
+    <string name="pref_fast_chek_update">Check update</string>
     <string name="pref_fast_chek_update_summ">Check if new versions are available now</string>
     <string name="pref_fast_through_tor_update">Update strictly through Tor</string>
     <string name="pref_fast_through_tor_update_summ">Check updates only with Tor and when Tor is running</string>
@@ -180,12 +180,12 @@
     <string name="pref_common_categ_other">Other</string>
     <string name="pref_common_block_http">Block HOTSPOT http</string>
     <string name="pref_common_block_http_summ">Deny connection to http port 80 for HOTSPOT</string>
-    <string name="pref_common_notification_summ">Protect application with No Root Mode to prevent app being killed by android</string>
+    <string name="pref_common_notification_summ">Protect application from being killed by android</string>
     <string name="pref_common_mitm_categ">MITM attack detection</string>
     <string name="pref_common_arp_spoofing_detection">ARP spoofing detection</string>
-    <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-Middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_rogue_dhcp_detection">Rogue DHCP detection</string>
-    <string name="pref_common_rogue_dhcp_detection_summ">Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks.</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Detect Man-in-the-Middle rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">Block internet when an attack is detected</string>
     <string name="pref_common_arp_block_internet_summ">Internet connection will be blocked during attack</string>
     <string name="pref_common_dns_rebind_protection">DNS rebinding protection</string>
@@ -199,11 +199,11 @@
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
     <string name="pref_common_wakelock">Prevent device sleep</string>
-    <string name="pref_common_wakelock_summ">Additional Protection with No Root Mode to prevent app being killed by android. May drain battery</string>
+    <string name="pref_common_wakelock_summ">Do not allow the device to fall into doze mode. May be useful when using HOTSPOT. Drains the battery!</string>
     <string name="pref_common_compatibility_mode">Compatibility mode</string>
-    <string name="pref_common_compatibility_mode_summ">Enable if your device with a custom ROM and the connection is lost when you press the START button</string>
+    <string name="pref_common_compatibility_mode_summ">Enable if your device with a custom rom and the connection is lost when you press the START button</string>
     <string name="pref_common_show_help">Help messages</string>
-    <string name="pref_common_show_help_summ">Always Show Help messages</string>
+    <string name="pref_common_show_help_summ">Show all messages that have been marked as not allowed to show</string>
     <string name="pref_common_shell_control">Enable script control</string>
     <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Use the following command to manage application modules: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module.</string>
     <string name="notification_exclude_bat_optimisation_title">Stop optimizing battery usage?</string>
@@ -216,25 +216,25 @@
     <string name="pref_common_use_busybox_app">Use application BusyBox</string>
     <string name="pref_common_use_busybox_not_use">Not use BusyBox</string>
     <string name="pref_common_categ_hotspot">HOTSPOT-Experimental</string>
-    <string name="pref_common_tethering_autostart">Start Tethering On Boot</string>
-    <string name="pref_common_tor_tethering">Allow Tor Tethering</string>
+    <string name="pref_common_tethering_autostart">Start sharing on boot</string>
+    <string name="pref_common_tor_tethering">Allow Tor sharing</string>
     <string name="pref_common_tor_route_all">Route All through Tor</string>
     <string name="pref_common_tor_route_all_summ">Route All incoming traffic through Tor</string>
-    <string name="pref_common_unblock_with_tor">Select WebSites</string>
-    <string name="pref_common_unblock_with_tor_summ">WebSites list to open with Tor for HOTSPOT</string>
-    <string name="pref_common_excludes_from_tor">Exclude WebSites</string>
-    <string name="pref_common_excludes_from_tor_summ">WebSites list to open directly for HOTSPOT</string>
-    <string name="pref_common_itpd_tethering">Allow I2P Tethering</string>
+    <string name="pref_common_unblock_with_tor">Select sites</string>
+    <string name="pref_common_unblock_with_tor_summ">Sites list to open with Tor for HOTSPOT</string>
+    <string name="pref_common_excludes_from_tor">Exclude sites</string>
+    <string name="pref_common_excludes_from_tor_summ">Sites list to open directly for HOTSPOT</string>
+    <string name="pref_common_itpd_tethering">Allow I2P sharing</string>
     <string name="pref_common_fix_ttl">Fix TTL</string>
     <string name="pref_common_fix_ttl_summ">TTL will be fixed to 64 using a local VPN. Kernel support is not required. To fix TTL please start DNSCrypt or/and Tor.</string>
     <string name="pref_common_local_eth_device_addr">LAN device IP address</string>
     <string name="pref_common_local_eth_device_addr_summ">Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s.</string>
-    <string name="pref_common_tethering_settings">Open Tethering config</string>
+    <string name="pref_common_tethering_settings">Open tethering config</string>
     <string name="pref_common_restart_dnscrypt">Please restart DNSCrypt</string>
     <string name="pref_common_restart_tor">Please restart Tor</string>
     <string name="pref_common_restart_itpd">Please restart I2P</string>
     <string name="pref_common_multi_user">Multi-user support</string>
-    <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications</string>
+    <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications. May be ineffective in VPN mode</string>
 
     <string name="pref_common_use_iptables">Select iptables</string>
     <string name="pref_common_use_iptables_app">Use application iptables</string>
@@ -418,7 +418,7 @@
     <string name="pref_tor_reduced_connections_padding" translatable="false">Reduced Connection Padding</string>
     <string name="pref_tor_reduced_connections_padding_summ">If set enabled, Tor will not hold OR connections open for very long, and will send less padding on these connections. Enable to save bandwidth.</string>
     <string name="pref_tor_nodes_categ">Nodes</string>
-    <string name="pref_tor_isolation_categ">Isolation Settings</string>
+    <string name="pref_tor_isolation_categ">Isolation settings</string>
     <string name="pref_tor_exclude_exit_nodes" translatable="false">Exclude Exit Nodes</string>
     <string name="pref_tor_exclude_exit_nodes_summ">A list of country codes to never use when picking an exit node, that delivers traffic for you outside the Tor network.</string>
     <string name="pref_tor_exit_nodes" translatable="false">Exit Nodes</string>
@@ -488,44 +488,47 @@
     <string name="country_select_select_all">Select All</string>
     <string name="country_select_unselect_all">Remove Selection</string>
 
-    <string name="pref_itpd_common">Common Settings</string>
-    <string name="pref_itpd_com_incom_connect">Allow incoming connections</string>
-    <string name="pref_itpd_com_port" translatable="false">incoming port</string>
-    <string name="pref_itpd_com_port_summ">Port to listen for incoming connections.</string>
-    <string name="pref_itpd_com_host" translatable="false">incoming host</string>
-    <string name="pref_itpd_com_host_summ">Router external IP for incoming connections.</string>
-    <string name="pref_itpd_com_ipv4" translatable="false">ipv4</string>
+    <string name="pref_itpd_common">Common settings</string>
+    <string name="pref_itpd_com_incom_connect">Incoming connections</string>
+    <string name="pref_itpd_com_port" translatable="false">Incoming port</string>
+    <string name="pref_itpd_com_port_summ">Port to listen for incoming connections (default: auto (random)).</string>
+    <string name="pref_itpd_com_host" translatable="false">Incoming host</string>
+    <string name="pref_itpd_com_host_summ">Router external IP for incoming connections (default: auto if SSU2 is enabled).</string>
+    <string name="pref_itpd_com_ipv4" translatable="false">IPv4</string>
     <string name="pref_itpd_com_ipv4_summ">Enable communication through IPv4.</string>
-    <string name="pref_itpd_com_ipv6" translatable="false">ipv6</string>
+    <string name="pref_itpd_com_ipv6" translatable="false">IPv6</string>
     <string name="pref_itpd_com_ipv6_summ">Enable communication through IPv6.</string>
-    <string name="pref_itpd_com_notransit" translatable="false">notransit</string>
+    <string name="pref_itpd_com_notransit" translatable="false">No transit</string>
     <string name="pref_itpd_com_notransit_summ">Router will not accept transit tunnels, disabling transit traffic completely.</string>
-    <string name="pref_itpd_com_floodfill" translatable="false">floodfill</string>
+    <string name="pref_itpd_com_floodfill" translatable="false">Floodfill</string>
     <string name="pref_itpd_com_floodfill_summ">Router will be floodfill.</string>
-    <string name="pref_itpd_com_bandwidth" translatable="false">bandwidth</string>
+    <string name="pref_itpd_com_bandwidth" translatable="false">Bandwidth</string>
     <string name="pref_itpd_com_bandwidth_summ">Bandwidth limit in KBps.</string>
-    <string name="pref_itpd_com_share" translatable="false">share</string>
+    <string name="pref_itpd_com_share" translatable="false">Share</string>
     <string name="pref_itpd_com_share_summ">Max % of bandwidth limit for transit. 0–100.</string>
-    <string name="pref_itpd_com_ssu" translatable="false">ssu</string>
+    <string name="pref_itpd_com_ssu" translatable="false">SSU</string>
     <string name="pref_itpd_com_ssu_summ">Enable SSU transport protocol (use UDP).</string>
-    <string name="pref_itpd_com_ssu2" translatable="false">ssu2</string>
+    <string name="pref_itpd_com_ssu2" translatable="false">SSU2</string>
     <string name="pref_itpd_com_ssu2_summ">Enable SSU2 transport protocol (use UDP).</string>
-    <string name="pref_itpd_com_ntcp" translatable="false">ntcp</string>
+    <string name="pref_itpd_com_ntcp" translatable="false">NTCP</string>
     <string name="pref_itpd_com_ntcp_summ">Enable NTCP2 transport protocol (use TCP).</string>
-    <string name="pref_itpd_com_use_ntcpproxy">Enable ntcpproxy</string>
-    <string name="pref_itpd_com_ntcpproxy" translatable="false">ntcpproxy</string>
+    <string name="pref_itpd_com_use_ntcpproxy">Outbound proxy</string>
+    <string name="pref_itpd_com_ntcpproxy" translatable="false">NTCP proxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">Specify proxy server for NTCP. Should be http://address:port or socks://address:port.</string>
     <string name="pref_itpd_HTTP_proxy">HTTP proxy</string>
     <string name="pref_itpd_HTTP_proxy_enabled">HTTP proxy</string>
     <string name="pref_itpd_HTTP_proxy_port">HTTP proxy port</string>
     <string name="pref_itpd_HTTP_proxy_port_summ">The port to listen on (HTTP Proxy).</string>
     <string name="pref_itpd_use_HTTP_outproxy">HTTP outproxy</string>
+    <string name="pref_itpd_use_HTTP_outproxy_summ">Gateway to the regular internet</string>
     <string name="pref_itpd_HTTP_outproxy_address">HTTP outproxy address</string>
+    <string name="pref_itpd_HTTP_outproxy_address_summ">HTTP proxy upstream out proxy url (like http://false.i2p)</string>
     <string name="pref_itpd_Socks_proxy">Socks proxy</string>
     <string name="pref_itpd_Socks_proxy_enabled">Socks proxy</string>
     <string name="pref_itpd_Socks_proxy_port">Socks proxy port</string>
     <string name="pref_itpd_Socks_proxy_port_summ">The port to listen on (SOCKS Proxy).</string>
     <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
+    <string name="pref_itpd_use_Socks_outproxy_summ">Address of outproxy(IP or local). Requests outside I2P will go there.</string>
     <string name="pref_itpd_Socks_outproxy_address">SOCKS outproxy address</string>
     <string name="pref_itpd_Socks_outproxy_port">SOCKS outproxy port</string>
     <string name="pref_itpd_SAM_interface">SAM interface</string>
@@ -533,27 +536,26 @@
     <string name="pref_itpd_SAM_interface_port">SAM interface port</string>
     <string name="pref_itpd_SAM_interface_port_summ">Port of SAM bridge.</string>
     <string name="pref_itpd_Cryptography">Cryptography</string>
-    <string name="pref_itpd_elgamal_enabled" translatable="false">elgamal</string>
+    <string name="pref_itpd_elgamal_enabled" translatable="false">Elgamal</string>
     <string name="pref_itpd_elgamal_summ">Use ElGamal precomputated tables.</string>
     <string name="pref_itpd_UPNP" translatable="false">UPNP</string>
     <string name="pref_itpd_UPNP_enabled" translatable="false">UPNP</string>
     <string name="pref_itpd_UPNP_summ">Enable or disable UPnP.</string>
-    <string name="pref_itpd_ntcp2" translatable="false">ntcp2</string>
-    <string name="pref_itpd_ntcp2_enabled">ntcp2 enabled</string>
+    <string name="pref_itpd_ntcp2" translatable="false">NTCP2</string>
     <string name="pref_itpd_reseeding">Reseeding</string>
-    <string name="pref_itpd_reseeding_enabled" translatable="false">verify</string>
-    <string name="pref_itpd_reseeding_summ">Verify .su3 signature.</string>
+    <string name="pref_itpd_reseeding_enabled" translatable="false">Verify</string>
+    <string name="pref_itpd_reseeding_summ">Verify su3 signature.</string>
     <string name="pref_itpd_limits">Limits</string>
-    <string name="pref_itpd_limits_transittunnels" translatable="false">transittunnels</string>
+    <string name="pref_itpd_limits_transittunnels" translatable="false">Transit tunnels</string>
     <string name="pref_itpd_limits_transittunnels_summ">Override maximum number of transit tunnels. 2500 by default.</string>
-    <string name="pref_itpd_limits_openfiles" translatable="false">openfiles</string>
+    <string name="pref_itpd_limits_openfiles" translatable="false">Open files</string>
     <string name="pref_itpd_limits_openfiles_summ">Limit number of open file descriptors (0 - use system limit).</string>
-    <string name="pref_itpd_limits_coresize" translatable="false">coresize</string>
-    <string name="pref_itpd_limits_coresize_summ">Maximum size of corefile in Kb (0 - use system limit).</string>
-    <string name="pref_itpd_addressbook">Addressbook</string>
-    <string name="pref_itpd_addressbook_defaulturl" translatable="false">defaulturl</string>
+    <string name="pref_itpd_limits_coresize" translatable="false">Core size</string>
+    <string name="pref_itpd_limits_coresize_summ">Maximum size of core file in Kb (0 - use system limit).</string>
+    <string name="pref_itpd_addressbook">Address book</string>
+    <string name="pref_itpd_addressbook_defaulturl" translatable="false">Default url</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">AddressBook subscription URL for initial setup.</string>
-    <string name="pref_itpd_addressbook_subscriptions" translatable="false">subscriptions</string>
+    <string name="pref_itpd_addressbook_subscriptions" translatable="false">Subscriptions</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">AddressBook subscriptions URLs.</string>
     <string name="pref_itpd_not_exist">Preference not exist in i2pd.conf!</string>
     <string name="pref_itpd_edit_conf">Edit i2pd.conf directly</string>
@@ -630,12 +632,12 @@
     <string name="update_dnscrypt_has_apdate">DNSCrypt update is available. Do you want to download and update it? The update will continue in the background.</string>
     <string name="update_tor_has_apdate">Tor update is available. Do you want to download and update it? The update will continue in the background.</string>
     <string name="update_itpd_has_apdate">Purple I2P update is available. Do you want to download and update it? The update will continue in the background.</string>
-    <string name="update_checking_title">Checking Updates</string>
-    <string name="update_checking_message">Please wait while Updates are checking.</string>
+    <string name="update_checking_title">Checking updates</string>
+    <string name="update_checking_message">Please wait while updates are checking.</string>
     <string name="update_check_warning">The update server is temporarily unavailable. Please try again later.</string>
     <string name="update_check_warning_menu">The update server was unavailable.</string>
     <string name="update_fault">Update fault.</string>
-    <string name="update_check_no_update">No Updates were Found.</string>
+    <string name="update_check_no_update">No updates were found.</string>
     <string name="update_last_check">Last check:</string>
     <string name="update_found">Updates were found.</string>
     <string name="update_installed">Updates were installed.</string>
@@ -667,7 +669,7 @@
 
     <string name="reset_settings_title">Attention</string>
     <string name="ask_reset_settings_btn">Reset</string>
-    <string name="ask_reset_settings_text">InviZible Pro cannot start %1$s! Please try resetting %2$s settings. If this does not help, please reboot your device.</string>
+    <string name="ask_reset_settings_text">InviZible Pro cannot start %1$s! Please try resetting %2$s settings. If this does not help, please restart your device.</string>
 
     <string name="add_custom_server_title">Add custom server</string>
     <string name="add_custom_server_error">Invalid custom server configuration. Please check the SDNS field.</string>

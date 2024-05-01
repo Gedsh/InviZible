@@ -274,9 +274,8 @@
     <string name="pref_itpd_Cryptography">"Kriptografi"</string>
     <string name="pref_itpd_elgamal_summ">"Gunakan tabel prakomputasi ElGamal."</string>
     <string name="pref_itpd_UPNP_summ">"Hidupkan atau matikan UPnP."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 diaktifkan"</string>
     <string name="pref_itpd_reseeding">Mengirim ulang</string>
-    <string name="pref_itpd_reseeding_summ">"Verifikasi tanda tangan .su3."</string>
+    <string name="pref_itpd_reseeding_summ">"Verifikasi tanda tangan su3."</string>
     <string name="pref_itpd_limits">"Batas"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Timpa jumlah maksimum terowongan transit. 2500 secara default."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Batasi jumlah deskriptor file terbuka (0 - gunakan batas sistem)."</string>
