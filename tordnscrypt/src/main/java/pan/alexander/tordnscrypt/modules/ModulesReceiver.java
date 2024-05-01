@@ -205,7 +205,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             } catch (Exception e) {
                 loge("ModulesReceiver onReceive", e, true);
             } finally {
-                pendingResult.finish();
+                if (pendingResult != null) {
+                    pendingResult.finish();
+                }
             }
             return null;
         });

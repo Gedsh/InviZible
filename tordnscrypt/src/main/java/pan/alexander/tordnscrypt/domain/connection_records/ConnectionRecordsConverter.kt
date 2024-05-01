@@ -488,7 +488,7 @@ class ConnectionRecordsConverter @Inject constructor(
                         } catch (e: Exception) {
                             loge("ConnectionRecordsConverter iptablesReceiver", e, true)
                         } finally {
-                            result.finish()
+                            result?.finish()
                         }
                     }
                 }
