@@ -617,6 +617,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     notificationManager,
                     UsageStatistics.getStartTime()
             );
+            notification.createNotificationChannel();
             notification.sendNotification(title, message);
         }
 

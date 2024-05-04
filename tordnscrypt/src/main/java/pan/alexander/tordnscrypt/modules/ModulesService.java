@@ -175,6 +175,7 @@ public class ModulesService extends Service {
                     systemNotificationManager,
                     UsageStatistics.getStartTime()
             );
+            serviceNotificationManager.createNotificationChannel();
             serviceNotificationManager.sendNotification(title, message);
         }
 
