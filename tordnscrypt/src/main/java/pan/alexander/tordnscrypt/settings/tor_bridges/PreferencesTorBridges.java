@@ -138,6 +138,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private final String ADD_BRIDGES_TAG = "pan.alexander.tordnscrypt/abstract_add_bridges";
     private final String ADD_REQUESTED_BRIDGES_TAG = "pan.alexander.tordnscrypt/abstract_add_requested_bridges";
 
+    private final static String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
+    private final static String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
+
     private final List<String> tor_conf = new ArrayList<>();
     private final Set<String> bridgesInUse = new LinkedHashSet<>();
     private final List<String> bridgesInappropriateType = new ArrayList<>();
@@ -366,10 +369,23 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         }
 
-        List<String> torConfCleaned = new ArrayList<>();
+        boolean fascistFirewall = defaultPreferences.get().getBoolean(TOR_FASCIST_FIREWALL, false);
+        boolean fascistFirewallShouldBeDisabled;
+        if (fascistFirewall) {
+            fascistFirewallShouldBeDisabled = isFascistFirewallShouldBeDisabled();
+        } else {
+            fascistFirewallShouldBeDisabled = false;
+        }
+        if (fascistFirewallShouldBeDisabled) {
+            defaultPreferences.get().edit().putBoolean(TOR_FASCIST_FIREWALL, false).apply();
+        }
 
+        List<String> torConfCleaned = new ArrayList<>();
         for (int i = 0; i < tor_conf.size(); i++) {
             String line = tor_conf.get(i);
+            if (fascistFirewallShouldBeDisabled && line.equals("FascistFirewall 1")) {
+                line = "FascistFirewall 0";
+            }
             if ((line.contains("#")
                     || (!line.contains("Bridge ")
                     && !line.contains("ClientTransportPlugin ")
@@ -454,6 +470,37 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         restartTorIfRequired(context);
 
+    }
+
+    private boolean isFascistFirewallShouldBeDisabled() {
+
+        if (currentBridgesType == meek_lite
+                || currentBridgesType == snowflake
+                || currentBridgesType == conjure) {
+            return true;
+        }
+
+        Pattern patternIPv4 = Pattern.compile(ipv4BridgeBase);
+        Pattern patternIPv6 = Pattern.compile(ipv6BridgeBase);
+        for (String currentBridge : bridgesInUse) {
+            Pattern pattern;
+            if (isBridgeIPv6(currentBridge)) {
+                pattern = patternIPv6;
+            } else {
+                pattern = patternIPv4;
+            }
+            Matcher matcher = pattern.matcher(currentBridge);
+            String ip;
+            if (matcher.find()) {
+                ip = matcher.group().substring(0, matcher.group().lastIndexOf(" "));
+            } else {
+                ip = "";
+            }
+            if (!ip.endsWith(":80") && !ip.endsWith(":443")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void restartTorIfRequired(Context context) {
@@ -686,14 +733,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setView(inputView);
 
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
-            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
-            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
             List<String> bridgesListNew = new ArrayList<>();
 
             String inputLinesStr = input.getText().toString().trim();
 
             String bridgeBase;
-            if (inputLinesStr.contains("[") && inputLinesStr.contains("]")) {
+            if (isBridgeIPv6(inputLinesStr)) {
                 bridgeBase = ipv6BridgeBase;
             } else {
                 bridgeBase = ipv4BridgeBase;
@@ -781,6 +826,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
         builder.setTitle(R.string.pref_fast_use_tor_bridges_add);
         builder.show();
+    }
+
+    private boolean isBridgeIPv6(String bridge) {
+        return bridge.contains("[") && bridge.contains("]");
     }
 
     private void addRequestedBridges(String bridgesToAdd, List<String> savedCustomBridges) {
