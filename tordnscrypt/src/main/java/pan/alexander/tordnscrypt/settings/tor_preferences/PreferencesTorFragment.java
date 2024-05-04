@@ -69,6 +69,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
@@ -177,10 +178,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         }
 
 
-        Preference entryNodesPref = findPreference("EntryNodes");
+        Preference entryNodesPref = findPreference(TOR_ENTRY_NODES);
         boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
         boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
-        boolean entryNodesActive = defaultPreferences.get().getBoolean("EntryNodes", false);
+        boolean entryNodesActive = defaultPreferences.get().getBoolean(TOR_ENTRY_NODES, false);
         if (entryNodesPref != null) {
             if (useDefaultBridges || useOwnBridges) {
                 if (entryNodesActive) {
@@ -351,10 +352,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(key_tor.indexOf("ExcludeNodes"), "#ExcludeNodes");
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "EntryNodes")) {
+        } else if (Objects.equals(preference.getKey(), TOR_ENTRY_NODES)) {
             if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#EntryNodes")) {
                 key_tor.set(key_tor.indexOf("#EntryNodes"), "EntryNodes");
-                openCountrySelectFragment(CountrySelectFragment.entryNodes, "EntryNodes");
+                openCountrySelectFragment(CountrySelectFragment.entryNodes, TOR_ENTRY_NODES);
             } else if (key_tor.contains("EntryNodes")) {
                 key_tor.set(key_tor.indexOf("EntryNodes"), "#EntryNodes");
             }

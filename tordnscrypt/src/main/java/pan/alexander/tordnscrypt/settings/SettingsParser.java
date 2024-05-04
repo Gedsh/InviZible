@@ -49,6 +49,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -267,7 +268,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                         editor.putBoolean("ExcludeNodes", false);
                         break;
                     case "EntryNodes":
-                        editor.putBoolean("EntryNodes", true);
+                        editor.putBoolean(TOR_ENTRY_NODES, true);
                         break;
                     case "#ExitNodes":
                         editor.putBoolean("ExitNodes", false);
@@ -282,7 +283,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                         editor.putBoolean("ExcludeExitNodes", true);
                         break;
                     case "#EntryNodes":
-                        editor.putBoolean("EntryNodes", false);
+                        editor.putBoolean(TOR_ENTRY_NODES, false);
                         break;
                     case "SOCKSPort":
                         editor.putBoolean("Enable SOCKS proxy", true);
