@@ -757,6 +757,31 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(index, "");
                 val_tor.set(index, "");
             }
+        } else if (Objects.equals(preference.getKey(), TOR_FASCIST_FIREWALL)) {
+            if (Boolean.parseBoolean(newValue.toString())) {
+                int indexReachableAddresses = key_tor.indexOf("#ReachableAddresses");
+                if (indexReachableAddresses >= 0) {
+                    key_tor.set(indexReachableAddresses, "ReachableAddresses");
+                } else if (!key_tor.contains("ReachableAddresses")) {
+                    int indexFascistFirewall = key_tor.indexOf("FascistFirewall");
+                    if (indexFascistFirewall >= 0) {
+                        key_tor.set(indexFascistFirewall, "ReachableAddresses");
+                        val_tor.set(indexFascistFirewall, "*:80,*:443");
+                    }
+                }
+            } else {
+                int indexReachableAddresses = key_tor.indexOf("ReachableAddresses");
+                if (indexReachableAddresses >= 0) {
+                    key_tor.set(indexReachableAddresses, "#ReachableAddresses");
+                } else if (!key_tor.contains("#ReachableAddresses")) {
+                    int indexFascistFirewall = key_tor.indexOf("FascistFirewall");
+                    if (indexFascistFirewall >= 0) {
+                        key_tor.set(indexFascistFirewall, "#ReachableAddresses");
+                        val_tor.set(indexFascistFirewall, "*:80,*:443");
+                    }
+                }
+            }
+            return true;
         }
 
         if (key_tor.contains(preference.getKey().trim())) {

@@ -383,8 +383,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         List<String> torConfCleaned = new ArrayList<>();
         for (int i = 0; i < tor_conf.size(); i++) {
             String line = tor_conf.get(i);
-            if (fascistFirewallShouldBeDisabled && line.equals("FascistFirewall 1")) {
-                line = "FascistFirewall 0";
+            if (fascistFirewallShouldBeDisabled && line.startsWith("ReachableAddresses")) {
+                line = "#" + line;
             }
             if ((line.contains("#")
                     || (!line.contains("Bridge ")
@@ -474,10 +474,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private boolean isFascistFirewallShouldBeDisabled() {
 
-        if (currentBridgesType == meek_lite
-                || currentBridgesType == snowflake
-                || currentBridgesType == conjure) {
-            return true;
+        boolean useNoBridges = preferenceRepository.get().getBoolPreference(USE_NO_BRIDGES);
+        if (useNoBridges) {
+            return false;
         }
 
         Pattern patternIPv4 = Pattern.compile(ipv4BridgeBase);

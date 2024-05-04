@@ -50,6 +50,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -261,66 +262,28 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
 
                 switch (key) {
-                    case "ExcludeNodes":
-                        editor.putBoolean("ExcludeNodes", true);
-                        break;
-                    case "#ExcludeNodes":
-                        editor.putBoolean("ExcludeNodes", false);
-                        break;
-                    case "EntryNodes":
-                        editor.putBoolean(TOR_ENTRY_NODES, true);
-                        break;
-                    case "#ExitNodes":
-                        editor.putBoolean("ExitNodes", false);
-                        break;
-                    case "ExitNodes":
-                        editor.putBoolean("ExitNodes", true);
-                        break;
-                    case "#ExcludeExitNodes":
-                        editor.putBoolean("ExcludeExitNodes", false);
-                        break;
-                    case "ExcludeExitNodes":
-                        editor.putBoolean("ExcludeExitNodes", true);
-                        break;
-                    case "#EntryNodes":
-                        editor.putBoolean(TOR_ENTRY_NODES, false);
-                        break;
-                    case "SOCKSPort":
-                        editor.putBoolean("Enable SOCKS proxy", true);
-                        break;
-                    case "#SOCKSPort":
-                        editor.putBoolean("Enable SOCKS proxy", false);
-                        break;
-                    case "TransPort":
-                        editor.putBoolean("Enable Transparent proxy", true);
-                        break;
-                    case "#TransPort":
-                        editor.putBoolean("Enable Transparent proxy", false);
-                        break;
-                    case "DNSPort":
-                        editor.putBoolean("Enable DNS", true);
-                        break;
-                    case "#DNSPort":
-                        editor.putBoolean("Enable DNS", false);
-                        break;
-                    case "HTTPTunnelPort":
-                        editor.putBoolean("Enable HTTPTunnel", true);
-                        break;
-                    case "#HTTPTunnelPort":
-                        editor.putBoolean("Enable HTTPTunnel", false);
-                        break;
-                    case TOR_OUTBOUND_PROXY_ADDRESS:
-                        editor.putBoolean(TOR_OUTBOUND_PROXY, true);
-                        break;
-                    case "#Socks5Proxy":
-                        editor.putBoolean(TOR_OUTBOUND_PROXY, false);
-                        break;
-                    case "TrackHostExits":
-                        editor.putBoolean("Enable TrackHostExits", true);
-                        break;
-                    case "#TrackHostExits":
-                        editor.putBoolean("Enable TrackHostExits", false);
-                        break;
+                    case "ExcludeNodes" -> editor.putBoolean("ExcludeNodes", true);
+                    case "#ExcludeNodes" -> editor.putBoolean("ExcludeNodes", false);
+                    case "EntryNodes" -> editor.putBoolean(TOR_ENTRY_NODES, true);
+                    case "#ExitNodes" -> editor.putBoolean("ExitNodes", false);
+                    case "ExitNodes" -> editor.putBoolean("ExitNodes", true);
+                    case "#ExcludeExitNodes" -> editor.putBoolean("ExcludeExitNodes", false);
+                    case "ExcludeExitNodes" -> editor.putBoolean("ExcludeExitNodes", true);
+                    case "#EntryNodes" -> editor.putBoolean(TOR_ENTRY_NODES, false);
+                    case "SOCKSPort" -> editor.putBoolean("Enable SOCKS proxy", true);
+                    case "#SOCKSPort" -> editor.putBoolean("Enable SOCKS proxy", false);
+                    case "TransPort" -> editor.putBoolean("Enable Transparent proxy", true);
+                    case "#TransPort" -> editor.putBoolean("Enable Transparent proxy", false);
+                    case "DNSPort" -> editor.putBoolean("Enable DNS", true);
+                    case "#DNSPort" -> editor.putBoolean("Enable DNS", false);
+                    case "HTTPTunnelPort" -> editor.putBoolean("Enable HTTPTunnel", true);
+                    case "#HTTPTunnelPort" -> editor.putBoolean("Enable HTTPTunnel", false);
+                    case TOR_OUTBOUND_PROXY_ADDRESS -> editor.putBoolean(TOR_OUTBOUND_PROXY, true);
+                    case "#Socks5Proxy" -> editor.putBoolean(TOR_OUTBOUND_PROXY, false);
+                    case "TrackHostExits" -> editor.putBoolean("Enable TrackHostExits", true);
+                    case "#TrackHostExits" -> editor.putBoolean("Enable TrackHostExits", false);
+                    case "ReachableAddresses" -> editor.putBoolean(TOR_FASCIST_FIREWALL, true);
+                    case "#ReachableAddresses" -> editor.putBoolean(TOR_FASCIST_FIREWALL, false);
                 }
             }
             editor.apply();
