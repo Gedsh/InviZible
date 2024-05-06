@@ -1122,3 +1122,9 @@
 * Revised app settings.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.2**
+* Fascist Firewall automatically turns off when inappropriate bridges are selected.
+* Fixed display of the app list on some phones.
+* Updated Spanish and Chinese translations.
+* Fixes and optimizations.
