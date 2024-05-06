@@ -67,11 +67,11 @@
     <string name="title_activity_settings">"تنظیمات"</string>
     <string name="pref_fast_categ_autostart">"شروع خودکار"</string>
     <!-- هنگام راه اندازی DNSCrypt شروع -->
-    <string name="pref_fast_dns_autostart">"فعال‌سازی DNSCrypt هنگام راه‌اندازی"</string>
+    <string name="pref_fast_dns_autostart">فعال‌سازی DNSCrypt هنگام راه‌اندازی</string>
     <!-- هنگام راه اندازی Tor شروع -->
-    <string name="pref_fast_tor_autostart">"شروع TOR هنگام راه‌اندازی مجدد"</string>
+    <string name="pref_fast_tor_autostart">شروع TOR هنگام راه‌اندازی مجدد</string>
     <!-- هنگام راه اندازی I2P شروع -->
-    <string name="pref_fast_itpd_autostart">"شروع I2P هنگام راه‌اندازی مجدد"</string>
+    <string name="pref_fast_itpd_autostart">شروع I2P هنگام راه‌اندازی مجدد</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
     <string name="pref_fast_autostart_delay_summ">شروع با تأخیر (چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد</string>
     <string name="pref_fast_dns_server">"سرورهای DNSCrypt"</string>
@@ -80,18 +80,18 @@
     <string name="pref_fast_routing">"تنظیمات مسیریابی"</string>
     <string name="pref_fast_all_through_tor">"انتقال کل ترافیک از طریق TOR"</string>
     <string name="pref_fast_all_through_ipro">"انتقال کل ترافیک از طریق InviZible"</string>
-    <string name="pref_fast_unlock_with_tor">"انتخاب وب‌سایت‌ها"</string>
+    <string name="pref_fast_unlock_with_tor">انتخاب وب‌سایت‌ها</string>
     <string name="pref_fast_unlock_with_tor_summ">این لیست وب سایتها با TOR باز می شوند. این ویژگی برای سایتهای پشت CDN کار نمی‌کند</string>
     <!-- انتخاب برنامه ها -->
-    <string name="pref_fast_unlock_apps_with_tor">"برنامه‌ها را انتخاب کنید"</string>
+    <string name="pref_fast_unlock_apps_with_tor">برنامه‌ها را انتخاب کنید</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">"برنامه‌هایی که با TOR می‌توان استفاده کرد"</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"برنامه‌هایی که با InviZible می‌توان استفاده کرد"</string>
-    <string name="pref_fast_exclude_from_tor">"محدودسازی سایت‌ها"</string>
+    <string name="pref_fast_exclude_from_tor">محدودسازی سایت‌ها</string>
     <string name="pref_fast_exclude_from_tor_summ">لیست این وب سایتها به طور مستقیم باز می شوند. این ویژگی برای سایتهای پشت CDN کار نمی‌کند</string>
-    <string name="pref_fast_exclude_apps_from_tor">"محدود‌سازی برنامه‌ها"</string>
+    <string name="pref_fast_exclude_apps_from_tor">محدود‌سازی برنامه‌ها</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"برنامه‌هایی که مستقیم اجرا شوند"</string>
-    <string name="pref_fast_site_refresh_interval">"بازخوانی Interval"</string>
-    <string name="pref_fast_site_refresh_interval_summ">"تعداد دفعات بازخوانی IPهای وب‌سایت‌ها در یک ساعت (فقط اندورید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید."</string>
+    <string name="pref_fast_site_refresh_interval">بازخوانی Interval</string>
+    <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی IPهای وب‌سایت‌ها در یک ساعت (فقط اندورید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید.</string>
     <string name="pref_fast_use_tor_bridges">"پل‌ها"</string>
     <string name="pref_fast_use_tor_bridges_summ">"از این مورد تنها اگر نمی‌توانید به TOR متصل شوید استفاده کنید"</string>
     <string name="pref_fast_use_tor_bridges_no">"عدم استفاده از پل"</string>
@@ -109,14 +109,14 @@
     <string name="pref_fast_use_tor_bridges_add_dialog">"ذخیره"</string>
     <string name="pref_fast_use_tor_bridges_close_dialog">"بستن"</string>
     <string name="pref_fast_unlock_host_wrong">"نام HOST اشتباه است!"</string>
-    <string name="pref_fast_theme">"انتخاب قالب"</string>
-    <string name="pref_fast_language">"انتخاب زبان"</string>
+    <string name="pref_fast_theme">انتخاب قالب</string>
+    <string name="pref_fast_language">انتخاب زبان</string>
     <string name="pref_fast_block_http">"مسدودسازی HTTP"</string>
     <string name="pref_fast_block_http_summ">"مسدودسازی ارتباط با HTTP Port 80"</string>
     <string name="pref_fast_categ_update">"بروزرسانی"</string>
-    <string name="pref_fast_auto_update">"بروزرسانی خودکار"</string>
-    <string name="pref_fast_auto_update_summ">"بروزرسانی‌های InviZible Pro و ماژول‌ها را روزانه بررسی کنید"</string>
-    <string name="pref_fast_chek_update">"بررسی بروزرسانی"</string>
+    <string name="pref_fast_auto_update">بروزرسانی خودکار</string>
+    <string name="pref_fast_auto_update_summ">بروزرسانی‌های InviZible Pro و ماژول‌ها را روزانه بررسی کنید</string>
+    <string name="pref_fast_chek_update">بررسی بروزرسانی</string>
     <string name="pref_fast_chek_update_summ">"بررسی کنید نسخه‌های جدید اکنون موجود هستند یا خیر"</string>
     <string name="pref_fast_through_tor_update">"مؤکداً انجام بروزرسانی‌ها از طریق TOR"</string>
     <string name="pref_fast_through_tor_update_summ">"فقط از طریق TOR و هنگام فعال بودن TOR، بروزرسانی‌ها را بررسی کنید"</string>
@@ -126,31 +126,31 @@
     <string name="pref_common_categ_other">"دیگر"</string>
     <string name="pref_common_block_http">"مسدود کردن HTTP هات‌اسپات"</string>
     <string name="pref_common_block_http_summ">"مسدودسازی ارتباط به HTTP Port 80 برای هات اسپات"</string>
-    <string name="pref_common_notification_summ">"محافظت از برنامه‌ها در حالت بدون Root برای جلوگیری از بسته شدن برنامه توسط اندروید"</string>
+    <string name="pref_common_notification_summ">محافظت از برنامه‌ها در حالت بدون Root برای جلوگیری از بسته شدن برنامه توسط اندروید</string>
     <string name="pref_common_refresh_rules">"تازه کردن قوانین"</string>
     <string name="pref_common_refresh_rules_summ">"بروزرسانی قوانین برای هر تغییر اتصال"</string>
     <string name="pref_common_show_notification">"نمایش اعلان‌ها"</string>
     <string name="pref_common_wakelock">"جلوگیری از به خواب رفتن دستگاه"</string>
     <string name="pref_common_wakelock_summ">حفاظت بیش‌تر بدون حالت Root برای جلوگیری از توقف برنامه توسط اندروید. ممکن است باعث تخلیه زودتر باتری شود</string>
     <string name="pref_common_show_help">"راهنمایی‌ها"</string>
-    <string name="pref_common_show_help_summ">"همیشه پیغام‌های راهنما را نشان بده"</string>
+    <string name="pref_common_show_help_summ">همیشه پیغام‌های راهنما را نشان بده</string>
     <string name="pref_common_notification_helper">لطفا InviZible Pro را در بهینه‌سازی باتری دستگاه قرار ندهید‌. در غیر این صورت، ممکن است اندروید DNSCrypt و TOR و یا I2P را در هر زمان خاموش کند. در بعضی سیستم عامل‌های استثناء همانند سیستم عامل گوشی‌های شیائومی باید چند گام اضافه.</string>
     <string name="pref_common_use_busybox">"انتخاب BusyBox"</string>
     <string name="pref_common_categ_hotspot">"هات اسپات-آزمایشی"</string>
-    <string name="pref_common_tethering_autostart">"شروع Tethering هنگام راه‌اندازی مجدد"</string>
-    <string name="pref_common_tor_tethering">"تور مجاز به Tethering است"</string>
+    <string name="pref_common_tethering_autostart">شروع Tethering هنگام راه‌اندازی مجدد</string>
+    <string name="pref_common_tor_tethering">تور مجاز به Tethering است</string>
     <string name="pref_common_tor_route_all">"تعیین مسیر تمام فعالیت‌ها از طریق TOR"</string>
     <string name="pref_common_tor_route_all_summ">"تعیین مسیر تمام ترافیک ورودی از طریق TOR"</string>
-    <string name="pref_common_unblock_with_tor">"انتخاب وب‌سایت‌ها"</string>
-    <string name="pref_common_unblock_with_tor_summ">"لیست وب‌سایت‌ها به‌منظور باز شدن همراه با TOR برای هات اسپات"</string>
-    <string name="pref_common_excludes_from_tor">"محدود‌سازی وب‌سایت‌ها"</string>
-    <string name="pref_common_excludes_from_tor_summ">"لیست وب‌سایت‌ها به‌منظور باز شدن خودکار برای هات اسپات"</string>
-    <string name="pref_common_itpd_tethering">"اجازه دادن به Tethering I2p"</string>
+    <string name="pref_common_unblock_with_tor">انتخاب وب‌سایت‌ها</string>
+    <string name="pref_common_unblock_with_tor_summ">لیست وب‌سایت‌ها به‌منظور باز شدن همراه با TOR برای هات اسپات</string>
+    <string name="pref_common_excludes_from_tor">محدود‌سازی وب‌سایت‌ها</string>
+    <string name="pref_common_excludes_from_tor_summ">لیست وب‌سایت‌ها به‌منظور باز شدن خودکار برای هات اسپات</string>
+    <string name="pref_common_itpd_tethering">اجازه دادن به Tethering I2p</string>
     <string name="pref_common_fix_ttl">"رفع مشکل TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL از طریق VPN محلی بر روی 64 ثابت خواهد شد. به پشتیبانی از Kernel نیاز نیست.
-این مورد تنها در \"حالت روت\" همراه با غیرفعال بودن گزینه \"اجزای ماژول‌ها همراه با روت\" می‌تواند استفاده شود.
-برای رفع مشکل TTL لطفاً DNSCrypt و یا TOR را راه‌اندازی نمایید."</string>
-    <string name="pref_common_tethering_settings">"باز کردن تنظیمات Tethering"</string>
+    <string name="pref_common_fix_ttl_summ">TTL از طریق VPN محلی بر روی 64 ثابت خواهد شد. به پشتیبانی از Kernel نیاز نیست.
+\nاین مورد تنها در \"حالت روت\" همراه با غیرفعال بودن گزینه \"اجزای ماژول‌ها همراه با روت\" می‌تواند استفاده شود.
+\nبرای رفع مشکل TTL لطفاً DNSCrypt و یا TOR را راه‌اندازی نمایید.</string>
+    <string name="pref_common_tethering_settings">باز کردن تنظیمات Tethering</string>
     <string name="pref_common_restart_dnscrypt">"لطفاً DNSCrypt را مجدداً راه‌اندازی کنید"</string>
     <string name="pref_common_restart_tor">"لطفا TOR را مجدداً راه‌اندازی نمایید"</string>
     <string name="pref_common_restart_itpd">"لطفا l2P را مجدداً راه‌اندازی نمایید"</string>
@@ -255,11 +255,11 @@
     <string name="pref_routing_clearnet_app">"برنامه‌هایی برای میانبر InviZible"</string>
     <string name="country_select_select_all">"انتخاب همه"</string>
     <string name="country_select_unselect_all">"پاک کردن موارد انتخاب شده"</string>
-    <string name="pref_itpd_common">"تنظیمات عمومی"</string>
-    <string name="pref_itpd_com_incom_connect">"اجازه دادن به اتصالات ورودی"</string>
+    <string name="pref_itpd_common">تنظیمات عمومی</string>
+    <string name="pref_itpd_com_incom_connect">اجازه دادن به اتصالات ورودی</string>
     <!-- پورتی برای شنیدن ورودی اتصالات -->
-    <string name="pref_itpd_com_port_summ">"پورت برای شنود اتصالات ورودی."</string>
-    <string name="pref_itpd_com_host_summ">"آی پی خارجی روتر برای اتصالات ورودی."</string>
+    <string name="pref_itpd_com_port_summ">پورت برای شنود اتصالات ورودی.</string>
+    <string name="pref_itpd_com_host_summ">آی پی خارجی روتر برای اتصالات ورودی.</string>
     <string name="pref_itpd_com_ipv4_summ">فعال کردن ارتباط از طریق IPv4.</string>
     <string name="pref_itpd_com_ipv6_summ">فعال کردن ارتباط از طریق IPv6.</string>
     <string name="pref_itpd_com_notransit_summ">"روتر تونل‌های ترانزیت را نپذیرفته، و ترافیک ترانزیت را کاملاً غیرفعال کرده است."</string>
@@ -268,7 +268,7 @@
     <string name="pref_itpd_com_share_summ">"حداکثر ٪ از پهنای باند برای انتقال. 0-100."</string>
     <string name="pref_itpd_com_ssu_summ">"فعال کردن پروتکل انتقال SSU (استفاده از UDP)."</string>
     <string name="pref_itpd_com_ntcp_summ">"فعال کردن پروتکل NTCP2 (استفاده از TCP)."</string>
-    <string name="pref_itpd_com_use_ntcpproxy">"فعال کردن ntcpproxy"</string>
+    <string name="pref_itpd_com_use_ntcpproxy">فعال کردن ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"سرور پروکسی را برای NTCP مشخص کنید. باید http://address:port یا socks://address:port باشد."</string>
     <string name="pref_itpd_HTTP_proxy">"پروکسی HTTP"</string>
     <string name="pref_itpd_HTTP_proxy_enabled">"پروکسی HTTP"</string>
@@ -287,11 +287,11 @@
     <string name="pref_itpd_UPNP_summ">"فعال‌کردن یا غیرفعال‌کردن UPnP."</string>
     <!-- در حال تحقیق -->
     <string name="pref_itpd_reseeding">در حال تحقیق</string>
-    <string name="pref_itpd_reseeding_summ">"امضای su3. را تأیید کنید."</string>
+    <string name="pref_itpd_reseeding_summ">امضای su3. را تأیید کنید.</string>
     <string name="pref_itpd_limits">"محدودیت‌ها"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"حداکثر تعداد تونل‌های ترانزیت را نادیده بگیرید. 2500 به‌صورت پیش‌فرض."</string>
     <string name="pref_itpd_limits_openfiles_summ">"تعداد توصیف‌کننده‌های فایل باز (صفر - استفاده از محدودیت سیستم) محدود کنید."</string>
-    <string name="pref_itpd_limits_coresize_summ">"حداکثر اندازه فایل اصلی در واحد Kb (صفر - استفاده از محدودیت سیستم)."</string>
+    <string name="pref_itpd_limits_coresize_summ">حداکثر اندازه فایل اصلی در واحد Kb (صفر - استفاده از محدودیت سیستم).</string>
     <!-- دفترچه آدرس -->
     <string name="pref_itpd_addressbook">دفترچه آدرس</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"URL اشتراک کتابچه آدرس برای تنظیم اولیه."</string>
@@ -331,12 +331,12 @@
     <string name="update_dnscrypt_has_apdate">"آپدیت DNSCrypt در دسترس است. آیا می‌خواهید آن را دانلود و آپدیت نمایید؟ آپدیت در پس‌زمینه ادامه خواهد داشت."</string>
     <string name="update_tor_has_apdate">"آپدیت TOR در دسترس است. آیا می‌خواهید آن را دانلود و آپدیت نمایید؟ آپدیت در پس‌زمینه ادامه خواهد داشت."</string>
     <string name="update_itpd_has_apdate">"آپدیت Purple I2P در دسترس است. آیا می‌خواهید آن را دانلود و آپدیت نمایید؟ آپدیت در پس‌زمینه ادامه خواهد داشت."</string>
-    <string name="update_checking_title">"در حال چک کردن بروزرسانی"</string>
-    <string name="update_checking_message">"لطفاً در هنگام بررسی وجود بروزرسانی‌ها صبر نمایید."</string>
+    <string name="update_checking_title">در حال چک کردن بروزرسانی</string>
+    <string name="update_checking_message">لطفاً در هنگام بررسی وجود بروزرسانی‌ها صبر نمایید.</string>
     <string name="update_check_warning">"سرور بروزرسانی موقتاً در دسترس نمی‌باشد. لطفاً بعداً سعی نمایید."</string>
     <string name="update_check_warning_menu">"سرور بروزرسانی در دسترس نمی‌باشد."</string>
     <string name="update_fault">"آپدیت با خطا مواجه شد."</string>
-    <string name="update_check_no_update">"بروزرسانی یافت نشد."</string>
+    <string name="update_check_no_update">بروزرسانی یافت نشد.</string>
     <string name="update_last_check">"آخرین بررسی:"</string>
     <string name="update_found">"بروزرسانی یافت شد."</string>
     <string name="update_installed">"بروزرسانی نصب شد."</string>
@@ -410,7 +410,7 @@
     <string name="dialog_new_tor_default_bridges_available">"پل‌های پیش فرض جدید TOR موجود است. آیا می خواهید آنها را به روز کنید؟"</string>
     <string name="pref_common_mitm_categ">"تشخیص حمله MITM"</string>
     <string name="pref_common_arp_spoofing_detection">"تشخیص کلاهبرداری ARP"</string>
-    <string name="pref_common_arp_spoofing_detection_summ">"کلاهبرداری ARP در مرکز و حملات ظالمانه DHCP در شبکه های Wi-Fi را شناسایی کنید."</string>
+    <string name="pref_common_arp_spoofing_detection_summ">کلاهبرداری ARP در مرکز و حملات ظالمانه DHCP در شبکه های Wi-Fi را شناسایی کنید.</string>
     <string name="pref_common_arp_block_internet">"با شناسایی حمله اینترنت را مسدود کنید"</string>
     <string name="pref_common_arp_block_internet_summ">"اتصال اینترنت در هنگام حمله مسدود خواهد شد"</string>
     <string name="pref_common_proxy_categ">"پروکسی"</string>
@@ -423,7 +423,7 @@
     <string name="pref_common_local_eth_device_addr">"آدرس IP دستگاه LAN"</string>
     <string name="pref_common_local_eth_device_addr_summ">"مشکل TTL را برطرف کرده و دستگاه LAN را برای اتصال به InviZible پیکربندی کنید. از درگاه پیش فرض استفاده کنید: %2$s، دی‌ان‌اس سرور: %1$s."</string>
     <string name="pref_common_multi_user">"پشتیبانی از چند کاربر"</string>
-    <string name="pref_common_multi_user_summ">"پشتیبانی از برنامه‌های دوتایی، MIUI، جزیره، پناهگاه و برنامه‌های نمایه‌کاری"</string>
+    <string name="pref_common_multi_user_summ">پشتیبانی از برنامه‌های دوتایی، MIUI، جزیره، پناهگاه و برنامه‌های نمایه‌کاری</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"پراکسی خروجی SOCKS را فعال کنید"</string>
     <string name="pref_tor_SOCKS_output_address_summ">"تور تمام ارتباطات OR را از طریق پروکسی SOCKS 5 برقرار می کند."</string>
     <string name="notification_channel_services">"خدمات در حال اجرا"</string>
