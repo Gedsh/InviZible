@@ -71,6 +71,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SE
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL_LOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
@@ -193,6 +194,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             } else {
                 entryNodesPref.setOnPreferenceChangeListener(this);
             }
+        }
+
+        Preference fascistFirewall = findPreference(TOR_FASCIST_FIREWALL);
+        boolean fascistFirewallLock = preferenceRepository.get().getBoolPreference(TOR_FASCIST_FIREWALL_LOCK);
+        if (fascistFirewall != null && fascistFirewallLock) {
+            fascistFirewall.setSummary(R.string.pref_tor_fascist_firewall_lock_summ);
+            fascistFirewall.setEnabled(false);
         }
 
         Preference editTorConfDirectly = findPreference("editTorConfDirectly");

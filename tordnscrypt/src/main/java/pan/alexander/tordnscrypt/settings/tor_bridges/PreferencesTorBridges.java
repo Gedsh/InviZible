@@ -99,6 +99,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL_LOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
@@ -369,15 +370,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         }
 
-        boolean fascistFirewall = defaultPreferences.get().getBoolean(TOR_FASCIST_FIREWALL, false);
-        boolean fascistFirewallShouldBeDisabled;
-        if (fascistFirewall) {
-            fascistFirewallShouldBeDisabled = isFascistFirewallShouldBeDisabled();
-        } else {
-            fascistFirewallShouldBeDisabled = false;
-        }
+        boolean fascistFirewallShouldBeDisabled = isFascistFirewallShouldBeDisabled();
         if (fascistFirewallShouldBeDisabled) {
             defaultPreferences.get().edit().putBoolean(TOR_FASCIST_FIREWALL, false).apply();
+            preferenceRepository.get().setBoolPreference(TOR_FASCIST_FIREWALL_LOCK, true);
+        } else {
+            preferenceRepository.get().setBoolPreference(TOR_FASCIST_FIREWALL_LOCK, false);
         }
 
         List<String> torConfCleaned = new ArrayList<>();

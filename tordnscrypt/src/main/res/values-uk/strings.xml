@@ -511,4 +511,5 @@
     <string name="firewall_critical_uid">Блокування цього системного додатку може призвести до нестабільного інтернет-з\'єднання!</string>
     <string name="pref_tor_nodes_categ">Ноди</string>
     <string name="pref_tor_isolation_categ">Налаштування ізолювання</string>
+    <string name="pref_tor_fascist_firewall_lock_summ">Щоб активувати цю опцію, необхідно відключити мости, або використовувати мости тільки з 80 і 443 портами.</string>
 </resources>

@@ -432,6 +432,7 @@
     <string name="pref_tor_strict_nodes_summ">If StrictNodes enabled, Tor will treat solely the ExcludeNodes option as a requirement to follow for all the circuits you generate, even if doing so will break functionality for you.</string>
     <string name="pref_tor_fascist_firewall" translatable="false">Fascist Firewall</string>
     <string name="pref_tor_fascist_firewall_summ">If enabled, Tor will only create outgoing connections to ORs running on ports that your firewall allows (defaults to 80 and 443).</string>
+    <string name="pref_tor_fascist_firewall_lock_summ">To activate this option, you should disable bridges or use bridges with 80 and 443 ports only.</string>
     <string name="pref_tor_new_circuit_period" translatable="false">New Circuit Period</string>
     <string name="pref_tor_new_circuit_period_summ">Every NUM seconds consider whether to build a new circuit.</string>
     <string name="pref_tor_max_circuit_dirtiness" translatable="false">Max Circuit Dirtiness</string>
