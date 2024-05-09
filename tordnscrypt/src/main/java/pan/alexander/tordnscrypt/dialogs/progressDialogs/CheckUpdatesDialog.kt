@@ -22,12 +22,14 @@ package pan.alexander.tordnscrypt.dialogs.progressDialogs
 import android.app.Dialog
 import android.os.Bundle
 import android.widget.ProgressBar
+import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
 import kotlinx.coroutines.Job
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import java.util.concurrent.Future
 
+@Keep
 class CheckUpdatesDialog: ExtendedDialogFragment() {
     var checkUpdatesTask: Job? = null
 
