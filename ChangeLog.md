@@ -1136,3 +1136,6 @@
 * Fascist Firewall option is blocked if inappropriate bridges are selected.
 * Updated Spanish and Turkish translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.4**
+* Downgraded Android material library which causes multiple crashes.

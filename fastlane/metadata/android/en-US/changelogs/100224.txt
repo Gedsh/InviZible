@@ -1,0 +1,2 @@
+**InviZible Pro beta 2.2.4**
+* Downgraded Android material library which causes multiple crashes.
