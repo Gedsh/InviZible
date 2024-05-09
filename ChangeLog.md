@@ -1128,3 +1128,11 @@
 * Fixed display of the app list on some phones.
 * Updated Spanish and Chinese translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.3**
+* Updated Tor.
+* Updated Tor lyrebird obfuscating proxy.
+* Updated DNSCrypt.
+* Fascist Firewall option is blocked if inappropriate bridges are selected.
+* Updated Spanish and Turkish translations.
+* Fixes and optimizations.
