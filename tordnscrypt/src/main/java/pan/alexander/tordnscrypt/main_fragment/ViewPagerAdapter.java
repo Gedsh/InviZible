@@ -19,7 +19,7 @@
 
 package pan.alexander.tordnscrypt.main_fragment;
 
-import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import android.view.ViewGroup;
@@ -201,7 +201,7 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 
         List<ViewPagerFragment> sortedFragments = new ArrayList<>();
 
-        for (ViewPagerFragment fragment: fragments) {
+        for (ViewPagerFragment fragment : fragments) {
             if (PagerTitle.MAIN.equals(fragment.title)) {
                 mainFragment = fragment;
             } else if (PagerTitle.DNS.equals(fragment.title)) {
@@ -239,15 +239,15 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     }
 
     private boolean isDNSCryptRunning() {
-        return modulesStatus.getDnsCryptState() == RUNNING;
+        return modulesStatus.getDnsCryptState() != STOPPED;
     }
 
     private boolean isTorRunning() {
-        return modulesStatus.getTorState() == RUNNING;
+        return modulesStatus.getTorState() != STOPPED;
     }
 
     private boolean isI2PDRunning() {
-        return modulesStatus.getItpdState() == RUNNING;
+        return modulesStatus.getItpdState() != STOPPED;
     }
 
     public static class ViewPagerFragment {
