@@ -12,7 +12,7 @@
     <string name="swRunOnBoot">Önyüklemede Başlat</string>
     <string name="root_available">Root kullanılabilirliği denetleniyor…</string>
     <string name="please_wait">Lütfen bekleyin…</string>
-    <string name="dont_show">Tekrar gösterme</string>
+    <string name="dont_show">Gösterme</string>
     <string name="tvDNSStop">DNSCrypt Durduruldu</string>
     <string name="tvDNSInstalled">DNSCrypt Kuruldu</string>
     <string name="tvDNSInstalling">DNSCrypt Kuruluyor</string>
@@ -66,9 +66,9 @@
     <string name="backupRestored">Yedekleme geri yüklendi</string>
     <string name="title_activity_settings">Ayarlar</string>
     <string name="pref_fast_categ_autostart">Otomatik Başlat</string>
-    <string name="pref_fast_dns_autostart">Önyüklemede DNSCrypt\'i Başlat</string>
-    <string name="pref_fast_tor_autostart">Önyüklemede Tor\'u Başlat</string>
-    <string name="pref_fast_itpd_autostart">Önyüklemede I2P\'yi Başlat</string>
+    <string name="pref_fast_dns_autostart">DNSCrypt\'i Otomatik Başlat</string>
+    <string name="pref_fast_tor_autostart">Tor\'u Otomatik Başlat</string>
+    <string name="pref_fast_itpd_autostart">I2P\'yi Otomatik Başlat</string>
     <string name="pref_fast_autostart_delay">Gecikme</string>
     <string name="pref_fast_autostart_delay_summ">Yalnızca otomatik başlatma düzgün çalışmazsa bir gecikme (sn) kullan</string>
     <string name="pref_fast_dns_server">DNSCrypt sunucuları</string>
@@ -80,14 +80,14 @@
     <string name="pref_common_restart_itpd">Lütfen I2P\'yi yeniden başlatın</string>
     <string name="pref_common_multi_user">Çoklu kullanıcı desteği</string>
     <string name="pref_tor_DNS_port_summ">UDP DNS isteklerini dinlemek ve bunları anonim olarak çözümlemek için bu bağlantı noktasını açın.</string>
-    <string name="pref_fast_unlock_with_tor">Web Sitelerini Seç</string>
-    <string name="pref_fast_unlock_with_tor_summ">Tor ile açılacak web siteleri listesi. Bu özellik, CDN arkasındaki sitelerde çalışmaz</string>
-    <string name="pref_fast_unlock_apps_with_tor">Uygulamaları Seç</string>
+    <string name="pref_fast_unlock_with_tor">Siteleri Seç</string>
+    <string name="pref_fast_unlock_with_tor_summ">Tor ile açılacak sitelerin listesi. Bu özellik, CDN arkasındaki sitelerde çalışmaz</string>
+    <string name="pref_fast_unlock_apps_with_tor">Uygulamaları seç</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">Tor ile kullanılacak uygulamalar listesi</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">InviZible ile kullanılacak uygulamalar listesi</string>
-    <string name="pref_fast_exclude_from_tor">Web Sitelerini Hariç Tut</string>
-    <string name="pref_fast_exclude_from_tor_summ">Doğrudan açılacak web siteleri listesi. Bu özellik, CDN arkasındaki sitelerde çalışmaz</string>
-    <string name="pref_fast_exclude_apps_from_tor">Uygulamaları Hariç Tut</string>
+    <string name="pref_fast_exclude_from_tor">Siteleri hariç tut</string>
+    <string name="pref_fast_exclude_from_tor_summ">Doğrudan açılacak sitelerin listesi. Bu özellik, CDN arkasındaki sitelerde çalışmaz</string>
+    <string name="pref_fast_exclude_apps_from_tor">Uygulamaları hariç tut</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Doğrudan açılacak uygulamalar listesi</string>
     <string name="pref_fast_site_refresh_interval">Yenileme Aralığı</string>
     <string name="pref_fast_site_refresh_interval_summ">Web sitelerinin IP\'lerini yenilemek için saat cinsinden süre. Android 5.1 ve üstü için. Yenilemeyi durdurmak için 0 yazın.</string>
@@ -486,4 +486,5 @@
     <string name="tile_change_tor_ip">Tor IP\'sini değiştir</string>
     <string name="tile_changing_tor_ip">Tor IP\'si değiştiriliyor</string>
     <string name="tile_dialog_over_three_tiles_message">Hızlı Ayarlar\'a 3\'ten fazla kutucuk eklediniz. Lütfen yalnızca 3 tane ekleyin. 3\'ten fazla kutucuk eklemek, uygulama denetimi ile ilgili sorunlara neden olabilir.</string>
+    <string name="ask_later">Sonra tekrar sor</string>
 </resources>
