@@ -542,4 +542,5 @@
     <string name="pref_itpd_HTTP_outproxy_address_summ">URL del proxy de salida ascendente del proxy HTTP (como http://false.i2p)</string>
     <string name="pref_itpd_use_HTTP_outproxy_summ">Puerta de acceso a Internet</string>
     <string name="pref_itpd_use_Socks_outproxy_summ">Dirección del proxy externo (IP o local). Las solicitudes fuera de I2P irán allí.</string>
+    <string name="pref_tor_fascist_firewall_lock_summ">Para activar esta opción, debe desactivar los puentes o utilizar puentes solo con puertos 80 y 443.</string>
 </resources>
