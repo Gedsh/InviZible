@@ -401,7 +401,7 @@
     <string name="pref_common_multi_user">"多用户支持"</string>
     <string name="pref_common_multi_user_summ">支持双应用，MIUI，Island，Shelter 和工作资料应用。在VPN模式下可能无效</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS 出站代理</string>
-    <string name="pref_tor_SOCKS_output_address_summ">"Tor 将使全部 OR 连接通过 SOCKS 5 代理。"</string>
+    <string name="pref_tor_SOCKS_output_address_summ">Tor将通过SOCKS 5代理建立所有OR连接。</string>
     <string name="notification_channel_services">"正在运行服务"</string>
     <string name="notification_channel_update">"更新规则"</string>
     <string name="notification_channel_root">"Root 命令规则"</string>
@@ -544,4 +544,5 @@
     <string name="pref_itpd_HTTP_outproxy_address_summ">HTTP代理上行输出代理url（类似http://false.i2p)</string>
     <string name="pref_tor_nodes_categ">节点</string>
     <string name="pref_tor_isolation_categ">隔离设置</string>
+    <string name="pref_tor_fascist_firewall_lock_summ">要激活此选项，应禁用网桥或仅使用具有80和443端口的网桥。</string>
 </resources>
