@@ -1139,3 +1139,11 @@
 
 **InviZible Pro beta 2.2.4**
 * Downgraded Android material library which causes multiple crashes.
+
+**InviZible Pro beta 2.2.5**
+* Updated Purple I2P to version 2.52.0.
+* Updated DNSCrypt.
+* Updated Tor Snowflake bridge.
+* Updated Tor Lyrebird obfuscating proxy.
+* Updated Chinese and Persian translations.
+* Fixes and optimizations.
