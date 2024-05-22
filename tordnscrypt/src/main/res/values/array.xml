@@ -577,10 +577,9 @@
         <item>njalla-doh</item>
         <item>mullvad-doh</item>
         <item>dns.digitale-gesellschaft.ch</item>
-        <item>dnscrypt.ca-1</item>
         <item>plan9dns-nj-doh-ipv6</item>
         <item>libredns</item>
-        <item>dnswarden-uncensor-dc</item>
+        <item>dnswarden-uncensor-dc-swiss</item>
         <item>meganerd-ipv6</item>
         <item>scaleway-fr</item>
     </string-array>
