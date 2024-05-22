@@ -421,7 +421,8 @@ public class ModulesStateLoop implements Runnable,
             }
 
             //Avoid too frequent iptables update
-            if (handler != null) {
+            if (handler != null
+                    && (dnsCryptState != STOPPED || torState != STOPPED || itpdState != STOPPED)) {
                 iptablesUpdateTemporaryBlocked = true;
                 handler.get().postDelayed(() -> {
                     iptablesUpdateTemporaryBlocked = false;
