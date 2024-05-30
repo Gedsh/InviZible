@@ -57,13 +57,14 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Future;
+import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import dagger.Lazy;
+import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.BridgesCaptchaDialogFragment;
@@ -81,10 +82,10 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.enums.BridgeType;
 import pan.alexander.tordnscrypt.utils.enums.BridgesSelector;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
@@ -98,6 +99,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL_LOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
@@ -137,6 +139,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private final String ADD_BRIDGES_TAG = "pan.alexander.tordnscrypt/abstract_add_bridges";
     private final String ADD_REQUESTED_BRIDGES_TAG = "pan.alexander.tordnscrypt/abstract_add_requested_bridges";
 
+    private final static String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
+    private final static String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
+
     private final List<String> tor_conf = new ArrayList<>();
     private final Set<String> bridgesInUse = new LinkedHashSet<>();
     private final List<String> bridgesInappropriateType = new ArrayList<>();
@@ -166,7 +171,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     private BridgeType currentBridgesType = undefined;
     private String requestedBridgesToAdd;
     private BridgesSelector savedBridgesSelector;
-    private Future<?> verifyDefaultBridgesTask;
+    private Job verifyDefaultBridgesTask;
 
     private PreferencesTorBridgesViewModel viewModel;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -179,7 +184,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Handler> handlerLazy;
     @Inject
@@ -365,10 +370,20 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             }
         }
 
-        List<String> torConfCleaned = new ArrayList<>();
+        boolean fascistFirewallShouldBeDisabled = isFascistFirewallShouldBeDisabled();
+        if (fascistFirewallShouldBeDisabled) {
+            defaultPreferences.get().edit().putBoolean(TOR_FASCIST_FIREWALL, false).apply();
+            preferenceRepository.get().setBoolPreference(TOR_FASCIST_FIREWALL_LOCK, true);
+        } else {
+            preferenceRepository.get().setBoolPreference(TOR_FASCIST_FIREWALL_LOCK, false);
+        }
 
+        List<String> torConfCleaned = new ArrayList<>();
         for (int i = 0; i < tor_conf.size(); i++) {
             String line = tor_conf.get(i);
+            if (fascistFirewallShouldBeDisabled && line.startsWith("ReachableAddresses")) {
+                line = "#" + line;
+            }
             if ((line.contains("#")
                     || (!line.contains("Bridge ")
                     && !line.contains("ClientTransportPlugin ")
@@ -455,6 +470,36 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     }
 
+    private boolean isFascistFirewallShouldBeDisabled() {
+
+        boolean useNoBridges = preferenceRepository.get().getBoolPreference(USE_NO_BRIDGES);
+        if (useNoBridges) {
+            return false;
+        }
+
+        Pattern patternIPv4 = Pattern.compile(ipv4BridgeBase);
+        Pattern patternIPv6 = Pattern.compile(ipv6BridgeBase);
+        for (String currentBridge : bridgesInUse) {
+            Pattern pattern;
+            if (isBridgeIPv6(currentBridge)) {
+                pattern = patternIPv6;
+            } else {
+                pattern = patternIPv4;
+            }
+            Matcher matcher = pattern.matcher(currentBridge);
+            String ip;
+            if (matcher.find()) {
+                ip = matcher.group().substring(0, matcher.group().lastIndexOf(" "));
+            } else {
+                ip = "";
+            }
+            if (!ip.endsWith(":80") && !ip.endsWith(":443")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void restartTorIfRequired(Context context) {
         if (modulesStatus.getTorState() == RUNNING) {
             ModulesRestarter.restartTor(context);
@@ -497,8 +542,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         handlerLazy.get().removeCallbacksAndMessages(null);
 
-        if (verifyDefaultBridgesTask != null && !verifyDefaultBridgesTask.isCancelled()) {
-            verifyDefaultBridgesTask.cancel(false);
+        if (verifyDefaultBridgesTask != null && !verifyDefaultBridgesTask.isCompleted()) {
+            verifyDefaultBridgesTask.cancel(new CancellationException());
             verifyDefaultBridgesTask = null;
         }
 
@@ -685,14 +730,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setView(inputView);
 
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
-            String ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?";
-            String ipv6BridgeBase = "\\[" + IPv6_REGEX_NO_BOUNDS + "]" + ":\\d+( +\\w+)?";
             List<String> bridgesListNew = new ArrayList<>();
 
             String inputLinesStr = input.getText().toString().trim();
 
             String bridgeBase;
-            if (inputLinesStr.contains("[") && inputLinesStr.contains("]")) {
+            if (isBridgeIPv6(inputLinesStr)) {
                 bridgeBase = ipv6BridgeBase;
             } else {
                 bridgeBase = ipv4BridgeBase;
@@ -780,6 +823,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setNegativeButton(getText(R.string.cancel), (dialog, i) -> dialog.cancel());
         builder.setTitle(R.string.pref_fast_use_tor_bridges_add);
         builder.show();
+    }
+
+    private boolean isBridgeIPv6(String bridge) {
+        return bridge.contains("[") && bridge.contains("]");
     }
 
     private void addRequestedBridges(String bridgesToAdd, List<String> savedCustomBridges) {
@@ -1143,9 +1190,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         return currentBridgesFilePath;
     }
 
-    private Future<?> verifyNewDefaultBridgesExist(Context context, boolean useDefaultBridges) {
+    private Job verifyNewDefaultBridgesExist(Context context, boolean useDefaultBridges) {
 
-        return cachedExecutor.submit(() -> {
+        return executor.submit("PreferencesTorBridges verifyNewDefaultBridgesExist", () -> {
             File outputFile = new File(appDataDir + "/app_data/tor/bridges_default.lst");
             long installedBridgesSize = outputFile.length();
 
@@ -1174,6 +1221,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } catch (Exception e) {
                 loge("PreferencesTorBridges verifyNewDefaultBridgesExist", e);
             }
+            return null;
         });
     }
 

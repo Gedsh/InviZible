@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.domain.connection_records
 import android.content.Context
 import android.content.SharedPreferences
 import android.text.format.DateUtils
+import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
@@ -56,16 +57,16 @@ class ConnectionRecordsParser @Inject constructor(
         ) ?: Constants.STANDARD_ADDRESS_LOCAL_PC
 
     private val liveLogEntryBlocked by lazy {
-        ContextCompat.getColor(applicationContext, R.color.liveLogEntryBlocked)
+        applicationContext.getHexFromColors(R.color.liveLogEntryBlocked)
     }
     private val liveLogEntryNoDns by lazy {
-        ContextCompat.getColor(applicationContext, R.color.liveLogEntryNoDns)
+        applicationContext.getHexFromColors(R.color.liveLogEntryNoDns)
     }
     private val liveLogEntryDnsUnused by lazy {
-        ContextCompat.getColor(applicationContext, R.color.liveLogEntryDnsUnused)
+        applicationContext.getHexFromColors(R.color.liveLogEntryDnsUnused)
     }
     private val liveLogEntryDnsUsed by lazy {
-        ContextCompat.getColor(applicationContext, R.color.liveLogEntryDnsUsed)
+        applicationContext.getHexFromColors(R.color.liveLogEntryDnsUsed)
     }
 
     private val dateFormatToday by lazy {
@@ -179,9 +180,6 @@ class ConnectionRecordsParser @Inject constructor(
                 if (record.blocked && record.blockedByIpv6) {
                     lines.append(" ipv6")
                 }
-                if (!record.blocked && record.ips.isNotEmpty()) {
-                    lines.append(" -> ").append(record.ips.joinToString(", "))
-                }
             }
 
             lines.append("</font>")
@@ -193,4 +191,8 @@ class ConnectionRecordsParser @Inject constructor(
 
         return lines.toString()
     }
+
+    private fun Context.getHexFromColors(
+        @ColorRes colorRes: Int
+    ): String = String.format("#%06X", 0xFFFFFF and ContextCompat.getColor(this, colorRes))
 }

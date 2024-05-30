@@ -32,7 +32,6 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -53,7 +52,7 @@ import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.tor_bridges.SnowflakeConfigurator;
 import pan.alexander.tordnscrypt.settings.tor_countries.CountrySelectFragment;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
@@ -70,7 +69,9 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL_LOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
@@ -110,7 +111,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
 
@@ -178,10 +179,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         }
 
 
-        Preference entryNodesPref = findPreference("EntryNodes");
+        Preference entryNodesPref = findPreference(TOR_ENTRY_NODES);
         boolean useDefaultBridges = preferenceRepository.get().getBoolPreference(USE_DEFAULT_BRIDGES);
         boolean useOwnBridges = preferenceRepository.get().getBoolPreference(USE_OWN_BRIDGES);
-        boolean entryNodesActive = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
+        boolean entryNodesActive = defaultPreferences.get().getBoolean(TOR_ENTRY_NODES, false);
         if (entryNodesPref != null) {
             if (useDefaultBridges || useOwnBridges) {
                 if (entryNodesActive) {
@@ -193,6 +194,13 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             } else {
                 entryNodesPref.setOnPreferenceChangeListener(this);
             }
+        }
+
+        Preference fascistFirewall = findPreference(TOR_FASCIST_FIREWALL);
+        boolean fascistFirewallLock = preferenceRepository.get().getBoolPreference(TOR_FASCIST_FIREWALL_LOCK);
+        if (fascistFirewall != null && fascistFirewallLock) {
+            fascistFirewall.setSummary(R.string.pref_tor_fascist_firewall_lock_summ);
+            fascistFirewall.setEnabled(false);
         }
 
         Preference editTorConfDirectly = findPreference("editTorConfDirectly");
@@ -352,17 +360,17 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(key_tor.indexOf("ExcludeNodes"), "#ExcludeNodes");
             }
             return true;
-        } else if (Objects.equals(preference.getKey(), "EntryNodes")) {
+        } else if (Objects.equals(preference.getKey(), TOR_ENTRY_NODES)) {
             if (Boolean.parseBoolean(newValue.toString()) && key_tor.contains("#EntryNodes")) {
                 key_tor.set(key_tor.indexOf("#EntryNodes"), "EntryNodes");
-                openCountrySelectFragment(CountrySelectFragment.entryNodes, "EntryNodes");
+                openCountrySelectFragment(CountrySelectFragment.entryNodes, TOR_ENTRY_NODES);
             } else if (key_tor.contains("EntryNodes")) {
                 key_tor.set(key_tor.indexOf("EntryNodes"), "#EntryNodes");
             }
             return true;
         } else if (Objects.equals(preference.getKey(), "HardwareAccel")) {
             if (Boolean.parseBoolean(newValue.toString())
-                    && !key_tor.contains("HardwareAccel") && key_tor.contains("Schedulers") ) {
+                    && !key_tor.contains("HardwareAccel") && key_tor.contains("Schedulers")) {
                 key_tor.add(key_tor.indexOf("Schedulers"), "HardwareAccel");
                 val_tor.add(key_tor.indexOf("HardwareAccel"), newValue.toString());
             }
@@ -452,7 +460,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             ModifyForwardingRules modifyForwardingRules = new ModifyForwardingRules(context,
                     "onion 127.0.0.1:" + dnsPort.trim());
-            cachedExecutor.submit(modifyForwardingRules.getRunnable());
+            executor.submit("PreferencesTorFragment modifyForwardingRules", () -> {
+                modifyForwardingRules.getRunnable().run();
+                return null;
+            });
             return true;
         } else if (Objects.equals(preference.getKey(), SNOWFLAKE_RENDEZVOUS)) {
             for (int i = 0; i < key_tor.size(); i++) {
@@ -484,7 +495,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             }
 
             String[] servers = serversStr.split(", ?");
-            for (String server: servers) {
+            for (String server : servers) {
                 if (!server.matches(HOST_NAME_REGEX + ":\\d+")) {
                     return false;
                 }
@@ -543,18 +554,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 String key = key_tor.get(i);
                 String val = val_tor.get(i);
 
-                String proxyType = "";
-                switch (key) {
-                    case "SOCKSPort":
-                        proxyType = "SOCKSPort";
-                        break;
-                    case "HTTPTunnelPort":
-                        proxyType = "HTTPTunnelPort";
-                        break;
-                    case "TransPort":
-                        proxyType = "TransPort";
-                        break;
-                }
+                String proxyType = switch (key) {
+                    case "SOCKSPort" -> "SOCKSPort";
+                    case "HTTPTunnelPort" -> "HTTPTunnelPort";
+                    case "TransPort" -> "TransPort";
+                    default -> "";
+                };
 
                 if (proxyType.isEmpty()) {
                     continue;
@@ -595,18 +600,12 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 String key = key_tor.get(i);
                 String val = val_tor.get(i);
 
-                String proxyType = "";
-                switch (key) {
-                    case "SOCKSPort":
-                        proxyType = "SOCKSPort";
-                        break;
-                    case "HTTPTunnelPort":
-                        proxyType = "HTTPTunnelPort";
-                        break;
-                    case "TransPort":
-                        proxyType = "TransPort";
-                        break;
-                }
+                String proxyType = switch (key) {
+                    case "SOCKSPort" -> "SOCKSPort";
+                    case "HTTPTunnelPort" -> "HTTPTunnelPort";
+                    case "TransPort" -> "TransPort";
+                    default -> "";
+                };
 
                 if (proxyType.isEmpty()) {
                     continue;
@@ -697,7 +696,16 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         } else if (Objects.equals(preference.getKey(), "Socks5Proxy")
                 && !newValue.toString().matches(IPv4_REGEX_WITH_PORT)) {
             return false;
+        } else if (Objects.equals(preference.getKey(), "ClientUseIPv4") && !Boolean.parseBoolean(newValue.toString())) {
+            if (!defaultPreferences.get().getBoolean(TOR_USE_IPV6, true)) {
+                return false;
+            }
         } else if (Objects.equals(preference.getKey(), TOR_USE_IPV6)) {
+
+            if (!defaultPreferences.get().getBoolean("ClientUseIPv4", true)
+                    && !Boolean.parseBoolean(newValue.toString())) {
+                return false;
+            }
 
             boolean useIPv6 = Boolean.parseBoolean(newValue.toString());
 
@@ -712,7 +720,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                             allowTorTethering,
                             isolateDestAddress,
                             isolateDestPort));
-                    if (i < key_tor.size() -1 && !key_tor.get(i + 1).equals("SOCKSPort")) {
+                    if (i < key_tor.size() - 1 && !key_tor.get(i + 1).equals("SOCKSPort")) {
                         key_tor.add(i + 1, "SOCKSPort");
                         proxyLine = "[" + LOOPBACK_ADDRESS_IPv6 + "]:" + pathVars.get().getTorSOCKSPort();
                         val_tor.add(i + 1, addIsolateFlags(
@@ -722,11 +730,11 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                                 isolateDestPort));
                     }
                 } else if (!useIPv6 && key.equals("SOCKSPort") && val.contains(LOOPBACK_ADDRESS_IPv6)) {
-                   key_tor.set(i, "");
-                   val_tor.set(i, "");
+                    key_tor.set(i, "");
+                    val_tor.set(i, "");
                 } else if (useIPv6 && key.equals("DNSPort") && !val.contains(LOOPBACK_ADDRESS_IPv6)) {
                     val_tor.set(i, LOOPBACK_ADDRESS + ":" + pathVars.get().getTorDNSPort());
-                    if (i < key_tor.size() -1 && !key_tor.get(i + 1).equals("DNSPort")) {
+                    if (i < key_tor.size() - 1 && !key_tor.get(i + 1).equals("DNSPort")) {
                         key_tor.add(i + 1, "DNSPort");
                         val_tor.add(
                                 i + 1,
@@ -757,6 +765,31 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 key_tor.set(index, "");
                 val_tor.set(index, "");
             }
+        } else if (Objects.equals(preference.getKey(), TOR_FASCIST_FIREWALL)) {
+            if (Boolean.parseBoolean(newValue.toString())) {
+                int indexReachableAddresses = key_tor.indexOf("#ReachableAddresses");
+                if (indexReachableAddresses >= 0) {
+                    key_tor.set(indexReachableAddresses, "ReachableAddresses");
+                } else if (!key_tor.contains("ReachableAddresses")) {
+                    int indexFascistFirewall = key_tor.indexOf("FascistFirewall");
+                    if (indexFascistFirewall >= 0) {
+                        key_tor.set(indexFascistFirewall, "ReachableAddresses");
+                        val_tor.set(indexFascistFirewall, "*:80,*:443");
+                    }
+                }
+            } else {
+                int indexReachableAddresses = key_tor.indexOf("ReachableAddresses");
+                if (indexReachableAddresses >= 0) {
+                    key_tor.set(indexReachableAddresses, "#ReachableAddresses");
+                } else if (!key_tor.contains("#ReachableAddresses")) {
+                    int indexFascistFirewall = key_tor.indexOf("FascistFirewall");
+                    if (indexFascistFirewall >= 0) {
+                        key_tor.set(indexFascistFirewall, "#ReachableAddresses");
+                        val_tor.set(indexFascistFirewall, "*:80,*:443");
+                    }
+                }
+            }
+            return true;
         }
 
         if (key_tor.contains(preference.getKey().trim())) {
@@ -817,10 +850,10 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 return true;
             }
 
-            cachedExecutor.submit(() -> {
+            executor.submit("PreferencesTorFragment cleanTorFolder", () -> {
                 Activity activity = getActivity();
                 if (activity == null) {
-                    return;
+                    return null;
                 }
 
                 boolean successfully = FileManager.deleteDirSynchronous(activity, appDataDir + "/tor_data");
@@ -830,6 +863,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 } else {
                     activity.runOnUiThread(() -> Toast.makeText(activity, R.string.wrong, Toast.LENGTH_SHORT).show());
                 }
+                return null;
             });
 
 
@@ -842,13 +876,50 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
     }
 
     private void changePreferencesForGPVersion() {
-        PreferenceCategory torSettingsCategory = findPreference("tor_settings");
+        removePreferencesFromTorSettingsCategory();
 
-        if (torSettingsCategory != null) {
+        removeDependenciesFromTorProxySettingsCategory();
+
+        removePreferencesFromTorProxySettingsCategory();
+
+        removePreferencesFromTorSnowflakeCategory();
+
+        removePreferencesFromTorOtherCategory();
+    }
+
+    private void removePreferencesFromTorSettingsCategory() {
+        PreferenceCategory category = findPreference("tor_settings");
+        if (category != null) {
             ArrayList<Preference> preferences = new ArrayList<>();
             preferences.add(findPreference("AvoidDiskWrites"));
             preferences.add(findPreference("ConnectionPadding"));
             preferences.add(findPreference("ReducedConnectionPadding"));
+
+            for (Preference preference : preferences) {
+                if (preference != null) {
+                    category.removePreference(preference);
+                }
+            }
+        }
+    }
+
+    private void removeDependenciesFromTorProxySettingsCategory() {
+        ArrayList<Preference> preferences = new ArrayList<>();
+        preferences.add(findPreference("SOCKSPort"));
+        preferences.add(findPreference("HTTPTunnelPort"));
+        preferences.add(findPreference("TransPort"));
+        preferences.add(findPreference("DNSPort"));
+        for (Preference preference : preferences) {
+            if (preference != null) {
+                preference.setDependency(null);
+            }
+        }
+    }
+
+    private void removePreferencesFromTorProxySettingsCategory() {
+        PreferenceCategory category = findPreference("tor_proxy_settings");
+        if (category != null) {
+            ArrayList<Preference> preferences = new ArrayList<>();
             preferences.add(findPreference("Enable SOCKS proxy"));
             preferences.add(findPreference("Enable HTTPTunnel"));
             preferences.add(findPreference("Enable Transparent proxy"));
@@ -856,11 +927,21 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             for (Preference preference : preferences) {
                 if (preference != null) {
-                    torSettingsCategory.removePreference(preference);
+                    category.removePreference(preference);
                 }
             }
         }
+    }
 
+    private void removePreferencesFromTorSnowflakeCategory() {
+        PreferenceCategory category = findPreference("pref_tor_snowflake_categ");
+        Preference preference = findPreference("pref_tor_snowflake_stun");
+        if (category != null && preference != null) {
+            category.removePreference(preference);
+        }
+    }
+
+    private void removePreferencesFromTorOtherCategory() {
         PreferenceCategory otherCategory = findPreference("pref_tor_other");
         Preference editTorConfDirectly = findPreference("editTorConfDirectly");
         if (otherCategory != null && editTorConfDirectly != null) {

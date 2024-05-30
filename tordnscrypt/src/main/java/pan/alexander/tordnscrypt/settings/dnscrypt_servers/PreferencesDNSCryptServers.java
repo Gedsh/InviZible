@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
@@ -49,7 +50,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -63,10 +63,17 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DnsServerRelay;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.IPV6_SERVER_ARG;
+import static pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.RELAY_TYPE_ARG;
+import static pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.ROUTES_ARG;
+import static pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.RelayType.DNSCRYPT_RELAY;
+import static pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.RelayType.ODOH_RELAY;
+import static pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.SERVER_NAME_ARG;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_SERVERS;
@@ -75,6 +82,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class PreferencesDNSCryptServers extends Fragment implements View.OnClickListener,
         PreferencesDNSCryptRelays.OnRoutesChangeListener,
@@ -83,9 +91,12 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
+    @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<Verifier> verifierLazy;
     @Inject
@@ -95,6 +106,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     private RecyclerView.Adapter<DnsServersAdapter.DNSServersViewHolder> dnsServersAdapter;
     private final List<String> dnscryptProxyToml = new ArrayList<>();
     private List<DnsCryptResolver> dnsCryptPublicResolversMd;
+    private List<DnsCryptResolver> dnsCryptOdohResolversMd;
     private List<DnsCryptResolver> dnsCryptOwnResolversMd;
     private final Set<DnsServerItem> savedOwnDNSCryptServers = new LinkedHashSet<>();
     private final List<String> dnscryptServersToml = new ArrayList<>();
@@ -123,7 +135,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             return;
         }
 
-        cachedExecutor.submit(() -> {
+        executor.submit("PreferencesDNSCryptServers verifier", () -> {
             try {
                 Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
@@ -144,6 +156,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 }
                 loge("PreferencesDNSCryptServers fault", e, true);
             }
+            return null;
         });
 
     }
@@ -182,7 +195,9 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
 
         observeDnsCryptConfiguration();
-        requestDnsCryptConfiguration();
+        if (dnscryptProxyToml.isEmpty()) {
+            requestDnsCryptConfiguration();
+        }
     }
 
     private void setTitle() {
@@ -199,6 +214,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         rvDNSServers.setLayoutManager(mLayoutManager);
 
         dnsServersAdapter = new DnsServersAdapter(this);
+        dnsServersAdapter.setHasStableIds(true);
 
         try {
             rvDNSServers.setAdapter(dnsServersAdapter);
@@ -212,7 +228,9 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     }
 
     private void updateRecycler() {
-        dnsServersAdapter.notifyDataSetChanged();
+        if (dnsServersAdapter != null) {
+            dnsServersAdapter.notifyDataSetChanged();
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -310,9 +328,17 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     }
 
     @Override
-    public void onRoutesChange(CopyOnWriteArrayList<DnsServerRelay> routesNew) {
+    public void onRoutesChange(List<DnsServerRelay> routes, String server) {
         dnsCryptRoutesToml.clear();
-        dnsCryptRoutesToml.addAll(routesNew);
+        dnsCryptRoutesToml.addAll(routes);
+        for (DnsServerItem item: dnsServerItems) {
+            if (item.getName().equals(server)){
+                item.setRoutes(getRoutes(item));
+                item.setChecked(!item.isProtoODoH() || !item.getRoutes().isEmpty());
+                break;
+            }
+        }
+        updateRecycler();
     }
 
     private void requestDnsCryptConfiguration() {
@@ -337,6 +363,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 dnsCryptRoutesToml.addAll(routes);
             } else if (configuration instanceof DnsCryptConfigurationResult.DnsCryptPublicResolvers) {
                 dnsCryptPublicResolversMd = ((DnsCryptConfigurationResult.DnsCryptPublicResolvers) configuration).getResolvers();
+            } else if (configuration instanceof DnsCryptConfigurationResult.DnsCryptOdohResolvers) {
+                dnsCryptOdohResolversMd = ((DnsCryptConfigurationResult.DnsCryptOdohResolvers) configuration).getResolvers();
             } else if (configuration instanceof DnsCryptConfigurationResult.DnsCryptOwnResolvers) {
                 dnsCryptOwnResolversMd = ((DnsCryptConfigurationResult.DnsCryptOwnResolvers) configuration).getResolvers();
             } else if (configuration instanceof DnsCryptConfigurationResult.Finished) {
@@ -357,14 +385,25 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     private void fillDnsServersList() {
         dnsServerItems.clear();
+
+        addServersFromPublicResolversMd();
+        addServersFromOdohServersMd();
+
+        Collections.sort(dnsServerItems);
+        dnsServerItemsSaved.clear();
+        dnsServerItemsSaved.addAll(dnsServerItems);
+    }
+
+    private void addServersFromPublicResolversMd() {
         Context context = requireContext();
+        DnsServerFeatures features = new DnsServerFeatures(context, defaultPreferences.get());
         for (int i = 0; i < dnsCryptPublicResolversMd.size(); i++) {
             try {
                 DnsServerItem dnsServer = new DnsServerItem(
-                        context,
                         dnsCryptPublicResolversMd.get(i).getName(),
                         dnsCryptPublicResolversMd.get(i).getDescription(),
-                        dnsCryptPublicResolversMd.get(i).getSdns()
+                        dnsCryptPublicResolversMd.get(i).getSdns(),
+                        features
                 );
                 dnsServer.setChecked(isDnsServerActive(dnsServer));
                 dnsServer.setRoutes(getRoutes(dnsServer));
@@ -378,10 +417,30 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
             }
 
         }
+    }
 
-        Collections.sort(dnsServerItems);
-        dnsServerItemsSaved.clear();
-        dnsServerItemsSaved.addAll(dnsServerItems);
+    private void addServersFromOdohServersMd() {
+        Context context = requireContext();
+        DnsServerFeatures features = new DnsServerFeatures(context, defaultPreferences.get());
+        for (int i = 0; i < dnsCryptOdohResolversMd.size(); i++) {
+            try {
+                DnsServerItem dnsServer = new DnsServerItem(
+                        dnsCryptOdohResolversMd.get(i).getName(),
+                        dnsCryptOdohResolversMd.get(i).getDescription(),
+                        dnsCryptOdohResolversMd.get(i).getSdns(),
+                        features
+                );
+                dnsServer.setChecked(isDnsServerActive(dnsServer));
+                dnsServer.setRoutes(getRoutes(dnsServer));
+                if (dnsServer.isVisible()) {
+                    dnsServerItems.add(dnsServer);
+                }
+            } catch (Exception e) {
+                logw("Trying to add wrong ODoH server "
+                        + e.getMessage() + " " + e.getCause() + " "
+                        + dnsCryptOdohResolversMd.get(i));
+            }
+        }
     }
 
     private boolean isDnsServerActive(DnsServerItem dnsServer) {
@@ -395,7 +454,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     }
 
     private List<String> getRoutes(DnsServerItem dnsServer) {
-        if (dnsServer.isProtoDNSCrypt()) {
+        if (dnsServer.isProtoDNSCrypt() || dnsServer.isProtoODoH()) {
             for (int i = 0; i < dnsCryptRoutesToml.size(); i++) {
                 if (dnsCryptRoutesToml.get(i).dnsServerName().equals(dnsServer.getName())) {
                     return dnsCryptRoutesToml.get(i).dnsServerRelays();
@@ -412,6 +471,9 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
         for (int i = 0; i < dnsServerItems.size(); i++) {
             if (dnsServerItems.get(i).isChecked()) {
+                if (dnsServerItems.get(i).isProtoODoH() && dnsServerItems.get(i).getRoutes().isEmpty()) {
+                    continue;
+                }
                 servers.append(dnsServerItems.get(i).getName());
                 servers.append("', '");
             }
@@ -599,14 +661,16 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     }
 
     private void addOwnDnsCryptServers() {
+        Context context = requireContext();
+        DnsServerFeatures features = new DnsServerFeatures(context, defaultPreferences.get());
         List<DnsServerItem> dnsServerItemsOwn = new ArrayList<>();
         for (DnsCryptResolver resolver : dnsCryptOwnResolversMd) {
             try {
                 DnsServerItem dnsServer = new DnsServerItem(
-                        getContext(),
                         resolver.getName(),
                         resolver.getDescription(),
-                        resolver.getSdns()
+                        resolver.getSdns(),
+                        features
                 );
                 dnsServer.setOwnServer(true);
                 dnsServer.setChecked(isDnsServerActive(dnsServer));
@@ -697,6 +761,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                     || dnsServerItem.getDescription().toLowerCase().contains(searchText.toLowerCase())
                     || (dnsServerItem.isProtoDNSCrypt() && searchText.toLowerCase().contains("dnscrypt server"))
                     || (dnsServerItem.isProtoDoH() && searchText.toLowerCase().contains("doh server"))
+                    || (dnsServerItem.isProtoODoH() && searchText.toLowerCase().contains("odoh server"))
                     || (dnsServerItem.isDnssec() && searchText.toLowerCase().contains("dnssec"))
                     || (dnsServerItem.isNofilter() && searchText.toLowerCase().contains("non-filtering"))
                     || (dnsServerItem.isNolog() && searchText.toLowerCase().contains("non-logging"))
@@ -713,11 +778,15 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
 
     void openDNSRelaysPref(DnsServerItem dnsServer) {
         Bundle bundle = new Bundle();
-        bundle.putString("dnsServerName", dnsServer.getName());
-        bundle.putBoolean("dnsServerIPv6", dnsServer.isIpv6());
-        bundle.putSerializable("routesCurrent", dnsCryptRoutesToml);
+        if (dnsServer.isProtoDNSCrypt()) {
+            bundle.putSerializable(RELAY_TYPE_ARG, DNSCRYPT_RELAY);
+        } else if (dnsServer.isProtoODoH()) {
+            bundle.putSerializable(RELAY_TYPE_ARG, ODOH_RELAY);
+        }
+        bundle.putString(SERVER_NAME_ARG, dnsServer.getName());
+        bundle.putBoolean(IPV6_SERVER_ARG, dnsServer.isIpv6());
+        bundle.putSerializable(ROUTES_ARG, dnsCryptRoutesToml);
         PreferencesDNSCryptRelays preferencesDNSCryptRelays = new PreferencesDNSCryptRelays();
-        preferencesDNSCryptRelays.setOnRoutesChangeListener(this);
         preferencesDNSCryptRelays.setArguments(bundle);
         FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);

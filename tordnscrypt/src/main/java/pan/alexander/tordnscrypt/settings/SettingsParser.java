@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.PreferenceManager;
 
@@ -48,6 +49,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
@@ -56,7 +59,6 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.write
 public class SettingsParser implements OnTextFileOperationsCompleteListener {
     private final SettingsActivity settingsActivity;
     private final String appDataDir;
-    private Bundle bundleForReadPublicResolversMdFunction;
 
     public SettingsParser(SettingsActivity settingsActivity, String appDataDir) {
         this.settingsActivity = settingsActivity;
@@ -126,8 +128,13 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "Relays";
                 } else if (header.matches("\\[sources\\.'?relays'?]") && key.equals("refresh_delay")) {
                     key = "refresh_delay_relays";
-                } else if (header.equals("[dns64]") && key.equals("prefix")) {
-                    key = DNSCRYPT_DNS64_PREFIX;
+                } else if (header.equals("[dns64]") && key.matches("#?prefix")) {
+                    if (key.equals("prefix")) {
+                        editor.putBoolean("dns64", true);
+                    } else if (key.equals("#prefix")) {
+                        editor.putBoolean("dns64", false);
+                    }
+                    key = "dns64_prefix";
                     StringBuilder dns64Prefixes = new StringBuilder();
                     for (String dns64Prefix: val.split(", ?")) {
                         dns64Prefix = dns64Prefix
@@ -162,33 +169,32 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
                 if (val_saved_str != null && !val_saved_str.isEmpty() && !val_saved_str.equals(val)) {
                     editor.putString(key, val);
-                }
-                if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
+                } else if (isbool && val_saved_bool != Boolean.parseBoolean(val)) {
                     editor.putBoolean(key, Boolean.parseBoolean(val));
                 }
 
                 if (key.equals("#proxy") && sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
                     editor.putBoolean(DNSCRYPT_OUTBOUND_PROXY, false);
-                }
-                if (key.equals("proxy_port") && !sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
+                } else if (key.equals("proxy_port") && !sp.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
                     editor.putBoolean(DNSCRYPT_OUTBOUND_PROXY, true);
-                }
-                if (val.contains(appDataDir + "/cache/query.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/query.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Query logging", true);
-                }
-                if (val.contains(appDataDir + "/cache/query.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/query.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Query logging", false);
-                }
-                if (val.contains(appDataDir + "/cache/nx.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/nx.log") && !key.contains("#") && !sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Suspicious logging", true);
-                }
-                if (val.contains(appDataDir + "/cache/nx.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
+                } else if (val.contains(appDataDir + "/cache/nx.log") && key.contains("#") && sp.getBoolean("Enable Query logging", false)) {
                     editor.putBoolean("Enable Suspicious logging", false);
                 }
             }
             editor.apply();
 
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+            FragmentManager manager = settingsActivity.getSupportFragmentManager();
+            if (manager.isDestroyed()) {
+                return;
+            }
+
+            FragmentTransaction fTrans = manager.beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_toml", key_toml);
             bundle.putStringArrayList("val_toml", val_toml);
@@ -256,76 +262,43 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
 
 
                 switch (key) {
-                    case "ExcludeNodes":
-                        editor.putBoolean("ExcludeNodes", true);
-                        break;
-                    case "#ExcludeNodes":
-                        editor.putBoolean("ExcludeNodes", false);
-                        break;
-                    case "EntryNodes":
-                        editor.putBoolean("EntryNodes", true);
-                        break;
-                    case "#ExitNodes":
-                        editor.putBoolean("ExitNodes", false);
-                        break;
-                    case "ExitNodes":
-                        editor.putBoolean("ExitNodes", true);
-                        break;
-                    case "#ExcludeExitNodes":
-                        editor.putBoolean("ExcludeExitNodes", false);
-                        break;
-                    case "ExcludeExitNodes":
-                        editor.putBoolean("ExcludeExitNodes", true);
-                        break;
-                    case "#EntryNodes":
-                        editor.putBoolean("EntryNodes", false);
-                        break;
-                    case "SOCKSPort":
-                        editor.putBoolean("Enable SOCKS proxy", true);
-                        break;
-                    case "#SOCKSPort":
-                        editor.putBoolean("Enable SOCKS proxy", false);
-                        break;
-                    case "TransPort":
-                        editor.putBoolean("Enable Transparent proxy", true);
-                        break;
-                    case "#TransPort":
-                        editor.putBoolean("Enable Transparent proxy", false);
-                        break;
-                    case "DNSPort":
-                        editor.putBoolean("Enable DNS", true);
-                        break;
-                    case "#DNSPort":
-                        editor.putBoolean("Enable DNS", false);
-                        break;
-                    case "HTTPTunnelPort":
-                        editor.putBoolean("Enable HTTPTunnel", true);
-                        break;
-                    case "#HTTPTunnelPort":
-                        editor.putBoolean("Enable HTTPTunnel", false);
-                        break;
-                    case TOR_OUTBOUND_PROXY_ADDRESS:
-                        editor.putBoolean(TOR_OUTBOUND_PROXY, true);
-                        break;
-                    case "#Socks5Proxy":
-                        editor.putBoolean(TOR_OUTBOUND_PROXY, false);
-                        break;
-                    case "TrackHostExits":
-                        editor.putBoolean("Enable TrackHostExits", true);
-                        break;
-                    case "#TrackHostExits":
-                        editor.putBoolean("Enable TrackHostExits", false);
-                        break;
+                    case "ExcludeNodes" -> editor.putBoolean("ExcludeNodes", true);
+                    case "#ExcludeNodes" -> editor.putBoolean("ExcludeNodes", false);
+                    case "EntryNodes" -> editor.putBoolean(TOR_ENTRY_NODES, true);
+                    case "#ExitNodes" -> editor.putBoolean("ExitNodes", false);
+                    case "ExitNodes" -> editor.putBoolean("ExitNodes", true);
+                    case "#ExcludeExitNodes" -> editor.putBoolean("ExcludeExitNodes", false);
+                    case "ExcludeExitNodes" -> editor.putBoolean("ExcludeExitNodes", true);
+                    case "#EntryNodes" -> editor.putBoolean(TOR_ENTRY_NODES, false);
+                    case "SOCKSPort" -> editor.putBoolean("Enable SOCKS proxy", true);
+                    case "#SOCKSPort" -> editor.putBoolean("Enable SOCKS proxy", false);
+                    case "TransPort" -> editor.putBoolean("Enable Transparent proxy", true);
+                    case "#TransPort" -> editor.putBoolean("Enable Transparent proxy", false);
+                    case "DNSPort" -> editor.putBoolean("Enable DNS", true);
+                    case "#DNSPort" -> editor.putBoolean("Enable DNS", false);
+                    case "HTTPTunnelPort" -> editor.putBoolean("Enable HTTPTunnel", true);
+                    case "#HTTPTunnelPort" -> editor.putBoolean("Enable HTTPTunnel", false);
+                    case TOR_OUTBOUND_PROXY_ADDRESS -> editor.putBoolean(TOR_OUTBOUND_PROXY, true);
+                    case "#Socks5Proxy" -> editor.putBoolean(TOR_OUTBOUND_PROXY, false);
+                    case "TrackHostExits" -> editor.putBoolean("Enable TrackHostExits", true);
+                    case "#TrackHostExits" -> editor.putBoolean("Enable TrackHostExits", false);
+                    case "ReachableAddresses" -> editor.putBoolean(TOR_FASCIST_FIREWALL, true);
+                    case "#ReachableAddresses" -> editor.putBoolean(TOR_FASCIST_FIREWALL, false);
                 }
             }
             editor.apply();
+
+            FragmentManager manager = settingsActivity.getSupportFragmentManager();
+            if (manager.isDestroyed()) {
+                return;
+            }
 
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_tor", key_tor);
             bundle.putStringArrayList("val_tor", val_tor);
             PreferencesTorFragment frag = new PreferencesTorFragment();
             frag.setArguments(bundle);
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+            FragmentTransaction fTrans = manager.beginTransaction();
             fTrans.replace(android.R.id.content, frag);
             fTrans.commit();
         }
@@ -441,7 +414,12 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             }
             editor.apply();
 
-            FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+            FragmentManager manager = settingsActivity.getSupportFragmentManager();
+            if (manager.isDestroyed()) {
+                return;
+            }
+
+            FragmentTransaction fTrans = manager.beginTransaction();
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("key_itpd", key_itpd);
             bundle.putStringArrayList("val_itpd", val_itpd);
@@ -459,7 +437,11 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         } else {
             rules_file.add("");
         }
-        FragmentTransaction fTrans = settingsActivity.getSupportFragmentManager().beginTransaction();
+        FragmentManager manager = settingsActivity.getSupportFragmentManager();
+        if (manager.isDestroyed()) {
+            return;
+        }
+        FragmentTransaction fTrans = manager.beginTransaction();
         Bundle bundle = new Bundle();
         bundle.putStringArrayList("rules_file", rules_file);
         bundle.putString("path", path);
@@ -474,10 +456,6 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
     }
 
     public void deactivateSettingsParser() {
-        if (bundleForReadPublicResolversMdFunction != null) {
-            bundleForReadPublicResolversMdFunction.clear();
-        }
-
         FileManager.deleteOnFileOperationCompleteListener(this);
     }
 

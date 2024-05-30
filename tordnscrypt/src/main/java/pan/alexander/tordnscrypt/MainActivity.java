@@ -46,6 +46,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.widget.Toolbar;
+import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import android.text.InputType;
@@ -103,6 +104,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
+import static pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter.MAIN_SCREEN_FRAGMENT_QUANTITY;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
@@ -157,7 +159,7 @@ public class MainActivity extends LangAppCompatActivity
     private TorRunFragment torRunFragment;
     private ITPDRunFragment iTPDRunFragment;
     private MainFragment mainFragment;
-    private ModulesStatus modulesStatus;
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
     private ViewPager viewPager;
     private static int viewPagerPosition = 0;
     private MenuItem newIdentityMenuItem;
@@ -195,25 +197,20 @@ public class MainActivity extends LangAppCompatActivity
         navigationView.setBackgroundColor(getResources().getColor(R.color.colorBackground));
         navigationView.setNavigationItemSelectedListener(this);
 
-        modulesStatus = ModulesStatus.getInstance();
+        initViewPager(savedInstanceState == null);
+    }
 
+    private void initViewPager(boolean initialiseFragments) {
         viewPager = findViewById(R.id.viewPager);
         if (viewPager != null) {
-            viewPager.setOffscreenPageLimit(4);
+            viewPager.setOffscreenPageLimit(MAIN_SCREEN_FRAGMENT_QUANTITY);
 
-            ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), ViewPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+            ViewPagerAdapter adapter = new ViewPagerAdapter(
+                    getSupportFragmentManager(),
+                    ViewPagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT
+            );
 
-            MainFragment mainFragment = new MainFragment();
-
-            DNSCryptRunFragment dnsCryptRunFragment = new DNSCryptRunFragment();
-
-            TorRunFragment torRunFragment = new TorRunFragment();
-            ITPDRunFragment itpdRunFragment = new ITPDRunFragment();
-
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("Main", mainFragment));
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("DNS", dnsCryptRunFragment));
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("Tor", torRunFragment));
-            adapter.addFragment(new ViewPagerAdapter.ViewPagerFragment("I2P", itpdRunFragment));
+            adapter.addFragments(initialiseFragments);
 
             viewPager.setAdapter(adapter);
 
@@ -222,15 +219,25 @@ public class MainActivity extends LangAppCompatActivity
 
             viewPager.setCurrentItem(viewPagerPosition);
         }
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
 
+        refreshViewPager();
+
         NavigationView navigationView = findViewById(R.id.nav_view);
         changeDrawerWithVersionAndDestination(navigationView);
+    }
+
+    private void refreshViewPager() {
+        if (viewPager != null) {
+            PagerAdapter adapter = viewPager.getAdapter();
+            if (adapter != null) {
+                viewPager.post(adapter::notifyDataSetChanged);
+            }
+        }
     }
 
     @Override

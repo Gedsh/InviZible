@@ -27,6 +27,7 @@ import android.os.Build
 import android.os.Handler
 import android.service.quicksettings.Tile
 import android.widget.Toast
+import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
 import androidx.core.os.postDelayed
@@ -54,6 +55,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 import javax.inject.Inject
 import javax.inject.Named
 
+@Keep
 @RequiresApi(Build.VERSION_CODES.N)
 class ModulesControlTileManager @Inject constructor(
     private val dispatcherMain: MainCoroutineDispatcher,

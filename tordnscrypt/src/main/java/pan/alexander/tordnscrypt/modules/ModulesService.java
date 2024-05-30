@@ -51,8 +51,8 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.portchecker.PortChecker;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 import pan.alexander.tordnscrypt.utils.wakelock.WakeLocksManager;
@@ -133,7 +133,7 @@ public class ModulesService extends Service {
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<InstalledAppNamesStorage> installedAppNamesStorage;
     @Inject
@@ -175,6 +175,7 @@ public class ModulesService extends Service {
                     systemNotificationManager,
                     UsageStatistics.getStartTime()
             );
+            serviceNotificationManager.createNotificationChannel();
             serviceNotificationManager.sendNotification(title, message);
         }
 
@@ -868,7 +869,10 @@ public class ModulesService extends Service {
 
     private void makeExtraLoop() {
         if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null) {
-            cachedExecutor.submit(checkModulesStateTask);
+            executor.submit("ModulesService makeExtraLoop", () -> {
+                    checkModulesStateTask.run();
+                    return null;
+            });
         }
     }
 

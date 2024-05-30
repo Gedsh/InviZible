@@ -34,7 +34,6 @@ class CachedExecutor @Inject constructor() {
 
     private val executorService: ExecutorService by lazy { Executors.newCachedThreadPool() }
 
-    @Synchronized
     fun submit(block: Runnable): Future<*>? =
         try {
             executorService.submit(block)

@@ -41,7 +41,7 @@ class ResetHelper(
     private val backupFragmentWeakReference: WeakReference<BackupFragment> = WeakReference(backupFragment)
 
     fun resetSettings() {
-        cachedExecutor.submit {
+        executor.submit("ResetHelper resetSettings") {
             try {
 
                 val activity = activityWeakReference.get() ?: return@submit

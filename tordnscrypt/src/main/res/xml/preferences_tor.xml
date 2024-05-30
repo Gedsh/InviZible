@@ -2,10 +2,13 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        android:key="tor_settings"
-        android:layout="@layout/preferences_category_custom"
-        android:title="@string/pref_advanced">
+        android:layout="@layout/preferences_category_advanced"
+        android:title="@string/pref_advanced" />
 
+    <PreferenceCategory
+        android:key="tor_nodes"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_tor_nodes_categ">
         <SwitchPreference
             android:id="@+id/pref_tor_exclude_exit_nodes"
             android:defaultValue="false"
@@ -30,6 +33,19 @@
             android:key="EntryNodes"
             android:summary="@string/pref_tor_entry_nodes_summ"
             android:title="@string/pref_tor_entry_nodes" />
+        <CheckBoxPreference
+            android:id="@+id/pref_tor_strict_nodes"
+            android:defaultValue="false"
+            android:key="StrictNodes"
+            android:summary="@string/pref_tor_strict_nodes_summ"
+            android:title="@string/pref_tor_strict_nodes" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="tor_settings"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_itpd_common">
+
         <EditTextPreference
             android:id="@+id/pref_tor_virtual_addr_network"
             android:defaultValue="10.192.0.0/10"
@@ -62,12 +78,6 @@
             android:key="ReducedConnectionPadding"
             android:summary="@string/pref_tor_reduced_connections_padding_summ"
             android:title="@string/pref_tor_reduced_connections_padding" />
-        <CheckBoxPreference
-            android:id="@+id/pref_tor_strict_nodes"
-            android:defaultValue="false"
-            android:key="StrictNodes"
-            android:summary="@string/pref_tor_strict_nodes_summ"
-            android:title="@string/pref_tor_strict_nodes" />
         <CheckBoxPreference
             android:id="@+id/pref_tor_fascist_firewall"
             android:defaultValue="false"
@@ -104,76 +114,12 @@
             android:key="EnforceDistinctSubnets"
             android:summary="@string/pref_tor_enforce_distinct_subnets_summ"
             android:title="@string/pref_tor_enforce_distinct_subnets" />
-        <SwitchPreference
+        <CheckBoxPreference
             android:id="@+id/pref_tor_track_host_exits"
             android:defaultValue="false"
             android:key="Enable TrackHostExits"
             android:summary="@string/pref_tor_track_host_exits_summ"
             android:title="@string/pref_tor_track_host_exits" />
-        <SwitchPreference
-            android:id="@+id/pref_tor_isolate_dest_address"
-            android:defaultValue="false"
-            android:key="pref_tor_isolate_dest_address"
-            android:summary="@string/pref_tor_isolate_dest_address_summ"
-            android:title="@string/pref_tor_isolate_dest_address" />
-        <SwitchPreference
-            android:id="@+id/pref_tor_isolate_dest_port"
-            android:defaultValue="false"
-            android:key="pref_tor_isolate_dest_port"
-            android:summary="@string/pref_tor_isolate_dest_port_summ"
-            android:title="@string/pref_tor_isolate_dest_port" />
-        <SwitchPreference
-            android:id="@+id/pref_tor_enable_SOCKS_proxy"
-            android:defaultValue="true"
-            android:key="Enable SOCKS proxy"
-            android:title="@string/pref_tor_enable_SOCKS_proxy" />
-        <EditTextPreference
-            android:id="@+id/pref_tor_SOCKS_port"
-            android:defaultValue="9050"
-            android:key="SOCKSPort"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_tor_SOCKS_port_summ"
-            android:title="@string/pref_tor_SOCKS_port" />
-        <SwitchPreference
-            android:id="@+id/pref_tor_enable_HTTPTunnel_proxy"
-            android:defaultValue="false"
-            android:key="Enable HTTPTunnel"
-            android:title="@string/pref_tor_enable_HTTPTunnel_proxy" />
-        <EditTextPreference
-            android:id="@+id/pref_tor_HTTPTunnel_port"
-            android:defaultValue="8118"
-            android:key="HTTPTunnelPort"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_tor_HTTPTunnel_port_summ"
-            android:title="@string/pref_tor_HTTPTunnel_port" />
-        <SwitchPreference
-            android:id="@+id/pref_tor_enable_transparent_proxy"
-            android:defaultValue="true"
-            android:key="Enable Transparent proxy"
-            android:title="@string/pref_tor_enable_transparent_proxy" />
-        <EditTextPreference
-            android:id="@+id/pref_tor_trans_port"
-            android:defaultValue="9040"
-            android:key="TransPort"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_tor_trans_port_summ"
-            android:title="@string/pref_tor_trans_port" />
-        <SwitchPreference
-            android:id="@+id/pref_tor_enable_DNS"
-            android:defaultValue="true"
-            android:key="Enable DNS"
-            android:title="@string/pref_tor_enable_DNS" />
-        <EditTextPreference
-            android:id="@+id/pref_tor_DNS_port"
-            android:defaultValue="5400"
-            android:key="DNSPort"
-            android:selectAllOnFocus="false"
-            android:singleLine="true"
-            android:summary="@string/pref_tor_DNS_port_summ"
-            android:title="@string/pref_tor_DNS_port" />
         <CheckBoxPreference
             android:id="@+id/pref_tor_client_use_IPv4"
             android:defaultValue="true"
@@ -188,6 +134,89 @@
             android:summary="@string/pref_tor_client_use_IPv6_summ"
             android:title="@string/pref_tor_client_use_IPv6" />
     </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="tor_isolation_settings"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_tor_isolation_categ">
+
+        <SwitchPreference
+            android:id="@+id/pref_tor_isolate_dest_address"
+            android:defaultValue="false"
+            android:key="pref_tor_isolate_dest_address"
+            android:summary="@string/pref_tor_isolate_dest_address_summ"
+            android:title="@string/pref_tor_isolate_dest_address" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_isolate_dest_port"
+            android:defaultValue="false"
+            android:key="pref_tor_isolate_dest_port"
+            android:summary="@string/pref_tor_isolate_dest_port_summ"
+            android:title="@string/pref_tor_isolate_dest_port" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="tor_proxy_settings"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_common_proxy_categ">
+
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_SOCKS_proxy"
+            android:defaultValue="true"
+            android:key="Enable SOCKS proxy"
+            android:title="@string/pref_tor_enable_SOCKS_proxy" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_SOCKS_port"
+            android:defaultValue="9050"
+            android:dependency="Enable SOCKS proxy"
+            android:key="SOCKSPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_SOCKS_port_summ"
+            android:title="@string/pref_tor_SOCKS_port" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_HTTPTunnel_proxy"
+            android:defaultValue="false"
+            android:key="Enable HTTPTunnel"
+            android:title="@string/pref_tor_enable_HTTPTunnel_proxy" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_HTTPTunnel_port"
+            android:defaultValue="8118"
+            android:dependency="Enable HTTPTunnel"
+            android:key="HTTPTunnelPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_HTTPTunnel_port_summ"
+            android:title="@string/pref_tor_HTTPTunnel_port" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_transparent_proxy"
+            android:defaultValue="true"
+            android:key="Enable Transparent proxy"
+            android:title="@string/pref_tor_enable_transparent_proxy" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_trans_port"
+            android:defaultValue="9040"
+            android:dependency="Enable Transparent proxy"
+            android:key="TransPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_trans_port_summ"
+            android:title="@string/pref_tor_trans_port" />
+        <SwitchPreference
+            android:id="@+id/pref_tor_enable_DNS"
+            android:defaultValue="true"
+            android:key="Enable DNS"
+            android:title="@string/pref_tor_enable_DNS" />
+        <EditTextPreference
+            android:id="@+id/pref_tor_DNS_port"
+            android:defaultValue="5400"
+            android:dependency="Enable DNS"
+            android:key="DNSPort"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_tor_DNS_port_summ"
+            android:title="@string/pref_tor_DNS_port" />
+    </PreferenceCategory>
+
     <PreferenceCategory
         android:key="pref_tor_snowflake_categ"
         android:layout="@layout/preferences_category_custom"

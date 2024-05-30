@@ -46,7 +46,7 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
@@ -70,7 +70,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<ModulesVersions> modulesVersions;
     @Inject
@@ -425,7 +425,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
 
     protected void stopAllRunningModulesWithNoRootCommand() {
 
-        cachedExecutor.submit(() -> {
+        executor.submit("Installer stopAllRunningModulesWithNoRootCommand", () -> {
             ModulesAux.stopModulesIfRunning(activity);
 
             int counter = 15;
@@ -452,6 +452,7 @@ public class Installer implements TopFragment.OnActivityChangeListener {
                 sendModulesStopResult("");
             }
 
+            return null;
         });
 
 

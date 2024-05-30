@@ -44,7 +44,6 @@ import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
@@ -74,7 +73,7 @@ public class UnlockTorIpsFragment extends Fragment {
     @Inject
     public Lazy<CoroutineExecutor> coroutineExecutor;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     ViewModelProvider.Factory viewModelFactory;
     @Inject @Named(DEFAULT_PREFERENCES_NAME)
@@ -130,7 +129,7 @@ public class UnlockTorIpsFragment extends Fragment {
                 routeAllThroughTorTether
         );
 
-        cachedExecutor.submit(() -> {
+        executor.submit("UnlockTorIpsFragment verifier", () -> {
             try {
                 Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
@@ -151,6 +150,7 @@ public class UnlockTorIpsFragment extends Fragment {
                 }
                 loge("UnlockTorIpsFrag fault", e, true);
             }
+            return null;
         });
     }
 

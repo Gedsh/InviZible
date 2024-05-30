@@ -1099,3 +1099,51 @@
 
 **InviZible Pro beta 2.1.7**
 * Fixed Telegram messenger always connecting.
+
+**InviZible Pro beta 2.1.8**
+* Added DNSCrypt ODoH servers support.
+* Updated default Tor bridges.
+* App shows IP and country for all types of bridges.
+* Improved handling of IPv6-only networks.
+* Performance improvements.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.1.9**
+* Updated Purple I2P with the latest patch to mitigate the ongoing DoS attack on the I2P network.
+
+**InviZible Pro beta 2.2.0**
+* Updated Purple I2P with the latest patch to mitigate the ongoing DoS attack on the I2P network.
+* Display the IPv6 network status for Purple I2P.
+* Sort tabs depending on running modules.
+* Fixed WebTunnel connection via IPv6.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.2.1**
+* Revised app settings.
+* Updated translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.2.2**
+* Fascist Firewall automatically turns off when inappropriate bridges are selected.
+* Fixed display of the app list on some phones.
+* Updated Spanish and Chinese translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.2.3**
+* Updated Tor.
+* Updated Tor lyrebird obfuscating proxy.
+* Updated DNSCrypt.
+* Fascist Firewall option is blocked if inappropriate bridges are selected.
+* Updated Spanish and Turkish translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.2.4**
+* Downgraded Android material library which causes multiple crashes.
+
+**InviZible Pro beta 2.2.5**
+* Updated Purple I2P to version 2.52.0.
+* Updated DNSCrypt.
+* Updated Tor Snowflake bridge.
+* Updated Tor Lyrebird obfuscating proxy.
+* Updated Chinese and Persian translations.
+* Fixes and optimizations.

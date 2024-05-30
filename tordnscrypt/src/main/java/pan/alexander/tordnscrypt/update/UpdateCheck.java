@@ -40,19 +40,19 @@ import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.Future;
 
 import javax.crypto.Cipher;
 import javax.inject.Inject;
 
 import dagger.Lazy;
+import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.BuildConfig;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.web.HttpsConnectionManager;
 
@@ -69,7 +69,7 @@ public class UpdateCheck {
     @Inject
     public Lazy<Verifier> verifier;
     @Inject
-    public Lazy<CachedExecutor> cachedExecutor;
+    public Lazy<CoroutineExecutor> executor;
     @Inject
     public Lazy<PathVars> pathVars;
 
@@ -241,12 +241,12 @@ public class UpdateCheck {
         return Base64.encodeToString(key, Base64.DEFAULT);
     }
 
-    public synchronized Future<?> requestUpdateData(final String domainName) {
+    public synchronized Job requestUpdateData(final String domainName) {
         if (pathVars.get().getAppVersion().endsWith("p") || pathVars.get().getAppVersion().startsWith("f")) {
             return null;
         }
 
-        return cachedExecutor.get().submit(() -> {
+        return executor.get().submit("UpdateCheck requestUpdateData", () -> {
             String serverAnswerEncoded = "";
             String serverAnswer = "";
 
@@ -256,7 +256,7 @@ public class UpdateCheck {
                 if (rsaSign == null) {
                     showUpdateMessageAndSaveResult(R.string.update_fault);
                     loge("RSASign(appSign) returns null");
-                    return;
+                    return null;
                 }
 
                 String registrationCode = preferenceRepository.get().getStringPreference("registrationCode");
@@ -286,16 +286,16 @@ public class UpdateCheck {
                         preferenceRepository.get().setStringPreference("updateTimeLast", "");
                         wrongRegistrationCode = true;
                         loge("requestUpdateData function fault - server returns wrong code");
-                        return;
+                        return null;
                     } else if (serverAnswerEncoded.contains("over 3 activations")) {
                         showUpdateMessageAndSaveResult(R.string.update_over_three_activations, R.string.update_fault);
                         wrongRegistrationCode = true;
                         loge("requestUpdateData function fault - server returns over 3 activations");
-                        return;
+                        return null;
                     } else if (serverAnswerEncoded.contains("over 5 times")) {
                         showUpdateMessageAndSaveResult(R.string.update_over_five_times, R.string.update_fault);
                         loge("requestUpdateData function fault - server returns over 5 times");
-                        return;
+                        return null;
                     } else {
                         throw new IllegalStateException("requestUpdateData function fault - server returns fault");
                     }
@@ -316,6 +316,7 @@ public class UpdateCheck {
                         + "; serverAnswerEncoded " + serverAnswerEncoded
                         + "; serverAnswer " + serverAnswer);
             }
+            return null;
         });
     }
 

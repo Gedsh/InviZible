@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.firewall.adapter
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.Html
 import android.view.LayoutInflater
@@ -31,9 +32,11 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.UiThread
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.AsyncListDiffer
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -69,12 +72,14 @@ class FirewallAdapter(
     private val showAllApps = defaultPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
 
     private val comparatorByName: Comparator<AdapterItem> = compareBy(
+        { !it.bypassed },
         { !it.newlyInstalled },
         { !(it.lan || it.wifi || it.gsm || it.roaming || it.vpn && rootMode) },
         { it.label }
     )
 
     private val comparatorByUid: Comparator<AdapterItem> = compareBy(
+        { !it.bypassed },
         { !it.newlyInstalled },
         { !(it.lan || it.wifi || it.gsm || it.roaming || it.vpn && rootMode) },
         { it.uid }
@@ -95,7 +100,8 @@ class FirewallAdapter(
                     gsm = it.allowGsm,
                     roaming = it.allowRoaming,
                     vpn = it.allowVPN,
-                    newlyInstalled = appsNewlyInstalledSavedSet.contains(it.applicationData.uid)
+                    newlyInstalled = appsNewlyInstalledSavedSet.contains(it.applicationData.uid),
+                    bypassed = it.bypassVPN
                 )
             }.filter {
                 if (showAllApps) {
@@ -144,26 +150,12 @@ class FirewallAdapter(
         return diff.currentList[position]
     }
 
-    private val icFirewallLan = ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan)
-    private val icFirewallLanGreen =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_lan_green)
-    private val icFirewallWifi =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_24)
-    private val icFirewallWifiGreen =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_wifi_green_24)
-    private val icFirewallGsm =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_24)
-    private val icFirewallGsmGreen =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_gsm_green_24)
-    private val icFirewallRoaming =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_24)
-    private val icFirewallRoamingGreen =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_roaming_green_24)
-    private val icFirewallVpn =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_24)
-    private val icFirewallVpnGreen =
-        ContextCompat.getDrawable(context, R.drawable.ic_firewall_vpn_key_green_24)
-
+    private val colorIconGreen by lazy {
+        ContextCompat.getColor(context, R.color.colorIconGreen)
+    }
+    private val colorIconWhite by lazy {
+        ContextCompat.getColor(context, R.color.colorWhite)
+    }
     private val colorRed by lazy {
         ContextCompat.getColor(context, R.color.colorAlert)
     }
@@ -181,16 +173,17 @@ class FirewallAdapter(
         View.OnClickListener {
         val context: Context = itemView.context
 
+        private val cardAppFirewall = itemView.findViewById<MaterialCardView>(R.id.cardAppFirewall)
         private val imgAppIconFirewall = itemView.findViewById<ImageView>(R.id.imgAppIconFirewall)
-        private val btnLanFirewall = itemView.findViewById<ImageButton>(R.id.btnLanFirewall)
+        private val btnLanFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnLanFirewall)
             .also { it.setOnClickListener(this) }
-        private val btnWifiFirewall = itemView.findViewById<ImageButton>(R.id.btnWifiFirewall)
+        private val btnWifiFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnWifiFirewall)
             .also { it.setOnClickListener(this) }
-        private val btnGsmFirewall = itemView.findViewById<ImageButton>(R.id.btnGsmFirewall)
+        private val btnGsmFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnGsmFirewall)
             .also { it.setOnClickListener(this) }
-        private val btnRoamingFirewall = itemView.findViewById<ImageButton>(R.id.btnRoamingFirewall)
+        private val btnRoamingFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnRoamingFirewall)
             .also { it.setOnClickListener(this) }
-        private val btnVpnFirewall = itemView.findViewById<ImageButton>(R.id.btnVpnFirewall)
+        private val btnVpnFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnVpnFirewall)
             .also { it.setOnClickListener(this) }
         private val tvAppName = itemView.findViewById<TextView>(R.id.tvAppName)
 
@@ -202,7 +195,8 @@ class FirewallAdapter(
 
             val appFirewall = getItem(position)
 
-            imgAppIconFirewall.setImageDrawable(appFirewall.icon)
+            cardAppFirewall?.strokeColor = if (appFirewall.bypassed) colorRed else Color.TRANSPARENT
+            imgAppIconFirewall?.setImageDrawable(appFirewall.icon)
             val description = StringBuilder().apply {
                 append(appFirewall.label)
                 if (appFirewall.uid >= 0) {
@@ -211,54 +205,104 @@ class FirewallAdapter(
                 }
             }
             if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.M) {
-                tvAppName.text = Html.fromHtml(description.toString(), Html.FROM_HTML_MODE_COMPACT)
+                tvAppName?.text = Html.fromHtml(description.toString(), Html.FROM_HTML_MODE_COMPACT)
             } else {
                 @Suppress("DEPRECATION")
-                tvAppName.text = Html.fromHtml(description.toString())
+                tvAppName?.text = Html.fromHtml(description.toString())
             }
             when {
                 appFirewall.system && appFirewall.hasInternetPermission ->
-                    tvAppName.setTextColor(colorRed)
+                    tvAppName?.setTextColor(colorRed)
                 appFirewall.system -> tvAppName.setTextColor(colorBrown)
                 !appFirewall.hasInternetPermission ->
-                    tvAppName.setTextColor(colorGreen)
-                else -> tvAppName.setTextColor(colorBlack)
+                    tvAppName?.setTextColor(colorGreen)
+                else -> tvAppName?.setTextColor(colorBlack)
             }
 
-            btnLanFirewall.setImageDrawable(
-                if (appFirewall.lan)
-                    icFirewallLanGreen
-                else
-                    icFirewallLan
-            )
+            btnLanFirewall?.apply {
+                when{
+                    appFirewall.bypassed -> {
+                        isEnabled = false
+                        setTint(colorIconGreen)
+                    }
+                    appFirewall.lan -> {
+                        isEnabled = true
+                        setTint(colorIconGreen)
+                    }
+                    else -> {
+                        isEnabled = true
+                        setTint(colorIconWhite)
+                    }
+                }
+            }
 
-            btnWifiFirewall.setImageDrawable(
-                if (appFirewall.wifi)
-                    icFirewallWifiGreen
-                else
-                    icFirewallWifi
-            )
+            btnWifiFirewall?.apply {
+                when{
+                    appFirewall.bypassed -> {
+                        isEnabled = false
+                        setTint(colorIconGreen)
+                    }
+                    appFirewall.wifi -> {
+                        isEnabled = true
+                        setTint(colorIconGreen)
+                    }
+                    else -> {
+                        isEnabled = true
+                        setTint(colorIconWhite)
+                    }
+                }
+            }
 
-            btnGsmFirewall.setImageDrawable(
-                if (appFirewall.gsm)
-                    icFirewallGsmGreen
-                else
-                    icFirewallGsm
-            )
+            btnGsmFirewall?.apply {
+                when{
+                    appFirewall.bypassed -> {
+                        isEnabled = false
+                        setTint(colorIconGreen)
+                    }
+                    appFirewall.gsm -> {
+                        isEnabled = true
+                        setTint(colorIconGreen)
+                    }
+                    else -> {
+                        isEnabled = true
+                        setTint(colorIconWhite)
+                    }
+                }
+            }
 
-            btnRoamingFirewall.setImageDrawable(
-                if (appFirewall.roaming)
-                    icFirewallRoamingGreen
-                else
-                    icFirewallRoaming
-            )
+            btnRoamingFirewall?.apply {
+                when{
+                    appFirewall.bypassed -> {
+                        isEnabled = false
+                        setTint(colorIconGreen)
+                    }
+                    appFirewall.roaming -> {
+                        isEnabled = true
+                        setTint(colorIconGreen)
+                    }
+                    else -> {
+                        isEnabled = true
+                        setTint(colorIconWhite)
+                    }
+                }
+            }
 
-            btnVpnFirewall.setImageDrawable(
-                if (appFirewall.vpn)
-                    icFirewallVpnGreen
-                else
-                    icFirewallVpn
-            )
+            btnVpnFirewall?.apply {
+                when{
+                    appFirewall.bypassed -> {
+                        isEnabled = false
+                        setTint(colorIconGreen)
+                    }
+                    appFirewall.vpn -> {
+                        isEnabled = true
+                        setTint(colorIconGreen)
+                    }
+                    else -> {
+                        isEnabled = true
+                        setTint(colorIconWhite)
+                    }
+                }
+            }
         }
 
         @SuppressLint("NotifyDataSetChanged")
@@ -301,6 +345,10 @@ class FirewallAdapter(
         }
     }
 
+    private fun AppCompatImageButton.setTint(color: Int) {
+        setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN)
+    }
+
     enum class SortMethod {
         BY_NAME,
         BY_UID
@@ -317,6 +365,7 @@ class FirewallAdapter(
         var gsm: Boolean,
         var roaming: Boolean,
         var vpn: Boolean,
-        val newlyInstalled: Boolean
+        val newlyInstalled: Boolean,
+        val bypassed: Boolean
     )
 }

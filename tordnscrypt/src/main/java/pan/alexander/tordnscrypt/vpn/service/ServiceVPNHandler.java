@@ -167,12 +167,15 @@ public class ServiceVPNHandler extends Handler {
                 if (VpnService.prepare(serviceVPN) == null) {
                     logw("VPN Handler prepared connected=" + serviceVPN.isNetworkAvailable());
                     if (serviceVPN.isNetworkAvailable() && !(ex instanceof StartFailedException)) {
-                        Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
+                        serviceVPN.handler.get().post(() -> {
+                            Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
+                        });
                     }
                     // Retried on connectivity change
                 } else {
-                    Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
-
+                    serviceVPN.handler.get().post(() -> {
+                        Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
+                    });
                     // Disable firewall
                     if (!(ex instanceof StartFailedException)) {
                         prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();

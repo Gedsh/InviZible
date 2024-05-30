@@ -21,12 +21,15 @@ package pan.alexander.tordnscrypt.settings.firewall
 
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 
-data class FirewallAppModel(val applicationData: ApplicationData,
-                            var allowLan: Boolean,
-                            var allowWifi: Boolean,
-                            var allowGsm: Boolean,
-                            var allowRoaming: Boolean,
-                            var allowVPN: Boolean): Comparable<FirewallAppModel> {
+data class FirewallAppModel(
+    val applicationData: ApplicationData,
+    var allowLan: Boolean,
+    var allowWifi: Boolean,
+    var allowGsm: Boolean,
+    var allowRoaming: Boolean,
+    var allowVPN: Boolean,
+    val bypassVPN: Boolean
+) : Comparable<FirewallAppModel> {
 
     override fun compareTo(other: FirewallAppModel): Int {
         return applicationData.uid.compareTo(other.applicationData.uid)

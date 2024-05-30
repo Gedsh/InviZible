@@ -32,6 +32,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.google.android.material.button.MaterialButton;
+
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
@@ -70,22 +72,27 @@ public class AgreementDialog extends ExtendedDialogFragment {
             return null;
         }
 
+        MaterialButton buttonAccept = view.findViewById(R.id.buttonAcceptAgreement);
+        MaterialButton buttonDecline = view.findViewById(R.id.buttonDeclineAgreement);
+
         alertDialog.setView(view);
 
         alertDialog.setCancelable(false);
 
-        alertDialog.setPositiveButton(R.string.agree, (dialog, id) -> {
+        buttonAccept.setOnClickListener(v -> {
             exit = false;
             preferences.setBoolPreference(AGREEMENT_ACCEPTED, true);
             OnAgreementAcceptedListener listener = getListener(getActivity().getSupportFragmentManager());
             if (listener != null) {
                 listener.onAgreementAccepted();
             }
+            dismiss();
         });
-        alertDialog.setNegativeButton(R.string.disagree, ((dialog, id) -> {
+
+        buttonDecline.setOnClickListener(v -> {
             exit = true;
             dismiss();
-        }));
+        });
 
         return alertDialog;
     }
@@ -101,7 +108,7 @@ public class AgreementDialog extends ExtendedDialogFragment {
     }
 
     private OnAgreementAcceptedListener getListener(FragmentManager manager) {
-        for (Fragment fragment: manager.getFragments()) {
+        for (Fragment fragment : manager.getFragments()) {
             if (fragment instanceof OnAgreementAcceptedListener) {
                 return (OnAgreementAcceptedListener) fragment;
             }

@@ -25,10 +25,21 @@ import javax.inject.Inject
 import javax.inject.Named
 
 class CoroutineExecutor @Inject constructor(
-    @Named(CoroutinesModule.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
+    @Named(CoroutinesModule.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE_SINGLETON)
     val baseCoroutineScope: CoroutineScope,
     val coroutineExceptionHandler: CoroutineExceptionHandler
 ) {
+    inline fun submit(
+        name: String,
+        crossinline block: () -> Unit
+    ): Job {
+        val scope = baseCoroutineScope + CoroutineName(name) + coroutineExceptionHandler
+        return scope.launch {
+            runInterruptible(coroutineContext) {
+                block()
+            }
+        }
+    }
 
     @JvmOverloads
     inline fun <T> execute(
@@ -37,13 +48,16 @@ class CoroutineExecutor @Inject constructor(
         crossinline block: () -> T
     ): Job {
         val scope = baseCoroutineScope + CoroutineName(name) + coroutineExceptionHandler
-
         return scope.launch {
             if (maxExecutingTimeMinutes == 0) {
-                block()
+                runInterruptible(coroutineContext) {
+                    block()
+                }
             } else {
                 withTimeoutOrNull(maxExecutingTimeMinutes * 60 * 1000L) {
-                    block()
+                    runInterruptible(coroutineContext) {
+                        block()
+                    }
                 }
             }
         }
@@ -64,10 +78,14 @@ class CoroutineExecutor @Inject constructor(
             while ((times == 0 || timesCount < times) && isActive) {
                 delay(delaySec * 1000L)
                 if (maxExecutingTimeMinutes == 0) {
-                    block()
+                    runInterruptible(coroutineContext) {
+                        block()
+                    }
                 } else {
                     withTimeoutOrNull(maxExecutingTimeMinutes * 60 * 1000L) {
-                        block()
+                        runInterruptible(coroutineContext) {
+                            block()
+                        }
                     }
                 }
                 timesCount++

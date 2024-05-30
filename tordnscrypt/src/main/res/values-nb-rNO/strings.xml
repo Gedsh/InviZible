@@ -159,7 +159,6 @@
     <string name="pref_itpd_SAM_interface_port_summ">Port for SAM-bro.</string>
     <string name="pref_itpd_elgamal_summ">Forhåndsutregnede ElGamal-tabeller.</string>
     <string name="pref_itpd_UPNP_summ">Skru på eller av UPnP.</string>
-    <string name="pref_itpd_ntcp2_enabled">NTCP2 påskrudd</string>
     <string name="helper_dialog_title">Info</string>
     <string name="only_for_pro">Kun for Pro-versjon</string>
     <string name="enter_code">Skriv inn kode</string>
@@ -219,7 +218,7 @@
     <string name="donate">Doner</string>
     <string name="add_custom_server_title">Legg til egendefinert tjener</string>
     <string name="pref_itpd_com_ssu_summ">Skru på SSU-transportprotokoll (bruker UDP).</string>
-    <string name="pref_itpd_reseeding_summ">Bekreft .su3-signatur</string>
+    <string name="pref_itpd_reseeding_summ">Bekreft su3-signatur</string>
     <string name="pref_itpd_limits">Grenser</string>
     <string name="enter_code_button">Skriv inn kode</string>
     <string name="main_fragment_protect_dns">Beskytt DNS med DNSCrypt</string>

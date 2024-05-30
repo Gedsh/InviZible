@@ -37,6 +37,8 @@ import javax.inject.Named
 import javax.inject.Provider
 import kotlin.Exception
 
+private const val CONNECT_TIMEOUT_SEC = 1
+
 class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
     private val socketInternetChecker: Provider<SocketInternetChecker>,
     private val bridgeDataSource: DefaultVanillaBridgeDataSource,
@@ -204,4 +206,50 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
         return null
     }
 
+    override fun isAddressReachable(ip: String, port: Int): Boolean = try {
+        tryCheckAddress(ip, port, CONNECT_TIMEOUT_SEC, CONNECT_TIMEOUT_SEC)
+    } catch (ignored: Exception) {
+        false
+    }
+
+    @Suppress("SameParameterValue")
+    private fun tryCheckAddress(
+        ip: String,
+        port: Int,
+        connectTimeout: Int,
+        reachableTimeout: Int
+    ): Boolean = if (isTorOutboundProxyEnabled()) {
+        val proxyAddress = getTorOutboundProxyAddress()?.split(":") ?: emptyList()
+        if (proxyAddress.size == 2
+            && proxyAddress[0].trim().matches(Regex(IPv4_REGEX))
+            && proxyAddress[1].trim().matches(Regex(NUMBER_REGEX))
+        ) {
+            socketInternetChecker.get().checkConnectionAvailability(
+                ip = ip,
+                port = port,
+                proxyAddress = proxyAddress[0].trim(),
+                proxyPort = proxyAddress[1].trim().toInt(),
+                connectTimeout = connectTimeout,
+                reachableTimeout = reachableTimeout
+            )
+        } else {
+            socketInternetChecker.get().checkConnectionAvailability(
+                ip = ip,
+                port = port,
+                proxyAddress = "",
+                proxyPort = 0,
+                connectTimeout = connectTimeout,
+                reachableTimeout = reachableTimeout
+            )
+        }
+    } else {
+        socketInternetChecker.get().checkConnectionAvailability(
+            ip = ip,
+            port = port,
+            proxyAddress = "",
+            proxyPort = 0,
+            connectTimeout = connectTimeout,
+            reachableTimeout = reachableTimeout
+        )
+    }
 }

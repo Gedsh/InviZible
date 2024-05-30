@@ -152,11 +152,16 @@ public interface PreferenceKeys {
     String STUN_SERVERS = "pref_tor_snowflake_stun";
     String TOR_USE_IPV6 = "ClientUseIPv6";
     String TOR_FASCIST_FIREWALL = "FascistFirewall";
+    String TOR_FASCIST_FIREWALL_LOCK = "FascistFirewallLock";
+
+    String TOR_ENTRY_NODES = "EntryNodes";
 
     //I2PD Settings
+    String I2PD_USE_IPV6 = "ipv6";
     String I2PD_OUTBOUND_PROXY = "Enable ntcpproxy";
 
     //Firewall Settings
+    String FIREWALL_NO_BLOCK_NEW_APP = "NewAppsInternetAllowed";
     String FIREWALL_SHOWS_ALL_APPS = "FirewallShowsAllApps";
 
     //Logs

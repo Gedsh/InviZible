@@ -37,7 +37,7 @@ import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
@@ -71,7 +71,7 @@ public class TorRefreshIPsWork {
     @Inject
     public Lazy<Handler> handler;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
 
     private final Pattern ipv4Pattern = Pattern.compile(IPv4_REGEX);
     private final Pattern ipv6Pattern = Pattern.compile(IPv6_REGEX);
@@ -88,7 +88,7 @@ public class TorRefreshIPsWork {
     }
 
     public void refreshIPs() {
-        cachedExecutor.submit(() -> {
+        executor.submit("TorRefreshIPsWork refreshIPs", () -> {
 
             logi("TorRefreshIPsWork refreshIPs");
 
@@ -97,7 +97,7 @@ public class TorRefreshIPsWork {
             } catch (Exception e) {
                 loge("TorRefreshIPsWork performBackgroundWork", e, true);
             }
-
+            return null;
         });
     }
 

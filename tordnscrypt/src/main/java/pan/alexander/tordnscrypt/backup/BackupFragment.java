@@ -58,9 +58,9 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitProgressDialog;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.ExternalStoragePermissions;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnBinaryFileOperationsCompleteListener;
@@ -93,7 +93,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
 
     final static Set<String> TAGS_TO_CONVERT = new HashSet<>(Arrays.asList(
             APPS_ALLOW_LAN_PREF,
@@ -326,7 +326,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
             return;
         }
 
-        cachedExecutor.submit(() -> {
+        executor.submit("BackupFragment closePleaseWaitDialog", () -> {
             try {
                 while (progress != null) {
                     if (progress.isStateSaved()) {
@@ -344,6 +344,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
                 }
                 loge("BackupFragment close progress fault", ex);
             }
+            return null;
         });
     }
 
@@ -431,7 +432,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     }
 
     private void hideSelectionEditTextIfRequired(Activity activity) {
-        cachedExecutor.submit(() -> {
+        executor.submit("BackupFragment hideSelectionEditTextIfRequired", () -> {
 
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logsDirAccessible = Utils.INSTANCE.isLogsDirAccessible();
@@ -445,6 +446,7 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
                     }
                 });
             }
+            return null;
         });
     }
 }

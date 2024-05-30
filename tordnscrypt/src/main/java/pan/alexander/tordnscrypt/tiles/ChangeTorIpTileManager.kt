@@ -23,6 +23,7 @@ import android.content.Context
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.widget.Toast
+import androidx.annotation.Keep
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.R
@@ -34,6 +35,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import javax.inject.Inject
 import javax.inject.Named
 
+@Keep
 @RequiresApi(Build.VERSION_CODES.N)
 class ChangeTorIpTileManager @Inject constructor(
     private val dispatcherMain: MainCoroutineDispatcher,

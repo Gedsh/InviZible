@@ -126,8 +126,7 @@
                     android:layout_marginBottom="4dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/tvTorStop"
-                    app:fontFamily="serif" />
+                    android:text="@string/tvTorStop" />
 
                 <ProgressBar
                     android:id="@+id/pbTorMainFragment"
@@ -163,8 +162,7 @@
                     android:layout_marginBottom="4dp"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/tvDNSStop"
-                    app:fontFamily="serif" />
+                    android:text="@string/tvDNSStop" />
 
                 <ProgressBar
                     android:id="@+id/pbDNSMainFragment"
@@ -200,8 +198,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/tvITPDStop"
-                    app:fontFamily="serif" />
+                    android:text="@string/tvITPDStop" />
 
                 <ProgressBar
                     android:id="@+id/pbITPDMainFragment"

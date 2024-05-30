@@ -3,7 +3,7 @@
     android:key="dnscrypt_settings">
 
     <PreferenceCategory
-        android:layout="@layout/preferences_category_custom"
+        android:layout="@layout/preferences_category_advanced"
         android:title="@string/pref_advanced" />
 
     <PreferenceCategory
@@ -36,6 +36,12 @@
             android:key="doh_servers"
             android:summary="@string/pref_dnscrypt_doh_servers_summ"
             android:title="@string/pref_dnscrypt_doh_servers" />
+        <CheckBoxPreference
+            android:id="@+id/odoh_servers"
+            android:defaultValue="true"
+            android:key="odoh_servers"
+            android:summary="@string/pref_dnscrypt_odoh_servers_summ"
+            android:title="@string/pref_dnscrypt_odoh_servers" />
         <CheckBoxPreference
             android:id="@+id/ipv4_servers"
             android:defaultValue="true"

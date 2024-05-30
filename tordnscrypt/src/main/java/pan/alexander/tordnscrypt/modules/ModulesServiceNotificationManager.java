@@ -20,7 +20,9 @@
 package pan.alexander.tordnscrypt.modules;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -31,12 +33,14 @@ import android.os.Build;
 import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
+import pan.alexander.tordnscrypt.R;
 
-import static pan.alexander.tordnscrypt.AppKt.ANDROID_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class ModulesServiceNotificationManager {
+
+    private final static String ANDROID_CHANNEL_ID = "InviZible";
     private final Service service;
     private final NotificationManager notificationManager;
     private final Long startTime;
@@ -73,6 +77,22 @@ public class ModulesServiceNotificationManager {
         }
 
         return contentIntent;
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    public void createNotificationChannel() {
+        NotificationChannel channel = new NotificationChannel(
+                ANDROID_CHANNEL_ID,
+                service.getString(R.string.notification_channel_services),
+                NotificationManager.IMPORTANCE_MIN
+        );
+        channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+        channel.setDescription("");
+        channel.enableLights(false);
+        channel.enableVibration(false);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        channel.setShowBadge(false);
+        notificationManager.createNotificationChannel(channel);
     }
 
     private int getIconResource() {

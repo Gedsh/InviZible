@@ -58,9 +58,9 @@
     <string name="backupFolder">"Valitse varmuuskopion kansio:"</string>
     <string name="title_activity_settings">"Asetukset"</string>
     <string name="pref_fast_categ_autostart">"Automaattinen käynnistys"</string>
-    <string name="pref_fast_dns_autostart">"Käynnistä DNSCrypt boottauksessa"</string>
-    <string name="pref_fast_tor_autostart">"Käynnistä Tor boottauksessa"</string>
-    <string name="pref_fast_itpd_autostart">"Käynnistä I2P boottauksessa"</string>
+    <string name="pref_fast_dns_autostart">Käynnistä DNSCrypt boottauksessa</string>
+    <string name="pref_fast_tor_autostart">Käynnistä Tor boottauksessa</string>
+    <string name="pref_fast_itpd_autostart">Käynnistä I2P boottauksessa</string>
     <string name="pref_fast_autostart_delay">"Viive"</string>
     <string name="pref_fast_autostart_delay_summ">"Käytä viivettä (sekuntina) vain, jos automaattinen käynnistys ei toimi oikein"</string>
     <string name="pref_fast_dns_server">"DNSCrypt palvelimet"</string>
@@ -69,17 +69,17 @@
     <string name="pref_fast_routing">"Reititys asetukset"</string>
     <string name="pref_fast_all_through_tor">"Ohjaa kaikki traffikki Tor:in kautta"</string>
     <string name="pref_fast_all_through_ipro">"Ohjaa kaikki traffikki InviZiblen kautta"</string>
-    <string name="pref_fast_unlock_with_tor">"Valitse nettisivustot"</string>
-    <string name="pref_fast_unlock_with_tor_summ">"Tor:lla avattava nettisivustolista. Tämä ominaisuus ei toimi CDN:n takana olevissa sivustoissa."</string>
-    <string name="pref_fast_unlock_apps_with_tor">"Valitse sovellukset"</string>
+    <string name="pref_fast_unlock_with_tor">Valitse nettisivustot</string>
+    <string name="pref_fast_unlock_with_tor_summ">Tor:lla avattava nettisivustolista. Tämä ominaisuus ei toimi CDN:n takana olevissa sivustoissa.</string>
+    <string name="pref_fast_unlock_apps_with_tor">Valitse sovellukset</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">"Tor:ia käyttävä sovelluslista."</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"InviZible:ä käyttävä sovelluslista."</string>
-    <string name="pref_fast_exclude_from_tor">"Hylkää nettisivustot"</string>
-    <string name="pref_fast_exclude_from_tor_summ">"Suoraan avattavat nettisivustot. Tämä ominaisuus ei toimi CDN:n takana olevissa sivustoissa."</string>
-    <string name="pref_fast_exclude_apps_from_tor">"Hylkää sovellukset"</string>
+    <string name="pref_fast_exclude_from_tor">Hylkää nettisivustot</string>
+    <string name="pref_fast_exclude_from_tor_summ">Suoraan avattavat nettisivustot. Tämä ominaisuus ei toimi CDN:n takana olevissa sivustoissa.</string>
+    <string name="pref_fast_exclude_apps_from_tor">Hylkää sovellukset</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Suoraan avattava sovelluslista"</string>
-    <string name="pref_fast_site_refresh_interval">"Päivitä intervalli"</string>
-    <string name="pref_fast_site_refresh_interval_summ">"Verkkosivustojen IP:ien päivittämisaika tunteina. Android 5.1 tai uudempi. Laita 0 pysäyttääksesi päivityksen."</string>
+    <string name="pref_fast_site_refresh_interval">Päivitä intervalli</string>
+    <string name="pref_fast_site_refresh_interval_summ">Verkkosivustojen IP:ien päivittämisaika tunteina. Android 5.1 tai uudempi. Laita 0 pysäyttääksesi päivityksen.</string>
     <string name="pref_fast_use_tor_bridges">"Sillat"</string>
     <string name="pref_fast_use_tor_bridges_summ">"Käytä sitä, jos et voi yhdistyä Tor verkkoon."</string>
     <string name="pref_fast_use_tor_bridges_no">"Älä käytä siltoja"</string>
@@ -97,14 +97,14 @@
     <string name="pref_fast_use_tor_bridges_add_dialog">"Tallenna"</string>
     <string name="pref_fast_use_tor_bridges_close_dialog">"Sulje"</string>
     <string name="pref_fast_unlock_host_wrong">"Väärä hostin nimi!"</string>
-    <string name="pref_fast_theme">"Valitse teema"</string>
-    <string name="pref_fast_language">"Valitse kieli"</string>
+    <string name="pref_fast_theme">Valitse teema</string>
+    <string name="pref_fast_language">Valitse kieli</string>
     <string name="pref_fast_block_http">"Estä http"</string>
     <string name="pref_fast_block_http_summ">"Estä yhteys http-porttiin 80"</string>
     <string name="pref_fast_categ_update">"Päivitä"</string>
-    <string name="pref_fast_auto_update">"Automaattiset päivitykset"</string>
-    <string name="pref_fast_auto_update_summ">"Tarkista InviZible Pro:n ja moduulejen päivitykset päivittäin"</string>
-    <string name="pref_fast_chek_update">"Tarkista päivitys"</string>
+    <string name="pref_fast_auto_update">Automaattiset päivitykset</string>
+    <string name="pref_fast_auto_update_summ">Tarkista InviZible Pro:n ja moduulejen päivitykset päivittäin</string>
+    <string name="pref_fast_chek_update">Tarkista päivitys</string>
     <string name="pref_fast_chek_update_summ">"Tarkista, jos uusia versioita on saatavilla nyt"</string>
     <string name="pref_fast_through_tor_update">"Päivitä pelkästään Tor:in kautta"</string>
     <string name="pref_fast_through_tor_update_summ">"Tarkista päivityksiä vain Tor:lla ja kun se on päällä"</string>
@@ -114,33 +114,29 @@
     <string name="pref_common_categ_other">"Muut"</string>
     <string name="pref_common_block_http">"Estä HOTSPOT http"</string>
     <string name="pref_common_block_http_summ">"Estä yhteys HOTSPOT http-porttiin 80"</string>
-    <string name="pref_common_notification_summ">"Suojaa sovellus No Root Modella, jotta android ei sulje sovellusta"</string>
+    <string name="pref_common_notification_summ">Suojaa sovellus No Root Modella, jotta android ei sulje sovellusta</string>
     <string name="pref_common_refresh_rules">"Päivitä säännöt"</string>
     <string name="pref_common_refresh_rules_summ">"Päivitä säännöt jokaisella yhteyden muutoksella"</string>
     <string name="pref_common_show_notification">"Näytä ilmoitus"</string>
     <string name="pref_common_wakelock">"Estä laitetta menemästä lepotilaan"</string>
-    <string name="pref_common_wakelock_summ">"Lisäsuojaus ilman Root-tilaa, jotta android ei sulje sovellusta. Saattaa tyhjentää akkua"</string>
+    <string name="pref_common_wakelock_summ">Lisäsuojaus ilman Root-tilaa, jotta android ei sulje sovellusta. Saattaa tyhjentää akkua</string>
     <string name="pref_common_show_help">"Ohjeviestit"</string>
-    <string name="pref_common_show_help_summ">"Näytä ohjeviestit aina"</string>
-    <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista.
-\n        Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä,
-\n        kuten MIUI, vaati joitain lisävaiheita."</string>
+    <string name="pref_common_show_help_summ">Näytä ohjeviestit aina</string>
+    <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista. Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä, kuten MIUI, vaati joitain lisävaiheita."</string>
     <string name="pref_common_use_busybox">"Valitse BusyBox"</string>
     <string name="pref_common_categ_hotspot">"Kokeellinen-HOTSPOT"</string>
-    <string name="pref_common_tethering_autostart">"Aloita tethering käynnistyksessä"</string>
-    <string name="pref_common_tor_tethering">"Salli Tor tethering"</string>
+    <string name="pref_common_tethering_autostart">Aloita tethering käynnistyksessä</string>
+    <string name="pref_common_tor_tethering">Salli Tor tethering</string>
     <string name="pref_common_tor_route_all">"Ohjaa kaikki Tor:in kautta"</string>
     <string name="pref_common_tor_route_all_summ">"Ohjaa kaikki tuleva traffikki Tor:in kautta"</string>
-    <string name="pref_common_unblock_with_tor">"Valitse nettisivustot"</string>
-    <string name="pref_common_unblock_with_tor_summ">"Nettisivustolista, joka avataan Tor HOTSPOTTIIN"</string>
-    <string name="pref_common_excludes_from_tor">"Hylkää nettisivustot"</string>
-    <string name="pref_common_excludes_from_tor_summ">"Nettisivustolista, joka avataan suoraan HOTSPOTTIIN"</string>
-    <string name="pref_common_itpd_tethering">"Salli I2P tethering"</string>
+    <string name="pref_common_unblock_with_tor">Valitse nettisivustot</string>
+    <string name="pref_common_unblock_with_tor_summ">Nettisivustolista, joka avataan Tor HOTSPOTTIIN</string>
+    <string name="pref_common_excludes_from_tor">Hylkää nettisivustot</string>
+    <string name="pref_common_excludes_from_tor_summ">Nettisivustolista, joka avataan suoraan HOTSPOTTIIN</string>
+    <string name="pref_common_itpd_tethering">Salli I2P tethering</string>
     <string name="pref_common_fix_ttl">"Korjaa TTL"</string>
-    <string name="pref_common_fix_ttl_summ">"TTL tullaan korjaamaan 64:n käyttämällä paikallista VPN:nää. Kernelitukea ei tarvita.
-        Sitä voidaan käyttää vain \"Root tilassa\", kun \"Suorita moduulit rootilla\" -asetus on poistettu käytöstä.
-        Korjaa TTL käynnistämällä DNSCrypt tai / ja Tor."</string>
-    <string name="pref_common_tethering_settings">"Avaa tethering config"</string>
+    <string name="pref_common_fix_ttl_summ">"TTL tullaan korjaamaan 64:n käyttämällä paikallista VPN:nää. Kernelitukea ei tarvita. Sitä voidaan käyttää vain \"Root tilassa\", kun \"Suorita moduulit rootilla\" -asetus on poistettu käytöstä. Korjaa TTL käynnistämällä DNSCrypt tai / ja Tor."</string>
+    <string name="pref_common_tethering_settings">Avaa tethering config</string>
     <string name="pref_common_restart_dnscrypt">"Käynnistä DNSCrypt uudelleen"</string>
     <string name="pref_common_restart_tor">"Käynnistä Tor uudelleen"</string>
     <string name="pref_common_restart_itpd">"Käynnistä I2P uudelleen"</string>
@@ -162,36 +158,26 @@
     <string name="pref_dnscrypt_require_nolog_summ">"Palvelin ei saa kirjata käyttäjän kyselyjä (deklaratiivinen)."</string>
     <string name="pref_dnscrypt_require_nofilter_summ">"Palvelin ei saa valvoa omaa blacklistiä (Vanhempien valvontaa varten, mainosten esto)."</string>
     <string name="pref_dnscrypt_force_tcp_categ">"Käytä aina TCP:tä yhteyden muodostamiseen ylävirran (upstream) palvelimiin."</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Tästä voi olla hyötyä, jos joudut reitittämään kaiken Tor:in läpi.
-
-        Muussa tapauksessa jätä tämä vääriksi (False), koska se ei paranna turvallisuutta (DNSCrypt-proxy salaa kaiken jopa UDP:tä käytettäessä), ja se voi vain lisätä viivettä."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">"Tästä voi olla hyötyä, jos joudut reitittämään kaiken Tor:in läpi. Muussa tapauksessa jätä tämä vääriksi (False), koska se ei paranna turvallisuutta (DNSCrypt-proxy salaa kaiken jopa UDP:tä käytettäessä), ja se voi vain lisätä viivettä."</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">"HTTP / SOCKS proxy (välityspalvelin)"</string>
     <string name="pref_dnscrypt_use_proxy">"Ota proxy käyttöön."</string>
-    <string name="pref_dnscrypt_proxy_summ">"Reititä kaikki TCP-yhteydet paikalliseen Tor-solmuun. (Tor node)
-        Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
+    <string name="pref_dnscrypt_proxy_summ">"Reititä kaikki TCP-yhteydet paikalliseen Tor-solmuun. (Tor node) Tor ei tue UDP:tä, joten laita force_tcp päälle myös."</string>
     <string name="pref_dnscrypt_proxy">"Proxy_portti"</string>
     <string name="pref_dnscrypt_other_categ">"Muut asetukset"</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">"Varaehtoinen resolveri.
-        Tämä on normaali, salaamaton DNS-ratkaisu, jota käytetään vain yhden kuvan kyselyihin (one-shot queries)
-        noudettaessa alkuperäisiä resolveri-listaa vain, jos järjestelmän DNS-määritykset eivät toimi.
-        Sitä ei koskaan käytetä, jos luettelot on jo välimuistissa.
-        Kiinassa asuvien on ehkä käytettävä tätä numeroa 114.114.114.114:53."</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">"Varaehtoinen resolveri. Tämä on normaali, salaamaton DNS-ratkaisu, jota käytetään vain yhden kuvan kyselyihin (one-shot queries) noudettaessa alkuperäisiä resolveri-listaa vain, jos järjestelmän DNS-määritykset eivät toimi. Sitä ei koskaan käytetä, jos luettelot on jo välimuistissa."</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Älä koskaan anna dnscrypt-proxy:n yrittää käyttää järjestelmän DNS-asetuksia. Muuten käytä varaehtoista resolveria..."</string>
     <string name="pref_dnscrypt_filters_categ">"SUODATUKSET"</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">"Forwarding rules"</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Reititä tiettyjen verkkotunnusten kyselyt omistettuun palvelinjoukkoon."</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">"Cloaking rules"</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen.
-
-        Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">"Naamiointi palauttaa tietyn nimen ennalta määritetyn osoitteen. Sen lisäksi, että se toimii HOSTS-tiedostona, se voi myös palauttaa IP-osoitteen toisella nimellä. Se tekee myös CNAME-tasoitusta"</string>
     <string name="pref_dnscrypt_query_log_categ">"Kyselyloki."</string>
     <string name="pref_dnscrypt_query_log_summ">"Tallenna asiakkaan(clientin) kyselyt tiedostoon."</string>
     <string name="pref_dnscrypt_query_log">"Ota kyselyloki käyttöön"</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">"Älä kirjaa näitä kyselytyyppejä vähentääksesi verbiittisuutta. Pidä tyhjänä kirjataksesi kaiken lokiin."</string>
     <string name="open_query_log">"Avaa kyselyloki"</string>
     <string name="pref_dnscrypt_nx_log_categ">"Epäilyttävien kysymysten kirjaaminen."</string>
-    <string name="pref_dnscrypt_nx_log_summ">"Tallenna kyselyt puuttuville vyöhykkeille lokiin.
-        Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
+    <string name="pref_dnscrypt_nx_log_summ">"Tallenna kyselyt puuttuville vyöhykkeille lokiin. Nämä kyselyt voivat paljastaa haittaohjelmia, rikkoutuneita / vanhentuneita sovelluksia ja laitteita, jotka ilmoittavat niiden olemassaolosta kolmansille osapuolille..."</string>
     <string name="pref_dnscrypt_nx_log">"Ota epäilyttävä kirjaaminen käyttöön"</string>
     <string name="open_nx_log">"Avaa epäilyttävä loki"</string>
     <string name="pref_dnscrypt_blacklist_categ">"Kuviopohjainen estäminen (Musta lista)."</string>
@@ -251,10 +237,10 @@
     <string name="pref_routing_clearnet_app">"InviZible:n ohittavat sovellukset"</string>
     <string name="country_select_select_all">"Valitse kaikki"</string>
     <string name="country_select_unselect_all">"Poista valinta"</string>
-    <string name="pref_itpd_common">"Yleiset asetukset"</string>
-    <string name="pref_itpd_com_incom_connect">"Salli saapuvat yhteydet"</string>
-    <string name="pref_itpd_com_port_summ">"Portti kuuntelemaan tulevia yhteyksiä."</string>
-    <string name="pref_itpd_com_host_summ">"Reitittimen ulkoinen IP tuleville yhteyksille."</string>
+    <string name="pref_itpd_common">Yleiset asetukset</string>
+    <string name="pref_itpd_com_incom_connect">Salli saapuvat yhteydet</string>
+    <string name="pref_itpd_com_port_summ">Portti kuuntelemaan tulevia yhteyksiä.</string>
+    <string name="pref_itpd_com_host_summ">Reitittimen ulkoinen IP tuleville yhteyksille.</string>
     <string name="pref_itpd_com_ipv4_summ">"Ota yhteys IPv4:n kautta."</string>
     <string name="pref_itpd_com_ipv6_summ">"Ota yhteys IPv6:n kautta."</string>
     <string name="pref_itpd_com_notransit_summ">"Reititin ei hyväksy kauttakulkutunneleita, poistamalla kuljetusliikenne kokonaan käytöstä."</string>
@@ -263,7 +249,7 @@
     <string name="pref_itpd_com_share_summ">"Enimmäis % kaistanleveysrajoituksesta siirtämiseen. 0-100."</string>
     <string name="pref_itpd_com_ssu_summ">"Ota SSU-siirtoprotokolla käyttöön (käytä UDP:tä)."</string>
     <string name="pref_itpd_com_ntcp_summ">"Ota NTCP2-siirtoprotokolla käyttöön (käytä TCP:tä)."</string>
-    <string name="pref_itpd_com_use_ntcpproxy">"Ota ntcpproxy käyttöön"</string>
+    <string name="pref_itpd_com_use_ntcpproxy">Ota ntcpproxy käyttöön</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"Määritä proxy NTCP:lle. Pitäisi olla http: // osoite: portti tai socks: // osoite: portti."</string>
     <string name="pref_itpd_HTTP_proxy">"HTTP proxy"</string>
     <string name="pref_itpd_HTTP_proxy_enabled">"HTTP proxy"</string>
@@ -280,26 +266,22 @@
     <string name="pref_itpd_Cryptography">"Salaustekniikka"</string>
     <string name="pref_itpd_elgamal_summ">"Käytä ElGamalin esikomputoituja taulukoita."</string>
     <string name="pref_itpd_UPNP_summ">"Ota UPnP käyttöön tai poista se käytöstä."</string>
-    <string name="pref_itpd_ntcp2_enabled">"ntcp2 käytössä"</string>
     <string name="pref_itpd_reseeding">"Reseeding"</string>
-    <string name="pref_itpd_reseeding_summ">"Varmista .su3-allekirjoitus."</string>
+    <string name="pref_itpd_reseeding_summ">"Varmista su3-allekirjoitus."</string>
     <string name="pref_itpd_limits">"Rajat"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Ohita kauttakulun tunnelien enimmäismäärä. 2500 oletuksena."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Rajoita avoimien tiedostokuvausten lukumäärä (0 - käytä järjestelmän rajaa)."</string>
-    <string name="pref_itpd_limits_coresize_summ">"Ydintiedoston enimmäiskoko (kt) (0 - järjestelmän käyttöraja)."</string>
-    <string name="pref_itpd_addressbook">"Addressbook"</string>
+    <string name="pref_itpd_limits_coresize_summ">Ydintiedoston enimmäiskoko (kt) (0 - järjestelmän käyttöraja).</string>
+    <string name="pref_itpd_addressbook">Addressbook</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">"Osoitekirjan (AddressBook) tilauksen URL-osoite alkuasetuksia varten."</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">"Osoitekirjatilausten (AddressBook) URL-osoitteet."</string>
     <string name="pref_itpd_not_exist">"Preferenssiä ei ole i2pd.conf!"</string>
     <string name="helper_dialog_title">"Tietoja"</string>
-    <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin.
-        Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
-    <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in.
-        Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
+    <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
+    <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
     <string name="helper_itpd_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki I2P:n. Tarkista laitteen asetukset!"</string>
     <string name="helper_dnscrypt_no_internet">"Näyttää siltä, ​​että DNSCrypt EI voi muodostaa yhteyttä Internetiin."</string>
-    <string name="helper_tor_use_bridges">"Näyttää siltä, ​​että Tor EI voi muodostaa yhteyttä Internetiin.
-        Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat"</string>
+    <string name="helper_tor_use_bridges">"Näyttää siltä, ​​että Tor EI voi muodostaa yhteyttä Internetiin. Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat"</string>
     <string name="action_mode_child_lock">"Lapsilukko"</string>
     <string name="action_mode_dialog_message_lock">"Voit lukita tämän sovelluksen hallinnan. Anna salasana tai käytä edellistä."</string>
     <string name="action_mode_dialog_message_unlock">"Anna salasana."</string>
@@ -324,12 +306,12 @@
     <string name="update_dnscrypt_has_apdate">"DNSCrypt-päivitys on saatavana. Haluatko ladata ja päivittää sen? Päivitys jatkuu taustalla."</string>
     <string name="update_tor_has_apdate">"Tor-päivitys on saatavana. Haluatko ladata ja päivittää sen? Päivitys jatkuu taustalla."</string>
     <string name="update_itpd_has_apdate">"Purple I2P -päivitys on saatavana. Haluatko ladata ja päivittää sen? Päivitys jatkuu taustalla."</string>
-    <string name="update_checking_title">"Tarkistetaan päivityksiä"</string>
-    <string name="update_checking_message">"Odota, kun tarkistamme päivityksiä."</string>
+    <string name="update_checking_title">Tarkistetaan päivityksiä</string>
+    <string name="update_checking_message">Odota, kun tarkistamme päivityksiä.</string>
     <string name="update_check_warning">"Päivityspalvelin ei ole väliaikaisesti käytettävissä. Yritä uudelleen myöhemmin."</string>
     <string name="update_check_warning_menu">"Päivityspalvelin ei ollut käytettävissä."</string>
     <string name="update_fault">"Päivitys vika."</string>
-    <string name="update_check_no_update">"Päivityksiä ei löydetty."</string>
+    <string name="update_check_no_update">Päivityksiä ei löydetty.</string>
     <string name="update_last_check">"Viimeinen tarkistus:"</string>
     <string name="update_found">"Päivityksiä löytyi."</string>
     <string name="update_installed">"Päivitykset asennettiin."</string>
@@ -388,8 +370,7 @@
     <string name="pref_dnscrypt_import_whitelist">"Tuo sallittujen luettelo (valkoinen lista)"</string>
     <string name="pref_dnscrypt_import_whitelist_summ">"Tuo verkkotunnusluettelo. Voit valita useita tiedostoja, kaksoisrivit poistetaan."</string>
     <string name="pref_dnscrypt_erase_whitelist">"Poista sallittujen luettelo (valkoinen lista)"</string>
-    <string name="pref_dnscrypt_block_ipv6_summ">"Vastaa heti IPv6-kyselyihin tyhjällä vastauksella.
-        Tämä nopeuttaa asioita, kun IPv6-yhteyttä ei ole, mutta voi myös aiheuttaa luotettavuusongelmia joihinkin tynkäratkaisureihin."</string>
+    <string name="pref_dnscrypt_block_ipv6_summ">"Vastaa heti IPv6-kyselyihin tyhjällä vastauksella. Tämä nopeuttaa asioita, kun IPv6-yhteyttä ei ole, mutta voi myös aiheuttaa luotettavuusongelmia joihinkin tynkäratkaisureihin."</string>
     <string name="helper_dnscrypt_private_dns">"Poista \"Yksityinen DNS\" käytöstä Android-verkkoasetuksissa. Tämä vaihtoehto häiritsee DNSCryptia."</string>
     <string name="import_dnscrypt_rules_dialog_title">"Tuo sännöt"</string>
     <string name="import_dnscrypt_rules_dialog_message">"Odota ... %d -sääntöä tuotu."</string>
@@ -402,22 +383,20 @@
     <string name="dialog_new_tor_default_bridges_available">"New default Tor bridges are available. Do you want to update them?"</string>
     <string name="pref_common_mitm_categ">"MITM attack detection"</string>
     <string name="pref_common_arp_spoofing_detection">"ARP spoofing detection"</string>
-    <string name="pref_common_arp_spoofing_detection_summ">"Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks."</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Detect Man-in-the-middle ARP spoofing and rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_common_arp_block_internet">"Block internet when an attack is detected"</string>
     <string name="pref_common_arp_block_internet_summ">"Internet connection will be blocked during attack"</string>
     <string name="pref_common_proxy_categ">"Proxy"</string>
     <string name="pref_common_proxy">"Use socks5 proxy"</string>
     <string name="pref_common_proxy_summ">"InviZible Pro will make all connections through the SOCKS5 proxy"</string>
     <string name="pref_common_compatibility_mode">"Compatibility mode"</string>
-    <string name="pref_common_compatibility_mode_summ">"Enable if your device with a custom ROM and the connection is lost when you press the START button"</string>
+    <string name="pref_common_compatibility_mode_summ">Enable if your device with a custom ROM and the connection is lost when you press the START button</string>
     <string name="pref_common_shell_control">"Enable script control"</string>
-    <string name="pref_common_shell_control_summ">"Use the following command to manage application modules:
-        \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL
-        --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
+    <string name="pref_common_shell_control_summ">"Use the following command to manage application modules: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Where 1 - starts, 0 - stops the module."</string>
     <string name="pref_common_local_eth_device_addr">"LAN device IP address"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Enable Fix TTL and configure LAN device to connect to InviZible. Use default gateway: %1$s, DNS server: %2$s."</string>
     <string name="pref_common_multi_user">"Multi-user support"</string>
-    <string name="pref_common_multi_user_summ">"Support for Dual Apps, MIUI, Island, Shelter and Work profile applications"</string>
+    <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">"Enable SOCKS output proxy"</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor will make all OR connections through the SOCKS 5 proxy."</string>
     <string name="notification_channel_services">"Running services"</string>
@@ -442,8 +421,7 @@
     <string name="proxy_successful_connection">"Successful connection. Ping %s ms."</string>
     <string name="notification_arp_spoofing">"ARP spoofing detected!"</string>
     <string name="notification_rogue_dhcp">"Rogue DHCP detected!"</string>
-    <string name="notification_mitm">"Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network.
-        Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!"</string>
+    <string name="notification_mitm">"Man-in-the-middle attack detected! Your data can be intercepted by another device on the local network. Turn off, wait a few seconds, and turn on Wi-Fi. Using current Wi-Fi hotspot may be unsafe!"</string>
     <string name="toast_arp_detection_not_supported">"ARP spoofing detection is not supported for your device!"</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges."</string>
     <string name="pref_fast_tor_bypass_lan">"Bypass LAN addresses"</string>
@@ -498,7 +476,7 @@
     <string name="tile_changing_tor_ip">"Tor IP changing"</string>
     <string name="tile_dialog_over_three_tiles_message">"You have added more than 3 tiles to Quick Settings. Please leave only 3. Adding more than 3 tiles can cause issues with app control."</string>
     <string name="pref_common_rogue_dhcp_detection">"Rogue DHCP detection"</string>
-    <string name="pref_common_rogue_dhcp_detection_summ">"Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks."</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Detect Man-in-the-middle rogue DHCP attacks in Wi-Fi networks.</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">"Hides the broker's domain name from the Internet provider. The broker is used to establish a connection."</string>
     <string name="pref_firewall_show_all_apps">"Show all apps"</string>

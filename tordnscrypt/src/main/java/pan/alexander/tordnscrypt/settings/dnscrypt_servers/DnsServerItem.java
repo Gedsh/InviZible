@@ -19,20 +19,13 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
 
-import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
-
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
-import androidx.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import pan.alexander.tordnscrypt.R;
 
 public class DnsServerItem implements Comparable<DnsServerItem> {
     private boolean checked = false;
@@ -40,39 +33,33 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
     private boolean nolog = false;
     private boolean nofilter = false;
     private boolean protoDoH = false;
+    private boolean protoODoH = false;
     private boolean protoDNSCrypt = false;
     private boolean ipv6 = false;
     private boolean visibility = true;
     private String name;
     private final String description;
     private final String sdns;
-    private boolean ownServer = false;
+    private boolean ownServer;
     private final ArrayList<String> routes = new ArrayList<>();
 
-    public DnsServerItem(Context context, String name, String description, String sdns) throws IllegalArgumentException {
+    public DnsServerItem(
+            String name,
+            String description,
+            String sdns,
+            DnsServerFeatures features
+    ) throws IllegalArgumentException {
         this.name = name;
         this.description = description;
         this.sdns = sdns;
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-
-        boolean require_dnssec = sp.getBoolean("require_dnssec", false);
-        boolean require_nofilter = sp.getBoolean("require_nofilter", false);
-        boolean require_nolog = sp.getBoolean("require_nolog", false);
-        boolean use_dns_servers = sp.getBoolean("dnscrypt_servers", true);
-        boolean use_doh_servers = sp.getBoolean("doh_servers", true);
-        boolean use_ipv4_servers = sp.getBoolean("ipv4_servers", true);
-        boolean use_ipv6_servers = sp.getBoolean("ipv6_servers", true);
-
-        if (!accelerated && context.getText(R.string.package_name).toString().contains(".gp")) {
-            require_nofilter = true;
-        }
 
         byte[] bin = Base64.decode(sdns.substring(0, 7).getBytes(), 16);
         if (bin[0] == 0x01) {
             protoDNSCrypt = true;
         } else if (bin[0] == 0x02) {
             protoDoH = true;
+        } else if (bin[0] == 0x05) {
+            protoODoH = true;
         } else {
             throw new IllegalArgumentException("Wrong sever type");
         }
@@ -91,26 +78,32 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
             ipv6 = true;
         }
 
-        if (require_dnssec)
+        if (features.getRequireDnssec())
             this.visibility = this.dnssec;
 
-        if (require_nofilter)
+        if (features.getRequireNofilter())
             this.visibility = this.visibility && this.nofilter;
 
-        if (require_nolog)
+        if (features.getRequireNolog())
             this.visibility = this.visibility && this.nolog;
 
-        if (!use_dns_servers)
+        if (!features.getUseDnsServers())
             this.visibility = this.visibility && !this.protoDNSCrypt;
 
-        if (!use_doh_servers)
+        if (!features.getUseDohServers())
             this.visibility = this.visibility && !this.protoDoH;
 
-        if (!use_ipv4_servers)
+        if (!features.getUseOdohServers())
+            this.visibility = this.visibility && !this.protoODoH;
+
+        if (!features.getUseIPv4Servers())
             this.visibility = this.visibility && ipv6;
 
-        if (!use_ipv6_servers)
+        if (!features.getUseIPv6Servers())
             this.visibility = this.visibility && !ipv6;
+
+        if (ownServer)
+            this.visibility = true;
     }
 
     public boolean isChecked() {
@@ -135,6 +128,10 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
 
     boolean isProtoDoH() {
         return protoDoH;
+    }
+
+    boolean isProtoODoH() {
+        return protoODoH;
     }
 
     boolean isProtoDNSCrypt() {
@@ -174,6 +171,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
     }
 
     void setRoutes(List<String> routes) {
+        this.routes.clear();
         this.routes.addAll(routes);
     }
 
@@ -190,6 +188,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
                 nolog == that.nolog &&
                 nofilter == that.nofilter &&
                 protoDoH == that.protoDoH &&
+                protoODoH == that.protoODoH &&
                 protoDNSCrypt == that.protoDNSCrypt &&
                 name.equals(that.name) &&
                 description.equals(that.description) &&
@@ -198,7 +197,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(dnssec, nolog, nofilter, protoDoH, protoDNSCrypt, name, description, sdns);
+        return Objects.hash(dnssec, nolog, nofilter, protoDoH, protoODoH, protoDNSCrypt, name, description, sdns);
     }
 
     @NonNull
@@ -210,6 +209,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
                 ", nolog=" + nolog +
                 ", nofilter=" + nofilter +
                 ", protoDoH=" + protoDoH +
+                ", protoODoH=" + protoODoH +
                 ", protoDNSCrypt=" + protoDNSCrypt +
                 ", visibility=" + visibility +
                 ", name='" + name + '\'' +
@@ -225,7 +225,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
         } else if (this.checked && !dnsServerItem.checked) {
             return -1;
         } else {
-            return 0;
+            return this.name.compareTo(dnsServerItem.name);
         }
     }
 }

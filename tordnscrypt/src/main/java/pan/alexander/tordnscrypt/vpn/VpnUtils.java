@@ -198,10 +198,11 @@ public class VpnUtils {
 
     public static void canFilterAsynchronous(ServiceVPN serviceVPN) {
 
-        App.getInstance().getDaggerComponent().getCachedExecutor().submit(() -> {
+        App.getInstance().getDaggerComponent()
+                .getCoroutineExecutor().submit("VpnUtils canFilterAsynchronous", () -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && serviceVPN != null) {
                 serviceVPN.canFilter = true;
-                return;
+                return null;
             }
 
             // https://android-review.googlesource.com/#/c/206710/1/untrusted_app.te
@@ -211,7 +212,7 @@ public class VpnUtils {
             try {
                 if (tcp.exists() && tcp.canRead() && serviceVPN != null)
                     serviceVPN.canFilter = true;
-                return;
+                return null;
             } catch (SecurityException ignored) {
             }
 
@@ -224,6 +225,7 @@ public class VpnUtils {
                     serviceVPN.canFilter = false;
                 }
             }
+            return null;
         });
     }
 

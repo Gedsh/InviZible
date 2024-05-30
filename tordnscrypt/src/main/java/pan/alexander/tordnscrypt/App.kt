@@ -19,7 +19,6 @@
 
 package pan.alexander.tordnscrypt
 
-import android.annotation.TargetApi
 import android.app.*
 import android.content.Context
 import android.content.res.Configuration
@@ -34,8 +33,6 @@ import pan.alexander.tordnscrypt.di.*
 import pan.alexander.tordnscrypt.language.Language
 import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 
-const val ANDROID_CHANNEL_ID = "InviZible"
-const val FIREWALL_CHANNEL_ID = "Firewall"
 const val AUX_CHANNEL_ID = "Auxiliary"
 
 class App : Application() {
@@ -81,8 +78,6 @@ class App : Application() {
         Language.setFromPreference(this, "pref_fast_language")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createNotificationChannel()
-            createFirewallChannel()
             createAuxChannel()
         }
 
@@ -93,40 +88,6 @@ class App : Application() {
         }
 
         initAppLifecycleListener()
-    }
-
-    @TargetApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel() {
-        val notificationManager = getSystemService(this, NotificationManager::class.java)
-        val channel = NotificationChannel(
-            ANDROID_CHANNEL_ID,
-            getString(R.string.notification_channel_services),
-            NotificationManager.IMPORTANCE_MIN
-        )
-        channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
-        channel.description = ""
-        channel.enableLights(false)
-        channel.enableVibration(false)
-        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-        channel.setShowBadge(false)
-        notificationManager?.createNotificationChannel(channel)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createFirewallChannel() {
-        val notificationManager = getSystemService(this, NotificationManager::class.java)
-        val channel = NotificationChannel(
-            FIREWALL_CHANNEL_ID,
-            getString(R.string.notification_channel_firewall),
-            NotificationManager.IMPORTANCE_HIGH
-        )
-        channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
-        channel.description = ""
-        channel.enableLights(true)
-        channel.enableVibration(true)
-        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
-        channel.setShowBadge(true)
-        notificationManager?.createNotificationChannel(channel)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

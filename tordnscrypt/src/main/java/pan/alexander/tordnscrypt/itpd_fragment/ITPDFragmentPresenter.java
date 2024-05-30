@@ -52,7 +52,7 @@ import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -82,7 +82,7 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
     @Inject
     public Lazy<ITPDInteractorInterface> itpdInteractor;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
 
     private boolean runI2PDWithRoot = false;
 
@@ -431,18 +431,19 @@ public class ITPDFragmentPresenter implements ITPDFragmentPresenterInterface,
         final String certificateFolder = appDataDir + "/i2pd_data/certificates";
         final String certificateDestination = appDataDir + "/i2pd_data";
 
-        cachedExecutor.submit(() -> {
+        executor.submit("ITPDFragmentPresenter copyCertificatesNoRootMethod", () -> {
 
             File certificateFolderDir = new File(certificateFolder);
 
             if (certificateFolderDir.isDirectory()
                     && certificateFolderDir.listFiles() != null
                     && Objects.requireNonNull(certificateFolderDir.listFiles()).length > 0) {
-                return;
+                return null;
             }
 
             FileManager.copyFolderSynchronous(context, certificateSource, certificateDestination);
             logi("Copy i2p certificates");
+            return null;
         });
     }
 

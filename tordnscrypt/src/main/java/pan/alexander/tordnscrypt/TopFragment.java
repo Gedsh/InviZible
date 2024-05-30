@@ -47,13 +47,14 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
 
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import dagger.Lazy;
+import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
 import pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog;
@@ -74,9 +75,9 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 import pan.alexander.tordnscrypt.update.UpdateService;
 import pan.alexander.tordnscrypt.utils.enums.ModuleName;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
 import pan.alexander.tordnscrypt.dialogs.Registration;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
@@ -136,7 +137,7 @@ public class TopFragment extends Fragment
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
-    public CachedExecutor cachedExecutor;
+    public CoroutineExecutor executor;
     @Inject
     public Lazy<ModulesVersions> modulesVersions;
     @Inject
@@ -156,7 +157,7 @@ public class TopFragment extends Fragment
     private boolean runModulesWithRoot = false;
 
     public CheckUpdatesDialog checkUpdatesDialog;
-    volatile Future<?> updateCheckTask;
+    volatile Job updateCheckTask;
 
     private ScheduledFuture<?> scheduledFuture;
     private BroadcastReceiver br;
@@ -367,12 +368,12 @@ public class TopFragment extends Fragment
 
     @WorkerThread
     private void performInitTasksBackgroundWork() {
-        cachedExecutor.submit(() -> {
+        executor.submit("TopFragment performInitTasksBackgroundWork", () -> {
 
             Activity activity = getActivity();
 
             if (activity == null || activity.isFinishing()) {
-                return;
+                return null;
             }
 
             Context context = activity.getApplicationContext();
@@ -392,7 +393,7 @@ public class TopFragment extends Fragment
             if (handler != null) {
                 handler.post(this::performInitTasksMainThreadWork);
             }
-
+            return null;
         });
     }
 
@@ -636,7 +637,7 @@ public class TopFragment extends Fragment
         try {
             final PreferenceRepository preferences = preferenceRepository.get();
 
-            if (fSuResult != null && fSuResult.size() != 0
+            if (fSuResult != null && !fSuResult.isEmpty()
                     && fSuResult.toString().toLowerCase().contains("uid=0")
                     && fSuResult.toString().toLowerCase().contains("gid=0")) {
 
@@ -644,7 +645,7 @@ public class TopFragment extends Fragment
 
                 preferences.setBoolPreference(ROOT_IS_AVAILABLE, true);
 
-                if (fSuVersion != null && fSuVersion.length() != 0) {
+                if (fSuVersion != null && !fSuVersion.isEmpty()) {
                     verSU = "Root is available." + (char) 10 +
                             "Super User Version: " + fSuVersion + (char) 10 +
                             fSuResult.get(0);
@@ -668,7 +669,7 @@ public class TopFragment extends Fragment
         try {
             final PreferenceRepository preferences = preferenceRepository.get();
 
-            if (fBbResult != null && fBbResult.size() != 0) {
+            if (fBbResult != null && !fBbResult.isEmpty()) {
                 verBB = fBbResult.get(0);
             } else {
                 preferences.setBoolPreference("bbOK", false);
@@ -849,12 +850,10 @@ public class TopFragment extends Fragment
     }
 
     private void cancelCheckUpdatesTask() {
-        if (updateCheckTask != null) {
-            if (!updateCheckTask.isDone()) {
-                updateCheckTask.cancel(true);
-            }
-            updateCheckTask = null;
+        if (updateCheckTask != null && !updateCheckTask.isCompleted()) {
+            updateCheckTask.cancel(new CancellationException());
         }
+        updateCheckTask = null;
     }
 
     public void showUpdateResultMessage(Activity activity) {
@@ -938,7 +937,7 @@ public class TopFragment extends Fragment
 
         String action = intent.getAction();
 
-        if ((action == null) || (action.equals(""))) {
+        if (action == null || action.isEmpty()) {
             return false;
         }
 

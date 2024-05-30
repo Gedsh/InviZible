@@ -26,7 +26,7 @@ import pan.alexander.tordnscrypt.di.arp.ArpScope
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import java.util.concurrent.locks.ReentrantLock
@@ -40,7 +40,7 @@ class ArpScannerHelper @Inject constructor(
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
     private val defaultSharedPreferences: SharedPreferences,
     private val appPreferenceRepository: PreferenceRepository,
-    private val cachedExecutor: CachedExecutor,
+    private val executor: CoroutineExecutor,
     private val defaultGatewayManager: dagger.Lazy<DefaultGatewayManager>,
     private val arpTableManager: dagger.Lazy<ArpTableManager>,
     private val arpScannerLoop: dagger.Lazy<ArpScannerLoop>,
@@ -77,7 +77,7 @@ class ArpScannerHelper @Inject constructor(
     }
 
     fun resetArpScannerState() {
-        cachedExecutor.submit {
+        executor.submit("ArpScannerHelper resetArpScannerState") {
             arpScannerReentrantLock.withLock {
                 ArpScanner.arpAttackDetected = false
                 ArpScanner.dhcpGatewayAttackDetected = false

@@ -384,6 +384,14 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/own-resolvers.md";
     }
 
+    public String getOdohServersPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/odoh-servers.md";
+    }
+
+    public String getOdohRelaysPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/odoh-relays.md";
+    }
+
     public String getCacheDirPath(Context context) {
         String cacheDirPath = "/storage/emulated/0/Android/data/" + context.getPackageName() + "/cache";
 

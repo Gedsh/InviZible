@@ -136,10 +136,20 @@ class InstalledApplicationsManager private constructor(
                 application = userAppsMap[applicationInfo.uid]
 
                 //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
-                val name = applicationInfo.loadLabel(packageManager)?.toString() ?: "Undefined"
+                val name = try {
+                    applicationInfo.loadLabel(packageManager)?.toString() ?: applicationInfo.packageName
+                } catch (e: Exception) {
+                    logw("InstalledApplications get name", e)
+                    applicationInfo.packageName
+                }
                 val icon = if (iconIsRequired) {
                     //packageManager.getApplicationIcon(applicationInfo)
-                    applicationInfo.loadIcon(packageManager)
+                    try {
+                        applicationInfo.loadIcon(packageManager)
+                    } catch (e: Exception) {
+                        logw("InstalledApplications get icon", e)
+                        null
+                    }
                 } else {
                     null
                 }

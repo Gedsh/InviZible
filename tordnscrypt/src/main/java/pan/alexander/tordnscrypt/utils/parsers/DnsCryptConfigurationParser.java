@@ -38,6 +38,7 @@ import javax.inject.Named;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DnsRelay;
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DnsServerRelay;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DnsCryptResolver;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -224,6 +225,103 @@ public class DnsCryptConfigurationParser {
             loge("DnsCryptServersParser parseDnsCryptResolversMd", e);
         }
         return resolvers;
+    }
+
+    @WorkerThread
+    public List<String> getOdohServersMd() {
+        List<String> servers = new ArrayList<>();
+        try {
+            List<String> lines = FileManager.readTextFileSynchronous(
+                    context,
+                    pathVars.get().getOdohServersPath()
+            );
+            for (String line : lines) {
+                if (!line.isBlank()) {
+                    servers.add(line);
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            loge("DnsCryptServersParser getOdohServersMd", e);
+        }
+        return servers;
+    }
+
+    @WorkerThread
+    public List<String> getDnsCryptRelaysMd() {
+        List<String> servers = new ArrayList<>();
+        try {
+            List<String> lines = FileManager.readTextFileSynchronous(
+                    context,
+                    pathVars.get().getDNSCryptRelaysPath()
+            );
+            for (String line : lines) {
+                if (!line.isBlank()) {
+                    servers.add(line);
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            loge("DnsCryptServersParser getDnsCryptRelaysMd", e);
+        }
+        return servers;
+    }
+
+    @WorkerThread
+    public List<String> getOdohRelaysMd() {
+        List<String> servers = new ArrayList<>();
+        try {
+            List<String> lines = FileManager.readTextFileSynchronous(
+                    context,
+                    pathVars.get().getOdohRelaysPath()
+            );
+            for (String line : lines) {
+                if (!line.isBlank()) {
+                    servers.add(line);
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            loge("DnsCryptServersParser getOdohRelaysMd", e);
+        }
+        return servers;
+    }
+
+    public Set<DnsRelay> parseDnsCryptRelaysMd(List<String> relaysMd) {
+        Set<DnsRelay> relays = new LinkedHashSet<>();
+        try {
+            String name = "";
+            String description = "";
+            boolean lockRelay = false;
+
+            for (String line : relaysMd) {
+
+                if (line.startsWith("##")) {
+                    name = line.replace("##", "").trim();
+                    lockRelay = true;
+                } else if (lockRelay && line.startsWith("sdns://")) {
+                    lockRelay = false;
+                } else if (lockRelay) {
+                    description = line.replaceAll("\\s", " ").trim();
+                }
+
+                if (!name.isEmpty() && !description.isEmpty() && !lockRelay) {
+                    DnsRelay dnsRelayItem = new DnsRelay(name, description);
+                    relays.add(dnsRelayItem);
+                    name = "";
+                    description = "";
+                }
+            }
+        } catch (Exception e) {
+            loge("DnsCryptServersParser parseDnsCryptRelaysMd", e);
+        }
+        return relays;
     }
 
     @WorkerThread

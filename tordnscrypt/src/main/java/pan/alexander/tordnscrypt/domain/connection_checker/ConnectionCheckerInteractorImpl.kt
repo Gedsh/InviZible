@@ -77,6 +77,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
 
     @Volatile
     private var networkAvailable = false
+
     @Volatile
     private var networkAvailableViaNetworkCallback = false
 
@@ -264,6 +265,13 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                 } else {
                     val dnsForConnectivityCheck = getNetworkDns()
                         .plus(pathVars.dnsCryptFallbackRes.split(Regex(", ?")))
+                        .filter {
+                            if (modulesStatus.mode == OperationMode.ROOT_MODE) {
+                                !it.isIPv6()
+                            } else {
+                                true
+                            }
+                        }
                         .shuffled()
                         .first()
 
@@ -296,6 +304,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     } catch (e: Exception) {
         pathVars.dnsCryptFallbackRes.split(Regex(", ?"))
     }
+
+    private fun String.isIPv6() = contains(":")
 
     private enum class Via {
         TOR,

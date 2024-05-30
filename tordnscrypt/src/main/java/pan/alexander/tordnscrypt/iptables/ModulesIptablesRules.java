@@ -307,12 +307,16 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String dnsCryptSystemDNSAllowedFilter = "";
         String dnsCryptRootDNSAllowedNat = "";
         String dnsCryptRootDNSAllowedFilter = "";
+        String dnsCryptDnsDaemonDNSAllowedNat = "";
+        String dnsCryptDnsDaemonDNSAllowedFilter = "";
         if (dnsCryptSystemDNSAllowed) {
             dnsCryptSystemDNSAllowedFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT";
             dnsCryptSystemDNSAllowedNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT";
             if (!runModulesWithRoot) {
                 dnsCryptRootDNSAllowedNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
                 dnsCryptRootDNSAllowedFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT";
+                dnsCryptDnsDaemonDNSAllowedNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m owner --uid-owner 1051 -j ACCEPT";
+                dnsCryptDnsDaemonDNSAllowedFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp --dport 53 -m owner --uid-owner 1051 -j ACCEPT";
             }
         }
 
@@ -410,6 +414,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
+                        dnsCryptDnsDaemonDNSAllowedNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         //handle onion websites
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + ONION_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
@@ -430,6 +435,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p udp -m udp --dport " + pathVars.getTorDNSPort() + " -j ACCEPT",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
+                        dnsCryptDnsDaemonDNSAllowedFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         blockRejectAddressFilter,
                         proxyAppsBypassNat,
@@ -480,6 +486,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                         dnsCryptSystemDNSAllowedNat,
                         dnsCryptRootDNSAllowedNat,
+                        dnsCryptDnsDaemonDNSAllowedNat,
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                         //handle onion websites
                         iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -m string --algo bm --from 16 --to 128 --hex-string " + ONION_HEX + " -j DNAT --to-destination 127.0.0.1:" + pathVars.getTorDNSPort() + " 2> /dev/null || true",
@@ -510,6 +517,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m owner --uid-owner " + appUID + " -j RETURN",
                         dnsCryptSystemDNSAllowedFilter,
                         dnsCryptRootDNSAllowedFilter,
+                        dnsCryptDnsDaemonDNSAllowedFilter,
                         blockRejectAddressFilter,
                         iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                         torSitesBypassFilter,
@@ -527,7 +535,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             }
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0) {
+            if (!commandsTether.isEmpty()) {
                 commands.addAll(commandsTether);
             }
             if (firewallEnabled) {
@@ -565,6 +573,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d 10.191.0.1 -j DNAT --to-destination 127.0.0.1:" + pathVars.getITPDHttpProxyPort(),
                     dnsCryptSystemDNSAllowedNat,
                     dnsCryptRootDNSAllowedNat,
+                    dnsCryptDnsDaemonDNSAllowedNat,
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
                     iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport 53 -j DNAT --to-destination 127.0.0.1:" + pathVars.getDNSCryptPort(),
@@ -579,6 +588,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -d 127.0.0.1/32 -p tcp -m tcp --dport " + pathVars.getDNSCryptPort() + " -j ACCEPT",
                     dnsCryptSystemDNSAllowedFilter,
                     dnsCryptRootDNSAllowedFilter,
+                    dnsCryptDnsDaemonDNSAllowedFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
                     blockRejectAddressFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
@@ -589,7 +599,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             ));
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0) {
+            if (!commandsTether.isEmpty()) {
                 commands.addAll(commandsTether);
             }
             if (firewallEnabled) {
@@ -616,7 +626,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
             ));
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0) {
+            if (!commandsTether.isEmpty()) {
                 commands.addAll(commandsTether);
             }
             commands.addAll(firewall.getClearFirewallRules());
@@ -752,7 +762,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
 
             List<String> commandsTether = tethering.activateTethering(false);
-            if (commandsTether.size() > 0) {
+            if (!commandsTether.isEmpty()) {
                 commands.addAll(commandsTether);
             }
             if (firewallEnabled) {
@@ -859,7 +869,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         ));
 
         List<String> commandsTether = tethering.fastUpdate();
-        if (commandsTether.size() > 0) {
+        if (!commandsTether.isEmpty()) {
             commands.addAll(commandsTether);
         }
         IptablesFirewall firewall = iptablesFirewall.get();

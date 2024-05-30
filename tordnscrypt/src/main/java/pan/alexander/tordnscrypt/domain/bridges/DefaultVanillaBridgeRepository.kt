@@ -28,4 +28,6 @@ interface DefaultVanillaBridgeRepository {
     suspend fun getRelaysWithFingerprintAndAddress(
         allowIPv6Relays: Boolean
     ): List<RelayAddressFingerprint>
+
+    fun isAddressReachable(ip: String, port: Int): Boolean
 }

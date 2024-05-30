@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -11,29 +11,71 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:layout_gravity="center_horizontal"
+        android:layout_margin="8dp"
         android:adjustViewBounds="true"
         android:cropToPadding="true"
-        android:layout_margin="8dp"
         android:tint="@color/ic_launcher_background"
         app:srcCompat="@drawable/ic_help_title"
         tools:ignore="ContentDescription" />
 
     <View
-        android:id="@+id/divider6"
+        android:id="@+id/dividerAgreementTop"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_margin="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:background="?android:attr/listDivider" />
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/textViewAgreement"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollAgreement"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
-        android:autoLink="all"
-        android:linksClickable="true"
-        android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:scrollbars="vertical"
-        android:text="@string/agreement_text"
-        android:typeface="serif" />
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/textViewAgreement"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:autoLink="all"
+            android:linksClickable="true"
+            android:padding="8dp"
+            android:text="@string/agreement_text"
+            android:typeface="serif" />
+    </androidx.core.widget.NestedScrollView>
+
+    <View
+        android:id="@+id/dividerAgreementBottom"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:background="?android:attr/listDivider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonDeclineAgreement"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:text="@string/disagree"
+            android:textColor="@color/colorAccent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonAcceptAgreement"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:text="@string/agree"
+            android:textColor="@color/colorAccent" />
+
+    </LinearLayout>
 </androidx.appcompat.widget.LinearLayoutCompat>

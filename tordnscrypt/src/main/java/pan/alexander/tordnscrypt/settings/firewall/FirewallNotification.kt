@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.firewall
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -32,10 +33,11 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
-import pan.alexander.tordnscrypt.FIREWALL_CHANNEL_ID
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -48,6 +50,8 @@ const val ALLOW_ACTION = "pan.alexander.tordnscrypt.ALLOW_APP_FOR_FIREWALL"
 const val DENY_ACTION = "pan.alexander.tordnscrypt.DENY_APP_FOR_FIREWALL"
 const val NOTIFICATION_ID = "pan.alexander.tordnscrypt.NOTIFICATION_ID"
 const val EXTRA_UID = "pan.alexander.tordnscrypt.EXTRA_UID"
+
+private const val FIREWALL_CHANNEL_ID = "Firewall"
 
 class FirewallNotification : BroadcastReceiver() {
 
@@ -99,7 +103,7 @@ class FirewallNotification : BroadcastReceiver() {
             context.applicationContext?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
 
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        newAppsAreAllowed = sharedPreferences.getBoolean("NewAppsInternetAllowed", false)
+        newAppsAreAllowed = sharedPreferences.getBoolean(FIREWALL_NO_BLOCK_NEW_APP, false)
 
         val action = intent?.action ?: return
 
@@ -332,6 +336,10 @@ class FirewallNotification : BroadcastReceiver() {
             return
         }
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createFirewallChannel(context)
+        }
+
         val notificationIntent = Intent(context, SettingsActivity::class.java)
         notificationIntent.action = "firewall"
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER)
@@ -422,5 +430,23 @@ class FirewallNotification : BroadcastReceiver() {
 
         val notification = builder.build()
         notificationManager.notify(notificationId, notification)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createFirewallChannel(context: Context) {
+        val notificationManager =
+            ContextCompat.getSystemService(context, NotificationManager::class.java)
+        val channel = NotificationChannel(
+            FIREWALL_CHANNEL_ID,
+            context.getString(R.string.notification_channel_firewall),
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT)
+        channel.description = ""
+        channel.enableLights(true)
+        channel.enableVibration(true)
+        channel.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        channel.setShowBadge(true)
+        notificationManager?.createNotificationChannel(channel)
     }
 }

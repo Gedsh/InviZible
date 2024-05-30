@@ -30,3 +30,5 @@
 
 -keepattributes *Annotation*,SourceFile,LineNumberTable,Signature
 -keep class kotlin.coroutines.Continuation
+
+-keepclassmembers,allowoptimization,allowobfuscation public class pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment {*;}

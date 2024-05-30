@@ -85,6 +85,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_I
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENTRY_NODES;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -146,7 +147,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         }
 
         Preference useBridges = findPreference("prefTorBridges");
-        boolean entryNodes = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("EntryNodes", false);
+        boolean entryNodes = PreferenceManager.getDefaultSharedPreferences(context).getBoolean(TOR_ENTRY_NODES, false);
         if (useBridges != null && entryNodes) {
             useBridges.setEnabled(false);
             useBridges.setSummary(R.string.pref_fast_use_tor_bridges_alt_summ);

@@ -34,7 +34,7 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.settings.PathVars;
-import pan.alexander.tordnscrypt.utils.executors.CachedExecutor;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -48,7 +48,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ModulesVersions {
-    private final CachedExecutor cachedExecutor;
+    private final CoroutineExecutor executor;
 
     private String dnsCryptVersion = "";
     private String torVersion = "";
@@ -57,13 +57,13 @@ public class ModulesVersions {
     private Shell.Console console;
 
     @Inject
-    ModulesVersions(CachedExecutor cachedExecutor) {
-        this.cachedExecutor = cachedExecutor;
+    ModulesVersions(CoroutineExecutor executor) {
+        this.executor = executor;
     }
 
     public void refreshVersions(final Context context) {
 
-        cachedExecutor.submit(() -> {
+        executor.submit("ModulesVersions refreshVersions", () -> {
             //openCommandShell();
 
             PathVars pathVars = App.getInstance().getDaggerComponent().getPathVars().get();
@@ -84,6 +84,7 @@ public class ModulesVersions {
             }
 
             //closeCommandShell();
+            return null;
         });
     }
 
