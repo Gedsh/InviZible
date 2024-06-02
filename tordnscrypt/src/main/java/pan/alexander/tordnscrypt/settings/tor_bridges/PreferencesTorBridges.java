@@ -489,7 +489,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             Matcher matcher = pattern.matcher(currentBridge);
             String ip;
             if (matcher.find()) {
-                ip = matcher.group().substring(0, matcher.group().lastIndexOf(" "));
+                if (matcher.group().lastIndexOf(" ") >= 0) {
+                    ip = matcher.group().substring(0, matcher.group().lastIndexOf(" "));
+                } else {
+                    ip = matcher.group();
+                }
             } else {
                 ip = "";
             }

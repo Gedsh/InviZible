@@ -1147,3 +1147,6 @@
 * Updated Tor Lyrebird obfuscating proxy.
 * Updated Chinese and Persian translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.6**
+* Fixed a crash when using Tor bridges containing only IP and port.
