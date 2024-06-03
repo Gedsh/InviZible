@@ -211,6 +211,7 @@
     <string name="pref_dnscrypt_blacklist_summ">Чорний список складається з одного шаблону на рядок.</string>
     <string name="pref_dnscrypt_relays_categ">Реле</string>
     <string name="pref_tor_unlock_edit">Редагувати хост або IP-адресу</string>
+    <string name="pref_tor_isolate_uid_summ">Не використовувати той же ланцюжок для різних додатків.</string>
     <string name="pref_tor_isolate_dest_address_summ">Не використовати спільні ланцюги з потоками, що мають іншу адресу призначення.</string>
     <string name="pref_itpd_Socks_proxy">Сокс-проксі</string>
     <string name="update_core_not_show_again">Не запитувати знову</string>

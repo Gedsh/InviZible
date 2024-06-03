@@ -64,6 +64,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
@@ -73,6 +74,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL_LOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ISOLATE_UID;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
@@ -137,6 +139,16 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         }
 
         ArrayList<Preference> preferences = new ArrayList<>();
+
+        if (ModulesStatus.getInstance().getMode() == VPN_MODE) {
+            preferences.add(findPreference(TOR_ISOLATE_UID));
+        } else {
+            PreferenceCategory isolationCategory = findPreference("tor_isolation_settings");
+            Preference isolateUid = findPreference(TOR_ISOLATE_UID);
+            if (isolationCategory != null && isolateUid != null) {
+                isolationCategory.removePreference(isolateUid);
+            }
+        }
 
         preferences.add(findPreference("VirtualAddrNetwork"));
         preferences.add(findPreference("HardwareAccel"));
@@ -545,6 +557,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
 
+            return true;
+        } else if (Objects.equals(preference.getKey(), TOR_ISOLATE_UID)) {
+            isChanged = true;
             return true;
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_address")) {
 

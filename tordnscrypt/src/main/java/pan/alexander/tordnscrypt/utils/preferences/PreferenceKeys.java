@@ -153,8 +153,8 @@ public interface PreferenceKeys {
     String TOR_USE_IPV6 = "ClientUseIPv6";
     String TOR_FASCIST_FIREWALL = "FascistFirewall";
     String TOR_FASCIST_FIREWALL_LOCK = "FascistFirewallLock";
-
     String TOR_ENTRY_NODES = "EntryNodes";
+    String TOR_ISOLATE_UID = "pref_tor_isolate_uid";
 
     //I2PD Settings
     String I2PD_USE_IPV6 = "ipv6";

@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.vpn.service
 
 import android.content.SharedPreferences
 import android.os.Build
-import android.util.Log
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -80,6 +79,8 @@ class VpnPreferenceHolder @Inject constructor(
     val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
             && proxyAddress.isNotBlank()
             && proxyPort != 0
+
+    val torIsolateUid = defaultPreferences.getBoolean(TOR_ISOLATE_UID, false)
 
     val torDNSPort = pathVars.torDNSPort.let {
         if (it.matches(Regex(NUMBER_REGEX))) {

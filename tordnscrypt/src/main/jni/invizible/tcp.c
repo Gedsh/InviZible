@@ -27,6 +27,7 @@ extern char tor_socks5_addr[INET6_ADDRSTRLEN + 1];
 extern int tor_socks5_port;
 extern char tor_socks5_username[127 + 1];
 extern char tor_socks5_password[127 + 1];
+extern bool tor_isolate_uid;
 
 extern char proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
 extern int proxy_socks5_port;
@@ -417,6 +418,9 @@ void check_tcp_socket(const struct arguments *args,
                 if (*proxy_socks5_addr && proxy_socks5_port && !redirect_to_tor) {
                    *socks5_username = *proxy_socks5_username;
                    *socks5_password = *proxy_socks5_password;
+                } else if (tor_isolate_uid) {
+                    sprintf(socks5_username, "%d", s->tcp.uid);
+                    sprintf(socks5_password, "%d", s->tcp.uid);
                 } else {
                     *socks5_username = *tor_socks5_username;
                     *socks5_password = *tor_socks5_password;
