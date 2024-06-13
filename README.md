@@ -170,7 +170,9 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 **XLM**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
 
-**XMR** 83k3FtpRhoT8QpE3M8mKunjXsktfVhGS2fVXm1X1Myj4EoH5hJ4BfuFXkYcRod61kCDP1hpcDSw2FFM622rRD6rWEJ45UjU
+**XMR** 82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX
+
+Please note that the XMR address has changed. The old address is no longer valid.
 
 ## License
 
