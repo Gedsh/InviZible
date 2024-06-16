@@ -602,7 +602,7 @@
     <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2024 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
     <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
-        InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
+        InviZible Pro forwards internet traffic directly to Tor, DNSCrypt and I2P networks.
         For detailed information, please visit the official pages of the mentioned projects.</string>
     <string name="about_own_licence" translatable="false">
         \tInviZible Pro is free software: you can redistribute it and/or modify
