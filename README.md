@@ -164,6 +164,8 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 **BTC**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
 
+**LTC**: MUSAXkcAvnN1Ytauzeo9bwjVjarUdDHGgk
+
 **BCH**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
 
 **USDT**: 0xdA1Dd53FE6501140E3Dcd5134323dfccF20aD536
