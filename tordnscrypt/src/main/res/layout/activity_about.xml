@@ -212,7 +212,9 @@
                 android:id="@+id/tvDonateTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="4dp"
                 android:text="@string/drawer_menu_donate"
                 android:textAlignment="center"
@@ -223,12 +225,14 @@
                 android:id="@+id/tvDonateBitcoin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:textIsSelectable="true"
                 android:typeface="serif"
                 tools:text="bitcoin://1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR" />
@@ -237,12 +241,14 @@
                 android:id="@+id/tvDonateMonero"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 android:layout_marginBottom="8dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:textIsSelectable="true"
                 android:typeface="serif"
                 tools:text="monero:82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX" />
@@ -297,7 +303,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_dnscrypt"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -307,7 +313,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_tor"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -317,7 +323,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_itpd"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -327,7 +333,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_libsupeuser"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -337,7 +343,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_AndroidShell"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -347,7 +353,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_NetGuard"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -357,7 +363,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_filepicker"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -367,7 +373,7 @@
                 android:layout_margin="8dp"
                 android:focusable="auto"
                 android:text="@string/about_license_busybox"
-                android:textColor="@color/ic_launcher_background"
+                android:textColor="@color/colorAccent"
                 android:typeface="serif" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
