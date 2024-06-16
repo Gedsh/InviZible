@@ -209,6 +209,45 @@
                 android:typeface="serif" />
 
             <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvDonateTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="4dp"
+                android:text="@string/drawer_menu_donate"
+                android:textAlignment="center"
+                android:textStyle="bold"
+                android:typeface="serif" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvDonateBitcoin"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/ic_launcher_background"
+                android:textIsSelectable="true"
+                android:typeface="serif"
+                tools:text="bitcoin://1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvDonateMonero"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/ic_launcher_background"
+                android:textIsSelectable="true"
+                android:typeface="serif"
+                tools:text="monero:82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX" />
+
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/privacyTitleTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

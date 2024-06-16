@@ -20,6 +20,8 @@
 package pan.alexander.tordnscrypt.about;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -101,6 +103,20 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         Date buildDate = BuildConfig.BUILD_TIME;
         tvHelpBuildDate.setText(DateFormat.getDateInstance(DateFormat.SHORT).format(buildDate));
 
+        TextView tvDonateTitle = findViewById(R.id.tvDonateTitle);
+        TextView tvDonateBitcoin = findViewById(R.id.tvDonateBitcoin);
+        TextView tvDonateMonero = findViewById(R.id.tvDonateMonero);
+        if (pathVars.get().getAppVersion().endsWith("p")) {
+            tvDonateTitle.setVisibility(View.GONE);
+            tvDonateBitcoin.setVisibility(View.GONE);
+            tvDonateMonero.setVisibility(View.GONE);
+        } else {
+            tvDonateBitcoin.setText(getBitcoinUri());
+            tvDonateBitcoin.setOnClickListener(this);
+            tvDonateMonero.setText(getMoneroUri());
+            tvDonateMonero.setOnClickListener(this);
+        }
+
         findViewById(R.id.dnscryptLicense).setOnClickListener(this);
         findViewById(R.id.torLicense).setOnClickListener(this);
         findViewById(R.id.itpdLicense).setOnClickListener(this);
@@ -173,10 +189,34 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         }
     }
 
+    private String getBitcoinUri() {
+        return "bitcoin:1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR";
+    }
+
+    private String getMoneroUri() {
+        return "monero:82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX";
+    }
+
+    private void sendDonateIntent(String uri) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(uri));
+        Intent chooser = Intent.createChooser(intent, "Donate with...");
+        try {
+            startActivity(chooser);
+        } catch (Exception ignored) {
+        }
+
+    }
+
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if (id == R.id.dnscryptLicense) {
+        if (id == R.id.tvDonateBitcoin) {
+            sendDonateIntent(getBitcoinUri());
+        } else if (id == R.id.tvDonateMonero) {
+            sendDonateIntent(getMoneroUri());
+        } else if (id == R.id.dnscryptLicense) {
             showLicense(R.string.about_license_dnscrypt, R.raw.dnscrypt_license, false);
         } else if (id == R.id.torLicense) {
             showLicense(R.string.about_license_tor, R.raw.tor_license, false);
