@@ -1150,3 +1150,9 @@
 
 **InviZible Pro beta 2.2.6**
 * Fixed a crash when using Tor bridges containing only IP and port.
+
+**InviZible Pro beta 2.2.7**
+* Updated Tor to version 4.8.12.
+* Implemented Tor isolate by app option.
+* Added donation addresses to the about screen.
+* Fixes and optimizations.
