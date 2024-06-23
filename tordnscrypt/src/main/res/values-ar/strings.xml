@@ -117,4 +117,6 @@
     <string name="pref_fast_use_tor_bridges_transport_select">الرجاء تحديد نوع التشويش:</string>
     <string name="pref_fast_use_tor_bridges_request_dialog">طلب جسور جديدة</string>
     <string name="pref_fast_use_tor_bridges_show_dialog">جسورك الجديدة من bridges.torproject.org:</string>
+    <string name="pref_fast_site_refresh_interval_summ">الفترة بالساعات لتحديث مواقع IP. لنظام التشغيل أندرويد 5.1 والإصدارات الأحدث. ضع 0 لإيقاف التحديث.</string>
+    <string name="pref_fast_unlock_host_wrong">اسم المضيف خاطئ!</string>
 </resources>
