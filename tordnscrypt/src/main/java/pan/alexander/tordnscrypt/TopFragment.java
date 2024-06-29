@@ -696,7 +696,7 @@ public class TopFragment extends Fragment
             initTimer();
         }
 
-        scheduledFuture = timer.scheduleAtFixedRate(new Runnable() {
+        scheduledFuture = timer.scheduleWithFixedDelay(new Runnable() {
             int loop = 0;
 
             @Override
