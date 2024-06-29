@@ -545,4 +545,5 @@
     <string name="pref_tor_nodes_categ">节点</string>
     <string name="pref_tor_isolation_categ">隔离设置</string>
     <string name="pref_tor_fascist_firewall_lock_summ">要激活此选项，应禁用网桥或仅使用具有80和443端口的网桥。</string>
+    <string name="pref_tor_isolate_uid_summ">不要与来自不同应用程序的流共享链路。</string>
 </resources>
