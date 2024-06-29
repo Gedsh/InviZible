@@ -508,19 +508,17 @@
     <string name="ask_reset_settings_btn">Zresetuj</string>
     <string name="pref_fast_fake_sni">Fałszywe SNI</string>
     <string name="pref_tor_track_host_exits_summ">Tor będzie śledził ostatnie połączenia z hostami i próbował ponownie użyć tego samego węzła wyjściowego dla każdego z nich. Ta opcja może pomóc uniknąć niekończących się pętli captcha.</string>
-    <string name="agreement_text">\\ Dziękujemy za wybranie InviZible Pro. Jestem przekonany, że zwiększy on twoją prywatność i zapewni płynne korzystanie z Internetu.
-\n
-\n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
-\n
-\n\tInviZible Pro może korzystać z roota, jeśli twoje urządzenie jest zrootowane, lub używa lokalnej sieci VPN do dostarczania ruchu internetowego bezpośrednio do sieci Tor, DNSCrypt i I2P.
-\n
-\n\tPolityka prywatności:
-\n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych ani wrażliwych danych użytkownika.
-\n
-\n\tCopyright © 2019-2024
-\n\tGarmatin Oleksandr
-\n\tinvizible.soft@gmail.com
-\n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tDziękujemy za wybranie InviZible Pro. Jestem przekonany, że zwiększy on twoją prywatność i zapewni płynne korzystanie z Internetu.
+        \n\n\tInviZible Pro zawiera moduły Tor, DNSCrypt i Purple I2P.
+        \n\n\tInviZible Pro może korzystać z roota, jeśli twoje urządzenie jest zrootowane, lub używa lokalnej sieci VPN do dostarczania ruchu internetowego bezpośrednio do sieci Tor, DNSCrypt i I2P.
+        \n\n\tPolityka prywatności:
+        \n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych ani wrażliwych danych użytkownika.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="press_to_add">Naciśnij, aby dodać.</string>
     <string name="notification_exclude_bat_optimisation_title">Przestać optymalizować zużycie baterii?</string>
     <string name="pref_fast_exclude_app_from_tor">Wyklucz z sieci Tor</string>

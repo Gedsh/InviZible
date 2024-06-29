@@ -248,7 +248,7 @@
     <string name="pref_itpd_com_share_summ">"Max % der Bandbreitenbegrenzung für Transit. 0–100."</string>
     <string name="pref_itpd_com_ssu_summ">"Aktiviere SSU Transport Protokoll (verwende UDP)."</string>
     <string name="pref_itpd_com_ntcp_summ">"Aktiviere NTCP2 Transport Protokoll (verwende TCP)."</string>
-    <string name="pref_itpd_com_use_ntcpproxy"></string>
+    <string name="pref_itpd_com_use_ntcpproxy">Ntcpproxy</string>
     <string name="pref_itpd_com_ntcpproxy_summ">"Spezifiziere Proxy Server für NTCP. Benutze folgende Syntax: http://address:port oder socks://address:port."</string>
     <string name="pref_itpd_HTTP_proxy">"HTTP Proxy"</string>
     <string name="pref_itpd_HTTP_proxy_enabled">"HTTP Proxy"</string>
