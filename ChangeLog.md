@@ -1156,3 +1156,8 @@
 * Implemented Tor isolate by app option.
 * Added donation addresses to the about screen.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.8**
+* Improved app update process.
+* Updated Polish, German, Spanish, Indonesian and Chinese translations.
+* Fixes and optimizations.
