@@ -46,7 +46,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class Registration {
     private final Activity activity;
-    public static boolean wrongRegistrationCode = true;
+    public static volatile boolean wrongRegistrationCode = true;
     private final Lazy<PreferenceRepository> preferenceRepository;
 
     public Registration(Activity activity) {
