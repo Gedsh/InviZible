@@ -41,8 +41,12 @@ object JobSchedulerManager {
             DEFAULT_SITES_IPS_REFRESH_INTERVAL.toString()
         )
 
-        refreshPeriod?.let {
-            refreshPeriodHours = it.toInt()
+        refreshPeriod?.toLong()?.let {
+            refreshPeriodHours = if (it <= Int.MAX_VALUE) {
+                it.toInt()
+            } else {
+                Int.MAX_VALUE
+            }
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && refreshPeriodHours > 0) {

@@ -45,6 +45,7 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
@@ -104,7 +105,13 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentProxyBinding.inflate(inflater, container, false)
+
+        _binding = try {
+            FragmentProxyBinding.inflate(inflater, container, false)
+        } catch (e: Exception) {
+            loge("ProxyFragment onCreateView", e)
+            throw e
+        }
 
         val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()
                 && binding.etProxyUserName.text.toString().trim().isEmpty()
@@ -305,7 +312,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             return
         }
 
-        if (port.isEmpty() || !port.matches(PORT_REGEX)) {
+        if (port.isEmpty() || !port.matches(PORT_REGEX) || port.toLong() > MAX_PORT_NUMBER) {
             binding.etProxyPort.background =
                 ContextCompat.getDrawable(context, R.drawable.error_hint_selector)
             return

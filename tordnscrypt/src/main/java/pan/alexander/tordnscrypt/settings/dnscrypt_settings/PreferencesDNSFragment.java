@@ -73,6 +73,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_61;
@@ -333,7 +334,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             if (Objects.equals(preference.getKey(), DNSCRYPT_LISTEN_PORT)) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
-                if (!newValue.toString().matches("\\d+")
+                if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }
@@ -382,7 +383,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             } else if (Objects.equals(preference.getKey(), "proxy_port")) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
-                if (!newValue.toString().matches("\\d+")
+                if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }

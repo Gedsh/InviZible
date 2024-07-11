@@ -98,9 +98,9 @@ class InstalledApplicationsManager private constructor(
                     user?.let {
                         val m = pattern.matcher(user.toString())
                         if (m.find()) {
-                            val id = m.group(1)?.toInt()
-                            if (id != null) {
-                                uids.add(id)
+                            val id = m.group(1)?.toLong()
+                            if (id != null && id <= Int.MAX_VALUE) {
+                                uids.add(id.toInt())
                             }
                         }
                     }

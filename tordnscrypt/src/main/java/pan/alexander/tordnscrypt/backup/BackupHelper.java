@@ -216,9 +216,9 @@ public class BackupHelper {
 
         for (String savedUIDStr : savedUIDs) {
 
-            int savedUID = 0;
+            long savedUID = 0;
             if (savedUIDStr.matches("^-?\\d+$")) {
-                savedUID = Integer.parseInt(savedUIDStr);
+                savedUID = Long.parseLong(savedUIDStr);
             }
 
             if (savedUID <= 2000) {

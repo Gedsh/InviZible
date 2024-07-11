@@ -335,9 +335,9 @@ class ModulesControlTileManager @Inject constructor(
     private fun stopRefreshTorUnlockIPsIfRequired() {
         val refreshPeriod = defaultPreferences.getString(
             SITES_IPS_REFRESH_INTERVAL, DEFAULT_SITES_IPS_REFRESH_INTERVAL.toString()
-        )?.toInt() ?: DEFAULT_SITES_IPS_REFRESH_INTERVAL
+        )?.toLong() ?: DEFAULT_SITES_IPS_REFRESH_INTERVAL
 
-        if (refreshPeriod == 0) {
+        if (refreshPeriod == 0L) {
             return
         }
 

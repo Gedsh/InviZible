@@ -123,6 +123,7 @@ class IptablesFirewall @Inject constructor(
             VpnUtils.nonTorList
                 .asSequence()
                 .filter { it != "127.0.0.0/8" } //exclude localhost
+                .filter { it != META_ADDRESS } //exclude meta address
                 .map {
                     "$iptables -A $FILTER_OUTPUT_FIREWALL -d $it -j $FILTER_FIREWALL_LAN"
                 }
@@ -231,14 +232,14 @@ class IptablesFirewall @Inject constructor(
         listAllowed.forEach {
             if (it?.matches(negativeNumberRegex) == true) {
                 uidSpecialAllowed.add(it.toInt())
-            } else if (it?.matches(positiveNumberRegex) == true) {
+            } else if (it?.matches(positiveNumberRegex) == true && it.toLong() <= Int.MAX_VALUE) {
                 uidAllowed.add(it.toInt())
             }
         }
 
     private fun fillLanAllowed() {
         preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF).forEach {
-            if (it.matches(numberRegex)) {
+            if (it.matches(numberRegex) && it.toLong() <= Int.MAX_VALUE) {
                 uidLanAllowed.add(it.toInt())
             }
         }
@@ -297,7 +298,7 @@ class IptablesFirewall @Inject constructor(
     fun getCriticalUidsAllowed() =
         preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF)
             .also { it.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF)) }
-            .filter { it.matches(positiveNumberRegex) }
+            .filter { it.matches(positiveNumberRegex) && it.toLong() <= Int.MAX_VALUE }
             .map { it.toInt() }
             .filter { it <= 2000 }
 }
