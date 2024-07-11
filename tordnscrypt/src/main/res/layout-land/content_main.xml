@@ -15,7 +15,7 @@
         android:orientation="vertical"
         android:visibility="gone">
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/Topfrg"
             android:name="pan.alexander.tordnscrypt.TopFragment"
             android:layout_width="match_parent"
@@ -33,7 +33,7 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="8dp">
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/DNSCryptfrg"
             android:name="pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptRunFragment"
             android:layout_width="match_parent"
@@ -50,7 +50,7 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="8dp">
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/Torfrg"
             android:name="pan.alexander.tordnscrypt.tor_fragment.TorRunFragment"
             android:layout_width="match_parent"
@@ -67,7 +67,7 @@
         app:cardUseCompatPadding="true"
         app:contentPadding="8dp">
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/ITPDfrg"
             android:name="pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment"
             android:layout_width="match_parent"
