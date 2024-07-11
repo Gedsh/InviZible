@@ -322,7 +322,13 @@ public class SettingsActivity extends LangAppCompatActivity {
 
         if (Objects.equals(action, "tor_apps_unlock")
                 || Objects.equals(action, "proxy_apps_exclude")) {
-            getMenuInflater().inflate(R.menu.settings_menu, menu);
+            try {
+                getMenuInflater().inflate(R.menu.settings_menu, menu);
+            } catch (Exception e) {
+                loge("SettingsActivity onCreateOptionsMenu", e);
+                throw e;
+            }
+
             showMenu = true;
             return true;
         } else {

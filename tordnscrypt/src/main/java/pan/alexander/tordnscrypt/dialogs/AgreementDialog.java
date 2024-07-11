@@ -19,8 +19,10 @@
 
 package pan.alexander.tordnscrypt.dialogs;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AGREEMENT_ACCEPTED;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -46,6 +48,7 @@ public class AgreementDialog extends ExtendedDialogFragment {
         return new AgreementDialog();
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public AlertDialog.Builder assignBuilder() {
 
@@ -65,7 +68,13 @@ public class AgreementDialog extends ExtendedDialogFragment {
             return null;
         }
 
-        View view = lInflater.inflate(R.layout.agreement_layout, null, false);
+        View view;
+        try {
+            view = lInflater.inflate(R.layout.agreement_layout, null, false);
+        } catch (Exception e) {
+            loge("AgreementDialog assignBuilder", e);
+            throw e;
+        }
 
         if (view == null) {
             preferences.setBoolPreference(AGREEMENT_ACCEPTED, true);

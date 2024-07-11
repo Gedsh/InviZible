@@ -95,10 +95,16 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_show_rules_recycle, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_show_rules_recycle, container, false);
+        } catch (Exception e) {
+            loge("ShowRulesRecycleFrag onCreateView", e);
+            throw e;
+        }
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(container.getContext());
         mRecyclerView = view.findViewById(R.id.rvRules);
@@ -267,7 +273,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
         mRecyclerView.scrollToPosition(rules_list.size() - 1);
     }
 
-    public class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHolder> {
+    class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHolder> {
 
         ArrayList<Rules> list_rules_adapter;
         LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -280,7 +286,13 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
         @NonNull
         @Override
         public RuleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = lInflater.inflate(R.layout.item_rules, parent, false);
+            View view;
+            try {
+                view = lInflater.inflate(R.layout.item_rules, parent, false);
+            } catch (Exception e) {
+                loge("ShowRulesRecycleFrag onCreateViewHolder", e);
+                throw e;
+            }
             return new RuleViewHolder(view);
         }
 

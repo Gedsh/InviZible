@@ -35,6 +35,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import pan.alexander.tordnscrypt.utils.Utils.hideKeyboard
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -61,7 +62,12 @@ class BridgesCaptchaDialogFragment @Inject constructor(
                 Context.LAYOUT_INFLATER_SERVICE
             ) as LayoutInflater
 
-            val view: View = layoutInflater.inflate(R.layout.tor_transport_code_image, null)
+            val view: View = try {
+                layoutInflater.inflate(R.layout.tor_transport_code_image, null)
+            } catch (e: Exception) {
+                loge("BridgesCaptchaDialogFragment assignBuilder", e)
+                throw e
+            }
 
             val imgCode = view.findViewById<ImageView>(R.id.imgCode)
             val etCode = view.findViewById<EditText>(R.id.etCode)

@@ -127,6 +127,7 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         findViewById(R.id.busyboxLicense).setOnClickListener(this);
     }
 
+    @SuppressLint("InflateParams")
     public void showLicense(int title, int resource, boolean isApache) {
 
         InputStream raw = getResources().openRawResource(resource);
@@ -165,7 +166,13 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             LayoutInflater layoutInflater = getLayoutInflater();
-            View inflatedView = layoutInflater.inflate(R.layout.licenses_scrollable_text, null, false);
+            View inflatedView;
+            try {
+                inflatedView = layoutInflater.inflate(R.layout.licenses_scrollable_text, null, false);
+            } catch (Exception e) {
+                loge("AboutActivity showLicense", e);
+                throw e;
+            }
             TextView licenseText = inflatedView.findViewById(R.id.tvLicense);
             licenseText.setText(outputText);
 

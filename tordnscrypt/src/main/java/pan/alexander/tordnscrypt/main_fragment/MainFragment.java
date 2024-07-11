@@ -144,7 +144,13 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.main_fragment, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.main_fragment, container, false);
+        } catch (Exception e) {
+            loge("MainFragment onCreateView", e);
+            throw e;
+        }
 
         btnStartMainFragment = view.findViewById(R.id.btnStartMainFragment);
         btnStartMainFragment.setOnClickListener(this);

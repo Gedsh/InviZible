@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -88,7 +90,13 @@ public class PreferencesDNSCryptRelays extends Fragment {
 
         activity.setTitle(R.string.pref_dnscrypt_relays_title);
 
-        View view = inflater.inflate(R.layout.fragment_preferences_dnscrypt_relays, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_preferences_dnscrypt_relays, container, false);
+        } catch (Exception e) {
+            loge("PreferencesDNSCryptRelays onCreateView", e);
+            throw e;
+        }
 
         pbDnsCryptRelays = view.findViewById(R.id.pbDnsCryptRelays);
         RecyclerView rvDNSRelay = view.findViewById(R.id.rvDNSRelays);

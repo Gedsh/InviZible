@@ -123,7 +123,12 @@ class FirewallFragment : Fragment(),
         savedInstanceState: Bundle?
     ): View {
 
-        _binding = FragmentFirewallBinding.inflate(inflater, container, false)
+        _binding = try {
+            FragmentFirewallBinding.inflate(inflater, container, false)
+        } catch (e: Exception) {
+            loge("FirewallFragment onCreateView", e)
+            throw e
+        }
 
         firewallAdapter = FirewallAdapter(
             requireContext(),
@@ -273,7 +278,12 @@ class FirewallFragment : Fragment(),
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        return inflater.inflate(R.menu.firewall_menu, menu)
+        try {
+            return inflater.inflate(R.menu.firewall_menu, menu)
+        } catch (e: Exception) {
+            loge("FirewallFragment onCreateOptionsMenu", e)
+            throw e
+        }
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {

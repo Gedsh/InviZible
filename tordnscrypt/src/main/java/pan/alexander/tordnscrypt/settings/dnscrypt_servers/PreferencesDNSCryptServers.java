@@ -165,7 +165,13 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_preferences_dnscrypt_servers_rv, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_preferences_dnscrypt_servers_rv, container, false);
+        } catch (Exception e) {
+            loge("PreferencesDNSCryptServers onCreateView", e);
+            throw e;
+        }
 
         FloatingActionButton ibAddOwnServer = view.findViewById(R.id.ibAddOwnServer);
         ibAddOwnServer.setOnClickListener(this);

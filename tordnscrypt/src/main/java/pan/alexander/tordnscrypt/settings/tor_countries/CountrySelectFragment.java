@@ -19,6 +19,9 @@
 
 package pan.alexander.tordnscrypt.settings.tor_countries;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -82,17 +85,21 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
             countries = getArguments().getString("countries");
         }
 
-        if (getActivity() != null && getActivity() instanceof SettingsActivity) {
-            SettingsActivity settingsActivity = (SettingsActivity) getActivity();
+        Activity activity = getActivity();
+        if (activity instanceof SettingsActivity settingsActivity) {
             preferencesTorFragment = settingsActivity.preferencesTorFragment;
         }
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_country_select, container, false);
+        try {
+            return inflater.inflate(R.layout.fragment_country_select, container, false);
+        } catch (Exception e) {
+            loge("CountrySelectFragment onCreateView", e);
+            throw e;
+        }
     }
 
     @Override
@@ -218,7 +225,13 @@ public class CountrySelectFragment extends Fragment implements CompoundButton.On
         @NonNull
         @Override
         public CountriesAdapter.CountriesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = lInflater.inflate(R.layout.item_country, parent, false);
+            View view;
+            try {
+                view = lInflater.inflate(R.layout.item_country, parent, false);
+            } catch (Exception e) {
+                loge("CountrySelectFragment onCreateViewHolder", e);
+                throw e;
+            }
             return new CountriesAdapter.CountriesViewHolder(view);
         }
 

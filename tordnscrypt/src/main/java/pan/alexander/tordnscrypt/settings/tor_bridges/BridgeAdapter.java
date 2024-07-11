@@ -26,6 +26,7 @@ import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.scramblesuit;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.snowflake;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.webtunnel;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_NO_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
@@ -95,7 +96,13 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
     @NonNull
     @Override
     public BridgeAdapter.BridgeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = lInflater.inflate(R.layout.item_bridge, parent, false);
+        View view;
+        try {
+            view = lInflater.inflate(R.layout.item_bridge, parent, false);
+        } catch (Exception e) {
+            loge("BridgeAdapter onCreateViewHolder", e);
+            throw e;
+        }
         return new BridgeViewHolder(view);
     }
 
@@ -301,6 +308,7 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         return currentBridgesSelector;
     }
 
+    @SuppressLint("InflateParams")
     private void editBridge(final int position) {
 
         if (activity == null || preferencesBridges == null) {
@@ -318,7 +326,13 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         }
 
         LayoutInflater inflater = activity.getLayoutInflater();
-        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        View inputView;
+        try {
+            inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        } catch (Exception e) {
+            loge("BridgeAdapter editBridge", e);
+            throw e;
+        }
         final EditText input = inputView.findViewById(R.id.etForDialog);
         input.setSingleLine(false);
         String brgEdit = bridgeList.get(position).bridge;

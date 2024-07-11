@@ -21,6 +21,8 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -71,7 +73,13 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
     @NonNull
     @Override
     public DNSRelaysViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_dns_relay, parent, false);
+        View view;
+        try {
+            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_dns_relay, parent, false);
+        } catch (Exception e) {
+            loge("DnsRelaysAdapter DNSRelaysViewHolder", e);
+            throw e;
+        }
         return new DNSRelaysViewHolder(view);
     }
 

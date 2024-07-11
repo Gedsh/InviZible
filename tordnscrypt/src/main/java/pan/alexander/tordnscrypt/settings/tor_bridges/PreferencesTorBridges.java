@@ -233,7 +233,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         activity.setTitle(R.string.pref_fast_use_tor_bridges);
 
-        View view = inflater.inflate(R.layout.fragment_preferences_tor_bridges, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_preferences_tor_bridges, container, false);
+        } catch (Exception e) {
+            loge("PreferencesTorBridges onCreateView", e);
+            throw e;
+        }
 
         rbNoBridges = view.findViewById(R.id.rbNoBridges);
 
@@ -728,7 +734,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        View inputView;
+        try {
+            inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        } catch (Exception e) {
+            loge("PreferencesTorBridges addBridges", e);
+            throw e;
+        }
         final EditText input = inputView.findViewById(R.id.etForDialog);
         input.setSingleLine(false);
         builder.setView(inputView);

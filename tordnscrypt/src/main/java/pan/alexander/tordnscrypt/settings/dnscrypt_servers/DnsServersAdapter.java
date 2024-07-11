@@ -21,6 +21,8 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
 
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.content.Context;
 import android.content.res.Configuration;
 import android.text.Html;
@@ -126,7 +128,13 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
     @NonNull
     @Override
     public DnsServersAdapter.DNSServersViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_dns_server, viewGroup, false);
+        View view;
+        try {
+            view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_dns_server, viewGroup, false);
+        } catch (Exception e) {
+            loge("DnsServersAdapter onCreateViewHolder", e);
+            throw e;
+        }
         return new DNSServersViewHolder(view);
     }
 

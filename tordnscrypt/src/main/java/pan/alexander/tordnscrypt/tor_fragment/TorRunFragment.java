@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -74,9 +75,15 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
 
     @SuppressLint({"SetTextI18n", "ClickableViewAccessibility"})
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_tor_run, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_tor_run, container, false);
+        } catch (Exception e) {
+            loge("TorRunFragment onCreateView", e);
+            throw e;
+        }
 
         btnTorStart = view.findViewById(R.id.btnTorStart);
 

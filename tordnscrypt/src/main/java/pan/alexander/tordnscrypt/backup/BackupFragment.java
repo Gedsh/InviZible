@@ -29,6 +29,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.LinearLayoutCompat;
@@ -137,9 +138,16 @@ public class BackupFragment extends Fragment implements View.OnClickListener,
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_backup, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_backup, container, false);
+        } catch (Exception e) {
+            loge("BackupFragment onCreateView", e);
+            throw e;
+        }
+
 
         Button btnResetSettings = view.findViewById(R.id.btnResetSettings);
         btnResetSettings.setOnClickListener(this);
