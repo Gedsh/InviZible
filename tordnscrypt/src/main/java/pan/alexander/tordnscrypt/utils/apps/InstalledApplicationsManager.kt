@@ -77,6 +77,7 @@ class InstalledApplicationsManager private constructor(
     private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, true)
     private var savedTime = 0L
 
+    @Suppress("UNNECESSARY_SAFE_CALL", "USELESS_ELVIS")
     fun getInstalledApps(): List<ApplicationData> {
 
         try {
@@ -87,7 +88,7 @@ class InstalledApplicationsManager private constructor(
 
             reentrantLock.lockInterruptibly()
 
-            val uids = arrayListOf<Int>()
+            val userUids = arrayListOf<Int>()
             val packageManager: PackageManager = context.packageManager
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && multiUserSupport) {
@@ -100,13 +101,13 @@ class InstalledApplicationsManager private constructor(
                         if (m.find()) {
                             val id = m.group(1)?.toLong()
                             if (id != null && id <= Int.MAX_VALUE) {
-                                uids.add(id.toInt())
+                                userUids.add(id.toInt())
                             }
                         }
                     }
                 }
 
-                logi("Devise Users: ${uids.joinToString()}")
+                logi("Devise Users: ${userUids.joinToString()}")
             }
 
             var pkgManagerFlags = PackageManager.GET_META_DATA
@@ -130,14 +131,14 @@ class InstalledApplicationsManager private constructor(
 
             val userAppsMap = hashMapOf<Int, ApplicationData>()
             val multiUserAppsMap = hashMapOf<Int, ApplicationData>()
-            var application: ApplicationData?
 
             installedApps.forEach { applicationInfo ->
-                application = userAppsMap[applicationInfo.uid]
+                var appDataSaved = userAppsMap[applicationInfo.uid]
 
                 //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
                 val name = try {
-                    applicationInfo.loadLabel(packageManager)?.toString() ?: applicationInfo.packageName
+                    applicationInfo.loadLabel(packageManager)?.toString()
+                        ?: applicationInfo.packageName
                 } catch (e: Exception) {
                     logw("InstalledApplications get name", e)
                     applicationInfo.packageName
@@ -154,20 +155,19 @@ class InstalledApplicationsManager private constructor(
                     null
                 }
 
-                if (application == null) {
-                    val uid = applicationInfo.uid
+                val uid = applicationInfo.uid
+                val packageName = applicationInfo.packageName
+
+                if (appDataSaved == null) {
 
                     if (uid == ownUID) {
                         return@forEach
                     }
 
-                    val system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-
+                    val system = isAppSystem(applicationInfo)
                     val useInternet = isAppUseInternet(packageManager, applicationInfo)
 
-                    val packageName = applicationInfo.packageName
-
-                    application = ApplicationData(
+                    appDataSaved = ApplicationData(
                         name,
                         packageName,
                         uid,
@@ -177,32 +177,93 @@ class InstalledApplicationsManager private constructor(
                         activeApps.contains(uid.toString())
                     )
 
-                    if ((applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED) != 0) {
-                        application?.let {
+                    if (isAppInstalled(applicationInfo)) {
+                        appDataSaved.let {
                             userAppsMap[uid] = it
-                            val time = System.currentTimeMillis()
-                            if (time - savedTime > ON_APP_ADDED_REFRESH_PERIOD_MSEC) {
-                                onAppAddListener?.onAppAdded(it)
-                                savedTime = time
-                            }
+                            updateDisplayedList(it)
                         }
                     }
                 } else {
-                    application?.addName(name)
+
+                    val system = isAppSystem(applicationInfo) && appDataSaved.system
+                    val useInternet = isAppUseInternet(packageManager, applicationInfo)
+                            || appDataSaved.hasInternetPermission
+                    val pack = if (packageName.length < appDataSaved.pack.length) {
+                        packageName
+                    } else {
+                        appDataSaved.pack
+                    }
+
+                    if (system != appDataSaved.system
+                        || useInternet != appDataSaved.hasInternetPermission
+                        || pack != appDataSaved.pack
+                    ) {
+
+                        val namesSaved = appDataSaved.names
+                        val iconSaved = appDataSaved.icon
+
+                        appDataSaved = ApplicationData(
+                            name,
+                            pack,
+                            uid,
+                            icon ?: iconSaved,
+                            system,
+                            useInternet,
+                            activeApps.contains(uid.toString())
+                        )
+
+                        appDataSaved.addAllNames(namesSaved)
+
+                        userAppsMap[uid] = appDataSaved
+                    } else {
+                        appDataSaved.addName(name)
+                    }
                 }
 
-                if (uids.size > 1 || uids.getOrElse(0) { 0 } != 0) {
-                    val tempMultiUserAppsMap: Map<Int, ApplicationData> = checkPartOfMultiUser(
+                if (userUids.size > 1 || userUids.getOrElse(0) { 0 } != 0) {
+                    val singleAppMultiUserAppsMap: Map<Int, ApplicationData> = checkPartOfMultiUser(
                         applicationInfo,
                         name,
                         icon,
-                        uids,
+                        userUids,
                         packageManager,
                         multiUserAppsMap
                     )
-                    tempMultiUserAppsMap.forEach { (uid, applicationData) ->
-                        if (multiUserAppsMap.containsKey(uid)) {
-                            multiUserAppsMap[uid]?.addAllNames(applicationData.names)
+                    singleAppMultiUserAppsMap.forEach { (uid, applicationData) ->
+                        val applicationDataSaved = multiUserAppsMap[uid]
+
+                        if (applicationDataSaved != null) {
+                            val system = applicationDataSaved.system && applicationData.system
+                            val useInternet = applicationDataSaved.hasInternetPermission
+                                    || applicationData.hasInternetPermission
+                            val pack =
+                                if (applicationData.pack.length < applicationDataSaved.pack.length) {
+                                    applicationData.pack
+                                } else {
+                                    applicationDataSaved.pack
+                                }
+
+                            if (system != applicationDataSaved.system
+                                || useInternet != applicationDataSaved.hasInternetPermission
+                                || pack != applicationDataSaved.pack
+                            ) {
+                                val appData = ApplicationData(
+                                    applicationData.names.firstOrNull() ?: name,
+                                    pack,
+                                    applicationData.uid,
+                                    applicationData.icon ?: applicationDataSaved.icon,
+                                    system,
+                                    useInternet,
+                                    activeApps.contains(uid.toString())
+                                )
+
+                                appData.addAllNames(applicationData.names)
+                                appData.addAllNames(applicationDataSaved.names)
+
+                                multiUserAppsMap[uid] = appData
+                            } else {
+                                multiUserAppsMap[uid]?.addAllNames(applicationData.names)
+                            }
                         } else {
                             multiUserAppsMap[uid] = applicationData
                         }
@@ -276,56 +337,79 @@ class InstalledApplicationsManager private constructor(
         return useInternet
     }
 
+    private fun isAppSystem(applicationInfo: ApplicationInfo) =
+        (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+
+    private fun isAppInstalled(applicationInfo: ApplicationInfo) =
+        applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED != 0
+
     private fun checkPartOfMultiUser(
         applicationInfo: ApplicationInfo,
         name: String,
-        icon: Drawable?, uids: List<Int>,
+        icon: Drawable?,
+        userUids: List<Int>,
         packageManager: PackageManager,
         multiUserAppsMap: Map<Int, ApplicationData>
     ): Map<Int, ApplicationData> {
 
-        val tempMultiUserAppsMap = hashMapOf<Int, ApplicationData>()
+        val singleAppMultiUserAppsMap = hashMapOf<Int, ApplicationData>()
 
-        uids.forEach { uid ->
-            if (uid != 0) {
-                try {
-                    val applicationUID = "$uid${applicationInfo.uid}".toInt()
+        for (userUid in userUids) {
 
-                    val packages = packageManager.getPackagesForUid(applicationUID)
+            if (userUid == 0) {
+                continue
+            }
 
-                    packages?.let {
-                        val system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-                        val useInternet = isAppUseInternet(packageManager, applicationInfo)
-                        val packageName = it.joinToString()
-                        val application = ApplicationData(
-                            "$name(M)",
-                            packageName,
-                            applicationUID,
-                            icon,
-                            system,
-                            useInternet,
-                            activeApps.contains(applicationUID.toString())
-                        )
-
-                        tempMultiUserAppsMap[applicationUID] = application
-
-                        val time = System.currentTimeMillis()
-
-                        if (!multiUserAppsMap.containsKey(applicationUID)
-                            && time - savedTime > ON_APP_ADDED_REFRESH_PERIOD_MSEC
-                        ) {
-                            onAppAddListener?.onAppAdded(application)
-                            savedTime = time
-                        }
-                    }
-                } catch (ignored: SecurityException) {
-                } catch (e: Exception) {
-                    loge("InstalledApplications checkPartOfMultiUser", e)
-                }
+            try {
+                tryCheckApp(
+                    appInfo = applicationInfo,
+                    name = name,
+                    icon = icon,
+                    userUid = userUid,
+                    packageManager = packageManager,
+                    multiUserAppsMap = multiUserAppsMap,
+                    singleAppMultiUserAppsMap = singleAppMultiUserAppsMap
+                )
+            } catch (ignored: SecurityException) {
+            } catch (e: Exception) {
+                loge("InstalledApplications checkPartOfMultiUser", e)
             }
         }
 
-        return tempMultiUserAppsMap
+        return singleAppMultiUserAppsMap
+    }
+
+    private fun tryCheckApp(
+        appInfo: ApplicationInfo,
+        name: String,
+        icon: Drawable?,
+        userUid: Int,
+        packageManager: PackageManager,
+        multiUserAppsMap: Map<Int, ApplicationData>,
+        singleAppMultiUserAppsMap: HashMap<Int, ApplicationData>
+    ) {
+        val applicationUIDLong = "$userUid${appInfo.uid}".toLong()
+        if (applicationUIDLong > Int.MAX_VALUE) return
+        val applicationUID = applicationUIDLong.toInt()
+
+        val packages = packageManager.getPackagesForUid(applicationUID) ?: return
+
+        val system = isAppSystem(appInfo)
+        val useInternet = isAppUseInternet(packageManager, appInfo)
+        val pack = packages.minByOrNull { it.length } ?: ""
+        val appData = ApplicationData(
+            "$name(M)",
+            pack,
+            applicationUID,
+            icon,
+            system,
+            useInternet,
+            activeApps.contains(applicationUID.toString())
+        )
+        singleAppMultiUserAppsMap[applicationUID] = appData
+        if (!multiUserAppsMap.containsKey(applicationUID)) {
+            updateDisplayedList(appData)
+        }
     }
 
     private fun getKnownApplications(): ArrayList<ApplicationData> {
@@ -498,6 +582,14 @@ class InstalledApplicationsManager private constructor(
 
     interface OnAppAddListener {
         fun onAppAdded(application: ApplicationData)
+    }
+
+    private fun updateDisplayedList(applicationData: ApplicationData) {
+        val time = System.currentTimeMillis()
+        if (time - savedTime > ON_APP_ADDED_REFRESH_PERIOD_MSEC) {
+            onAppAddListener?.onAppAdded(applicationData)
+            savedTime = time
+        }
     }
 
     class Builder {
