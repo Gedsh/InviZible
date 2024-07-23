@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -64,6 +65,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import dagger.Lazy;
+import dalvik.system.ZipPathValidator;
 import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
@@ -1214,12 +1216,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             try (ZipInputStream zipInputStream = new ZipInputStream(context.getAssets().open("tor.mp3"))) {
 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    ZipPathValidator.clearCallback();
+                }
+
                 ZipEntry zipEntry = zipInputStream.getNextEntry();
 
                 while (zipEntry != null) {
 
                     String fileName = zipEntry.getName();
-                    if (fileName.contains("bridges_default.lst") && zipEntry.getSize() != installedBridgesSize) {
+                    if (fileName.endsWith("bridges_default.lst") && zipEntry.getSize() != installedBridgesSize) {
                         if (isAdded() && handlerLazy != null) {
                             handlerLazy.get().post(() -> {
                                 AlertDialog dialog = UpdateDefaultBridgesDialog.DIALOG.getDialog(getActivity(), useDefaultBridges);

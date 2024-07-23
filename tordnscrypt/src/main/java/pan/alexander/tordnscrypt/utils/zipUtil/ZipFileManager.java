@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.utils.zipUtil;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +36,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import dalvik.system.ZipPathValidator;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
@@ -60,6 +62,10 @@ public class ZipFileManager {
         }
 
         try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ZipPathValidator.clearCallback();
+            }
 
             ZipEntry zipEntry = zipInputStream.getNextEntry();
 
