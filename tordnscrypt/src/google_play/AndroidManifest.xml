@@ -143,7 +143,8 @@
             android:name=".update.UpdateService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+            tools:node="remove" />
 
         <activity android:name=".help.HelpActivity" />
 
