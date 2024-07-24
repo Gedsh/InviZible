@@ -1161,3 +1161,10 @@
 * Improved app update process.
 * Updated Polish, German, Spanish, Indonesian and Chinese translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.2.9**
+* Updated Purple I2P to version 2.53.0.
+* Updated Tor geoip files.
+* Preparing the app for use on Android 15.
+* Fixed detecting internet access permission in apps with a shared id.
+* Fixes and optimizations.
