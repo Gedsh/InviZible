@@ -205,4 +205,10 @@ public class RootExecService extends Service
         sendResult(results, mark);
         moveServiceToBackground();
     }
+
+    @Override
+    public void onTimeout(int startId) {
+        moveServiceToBackground();
+        super.onTimeout(startId);
+    }
 }

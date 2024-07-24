@@ -53,10 +53,10 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
+import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
-import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
@@ -86,6 +86,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public Lazy<Verifier> verifierLazy;
     @Inject
     public Lazy<PathVars> pathVars;
+    @Inject
+    public Lazy<UpdateIPsManager> updateIPsManager;
 
     public TorFragmentView view;
 
@@ -231,7 +233,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             return;
         }
 
-        stopRefreshTorUnlockIPs(context);
+        updateIPsManager.get().stopRefreshTorUnlockIPs();
 
         view.setTorStatus(R.string.tvTorStop, R.color.textModuleStatusColorStopped);
         view.setStartButtonText(R.string.btnTorStart);
@@ -618,7 +620,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
             displayLog();
         } else if (modulesStatus.getTorState() == RUNNING) {
 
-            stopRefreshTorUnlockIPs(context);
+            updateIPsManager.get().stopRefreshTorUnlockIPs();
 
             setTorStopping();
             stopTor();

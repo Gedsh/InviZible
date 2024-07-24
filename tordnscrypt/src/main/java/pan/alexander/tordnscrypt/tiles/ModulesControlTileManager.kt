@@ -40,17 +40,16 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.*
 import pan.alexander.tordnscrypt.modules.ModulesService.*
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_SITES_IPS_REFRESH_INTERVAL
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
-import pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.*
 import pan.alexander.tordnscrypt.utils.root.RootExecService.*
+import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper
 import javax.inject.Inject
 import javax.inject.Named
@@ -67,7 +66,8 @@ class ModulesControlTileManager @Inject constructor(
     @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
     private val defaultPreferences: SharedPreferences,
     private val handler: Handler,
-    private val pathVars: PathVars
+    private val pathVars: PathVars,
+    private val updateIPsManager: dagger.Lazy<UpdateIPsManager>
 ) {
     private val modulesStatus = ModulesStatus.getInstance()
 
@@ -319,7 +319,7 @@ class ModulesControlTileManager @Inject constructor(
 
             runTor()
         } else if (modulesStatus.torState == ModuleState.RUNNING) {
-            stopRefreshTorUnlockIPsIfRequired()
+            stopRefreshTorUnlockIPs()
             stopTor()
         }
     }
@@ -332,16 +332,8 @@ class ModulesControlTileManager @Inject constructor(
         ModulesAux.saveTorStateRunning(true)
     }
 
-    private fun stopRefreshTorUnlockIPsIfRequired() {
-        val refreshPeriod = defaultPreferences.getString(
-            SITES_IPS_REFRESH_INTERVAL, DEFAULT_SITES_IPS_REFRESH_INTERVAL.toString()
-        )?.toLong() ?: DEFAULT_SITES_IPS_REFRESH_INTERVAL
-
-        if (refreshPeriod == 0L) {
-            return
-        }
-
-        stopRefreshTorUnlockIPs(context)
+    private fun stopRefreshTorUnlockIPs() {
+        updateIPsManager.get().stopRefreshTorUnlockIPs()
     }
 
     private fun stopTor() {

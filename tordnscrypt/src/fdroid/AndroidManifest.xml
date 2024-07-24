@@ -35,6 +35,10 @@
     <!--  https://developer.android.com/develop/connectivity/network-ops/managing  -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"
+        tools:node="remove" />
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:node="remove" />
@@ -156,13 +160,17 @@
             android:name=".utils.root.RootExecService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="shortService" />
 
         <service
             android:name=".modules.ModulesService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="proxy" />
+        </service>
 
         <activity
             android:name=".MainActivity"
@@ -226,18 +234,14 @@
         <activity android:name=".about.AboutActivity" />
 
         <service
-            android:name=".utils.web.GetIPsJobService"
-            android:enabled="true"
-            android:exported="true"
-            android:foregroundServiceType="dataSync"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <service
             android:name=".vpn.service.ServiceVPN"
             android:exported="true"
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="specialUse"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_VPN_SERVICE">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="vpn" />
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>

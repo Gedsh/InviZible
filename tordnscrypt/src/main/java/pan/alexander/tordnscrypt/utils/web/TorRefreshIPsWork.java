@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.utils.web;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import android.os.Handler;
 
@@ -54,6 +53,9 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
 
+import androidx.work.ListenableWorker;
+import androidx.work.Worker;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -72,33 +74,38 @@ public class TorRefreshIPsWork {
     public Lazy<Handler> handler;
     @Inject
     public CoroutineExecutor executor;
+    @Inject
+    public Context context;
 
     private final Pattern ipv4Pattern = Pattern.compile(IPv4_REGEX);
     private final Pattern ipv6Pattern = Pattern.compile(IPv6_REGEX);
 
-    private final Context context;
-    private final GetIPsJobService getIPsJobService;
+    private final Worker worker;
 
-    private boolean exceptionWhenResolvingHost = false;
+    private boolean updateFault = false;
 
-    public TorRefreshIPsWork(Context context, GetIPsJobService getIPsJobService) {
+    public TorRefreshIPsWork(Worker worker) {
         App.getInstance().getDaggerComponent().inject(this);
-        this.context = context;
-        this.getIPsJobService = getIPsJobService;
+        this.worker = worker;
     }
 
-    public void refreshIPs() {
-        executor.submit("TorRefreshIPsWork refreshIPs", () -> {
+    public ListenableWorker.Result refreshIPs() {
+        logi("TorRefreshIPsWork refreshIPs");
 
-            logi("TorRefreshIPsWork refreshIPs");
+        try {
+            updateData();
 
-            try {
-                updateData();
-            } catch (Exception e) {
-                loge("TorRefreshIPsWork performBackgroundWork", e, true);
+            if (updateFault) {
+                updateFault = false;
+                return ListenableWorker.Result.retry();
+            } else {
+                return ListenableWorker.Result.success();
             }
-            return null;
-        });
+        } catch (Exception e) {
+            loge("TorRefreshIPsWork performBackgroundWork", e, true);
+        }
+
+        return ListenableWorker.Result.failure();
     }
 
     private void updateData() {
@@ -120,10 +127,6 @@ public class TorRefreshIPsWork {
 
         if (settingsChanged) {
             ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && getIPsJobService != null) {
-            handler.get().post(() -> getIPsJobService.finishJob(exceptionWhenResolvingHost));
         }
 
     }
@@ -209,13 +212,16 @@ public class TorRefreshIPsWork {
 
 
         Set<String> unlockIPsPrepared = new HashSet<>();
-        Set<String> IPsReady = new HashSet<>();
+        Set<String> ipsReady = new HashSet<>();
 
-        if (hosts != null) {
+        if (hosts != null && !hosts.isEmpty()) {
             for (String host : hosts) {
                 if (!host.startsWith("#")) {
                     ArrayList<String> preparedIPs = handleActionGetIP(host, includeIPv6);
                     unlockIPsPrepared.addAll(preparedIPs);
+                }
+                if (worker.isStopped()) {
+                    break;
                 }
             }
 
@@ -228,12 +234,20 @@ public class TorRefreshIPsWork {
                 }
 
                 if (matcher.find()) {
-                    IPsReady.add(unlockIPPrepared);
+                    ipsReady.add(unlockIPPrepared);
                 }
+
+                if (worker.isStopped()) {
+                    break;
+                }
+            }
+
+            if (ipsReady.isEmpty()) {
+                updateFault = true;
             }
         }
 
-        if (ips != null) {
+        if (ips != null && !ips.isEmpty()) {
             for (String unlockIP : ips) {
                 Matcher matcher;
                 if (includeIPv6 && isIPv6Address(unlockIP)) {
@@ -243,13 +257,16 @@ public class TorRefreshIPsWork {
                 }
 
                 if (matcher.find()) {
-                    IPsReady.add(unlockIP);
+                    ipsReady.add(unlockIP);
+                }
+
+                if (worker.isStopped()) {
+                    break;
                 }
             }
-
         }
 
-        return IPsReady;
+        return ipsReady;
     }
 
     private boolean isIPv6Address(String ip) {
@@ -265,7 +282,6 @@ public class TorRefreshIPsWork {
                 TimeUnit.MILLISECONDS.sleep(DELAY_ERROR_RETRY_MSEC);
                 preparedIPs.addAll(dnsInteractor.get().resolveDomain(host, includeIPv6));
             } catch (Exception e) {
-                exceptionWhenResolvingHost = true;
                 loge("TorRefreshIPsWork get " + host, e);
             }
         }
@@ -274,7 +290,7 @@ public class TorRefreshIPsWork {
 
     private boolean saveSettings(Set<String> ipsToUnlock, String settingsKey) {
         Set<String> ips = preferenceRepository.get().getStringSetPreference(settingsKey);
-        if (ips.size() == ipsToUnlock.size() && ips.containsAll(ipsToUnlock)) {
+        if (ips.size() == ipsToUnlock.size() && ips.containsAll(ipsToUnlock) || worker.isStopped()) {
             return false;
         } else {
             preferenceRepository.get().setStringSetPreference(settingsKey, ipsToUnlock);
