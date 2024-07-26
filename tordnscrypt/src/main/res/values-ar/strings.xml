@@ -217,4 +217,17 @@
     <string name="pref_dnscrypt_dnscrypt_servers_summ">استخدم الخوادم التي تطبق بروتوكول DNSCrypt.</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">استخدم الخوادم التي يمكن الوصول إليها عبر IPv4</string>
     <string name="pref_dnscrypt_ipv6_servers_summ">استخدم الخوادم التي يمكن الوصول إليها عبر IPv6</string>
+    <string name="pref_dnscrypt_require_dnssec_summ">يجب أن يدعم الخادم امتدادات أمان DNS (DNSSEC).</string>
+    <string name="pref_dnscrypt_require_nofilter_summ">يجب ألا يفرض الخادم القائمة السوداء الخاصة به (للرقابة الأبوية، وحظر الإعلانات...).</string>
+    <string name="pref_dnscrypt_force_tcp_categ">‎‍‎‍‎‎‎استخدم دائمًا TCP للاتصال بالخوادم الأولية</string>
+    <string name="pref_dnscrypt_proxy">Proxy port</string>
+    <string name="pref_dnscrypt_other_categ">اعدادات اخرى</string>
+    <string name="pref_dnscrypt_ignore_system_dns_summ">"لا تدع DNSCrypt يحاول استخدام إعدادات DNS الخاصة بالنظام.  استخدم محللات Bootstrap دون قيد أو شرط."</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">تتطلب الخوادم المحددة بواسطة مصادر بعيدة لتلبية خصائص محددة</string>
+    <string name="pref_dnscrypt_require_nolog_summ">يجب ألا يقوم الخادم بتسجيل استعلامات المستخدم (تصريحي).</string>
+    <string name="pref_dnscrypt_force_tcp_summ">استخدم TCP بدلاً من UDP للاتصال بخوادم DNSCrypt. يجب تمكين هذا الخيار إذا كنت تستخدم DNSCrypt عبر Tor.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">وكيل الجوارب</string>
+    <string name="pref_dnscrypt_use_proxy">بروكسي الصادر</string>
+    <string name="pref_dnscrypt_proxy_summ">قم بتوجيه كافة اتصالات TCP إلى وكيل Tor المحلي Socks5. لا يدعم Tor UDP، لذا قم بتعيين Force TCP على true أيضًا.</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">هذا هو محلل DNS عادي وغير مشفر، وسيتم استخدامه فقط للاستعلامات التي يتم تنفيذها لمرة واحدة عند استرداد قائمة أدوات الحل الأولية، وفقط إذا لم يعمل تكوين DNS للنظام.لن يتم استخدامه أبدًا إذا كانت القوائم قد تم تخزينها مؤقتًا بالفعل.</string>
 </resources>
