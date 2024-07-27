@@ -1168,3 +1168,9 @@
 * Preparing the app for use on Android 15.
 * Fixed detecting internet access permission in apps with a shared id.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.3.0**
+* Updated Tor bridges: Conjure, Lyrebird, SnowFlake.
+* Updated French and Portuguese (Brazil) translations.
+* Added Arabic and Bulgarian translations.
+* Fixes and optimizations.
