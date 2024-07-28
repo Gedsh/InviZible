@@ -185,7 +185,7 @@ class InstalledApplicationsManager private constructor(
                     }
                 } else {
 
-                    val system = isAppSystem(applicationInfo) && appDataSaved.system
+                    val system = isAppSystem(applicationInfo) || appDataSaved.system
                     val useInternet = isAppUseInternet(packageManager, applicationInfo)
                             || appDataSaved.hasInternetPermission
                     val pack = if (packageName.length < appDataSaved.pack.length) {
@@ -233,7 +233,7 @@ class InstalledApplicationsManager private constructor(
                         val applicationDataSaved = multiUserAppsMap[uid]
 
                         if (applicationDataSaved != null) {
-                            val system = applicationDataSaved.system && applicationData.system
+                            val system = applicationDataSaved.system || applicationData.system
                             val useInternet = applicationDataSaved.hasInternetPermission
                                     || applicationData.hasInternetPermission
                             val pack =
