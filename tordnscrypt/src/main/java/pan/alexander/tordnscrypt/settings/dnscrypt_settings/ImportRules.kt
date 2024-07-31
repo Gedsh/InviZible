@@ -40,7 +40,7 @@ import kotlin.collections.ArrayList
 
 private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?,]+$")
 private val blacklistIPRulesRegex = Regex("^(?:[0-9*]{1,3}\\.){1,3}[0-9*]{1,3}(?:/\\d+)*$")
-private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*]+$")
+private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
 private val forwardingRulesRegex =
     Regex("^[a-zA-Z\\d-._]+[ \\t]+(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:, ?(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3})*$")
 private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
