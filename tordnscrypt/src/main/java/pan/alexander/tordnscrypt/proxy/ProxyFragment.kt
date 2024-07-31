@@ -48,6 +48,8 @@ import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_I2PD
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_TOR
@@ -55,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
 import javax.inject.Inject
 
@@ -113,24 +116,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             throw e
         }
 
-        val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()
-                && binding.etProxyUserName.text.toString().trim().isEmpty()
-
         (binding.btnSelectWoProxyApps as Button).setOnClickListener(this)
         (binding.btnProxySave as Button).setOnClickListener(this)
-
-        (binding.chbProxyDNSCrypt as CompoundButton).apply {
-            isEnabled = passAndNameIsEmpty
-            isChecked = getBoolFromSharedPreferences(PROXIFY_DNSCRYPT)
-        }
-        (binding.chbProxyTor as CompoundButton).apply {
-            isEnabled = passAndNameIsEmpty
-            isChecked = getBoolFromSharedPreferences(PROXIFY_TOR)
-        }
-        (binding.chbProxyITPD as CompoundButton).apply {
-            isEnabled = passAndNameIsEmpty
-            isChecked = getBoolFromSharedPreferences(PROXIFY_I2PD)
-        }
 
         binding.etProxyServer.setText(sharedPreferences?.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS))
         binding.etProxyPort.setText(sharedPreferences?.getString(PROXY_PORT, DEFAULT_PROXY_PORT))
@@ -142,6 +129,27 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         binding.etProxyPass.apply {
             setText(getTextFromSharedPreferences(PROXY_PASS))
             addTextChangedListener(this@ProxyFragment)
+        }
+
+        val dnsCryptProxified =
+            sharedPreferences?.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false) ?: false
+        val torProxified = sharedPreferences?.getBoolean(TOR_OUTBOUND_PROXY, false) ?: false
+        val itpdProxified = sharedPreferences?.getBoolean(I2PD_OUTBOUND_PROXY, false) ?: false
+
+        val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()
+                && binding.etProxyUserName.text.toString().trim().isEmpty()
+        (binding.chbProxyDNSCrypt as CompoundButton).apply {
+            isEnabled = passAndNameIsEmpty
+            isChecked =
+                getBoolFromSharedPreferences(PROXIFY_DNSCRYPT) && dnsCryptProxified && passAndNameIsEmpty
+        }
+        (binding.chbProxyTor as CompoundButton).apply {
+            isChecked = getBoolFromSharedPreferences(PROXIFY_TOR) && torProxified
+        }
+        (binding.chbProxyITPD as CompoundButton).apply {
+            isEnabled = passAndNameIsEmpty
+            isChecked =
+                getBoolFromSharedPreferences(PROXIFY_I2PD) && itpdProxified && passAndNameIsEmpty
         }
 
         etBackground = binding.etProxyServer.background
@@ -199,10 +207,12 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val proxyPass = binding.etProxyPass.text.toString().trim()
         if (getTextFromSharedPreferences(PROXY_USER) != proxyUserName) {
             saveToSharedPreferences(PROXY_USER, proxyUserName)
+            serverOrPortChanged = true
             settingsChanged = true
         }
         if (getTextFromSharedPreferences(PROXY_PASS) != proxyPass) {
             saveToSharedPreferences(PROXY_PASS, proxyPass)
+            serverOrPortChanged = true
             settingsChanged = true
         }
 
@@ -290,6 +300,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         val server = binding.etProxyServer.text?.toString()?.trim() ?: ""
         val port = binding.etProxyPort.text?.toString()?.trim() ?: ""
+        val user = binding.etProxyUserName.text?.toString()?.trim() ?: ""
+        val pass = binding.etProxyPass.text?.toString()?.trim() ?: ""
 
         if (server.isEmpty() || !server.matches(IP_REGEX)) {
             binding.etProxyServer.background =
@@ -320,7 +332,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         task = executor.submit("ProxyFragment checkProxy") {
             try {
-                val result = proxyHelper.checkProxyConnectivity(server, port.toInt())
+                val result = proxyHelper.checkProxyConnectivity(server, port.toInt(), user, pass)
 
                 if (_binding != null) {
                     if (result.matches(Regex("\\d+"))) {
@@ -398,8 +410,13 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()
                 && binding.etProxyUserName.text.toString().trim().isEmpty()
 
-        (binding.chbProxyDNSCrypt as CompoundButton).isEnabled = passAndNameIsEmpty
-        (binding.chbProxyTor as CompoundButton).isEnabled = passAndNameIsEmpty
-        (binding.chbProxyITPD as CompoundButton).isEnabled = passAndNameIsEmpty
+        (binding.chbProxyDNSCrypt as CompoundButton).apply {
+            isEnabled = passAndNameIsEmpty
+            isChecked = isChecked && passAndNameIsEmpty
+        }
+        (binding.chbProxyITPD as CompoundButton).apply {
+            isEnabled = passAndNameIsEmpty
+            isChecked = isChecked && passAndNameIsEmpty
+        }
     }
 }

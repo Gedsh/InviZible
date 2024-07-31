@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.utils.connectionchecker
 
+import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDefaultAuth
 import java.lang.Exception
 import java.net.*
 import javax.inject.Inject
@@ -34,6 +35,8 @@ class SocketInternetChecker @Inject constructor() {
         port: Int,
         proxyAddress: String,
         proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String,
         connectTimeout: Int = CONNECT_TIMEOUT_SEC,
         reachableTimeout: Int = CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC
     ): Boolean {
@@ -42,6 +45,7 @@ class SocketInternetChecker @Inject constructor() {
 
         try {
             socket = if (isProxyUsed(proxyAddress, proxyPort)) {
+                setDefaultAuth(proxyUser, proxyPass)
                 val proxySockAdr: SocketAddress = InetSocketAddress(
                     proxyAddress,
                     proxyPort
@@ -76,7 +80,9 @@ class SocketInternetChecker @Inject constructor() {
         ip: String,
         port: Int,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
     ): Int {
 
         var socket: Socket? = null
@@ -84,6 +90,7 @@ class SocketInternetChecker @Inject constructor() {
 
         try {
             socket = if (isProxyUsed(proxyAddress, proxyPort)) {
+                setDefaultAuth(proxyUser, proxyPass)
                 val proxySockAdr: SocketAddress = InetSocketAddress(
                     proxyAddress,
                     proxyPort

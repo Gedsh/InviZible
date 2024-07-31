@@ -416,14 +416,14 @@ void check_tcp_socket(const struct arguments *args,
                 }
 
                 if (*proxy_socks5_addr && proxy_socks5_port && !redirect_to_tor) {
-                   *socks5_username = *proxy_socks5_username;
-                   *socks5_password = *proxy_socks5_password;
+                    strcpy(socks5_username, proxy_socks5_username);
+                    strcpy(socks5_password, proxy_socks5_password);
                 } else if (tor_isolate_uid) {
                     sprintf(socks5_username, "%d", s->tcp.uid);
                     sprintf(socks5_password, "%d", s->tcp.uid);
                 } else {
-                    *socks5_username = *tor_socks5_username;
-                    *socks5_password = *tor_socks5_password;
+                    strcpy(socks5_username, tor_socks5_username);
+                    strcpy(socks5_password, tor_socks5_password);
                 }
 
                 uint8_t ulen = strlen(socks5_username);

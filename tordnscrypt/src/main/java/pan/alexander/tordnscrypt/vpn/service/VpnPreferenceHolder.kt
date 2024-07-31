@@ -76,6 +76,8 @@ class VpnPreferenceHolder @Inject constructor(
             DEFAULT_PROXY_PORT.toInt()
         }
     }
+    val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
+    val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
 
     val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
             && proxyAddress.isNotBlank()

@@ -227,8 +227,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             jni_socks5_for_proxy(
                     vpnPreferences.getProxyAddress(),
                     vpnPreferences.getProxyPort(),
-                    "",
-                    ""
+                    vpnPreferences.getProxyUser(),
+                    vpnPreferences.getProxyPass()
             );
         } else {
             jni_socks5_for_proxy("", 0, "", "");

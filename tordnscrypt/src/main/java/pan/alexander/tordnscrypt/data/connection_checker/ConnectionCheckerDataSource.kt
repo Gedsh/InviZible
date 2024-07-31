@@ -23,14 +23,18 @@ interface ConnectionCheckerDataSource {
     fun checkInternetAvailableOverHttp(
         site: String,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
     ): Boolean
 
     fun checkInternetAvailableOverSocks(
         ip: String,
         port: Int,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
     ): Boolean
 
     fun checkNetworkAvailable(): Boolean
