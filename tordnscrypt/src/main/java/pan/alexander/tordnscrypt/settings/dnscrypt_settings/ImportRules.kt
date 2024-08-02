@@ -39,10 +39,10 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.collections.ArrayList
 
 private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?,]+$")
-private val blacklistIPRulesRegex = Regex("^(?:[0-9*]{1,3}\\.){1,3}[0-9*]{1,3}(?:/\\d+)*$")
+private val blacklistIPRulesRegex = Regex("^[0-9a-fA-F:.=*\\[\\]]+$")
 private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
 private val forwardingRulesRegex =
-    Regex("^[a-zA-Z\\d-._]+[ \\t]+(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3}(?:, ?(?:[0-9*]{1,3}\\.){3}[0-9*]{1,3})*$")
+    Regex("^[a-zA-Z\\d-._]+[ \\t]+[0-9a-fA-F:.,\\[\\]]+$")
 private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
 private val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[a-zA-Z\\d-._]+$")
 private const val itpdRedirectAddress = "*i2p 10.191.0.1"
@@ -419,6 +419,7 @@ class ImportRules(
         contentResolver.openInputStream(uri)?.use { inputStream ->
             BufferedReader(InputStreamReader(inputStream)).use { reader ->
                 var line: String? = reader.readLine().trim()
+                var index = 0
                 while (line != null) {
 
                     if (currentThread().isInterrupted) {
@@ -426,7 +427,12 @@ class ImportRules(
                     }
 
                     if (line.isNotEmpty() && !line.contains("#") && !line.contains("!")) {
-                        return line.matches(regExp)
+                        index++
+                        if (line.matches(regExp)) {
+                            return true
+                        } else if (index > 100) {
+                            return false
+                        }
                     }
 
                     line = reader.readLine().trim()
