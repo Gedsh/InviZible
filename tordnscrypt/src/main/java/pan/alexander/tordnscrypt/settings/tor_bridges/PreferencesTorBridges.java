@@ -193,14 +193,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
     @Inject
     public ViewModelProvider.Factory viewModelFactory;
-    @Inject
-    public Lazy<SelectBridgesTransportDialogFragment> selectBridgesTransportDialogFragment;
-    @Inject
-    public Lazy<PleaseWaitDialogBridgesRequest> pleaseWaitDialogBridgesRequest;
-    @Inject
-    public Lazy<BridgesCaptchaDialogFragment> bridgesCaptchaDialogFragment;
-    @Inject
-    public Lazy<BridgesReadyDialogFragment> bridgesReadyDialogFragment;
 
     public PreferencesTorBridges() {
     }
@@ -602,7 +594,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         PleaseWaitDialogBridgesRequest dialog =
                 (PleaseWaitDialogBridgesRequest) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            pleaseWaitDialogBridgesRequest.get().show(getChildFragmentManager(), tag);
+            dialog = new PleaseWaitDialogBridgesRequest();
+            dialog.show(getChildFragmentManager(), tag);
         }
     }
 
@@ -611,7 +604,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         SelectBridgesTransportDialogFragment dialog =
                 (SelectBridgesTransportDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            selectBridgesTransportDialogFragment.get().show(getChildFragmentManager(), tag);
+            dialog = new SelectBridgesTransportDialogFragment();
+            dialog.show(getChildFragmentManager(), tag);
         }
     }
 
@@ -620,7 +614,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         BridgesCaptchaDialogFragment dialog =
                 (BridgesCaptchaDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            dialog = bridgesCaptchaDialogFragment.get();
+            dialog = new BridgesCaptchaDialogFragment();
             dialog.setTransport(transport);
             dialog.setIpv6(ipv6);
             dialog.setCaptcha(captcha);
@@ -634,7 +628,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         BridgesReadyDialogFragment dialog =
                 (BridgesReadyDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            dialog = bridgesReadyDialogFragment.get();
+            dialog = new BridgesReadyDialogFragment();
             dialog.setBridges(bridges);
             dialog.show(getChildFragmentManager(), tag);
         }

@@ -57,7 +57,6 @@ import dagger.Lazy;
 import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.dialogs.AgreementDialog;
 import pan.alexander.tordnscrypt.dialogs.AskAccelerateDevelop;
-import pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog;
 import pan.alexander.tordnscrypt.dialogs.NewUpdateDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
@@ -85,7 +84,7 @@ import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionDialog
 import pan.alexander.tordnscrypt.utils.notification.NotificationPermissionManager;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
-import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.MODULE_NAME_ARG;
+import static pan.alexander.tordnscrypt.dialogs.AskRestoreDefaultsDialog.getInstance;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongConjureLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongSnowflakeLog;
 import static pan.alexander.tordnscrypt.utils.Utils.shortenTooLongWebTunnelLog;
@@ -148,8 +147,6 @@ public class TopFragment extends Fragment
     public ViewModelProvider.Factory viewModelFactory;
     @Inject
     public Lazy<Verifier> verifierLazy;
-    @Inject
-    public Lazy<AskRestoreDefaultsDialog> askRestoreDefaultsDialog;
 
     private TopFragmentViewModel viewModel;
 
@@ -925,12 +922,10 @@ public class TopFragment extends Fragment
         if (intent.getAction().equals(UpdateService.UPDATE_RESULT)) {
             showUpdateResultMessage(activity);
             refreshModulesVersions(activity);
-        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_RESTORE_DEFAULTS)) {
-            DialogFragment dialog = askRestoreDefaultsDialog.get();
-            Bundle args = new Bundle();
+        } else if (intent.getAction().equals(ModulesStarterHelper.ASK_RESTORE_DEFAULTS)
+                && isAdded() && !isStateSaved()) {
             ModuleName name = (ModuleName) intent.getSerializableExtra(ModulesStarterHelper.MODULE_NAME);
-            args.putSerializable(MODULE_NAME_ARG, name);
-            dialog.setArguments(args);
+            DialogFragment dialog = getInstance(name);
             dialog.show(getChildFragmentManager(), "AskRestoreDefaults");
         }
     }

@@ -23,6 +23,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
@@ -33,6 +34,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
@@ -42,11 +44,13 @@ import javax.inject.Inject
 import javax.inject.Named
 
 @ExperimentalCoroutinesApi
-class SelectBridgesTransportDialogFragment @Inject constructor(
+class SelectBridgesTransportDialogFragment : ExtendedDialogFragment() {
+
+    @Inject
     @Named(DEFAULT_PREFERENCES_NAME)
-    private val defaultPreferences: SharedPreferences,
-    private val viewModelFactory: ViewModelProvider.Factory
-) : ExtendedDialogFragment() {
+    lateinit var defaultPreferences: SharedPreferences
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
     private val preferencesTorBridgesViewModel: PreferencesTorBridgesViewModel by viewModels(
         { requireParentFragment() },
@@ -54,6 +58,11 @@ class SelectBridgesTransportDialogFragment @Inject constructor(
     )
 
     private var okButtonPressed = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
 
     @SuppressLint("InflateParams")
     override fun assignBuilder(): AlertDialog.Builder =
