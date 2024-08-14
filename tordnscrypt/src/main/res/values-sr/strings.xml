@@ -1,2 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources></resources>
+<resources>
+    <string name="nav_header_subtitle">Најбоље решење за вашу приватност</string>
+    <string name="tvITPDStop">Л2П заустављен</string>
+    <string name="tvITPDRunning">Л2П покренут</string>
+    <string name="tvITPDStarting">Л2П се покреће</string>
+    <string name="tvITPDStopping">Л2П се зауставља</string>
+    <string name="tvITPDInstalling">Л2П се инсталира</string>
+    <string name="tvITPDNotInstalled">Л2П није инсталиран</string>
+    <string name="swRunOnBoot">Покренути при покретању система</string>
+    <string name="please_wait">Молимо сачекајте…</string>
+    <string name="dont_show">Без приказивања</string>
+    <string name="tvDNSStop">ДНСКрипт је заустављен</string>
+    <string name="tvDNSInstalled">ДНСКрипт је инсталиран</string>
+    <string name="tvDNSInstalling">ДНСКрипт се инсталира</string>
+    <string name="tvDNSStarting">ДНСКрипт се покреће</string>
+    <string name="tvDNSStopping">ДНСКрипт се зауставља</string>
+    <string name="tvTorStop">Тор је заустављен</string>
+    <string name="action_settings">Подешавања</string>
+    <string name="cancel">Откажи</string>
+    <string name="backupFolder">Изаберите фолдер резервне копије:</string>
+    <string name="backupRestored">Резервна копија је враћена</string>
+    <string name="backupSaved">Резервна копија је сачувана</string>
+    <string name="btnResetSettings">Ресетујте подешавања</string>
+    <string name="deny">Одбити</string>
+    <string name="country_select_unselect_all">Уклони избор</string>
+    <string name="action_mode_child_lock">Закључавање за децу</string>
+    <string name="action_mode_dialog_locked">Контрола је закључана</string>
+    <string name="buy_premium_gp">ИнвиЗибле Про пројекат тражи вашу помоћ. Притисните ОК да бисте купили премијум функције.</string>
+    <string name="config_changes_dialog_message">Да ли желите да сачувате промене? Може покварити ИнвиЗибле Про.</string>
+    <string name="btn_new_tor_identity">Нови Тор идентитет</string>
+    <string name="anonymize_relays">Анонимни релеји</string>
+    <string name="anonymize_relays_not_used">Анонимизирани релеји се не користе.</string>
+    <string name="connectivity_check">Провера интернет везе</string>
+    <string name="tvITPDInstalled">Л2П је инсталиран</string>
+    <string name="root_available">Провера да ли је рут доступан</string>
+    <string name="tvDNSNotInstalled">ДНСКрипт није инсталиран</string>
+    <string name="tvDNSRunning">ДНСКрипт је покренут</string>
+    <string name="tvTorInstalled">Тор је инсталиран</string>
+    <string name="tvTorInstalling">Тор се инсталира</string>
+    <string name="tvTorNotInstalled">Тор није инсталиран</string>
+    <string name="tvTorStarting">Тор се покреће</string>
+    <string name="nav_header_title">Тор са ДНСКриптом и Л2П</string>
+    <string name="action_mode_dialog_message_lock">Можете закључати контролу над овом апликацијом. Молићу унесите лозинку или користите претходну.</string>
+    <string name="allow">Дозволи</string>
+    <string name="areYouSure">Да ли сте сигурни? Ова радња се не може опозвати!</string>
+    <string name="ask_reset_settings_btn">Ресет</string>
+    <string name="ask_later">Питај касније</string>
+    <string name="ask_reset_settings_text">ИнвиЗибле Про не може да покрене %1$с! Покушајте да ресетујете подешавања %2$с. Ако ово не помогне, поново покрените уређај.</string>
+    <string name="btn_dnscrypt_delete_log">Избриши лог</string>
+    <string name="btnRestoreBackup">Врати подешавања</string>
+    <string name="btnSaveBackup">Сачувај подешавања</string>
+    <string name="cancel_download">ОТКАЖИ ПРЕУЗИМАЊЕ</string>
+    <string name="ask_save_changes">Да ли желите да сачувате промене?</string>
+    <string name="country_select_select_all">Изаберите Све</string>
+</resources>
