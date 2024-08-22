@@ -58,7 +58,7 @@
     <string name="backupFolder">"Wybierz folder kopii zapasowej:"</string>
     <string name="title_activity_settings">"Ustawienia"</string>
     <string name="pref_fast_categ_autostart">"Uruchomienie automatyczne"</string>
-    <string name="pref_fast_dns_autostart">Autostart DNSCrypt</string>
+    <string name="pref_fast_dns_autostart">Autouruchamianie DNSCrypt</string>
     <string name="pref_fast_tor_autostart">Autostart Tor</string>
     <string name="pref_fast_itpd_autostart">Autostart I2P</string>
     <string name="pref_fast_autostart_delay">Opóźnienie</string>
