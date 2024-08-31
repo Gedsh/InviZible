@@ -158,8 +158,6 @@ This product is produced independently from the **Tor®**, **DNSCrypt**, **Purpl
 and carries no guarantee from The Above Projects about quality, suitability or anything else.
 
 ## Donations
-**PayPal**: Send to invizible.soft@gmail.com
-
 **Patreon**: https://www.patreon.com/inviziblepro
 
 **BTC**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
