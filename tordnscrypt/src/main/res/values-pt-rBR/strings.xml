@@ -553,7 +553,7 @@
     <string name="pref_fast_bypass_app">"Excluir completamente"</string>
     <string name="pull_to_refresh">"\u2193 Puxe para atualizar \u2193"</string>
     <string name="firewall_critical_uid">"Bloquear este aplicativo do sistema pode resultar em uma conexão de internet instável!"</string>
-    <string name="pref_dnscrypt_odoh_servers_summ">"Use servidores que implementam o protocolo Oblivious DNS-over-HTTPS protocol."</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Use servidores que implementam o protocolo Oblivious DNS-over-HTTPS.</string>
     <string name="pref_tor_nodes_categ">"Nós"</string>
     <string name="pref_tor_isolation_categ">"Configurações de isolamento"</string>
     <string name="pref_itpd_use_HTTP_outproxy_summ">"Gateway para a internet convencional"</string>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="nav_header_title">"TOR به همراه DNSCrypt و l2P"</string>
+    <string name="nav_header_title">تور به همراه DNSCrypt و l2P</string>
     <string name="nav_header_subtitle">"بهترین راه‌حل برای حفظ حریم خصوصی شما"</string>
     <string name="action_settings">"تنظیمات"</string>
     <string name="tvITPDStop">"I2P متوقف شد"</string>
@@ -69,7 +69,7 @@
     <!-- هنگام راه اندازی DNSCrypt شروع -->
     <string name="pref_fast_dns_autostart">فعال‌سازی DNSCrypt هنگام راه‌اندازی</string>
     <!-- هنگام راه اندازی Tor شروع -->
-    <string name="pref_fast_tor_autostart">شروع TOR هنگام راه‌اندازی مجدد</string>
+    <string name="pref_fast_tor_autostart">شروع تور هنگام راه‌اندازی مجدد</string>
     <!-- هنگام راه اندازی I2P شروع -->
     <string name="pref_fast_itpd_autostart">"شروع خودکار  I2P"</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
@@ -90,7 +90,7 @@
     <string name="pref_fast_exclude_from_tor_summ">لیست این وب سایت‌ها به طور مستقیم باز می‌شوند. این ویژگی برای سایت‌های پشت CDN کار نمی‌کند</string>
     <string name="pref_fast_exclude_apps_from_tor">محدود‌سازی برنامه‌ها</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"برنامه‌هایی که مستقیم اجرا شوند"</string>
-    <string name="pref_fast_site_refresh_interval">بازخوانی Interval</string>
+    <string name="pref_fast_site_refresh_interval">بازه بازخوانی</string>
     <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی IPهای وب‌سایت‌ها در یک ساعت (فقط اندورید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید.</string>
     <string name="pref_fast_use_tor_bridges">"پل‌ها"</string>
     <string name="pref_fast_use_tor_bridges_summ">"از این مورد تنها اگر نمی‌توانید به TOR متصل شوید استفاده کنید"</string>
@@ -126,12 +126,12 @@
     <string name="pref_common_categ_other">"دیگر"</string>
     <string name="pref_common_block_http">"مسدود کردن HTTP هات‌اسپات"</string>
     <string name="pref_common_block_http_summ">"مسدودسازی ارتباط به HTTP Port 80 برای هات اسپات"</string>
-    <string name="pref_common_notification_summ">محافظت از برنامه‌ها در حالت بدون Root برای جلوگیری از بسته شدن برنامه توسط اندروید</string>
+    <string name="pref_common_notification_summ">محافظت از برنامه‌ها در حالت بدون روت برای جلوگیری از بسته شدن برنامه توسط اندروید</string>
     <string name="pref_common_refresh_rules">"تازه کردن قوانین"</string>
     <string name="pref_common_refresh_rules_summ">"بروزرسانی قوانین برای هر تغییر اتصال"</string>
     <string name="pref_common_show_notification">"نمایش اعلان‌ها"</string>
     <string name="pref_common_wakelock">"جلوگیری از به خواب رفتن دستگاه"</string>
-    <string name="pref_common_wakelock_summ">حفاظت بیش‌تر بدون حالت Root برای جلوگیری از توقف برنامه توسط اندروید. ممکن است باعث تخلیه زودتر باتری شود</string>
+    <string name="pref_common_wakelock_summ">حفاظت بیش‌تر بدون حالت روت برای جلوگیری از توقف برنامه توسط اندروید. ممکن است باعث تخلیه زودتر باتری شود</string>
     <string name="pref_common_show_help">"راهنمایی‌ها"</string>
     <string name="pref_common_show_help_summ">همیشه پیغام‌های راهنما را نشان بده</string>
     <string name="pref_common_notification_helper">لطفا InviZible Pro را در بهینه‌سازی باتری دستگاه قرار ندهید‌. در غیر این صورت، ممکن است اندروید DNSCrypt و TOR و یا I2P را در هر زمان خاموش کند. در بعضی سیستم عامل‌های استثناء همانند سیستم عامل گوشی‌های شیائومی باید چند گام اضافه.</string>
@@ -358,7 +358,7 @@
     <string name="vpn_tor_tether_summ">لطفاً از سرور پروکسی در تنظیمات دستگاه‌ متصل استفاده نمایید. مقادیر پیش‌فرض:
 \nآی‌پی:10.1.10.1
 \nپورت:8118</string>
-    <string name="main_fragment_hide_ip">"پنهان‌سازی IP توسط TOR"</string>
+    <string name="main_fragment_hide_ip">پنهان‌سازی IP توسط تور</string>
     <string name="main_fragment_protect_dns">"حفاظت از DNS توسط DNSCrypt"</string>
     <string name="main_fragment_access_i2p">"دسترسی به سایت‌های I2P توسط Purple I2P"</string>
     <string name="reset_settings_title">"توجه"</string>
@@ -531,4 +531,45 @@
     <string name="pref_fast_bypass_app">مستثنی کردن به طور کامل</string>
     <string name="notification_exclude_data_restriction_message">"لطفا اجازه فعال شدن background data usage  و  data usage را هنگامی که ذخیره دیتا روشن است بدهید.این مورد برای تجربه کاربری بهتر مورد نیاز است."</string>
     <string name="pref_fast_logs_summ">نمایش گزارش‌های ارتباط برنامه در تب DNS</string>
+    <string name="pref_common_kill_switch">قطع اضطراری</string>
+    <string name="pref_itpd_com_ssu2_summ">فعال کردن پروتکل انتقال SSU2 (استفاده از UDP)</string>
+    <string name="pref_tor_isolation_categ">تنظیمات ایزوله</string>
+    <string name="pref_firewall_show_all_apps_off_summ">فقط برنامه هایی که می توانند به اینترنت متصل شوند نشان داده می شوند.</string>
+    <string name="pref_tor_isolate_uid_summ">مدارها را با جریان های برنامه های مختلف به اشتراک نگذارید.</string>
+    <string name="pref_itpd_use_HTTP_outproxy_summ">دروازه ای به اینترنت عادی</string>
+    <string name="pref_itpd_HTTP_outproxy_address_summ">پراکسی HTTP در بالادست از آدرس آن (مثل http://false.i2p)</string>
+    <string name="pref_itpd_use_Socks_outproxy_summ">آدرس خارج از پروکسی (آی‌پی یا محلی). درخواست های خارج از I2P به آنجا می روند.</string>
+    <string name="pref_firewall_show_all_apps_on_summ">برنامه‌ها بدون در نظر گرفتن اینکه آیا برنامه می‌تواند به اینترنت متصل شود یا نه، نشان داده می‌شوند.</string>
+    <string name="pull_to_refresh">↓ برای تازه کردن بکشید ↓</string>
+    <string name="notifications_permission_rationale_message">اعلان‌ها برای نمایش اطلاعات مهم درباره عملکرد برنامه، کنترل برنامه و حملات شناسایی‌شده ضروری هستند. آیا می‌خواهید اعلان‌ها را برای InviZible مجاز کنید؟</string>
+    <string name="press_to_add">برای افزودن فشار دهید.</string>
+    <string name="press_to_edit">برای ویرایش فشار دهید.</string>
+    <string name="anonymize_relays">ناشناس کردن رله ها</string>
+    <string name="pref_fast_fake_sni">جعل نشانگر نام سرور</string>
+    <string name="pref_common_use_iptables_app">استفاده از جداول آی پی برنامه</string>
+    <string name="pref_common_use_iptables_device">استفاده از جداول آی پی دستگاه</string>
+    <string name="pref_common_wait_iptables">انتظار برای قفل جداول افراطی</string>
+    <string name="pref_common_wait_iptables_summ">برای جلوگیری از تغییر همزمان قوانین جداول آی‌پی منتظر بمانید تا رمز انحصاری آن بدست آید.</string>
+    <string name="notification_internet_blocked_message">اینترنت به دلیل قطع اضطراری مسدود شده است. برای اجازه دادن به اتصال، تور، DNSCrypt یا I2P را راه اندازی کنید. یا قطع اضطراری را در تنظیمات سریع غیرفعال کنید.</string>
+    <string name="pref_dnscrypt_dns64_summ">اگر در شبکه فقط IPv6 هستید و سایت های IPv4 در دسترس نیستند، این گزینه را فعال کنید. در غیر این صورت آن را فعال نکنید، وگرنه نمی توانید به هیچ چیزی متصل شوید.</string>
+    <string name="pref_tor_dormant_client_timeout_summ">اگر تور برای مدت زمان مشخصی استفاده نشود، وارد حالت غیرفعال می شود. باید حداقل 10 دقیقه باشد</string>
+    <string name="ask_reset_settings_btn">بازنشانی</string>
+    <string name="pref_firewall_show_all_apps">نمایش همه برنامه ها</string>
+    <string name="pref_dnscrypt_http3_summ">پشتیبانی از HTTP/3 (DoH3، HTTP از طریق QUIC) را فعال کنید. توجه داشته باشید که مانند DNSCrypt اما بر خلاف سایر نسخه‌های HTTP، به جای TCP از UDP و (معمولا) پورت 443 استفاده می‌کند.</string>
+    <string name="firewall_critical_uid">مسدود کردن این برنامه سیستمی ممکن است باعث اتصال اینترنت ناپایدار شود!</string>
+    <string name="list_is_empty">لیست خالی</string>
+    <string name="anonymize_relays_not_used">از رله های ناشناس استفاده نمی شود.</string>
+    <string name="pref_common_rogue_dhcp_detection">تشخیص DHCP ناخواسته</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">حملات DHCP ناخواسته را در میان شبکه های Wi-Fi شناسایی کنید.</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">مجموعه ای از پیشوندهای IPv6 ثابت استفاده شده.</string>
+    <string name="pref_tor_snowflake_select_rendezvous">انتخاب نوع ارتباط</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">نام دامنه کارگزار را از ارائه‌دهنده اینترنت مخفی می‌کند. کارگزار برای برقراری ارتباط استفاده می شود.</string>
+    <string name="pref_tor_track_host_exits_summ">تور اتصالات اخیر به هاست ها را ردیابی می کند و سعی می کند از همان گره خروجی برای هرکدام مجددا استفاده کند. این گزینه ممکن است به جلوگیری از کپچای بی پایان کمک کند.</string>
+    <string name="long_press_to_add">برای افزودن طولانی فشار دهید.</string>
+    <string name="connectivity_check">بررسی اتصال به اینترنت</string>
+    <string name="pref_tor_fascist_firewall_lock_summ">برای فعال کردن این گزینه باید پل ها را غیرفعال کنید یا فقط از پل هایی با پورت های 80 و 443 استفاده کنید.</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">از سرورهایی استفاده کنید که پروتکل Oblivious DNS-over-HTTPS را پیاده سازی می کنند.</string>
+    <string name="long_press_to_edit">برای ویرایش طولانی فشار دهید.</string>
+    <string name="pref_tor_nodes_categ">گره ها</string>
+    <string name="ask_reset_settings_text">InviZible Pro نمی تواند %1$s را شروع کند! لطفاً تنظیمات %2$s را بازنشانی کنید. اگر کمکی نکرد، لطفاً دستگاه خود را راه اندازی مجدد کنید.</string>
 </resources>

@@ -108,7 +108,7 @@
     <string name="pref_common_refresh_rules_summ">Актуализирайте правилата при всяка промяна на свързаността</string>
     <string name="pref_common_show_notification">Показване на известие</string>
     <string name="pref_common_wakelock">Предотврати заспиване на устройството</string>
-    <string name="pref_common_wakelock_summ">"Не позволявайте на устройството да изпада в режим на заспиване. Може да бъде полезно при използване на HOTSPOT.  Изтощава батерията!"</string>
+    <string name="pref_common_wakelock_summ">Не позволявайте на устройството да изпада в режим на заспиване. Може да бъде полезно при използване на HOTSPOT. Изтощава батерията!</string>
     <string name="pref_common_compatibility_mode">Режим на съвместимост</string>
     <string name="pref_common_compatibility_mode_summ">Активирайте, ако вашето устройство е с персонализиран ROM и връзката се загуби, когато натиснете бутона START</string>
     <string name="pref_common_show_help">Помощни съобщения</string>
@@ -228,7 +228,7 @@
     <string name="pref_dnscrypt_ignored_qtypes_summ">Не регистрирайте тези типове заявки, за да намалите многословието. Оставете празно, за да регистрирате всичко.</string>
     <string name="open_query_log">Отворете регистъра на заявките</string>
     <string name="pref_dnscrypt_nx_log_categ">Регистриране на съмнителни заявки</string>
-    <string name="pref_dnscrypt_force_tcp_summ">"Използвайте TCP вместо UDP, за да се свържете към DNSCrypt сървъри.  Тази опция трябва да бъде активирана, ако използвате DNSCrypt през Tor."</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Използвайте TCP вместо UDP, за да се свържете към DNSCrypt сървъри. Тази опция трябва да бъде активирана, ако използвате DNSCrypt през Tor.</string>
     <string name="pref_common_use_iptables_device">Използвайте iptables на устройството</string>
     <string name="pref_common_wait_iptables">Изчакайте заключването на xtables</string>
     <string name="pref_common_wait_iptables_summ">Изчакайте, докато може да бъде получено изключителното заключване на iptables, за да предотвратите едновременна промяна на правилата на iptables.</string>
@@ -242,7 +242,7 @@
     <string name="pref_dnscrypt_forwarding_rules_summ">Насочвайте заявки за конкретни домейни към специален набор от сървъри.</string>
     <string name="pref_dnscrypt_import_forwarding_rules">Правила за препращане на импортиране</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Правила за прикриване</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">"Прикриването връща предварително зададен адрес за конкретно име.  Освен че действа като HOSTS файл, той може също да върне IP адрес с различно име.  Той също така ще направи изравняване на CNAME."</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Прикриването връща предварително зададен адрес за конкретно име. Освен че действа като HOSTS файл, той може също да върне IP адрес с различно име. Той също така ще направи изравняване на CNAME.</string>
     <string name="pref_dnscrypt_import_cloaking_rules">Импортиране на правила за прикриване</string>
     <string name="pref_dnscrypt_import_cloaking_rules_summ">Импортирайте файл с правила за прикриване. Можете да изберете няколко файла, дублиращите се редове ще бъдат премахнати.</string>
     <string name="pref_dnscrypt_query_log_categ">Регистриране на заявки</string>
