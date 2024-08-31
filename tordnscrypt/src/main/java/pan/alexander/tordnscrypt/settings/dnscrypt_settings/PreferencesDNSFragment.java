@@ -969,21 +969,29 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
 
         executor.submit("PreferencesDNSFragment cleanModuleFolder", () -> {
 
-            boolean successfully1 = !FileManager.deleteFileSynchronous(context, appDataDir
+            boolean success = !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md");
-            boolean successfully2 = !FileManager.deleteFileSynchronous(context, appDataDir
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "public-resolvers.md.minisig");
-            boolean successfully3 = !FileManager.deleteFileSynchronous(context, appDataDir
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "relays.md");
-            boolean successfully4 = !FileManager.deleteFileSynchronous(context, appDataDir
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
                     + "/app_data/dnscrypt-proxy", "relays.md.minisig");
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "odoh-servers.md");
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "odoh-servers.md.minisig");
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "odoh-relays.md");
+            success = success && !FileManager.deleteFileSynchronous(context, appDataDir
+                    + "/app_data/dnscrypt-proxy", "odoh-relays.md.minisig");
 
             Activity activity = getActivity();
             if (activity == null) {
                 return null;
             }
 
-            if (successfully1 || successfully2 || successfully3 || successfully4) {
+            if (success) {
                 activity.runOnUiThread(() -> Toast.makeText(activity, R.string.done, Toast.LENGTH_SHORT).show());
             } else {
                 activity.runOnUiThread(() -> Toast.makeText(activity, R.string.wrong, Toast.LENGTH_SHORT).show());
