@@ -1174,3 +1174,9 @@
 * Updated French and Portuguese (Brazil) translations.
 * Added Arabic and Bulgarian translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.3.1**
+* Updated Purple I2P to version 2.53.1.
+* Updated German, Bulgarian, Chinese, Polish, Arabic, Persian and Portuguese (Brazil) translations.
+* Fixed using socks5 proxy with authentication.
+* A lot of minor fixes and optimisations.
