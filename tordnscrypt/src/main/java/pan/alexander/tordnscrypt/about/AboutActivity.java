@@ -105,14 +105,18 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
         TextView tvDonateTitle = findViewById(R.id.tvDonateTitle);
         TextView tvDonateBitcoin = findViewById(R.id.tvDonateBitcoin);
+        TextView tvDonateLitecoin = findViewById(R.id.tvDonateLitecoin);
         TextView tvDonateMonero = findViewById(R.id.tvDonateMonero);
         if (pathVars.get().getAppVersion().endsWith("p")) {
             tvDonateTitle.setVisibility(View.GONE);
             tvDonateBitcoin.setVisibility(View.GONE);
+            tvDonateLitecoin.setVisibility(View.GONE);
             tvDonateMonero.setVisibility(View.GONE);
         } else {
             tvDonateBitcoin.setText(getBitcoinUri());
             tvDonateBitcoin.setOnClickListener(this);
+            tvDonateLitecoin.setText(getLitecoinUri());
+            tvDonateLitecoin.setOnClickListener(this);
             tvDonateMonero.setText(getMoneroUri());
             tvDonateMonero.setOnClickListener(this);
         }
@@ -200,6 +204,10 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         return "bitcoin:1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR";
     }
 
+    private String getLitecoinUri() {
+        return "litecoin:MUSAXkcAvnN1Ytauzeo9bwjVjarUdDHGgk";
+    }
+
     private String getMoneroUri() {
         return "monero:82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX";
     }
@@ -223,6 +231,8 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
             sendDonateIntent(getBitcoinUri());
         } else if (id == R.id.tvDonateMonero) {
             sendDonateIntent(getMoneroUri());
+        } else if (id == R.id.tvDonateLitecoin) {
+            sendDonateIntent(getLitecoinUri());
         } else if (id == R.id.dnscryptLicense) {
             showLicense(R.string.about_license_dnscrypt, R.raw.dnscrypt_license, false);
         } else if (id == R.id.torLicense) {
