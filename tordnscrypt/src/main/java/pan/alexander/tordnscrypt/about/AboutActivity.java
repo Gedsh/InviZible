@@ -24,6 +24,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.appcompat.app.AlertDialog;
+
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +34,7 @@ import android.widget.TextView;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -201,15 +204,22 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
     }
 
     private String getBitcoinUri() {
-        return "bitcoin:1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR";
+        return decodeBase64("WW1sMFkyOXBiam94UjJaS2QybElSelo0UzBOUlEzQklaVmMyWmtWTWVrWm1aM04yWTFONFZsVlM=");
     }
 
     private String getLitecoinUri() {
-        return "litecoin:MUSAXkcAvnN1Ytauzeo9bwjVjarUdDHGgk";
+        return decodeBase64("YkdsMFpXTnZhVzQ2VFZWVFFWaHJZMEYyYms0eFdYUmhkWHBsYnpsaWQycFdhbUZ5VldSRVNFZG5hdz09");
     }
 
     private String getMoneroUri() {
-        return "monero:82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX";
+        return decodeBase64("Ylc5dVpYSnZPamd5VjBaNmIyWjJSMVZrV1RVeWR6bDZRMlp5V2xkaFNGWnhSVVJqU2tnM2VURkdkV3A2ZGxoa1IxQmxWVGxWY0hWR1RtVkRkblJEUzJoMGNFTTJjRnB0VFZsMVEwNW5SbXBqZHpWdFNFRm5SVXBSTkZKVWQxWTVXRkpvYjJKWQ==");
+    }
+
+    private static String decodeBase64(final String base64) {
+        byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+        String unwrap = new String(bytes, StandardCharsets.UTF_8);
+        bytes = Base64.decode(unwrap, Base64.DEFAULT);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private void sendDonateIntent(String uri) {
