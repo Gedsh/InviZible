@@ -119,7 +119,7 @@
     <string name="pref_common_refresh_rules_summ">"Aktualisiere die Regeln bei jeder Verbindungsänderung"</string>
     <string name="pref_common_show_notification">"Zeige Benachrichtigungen"</string>
     <string name="pref_common_wakelock">Verhindere das automatische Ausschalten des Bildschirms</string>
-    <string name="pref_common_wakelock_summ">Das automatische Ausschalten des Bildschirms verhindern. Kann nützlich sein, wenn man im Hotspot ist. Verursacht hohen Akkuverbrauch!</string>
+    <string name="pref_common_wakelock_summ">Untersage dem Gerät in einen Ruhezustand zu wechseln. Kann bei Verwendung der HOTSPOT-Funktion nützlich sein. Verursacht erhöhten Akkuverbrauch!</string>
     <string name="pref_common_show_help">Hilfe-Nachrichten</string>
     <string name="pref_common_show_help_summ">Alle Nachrichten anzeigen, die als nicht zum Anzeigen erlaubt markiert wurden.</string>
     <string name="pref_common_notification_helper">Bitte deaktiviere die Batterieoptimierung deines Telefons für InviZible Pro. Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein.</string>
