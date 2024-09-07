@@ -1180,3 +1180,7 @@
 * Updated German, Bulgarian, Chinese, Polish, Arabic, Persian and Portuguese (Brazil) translations.
 * Fixed using socks5 proxy with authentication.
 * A lot of minor fixes and optimisations.
+
+**InviZible Pro beta 2.3.2**
+* Updated Tor.
+* Fixes and optimizations.
