@@ -34,20 +34,26 @@ class ConnectionCheckerDataSourceImpl @Inject constructor(
     override fun checkInternetAvailableOverHttp(
         site: String,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
     ): Boolean =
-        httpInternetChecker.get().checkConnectionAvailability(site, proxyAddress, proxyPort)
+        httpInternetChecker.get().checkConnectionAvailability(site, proxyAddress, proxyPort, proxyUser, proxyPass)
 
     override fun checkInternetAvailableOverSocks(
         ip: String,
         port: Int,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String,
     ): Boolean = socketInternetChecker.get().checkConnectionAvailability(
         ip,
         port,
         proxyAddress,
-        proxyPort
+        proxyPort,
+        proxyUser,
+        proxyPass
     )
 
     override fun checkNetworkAvailable(): Boolean =

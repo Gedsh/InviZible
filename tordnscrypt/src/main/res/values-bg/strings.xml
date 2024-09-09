@@ -108,7 +108,7 @@
     <string name="pref_common_refresh_rules_summ">Актуализирайте правилата при всяка промяна на свързаността</string>
     <string name="pref_common_show_notification">Показване на известие</string>
     <string name="pref_common_wakelock">Предотврати заспиване на устройството</string>
-    <string name="pref_common_wakelock_summ">Допълнителна защита с режим без Root за предотвратяване на спиране на приложението от android. Може да изтощи батерията</string>
+    <string name="pref_common_wakelock_summ">Не позволявайте на устройството да изпада в режим на заспиване. Може да бъде полезно при използване на HOTSPOT. Изтощава батерията!</string>
     <string name="pref_common_compatibility_mode">Режим на съвместимост</string>
     <string name="pref_common_compatibility_mode_summ">Активирайте, ако вашето устройство е с персонализиран ROM и връзката се загуби, когато натиснете бутона START</string>
     <string name="pref_common_show_help">Помощни съобщения</string>
@@ -203,18 +203,18 @@
     <string name="pref_dnscrypt_require_nolog_summ">Сървърът не трябва да регистрира потребителски заявки (декларативно).</string>
     <string name="pref_dnscrypt_select_server_names">Изберете поне един сървър!</string>
     <string name="pref_dnscrypt_local_port_summ">Локален порт за слушане.</string>
-    <string name="pref_dnscrypt_require_servers_categ">Изисквайте сървъри (от статични + отдалечени източници), за да отговарят на специфични свойства.</string>
+    <string name="pref_dnscrypt_require_servers_categ">Изисквайте сървъри (от статични + отдалечени източници), за да отговарят на специфични свойства</string>
     <string name="pref_dnscrypt_dnscrypt_servers_summ">Използвайте сървъри, изпълняващи протокола DNSCrypt.</string>
     <string name="pref_dnscrypt_doh_servers_summ">Използвайте сървъри, прилагащи протокола DNS-over-HTTPS.</string>
     <string name="pref_dnscrypt_ipv4_servers_summ">Използвайте сървъри, достъпни през IPv4</string>
     <string name="pref_dnscrypt_require_dnssec_summ">Сървърът трябва да поддържа DNS разширения за сигурност (DNSSEC).</string>
-    <string name="pref_dnscrypt_require_servers_prop_categ">Изисквайте сървъри, дефинирани от отдалечени източници, за да отговарят на специфични свойства.</string>
-    <string name="pref_dnscrypt_force_tcp_categ">Винаги използвайте TCP за свързване към сървъри нагоре по веригата.</string>
+    <string name="pref_dnscrypt_require_servers_prop_categ">Изисквайте сървъри, дефинирани от отдалечени източници, за да отговарят на специфични свойства</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Винаги използвайте TCP за свързване към сървъри нагоре по веригата</string>
     <string name="pref_dnscrypt_require_nofilter_summ">Сървърът не трябва да налага собствен черен списък (за родителски контрол, блокиране на реклами...).</string>
     <string name="pref_dnscrypt_use_proxy">Активиране на прокси</string>
     <string name="pref_dnscrypt_proxy_summ">Насочете всички TCP връзки към локален Tor възел. Tor не поддържа UDP, така че задайте force_tcp също на true.</string>
     <string name="pref_dnscrypt_proxy">proxy_port</string>
-    <string name="pref_dnscrypt_other_categ">Други настройки.</string>
+    <string name="pref_dnscrypt_other_categ">Други настройки</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Bootstrap резолвер. Това е нормален, некриптиран DNS резолвер, който ще се използва само за еднократни заявки при извличане на първоначалния списък с резолвери и само ако системната DNS конфигурация не работи. Никога няма да се използва, ако списъците вече са кеширани.</string>
     <string name="pref_dnscrypt_ignore_system_dns_summ">Никога не позволявайте на dnscrypt-proxy да се опитва да използва системните DNS настройки. Безусловно използвайте резервния резолвер..</string>
     <string name="pref_dnscrypt_http3_summ">Активиране на поддръжка за HTTP/3 (DoH3, HTTP през QUIC). Обърнете внимание, че подобно на DNSCrypt, но за разлика от други HTTP версии, това използва UDP и (обикновено) порт 443 вместо TCP.</string>
@@ -227,9 +227,8 @@
     <string name="pref_dnscrypt_erase_cloaking_rules">Изтрийте правилата за прикриване</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">Не регистрирайте тези типове заявки, за да намалите многословието. Оставете празно, за да регистрирате всичко.</string>
     <string name="open_query_log">Отворете регистъра на заявките</string>
-    <string name="pref_dnscrypt_nx_log_categ">Регистриране на съмнителни заявки.</string>
-    <string name="pref_dnscrypt_force_tcp_summ">Това може да бъде полезно, ако трябва да маршрутизирате всичко през Tor.
-\n В противен случай оставете това на false, тъй като не подобрява сигурността (dnscrypt-proxy винаги ще шифрова всичко дори с помощта на UDP) и може само да увеличи латентността.</string>
+    <string name="pref_dnscrypt_nx_log_categ">Регистриране на съмнителни заявки</string>
+    <string name="pref_dnscrypt_force_tcp_summ">Използвайте TCP вместо UDP, за да се свържете към DNSCrypt сървъри. Тази опция трябва да бъде активирана, ако използвате DNSCrypt през Tor.</string>
     <string name="pref_common_use_iptables_device">Използвайте iptables на устройството</string>
     <string name="pref_common_wait_iptables">Изчакайте заключването на xtables</string>
     <string name="pref_common_wait_iptables_summ">Изчакайте, докато може да бъде получено изключителното заключване на iptables, за да предотвратите едновременна промяна на правилата на iptables.</string>
@@ -239,34 +238,32 @@
     <string name="notification_connecting">Свързване…</string>
     <string name="notification_internet_blocked_message">Интернетът е блокиран поради превключвателя Kill. Стартирайте Tor, DNSCrypt или I2P, за да разрешите връзката. Или деактивирайте превключвателя Kill в Общи настройки.</string>
     <string name="tvSettings_text">Моля изчакай…</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS proxy</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">Насочвайте заявки за конкретни домейни към специален набор от сървъри.</string>
     <string name="pref_dnscrypt_import_forwarding_rules">Правила за препращане на импортиране</string>
     <string name="pref_dnscrypt_cloaking_rules_categ">Правила за прикриване</string>
-    <string name="pref_dnscrypt_cloaking_rules_summ">Прикриването връща предварително зададен адрес за конкретно име.
-\n Освен че действа като HOSTS файл, той може също да върне IP адрес с различно име. Той също така ще направи изравняване на CNAME..</string>
+    <string name="pref_dnscrypt_cloaking_rules_summ">Прикриването връща предварително зададен адрес за конкретно име. Освен че действа като HOSTS файл, той може също да върне IP адрес с различно име. Той също така ще направи изравняване на CNAME.</string>
     <string name="pref_dnscrypt_import_cloaking_rules">Импортиране на правила за прикриване</string>
     <string name="pref_dnscrypt_import_cloaking_rules_summ">Импортирайте файл с правила за прикриване. Можете да изберете няколко файла, дублиращите се редове ще бъдат премахнати.</string>
-    <string name="pref_dnscrypt_query_log_categ">Регистриране на заявки.</string>
+    <string name="pref_dnscrypt_query_log_categ">Регистриране на заявки</string>
     <string name="pref_dnscrypt_query_log_summ">Регистрирайте клиентските заявки във файл.</string>
     <string name="pref_dnscrypt_query_log">Активирайте регистрирането на заявки</string>
     <string name="pref_dnscrypt_nx_log">Активиране на подозрително регистриране</string>
-    <string name="pref_dnscrypt_nx_log_summ">Регистрирайте заявки за несъществуващи зони.
-\n Тези заявки могат да разкрият наличието на зловреден софтуер, повредени/остарели приложения и устройства, сигнализиращи за присъствието си на трети страни.</string>
+    <string name="pref_dnscrypt_nx_log_summ">Регистрирайте заявки за несъществуващи зони. Тези заявки могат да разкрият наличието на зловреден софтуер, повредени/остарели приложения и устройства, сигнализиращи за присъствието си на трети страни.</string>
     <string name="open_nx_log">Отворете подозрителен дневник</string>
     <string name="pref_fast_fake_sni">Измислица SNI</string>
-    <string name="pref_dnscrypt_blacklist_categ">Блокиране въз основа на шаблон (черен списък).</string>
+    <string name="pref_dnscrypt_blacklist_categ">Блокиране въз основа на модел (черен списък)</string>
     <string name="pref_dnscrypt_blacklist">Черен списък</string>
     <string name="pref_dnscrypt_blacklist_summ">Черният списък е съставен от един модел на ред.</string>
     <string name="pref_dnscrypt_import_blacklist">Черен списък за импортиране</string>
     <string name="pref_dnscrypt_import_blacklist_summ">Импортирайте списък с домейни или файл с хостове. Можете да изберете няколко файла, дублиращите се редове ще бъдат премахнати.</string>
     <string name="pref_dnscrypt_erase_blacklist">Изтриване на черния списък</string>
     <string name="pref_dnscrypt_ipblacklist">IP черен списък</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">Базирано на шаблон IP блокиране (IP черен списък).</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Базирано на шаблон IP блокиране (IP черен списък)</string>
     <string name="pref_dnscrypt_ipblacklist_summ">Черният списък на IP се състои от един модел на ред.</string>
     <string name="pref_dnscrypt_erase_ipblacklist">Изтриване на черния списък с IP</string>
     <string name="pref_dnscrypt_import_ipblacklist">Черен списък за импортиране на IP</string>
     <string name="pref_dnscrypt_import_ipblacklist_summ">Черен списък за импортиране на IP. Можете да изберете няколко файла, дублиращите се редове ще бъдат премахнати.</string>
-    <string name="pref_dnscrypt_whitelist_categ">Бели списъци въз основа на шаблони (заобикаляне на черните списъци).</string>
+    <string name="pref_dnscrypt_whitelist_categ">Бели списъци въз основа на шаблони (заобикаляне на черните списъци)</string>
     <string name="pref_dnscrypt_whitelist">Бял списък</string>
 </resources>

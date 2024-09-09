@@ -1,0 +1,4 @@
+**InviZible Pro beta 2.2.8**
+* Improved app update process.
+* Updated Polish, German, Spanish, Indonesian and Chinese translations.
+* Fixes and optimizations.

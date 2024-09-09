@@ -27,7 +27,6 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
-import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -67,6 +66,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
+import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 public class BootCompleteManager {
@@ -84,6 +84,7 @@ public class BootCompleteManager {
     private final Lazy<PathVars> pathVars;
     private final Lazy<ApManager> apManager;
     private final Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
+    private final Lazy<UpdateIPsManager> updateIPsManager;
     private Context context;
     private String appDataDir;
 
@@ -95,7 +96,8 @@ public class BootCompleteManager {
             Lazy<Handler> handler,
             Lazy<PathVars> pathVars,
             Lazy<ApManager> apManager,
-            Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster
+            Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster,
+            Lazy<UpdateIPsManager> updateIPsManager
     ) {
         this.defaultSharedPreferences = defaultSharedPreferences;
         this.preferenceRepository = preferenceRepository;
@@ -103,6 +105,7 @@ public class BootCompleteManager {
         this.pathVars = pathVars;
         this.apManager = apManager;
         this.modulesStatusBroadcaster = modulesStatusBroadcaster;
+        this.updateIPsManager = updateIPsManager;
     }
 
     private ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -221,20 +224,20 @@ public class BootCompleteManager {
             startStopRestartModules(true, true, false);
         } else if (autoStartDNSCrypt && !autoStartITPD) {
             startStopRestartModules(true, false, false);
-            stopRefreshTorUnlockIPs(context);
+            updateIPsManager.get().stopRefreshTorUnlockIPs();
         } else if (!autoStartDNSCrypt && autoStartTor && !autoStartITPD) {
             startStopRestartModules(false, true, false);
         } else if (!autoStartDNSCrypt && !autoStartTor && autoStartITPD) {
             startStopRestartModules(false, false, true);
-            stopRefreshTorUnlockIPs(context);
+            updateIPsManager.get().stopRefreshTorUnlockIPs();
         } else if (!autoStartDNSCrypt && autoStartTor) {
             startStopRestartModules(false, true, true);
         } else if (autoStartDNSCrypt) {
             startStopRestartModules(true, false, true);
-            stopRefreshTorUnlockIPs(context);
+            updateIPsManager.get().stopRefreshTorUnlockIPs();
         } else {
             startStopRestartModules(false, false, false);
-            stopRefreshTorUnlockIPs(context);
+            updateIPsManager.get().stopRefreshTorUnlockIPs();
         }
 
         if ((autoStartDNSCrypt || autoStartTor || autoStartITPD) && (mode == VPN_MODE || fixTTL)) {

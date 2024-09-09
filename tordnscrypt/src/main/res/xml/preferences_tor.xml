@@ -141,6 +141,12 @@
         android:title="@string/pref_tor_isolation_categ">
 
         <SwitchPreference
+            android:id="@+id/pref_tor_isolate_uid"
+            android:defaultValue="false"
+            android:key="pref_tor_isolate_uid"
+            android:summary="@string/pref_tor_isolate_uid_summ"
+            android:title="@string/pref_tor_isolate_uid" />
+        <SwitchPreference
             android:id="@+id/pref_tor_isolate_dest_address"
             android:defaultValue="false"
             android:key="pref_tor_isolate_dest_address"

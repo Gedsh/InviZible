@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.settings.tor_ips;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,8 +64,14 @@ public class DialogEditDomainIp extends DialogDomainIp {
         setTitle(R.string.pref_tor_unlock_edit);
 
         LayoutInflater inflater = fragment.getLayoutInflater();
-        final View inputView = inflater.inflate(R.layout.edit_text_for_dialog,
-                (ViewGroup) fragment.getView(), false);
+        final View inputView;
+        try {
+            inputView = inflater.inflate(R.layout.edit_text_for_dialog,
+                    (ViewGroup) fragment.getView(), false);
+        } catch (Exception e) {
+            loge("DialogEditDomainIp create", e);
+            throw e;
+        }
 
         final EditText input = inputView.findViewById(R.id.etForDialog);
 

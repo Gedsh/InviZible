@@ -20,16 +20,27 @@
 package pan.alexander.tordnscrypt.utils.web
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import kotlinx.coroutines.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER
+import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
+import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDefaultAuth
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection.HTTP_OK
@@ -46,6 +57,8 @@ import javax.net.ssl.SSLSession
 class HttpsConnectionManager @Inject constructor(
     private val context: Context,
     private val pathVars: PathVars,
+    @Named(DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences,
     @Named(CoroutinesModule.DISPATCHER_IO)
     private val dispatcherIo: CoroutineDispatcher
 ) {
@@ -204,9 +217,22 @@ class HttpsConnectionManager @Inject constructor(
 
     fun getHttpsUrlConnection(url: String): HttpsURLConnection {
         val modulesStatus = ModulesStatus.getInstance()
+        val proxyAddress =
+            defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS) ?: LOOPBACK_ADDRESS
+        val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
+            if (it?.matches(Regex(NUMBER_REGEX)) == true && it.toLong() <= MAX_PORT_NUMBER) {
+                it.toInt()
+            } else {
+                DEFAULT_PROXY_PORT.toInt()
+            }
+        }
+        val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
+                && proxyAddress.isNotBlank()
+                && proxyPort != 0
+
         val proxy = if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady) {
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
-                logi("Using http proxy for url connection")
+                logi("Using tor http proxy for url connection")
                 Proxy(
                     Proxy.Type.HTTP,
                     InetSocketAddress(
@@ -214,7 +240,7 @@ class HttpsConnectionManager @Inject constructor(
                     )
                 )
             } else {
-                logi("Using socks proxy for url connection")
+                logi("Using tor socks proxy for url connection")
                 Proxy(
                     Proxy.Type.SOCKS,
                     InetSocketAddress(
@@ -222,6 +248,17 @@ class HttpsConnectionManager @Inject constructor(
                     )
                 )
             }
+        } else if (useProxy) {
+            logi("Using socks proxy for url connection")
+            val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
+            val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
+            setDefaultAuth(proxyUser, proxyPass)
+            Proxy(
+                Proxy.Type.SOCKS,
+                InetSocketAddress(
+                    proxyAddress, proxyPort
+                )
+            )
         } else {
             logi("Using direct url connection")
             null

@@ -242,12 +242,14 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                     defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)
                         ?: LOOPBACK_ADDRESS
                 val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
-                    if (it?.matches(Regex(NUMBER_REGEX)) == true) {
+                    if (it?.matches(Regex(NUMBER_REGEX)) == true && it.toLong() <= MAX_PORT_NUMBER) {
                         it.toInt()
                     } else {
                         DEFAULT_PROXY_PORT.toInt()
                     }
                 }
+                val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
+                val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
                 val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
                         && proxyAddress.isNotBlank()
                         && proxyPort != 0
@@ -260,7 +262,9 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                     checkerRepository.checkInternetAvailableOverHttp(
                         site,
                         proxyAddress,
-                        proxyPort
+                        proxyPort,
+                        proxyUser,
+                        proxyPass
                     )
                 } else {
                     val dnsForConnectivityCheck = getNetworkDns()
@@ -281,7 +285,9 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                         dnsForConnectivityCheck,
                         PLAINTEXT_DNS_PORT,
                         "",
-                        0
+                        0,
+                        "",
+                        ""
                     )
                 }
 

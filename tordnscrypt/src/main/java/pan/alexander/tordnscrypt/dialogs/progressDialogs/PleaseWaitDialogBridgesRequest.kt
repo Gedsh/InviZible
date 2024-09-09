@@ -27,20 +27,27 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class PleaseWaitDialogBridgesRequest @Inject constructor(
-    private val viewModelFactory: ViewModelProvider.Factory
-) : ExtendedDialogFragment() {
+class PleaseWaitDialogBridgesRequest : ExtendedDialogFragment() {
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
     private val preferencesTorBridgesViewModel: PreferencesTorBridgesViewModel by viewModels(
         { requireParentFragment() },
         { viewModelFactory }
     )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun assignBuilder(): AlertDialog.Builder =
         AlertDialog.Builder(requireActivity()).apply {

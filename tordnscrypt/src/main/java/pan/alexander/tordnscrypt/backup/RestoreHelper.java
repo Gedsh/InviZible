@@ -28,6 +28,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,6 +46,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import dalvik.system.ZipPathValidator;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
@@ -191,6 +193,10 @@ class RestoreHelper extends Installer {
 
         try (FileInputStream fileInputStream = new FileInputStream(pathBackup + "/InvizibleBackup.zip");
              ZipInputStream zipInputStream = new ZipInputStream(fileInputStream)) {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ZipPathValidator.clearCallback();
+            }
 
             ZipEntry zipEntry = zipInputStream.getNextEntry();
 

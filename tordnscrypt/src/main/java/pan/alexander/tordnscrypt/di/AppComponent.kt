@@ -33,6 +33,7 @@ import pan.alexander.tordnscrypt.di.arp.ArpSubcomponent
 import pan.alexander.tordnscrypt.di.modulesservice.ModulesServiceSubcomponent
 import pan.alexander.tordnscrypt.di.tiles.TilesSubcomponent
 import pan.alexander.tordnscrypt.dialogs.*
+import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest
 
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
@@ -128,6 +129,11 @@ interface AppComponent {
     fun inject(dialogFragment: RequestIgnoreDataRestrictionDialog)
     fun inject(dialogFragment: SendCrashReport)
     fun inject(dialogFragment: AddDNSCryptServerDialogFragment)
+    fun inject(dialogFragment: AskRestoreDefaultsDialog)
+    fun inject(dialogFragment: PleaseWaitDialogBridgesRequest)
+    fun inject(dialogFragment: BridgesCaptchaDialogFragment)
+    fun inject(dialogFragment: BridgesReadyDialogFragment)
+    fun inject(dialogFragment: SelectBridgesTransportDialogFragment)
     fun inject(usageStatistic: UsageStatistic)
     fun inject(modulesKiller: ModulesKiller)
     fun inject(contextUIDUpdater: ContextUIDUpdater)

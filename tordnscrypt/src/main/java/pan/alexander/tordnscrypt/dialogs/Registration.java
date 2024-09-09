@@ -46,7 +46,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class Registration {
     private final Activity activity;
-    public static boolean wrongRegistrationCode = true;
+    public static volatile boolean wrongRegistrationCode = true;
     private final Lazy<PreferenceRepository> preferenceRepository;
 
     public Registration(Activity activity) {
@@ -88,6 +88,7 @@ public class Registration {
 
     }
 
+    @SuppressLint("InflateParams")
     public void showEnterCodeDialog() {
 
         if (activity == null || !(activity instanceof MainActivity) || activity.isFinishing()) {
@@ -95,7 +96,13 @@ public class Registration {
         }
 
         LayoutInflater inflater = activity.getLayoutInflater();
-        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        View inputView;
+        try {
+            inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        } catch (Exception e) {
+            loge("Registration showEnterCodeDialog", e);
+            throw e;
+        }
         final EditText editText = inputView.findViewById(R.id.etForDialog);
         editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         editText.setOnFocusChangeListener((v, hasFocus) -> {

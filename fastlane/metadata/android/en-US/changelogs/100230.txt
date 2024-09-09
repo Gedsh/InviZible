@@ -1,0 +1,5 @@
+**InviZible Pro beta 2.3.0**
+* Updated Tor bridges: Conjure, Lyrebird, SnowFlake.
+* Updated French and Portuguese (Brazil) translations.
+* Added Arabic and Bulgarian translations.
+* Fixes and optimizations.

@@ -536,11 +536,11 @@ class ConnectionRecordsConverter @Inject constructor(
         allThroughTor = isRouteAllThroughTor()
         appsThroughTor.apply {
             clear()
-            addAll(preferenceRepository.getStringSetPreference(UNLOCK_APPS).map { it.toInt() })
+            addAll(preferenceRepository.getStringSetPreference(UNLOCK_APPS).map { it.toLong().toInt() })
         }
         appsBypassTor.apply {
             clear()
-            addAll(preferenceRepository.getStringSetPreference(CLEARNET_APPS).map { it.toInt() })
+            addAll(preferenceRepository.getStringSetPreference(CLEARNET_APPS).map { it.toLong().toInt() })
         }
     }
 

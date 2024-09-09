@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.settings.tor_ips;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
@@ -42,7 +44,7 @@ import java.util.Set;
 
 import pan.alexander.tordnscrypt.R;
 
-public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.DomainIpViewHolder> {
+class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.DomainIpViewHolder> {
     private final AsyncListDiffer<DomainIpEntity> diff = new AsyncListDiffer<>(
             this, new DomainIpDiffUtilItemCallback()
     );
@@ -63,7 +65,13 @@ public class DomainIpAdapter extends RecyclerView.Adapter<DomainIpAdapter.Domain
     @NonNull
     @Override
     public DomainIpViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = unlockTorIpsFragment.getLayoutInflater().inflate(R.layout.item_tor_ips, parent, false);
+        View view;
+        try {
+            view = unlockTorIpsFragment.getLayoutInflater().inflate(R.layout.item_tor_ips, parent, false);
+        } catch (Exception e) {
+            loge("DomainIpAdapter onCreateViewHolder", e);
+            throw e;
+        }
         return new DomainIpViewHolder(view);
     }
 

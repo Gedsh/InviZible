@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -64,6 +65,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import dagger.Lazy;
+import dalvik.system.ZipPathValidator;
 import kotlinx.coroutines.Job;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
@@ -191,14 +193,6 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
     @Inject
     public ViewModelProvider.Factory viewModelFactory;
-    @Inject
-    public Lazy<SelectBridgesTransportDialogFragment> selectBridgesTransportDialogFragment;
-    @Inject
-    public Lazy<PleaseWaitDialogBridgesRequest> pleaseWaitDialogBridgesRequest;
-    @Inject
-    public Lazy<BridgesCaptchaDialogFragment> bridgesCaptchaDialogFragment;
-    @Inject
-    public Lazy<BridgesReadyDialogFragment> bridgesReadyDialogFragment;
 
     public PreferencesTorBridges() {
     }
@@ -233,7 +227,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         activity.setTitle(R.string.pref_fast_use_tor_bridges);
 
-        View view = inflater.inflate(R.layout.fragment_preferences_tor_bridges, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_preferences_tor_bridges, container, false);
+        } catch (Exception e) {
+            loge("PreferencesTorBridges onCreateView", e);
+            throw e;
+        }
 
         rbNoBridges = view.findViewById(R.id.rbNoBridges);
 
@@ -594,7 +594,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         PleaseWaitDialogBridgesRequest dialog =
                 (PleaseWaitDialogBridgesRequest) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            pleaseWaitDialogBridgesRequest.get().show(getChildFragmentManager(), tag);
+            dialog = new PleaseWaitDialogBridgesRequest();
+            dialog.show(getChildFragmentManager(), tag);
         }
     }
 
@@ -603,7 +604,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         SelectBridgesTransportDialogFragment dialog =
                 (SelectBridgesTransportDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            selectBridgesTransportDialogFragment.get().show(getChildFragmentManager(), tag);
+            dialog = new SelectBridgesTransportDialogFragment();
+            dialog.show(getChildFragmentManager(), tag);
         }
     }
 
@@ -612,7 +614,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         BridgesCaptchaDialogFragment dialog =
                 (BridgesCaptchaDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            dialog = bridgesCaptchaDialogFragment.get();
+            dialog = new BridgesCaptchaDialogFragment();
             dialog.setTransport(transport);
             dialog.setIpv6(ipv6);
             dialog.setCaptcha(captcha);
@@ -626,7 +628,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         BridgesReadyDialogFragment dialog =
                 (BridgesReadyDialogFragment) getChildFragmentManager().findFragmentByTag(tag);
         if (dialog == null || !dialog.isAdded()) {
-            dialog = bridgesReadyDialogFragment.get();
+            dialog = new BridgesReadyDialogFragment();
             dialog.setBridges(bridges);
             dialog.show(getChildFragmentManager(), tag);
         }
@@ -728,7 +730,13 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        @SuppressLint("InflateParams") final View inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        View inputView;
+        try {
+            inputView = inflater.inflate(R.layout.edit_text_for_dialog, null, false);
+        } catch (Exception e) {
+            loge("PreferencesTorBridges addBridges", e);
+            throw e;
+        }
         final EditText input = inputView.findViewById(R.id.etForDialog);
         input.setSingleLine(false);
         builder.setView(inputView);
@@ -1202,12 +1210,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             try (ZipInputStream zipInputStream = new ZipInputStream(context.getAssets().open("tor.mp3"))) {
 
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    ZipPathValidator.clearCallback();
+                }
+
                 ZipEntry zipEntry = zipInputStream.getNextEntry();
 
                 while (zipEntry != null) {
 
                     String fileName = zipEntry.getName();
-                    if (fileName.contains("bridges_default.lst") && zipEntry.getSize() != installedBridgesSize) {
+                    if (fileName.endsWith("bridges_default.lst") && zipEntry.getSize() != installedBridgesSize) {
                         if (isAdded() && handlerLazy != null) {
                             handlerLazy.get().post(() -> {
                                 AlertDialog dialog = UpdateDefaultBridgesDialog.DIALOG.getDialog(getActivity(), useDefaultBridges);

@@ -79,7 +79,13 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_itpd_run, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_itpd_run, container, false);
+        } catch (Exception e) {
+            loge("ITPDRunFragment onCreateView", e);
+            throw e;
+        }
 
         btnITPDStart = view.findViewById(R.id.btnITPDStart);
 

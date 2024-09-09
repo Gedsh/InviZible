@@ -32,6 +32,7 @@ int tor_socks5_port = 0;
 char tor_socks5_username[127 + 1];
 char tor_socks5_password[127 + 1];
 int tor_dns_port = 0;
+bool tor_isolate_uid = false;
 
 char proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
 int proxy_socks5_port = 0;
@@ -220,6 +221,7 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(JNIE
                                                                             jint port,
                                                                             jstring username_,
                                                                             jstring password_,
+                                                                            jboolean isolate_uid,
                                                                             jint dnsport) {
     const char *addr = (*env)->GetStringUTFChars(env, addr_, 0);
     const char *username = (*env)->GetStringUTFChars(env, username_, 0);
@@ -233,6 +235,7 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(JNIE
     strcpy(tor_socks5_username, username);
     strcpy(tor_socks5_password, password);
     tor_dns_port = dnsport;
+    tor_isolate_uid = isolate_uid;
 
     log_android(ANDROID_LOG_WARN, "TOR SOCKS5 %s:%d user=%s",
                 tor_socks5_addr, tor_socks5_port, tor_socks5_username);

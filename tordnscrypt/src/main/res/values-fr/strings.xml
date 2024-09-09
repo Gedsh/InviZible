@@ -58,9 +58,9 @@
     <string name="backupFolder">"Choisissez le dossier de sauvegarde:"</string>
     <string name="title_activity_settings">"Paramètres"</string>
     <string name="pref_fast_categ_autostart">"Démarrage automatique"</string>
-    <string name="pref_fast_dns_autostart">Lancer DNSCrypt au démarrage</string>
-    <string name="pref_fast_tor_autostart">Lancer Tor au démarrage</string>
-    <string name="pref_fast_itpd_autostart">Lancer I2P au démarrage</string>
+    <string name="pref_fast_dns_autostart">Lancer DNSCrypt automatiquement</string>
+    <string name="pref_fast_tor_autostart">Lancer Tor automatiquement</string>
+    <string name="pref_fast_itpd_autostart">Lancer I2P automatiquement</string>
     <string name="pref_fast_autostart_delay">"Délai"</string>
     <string name="pref_fast_autostart_delay_summ">"Utiliser un délai (en secondes) uniquement si le démarrage automatique ne fonctionne pas correctement"</string>
     <string name="pref_fast_dns_server">"Serveurs DNSCrypt"</string>
@@ -74,11 +74,11 @@
     <string name="pref_fast_unlock_apps_with_tor">Sélectionner les applications</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">"Liste des applications à utiliser avec Tor"</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"Liste des applications à utiliser avec InviZible"</string>
-    <string name="pref_fast_exclude_from_tor">Exclure des sites Web</string>
-    <string name="pref_fast_exclude_from_tor_summ">Liste des sites Web à ouvrir directement</string>
-    <string name="pref_fast_exclude_apps_from_tor">Exclure des Applications</string>
+    <string name="pref_fast_exclude_from_tor">Exclure des sites web</string>
+    <string name="pref_fast_exclude_from_tor_summ">Liste des sites web à ouvrir directement. Cette option ne fonctionne pas pour les sites utilisant des CDN</string>
+    <string name="pref_fast_exclude_apps_from_tor">Exclure des applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Liste d'applications à ouvrir directement"</string>
-    <string name="pref_fast_site_refresh_interval">Intervalle de Rafraîchissement</string>
+    <string name="pref_fast_site_refresh_interval">Intervalle de rafraîchissement</string>
     <string name="pref_fast_site_refresh_interval_summ">Durée en heures entre chaque actualisation des adresses IP des sites Web. Pour Android 5.1 et supérieur. Mettez 0 pour empêcher le rafraîchissement.</string>
     <string name="pref_fast_use_tor_bridges">"Passerelles"</string>
     <string name="pref_fast_use_tor_bridges_summ">"Utilisez-le si vous ne pouvez pas vous connecter au réseau Tor"</string>
@@ -97,14 +97,14 @@
     <string name="pref_fast_use_tor_bridges_add_dialog">"Sauvegarder"</string>
     <string name="pref_fast_use_tor_bridges_close_dialog">"Fermer"</string>
     <string name="pref_fast_unlock_host_wrong">"nom d'hôte erroné!"</string>
-    <string name="pref_fast_theme">Sélectionner un Thème</string>
-    <string name="pref_fast_language">Sélectionner une Langue</string>
+    <string name="pref_fast_theme">Sélectionner un thème</string>
+    <string name="pref_fast_language">Sélectionner une langue</string>
     <string name="pref_fast_block_http">"Bloquer l'http"</string>
     <string name="pref_fast_block_http_summ">"Refuser la connexion au port http 80"</string>
     <string name="pref_fast_categ_update">"Mise à Jour"</string>
-    <string name="pref_fast_auto_update">Mise à Jours automatique</string>
+    <string name="pref_fast_auto_update">Mises à jour automatiques</string>
     <string name="pref_fast_auto_update_summ">Vérifier quotidiennement les versions d\'InviZible Pro et de ses modules</string>
-    <string name="pref_fast_chek_update">Vérifier les Mise à Jours</string>
+    <string name="pref_fast_chek_update">Vérifier les mises à jour</string>
     <string name="pref_fast_chek_update_summ">"Vérifier immédiatement si de nouvelles versions sont disponibles"</string>
     <string name="pref_fast_through_tor_update">"Mettre à jour uniquement via Tor"</string>
     <string name="pref_fast_through_tor_update_summ">"Vérifier les mises à jour uniquement via Tor et lorsque Tor est en fonctionnement"</string>
@@ -114,7 +114,7 @@
     <string name="pref_common_categ_other">"Autre"</string>
     <string name="pref_common_block_http">"Bloquer l'http sur les POINTS D'ACCÈS"</string>
     <string name="pref_common_block_http_summ">"Refuser la connexion au port http 80 sur les POINTS D'ACCÈS"</string>
-    <string name="pref_common_notification_summ">Protéger l\'application en fonctionnant sans Privilèges pour éviter que l\'application ne soit tuée par Android</string>
+    <string name="pref_common_notification_summ">Protéger l\'application pour éviter que l\'application ne soit mise en veille par le système android</string>
     <string name="pref_common_refresh_rules">"Rafraîchir les règles"</string>
     <string name="pref_common_refresh_rules_summ">"Mettre à jour les règles à chaque changement de connectivité"</string>
     <string name="pref_common_show_notification">"Afficher la notification"</string>
@@ -516,4 +516,10 @@
     <string name="pref_dnscrypt_dns64_summ">"Activate this option if you are on an ipv6-only network and ipv4 sites become unavailable. Don't enable it otherwise, or you won't be able to connect to anything at all."</string>
     <string name="pref_dnscrypt_dns64_prefix_summ">"Set of used static IPv6 prefixes."</string>
     <string name="pref_fast_use_tor_bridges_ipv6">"IPv6 bridges"</string>
+    <string name="anonymize_relays">Relais anonymes</string>
+    <string name="pref_fast_exclude_app_from_tor">Exclure de Tor</string>
+    <string name="pref_fast_direct_udp_connection">Exclure UDP de Tor</string>
+    <string name="pref_fast_bypass_app">Exclure entièrement</string>
+    <string name="press_to_edit">Presser pour éditer.</string>
+    <string name="long_press_to_edit">Presser longtemps pour éditer.</string>
 </resources>

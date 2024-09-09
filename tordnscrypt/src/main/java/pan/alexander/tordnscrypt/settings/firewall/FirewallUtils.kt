@@ -21,7 +21,11 @@ package pan.alexander.tordnscrypt.settings.firewall
 
 fun Set<String>.toIntSet(): Set<Int> {
     val intSet = mutableSetOf<Int>()
-    forEach { intSet.add(it.toInt()) }
+    forEach {
+        if (it.toLong() <= Int.MAX_VALUE) {
+            intSet.add(it.toInt())
+        }
+    }
     return intSet
 }
 

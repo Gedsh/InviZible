@@ -23,6 +23,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.os.Build;
 import android.util.Base64;
 
 import java.io.BufferedWriter;
@@ -47,6 +48,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import dagger.Lazy;
+import dalvik.system.ZipPathValidator;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -68,6 +70,10 @@ public class Verifier {
     }
 
     private String getApkSignatureZip() throws Exception {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ZipPathValidator.clearCallback();
+        }
 
         File apkFile = new File(context.getApplicationInfo().sourceDir);
 

@@ -191,7 +191,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     native int jni_get_mtu();
 
     @Keep
-    private native void jni_socks5_for_tor(String addr, int port, String username, String password, int dnsPort);
+    private native void jni_socks5_for_tor(String addr, int port, String username, String password, boolean isolateUid, int dnsPort);
 
     @Keep
     private native void jni_socks5_for_proxy(String addr, int port, String username, String password);
@@ -216,18 +216,19 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                     vpnPreferences.getTorSOCKSPort(),
                     "",
                     "",
+                    vpnPreferences.getTorIsolateUid(),
                     vpnPreferences.getTorDNSPort()
             );
         } else {
-            jni_socks5_for_tor("", 0, "", "", 0);
+            jni_socks5_for_tor("", 0, "", "", false, 0);
         }
 
         if (vpnPreferences.getUseProxy()) {
             jni_socks5_for_proxy(
                     vpnPreferences.getProxyAddress(),
                     vpnPreferences.getProxyPort(),
-                    "",
-                    ""
+                    vpnPreferences.getProxyUser(),
+                    vpnPreferences.getProxyPass()
             );
         } else {
             jni_socks5_for_proxy("", 0, "", "");

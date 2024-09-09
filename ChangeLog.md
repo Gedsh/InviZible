@@ -1150,3 +1150,37 @@
 
 **InviZible Pro beta 2.2.6**
 * Fixed a crash when using Tor bridges containing only IP and port.
+
+**InviZible Pro beta 2.2.7**
+* Updated Tor to version 4.8.12.
+* Implemented Tor isolate by app option.
+* Added donation addresses to the about screen.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.2.8**
+* Improved app update process.
+* Updated Polish, German, Spanish, Indonesian and Chinese translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.2.9**
+* Updated Purple I2P to version 2.53.0.
+* Updated Tor geoip files.
+* Preparing the app for use on Android 15.
+* Fixed detecting internet access permission in apps with a shared id.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.3.0**
+* Updated Tor bridges: Conjure, Lyrebird, SnowFlake.
+* Updated French and Portuguese (Brazil) translations.
+* Added Arabic and Bulgarian translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.3.1**
+* Updated Purple I2P to version 2.53.1.
+* Updated German, Bulgarian, Chinese, Polish, Arabic, Persian and Portuguese (Brazil) translations.
+* Fixed using socks5 proxy with authentication.
+* A lot of minor fixes and optimisations.
+
+**InviZible Pro beta 2.3.2**
+* Updated Tor.
+* Fixes and optimizations.

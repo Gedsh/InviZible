@@ -23,10 +23,12 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import javax.inject.Inject;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragmentViewModel;
 import pan.alexander.tordnscrypt.utils.enums.ModuleName;
@@ -37,16 +39,13 @@ public class AskRestoreDefaultsDialog extends ExtendedDialogFragment {
 
     private ModuleName module;
 
-    ViewModelProvider.Factory viewModelFactory;
-    TopFragmentViewModel topFragmentViewModel;
-
     @Inject
-    public AskRestoreDefaultsDialog(ViewModelProvider.Factory viewModelFactory) {
-        this.viewModelFactory = viewModelFactory;
-    }
+    public ViewModelProvider.Factory viewModelFactory;
+    private TopFragmentViewModel topFragmentViewModel;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
         topFragmentViewModel = new ViewModelProvider(
@@ -84,5 +83,13 @@ public class AskRestoreDefaultsDialog extends ExtendedDialogFragment {
                 .setNegativeButton(R.string.cancel, (dialog, id) -> dismiss());
 
         return builder;
+    }
+
+    public static DialogFragment getInstance(ModuleName name) {
+        DialogFragment dialog = new AskRestoreDefaultsDialog();
+        Bundle args = new Bundle();
+        args.putSerializable(MODULE_NAME_ARG, name);
+        dialog.setArguments(args);
+        return dialog;
     }
 }

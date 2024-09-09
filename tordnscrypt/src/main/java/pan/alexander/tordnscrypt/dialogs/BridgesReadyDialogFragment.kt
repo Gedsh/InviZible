@@ -20,21 +20,24 @@
 package pan.alexander.tordnscrypt.dialogs
 
 import android.content.DialogInterface
+import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class BridgesReadyDialogFragment @Inject constructor(
-    private val viewModelFactory: ViewModelProvider.Factory
-) : ExtendedDialogFragment() {
+class BridgesReadyDialogFragment : ExtendedDialogFragment() {
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
     private val preferencesTorBridgesViewModel: PreferencesTorBridgesViewModel by viewModels(
         { requireParentFragment() },
@@ -42,6 +45,11 @@ class BridgesReadyDialogFragment @Inject constructor(
     )
 
     var bridges = ""
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun assignBuilder(): AlertDialog.Builder =
         AlertDialog.Builder(requireActivity()).apply {

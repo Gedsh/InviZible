@@ -478,6 +478,8 @@
     <string name="pref_tor_clean_module_folder">Clear cache</string>
     <string name="pref_tor_track_host_exits" translatable="false">Track Host Exits</string>
     <string name="pref_tor_track_host_exits_summ">Tor will track recent connections to hosts and attempt to reuse the same exit node for each. This option may help avoid endless captcha.</string>
+    <string name="pref_tor_isolate_uid" translatable="false">Isolate By UID</string>
+    <string name="pref_tor_isolate_uid_summ">Don’t share circuits with streams from different apps.</string>
     <string name="pref_tor_isolate_dest_address" translatable="false">Isolate Dest Addr</string>
     <string name="pref_tor_isolate_dest_address_summ">Don’t share circuits with streams targeting a different destination address.</string>
     <string name="pref_tor_isolate_dest_port" translatable="false">Isolate Dest Port</string>
@@ -600,7 +602,7 @@
     <string name="about_own_copyright" translatable="false">Copyright (C) 2019-2024 Garmatin Oleksandr\n All Rights Reserved\n Web Site:</string>
     <string name="privacy_policy_title" translatable="false">Privacy Policy</string>
     <string name="privacy_policy" translatable="false">\tInviZible Pro does not collect or share any personal or sensitive user data.
-        InviZible Pro forwards internet traffic to Tor, DNSCrypt and I2P networks.
+        InviZible Pro forwards internet traffic directly to Tor, DNSCrypt and I2P networks.
         For detailed information, please visit the official pages of the mentioned projects.</string>
     <string name="about_own_licence" translatable="false">
         \tInviZible Pro is free software: you can redistribute it and/or modify

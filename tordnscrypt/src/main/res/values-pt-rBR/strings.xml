@@ -19,7 +19,7 @@
     <string name="tvDNSInstalling">"Instalando DNSCrypt"</string>
     <string name="tvDNSNotInstalled">"O DNSCrypt não está instalado"</string>
     <string name="tvDNSStarting">"Iniciando DNSCrypt"</string>
-    <string name="tvDNSRunning">"DNSCypt Rodando"</string>
+    <string name="tvDNSRunning">DNSCrypt Rodando</string>
     <string name="tvDNSStopping">"DNSCrypt Parando"</string>
     <string name="tvTorStop">"Tor Parado"</string>
     <string name="tvTorInstalled">"Tor Instalado"</string>
@@ -150,7 +150,6 @@
     <string name="pref_common_use_iptables">Selecionar Iptables</string>
     <string name="pref_common_log_root_commands">"Salvar comandos Root para o log"</string>
     <string name="notification_text">"DNSCrypt, Tor 2 o I2P são protegidos. Não esconda."</string>
-    <string name="notification_exec_root_commands">Executando comandos de Root…</string>
     <string name="tvSettings_text">"Por favor, aguarde…"</string>
     <string name="toastSettings_saved">"Configurações salvas"</string>
     <string name="pref_dnscrypt_global_settings_categ">"CONFIGURAÇÕES GLOBAIS"</string>
@@ -350,7 +349,6 @@
     <string name="vpn_mode_error">Erro no modo VPN!</string>
     <string name="vpn_tor_tether_summ">"Configure o uso do servidor proxy nas configurações do dispositivo conectado. Valores padrão: IP:10.1.10.1 Porta:8118"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP com TOR"</string>
-    <string name="reset_settings_title">"Atenção"</string>
     <string name="main_fragment_protect_dns">Defenda-se com DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Acesso à rede I2P com Purple I2P</string>
     <string name="add_custom_server_title">"Adicionar servidor customizado"</string>
@@ -526,4 +524,41 @@
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
     </string>
+    <string name="pref_dnscrypt_http3_summ">"Habilitar suporte para HTTP/3 (DoH3, HTTP sobre QUIC). Note que, assim como o DNSCrypt, mas diferente das outras versões do HTTP, isso usa UDP e (geralmente) a porta 443 em vez de TCP."</string>
+    <string name="pref_itpd_com_ssu2_summ">"Habilitar o protocolo de transporte SSU2 (usar UDP)."</string>
+    <string name="ask_later">"Perguntar depois"</string>
+    <string name="notifications_permission_rationale_message">"As notificações são essenciais para exibir informações importantes sobre a operação do aplicativo, controle do aplicativo e ataques detectados. Gostaria de permitir notificações para o InviZible?"</string>
+    <string name="pref_dnscrypt_dns64_summ">"Ative esta opção se você estiver em uma rede somente IPv6 e sites IPv4 ficarem indisponíveis. Caso contrário, não a ative, ou você não conseguirá se conectar a nada."</string>
+    <string name="pref_dnscrypt_dns64_prefix_summ">"Conjunto de prefixos IPv6 estáticos utilizados."</string>
+    <string name="pref_fast_use_tor_bridges_ipv6">"Bridges IPv6"</string>
+    <string name="reset_settings_title">"Atenção"</string>
+    <string name="ask_reset_settings_text">"O InviZible Pro não pode iniciar %1$s! Por favor, tente redefinir as configurações de %2$s. Se isso não ajudar, reinicie seu dispositivo."</string>
+    <string name="ask_reset_settings_btn">"Reiniciar"</string>
+    <string name="pref_fast_fake_sni">"Spoof SNI"</string>
+    <string name="pref_tor_track_host_exits_summ">"O Tor rastreará conexões recentes com hosts e tentará reutilizar o mesmo nó de saída para cada uma delas. Esta opção pode ajudar a evitar captchas intermináveis."</string>
+    <string name="notification_exclude_bat_optimisation_title">"Parar de otimizar o uso da bateria?"</string>
+    <string name="notification_exclude_data_restriction_title">"Desativar o economizador de dados da rede?"</string>
+    <string name="notification_exclude_data_restriction_message">"Por favor, permita o uso de dados em segundo plano e o uso de dados enquanto o economizador de dados está ativado. Isso é essencial para uma experiência online suave."</string>
+    <string name="notification_exec_root_commands">"Executando comandos de Root…"</string>
+    <string name="pref_tor_dormant_client_timeout_summ">"O Tor entra em um estado de inatividade se não detectar atividade do cliente por um tempo especificado. Deve ser de pelo menos 10 minutos."</string>
+    <string name="press_to_add">"Pressione para adicionar."</string>
+    <string name="long_press_to_add">"Pressione e segure para adicionar."</string>
+    <string name="press_to_edit">"Pressione para editar."</string>
+    <string name="long_press_to_edit">"Pressione e segure para editar."</string>
+    <string name="anonymize_relays">"Anonimizar retransmissores."</string>
+    <string name="anonymize_relays_not_used">"Os retransmissores anonimizados não estão em uso."</string>
+    <string name="pref_fast_exclude_app_from_tor">"Excluir do Tor"</string>
+    <string name="pref_fast_route_to_tor">"Roteirizar para o Tor"</string>
+    <string name="pref_fast_direct_udp_connection">"Excluir UDP do Tor"</string>
+    <string name="pref_fast_bypass_app">"Excluir completamente"</string>
+    <string name="pull_to_refresh">"\u2193 Puxe para atualizar \u2193"</string>
+    <string name="firewall_critical_uid">"Bloquear este aplicativo do sistema pode resultar em uma conexão de internet instável!"</string>
+    <string name="pref_dnscrypt_odoh_servers_summ">Use servidores que implementam o protocolo Oblivious DNS-over-HTTPS.</string>
+    <string name="pref_tor_nodes_categ">"Nós"</string>
+    <string name="pref_tor_isolation_categ">"Configurações de isolamento"</string>
+    <string name="pref_itpd_use_HTTP_outproxy_summ">"Gateway para a internet convencional"</string>
+    <string name="pref_itpd_HTTP_outproxy_address_summ">"URL do proxy HTTP upstream (como http://false.i2p)"</string>
+    <string name="pref_itpd_use_Socks_outproxy_summ">"Endereço do outproxy (IP ou local). As solicitações fora do I2P serão enviadas para lá."</string>
+    <string name="pref_tor_fascist_firewall_lock_summ">"Para ativar esta opção, você deve desativar as pontes ou usar pontes com as portas 80 e 443 apenas."</string>
+    <string name="pref_tor_isolate_uid_summ">"Não compartilhe circuitos com conexões de diferentes aplicativos."</string>
 </resources>

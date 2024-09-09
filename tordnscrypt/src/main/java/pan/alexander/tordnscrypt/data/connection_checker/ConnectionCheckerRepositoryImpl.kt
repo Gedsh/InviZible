@@ -29,12 +29,16 @@ class ConnectionCheckerRepositoryImpl @Inject constructor(
     override fun checkInternetAvailableOverHttp(
         site: String,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
     ): Boolean {
         return connectionCheckerDataSource.checkInternetAvailableOverHttp(
             site,
             proxyAddress,
-            proxyPort
+            proxyPort,
+            proxyUser,
+            proxyPass
         )
     }
 
@@ -42,13 +46,17 @@ class ConnectionCheckerRepositoryImpl @Inject constructor(
         ip: String,
         port: Int,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String,
     ): Boolean {
         return connectionCheckerDataSource.checkInternetAvailableOverSocks(
             ip,
             port,
             proxyAddress,
-            proxyPort
+            proxyPort,
+            proxyUser,
+            proxyPass
         )
     }
 

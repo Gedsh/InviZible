@@ -15,7 +15,7 @@
         android:orientation="vertical"
         android:visibility="gone">
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/Topfrg"
             android:name="pan.alexander.tordnscrypt.TopFragment"
             android:layout_width="match_parent"

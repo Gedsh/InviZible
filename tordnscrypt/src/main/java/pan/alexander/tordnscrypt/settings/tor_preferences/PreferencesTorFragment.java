@@ -62,8 +62,10 @@ import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_WITH_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
+import static pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK_IPV6;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SNOWFLAKE_RENDEZVOUS;
@@ -73,6 +75,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ENT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL_LOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_HTTP_TUNNEL_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_ISOLATE_UID;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_SOCKS_PORT;
@@ -137,6 +140,16 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         }
 
         ArrayList<Preference> preferences = new ArrayList<>();
+
+        if (ModulesStatus.getInstance().getMode() == VPN_MODE) {
+            preferences.add(findPreference(TOR_ISOLATE_UID));
+        } else {
+            PreferenceCategory isolationCategory = findPreference("tor_isolation_settings");
+            Preference isolateUid = findPreference(TOR_ISOLATE_UID);
+            if (isolationCategory != null && isolateUid != null) {
+                isolationCategory.removePreference(isolateUid);
+            }
+        }
 
         preferences.add(findPreference("VirtualAddrNetwork"));
         preferences.add(findPreference("HardwareAccel"));
@@ -331,6 +344,21 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
             return false;
         }
 
+        try {
+            return tryPreferenceChange(context, preference, newValue);
+        } catch (Exception e) {
+            loge("PreferencesTorFragment onPreferenceChange", e);
+            Toast.makeText(context, R.string.wrong, Toast.LENGTH_LONG).show();
+        }
+
+        return false;
+    }
+
+    private boolean tryPreferenceChange(
+            @NonNull Context context,
+            @NonNull Preference preference,
+            Object newValue
+    ) {
         SharedPreferences sharedPreferences = defaultPreferences.get();
         boolean isolateDestAddress = sharedPreferences.getBoolean("pref_tor_isolate_dest_address", false);
         boolean isolateDestPort = sharedPreferences.getBoolean("pref_tor_isolate_dest_port", false);
@@ -441,7 +469,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                     && ModulesStatus.getInstance().isUseModulesWithRoot();
-            if (!dnsPort.matches("\\d+")
+            if (!dnsPort.matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                     || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                 return false;
             }
@@ -513,7 +541,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                     && ModulesStatus.getInstance().isUseModulesWithRoot();
-            if (!proxyPort.matches("\\d+")
+            if (!proxyPort.matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                     || (!useModulesWithRoot && Integer.parseInt(proxyPort) < 1024)) {
                 return false;
             }
@@ -545,6 +573,9 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 }
             }
 
+            return true;
+        } else if (Objects.equals(preference.getKey(), TOR_ISOLATE_UID)) {
+            isChanged = true;
             return true;
         } else if (Objects.equals(preference.getKey(), "pref_tor_isolate_dest_address")) {
 
@@ -662,7 +693,8 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
                 && !newValue.toString().matches("\\d+")) {
             return false;
         } else if ((Objects.equals(preference.getKey(), DORMANT_CLIENT_TIMEOUT))) {
-            if (newValue.toString().matches("\\d+")) {
+            if (newValue.toString().matches("\\d+")
+                    && Long.parseLong(newValue.toString()) <= Integer.MAX_VALUE) {
                 int value = Integer.parseInt(newValue.toString());
                 if (value < 10) {
                     return false;

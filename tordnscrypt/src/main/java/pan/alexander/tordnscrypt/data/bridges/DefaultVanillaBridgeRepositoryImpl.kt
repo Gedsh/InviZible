@@ -27,6 +27,8 @@ import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeRepository
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.connectionchecker.SocketInternetChecker
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY_ADDRESS
 import java.lang.IllegalArgumentException
@@ -84,7 +86,9 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
                             ip,
                             port,
                             proxyAddress[0].trim(),
-                            proxyAddress[1].trim().toInt()
+                            proxyAddress[1].trim().toInt(),
+                            getTorProxyUser(),
+                            getTorProxyPass()
                         )
                     }
                 } else {
@@ -109,17 +113,23 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
     private fun getTorOutboundProxyAddress() =
         defaultPreferences.getString(TOR_OUTBOUND_PROXY_ADDRESS, "")
 
+    private fun getTorProxyUser() = defaultPreferences.getString(PROXY_USER, "") ?: ""
+
+    private fun getTorProxyPass() = defaultPreferences.getString(PROXY_PASS, "") ?: ""
+
     private fun checkTimeoutDirectly(ip: String, port: String) =
         socketInternetChecker.get()
-            .checkConnectionPing(ip, port.toInt(), "", 0)
+            .checkConnectionPing(ip, port.toInt(), "", 0, "", "")
 
     private fun checkTimeoutViaProxy(
         ip: String,
         port: String,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String,
     ) = socketInternetChecker.get()
-        .checkConnectionPing(ip, port.toInt(), proxyAddress, proxyPort)
+        .checkConnectionPing(ip, port.toInt(), proxyAddress, proxyPort, proxyUser, proxyPass)
 
     override suspend fun getRelaysWithFingerprintAndAddress(
         allowIPv6Relays: Boolean
@@ -229,6 +239,8 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
                 port = port,
                 proxyAddress = proxyAddress[0].trim(),
                 proxyPort = proxyAddress[1].trim().toInt(),
+                proxyUser = getTorProxyUser(),
+                proxyPass = getTorProxyPass(),
                 connectTimeout = connectTimeout,
                 reachableTimeout = reachableTimeout
             )
@@ -238,6 +250,8 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
                 port = port,
                 proxyAddress = "",
                 proxyPort = 0,
+                "",
+                "",
                 connectTimeout = connectTimeout,
                 reachableTimeout = reachableTimeout
             )
@@ -248,6 +262,8 @@ class DefaultVanillaBridgeRepositoryImpl @Inject constructor(
             port = port,
             proxyAddress = "",
             proxyPort = 0,
+            "",
+            "",
             connectTimeout = connectTimeout,
             reachableTimeout = reachableTimeout
         )

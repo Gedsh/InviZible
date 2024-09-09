@@ -63,14 +63,13 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
+import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.views.SwitchPlusClickPreference;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.dialogs.FakeSniInputDialogFragmentKt.FAKE_SNI_ARG;
 import static pan.alexander.tordnscrypt.utils.Utils.verifyHostsSet;
-import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
-import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.stopRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_START_DELAY;
@@ -111,6 +110,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     public Lazy<PathVars> pathVars;
     @Inject
     public Lazy<FakeSniInputDialogFragment> fakeSniInputDialogFragment;
+    @Inject
+    public Lazy<UpdateIPsManager> updateIPsManager;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -371,9 +372,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         switch (preference.getKey()) {
             case "swAutostartTor":
                 if (Boolean.parseBoolean(newValue.toString())) {
-                    startRefreshTorUnlockIPs(context);
+                    updateIPsManager.get().startRefreshTorUnlockIPs();
                 } else if (!ModulesAux.isTorSavedStateRunning()) {
-                    stopRefreshTorUnlockIPs(context);
+                    updateIPsManager.get().stopRefreshTorUnlockIPs();
                 }
                 return true;
             case ALL_THROUGH_TOR:

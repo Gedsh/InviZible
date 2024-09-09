@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.utils.connectionchecker
 
 import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
+import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDefaultAuth
 import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -36,11 +37,17 @@ class HttpInternetChecker @Inject constructor() {
 
     private var connection: HttpURLConnection? = null
 
-    fun checkConnectionAvailability(site: String, proxyAddress: String, proxyPort: Int): Boolean {
+    fun checkConnectionAvailability(
+        site: String,
+        proxyAddress: String,
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
+    ): Boolean {
         var result = false
 
         try {
-            result = checkConnection(site, proxyAddress, proxyPort)
+            result = checkConnection(site, proxyAddress, proxyPort, proxyUser, proxyPass)
             return result
         } finally {
             if (result) {
@@ -49,7 +56,13 @@ class HttpInternetChecker @Inject constructor() {
         }
     }
 
-    private fun checkConnection(site: String, proxyAddress: String, proxyPort: Int): Boolean {
+    private fun checkConnection(
+        site: String,
+        proxyAddress: String,
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
+    ): Boolean {
         val url = URL(site)
 
         connection = if (proxyAddress.isNotBlank() && proxyPort != 0) {
@@ -60,6 +73,8 @@ class HttpInternetChecker @Inject constructor() {
                     proxyPort
                 )
             )
+
+            setDefaultAuth(proxyUser, proxyPass)
 
             url.openConnection(proxy) as HttpsURLConnection
         } else {

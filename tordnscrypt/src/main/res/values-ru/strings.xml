@@ -221,6 +221,7 @@
     <string name="pref_tor_unlock_edit">Редактировать сайт или IP</string>
     <string name="pref_tor_unlock_disabled">Выключено</string>
     <string name="pref_tor_snowflake_stun">STUN сервера для мостов SnowFlake</string>
+    <string name="pref_tor_isolate_uid_summ">Не использовать ту же цепочку для разных приложений.</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
     <string name="pref_tor_dormant_client_timeout_summ">Tor переходит в режим ожидания, если не видит активности клиента в течении заданного времени. Должно быть не менее 10 минут.</string>

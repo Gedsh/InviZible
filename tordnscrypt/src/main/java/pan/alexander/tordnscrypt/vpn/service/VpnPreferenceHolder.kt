@@ -21,7 +21,6 @@ package pan.alexander.tordnscrypt.vpn.service
 
 import android.content.SharedPreferences
 import android.os.Build
-import android.util.Log
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -29,6 +28,7 @@ import pan.alexander.tordnscrypt.proxy.CLEARNET_APPS_FOR_PROXY
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
+import pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER
 import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
@@ -70,19 +70,23 @@ class VpnPreferenceHolder @Inject constructor(
 
     val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS) ?: LOOPBACK_ADDRESS
     val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
-        if (it?.matches(Regex(NUMBER_REGEX)) == true) {
+        if (it?.matches(Regex(NUMBER_REGEX)) == true && it.toLong() <= MAX_PORT_NUMBER) {
             it.toInt()
         } else {
             DEFAULT_PROXY_PORT.toInt()
         }
     }
+    val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
+    val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
 
     val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
             && proxyAddress.isNotBlank()
             && proxyPort != 0
 
+    val torIsolateUid = defaultPreferences.getBoolean(TOR_ISOLATE_UID, false)
+
     val torDNSPort = pathVars.torDNSPort.let {
-        if (it.matches(Regex(NUMBER_REGEX))) {
+        if (it.matches(Regex(NUMBER_REGEX)) && it.toLong() <= MAX_PORT_NUMBER) {
             it.toInt()
         } else {
             5400
@@ -90,7 +94,7 @@ class VpnPreferenceHolder @Inject constructor(
     }
 
     val torSOCKSPort = pathVars.torSOCKSPort.let {
-        if (it.matches(Regex(NUMBER_REGEX))) {
+        if (it.matches(Regex(NUMBER_REGEX)) && it.toLong() <= MAX_PORT_NUMBER) {
             it.toInt()
         } else {
             9050

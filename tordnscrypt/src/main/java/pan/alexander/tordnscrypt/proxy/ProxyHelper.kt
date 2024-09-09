@@ -29,6 +29,7 @@ import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
+import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDefaultAuth
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
@@ -38,10 +39,17 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_I2PD
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_TOR
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
-import java.net.*
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.Socket
+import java.net.SocketAddress
 import javax.inject.Inject
 import javax.inject.Named
+
 
 private const val CHECK_CONNECTION_TIMEOUT_MSEC = 500
 
@@ -136,7 +144,12 @@ class ProxyHelper @Inject constructor(
         }
     }
 
-    fun checkProxyConnectivity(proxyHost: String, proxyPort: Int): String {
+    fun checkProxyConnectivity(
+        proxyHost: String,
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
+    ): String {
         val start = System.currentTimeMillis()
 
         try {
@@ -150,6 +163,7 @@ class ProxyHelper @Inject constructor(
             val proxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(proxyHost, proxyPort))
 
             Socket(proxy).use {
+                setDefaultAuth(proxyUser, proxyPass)
                 it.connect(sockaddr, CHECK_CONNECTION_TIMEOUT_MSEC)
                 it.soTimeout = 1
 
@@ -192,21 +206,43 @@ class ProxyHelper @Inject constructor(
             return
         }
 
+        val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
+        val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
+        val auth = proxyUser.isNotEmpty() || proxyPass.isNotEmpty()
+
         var clientOnlyLinePosition = -1
         var socksProxyLineExist = false
+        var socksProxyLinePosition = -1
+        var socksProxyUserNameLineExist = false
+        var socksProxyPasswordLineExist = false
         val torConf = FileManager.readTextFileSynchronous(context, torConfPath)
         val torConfToSave = mutableListOf<String>()
         for (i in torConf.indices) {
             var line = torConf[i]
-            if (line.contains("Socks5Proxy")) {
+            if (line.contains("Socks5Proxy ")) {
                 line = when {
                     socksProxyLineExist -> ""
                     enable -> "Socks5Proxy $address"
                     else -> "#Socks5Proxy $address"
                 }
                 socksProxyLineExist = true
-            } else if (line.contains("ClientOnly")) {
+                socksProxyLinePosition = i
+            } else if (line.contains("ClientOnly ")) {
                 clientOnlyLinePosition = i
+            } else if (line.contains("Socks5ProxyUsername ")) {
+                line = when {
+                    socksProxyUserNameLineExist -> ""
+                    enable && auth -> "Socks5ProxyUsername $proxyUser"
+                    else -> "#Socks5ProxyUsername $proxyUser"
+                }
+                socksProxyUserNameLineExist = true
+            } else if (line.contains("Socks5ProxyPassword ")) {
+                line = when {
+                    socksProxyPasswordLineExist -> ""
+                    enable && auth -> "Socks5ProxyPassword $proxyPass"
+                    else -> "#Socks5ProxyPassword $proxyPass"
+                }
+                socksProxyPasswordLineExist = true
             }
 
             if (line.isNotEmpty()) {
@@ -215,6 +251,13 @@ class ProxyHelper @Inject constructor(
         }
         if (enable && !socksProxyLineExist && clientOnlyLinePosition >= 0) {
             torConfToSave.add(clientOnlyLinePosition, "Socks5Proxy $address")
+            socksProxyLinePosition = clientOnlyLinePosition
+        }
+        if (enable && auth && !socksProxyUserNameLineExist && socksProxyLinePosition >= 0) {
+            torConfToSave.add(socksProxyLinePosition + 1, "Socks5ProxyUsername $proxyUser")
+        }
+        if (enable && auth && !socksProxyPasswordLineExist && socksProxyLinePosition >= 0) {
+            torConfToSave.add(socksProxyLinePosition + 2, "Socks5ProxyPassword $proxyPass")
         }
         FileManager.writeTextFileSynchronous(context, torConfPath, torConfToSave)
     }

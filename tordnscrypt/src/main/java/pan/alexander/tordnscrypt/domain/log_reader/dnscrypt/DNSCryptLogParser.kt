@@ -42,7 +42,7 @@ class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) 
         if (!startedSuccessfully) {
             for (i in lines.size - 1 downTo 0) {
                 val line = lines[i]
-                if (line.contains(" OK ")) {
+                if (line.contains(" OK ") || line.contains("lowest initial latency")) {
                     startedSuccessfully = true
                     startedWithError = false
                     errorCountDownCounter = COUNT_DOWN_TIMER
@@ -53,7 +53,7 @@ class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) 
                     break
                 } else if (line.contains("connect: connection refused")
                     || (line.contains("ERROR") && !line.contains("Unable to resolve"))
-                    || line.contains("[CRITICAL]")
+                    || (line.contains("[CRITICAL]") && !line.contains("Certificate hash"))
                     || line.contains("[FATAL]")
                 ) {
                     if (errorCountDownCounter <= 0) {

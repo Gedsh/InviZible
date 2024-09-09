@@ -47,6 +47,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -298,7 +299,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     || Objects.equals(preference.getKey(), "SAM interface port")) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
-                if (!newValue.toString().matches("\\d+")
+                if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }

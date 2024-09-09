@@ -20,8 +20,8 @@
 package pan.alexander.tordnscrypt.utils.portchecker;
 
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER;
 import static pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX;
-import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import java.net.ConnectException;
 import java.net.DatagramSocket;
@@ -39,7 +39,7 @@ public class PortChecker {
 
     public boolean isPortBusy(String port) {
         int portInt;
-        if (port.matches(NUMBER_REGEX)) {
+        if (port.matches(NUMBER_REGEX) && port.length() <= 5 && Long.parseLong(port) <= MAX_PORT_NUMBER) {
             portInt = Integer.parseInt(port);
         } else {
             return true;
@@ -56,7 +56,7 @@ public class PortChecker {
 
     public String getFreePort(String port) {
 
-        if (!port.matches(NUMBER_REGEX)) {
+        if (!port.matches(NUMBER_REGEX) || port.length() > 5 || Long.parseLong(port) > MAX_PORT_NUMBER) {
             return port;
         }
 

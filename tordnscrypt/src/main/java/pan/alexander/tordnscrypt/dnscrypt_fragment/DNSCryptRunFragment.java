@@ -79,7 +79,13 @@ public class DNSCryptRunFragment extends Fragment implements DNSCryptFragmentVie
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_dnscrypt_run, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_dnscrypt_run, container, false);
+        } catch (Exception e) {
+            loge("DNSCryptRunFragment onCreateView", e);
+            throw e;
+        }
 
         btnDNSCryptStart = view.findViewById(R.id.btnDNSCryptStart);
 

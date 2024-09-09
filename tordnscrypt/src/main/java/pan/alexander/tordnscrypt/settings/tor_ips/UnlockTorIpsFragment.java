@@ -179,7 +179,13 @@ public class UnlockTorIpsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_preferences_tor_ips, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_preferences_tor_ips, container, false);
+        } catch (Exception e) {
+            loge("UnlockTorIpsFragment onCreateView", e);
+            throw e;
+        }
 
         initViews(view);
 

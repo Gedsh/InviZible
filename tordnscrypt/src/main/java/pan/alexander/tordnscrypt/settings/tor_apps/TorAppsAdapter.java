@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings.tor_apps;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 
@@ -60,11 +61,17 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
     @NonNull
     @Override
     public TorAppsAdapter.TorAppsViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int i) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(
-                R.layout.item_tor_app,
-                parent,
-                false
-        );
+        View view;
+        try {
+            view = LayoutInflater.from(parent.getContext()).inflate(
+                    R.layout.item_tor_app,
+                    parent,
+                    false
+            );
+        } catch (Exception e) {
+            loge("TorAppsAdapter onCreateViewHolder", e);
+            throw e;
+        }
         return new TorAppsViewHolder(view);
     }
 

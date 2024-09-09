@@ -376,7 +376,12 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+        try {
+            getMenuInflater().inflate(R.menu.main, menu);
+        } catch (Exception e) {
+            loge("MainActivity onCreateOptionsMenu", e);
+            throw e;
+        }
         return true;
     }
 
@@ -643,8 +648,13 @@ public class MainActivity extends LangAppCompatActivity
                 rotateAnimation.setDuration(1000);
                 rotateAnimation.setRepeatCount(3);
 
-                LayoutInflater inflater = getLayoutInflater();
-                animatingImage = (ImageView) inflater.inflate(R.layout.icon_image_new_tor_identity, null);
+                try {
+                    LayoutInflater inflater = getLayoutInflater();
+                    animatingImage = (ImageView) inflater.inflate(R.layout.icon_image_new_tor_identity, null);
+                } catch (Exception e) {
+                    loge("MainActivity newTorIdentity", e);
+                    throw e;
+                }
             }
 
             if (rotateAnimation != null && animatingImage != null) {
@@ -708,7 +718,7 @@ public class MainActivity extends LangAppCompatActivity
 
         checkHotspotStateTimer = new Timer();
 
-        checkHotspotStateTimer.scheduleAtFixedRate(new TimerTask() {
+        checkHotspotStateTimer.schedule(new TimerTask() {
             int loop = 0;
 
             @Override

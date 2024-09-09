@@ -127,8 +127,12 @@ class FirewallAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FirewallViewHolder {
-        val itemView =
+        val itemView = try {
             LayoutInflater.from(parent.context).inflate(R.layout.item_firewall, parent, false)
+        } catch (e: Exception) {
+            loge("FirewallAdapter onCreateViewHolder", e)
+            throw e
+        }
 
         val modulesStatus = ModulesStatus.getInstance()
         if (modulesStatus.mode == OperationMode.VPN_MODE) {

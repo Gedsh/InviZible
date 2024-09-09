@@ -54,20 +54,20 @@ class NflogParser @Inject constructor(
         if (matcher.find()) {
             val time = (matcher.group(1) ?: "0").toLong()
                 .takeIf { it > 0 } ?: System.currentTimeMillis()
-            var uid = (matcher.group(2) ?: "-1").toInt()
+            var uid = (matcher.group(2) ?: "-1").toLong()
             val protocol = matcher.group(3) ?: ""
             val saddr = matcher.group(4) ?: ""
             val sport = (matcher.group(5) ?: "0").toInt()
             val daddr = matcher.group(6) ?: ""
             val dport = (matcher.group(7) ?: "0").toInt()
 
-            if (uid >= 0) {
-                nflogSessionsHolder.addSession(uid, protocol, saddr, sport, daddr, dport)
+            if (uid >= 0 && uid <= Int.MAX_VALUE) {
+                nflogSessionsHolder.addSession(uid.toInt(), protocol, saddr, sport, daddr, dport)
             } else {
-                uid = nflogSessionsHolder.getUid(protocol, saddr, sport, daddr, dport)
+                uid = nflogSessionsHolder.getUid(protocol, saddr, sport, daddr, dport).toLong()
             }
 
-            if (uid == ownUid) {
+            if (uid == ownUid.toLong() || uid > Int.MAX_VALUE) {
                 return null
             }
 
@@ -81,7 +81,7 @@ class NflogParser @Inject constructor(
 
             return PacketRecord(
                 time = time,
-                uid = uid,
+                uid = uid.toInt(),
                 saddr = saddr,
                 daddr = daddr,
                 protocol = protocolInt,

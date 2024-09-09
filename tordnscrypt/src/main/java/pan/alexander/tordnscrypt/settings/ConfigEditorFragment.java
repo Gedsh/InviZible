@@ -45,6 +45,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
 
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import javax.inject.Inject;
 
@@ -101,7 +102,13 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_config_editor, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_config_editor, container, false);
+        } catch (Exception e) {
+            loge("ConfigEditorFragment onCreateView", e);
+            throw e;
+        }
 
         etConfigEditor = view.findViewById(R.id.etConfigEditor);
         etConfigEditor.setBackgroundColor(Color.TRANSPARENT);

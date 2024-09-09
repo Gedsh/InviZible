@@ -159,10 +159,16 @@ public class UnlockTorAppsFragment extends Fragment
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view = inflater.inflate(R.layout.fragment_preferences_tor_apps, container, false);
+        View view;
+        try {
+            view = inflater.inflate(R.layout.fragment_preferences_tor_apps, container, false);
+        } catch (Exception e) {
+            loge("UnlockTorAppsFragment onCreateView", e);
+            throw e;
+        }
 
         ChipGroup chipGroupTorApps = view.findViewById(R.id.chipGroupTorApps);
         chipGroupTorApps.setOnCheckedChangeListener(this);

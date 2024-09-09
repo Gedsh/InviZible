@@ -20,6 +20,8 @@
 package pan.alexander.tordnscrypt.patches
 
 import android.content.Context
+import android.os.Build
+import dalvik.system.ZipPathValidator
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
@@ -205,18 +207,22 @@ class ConfigUtil(private val context: Context) {
         val installedGeoipSize = geoip.length()
         val installedGeoip6Size = geoip6.length()
         try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ZipPathValidator.clearCallback()
+            }
+
             ZipInputStream(context.assets.open("tor.mp3")).use { zipInputStream ->
                 var zipEntry = zipInputStream.nextEntry
                 while (zipEntry != null) {
                     val fileName = zipEntry.name
-                    if (fileName.contains("geoip6")) {
+                    if (fileName.endsWith("geoip6")) {
                         if (zipEntry.size != installedGeoip6Size) {
                             FileOutputStream(geoip6).use { outputStream ->
                                 copyData(zipInputStream, outputStream)
                                 logi("Tor geoip6 was updated!")
                             }
                         }
-                    } else if (fileName.contains("geoip")) {
+                    } else if (fileName.endsWith("geoip")) {
                         if (zipEntry.size != installedGeoipSize) {
                             FileOutputStream(geoip).use { outputStream ->
                                 copyData(zipInputStream, outputStream)

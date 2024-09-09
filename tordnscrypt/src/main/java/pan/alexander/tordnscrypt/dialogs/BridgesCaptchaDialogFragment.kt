@@ -23,6 +23,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Bitmap
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnFocusChangeListener
@@ -32,15 +33,18 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import pan.alexander.tordnscrypt.utils.Utils.hideKeyboard
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
-class BridgesCaptchaDialogFragment @Inject constructor(
-    private val viewModelFactory: ViewModelProvider.Factory
-) : ExtendedDialogFragment() {
+class BridgesCaptchaDialogFragment : ExtendedDialogFragment() {
+
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
 
     var transport = ""
     var ipv6 = false
@@ -54,6 +58,11 @@ class BridgesCaptchaDialogFragment @Inject constructor(
 
     private var okButtonPressed = false
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        App.instance.daggerComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
+
     @SuppressLint("InflateParams")
     override fun assignBuilder(): AlertDialog.Builder =
         AlertDialog.Builder(requireActivity()).apply {
@@ -61,7 +70,12 @@ class BridgesCaptchaDialogFragment @Inject constructor(
                 Context.LAYOUT_INFLATER_SERVICE
             ) as LayoutInflater
 
-            val view: View = layoutInflater.inflate(R.layout.tor_transport_code_image, null)
+            val view: View = try {
+                layoutInflater.inflate(R.layout.tor_transport_code_image, null)
+            } catch (e: Exception) {
+                loge("BridgesCaptchaDialogFragment assignBuilder", e)
+                throw e
+            }
 
             val imgCode = view.findViewById<ImageView>(R.id.imgCode)
             val etCode = view.findViewById<EditText>(R.id.etCode)

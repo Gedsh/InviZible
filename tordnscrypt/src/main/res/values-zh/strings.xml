@@ -247,7 +247,7 @@
     <string name="pref_itpd_com_ipv4_summ">"启用通过 IPv4 通信。"</string>
     <string name="pref_itpd_com_ipv6_summ">"启用通过 IPv6 通信。"</string>
     <string name="pref_itpd_com_notransit_summ">"路由器将不接受中转隧道，完全禁用中转流量。"</string>
-    <string name="pref_itpd_com_floodfill_summ">"路由器将洪泛。"</string>
+    <string name="pref_itpd_com_floodfill_summ">路由器将进行流量填充。</string>
     <string name="pref_itpd_com_bandwidth_summ">"带宽限制 (KBps)。"</string>
     <string name="pref_itpd_com_share_summ">"最大中转带宽限制比率。0–100。"</string>
     <string name="pref_itpd_com_ssu_summ">"启用 SSU 传输协议（使用 UDP）。"</string>
@@ -480,7 +480,7 @@
     <string name="tile_dialog_over_three_tiles_message">你在快捷设置中添加了超过3个磁贴。请只留下3个。添加超过3个磁贴会导致应用控制的问题。</string>
     <string name="pref_common_rogue_dhcp_detection">恶意 DHCP 检测</string>
     <string name="pref_common_rogue_dhcp_detection_summ">检测Wi-Fi网络中的中间人恶意DHCP攻击。</string>
-    <string name="pref_tor_snowflake_select_rendezvous">选择会合</string>
+    <string name="pref_tor_snowflake_select_rendezvous">选择会合点</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">在互联网提供商处隐藏代理的域名。代理用于建立连接。</string>
     <string name="pref_firewall_show_all_apps">显示所有应用</string>
     <string name="pref_firewall_show_all_apps_on_summ">无论应用程序是否可以连接到互联网，都会显示应用程序。</string>
@@ -545,4 +545,5 @@
     <string name="pref_tor_nodes_categ">节点</string>
     <string name="pref_tor_isolation_categ">隔离设置</string>
     <string name="pref_tor_fascist_firewall_lock_summ">要激活此选项，应禁用网桥或仅使用具有80和443端口的网桥。</string>
+    <string name="pref_tor_isolate_uid_summ">不要与来自不同应用程序的流共享链路。</string>
 </resources>

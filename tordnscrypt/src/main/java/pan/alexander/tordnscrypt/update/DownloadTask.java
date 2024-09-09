@@ -71,7 +71,9 @@ import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.TOP_FRAGMENT
 public class DownloadTask extends Thread {
     private static final int READ_TIMEOUT = 60;
     private static final int CONNECT_TIMEOUT = 60;
-    private static final int ATTEMPTS_TO_DOWNLOAD = 3;
+    private static final int ATTEMPTS_TO_DOWNLOAD = 5;
+    private static final int MAX_ATTEMPTS_TO_DOWNLOAD = 120;
+    private static final int TIME_TO_DOWNLOAD_MINUTES = 25;
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -109,7 +111,8 @@ public class DownloadTask extends Thread {
         String fileToDownload = intent.getStringExtra("file");
         String hash = intent.getStringExtra("hash");
         PreferenceRepository preferences = preferenceRepository.get();
-        int attempts = ATTEMPTS_TO_DOWNLOAD;
+        int attempts = 0;
+        long startTime = System.currentTimeMillis();
 
         try {
 
@@ -128,10 +131,14 @@ public class DownloadTask extends Thread {
                     outputFile = downloadFile(fileToDownload, urlToDownload);
                 } catch (IOException e) {
                     exception = e;
-                    logw("UpdateService failed to download file " + urlToDownload, e);
+                    logw("UpdateService failed to download file " + urlToDownload + ", attempt " + attempts, e);
                 }
-                attempts--;
-            } while (outputFile == null && attempts > 0 && !Thread.currentThread().isInterrupted());
+                attempts++;
+            } while (outputFile == null
+                    && (attempts < ATTEMPTS_TO_DOWNLOAD
+                    || System.currentTimeMillis() - startTime < TIME_TO_DOWNLOAD_MINUTES * 60000
+                    && attempts < MAX_ATTEMPTS_TO_DOWNLOAD)
+                    && !Thread.currentThread().isInterrupted());
 
             if (outputFile == null) {
                 throw exception;
@@ -211,7 +218,12 @@ public class DownloadTask extends Thread {
             con.setRequestProperty("Range", "bytes=" + range + "-");
         }
 
-        long fileLength = con.getContentLength();
+        long fileLength;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            fileLength = con.getContentLengthLong() + range;
+        } else {
+            fileLength = con.getContentLength() + range;
+        }
 
         try (InputStream input = new BufferedInputStream(con.getInputStream());
              OutputStream output = new FileOutputStream(path, true)) {

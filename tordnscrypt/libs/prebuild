@@ -4,27 +4,24 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 lyrebird_version=workaround/ntor-auth-mismatch
 dnscryptproxy_version=master
-snowflake_version=v2.9.2
+snowflake_version=feat/check-dns-ip
 libzmq_version=v4.3.5
 conjure_version=prod
 webtunnel_version=prod
-tor_openssl_version=openssl-3.3.0
+tor_openssl_version=openssl-3.3.1
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=prod
-i2pd_openssl_version=openssl-3.3.0
-miniupnpc_version=c2818392e12f42901ab5abf145f43d69825a38c9
-i2pd_version=2.52.0
+i2pd_openssl_version=openssl-3.3.1
+miniupnpc_version=miniupnpc_2_2_8
+i2pd_version=2.53.1
 
 git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
 
 git clone --single-branch --branch $dnscryptproxy_version https://github.com/Gedsh/dnscrypt-proxy
 
-git clone https://git.torproject.org/pluggable-transports/snowflake.git
-pushd snowflake/
-git checkout -f $snowflake_version -b $snowflake_version
-popd
+git clone --single-branch --branch $snowflake_version https://gitlab.torproject.org/Gedsh/snowflake.git
 
 git clone https://github.com/zeromq/libzmq
 pushd libzmq/

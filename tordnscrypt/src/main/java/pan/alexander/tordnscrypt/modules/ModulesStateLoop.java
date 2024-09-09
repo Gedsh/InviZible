@@ -51,10 +51,10 @@ import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.utils.jobscheduler.JobSchedulerManager.startRefreshTorUnlockIPs;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -108,6 +108,8 @@ public class ModulesStateLoop implements Runnable,
     public Lazy<ConnectivityCheckManager> connectivityCheckManager;
     @Inject
     public Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
+    @Inject
+    public Lazy<UpdateIPsManager> updateIPsManager;
 
     private boolean iptablesUpdateTemporaryBlocked;
 
@@ -615,7 +617,7 @@ public class ModulesStateLoop implements Runnable,
         }
 
         if (ready && !savedReady) {
-            startRefreshTorUnlockIPs(modulesService.getApplicationContext());
+            updateIPsManager.get().startRefreshTorUnlockIPs();
         }
     }
 

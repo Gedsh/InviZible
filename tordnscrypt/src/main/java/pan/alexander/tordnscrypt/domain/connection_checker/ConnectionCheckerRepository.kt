@@ -20,13 +20,21 @@
 package pan.alexander.tordnscrypt.domain.connection_checker
 
 interface ConnectionCheckerRepository {
-    fun checkInternetAvailableOverHttp(site: String, proxyAddress: String, proxyPort: Int): Boolean
+    fun checkInternetAvailableOverHttp(
+        site: String,
+        proxyAddress: String,
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String
+    ): Boolean
 
     fun checkInternetAvailableOverSocks(
         ip: String,
         port: Int,
         proxyAddress: String,
-        proxyPort: Int
+        proxyPort: Int,
+        proxyUser: String,
+        proxyPass: String,
     ): Boolean
 
     fun checkNetworkAvailable(): Boolean

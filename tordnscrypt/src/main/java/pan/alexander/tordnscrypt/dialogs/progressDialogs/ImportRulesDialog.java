@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.dialogs.progressDialogs;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.os.Bundle;
@@ -49,6 +51,7 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
         return new ImportRulesDialog();
     }
 
+    @SuppressLint("InflateParams")
     @Override
     public AlertDialog.Builder assignBuilder() {
 
@@ -59,8 +62,13 @@ public class ImportRulesDialog extends ExtendedDialogFragment implements ImportR
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.import_dnscrypt_rules_dialog_title);
 
-        @SuppressLint("InflateParams")
-        View view = getActivity().getLayoutInflater().inflate(R.layout.dialog_import_dnscrypt_rules, null, false);
+        View view;
+        try {
+            view = getActivity().getLayoutInflater().inflate(R.layout.dialog_import_dnscrypt_rules, null, false);
+        } catch (Exception e) {
+            loge("ImportRulesDialog assignBuilder", e);
+            throw e;
+        }
 
         if (view != null) {
             builder.setView(view);

@@ -27,6 +27,7 @@ public interface Constants {
     String LOOPBACK_ADDRESS_IPv6 = "::1";
     String META_ADDRESS = "0.0.0.0";
     String META_ADDRESS_IPv6 = "::";
+    int MAX_PORT_NUMBER = 65535;
     String STANDARD_WIFI_INTERFACE_NAME = "wlan0";
     String STANDARD_ETHERNET_INTERFACE_NAME = "eth0";
     String STANDARD_VPN_INTERFACE_NAME = "tun0";

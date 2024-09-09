@@ -21,7 +21,9 @@ package pan.alexander.tordnscrypt.dialogs
 
 import android.app.Activity
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AlertDialog
+import dalvik.system.ZipPathValidator
 import kotlinx.coroutines.Job
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
@@ -71,11 +73,15 @@ class UpdateDefaultBridgesDialog private constructor() {
                 val outputFile = File(pathVars.appDataDir + "/app_data/tor/bridges_default.lst")
                 val installedBridgesSize = outputFile.length()
                 try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        ZipPathValidator.clearCallback()
+                    }
+
                     ZipInputStream(activity.assets.open("tor.mp3")).use { zipInputStream ->
                         var zipEntry = zipInputStream.nextEntry
                         while (zipEntry != null) {
                             val fileName = zipEntry.name
-                            if (fileName.contains("bridges_default.lst") && zipEntry.size != installedBridgesSize) {
+                            if (fileName.endsWith("bridges_default.lst") && zipEntry.size != installedBridgesSize) {
                                 FileOutputStream(outputFile).use { outputStream ->
                                     copyData(zipInputStream, outputStream)
                                     logi("Tor default bridges were updated!")
