@@ -119,10 +119,14 @@ class RequestBridgesInteractor @Inject constructor(
 
             lockWakeLock()
 
-            val query = linkedMapOf<String, String>().apply {
-                put("captcha_challenge_field", secretCode)
-                put("captcha_response_field", captchaText)
-                put("submit", "submit")
+            val query = if (secretCode.isNotEmpty() && captchaText.isNotEmpty()) {
+                linkedMapOf<String, String>().apply {
+                    put("captcha_challenge_field", secretCode)
+                    put("captcha_response_field", captchaText)
+                    put("submit", "submit")
+                }
+            } else {
+                linkedMapOf()
             }
 
             val url = if (ipv6) {

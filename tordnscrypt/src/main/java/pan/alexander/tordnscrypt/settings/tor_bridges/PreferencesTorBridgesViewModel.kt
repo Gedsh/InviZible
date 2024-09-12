@@ -252,6 +252,8 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
             } catch (e: java.util.concurrent.CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
+            } catch (e: IllegalStateException) {
+                requestTorBridges(transport, ipv6Bridges, "", "")
             } catch (e: Exception) {
                 e.message?.let { showErrorMessage(it) }
                 loge("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)

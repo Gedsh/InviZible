@@ -93,6 +93,7 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
+import static pan.alexander.tordnscrypt.utils.Utils.unescapeHTML;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.webtunnel;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -384,7 +385,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             if (fascistFirewallShouldBeDisabled && line.startsWith("ReachableAddresses")) {
                 line = "#" + line;
             }
-            if ((line.contains("#")
+            if ((line.startsWith("#")
                     || (!line.contains("Bridge ")
                     && !line.contains("ClientTransportPlugin ")
                     && !line.contains("UseBridges ")))
@@ -744,7 +745,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         builder.setPositiveButton(getText(R.string.ok), (dialogInterface, i) -> {
             List<String> bridgesListNew = new ArrayList<>();
 
-            String inputLinesStr = input.getText().toString().trim();
+            String inputLinesStr = unescapeHTML(input.getText().toString().trim());
 
             String bridgeBase;
             if (isBridgeIPv6(inputLinesStr)) {
@@ -843,7 +844,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private void addRequestedBridges(String bridgesToAdd, List<String> savedCustomBridges) {
         List<String> bridgesListNew = new ArrayList<>();
-        String[] bridgesArrNew = bridgesToAdd.split("\n");
+        String[] bridgesArrNew = unescapeHTML(bridgesToAdd).split("\n");
 
         if (bridgesArrNew.length != 0) {
             for (String brgNew : bridgesArrNew) {

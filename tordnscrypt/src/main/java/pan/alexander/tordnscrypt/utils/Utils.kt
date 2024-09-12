@@ -32,6 +32,7 @@ import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Process
+import android.text.Html
 import android.util.Base64
 import android.util.TypedValue
 import android.view.Display
@@ -63,6 +64,7 @@ import java.io.PrintWriter
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
+import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
 
@@ -388,5 +390,22 @@ object Utils {
             }
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
+
+    @JvmStatic
+    fun unescapeHTML(line: String): String {
+        var result = line
+        val pattern = Pattern.compile("&#\\d+;")
+        val matcher = pattern.matcher(line)
+        if (matcher.find()) {
+            result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                matcher.replaceAll(
+                    Html.fromHtml(matcher.group(), Html.FROM_HTML_MODE_LEGACY).toString()
+                )
+            } else {
+                matcher.replaceAll(Html.fromHtml(matcher.group()).toString())
+            }
+        }
+        return result
+    }
 
 }
