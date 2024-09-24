@@ -160,7 +160,7 @@
     <string name="pref_dnscrypt_force_tcp_summ">Verwende TCP anstelle von UDP um zu DNSCrypt-Servern zu verbinden. Diese Option sollte aktiviert sein, falls du DNSCrypt in Kombination mit Tor verwendest.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS-Proxy</string>
     <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
-    <string name="pref_dnscrypt_proxy_summ">Route alle TCP-Verbindungen zu einem lokalen Tor-Knoten. Da Tor UDP nicht unterstützt, setze die Einstellung „Force TCP“ ebenfalls auf aktiv.</string>
+    <string name="pref_dnscrypt_proxy_summ">Route alle TCP-Verbindungen zu einem lokalen Tor Socks5-Proxy. Da Tor UDP nicht unterstützt, setze die Einstellung „Force TCP“ ebenfalls auf aktiv.</string>
     <string name="pref_dnscrypt_proxy">Proxy-Port</string>
     <string name="pref_dnscrypt_other_categ">Andere Einstellungen</string>
     <string name="pref_dnscrypt_fallback_resolver_summ">Bootstrap-Resolver. Dies ist ein normaler, unverschlüsselter DNS-Resolver, der nur für einmalige Anfragen benutzt wird, um die Liste von Eingangsresolvern zu beziehen, und dies nur, wenn die System-DNS-Konfiguration nicht funktioniert. Er wird nicht mehr benutzt, sobald sich Listen im Cache befinden.</string>
