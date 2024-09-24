@@ -83,7 +83,7 @@ class VpnPreferenceHolder @Inject constructor(
             && proxyAddress.isNotBlank()
             && proxyPort != 0
 
-    val torIsolateUid = defaultPreferences.getBoolean(TOR_ISOLATE_UID, false)
+    val torIsolateUid = defaultPreferences.getBoolean(TOR_ISOLATE_UID, true)
 
     val torDNSPort = pathVars.torDNSPort.let {
         if (it.matches(Regex(NUMBER_REGEX)) && it.toLong() <= MAX_PORT_NUMBER) {
