@@ -159,7 +159,7 @@
     <string name="pref_dnscrypt_force_tcp_categ">Benutze immer TCP zum Verbinden mit Upstream-Servern</string>
     <string name="pref_dnscrypt_force_tcp_summ">Verwende TCP anstelle von UDP um zu DNSCrypt-Servern zu verbinden. Diese Option sollte aktiviert sein, falls du DNSCrypt in Kombination mit Tor verwendest.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS-Proxy</string>
-    <string name="pref_dnscrypt_use_proxy">"Proxy aktivieren"</string>
+    <string name="pref_dnscrypt_use_proxy">Ausgehender Proxy</string>
     <string name="pref_dnscrypt_proxy_summ">Route alle TCP-Verbindungen zu einem lokalen Tor Socks5-Proxy. Da Tor UDP nicht unterstützt, setze die Einstellung „Force TCP“ ebenfalls auf aktiv.</string>
     <string name="pref_dnscrypt_proxy">Proxy-Port</string>
     <string name="pref_dnscrypt_other_categ">Andere Einstellungen</string>
@@ -172,7 +172,7 @@
     <string name="pref_dnscrypt_cloaking_rules_summ">Cloaking gibt für spezifische Namen eine festgelegte Adresse zurück. Zusätzlich zur Funktion als HOSTS-Datei kann Cloaking auch die IP-Adresse eines anderen Namens zurückgeben. CNAME-Flattening wird ebenso durchgeführt.</string>
     <string name="pref_dnscrypt_query_log_categ">Logging von Anfragen</string>
     <string name="pref_dnscrypt_query_log_summ">"Logge Client-Anfragen in eine Datei."</string>
-    <string name="pref_dnscrypt_query_log">"Aktiviere das Logging von Anfragen"</string>
+    <string name="pref_dnscrypt_query_log">Abfrage-Protokollierung</string>
     <string name="pref_dnscrypt_ignored_qtypes_summ">Folgende Anfragetypen nicht loggen, um die Informationsmenge zu reduzieren. Leerlassen, um alles zu loggen.</string>
     <string name="open_query_log">Öffne das Anfragen-Log</string>
     <string name="pref_dnscrypt_nx_log_categ">Logging von verdächtigen Anfragen</string>
