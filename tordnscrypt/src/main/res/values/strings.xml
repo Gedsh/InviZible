@@ -568,9 +568,8 @@
     <string name="helper_dnscrypt_stopped">Looks like DNSCrypt was killed by android system. Your internet connection was restored. Check device Settings!</string>
     <string name="helper_tor_stopped">Looks like Tor was killed by android system. Your internet connection was restored. Check device Settings!</string>
     <string name="helper_itpd_stopped">Looks like I2P was killed by android system. Check device Settings!</string>
-    <string name="helper_dnscrypt_no_internet">Looks like DNSCrypt can\'t connect to the internet. You can try to choose another DNSCrypt servers. Please find them in MENU -> Fast Settings -> Select DNSCrypt servers</string>
-    <string name="helper_tor_use_bridges">Looks like Tor can\'t connect to the internet. ISP may blocks Tor connections. You can try to use Tor Bridges. Please find them in MENU -> Fast Settings -> Bridges</string>
-
+    <string name="helper_dnscrypt_no_internet">Looks like DNSCrypt can\'t connect to the internet. You can try to choose another DNSCrypt servers. Please find them in MENU -&gt; Fast Settings -&gt; Select DNSCrypt servers</string>
+    <string name="helper_tor_use_bridges">Looks like Tor can\'t connect to the internet. ISP may blocks Tor connections. You can try to use Tor Bridges. Please find them in MENU -&gt; Fast Settings -&gt; Bridges</string>
     <string name="action_mode_child_lock">Child Lock</string>
     <string name="action_mode_dialog_message_lock">You can lock control of this application. Please enter password, or use previous.</string>
     <string name="action_mode_dialog_message_unlock">Please enter password.</string>
