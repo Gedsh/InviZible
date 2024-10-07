@@ -142,7 +142,7 @@
 
         <SwitchPreference
             android:id="@+id/pref_tor_isolate_uid"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="pref_tor_isolate_uid"
             android:summary="@string/pref_tor_isolate_uid_summ"
             android:title="@string/pref_tor_isolate_uid" />
