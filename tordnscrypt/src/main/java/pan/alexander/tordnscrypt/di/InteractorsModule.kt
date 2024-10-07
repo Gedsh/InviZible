@@ -25,6 +25,8 @@ import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInte
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractorImpl
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractorImpl
+import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesInteractor
+import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesInteractorImpl
 import pan.alexander.tordnscrypt.domain.tor_ips.TorIpsInteractor
 import pan.alexander.tordnscrypt.domain.tor_ips.TorIpsInteractorImpl
 
@@ -43,4 +45,9 @@ abstract class InteractorsModule {
     abstract fun provideTorIpsInteractor(
         torIpsInteractor: TorIpsInteractorImpl
     ): TorIpsInteractor
+
+    @Binds
+    abstract fun provideDnsRulesInteractor(
+        dnsRulesInteractor: DnsRulesInteractorImpl
+    ): DnsRulesInteractor
 }

@@ -56,7 +56,10 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HELP_MESSAGES
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CHILD_LOCK_PASSWORD
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS
 import pan.alexander.tordnscrypt.utils.root.RootCommands
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import java.io.File
@@ -64,6 +67,7 @@ import java.io.PrintWriter
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
+import java.util.Locale
 import java.util.regex.Pattern
 import kotlin.math.roundToInt
 
@@ -406,6 +410,17 @@ object Utils {
             }
         }
         return result
+    }
+
+    fun formatFileSizeToReadableUnits(length: Long): String {
+        var bytes = length
+        if (bytes <= 1024) return String.format(Locale.ROOT, "%d B", bytes)
+        var u = 0
+        while (bytes > 1024 * 1024) {
+            u++
+            bytes = bytes shr 10
+        }
+        return String.format(Locale.ROOT, "%.1f %cB", bytes / 1024f, "kMGTPE"[u])
     }
 
 }

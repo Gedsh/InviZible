@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules;
+package pan.alexander.tordnscrypt.settings.itpd_settings;
 
 import android.app.Activity;
 import android.content.Context;
@@ -30,7 +30,6 @@ import androidx.annotation.Nullable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -41,7 +40,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -52,30 +50,25 @@ import java.util.LinkedList;
 import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.settings.SettingsActivity;
-import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
-import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 
-public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListener {
+public class ITPDSubscriptionsFragment extends Fragment implements View.OnClickListener {
 
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter<RulesAdapter.RuleViewHolder> mAdapter;
 
     private final ArrayList<String> rules_file = new ArrayList<>();
-    private final ArrayList<Rules> rules_list = new ArrayList<>();
-    private final ArrayList<String> others_list = new ArrayList<>();
+    private final ArrayList<ITPDSubscription> ITPDSubscription_list = new ArrayList<>();
     private final ArrayList<String> original_rules = new ArrayList<>();
 
     private String file_path;
-    private boolean readOnly;
 
 
-    public ShowRulesRecycleFrag() {
+    public ITPDSubscriptionsFragment() {
     }
 
 
@@ -100,7 +93,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
         View view;
         try {
-            view = inflater.inflate(R.layout.fragment_show_rules_recycle, container, false);
+            view = inflater.inflate(R.layout.fragment_itpd_subscription, container, false);
         } catch (Exception e) {
             loge("ShowRulesRecycleFrag onCreateView", e);
             throw e;
@@ -110,19 +103,10 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
         mRecyclerView = view.findViewById(R.id.rvRules);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        if (checkAndTrimIfRulesTooMany()) {
-            readOnly = true;
-            showTooManyRulesDialog();
-        }
-
         FloatingActionButton btnAddRule = view.findViewById(R.id.floatingBtnAddRule);
-        if (readOnly) {
-            btnAddRule.setVisibility(View.GONE);
-        } else {
-            btnAddRule.setAlpha(0.8f);
-            btnAddRule.setOnClickListener(this);
-            btnAddRule.requestFocus();
-        }
+        btnAddRule.setAlpha(0.8f);
+        btnAddRule.setOnClickListener(this);
+        btnAddRule.requestFocus();
 
         return view;
     }
@@ -138,11 +122,11 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
         setTitle(activity);
 
-        if (rules_list.isEmpty()) {
+        if (ITPDSubscription_list.isEmpty()) {
             fillRules();
         }
 
-        mAdapter = new RulesAdapter(rules_list);
+        mAdapter = new RulesAdapter(ITPDSubscription_list);
         mRecyclerView.setAdapter(mAdapter);
     }
 
@@ -157,7 +141,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
         List<String> rules_file_new = new LinkedList<>();
 
-        for (Rules rule : rules_list) {
+        for (ITPDSubscription rule : ITPDSubscription_list) {
             if (rule.active) {
                 rules_file_new.add(rule.text);
             } else {
@@ -168,75 +152,32 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
         if (rules_file_new.equals(original_rules)) return;
 
-        if (file_path.contains("subscriptions")) {
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-            StringBuilder sb = new StringBuilder();
-            String str = "";
-            for (Rules rule : rules_list) {
-                if (rule.subscription)
-                    sb.append(rule.text).append(", ");
-            }
-            if (sb.length() > 2) {
-                str = sb.substring(0, sb.length() - 2);
-            }
-            sp.edit().putString("subscriptions", str).apply();
-
-            rules_file.clear();
-            rules_file.addAll(rules_file_new);
-            original_rules.clear();
-            original_rules.addAll(rules_file_new);
-        } else {
-            rules_file.clear();
-            rules_file.addAll(others_list);
-            rules_file.addAll(rules_file_new);
-            original_rules.clear();
-            original_rules.addAll(rules_file_new);
-
-            FileManager.writeToTextFile(context, file_path, rules_file, SettingsActivity.rules_tag);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        StringBuilder sb = new StringBuilder();
+        String str = "";
+        for (ITPDSubscription rule : ITPDSubscription_list) {
+            if (rule.subscription)
+                sb.append(rule.text).append(", ");
         }
+        if (sb.length() > 2) {
+            str = sb.substring(0, sb.length() - 2);
+        }
+        sp.edit().putString("subscriptions", str).apply();
 
-        boolean dnsCryptRunning = ModulesAux.isDnsCryptSavedStateRunning();
+        rules_file.clear();
+        rules_file.addAll(rules_file_new);
+        original_rules.clear();
+        original_rules.addAll(rules_file_new);
+
         boolean itpdRunning = ModulesAux.isITPDSavedStateRunning();
 
-        if (itpdRunning && file_path.contains("subscriptions")) {
+        if (itpdRunning) {
             ModulesRestarter.restartITPD(context);
-        } else if (dnsCryptRunning) {
-            ModulesRestarter.restartDNSCrypt(context);
-        }
-    }
-
-    private boolean checkAndTrimIfRulesTooMany() {
-        if (rules_file.size() > 1000) {
-            rules_file.subList(1000, rules_file.size()).clear();
-            rules_file.trimToSize();
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private void showTooManyRulesDialog() {
-        DialogFragment dialogFragment = NotificationDialogFragment.newInstance(R.string.dnscrypt_many_rules_dialog_message);
-        if (isAdded()) {
-            dialogFragment.show(getChildFragmentManager(), "TooManyRules");
         }
     }
 
     private void setTitle(Activity activity) {
-        if (file_path.endsWith("forwarding-rules.txt")) {
-            activity.setTitle(R.string.title_dnscrypt_forwarding_rules);
-        } else if (file_path.endsWith("cloaking-rules.txt")) {
-            activity.setTitle(R.string.title_dnscrypt_cloaking_rules);
-        } else if (file_path.endsWith("ip-blacklist.txt")) {
-            activity.setTitle(R.string.title_dnscrypt_ip_blacklist);
-        } else if (file_path.endsWith("blacklist.txt")) {
-            activity.setTitle(R.string.title_dnscrypt_blacklist);
-        } else if (file_path.endsWith("whitelist.txt")) {
-            activity.setTitle(R.string.title_dnscrypt_whitelist);
-        } else if (file_path.endsWith("subscriptions")) {
-            activity.setTitle(R.string.pref_itpd_addressbook_subscriptions);
-        }
+        activity.setTitle(R.string.pref_itpd_addressbook_subscriptions);
     }
 
     private void fillRules() {
@@ -255,12 +196,9 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
                 }
             }
             if (match) {
-                rules_list.add(new Rules(rules_file.get(i).replace("#", ""), active, locked, subscription));
+                ITPDSubscription_list.add(new ITPDSubscription(rules_file.get(i).replace("#", ""), active, locked, subscription));
                 original_rules.add(rules_file.get(i));
                 original_rules.add("");
-            } else if (!rules_file.get(i).isEmpty()) {
-                others_list.add(rules_file.get(i));
-                others_list.add("");
             }
         }
     }
@@ -268,18 +206,18 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
     @Override
     public void onClick(View v) {
         boolean subscription = file_path.contains("subscriptions");
-        rules_list.add(new Rules("", true, false, subscription));
-        mAdapter.notifyItemInserted(rules_list.size() - 1);
-        mRecyclerView.scrollToPosition(rules_list.size() - 1);
+        ITPDSubscription_list.add(new ITPDSubscription("", true, false, subscription));
+        mAdapter.notifyItemInserted(ITPDSubscription_list.size() - 1);
+        mRecyclerView.scrollToPosition(ITPDSubscription_list.size() - 1);
     }
 
     class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHolder> {
 
-        ArrayList<Rules> list_rules_adapter;
+        ArrayList<ITPDSubscription> list_ITPDSubscription_adapter;
         LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        RulesAdapter(ArrayList<Rules> rules_list) {
-            list_rules_adapter = rules_list;
+        RulesAdapter(ArrayList<ITPDSubscription> ITPDSubscription_list) {
+            list_ITPDSubscription_adapter = ITPDSubscription_list;
         }
 
 
@@ -303,17 +241,17 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
         @Override
         public int getItemCount() {
-            return list_rules_adapter.size();
+            return list_ITPDSubscription_adapter.size();
         }
 
-        Rules getRule(int position) {
-            return list_rules_adapter.get(position);
+        ITPDSubscription getRule(int position) {
+            return list_ITPDSubscription_adapter.get(position);
         }
 
         void delRule(int position) {
 
             try {
-                list_rules_adapter.remove(position);
+                list_ITPDSubscription_adapter.remove(position);
             } catch (Exception e) {
                 loge("ShowRulesRecycleFrag getItemCount", e);
             }
@@ -322,7 +260,7 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
         }
 
         class RuleViewHolder extends RecyclerView.ViewHolder
-                implements View.OnClickListener, CompoundButton.OnCheckedChangeListener, View.OnFocusChangeListener {
+                implements View.OnClickListener, View.OnFocusChangeListener {
 
             EditText etRule;
             ImageButton delBtnRules;
@@ -334,18 +272,8 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
                 etRule = itemView.findViewById(R.id.etRule);
                 delBtnRules = itemView.findViewById(R.id.delBtnRules);
                 swRuleActive = itemView.findViewById(R.id.swRuleActive);
-
-                if (readOnly) {
-                    delBtnRules.setVisibility(View.GONE);
-                    swRuleActive.setVisibility(View.GONE);
-                } else {
-                    if (!file_path.contains("subscriptions")) {
-                        swRuleActive.setOnCheckedChangeListener(this);
-                        swRuleActive.setOnFocusChangeListener(this);
-                    }
-                    etRule.addTextChangedListener(textWatcher);
-                    delBtnRules.setOnClickListener(this);
-                }
+                etRule.addTextChangedListener(textWatcher);
+                delBtnRules.setOnClickListener(this);
             }
 
             void bind(int position) {
@@ -354,9 +282,6 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
 
                 if (getRule(position).subscription) {
                     swRuleActive.setVisibility(View.GONE);
-                } else if (!readOnly) {
-                    swRuleActive.setVisibility(View.VISIBLE);
-                    swRuleActive.setChecked(getRule(position).active);
                 }
 
                 delBtnRules.setEnabled(true);
@@ -389,15 +314,6 @@ public class ShowRulesRecycleFrag extends Fragment implements View.OnClickListen
                     int position = getBindingAdapterPosition();
                     delRule(position);
                     notifyItemRemoved(position);
-                }
-            }
-
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                int position = getBindingAdapterPosition();
-                if (getRule(position).active != isChecked) {
-                    getRule(position).active = isChecked;
-                    notifyItemChanged(position);
                 }
             }
 

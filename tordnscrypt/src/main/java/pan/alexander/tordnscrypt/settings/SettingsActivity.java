@@ -20,17 +20,14 @@
 package pan.alexander.tordnscrypt.settings;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
 
 import android.annotation.SuppressLint;
-import android.content.ClipData;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.preference.PreferenceManager;
@@ -53,12 +50,13 @@ import pan.alexander.tordnscrypt.proxy.ProxyFragment;
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
+import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType;
+import pan.alexander.tordnscrypt.settings.show_rules.DnsRulesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
-import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
+import pan.alexander.tordnscrypt.settings.itpd_settings.ITPDSubscriptionsFragment;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
-import pan.alexander.tordnscrypt.utils.enums.DNSCryptRulesVariant;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 
 import static pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsFragment.DeviceOrTether.DEVICE;
@@ -75,7 +73,6 @@ public class SettingsActivity extends LangAppCompatActivity {
     public static final String tor_conf_tag = "pan.alexander.tordnscrypt/app_data/tor/tor.conf";
     public static final String itpd_conf_tag = "pan.alexander.tordnscrypt/app_data/itpd/itpd.conf";
     public static final String itpd_tunnels_tag = "pan.alexander.tordnscrypt/app_data/itpd/tunnels.conf";
-    public static final String rules_tag = "pan.alexander.tordnscrypt/app_data/abstract_rules";
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -156,25 +153,40 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, frag);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")) {
-            dialogFragment = PleaseWaitProgressDialog.getInstance();
-            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules.txt", rules_tag);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.FORWARDING);
+            DnsRulesFragment fragment = new DnsRulesFragment();
+            fragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "cloaking_rules_Pref")) {
-            dialogFragment = PleaseWaitProgressDialog.getInstance();
-            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules.txt", rules_tag);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.CLOAKING);
+            DnsRulesFragment fragment = new DnsRulesFragment();
+            fragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "blacklist_Pref")) {
-            dialogFragment = PleaseWaitProgressDialog.getInstance();
-            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/blacklist.txt", rules_tag);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.BLACKLIST);
+            DnsRulesFragment fragment = new DnsRulesFragment();
+            fragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "ipblacklist_Pref")) {
-            dialogFragment = PleaseWaitProgressDialog.getInstance();
-            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist.txt", rules_tag);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.IP_BLACKLIST);
+            DnsRulesFragment fragment = new DnsRulesFragment();
+            fragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "whitelist_Pref")) {
-            dialogFragment = PleaseWaitProgressDialog.getInstance();
-            dialogFragment.show(getSupportFragmentManager(), "PleaseWaitProgressDialog");
-            FileManager.readTextFile(this, appDataDir + "/app_data/dnscrypt-proxy/whitelist.txt", rules_tag);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.WHITELIST);
+            DnsRulesFragment fragment = new DnsRulesFragment();
+            fragment.setArguments(bundle);
+            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
             ArrayList<String> rules_file = new ArrayList<>();
@@ -193,7 +205,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             Bundle bundle = new Bundle();
             bundle.putStringArrayList("rules_file", rules_file);
             bundle.putString("path", subscriptions);
-            ShowRulesRecycleFrag frag = new ShowRulesRecycleFrag();
+            ITPDSubscriptionsFragment frag = new ITPDSubscriptionsFragment();
             frag.setArguments(bundle);
             fSupportTrans.replace(android.R.id.content, frag);
             fSupportTrans.commit();
@@ -241,60 +253,6 @@ public class SettingsActivity extends LangAppCompatActivity {
         } else if (fragment instanceof UnlockTorAppsFragment) {
             unlockTorAppsFragment = (UnlockTorAppsFragment) fragment;
         }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode != RESULT_OK) {
-            return;
-        }
-
-        if (preferencesDNSFragment != null && data != null) {
-            Uri[] filesUri = getFilesUri(data);
-
-            if (filesUri.length > 0) {
-
-                switch (requestCode) {
-                    case PreferencesDNSFragment.PICK_BLACKLIST_HOSTS:
-                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.BLACKLIST_HOSTS, filesUri);
-                        break;
-                    case PreferencesDNSFragment.PICK_WHITELIST_HOSTS:
-                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.WHITELIST_HOSTS, filesUri);
-                        break;
-                    case PreferencesDNSFragment.PICK_BLACKLIST_IPS:
-                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.BLACKLIST_IPS, filesUri);
-                        break;
-                    case PreferencesDNSFragment.PICK_FORWARDING:
-                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.FORWARDING, filesUri);
-                        break;
-                    case PreferencesDNSFragment.PICK_CLOAKING:
-                        preferencesDNSFragment.importRules(this, DNSCryptRulesVariant.CLOAKING, filesUri);
-                        break;
-                    default:
-                        loge("SettingsActivity wrong onActivityRequestCode " + requestCode);
-                }
-
-            }
-        }
-    }
-
-    private Uri[] getFilesUri(Intent data) {
-        Uri[] uris = new Uri[0];
-        ClipData clipData = data.getClipData();
-
-        if (clipData == null && data.getData() != null) {
-            uris = new Uri[]{data.getData()};
-        } else if (clipData != null) {
-            uris = new Uri[clipData.getItemCount()];
-            for (int i = 0; i < clipData.getItemCount(); i++) {
-                Uri uri = clipData.getItemAt(i).getUri();
-                uris[i] = uri;
-            }
-        }
-
-        return uris;
     }
 
     @Override

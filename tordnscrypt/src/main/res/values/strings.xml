@@ -382,11 +382,11 @@
     <string name="title_dnscrypt_query_log">DNSCrypt Query Log</string>
     <string name="title_dnscrypt_nx_log">DNSCrypt Suspicious Log</string>
     <string name="dnscrypt_empty_log">Log is Empty</string>
-    <string name="title_dnscrypt_forwarding_rules" translatable="false">DNSCrypt Forwarding rules</string>
-    <string name="title_dnscrypt_cloaking_rules" translatable="false">DNSCrypt Cloaking rules</string>
-    <string name="title_dnscrypt_blacklist" translatable="false">DNSCrypt Blacklist</string>
-    <string name="title_dnscrypt_ip_blacklist" translatable="false">DNSCrypt IP Blacklist</string>
-    <string name="title_dnscrypt_whitelist" translatable="false">DNSCrypt Whitelist</string>
+    <string name="title_dnscrypt_forwarding_rules" translatable="false">Forwarding rules</string>
+    <string name="title_dnscrypt_cloaking_rules" translatable="false">Cloaking rules</string>
+    <string name="title_dnscrypt_blacklist" translatable="false">Blacklist</string>
+    <string name="title_dnscrypt_ip_blacklist" translatable="false">IP Blacklist</string>
+    <string name="title_dnscrypt_whitelist" translatable="false">Whitelist</string>
 
     <string name="pref_dnscrypt_block_unqualified" translatable="false">Block unqualified</string>
     <string name="pref_dnscrypt_block_unqualified_summ">Immediately respond to A and AAAA queries for host names without a domain name.</string>
@@ -768,4 +768,10 @@
     <string name="long_press_to_edit">Long Press to edit.</string>
     <string name="anonymize_relays">Anonymize relays</string>
     <string name="anonymize_relays_not_used">Anonymize relays are not used.</string>
+    <string name="dns_rule_add_remote_list">Add remote list</string>
+    <string name="dns_rule_add_local_list">Add local list</string>
+    <string name="dns_rule_add_rule">Add rule</string>
+    <string name="rules">rules</string>
+    <string name="total_rules">Total: %d rules</string>
+    <string name="dns_rule_add_url">Add URL</string>
 </resources>

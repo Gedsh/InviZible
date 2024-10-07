@@ -87,6 +87,12 @@ public interface PreferenceKeys {
     String GP_DATA = "gpData";
     String GP_SIGNATURE = "gpSign";
 
+    String REMOTE_BLACKLIST_URL = "remote_blacklist_url";
+    String REMOTE_WHITELIST_URL = "remote_whitelist_url";
+    String REMOTE_IP_BLACKLIST_URL = "remote_ip_blacklist_url";
+    String REMOTE_FORWARDING_URL = "remote_forwarding_url";
+    String REMOTE_CLOAKING_URL = "remote_cloaking_url";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
@@ -139,6 +145,8 @@ public interface PreferenceKeys {
     String DNSCRYPT_DNS64_PREFIX = "dns64_prefix";
 
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
+
+    String DNSCRYPT_REFRESH_DELAY = "refresh_delay";
 
     //Tor Settings
     String TOR_DNS_PORT = "DNSPort";

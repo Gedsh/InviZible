@@ -26,6 +26,8 @@ import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSo
 import pan.alexander.tordnscrypt.data.connection_checker.ConnectionCheckerDataSourceImpl
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSourceImpl
+import pan.alexander.tordnscrypt.data.dns_rules.DnsRulesDataSource
+import pan.alexander.tordnscrypt.data.dns_rules.DnsRulesDataSourceImpl
 import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSource
 import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSourceImpl
 
@@ -60,4 +62,9 @@ abstract class DataSourcesModule {
     abstract fun provideBridgesCountriesDataSource(
         bridgesCountriesDataSource: BridgesCountriesDataSourceImpl
     ): BridgesCountriesDataSource
+
+    @Binds
+    abstract fun provideDnsRulesDataSource(
+        dnsDataSource: DnsRulesDataSourceImpl
+    ): DnsRulesDataSource
 }

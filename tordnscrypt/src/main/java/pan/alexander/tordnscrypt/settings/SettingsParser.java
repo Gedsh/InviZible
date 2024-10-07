@@ -33,7 +33,7 @@ import java.util.List;
 
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
-import pan.alexander.tordnscrypt.settings.show_rules.ShowRulesRecycleFrag;
+import pan.alexander.tordnscrypt.settings.itpd_settings.PreferencesITPDFragment;
 import pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -44,7 +44,6 @@ import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_WITH_MASK;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DORMANT_CLIENT_TIMEOUT;
@@ -430,27 +429,6 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
         }
     }
 
-    private void readRules(String path, List<String> lines) {
-        ArrayList<String> rules_file = new ArrayList<>();
-        if (lines != null) {
-            rules_file.addAll(lines);
-        } else {
-            rules_file.add("");
-        }
-        FragmentManager manager = settingsActivity.getSupportFragmentManager();
-        if (manager.isDestroyed()) {
-            return;
-        }
-        FragmentTransaction fTrans = manager.beginTransaction();
-        Bundle bundle = new Bundle();
-        bundle.putStringArrayList("rules_file", rules_file);
-        bundle.putString("path", path);
-        ShowRulesRecycleFrag frag = new ShowRulesRecycleFrag();
-        frag.setArguments(bundle);
-        fTrans.replace(android.R.id.content, frag);
-        fTrans.commit();
-    }
-
     public void activateSettingsParser() {
         FileManager.setOnFileOperationCompleteListener(this);
     }
@@ -483,17 +461,10 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     case SettingsActivity.itpd_conf_tag:
                         readITPDconf(lines);
                         break;
-                    case SettingsActivity.rules_tag:
-                        readRules(path, lines);
-                        break;
                 }
 
             });
 
-        } else if (!fileOperationResult && currentFileOperation == readTextFile) {
-            if (tag.equals(SettingsActivity.rules_tag)) {
-                readRules(path, lines);
-            }
         } else if (fileOperationResult && currentFileOperation == writeToTextFile) {
             settingsActivity.runOnUiThread(() -> Toast.makeText(settingsActivity, settingsActivity.getText(R.string.toastSettings_saved), Toast.LENGTH_SHORT).show());
         }

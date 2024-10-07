@@ -49,8 +49,12 @@ import pan.alexander.tordnscrypt.proxy.ProxyFragment
 import pan.alexander.tordnscrypt.settings.*
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptServers
+import pan.alexander.tordnscrypt.settings.dnscrypt_settings.RulesEraser
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment
+import pan.alexander.tordnscrypt.settings.itpd_settings.PreferencesITPDFragment
+import pan.alexander.tordnscrypt.settings.show_rules.DnsRulesFragment
+import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalDnsRulesWorker
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment
 import pan.alexander.tordnscrypt.settings.tor_bridges.BridgeAdapter
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
@@ -67,6 +71,8 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.root.RootExecService
 import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork
+import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteDnsRulesWorker
+import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingDnsRulesWorker
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
 import javax.inject.Singleton
 
@@ -116,6 +122,7 @@ interface AppComponent {
     fun inject(fragment: PreferencesDNSFragment)
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
+    fun inject(fragment: DnsRulesFragment)
     fun inject(service: ModulesService)
     fun inject(service: RootExecService)
     fun inject(service: UpdateService)
@@ -150,4 +157,8 @@ interface AppComponent {
     fun inject(installer: Installer)
     fun inject(installedApplicationsManager: InstalledApplicationsManager)
     fun inject(agreementDialog: AgreementDialog)
+    fun inject(rulesEraser: RulesEraser)
+    fun inject(worker: UpdateRemoteDnsRulesWorker)
+    fun inject(worker: UpdateLocalDnsRulesWorker)
+    fun inject(worker: RemixExistingDnsRulesWorker)
 }
