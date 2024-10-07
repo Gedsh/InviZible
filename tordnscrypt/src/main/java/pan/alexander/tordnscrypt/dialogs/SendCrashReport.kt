@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.dialogs
 
 import android.content.Context
 import android.os.Bundle
+import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.FileProvider
 import androidx.preference.PreferenceManager
@@ -41,6 +42,7 @@ import java.io.FileWriter
 import java.io.InputStreamReader
 import javax.inject.Inject
 
+@Keep
 class SendCrashReport : ExtendedDialogFragment() {
 
     @Inject
