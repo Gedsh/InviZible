@@ -99,7 +99,7 @@ class SelectBridgesTransportDialogFragment : ExtendedDialogFragment() {
                 when (rbgTorTransport.checkedRadioButtonId) {
                     R.id.rbObfsNone ->
                         preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
-                            "0",
+                            "vanilla",
                             ipv6Bridges
                         )
                     R.id.rbObfs4 ->
