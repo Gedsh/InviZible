@@ -29,6 +29,7 @@ import androidx.core.view.setPadding
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.utils.Constants.URL_REGEX
 import pan.alexander.tordnscrypt.utils.Utils.dp2pixels
+import pan.alexander.tordnscrypt.utils.Utils.getDomainNameFromUrl
 import java.util.regex.Pattern
 
 class AddRemoteRulesUrlDialog {
@@ -73,10 +74,7 @@ class AddRemoteRulesUrlDialog {
                 setPositiveButton(R.string.ok) { _, _ ->
                     val url = editText.text?.toString() ?: ""
                     if (urlPattern.matcher(url).matches()) {
-                        val name = url.removePrefix("http://")
-                            .removePrefix("https://")
-                            .replaceAfter("/", "")
-                            .removeSuffix("/")
+                        val name = getDomainNameFromUrl(url)
                         callback?.onRemoteRulesUrlAdded(url, name)
                     }
                 }

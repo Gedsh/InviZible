@@ -146,7 +146,9 @@ public interface PreferenceKeys {
 
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
 
-    String DNSCRYPT_REFRESH_DELAY = "refresh_delay";
+    String DNSCRYPT_SERVERS_REFRESH_DELAY = "refresh_delay";
+    String DNSCRYPT_RELAYS_REFRESH_DELAY = "refresh_delay_relays";
+    String DNSCRYPT_RULES_REFRESH_DELAY = "refresh_delay_rules";
 
     //Tor Settings
     String TOR_DNS_PORT = "DNSPort";

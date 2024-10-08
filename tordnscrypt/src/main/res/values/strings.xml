@@ -368,6 +368,7 @@
     <string name="pref_dnscrypt_sources_summ">Remote lists of available servers.</string>
     <string name="pref_dnscrypt_refresh_delay" translatable="false">Refresh delay</string>
     <string name="pref_dnscrypt_refresh_delay_summ">Server list will be updated after the specified delay in hours.</string>
+    <string name="pref_dnscrypt_rules_delay_summ">Rules will be updated after the specified delay in hours.</string>
 
     <string name="pref_dnscrypt_relays_categ">Relays</string>
     <string name="pref_dnscrypt_relays">Sources</string>

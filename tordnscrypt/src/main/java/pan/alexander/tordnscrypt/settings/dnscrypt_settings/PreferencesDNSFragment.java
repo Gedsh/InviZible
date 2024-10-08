@@ -51,6 +51,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType;
+import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -76,7 +77,9 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_NETPROBE_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_REFRESH_DELAY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_RELAYS_REFRESH_DELAY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_RULES_REFRESH_DELAY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_SERVERS_REFRESH_DELAY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.HTTP3_QUIC;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -100,6 +103,8 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
     public Lazy<Handler> handler;
     @Inject
     public Lazy<RulesEraser> rulesEraser;
+    @Inject
+    public Lazy<UpdateRemoteRulesWorkManager> updateRemoteRulesWorkManager;
 
     private ArrayList<String> key_toml;
     private ArrayList<String> val_toml;
@@ -142,9 +147,10 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("ignored_qtypes"));
         preferences.add(findPreference("Enable Suspicious logging"));
         preferences.add(findPreference("Sources"));
-        preferences.add(findPreference(DNSCRYPT_REFRESH_DELAY));
+        preferences.add(findPreference(DNSCRYPT_SERVERS_REFRESH_DELAY));
+        preferences.add(findPreference(DNSCRYPT_RULES_REFRESH_DELAY));
         preferences.add(findPreference("Relays"));
-        preferences.add(findPreference("refresh_delay_relays"));
+        preferences.add(findPreference(DNSCRYPT_RELAYS_REFRESH_DELAY));
         preferences.add(findPreference("block_unqualified"));
         preferences.add(findPreference("block_undelegated"));
         preferences.add(findPreference(DNSCRYPT_BLOCK_IPv6));
@@ -374,15 +380,21 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 }
                 val_toml.set(key_toml.lastIndexOf("urls"), newValue.toString());
                 return true;
-            } else if (Objects.equals(preference.getKey(), DNSCRYPT_REFRESH_DELAY)) {
+            } else if (Objects.equals(preference.getKey(), DNSCRYPT_SERVERS_REFRESH_DELAY)) {
                 if (!newValue.toString().matches("\\d+")) {
                     return false;
                 }
-            } else if (Objects.equals(preference.getKey(), "refresh_delay_relays")) {
+            } else if (Objects.equals(preference.getKey(), DNSCRYPT_RELAYS_REFRESH_DELAY)) {
                 if (!newValue.toString().matches("\\d+")) {
                     return false;
                 }
                 val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
+                return true;
+            } else if (Objects.equals(preference.getKey(), DNSCRYPT_RULES_REFRESH_DELAY)) {
+                if (!newValue.toString().matches("\\d+")) {
+                    return false;
+                }
+                refreshDnsCryptRulesUpdateInterval(Long.parseLong(newValue.toString()));
                 return true;
             } else if (Objects.equals(preference.getKey(), DNSCRYPT_OUTBOUND_PROXY)) {
                 if (Boolean.parseBoolean(newValue.toString())
@@ -528,6 +540,10 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         }
 
         return false;
+    }
+
+    private void refreshDnsCryptRulesUpdateInterval(long delay) {
+        updateRemoteRulesWorkManager.get().updateRefreshDnsRulesInterval(delay);
     }
 
     private List<String> getDNSCryptBootstrapResolvers(String newValue) {
@@ -793,6 +809,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         categories.add(findPreference("pref_dnscrypt_blacklist"));
         categories.add(findPreference("pref_dnscrypt_ipblacklist"));
         categories.add(findPreference("pref_dnscrypt_whitelist"));
+        categories.add(findPreference("pref_dnscrypt_refresh_rules"));
 
         for (PreferenceCategory category : categories) {
             if (dnscryptSettings != null && category != null) {

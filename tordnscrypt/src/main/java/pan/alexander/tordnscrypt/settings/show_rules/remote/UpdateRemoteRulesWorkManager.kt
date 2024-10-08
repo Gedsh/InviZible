@@ -26,14 +26,16 @@ import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest.Companion.DEFAULT_BACKOFF_DELAY_MILLIS
 import androidx.work.workDataOf
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
+import pan.alexander.tordnscrypt.utils.Utils.getDomainNameFromUrl
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_REFRESH_DELAY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_RULES_REFRESH_DELAY
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_BLACKLIST_URL
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CLOAKING_URL
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_FORWARDING_URL
@@ -52,6 +54,8 @@ class UpdateRemoteRulesWorkManager @Inject constructor(
     private val preferences: PreferenceRepository
 ) {
 
+    private val workManager by lazy { WorkManager.getInstance(context) }
+
     fun startRefreshDnsRules(ruleName: String, ruleType: DnsRuleType) {
 
         val interval = getInterval()
@@ -59,32 +63,70 @@ class UpdateRemoteRulesWorkManager @Inject constructor(
             return
         }
 
-        val constraints = Constraints.Builder()
-            .setRequiresBatteryNotLow(true)
-            .setRequiresStorageNotLow(true)
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        val updateRequest =
+            PeriodicWorkRequestBuilder<UpdateRemoteDnsRulesWorker>(interval, TimeUnit.HOURS)
+                .setConstraints(getConstraints())
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    DEFAULT_BACKOFF_DELAY_MILLIS,
+                    TimeUnit.MILLISECONDS
+                )
+                .setInputData(
+                    workDataOf(
+                        REMOTE_RULES_TYPE_ARG to ruleType.name,
+                        REMOTE_RULES_NAME_ARG to ruleName,
+                        REMOTE_RULES_URL_ARG to getRuleUrl(ruleType)
+                    )
+                )
+                .build()
 
-        val updateRequest = PeriodicWorkRequestBuilder<UpdateRemoteDnsRulesWorker>(interval, TimeUnit.HOURS)
-            .setConstraints(constraints)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                DEFAULT_BACKOFF_DELAY_MILLIS,
-                TimeUnit.MILLISECONDS
-            )
-            .setInputData(workDataOf(
-                REMOTE_RULES_TYPE_ARG to ruleType.name,
-                REMOTE_RULES_NAME_ARG to ruleName,
-                REMOTE_RULES_URL_ARG to getRuleUrl(ruleType)
-            ))
-            .build()
+        workManager.enqueueUniquePeriodicWork(
+            getWorkName(ruleType),
+            ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+            updateRequest
+        )
+    }
 
-        WorkManager.getInstance(context)
-            .enqueueUniquePeriodicWork(
-                getWorkName(ruleType),
-                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
-                updateRequest
-            )
+    fun updateRefreshDnsRulesInterval(interval: Long) =
+        DnsRuleType.entries.forEach { type ->
+            val workInfos = workManager.getWorkInfosForUniqueWork(getWorkName(type))
+            workInfos.get().firstOrNull()?.let { workInfo ->
+                try {
+                    if (interval == 0L) {
+                        stopRefreshDnsRules(type)
+                    } else {
+                        updateExistingWorkInterval(type, workInfo, interval)
+                    }
+                } catch (e: Exception) {
+                    loge("UpdateRemoteRulesWorkManager updateRefreshDnsRulesInterval", e)
+                }
+            }
+        }
+
+    private fun updateExistingWorkInterval(
+        ruleType: DnsRuleType,
+        workInfo: WorkInfo,
+        interval: Long
+    ) {
+        val updateRequest =
+            PeriodicWorkRequestBuilder<UpdateRemoteDnsRulesWorker>(interval, TimeUnit.HOURS)
+                .setConstraints(getConstraints())
+                .setId(workInfo.id)
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    DEFAULT_BACKOFF_DELAY_MILLIS,
+                    TimeUnit.MILLISECONDS
+                )
+                .setInputData(
+                    workDataOf(
+                        REMOTE_RULES_TYPE_ARG to ruleType.name,
+                        REMOTE_RULES_NAME_ARG to getDomainNameFromUrl(getRuleUrl(ruleType)),
+                        REMOTE_RULES_URL_ARG to getRuleUrl(ruleType)
+                    )
+                )
+                .build()
+
+        workManager.updateWork(updateRequest)
     }
 
     fun stopRefreshDnsRules(type: DnsRuleType) {
@@ -94,13 +136,12 @@ class UpdateRemoteRulesWorkManager @Inject constructor(
             return
         }
 
-        WorkManager.getInstance(context)
-            .cancelUniqueWork(getWorkName(type))
+        workManager.cancelUniqueWork(getWorkName(type))
     }
 
     private fun getInterval(): Long = try {
         val refreshPeriod = defaultPreferences.getString(
-            DNSCRYPT_REFRESH_DELAY,
+            DNSCRYPT_RULES_REFRESH_DELAY,
             DEFAULT_DELAY_HOURS.toString()
         )
         refreshPeriod?.toLong() ?: DEFAULT_DELAY_HOURS.toLong()
@@ -108,6 +149,12 @@ class UpdateRemoteRulesWorkManager @Inject constructor(
         loge("UpdateDnsRulesManager getInterval", e)
         DEFAULT_DELAY_HOURS.toLong()
     }
+
+    private fun getConstraints() = Constraints.Builder()
+        .setRequiresBatteryNotLow(true)
+        .setRequiresStorageNotLow(true)
+        .setRequiredNetworkType(NetworkType.CONNECTED)
+        .build()
 
     private fun getWorkName(type: DnsRuleType) =
         when (type) {
@@ -132,10 +179,15 @@ class UpdateRemoteRulesWorkManager @Inject constructor(
         const val REMOTE_RULES_NAME_ARG = "pan.alexander.tordnscrypt.REMOTE_RULES_NAME_ARG"
         const val REMOTE_RULES_TYPE_ARG = "pan.alexander.tordnscrypt.REMOTE_RULES_TYPE_ARG"
 
-        const val REFRESH_REMOTE_DNS_BLACKLIST_WORK = "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_BLACKLIST_WORK"
-        const val REFRESH_REMOTE_DNS_WHITELIST_WORK = "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_WHITELIST_WORK"
-        const val REFRESH_REMOTE_DNS_IP_BLACKLIST_WORK = "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_IP_BLACKLIST_WORK"
-        const val REFRESH_REMOTE_DNS_FORWARDING_WORK = "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_FORWARDING_WORK"
-        const val REFRESH_REMOTE_DNS_CLOAKING_WORK = "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_CLOAKING_WORK"
+        const val REFRESH_REMOTE_DNS_BLACKLIST_WORK =
+            "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_BLACKLIST_WORK"
+        const val REFRESH_REMOTE_DNS_WHITELIST_WORK =
+            "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_WHITELIST_WORK"
+        const val REFRESH_REMOTE_DNS_IP_BLACKLIST_WORK =
+            "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_IP_BLACKLIST_WORK"
+        const val REFRESH_REMOTE_DNS_FORWARDING_WORK =
+            "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_FORWARDING_WORK"
+        const val REFRESH_REMOTE_DNS_CLOAKING_WORK =
+            "pan.alexander.tordnscrypt.REFRESH_REMOTE_DNS_CLOAKING_WORK"
     }
 }

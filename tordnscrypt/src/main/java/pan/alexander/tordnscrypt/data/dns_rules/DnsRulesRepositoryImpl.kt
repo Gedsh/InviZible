@@ -26,6 +26,7 @@ import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesRepository.Companion.L
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesRepository.Companion.REMOTE_RULES_DEFAULT_HEADER
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.utils.Utils.getDomainNameFromUrl
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Date
@@ -75,7 +76,7 @@ class DnsRulesRepositoryImpl @Inject constructor(
         val url = getHeaderFromFile(dataSource.getRemoteBlacklistRulesStream())
             ?: REMOTE_RULES_DEFAULT_HEADER
         return DnsRulesMetadata.RemoteDnsRulesMetadata(
-            name = getNameFromUrl(url),
+            name = getDomainNameFromUrl(url),
             url = url,
             date = Date(dataSource.getRemoteBlacklistRulesFileDate()),
             count = getRulesCountFromFile(dataSource.getRemoteBlacklistRulesStream()),
@@ -132,7 +133,7 @@ class DnsRulesRepositoryImpl @Inject constructor(
         val url = getHeaderFromFile(dataSource.getRemoteWhitelistRulesStream())
             ?: REMOTE_RULES_DEFAULT_HEADER
         return DnsRulesMetadata.RemoteDnsRulesMetadata(
-            name = getNameFromUrl(url),
+            name = getDomainNameFromUrl(url),
             url = url,
             date = Date(dataSource.getRemoteWhitelistRulesFileDate()),
             count = getRulesCountFromFile(dataSource.getRemoteWhitelistRulesStream()),
@@ -189,7 +190,7 @@ class DnsRulesRepositoryImpl @Inject constructor(
         val url = getHeaderFromFile(dataSource.getRemoteIpBlacklistRulesStream())
             ?: REMOTE_RULES_DEFAULT_HEADER
         return DnsRulesMetadata.RemoteDnsRulesMetadata(
-            name = getNameFromUrl(url),
+            name = getDomainNameFromUrl(url),
             url = url,
             date = Date(dataSource.getRemoteIpBlacklistRulesFileDate()),
             count = getRulesCountFromFile(dataSource.getRemoteIpBlacklistRulesStream()),
@@ -252,7 +253,7 @@ class DnsRulesRepositoryImpl @Inject constructor(
         val url = getHeaderFromFile(dataSource.getRemoteForwardingRulesStream())
             ?: REMOTE_RULES_DEFAULT_HEADER
         return DnsRulesMetadata.RemoteDnsRulesMetadata(
-            name = getNameFromUrl(url),
+            name = getDomainNameFromUrl(url),
             url = url,
             date = Date(dataSource.getRemoteForwardingRulesFileDate()),
             count = getRulesCountFromFile(dataSource.getRemoteForwardingRulesStream()),
@@ -315,7 +316,7 @@ class DnsRulesRepositoryImpl @Inject constructor(
         val url = getHeaderFromFile(dataSource.getRemoteCloakingRulesStream())
             ?: REMOTE_RULES_DEFAULT_HEADER
         return DnsRulesMetadata.RemoteDnsRulesMetadata(
-            name = getNameFromUrl(url),
+            name = getDomainNameFromUrl(url),
             url = url,
             date = Date(dataSource.getRemoteCloakingRulesFileDate()),
             count = getRulesCountFromFile(dataSource.getRemoteCloakingRulesStream()),
@@ -394,12 +395,6 @@ class DnsRulesRepositoryImpl @Inject constructor(
         }
         return null
     }
-
-    private fun getNameFromUrl(url: String): String =
-        url.removePrefix("http://")
-            .removePrefix("https://")
-            .replaceAfter("/", "")
-            .removeSuffix("/")
 
     private suspend fun getRulesCountFromFile(inputReader: InputStreamReader): Int {
         var count = 0

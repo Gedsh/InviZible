@@ -258,6 +258,19 @@
             android:title="@string/pref_dnscrypt_erase_cloaking_rules" />
     </PreferenceCategory>
     <PreferenceCategory
+        android:key="pref_dnscrypt_refresh_rules"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_common_refresh_rules">
+        <EditTextPreference
+            android:id="@+id/rules_refresh_delay"
+            android:defaultValue="72"
+            android:key="refresh_delay_rules"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_rules_delay_summ"
+            android:title="@string/pref_dnscrypt_refresh_delay" />
+    </PreferenceCategory>
+    <PreferenceCategory
         android:key="pref_dnscrypt_query_log"
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_dnscrypt_query_log_categ">

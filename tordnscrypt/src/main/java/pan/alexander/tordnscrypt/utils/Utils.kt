@@ -423,4 +423,9 @@ object Utils {
         return String.format(Locale.ROOT, "%.1f %cB", bytes / 1024f, "kMGTPE"[u])
     }
 
+    fun getDomainNameFromUrl(url: String): String =
+        url.removePrefix("http://")
+            .removePrefix("https://")
+            .substringBefore("/")
+
 }
