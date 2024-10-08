@@ -544,4 +544,10 @@
     <string name="pref_itpd_use_Socks_outproxy_summ">Dirección del proxy externo (IP o local). Las solicitudes fuera de I2P irán allí.</string>
     <string name="pref_tor_fascist_firewall_lock_summ">Para activar esta opción, debe desactivar los puentes o utilizar puentes solo con puertos 80 y 443.</string>
     <string name="pref_tor_isolate_uid_summ">No compartas circuitos con streams de diferentes aplicaciones.</string>
+    <string name="dns_rule_add_local_list">Añadir lista local</string>
+    <string name="dns_rule_add_rule">Añadir regla</string>
+    <string name="rules">reglas</string>
+    <string name="total_rules">Total: %d reglas</string>
+    <string name="dns_rule_add_url">Añadir URL</string>
+    <string name="dns_rule_add_remote_list">Añadir lista remota</string>
 </resources>
