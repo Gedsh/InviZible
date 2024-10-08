@@ -126,7 +126,7 @@ android {
         }
     }
 
-    ndkVersion '23.0.7421159'
+    ndkVersion '23.1.7779620'
 
     buildFeatures {
         viewBinding true
