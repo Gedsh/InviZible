@@ -497,7 +497,7 @@
     <string name="pref_common_use_busybox_device">"BusyBox des Gerätes verwenden"</string>
     <string name="pref_common_use_busybox_app">BusyBox des Programms verwenden</string>
     <string name="pref_common_use_busybox_not_use">"BusyBox nicht verwenden"</string>
-    <string name="pref_common_use_iptables_app">"IPTables des Gerätes verwenden"</string>
+    <string name="pref_common_use_iptables_app">IPTables der Applikation verwenden</string>
     <string name="pref_common_use_iptables_device">"IPTables des Gerätes verwenden"</string>
     <string name="pref_common_wait_iptables">Warten auf die xTables-Sperre</string>
     <string name="pref_common_wait_iptables_summ">Warten, bis die IPTables-Sperre greift, um gleichzeitige Änderung von IPTables-Regeln zu verhindern.</string>
@@ -541,4 +541,11 @@
     <string name="pref_dnscrypt_odoh_servers_summ">Benutze Server, die das Oblivious-DNS-over-HTTPS-Protokoll implementieren.</string>
     <string name="pref_itpd_use_Socks_outproxy_summ">Addresse des ausgehenden Proxys (IP oder lokal). Anfragen, die nicht I2P betreffen, gehen dorthin.</string>
     <string name="pref_itpd_HTTP_outproxy_address_summ">Ausgehende HTTP-Proxy Adresse (z.B. http://false.i2p)</string>
+    <string name="dns_rule_add_url">URL hinzufügen</string>
+    <string name="dns_rule_add_rule">Regel hinzufügen</string>
+    <string name="rules">Regeln</string>
+    <string name="total_rules">Insgesamt: %d Regeln</string>
+    <string name="dns_rule_add_local_list">Lokale Liste hinzufügen</string>
+    <string name="pref_dnscrypt_rules_delay_summ">Regeln werden nach der in Stunden angegebenen Verzögerung aktualisiert.</string>
+    <string name="dns_rule_add_remote_list">Remote Liste hinzufügen</string>
 </resources>
