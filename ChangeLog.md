@@ -1184,3 +1184,11 @@
 **InviZible Pro beta 2.3.2**
 * Updated Tor.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.3.3**
+* Updated Purple I2P to version 2.54.0.
+* Updated Tor Snowflake bridge.
+* Added option for downloading and updating DNSCrypt blacklists.
+* Tor apps isolation is enabled by default.
+* Fixed requesting Tor bridges via the app.
+* Updated German and Spanish translations.
