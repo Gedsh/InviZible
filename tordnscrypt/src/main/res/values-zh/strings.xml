@@ -546,4 +546,11 @@
     <string name="pref_tor_isolation_categ">隔离设置</string>
     <string name="pref_tor_fascist_firewall_lock_summ">要激活此选项，应禁用网桥或仅使用具有80和443端口的网桥。</string>
     <string name="pref_tor_isolate_uid_summ">不要与来自不同应用程序的流共享链路。</string>
+    <string name="dns_rule_add_remote_list">添加远程列表</string>
+    <string name="dns_rule_add_local_list">添加本地列表</string>
+    <string name="rules">规则</string>
+    <string name="dns_rule_add_url">添加URL</string>
+    <string name="pref_dnscrypt_rules_delay_summ">规则将在指定的延迟时间后更新。</string>
+    <string name="dns_rule_add_rule">添加规则</string>
+    <string name="total_rules">总计：%d条规则</string>
 </resources>
