@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Εναρξη κατά την εκκίνηση"</string>
     <string name="root_available">"Έλεγχος εάν η πρόσβαση Root είναι διαθέσιμη…"</string>
     <string name="please_wait">"Παρακαλώ περιμένετε…"</string>
-    <string name="dont_show">Να μην εμφανιστεί πάλι</string>
+    <string name="dont_show">Μην εμφανιστεί πάλι</string>
     <string name="tvDNSStop">"DNSCrypt Ανενεργό"</string>
     <string name="tvDNSInstalled">"DNSCrypt Εγκατεστημένο"</string>
     <string name="tvDNSInstalling">"Εγκατάσταση DNSCrypt"</string>
@@ -64,8 +64,8 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="backupFolder">"Επιλογή φακέλου:"</string>
     <string name="title_activity_settings">"Ρυθμίσεις"</string>
     <string name="pref_fast_categ_autostart">"Αυτόματη Εκκίνηση"</string>
-    <string name="pref_fast_dns_autostart">Εκκίνηση DNSCrypt κατά τη φόρτωση</string>
-    <string name="pref_fast_tor_autostart">Εκκίνηση Tor κατά τη φόρτωση</string>
+    <string name="pref_fast_dns_autostart">Εκκίνηση DNSCrypt κατά την εκκίνηση</string>
+    <string name="pref_fast_tor_autostart">Εκκίνηση Tor κατά την εκκίνηση</string>
     <string name="pref_fast_itpd_autostart">Εναρξη I2P κατά την εκκίνηση</string>
     <string name="pref_fast_autostart_delay">"Καθυστέρηση"</string>
     <string name="pref_fast_autostart_delay_summ">"Χρησιμοποιήστε την καθυστέρηση (σε δευτερόλεπτα) μόνο εάν η αυτόματη εκκίνηση δεν λειτουργεί σωστά"</string>
@@ -524,4 +524,5 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="connectivity_check">"Internet connectivity check"</string>
     <string name="pref_fast_logs">"Real-time logs"</string>
     <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
+    <string name="ask_later">Ρώτα αργότερα</string>
 </resources>
