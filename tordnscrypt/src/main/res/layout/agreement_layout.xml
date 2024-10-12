@@ -41,8 +41,7 @@
             android:autoLink="all"
             android:linksClickable="true"
             android:padding="8dp"
-            android:text="@string/agreement_text"
-            android:typeface="serif" />
+            android:text="@string/agreement_text" />
     </androidx.core.widget.NestedScrollView>
 
     <View

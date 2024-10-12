@@ -14,7 +14,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:orientation="vertical">
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/cardBackupPath"
@@ -80,11 +80,11 @@
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="18dp"
                         android:background="@drawable/button_start_selector"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
                         android:minHeight="45dp"
                         android:text="@string/btnResetSettings"
                         android:textAlignment="center"
-                        android:textColor="@color/buttonTextColor"
-                        android:typeface="serif" />
+                        android:textColor="@color/buttonTextColor" />
 
                     <View
                         android:id="@+id/divider4"
@@ -101,11 +101,11 @@
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="18dp"
                         android:background="@drawable/button_start_selector"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
                         android:minHeight="45dp"
                         android:text="@string/btnRestoreBackup"
                         android:textAlignment="center"
-                        android:textColor="@color/buttonTextColor"
-                        android:typeface="serif" />
+                        android:textColor="@color/buttonTextColor" />
 
                     <View
                         android:id="@+id/divider5"
@@ -122,11 +122,11 @@
                         android:layout_marginEnd="8dp"
                         android:layout_marginBottom="8dp"
                         android:background="@drawable/button_start_selector"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
                         android:minHeight="45dp"
                         android:text="@string/btnSaveBackup"
                         android:textAlignment="center"
-                        android:textColor="@color/buttonTextColor"
-                        android:typeface="serif" />
+                        android:textColor="@color/buttonTextColor" />
 
                 </androidx.appcompat.widget.LinearLayoutCompat>
             </androidx.cardview.widget.CardView>

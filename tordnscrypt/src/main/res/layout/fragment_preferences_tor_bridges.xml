@@ -48,8 +48,10 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_horizontal"
                             android:checked="true"
+                            android:fontFamily="sans-serif-thin"
                             android:text="@string/pref_fast_use_tor_bridges_no"
-                            android:typeface="serif" />
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
                     </androidx.cardview.widget.CardView>
 
                     <androidx.cardview.widget.CardView
@@ -72,8 +74,10 @@
                                 android:layout_height="match_parent"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
+                                android:fontFamily="sans-serif-thin"
                                 android:text="@string/pref_fast_use_tor_bridges_default"
-                                android:typeface="serif" />
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
 
                             <androidx.appcompat.widget.AppCompatSpinner
                                 android:id="@+id/spDefaultBridges"
@@ -107,8 +111,10 @@
                                 android:layout_height="match_parent"
                                 android:layout_marginEnd="8dp"
                                 android:layout_weight="1"
+                                android:fontFamily="sans-serif-thin"
                                 android:text="@string/pref_fast_use_tor_bridges_own"
-                                android:typeface="serif" />
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
 
                             <androidx.appcompat.widget.AppCompatSpinner
                                 android:id="@+id/spOwnBridges"
@@ -133,9 +139,9 @@
                             android:layout_margin="4dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_start_selector"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
                             android:text="@string/pref_fast_use_tor_bridges_request"
-                            android:textColor="@color/buttonTextColor"
-                            android:typeface="serif" />
+                            android:textColor="@color/buttonTextColor" />
 
                         <androidx.appcompat.widget.AppCompatButton
                             android:id="@+id/btnAddBridges"
@@ -144,9 +150,9 @@
                             android:layout_margin="4dp"
                             android:layout_weight="1"
                             android:background="@drawable/button_start_selector"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
                             android:text="@string/pref_fast_use_tor_bridges_add"
-                            android:textColor="@color/buttonTextColor"
-                            android:typeface="serif" />
+                            android:textColor="@color/buttonTextColor" />
                     </androidx.appcompat.widget.LinearLayoutCompat>
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
