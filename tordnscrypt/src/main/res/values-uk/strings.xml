@@ -514,7 +514,9 @@
     <string name="pref_tor_isolation_categ">Налаштування ізолювання</string>
     <string name="pref_tor_fascist_firewall_lock_summ">Щоб активувати цю опцію, необхідно відключити мости, або використовувати мости тільки з 80 і 443 портами.</string>
     <string name="dns_rule_add_remote_list">Добавити посилання</string>
+    <string name="dns_rule_replace_remote_list">Замінити посилання</string>
     <string name="dns_rule_add_local_list">Добавити файли</string>
+    <string name="dns_rule_replace_local_list">Замінити файли</string>
     <string name="dns_rule_add_rule">Добавити правило</string>
     <string name="rules">правил</string>
     <string name="total_rules">Всього: %d правил</string>

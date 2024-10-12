@@ -698,7 +698,9 @@
     <string name="anonymize_relays">Anonymize relays</string>
     <string name="anonymize_relays_not_used">Anonymize relays are not used.</string>
     <string name="dns_rule_add_remote_list">Add remote list</string>
+    <string name="dns_rule_replace_remote_list">Replace remote list</string>
     <string name="dns_rule_add_local_list">Add local list</string>
+    <string name="dns_rule_replace_local_list">Replace local list</string>
     <string name="dns_rule_add_rule">Add rule</string>
     <string name="rules">rules</string>
     <string name="total_rules">Total: %d rules</string>

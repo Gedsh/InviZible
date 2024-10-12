@@ -386,7 +386,11 @@ class DnsRulesRecyclerAdapter(
             when (rules[position]) {
                 is DnsRuleRecycleItem.AddRemoteRulesButton -> {
                     ItemButtonBinding.bind(itemView).apply {
-                        btnAddRuleItem.setText(R.string.dns_rule_add_remote_list)
+                        if (rules.firstOrNull { it is DnsRuleRecycleItem.DnsRemoteRule } == null) {
+                            btnAddRuleItem.setText(R.string.dns_rule_add_remote_list)
+                        } else {
+                            btnAddRuleItem.setText(R.string.dns_rule_replace_remote_list)
+                        }
                         btnAddRuleItem.setOnClickListener {
                             onRemoteRulesAdd()
                         }
@@ -395,7 +399,11 @@ class DnsRulesRecyclerAdapter(
 
                 is DnsRuleRecycleItem.AddLocalRulesButton -> {
                     ItemButtonBinding.bind(itemView).apply {
-                        btnAddRuleItem.setText(R.string.dns_rule_add_local_list)
+                        if (rules.firstOrNull { it is DnsRuleRecycleItem.DnsLocalRule } == null) {
+                            btnAddRuleItem.setText(R.string.dns_rule_add_local_list)
+                        } else {
+                            btnAddRuleItem.setText(R.string.dns_rule_replace_local_list)
+                        }
                         btnAddRuleItem.setOnClickListener {
                             onImportLocalRules()
                         }

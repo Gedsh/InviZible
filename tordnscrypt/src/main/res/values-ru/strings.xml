@@ -545,7 +545,9 @@
     <string name="pull_to_refresh">\u2193 Потяните, чтобы обновить \u2193</string>
     <string name="firewall_critical_uid">Блокировка этого системного приложения может привести к нестабильному интернет-соединению!</string>
     <string name="dns_rule_add_remote_list">Добавить ссылку</string>
+    <string name="dns_rule_replace_remote_list">Заменить ссылку</string>
     <string name="dns_rule_add_local_list">Добавить файлы</string>
+    <string name="dns_rule_replace_local_list">Заменить файлы</string>
     <string name="dns_rule_add_rule">Добавить правило</string>
     <string name="rules">правил</string>
     <string name="total_rules">Всего: %d правил</string>
