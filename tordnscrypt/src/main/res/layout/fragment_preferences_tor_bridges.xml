@@ -21,140 +21,137 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="4dp"
                 tools:context=".settings.tor_bridges.PreferencesTorBridges">
 
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:id="@+id/linearLayout6"
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardNoBridges"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_marginTop="4dp"
-                    android:orientation="vertical"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    app:cardBackgroundColor="@color/cardsColor"
+                    app:cardCornerRadius="5dp"
+                    app:cardUseCompatPadding="true"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
 
-                    <androidx.cardview.widget.CardView
+                    <androidx.appcompat.widget.AppCompatRadioButton
+                        android:id="@+id/rbNoBridges"
                         android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:focusable="false"
-                        app:cardBackgroundColor="@color/cardsColor"
-                        app:cardCornerRadius="5dp"
-                        app:cardUseCompatPadding="true">
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:checked="true"
+                        android:fontFamily="sans-serif-thin"
+                        android:text="@string/pref_fast_use_tor_bridges_no"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+                </androidx.cardview.widget.CardView>
 
-                        <androidx.appcompat.widget.AppCompatRadioButton
-                            android:id="@+id/rbNoBridges"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_horizontal"
-                            android:checked="true"
-                            android:fontFamily="sans-serif-thin"
-                            android:text="@string/pref_fast_use_tor_bridges_no"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </androidx.cardview.widget.CardView>
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:focusable="false"
-                        app:cardBackgroundColor="@color/cardsColor"
-                        app:cardCornerRadius="5dp"
-                        app:cardUseCompatPadding="true">
-
-                        <androidx.appcompat.widget.LinearLayoutCompat
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <androidx.appcompat.widget.AppCompatRadioButton
-                                android:id="@+id/rbDefaultBridges"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                android:fontFamily="sans-serif-thin"
-                                android:text="@string/pref_fast_use_tor_bridges_default"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <androidx.appcompat.widget.AppCompatSpinner
-                                android:id="@+id/spDefaultBridges"
-                                android:layout_width="250dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1"
-                                android:dropDownWidth="wrap_content"
-                                android:entries="@array/tor_bridges_default_obfs"
-                                android:spinnerMode="dialog" />
-                        </androidx.appcompat.widget.LinearLayoutCompat>
-
-                    </androidx.cardview.widget.CardView>
-
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1"
-                        android:focusable="false"
-                        app:cardBackgroundColor="@color/cardsColor"
-                        app:cardCornerRadius="5dp"
-                        app:cardUseCompatPadding="true">
-
-                        <androidx.appcompat.widget.LinearLayoutCompat
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <androidx.appcompat.widget.AppCompatRadioButton
-                                android:id="@+id/rbOwnBridges"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:layout_marginEnd="8dp"
-                                android:layout_weight="1"
-                                android:fontFamily="sans-serif-thin"
-                                android:text="@string/pref_fast_use_tor_bridges_own"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-
-                            <androidx.appcompat.widget.AppCompatSpinner
-                                android:id="@+id/spOwnBridges"
-                                android:layout_width="250dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1"
-                                android:entries="@array/tor_bridges_own_obfs"
-                                android:spinnerMode="dialog" />
-                        </androidx.appcompat.widget.LinearLayoutCompat>
-
-                    </androidx.cardview.widget.CardView>
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardDefaultBridges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    app:cardBackgroundColor="@color/cardsColor"
+                    app:cardCornerRadius="5dp"
+                    app:cardUseCompatPadding="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cardNoBridges">
 
                     <androidx.appcompat.widget.LinearLayoutCompat
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/btnRequestBridges"
+                        <androidx.appcompat.widget.AppCompatRadioButton
+                            android:id="@+id/rbDefaultBridges"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_margin="4dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_start_selector"
-                            android:foreground="?attr/selectableItemBackgroundBorderless"
-                            android:text="@string/pref_fast_use_tor_bridges_request"
-                            android:textColor="@color/buttonTextColor" />
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="2"
+                            android:fontFamily="sans-serif-thin"
+                            android:text="@string/pref_fast_use_tor_bridges_default"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
 
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/btnAddBridges"
+                        <androidx.appcompat.widget.AppCompatSpinner
+                            android:id="@+id/spDefaultBridges"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:layout_margin="4dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/button_start_selector"
-                            android:foreground="?attr/selectableItemBackgroundBorderless"
-                            android:text="@string/pref_fast_use_tor_bridges_add"
-                            android:textColor="@color/buttonTextColor" />
+                            android:layout_weight="3"
+                            android:dropDownWidth="wrap_content"
+                            android:entries="@array/tor_bridges_default_obfs"
+                            android:spinnerMode="dialog" />
                     </androidx.appcompat.widget.LinearLayoutCompat>
-                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardOwnBridges"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    app:cardBackgroundColor="@color/cardsColor"
+                    app:cardCornerRadius="5dp"
+                    app:cardUseCompatPadding="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cardDefaultBridges">
+
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <androidx.appcompat.widget.AppCompatRadioButton
+                            android:id="@+id/rbOwnBridges"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="2"
+                            android:fontFamily="sans-serif-thin"
+                            android:text="@string/pref_fast_use_tor_bridges_own"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <androidx.appcompat.widget.AppCompatSpinner
+                            android:id="@+id/spOwnBridges"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="3"
+                            android:entries="@array/tor_bridges_own_obfs"
+                            android:spinnerMode="dialog" />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnRequestBridges"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/button_start_selector"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:text="@string/pref_fast_use_tor_bridges_request"
+                    android:textColor="@color/buttonTextColor"
+                    app:layout_constraintEnd_toStartOf="@+id/btnAddBridges"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/cardOwnBridges" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnAddBridges"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:background="@drawable/button_start_selector"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:text="@string/pref_fast_use_tor_bridges_add"
+                    android:textColor="@color/buttonTextColor"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/btnRequestBridges"
+                    app:layout_constraintTop_toBottomOf="@id/cardOwnBridges" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvBridgesListEmpty"
@@ -167,7 +164,7 @@
                     android:visibility="visible"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/linearLayout6"
+                    app:layout_constraintTop_toBottomOf="@+id/btnAddBridges"
                     tools:text="@string/pull_to_refresh" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
