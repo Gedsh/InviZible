@@ -551,4 +551,6 @@
     <string name="dns_rule_add_url">Añadir URL</string>
     <string name="dns_rule_add_remote_list">Añadir lista remota</string>
     <string name="pref_dnscrypt_rules_delay_summ">Las normas se actualizarán tras el plazo especificado en horas.</string>
+    <string name="dns_rule_replace_remote_list">Reemplazar lista remota</string>
+    <string name="dns_rule_replace_local_list">Reemplazar lista local</string>
 </resources>
