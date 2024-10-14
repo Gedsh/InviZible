@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.vpn;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -28,6 +29,7 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.os.Build;
 import android.provider.Settings;
+import android.text.TextUtils;
 
 import androidx.annotation.Keep;
 
@@ -245,13 +247,31 @@ public class VpnUtils {
         }
     }
 
-    public static boolean isPrivateDns(Context context) {
-        String dns_mode = Settings.Global.getString(context.getContentResolver(), "private_dns_mode");
-        logi("Private DNS mode=" + dns_mode);
-        if (dns_mode == null) {
-            dns_mode = "off";
+    public static final int PRIVATE_DNS_MODE_OFF = 1;
+    public static final int PRIVATE_DNS_MODE_OPPORTUNISTIC = 2;
+    public static final int PRIVATE_DNS_MODE_PROVIDER_HOSTNAME = 3;
+    public static final String PRIVATE_DNS_DEFAULT_MODE = "private_dns_default_mode";
+    public static final String PRIVATE_DNS_MODE = "private_dns_mode";
+
+    public static int getPrivateDnsMode(Context context) {
+        try {
+            final ContentResolver cr = context.getContentResolver();
+            String mode = Settings.Global.getString(cr, PRIVATE_DNS_MODE);
+            if (TextUtils.isEmpty(mode)) mode = Settings.Global.getString(cr, PRIVATE_DNS_DEFAULT_MODE);
+            return getPrivateDnsModeAsInt(mode);
+        } catch (Exception e) {
+            loge("VpnUtils getPrivateDnsMode", e);
         }
-        return (!"off".equals(dns_mode));
+        return PRIVATE_DNS_MODE_OFF;
+    }
+    private static int getPrivateDnsModeAsInt(String mode) {
+        if (TextUtils.isEmpty(mode))
+            return PRIVATE_DNS_MODE_OFF;
+        return switch (mode) {
+            case "hostname" -> PRIVATE_DNS_MODE_PROVIDER_HOSTNAME;
+            case "opportunistic" -> PRIVATE_DNS_MODE_OPPORTUNISTIC;
+            default -> PRIVATE_DNS_MODE_OFF;
+        };
     }
 
     public static boolean isIpInSubnetOld(final String ip, final String network) {
