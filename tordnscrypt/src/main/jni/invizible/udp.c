@@ -285,7 +285,7 @@ jboolean handle_udp(const struct arguments *args,
         return 0;
     }
 
-    if (ntohs(udphdr->dest) == 53 && redirect == NULL && uid != own_uid) {
+    if (ntohs(udphdr->dest) == 53 && redirect == NULL && uid != own_uid && args->fwd53) {
         log_android(
                 ANDROID_LOG_ERROR, "Direct DNS connection for %s/%u to %s/%u uid %uid not allowed",
                 source, ntohs(udphdr->source), dest, ntohs(udphdr->dest), uid

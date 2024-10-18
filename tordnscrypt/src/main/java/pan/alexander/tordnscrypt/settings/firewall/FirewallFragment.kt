@@ -47,9 +47,11 @@ import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper.TAG_HELPER
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.modules.ModulesAux
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.OnBackPressListener
 import pan.alexander.tordnscrypt.settings.firewall.adapter.FirewallAdapter
+import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED
@@ -105,7 +107,7 @@ class FirewallFragment : Fragment(),
 
     private var searchText: String? = null
 
-    var firewallEnabled = false
+    private var firewallEnabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -353,7 +355,7 @@ class FirewallFragment : Fragment(),
             R.id.btnTopUnCheckAllFirewall -> activateAll(false)
             R.id.btnPowerFirewall -> {
                 enableFirewall()
-                modulesStatus.setIptablesRulesUpdateRequested(context, true)
+                startFirewall()
             }
             else -> loge("FirewallFragment onClick unknown id: ${v.id}")
         }
@@ -404,8 +406,10 @@ class FirewallFragment : Fragment(),
         if (buttonView.id == R.id.menu_switch) {
             if (isChecked) {
                 enableFirewall()
+                startFirewall()
             } else {
                 disableFirewall()
+                stopFirewall()
             }
             modulesStatus.setIptablesRulesUpdateRequested(context, true)
         }
@@ -458,6 +462,20 @@ class FirewallFragment : Fragment(),
         firewallSwitch?.isChecked = false
 
         binding.btnPowerFirewall.setOnClickListener(this)
+    }
+
+    private fun startFirewall() {
+        if (modulesStatus.firewallState != ModuleState.RUNNING) {
+            modulesStatus.setFirewallState(ModuleState.STARTING, preferenceRepository.get())
+            ModulesAux.makeModulesStateExtraLoop(context)
+        }
+    }
+
+    private fun stopFirewall() {
+        if (modulesStatus.firewallState != ModuleState.STOPPED) {
+            modulesStatus.setFirewallState(ModuleState.STOPPING, preferenceRepository.get())
+            ModulesAux.makeModulesStateExtraLoop(context)
+        }
     }
 
     private fun searchApps(text: String?) {

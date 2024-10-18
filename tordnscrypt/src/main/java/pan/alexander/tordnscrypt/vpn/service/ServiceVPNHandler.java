@@ -54,11 +54,15 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.vpn.Rule;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -205,6 +209,14 @@ public class ServiceVPNHandler extends Handler {
             }
 
             serviceVPN.startNative(serviceVPN.vpn, listAllowed);
+
+            ModulesStatus modulesStatus = ModulesStatus.getInstance();
+            if (modulesStatus.getMode() == OperationMode.VPN_MODE
+                    && serviceVPN.vpnPreferences.getFirewallEnabled()) {
+                modulesStatus.setFirewallState(RUNNING, preferenceRepository.get());
+            } else {
+                modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+            }
         }
     }
 
@@ -311,6 +323,16 @@ public class ServiceVPNHandler extends Handler {
         }
 
         serviceVPN.reloading = false;
+
+        if (modulesStatus.getMode() == OperationMode.VPN_MODE) {
+            if (modulesStatus.getFirewallState() == STARTING) {
+                modulesStatus.setFirewallState(RUNNING, preferenceRepository.get());
+            } else if (modulesStatus.getFirewallState() == STOPPING) {
+                modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+            }
+        } else {
+            modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+        }
 
         if (defaultSharedPreferences.get().getBoolean(ARP_SPOOFING_DETECTION, false)) {
             try {
@@ -445,6 +467,10 @@ public class ServiceVPNHandler extends Handler {
         serviceVPN.stopSelf();
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.getMode() == OperationMode.VPN_MODE
+                || modulesStatus.getMode() == OperationMode.PROXY_MODE) {
+            modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+        }
         ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
         ModuleState torState = modulesStatus.getTorState();
         ModuleState itpdState = modulesStatus.getItpdState();

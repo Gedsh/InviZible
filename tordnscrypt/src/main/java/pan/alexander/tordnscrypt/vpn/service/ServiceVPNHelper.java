@@ -35,6 +35,7 @@ import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -59,6 +60,7 @@ public class ServiceVPNHelper {
         OperationMode operationMode = modulesStatus.getMode();
         ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
         ModuleState torState = modulesStatus.getTorState();
+        ModuleState firewallState = modulesStatus.getFirewallState();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean vpnServiceEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
 
@@ -67,7 +69,8 @@ public class ServiceVPNHelper {
 
         if (((operationMode == VPN_MODE) || fixTTL)
                 && vpnServiceEnabled
-                && (dnsCryptState == RUNNING || torState == RUNNING)) {
+                && (dnsCryptState == RUNNING || torState == RUNNING
+                || firewallState == RUNNING || firewallState == STARTING)) {
             Intent intent = new Intent(context, ServiceVPN.class);
             intent.putExtra(EXTRA_COMMAND, VPNCommand.RELOAD);
             intent.putExtra(EXTRA_REASON, reason);

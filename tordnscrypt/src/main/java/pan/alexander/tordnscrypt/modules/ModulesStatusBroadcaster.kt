@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.modules
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
@@ -29,28 +30,6 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
-
-private const val STATUS_ACTION = "pan.alexander.tordnscrypt.STATUS_ACTION"
-
-private const val STATUS_ARG = "STATUS"
-private const val STATUS_RUNNING = "RUNNING"
-private const val STATUS_READY = "READY"
-private const val STATUS_STOPPED = "STOPPED"
-private const val STATUS_DISABLED = "CONTROL_DISABLED"
-
-private const val MODULE_ARG = "MODULE"
-private const val DNSCRYPT = "DNSCRYPT"
-private const val TOR = "TOR"
-private const val I2PD = "I2PD"
-
-private const val DNSCRYPT_DNS_PORT_ARG = "DNSCRYPT_DNS_PORT"
-
-private const val TOR_DNS_PORT_ARG = "TOR_DNS_PORT"
-private const val TOR_SOCKS_PROXY_PORT_ARG = "TOR_SOCKS_PROXY_PORT"
-private const val TOR_TRANSPARENT_PROXY_PORT_ARG = "TOR_TRANSPARENT_PROXY_PORT"
-private const val TOR_HTTP_PROXY_PORT_ARG = "TOR_HTTP_PROXY_PORT"
-
-private const val I2PD_HTTP_PROXY_PORT_ARG = "I2PD_HTTP_PROXY_PORT"
 
 @Singleton
 class ModulesStatusBroadcaster @Inject constructor(
@@ -154,6 +133,20 @@ class ModulesStatusBroadcaster @Inject constructor(
         }
     }
 
+    fun broadcastFirewallRunning() {
+        getFirewallIntent().also {
+            it.putExtra(STATUS_ARG, STATUS_RUNNING)
+            LocalBroadcastManager.getInstance(context).sendBroadcast(it)
+        }
+    }
+
+    fun broadcastFirewallStopped() {
+        getFirewallIntent().also {
+            it.putExtra(STATUS_ARG, STATUS_STOPPED)
+            LocalBroadcastManager.getInstance(context).sendBroadcast(it)
+        }
+    }
+
     private fun getDNSCryptIntent() =
         Intent().also {
             it.setAction(STATUS_ACTION)
@@ -178,6 +171,12 @@ class ModulesStatusBroadcaster @Inject constructor(
             it.putExtra(I2PD_HTTP_PROXY_PORT_ARG, pathVars.itpdHttpProxyPort)
         }
 
+    private fun getFirewallIntent() =
+        Intent().also {
+            it.setAction(STATUS_ACTION)
+            it.putExtra(MODULE_ARG, FIREWALL)
+        }
+
     fun broadcastRemoteControlDisabled() {
         Intent().also {
             it.setAction(STATUS_ACTION)
@@ -188,6 +187,31 @@ class ModulesStatusBroadcaster @Inject constructor(
 
     fun onRemoteControlChanged(enabled: Boolean) {
         remoteControlActive = enabled
+    }
+
+    companion object {
+        const val STATUS_ACTION = "pan.alexander.tordnscrypt.STATUS_ACTION"
+
+        const val STATUS_ARG = "STATUS"
+        const val STATUS_RUNNING = "RUNNING"
+        const val STATUS_READY = "READY"
+        const val STATUS_STOPPED = "STOPPED"
+        const val STATUS_DISABLED = "CONTROL_DISABLED"
+
+        const val MODULE_ARG = "MODULE"
+        const val DNSCRYPT = "DNSCRYPT"
+        const val TOR = "TOR"
+        const val I2PD = "I2PD"
+        const val FIREWALL = "FIREWALL"
+
+        const val DNSCRYPT_DNS_PORT_ARG = "DNSCRYPT_DNS_PORT"
+
+        const val TOR_DNS_PORT_ARG = "TOR_DNS_PORT"
+        const val TOR_SOCKS_PROXY_PORT_ARG = "TOR_SOCKS_PROXY_PORT"
+        const val TOR_TRANSPARENT_PROXY_PORT_ARG = "TOR_TRANSPARENT_PROXY_PORT"
+        const val TOR_HTTP_PROXY_PORT_ARG = "TOR_HTTP_PROXY_PORT"
+
+        const val I2PD_HTTP_PROXY_PORT_ARG = "I2PD_HTTP_PROXY_PORT"
     }
 
 }

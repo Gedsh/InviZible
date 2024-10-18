@@ -87,6 +87,7 @@ import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.itpd_fragment.ITPDRunFragment;
 import pan.alexander.tordnscrypt.settings.SettingsActivity;
@@ -105,9 +106,17 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated;
 import static pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter.MAIN_SCREEN_FRAGMENT_QUANTITY;
+import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.FIREWALL;
+import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.MODULE_ARG;
+import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.STATUS_ARG;
+import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.STATUS_RUNNING;
+import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.STATUS_STOPPED;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
@@ -400,6 +409,8 @@ public class MainActivity extends LangAppCompatActivity
 
         showNewTorIdentityIcon(menu);
 
+        manageFirewallIcon(menu);
+
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -463,7 +474,7 @@ public class MainActivity extends LangAppCompatActivity
             } else if (mode == PROXY_MODE) {
                 rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
             } else {
-                rootIcon.setIcon(R.drawable.ic_vpn_key_white_24dp);
+                rootIcon.setIcon(R.drawable.ic_vpn_key);
             }
 
             if (mode == ROOT_MODE) {
@@ -500,7 +511,7 @@ public class MainActivity extends LangAppCompatActivity
             } else if (mode == PROXY_MODE) {
                 rootIcon.setIcon(R.drawable.ic_warning_white_24dp);
             } else {
-                rootIcon.setIcon(R.drawable.ic_vpn_key_white_24dp);
+                rootIcon.setIcon(R.drawable.ic_vpn_key);
             }
 
             hotSpot.setVisible(false);
@@ -587,6 +598,25 @@ public class MainActivity extends LangAppCompatActivity
         invalidateMenu();
     }
 
+    private void manageFirewallIcon(Menu menu) {
+        MenuItem firewallMenuItem = menu.findItem(R.id.menu_item_firewall);
+        if (firewallMenuItem == null) {
+            return;
+        }
+        boolean firewallIsEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)
+                && preferenceRepository.get().getBoolPreference(FIREWALL_WAS_STARTED);
+        if (modulesStatus.getMode() == PROXY_MODE) {
+            firewallMenuItem.setVisible(false);
+        } else {
+            firewallMenuItem.setVisible(firewallIsEnabled);
+            if (modulesStatus.getFirewallState() == RUNNING) {
+                firewallMenuItem.setIcon(R.drawable.ic_firewall_active_menu);
+            } else {
+                firewallMenuItem.setIcon(R.drawable.ic_firewall_menu);
+            }
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
@@ -614,6 +644,8 @@ public class MainActivity extends LangAppCompatActivity
             switchToVPNMode(item);
         } else if (id == R.id.menu_proxies_mode) {
             switchToProxyMode(item);
+        } else if (id == R.id.menu_item_firewall) {
+            showFirewallScreen();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -868,9 +900,7 @@ public class MainActivity extends LangAppCompatActivity
             intent.setAction("common_Pref");
             startActivity(intent);
         } else if (id == R.id.nav_firewall) {
-            Intent intent = new Intent(this, SettingsActivity.class);
-            intent.setAction("firewall");
-            startActivity(intent);
+            showFirewallScreen();
         } else if (id == R.id.nav_help) {
             Intent intent = new Intent(this, HelpActivity.class);
             startActivity(intent);
@@ -902,6 +932,12 @@ public class MainActivity extends LangAppCompatActivity
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showFirewallScreen() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        intent.setAction("firewall");
+        startActivity(intent);
     }
 
     private void showInfoAboutRoot() {
@@ -1008,14 +1044,25 @@ public class MainActivity extends LangAppCompatActivity
         mainActivityReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+
+                if (intent == null) return;
+
                 if (ArpScannerKt.MITM_ATTACK_WARNING.equals(intent.getAction())) {
                     invalidateMenu();
+                } else if (ModulesStatusBroadcaster.STATUS_ACTION.equals(intent.getAction())
+                        && FIREWALL.equals(intent.getStringExtra(MODULE_ARG))) {
+                    invalidateMenu();
+                    if (mainFragment != null) {
+                        mainFragment.refreshStartButtonText();
+                    }
                 }
             }
         };
 
         IntentFilter mitmDetected = new IntentFilter(ArpScannerKt.MITM_ATTACK_WARNING);
         LocalBroadcastManager.getInstance(this).registerReceiver(mainActivityReceiver, mitmDetected);
+        IntentFilter firewallState = new IntentFilter(ModulesStatusBroadcaster.STATUS_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mainActivityReceiver, firewallState);
     }
 
     private void unregisterBroadcastReceiver() {
@@ -1047,7 +1094,8 @@ public class MainActivity extends LangAppCompatActivity
         if (ModulesService.serviceIsRunning && modulesStatus.getMode() == VPN_MODE
                 && (modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == FAULT || modulesStatus.getDnsCryptState() == ModuleState.UNDEFINED)
                 && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == FAULT || modulesStatus.getTorState() == ModuleState.UNDEFINED)
-                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT || modulesStatus.getItpdState() == ModuleState.UNDEFINED)) {
+                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == FAULT || modulesStatus.getItpdState() == ModuleState.UNDEFINED)
+                && (modulesStatus.getFirewallState() == STOPPING || modulesStatus.getFirewallState() == STOPPED)) {
             ModulesAux.stopModulesService(this);
         }
 
@@ -1120,8 +1168,9 @@ public class MainActivity extends LangAppCompatActivity
 
     @Override
     public void invalidateMenu() {
-        if (handler != null) {
-            handler.post(this::invalidateOptionsMenu);
+        Toolbar toolbar = getWindow().findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            toolbar.post(this::invalidateOptionsMenu);
         }
     }
 }

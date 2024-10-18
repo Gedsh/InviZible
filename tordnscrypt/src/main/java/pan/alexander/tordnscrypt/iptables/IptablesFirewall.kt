@@ -41,6 +41,7 @@ import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isRoamin
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isVpnActive
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isWifiActive
 import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager
+import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.vpn.VpnUtils
@@ -70,6 +71,10 @@ class IptablesFirewall @Inject constructor(
     fun getFirewallRules(tetheringActive: Boolean): List<String> {
 
         prepareUidAllowed()
+
+        if (modulesStatus.mode == OperationMode.ROOT_MODE) {
+            modulesStatus.setFirewallState(ModuleState.RUNNING, preferences)
+        }
 
         val iptables = getIptables()
 
@@ -103,6 +108,10 @@ class IptablesFirewall @Inject constructor(
     }
 
     fun getClearFirewallRules(): List<String> {
+
+        if (modulesStatus.mode == OperationMode.ROOT_MODE) {
+            modulesStatus.setFirewallState(ModuleState.STOPPED, preferences)
+        }
 
         val iptables = getIptables()
 

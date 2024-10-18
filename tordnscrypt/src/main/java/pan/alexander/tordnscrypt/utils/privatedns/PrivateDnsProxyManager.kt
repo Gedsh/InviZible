@@ -39,6 +39,7 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
+import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
@@ -57,7 +58,8 @@ object PrivateDnsProxyManager {
         ignoreSystemDns: Boolean
     ) {
         try {
-            if (ModulesStatus.getInstance().mode == OperationMode.PROXY_MODE) {
+            val modulesStatus = ModulesStatus.getInstance()
+            if (modulesStatus.mode == OperationMode.PROXY_MODE) {
                 return
             }
 
@@ -75,10 +77,13 @@ object PrivateDnsProxyManager {
 
             // localLinkProperties.privateDnsServerName == null - Opportunistic mode ("Automatic")
             val privateDnsMode = VpnUtils.getPrivateDnsMode(context)
-            if (privateDnsMode == PRIVATE_DNS_MODE_PROVIDER_HOSTNAME
-                || privateDnsMode == PRIVATE_DNS_MODE_OPPORTUNISTIC && !ignoreSystemDns
-                || localLinkProperties?.isPrivateDnsActive == true
-                && (localLinkProperties.privateDnsServerName != null || !ignoreSystemDns)) {
+            if ((modulesStatus.dnsCryptState == ModuleState.RUNNING
+                        || modulesStatus.torState == ModuleState.RUNNING)
+                && (privateDnsMode == PRIVATE_DNS_MODE_PROVIDER_HOSTNAME
+                        || privateDnsMode == PRIVATE_DNS_MODE_OPPORTUNISTIC && !ignoreSystemDns
+                        || localLinkProperties?.isPrivateDnsActive == true
+                        && (localLinkProperties.privateDnsServerName != null || !ignoreSystemDns))
+            ) {
                 sendNotification(
                     context,
                     context.getString(R.string.app_name),
@@ -87,7 +92,10 @@ object PrivateDnsProxyManager {
                 )
             }
 
-            if (localLinkProperties?.httpProxy != null) {
+            if ((modulesStatus.dnsCryptState == ModuleState.RUNNING
+                        || modulesStatus.torState == ModuleState.RUNNING)
+                && localLinkProperties?.httpProxy != null
+            ) {
 
                 if (NetworkChecker.isWifiActive(context)) {
                     sendNotification(

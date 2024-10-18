@@ -206,6 +206,10 @@
             android:name=".settings.firewall.FirewallNotification"
             android:exported="false" />
 
+        <receiver
+            android:name=".modules.ModulesServiceNotificationManager"
+            android:exported="false" />
+
         <activity
             android:name=".backup.BackupActivity"
             android:theme="@style/AppTheme" />

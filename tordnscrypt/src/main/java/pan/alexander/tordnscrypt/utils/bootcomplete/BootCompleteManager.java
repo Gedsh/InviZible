@@ -23,6 +23,7 @@ import static pan.alexander.tordnscrypt.BootCompleteReceiver.MY_PACKAGE_REPLACED
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.ACTION_STOP_SERVICE_FOREGROUND;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -53,11 +54,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import dagger.Lazy;
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.modules.ModulesActionSender;
 import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesKiller;
 import pan.alexander.tordnscrypt.modules.ModulesRunner;
-import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster;
 import pan.alexander.tordnscrypt.settings.PathVars;
@@ -108,7 +110,7 @@ public class BootCompleteManager {
         this.updateIPsManager = updateIPsManager;
     }
 
-    private ModulesStatus modulesStatus = ModulesStatus.getInstance();
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
     public void performAction(final Context context, Intent intent) {
 
@@ -156,11 +158,16 @@ public class BootCompleteManager {
         boolean savedDNSCryptStateRunning = ModulesAux.isDnsCryptSavedStateRunning();
         boolean savedTorStateRunning = ModulesAux.isTorSavedStateRunning();
         boolean savedITPDStateRunning = ModulesAux.isITPDSavedStateRunning();
+        boolean savedFirewallStateRunning = ModulesAux.isFirewallSavedStateRunning();
+
+        boolean autoStartFirewall = autoStartDNSCrypt || autoStartTor
+                || autoStartITPD && savedFirewallStateRunning;
 
         if (action.equalsIgnoreCase(MY_PACKAGE_REPLACED) || action.equalsIgnoreCase(ALWAYS_ON_VPN)) {
             autoStartDNSCrypt = savedDNSCryptStateRunning;
             autoStartTor = savedTorStateRunning;
             autoStartITPD = savedITPDStateRunning;
+            autoStartFirewall = autoStartDNSCrypt || autoStartTor || savedFirewallStateRunning;
         } else if (action.equals(SHELL_SCRIPT_CONTROL)) {
             int startDnsCrypt = intent.getIntExtra(MANAGE_DNSCRYPT_EXTRA, -1);
             int startTor = intent.getIntExtra(MANAGE_TOR_EXTRA, -1);
@@ -185,13 +192,17 @@ public class BootCompleteManager {
                 broadcastItpdState(autoStartITPD);
             }
 
+            autoStartFirewall = autoStartDNSCrypt || autoStartTor
+                    || autoStartITPD && savedFirewallStateRunning;
+
             logi("SHELL_SCRIPT_CONTROL start: " +
                     "DNSCrypt " + autoStartDNSCrypt + " Tor " + autoStartTor + " ITPD " + autoStartITPD);
         } else {
             resetModulesSavedState(preferences);
         }
 
-        if (savedDNSCryptStateRunning || savedTorStateRunning || savedITPDStateRunning) {
+        if (savedDNSCryptStateRunning || savedTorStateRunning || savedITPDStateRunning
+                || savedFirewallStateRunning) {
             stopServicesForeground(context, mode, fixTTL);
         }
 
@@ -219,28 +230,29 @@ public class BootCompleteManager {
         }
 
         if (autoStartDNSCrypt && autoStartTor && autoStartITPD) {
-            startStopRestartModules(true, true, true);
+            startStopRestartModules(true, true, true, autoStartFirewall);
         } else if (autoStartDNSCrypt && autoStartTor) {
-            startStopRestartModules(true, true, false);
+            startStopRestartModules(true, true, false, autoStartFirewall);
         } else if (autoStartDNSCrypt && !autoStartITPD) {
-            startStopRestartModules(true, false, false);
+            startStopRestartModules(true, false, false, autoStartFirewall);
             updateIPsManager.get().stopRefreshTorUnlockIPs();
         } else if (!autoStartDNSCrypt && autoStartTor && !autoStartITPD) {
-            startStopRestartModules(false, true, false);
+            startStopRestartModules(false, true, false, autoStartFirewall);
         } else if (!autoStartDNSCrypt && !autoStartTor && autoStartITPD) {
-            startStopRestartModules(false, false, true);
+            startStopRestartModules(false, false, true, autoStartFirewall);
             updateIPsManager.get().stopRefreshTorUnlockIPs();
         } else if (!autoStartDNSCrypt && autoStartTor) {
-            startStopRestartModules(false, true, true);
+            startStopRestartModules(false, true, true, autoStartFirewall);
         } else if (autoStartDNSCrypt) {
-            startStopRestartModules(true, false, true);
+            startStopRestartModules(true, false, true, autoStartFirewall);
             updateIPsManager.get().stopRefreshTorUnlockIPs();
         } else {
-            startStopRestartModules(false, false, false);
+            startStopRestartModules(false, false, false, autoStartFirewall);
             updateIPsManager.get().stopRefreshTorUnlockIPs();
         }
 
-        if ((autoStartDNSCrypt || autoStartTor || autoStartITPD) && (mode == VPN_MODE || fixTTL)) {
+        if ((autoStartDNSCrypt || autoStartTor || autoStartITPD || autoStartFirewall)
+                && (mode == VPN_MODE || fixTTL)) {
             final Intent prepareIntent = VpnService.prepare(context);
 
             if (prepareIntent == null) {
@@ -323,7 +335,12 @@ public class BootCompleteManager {
         }
     }
 
-    private void startStopRestartModules(boolean autoStartDNSCrypt, boolean autoStartTor, boolean autoStartITPD) {
+    private void startStopRestartModules(
+            boolean autoStartDNSCrypt,
+            boolean autoStartTor,
+            boolean autoStartITPD,
+            boolean autoStartFirewall
+    ) {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -354,6 +371,15 @@ public class BootCompleteManager {
             modulesStatus.setItpdState(STOPPED);
         }
 
+        if (autoStartFirewall) {
+            modulesStatus.setFirewallState(STARTING, preferenceRepository.get());
+            if (!autoStartDNSCrypt && !autoStartTor) {
+                ModulesAux.makeModulesStateExtraLoop(context);
+            }
+        } else {
+            modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+        }
+
         saveModulesStateRunning(autoStartDNSCrypt, autoStartTor, autoStartITPD);
 
     }
@@ -368,6 +394,7 @@ public class BootCompleteManager {
         preferences.setStringPreference(SAVED_DNSCRYPT_STATE_PREF, ModuleState.UNDEFINED.toString());
         preferences.setStringPreference(SAVED_TOR_STATE_PREF, ModuleState.UNDEFINED.toString());
         preferences.setStringPreference(SAVED_ITPD_STATE_PREF, ModuleState.UNDEFINED.toString());
+        ModulesAux.saveFirewallStateRunning(false);
     }
 
     private void runDNSCrypt() {
@@ -401,13 +428,19 @@ public class BootCompleteManager {
                 Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
                 stopVPNServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
                 stopVPNServiceForeground.putExtra("showNotification", true);
-                context.startForegroundService(stopVPNServiceForeground);
+                if (App.getInstance().isAppForeground()) {
+                    try {
+                        context.startService(stopVPNServiceForeground);
+                    } catch (Exception e) {
+                        loge("BootCompleteReceiver stopServicesForeground", e);
+                        context.startForegroundService(stopVPNServiceForeground);
+                    }
+                } else {
+                    context.startForegroundService(stopVPNServiceForeground);
+                }
             }
 
-            Intent stopModulesServiceForeground = new Intent(context, ModulesService.class);
-            stopModulesServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
-            context.startForegroundService(stopModulesServiceForeground);
-            stopModulesServiceForeground.putExtra("showNotification", true);
+            ModulesActionSender.INSTANCE.sendIntent(context, ACTION_STOP_SERVICE_FOREGROUND);
 
             logi("BootCompleteReceiver stop running services foreground");
         }

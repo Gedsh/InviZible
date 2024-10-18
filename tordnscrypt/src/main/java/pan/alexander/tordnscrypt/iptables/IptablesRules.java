@@ -24,7 +24,12 @@ import java.util.List;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 public interface IptablesRules {
-    List<String> configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState);
+    List<String> configureIptables(
+            ModuleState dnsCryptState,
+            ModuleState torState,
+            ModuleState itpdState,
+            ModuleState firewallState
+    );
     List<String> fastUpdate();
     void refreshFixTTLRules();
     List<String> clearAll();

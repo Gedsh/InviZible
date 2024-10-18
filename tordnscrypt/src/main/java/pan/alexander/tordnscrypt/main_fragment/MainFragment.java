@@ -67,11 +67,13 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentPresenter;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver;
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentView;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentPresenter;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentReceiver;
 import pan.alexander.tordnscrypt.tor_fragment.TorFragmentView;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
@@ -81,10 +83,14 @@ import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED;
 
 import com.google.android.material.divider.MaterialDivider;
 
@@ -336,22 +342,48 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         if (v.getId() == R.id.btnStartMainFragment) {
 
+            boolean runDnsCrypt = chbProtectDnsMainFragment.isChecked();
+            boolean runTor = chbHideIpMainFragment.isChecked();
+            boolean runITPD = chbAccessITPMainFragment.isChecked();
+
             if (modulesStatus.getDnsCryptState() == STOPPED
                     && modulesStatus.getTorState() == STOPPED
-                    && modulesStatus.getItpdState() == STOPPED) {
+                    && modulesStatus.getItpdState() == STOPPED
+                    && modulesStatus.getFirewallState() != RUNNING) {
 
-                if (chbProtectDnsMainFragment.isChecked()) {
+                if (modulesStatus.getFirewallState() == STOPPED
+                        && (modulesStatus.getMode() == OperationMode.VPN_MODE
+                        || modulesStatus.getMode() == OperationMode.ROOT_MODE)) {
+                    modulesStatus.setFirewallState(STARTING, preferenceRepository.get());
+                    if (!runDnsCrypt && !runTor && !runITPD) {
+                        ModulesAux.makeModulesStateExtraLoop(context);
+                    }
+                } else {
+                    modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+                }
+
+                if (runDnsCrypt) {
                     dnsCryptFragmentPresenter.startButtonOnClick();
                 }
 
-                if (chbHideIpMainFragment.isChecked()) {
+                if (runTor) {
                     torFragmentPresenter.startButtonOnClick();
                 }
 
-                if (chbAccessITPMainFragment.isChecked()) {
+                if (runITPD) {
                     itpdFragmentPresenter.startButtonOnClick();
                 }
             } else {
+
+                if (modulesStatus.getFirewallState() != STOPPED) {
+                    modulesStatus.setFirewallState(STOPPING, preferenceRepository.get());
+                    if (!runDnsCrypt && !runTor && !runITPD) {
+                        ModulesAux.makeModulesStateExtraLoop(context);
+                    }
+                } else {
+                    modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+                }
+
                 if (modulesStatus.getDnsCryptState() != STOPPED) {
                     dnsCryptFragmentPresenter.startButtonOnClick();
                 }
@@ -363,8 +395,14 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 if (modulesStatus.getItpdState() != STOPPED) {
                     itpdFragmentPresenter.startButtonOnClick();
                 }
+
             }
         }
+    }
+
+    private boolean isFirewallEnabled() {
+        return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)
+                && preferenceRepository.get().getBoolPreference(FIREWALL_WAS_STARTED);
     }
 
     @Override
@@ -389,7 +427,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         if (modulesStatus.getDnsCryptState() != STOPPED
                 || modulesStatus.getTorState() != STOPPED
-                || modulesStatus.getItpdState() != STOPPED) {
+                || modulesStatus.getItpdState() != STOPPED
+                || modulesStatus.getFirewallState() != STOPPED) {
 
             int id = buttonView.getId();
             if (id == R.id.chbProtectDnsMainFragment) {
@@ -425,10 +464,10 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
         }
     }
 
-    private void refreshStartButtonText() {
+    public void refreshStartButtonText() {
 
         Context context = getActivity();
-        if (context == null || orientationLandscape) {
+        if (context == null || btnStartMainFragment == null || orientationLandscape) {
             return;
         }
 
@@ -436,7 +475,8 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
         if ((modulesStatus.getDnsCryptState() == STOPPED || modulesStatus.getDnsCryptState() == UNDEFINED)
                 && (modulesStatus.getTorState() == STOPPED || modulesStatus.getTorState() == UNDEFINED)
-                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == UNDEFINED)) {
+                && (modulesStatus.getItpdState() == STOPPED || modulesStatus.getItpdState() == UNDEFINED)
+                && (modulesStatus.getFirewallState() == STOPPED || modulesStatus.getFirewallState() == STOPPING)) {
 
             mainStartButtonDrawable = ResourcesCompat.getDrawable(context.getResources(), R.drawable.button_main_selector, context.getTheme());
 
@@ -466,6 +506,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     }
 
     private void setChbProtectDnsMainFragment(boolean checked) {
+        if (chbProtectDnsMainFragment == null) {
+            return;
+        }
         if (!chbProtectDnsMainFragment.isChecked() && checked) {
             chbProtectDnsMainFragment.setChecked(true);
         } else if (chbProtectDnsMainFragment.isChecked() && !checked) {
@@ -602,6 +645,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
 
     private void setChbHideIpMainFragment(boolean checked) {
+        if (chbHideIpMainFragment == null) {
+            return;
+        }
         if (!chbHideIpMainFragment.isChecked() && checked) {
             chbHideIpMainFragment.setChecked(true);
         } else if (chbHideIpMainFragment.isChecked() && !checked) {
@@ -862,6 +908,9 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     }
 
     private void setChbAccessITPMainFragment(boolean checked) {
+        if (chbAccessITPMainFragment == null) {
+            return;
+        }
         if (!chbAccessITPMainFragment.isChecked() && checked) {
             chbAccessITPMainFragment.setChecked(true);
         } else if (chbAccessITPMainFragment.isChecked() && !checked) {
