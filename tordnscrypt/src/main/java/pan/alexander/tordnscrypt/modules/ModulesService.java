@@ -149,6 +149,7 @@ public class ModulesService extends Service {
     private ModulesKiller modulesKiller;
     private UsageStatistic usageStatistic;
     private ArpScanner arpScanner;
+    private ModulesServiceNotificationManager serviceNotificationManager;
 
     public ModulesService() {
     }
@@ -170,13 +171,9 @@ public class ModulesService extends Service {
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
 
-            ModulesServiceNotificationManager serviceNotificationManager = new ModulesServiceNotificationManager(
-                    this,
-                    systemNotificationManager,
-                    UsageStatistics.getStartTime()
-            );
-            serviceNotificationManager.createNotificationChannel();
-            serviceNotificationManager.sendNotification(title, message);
+            serviceNotificationManager = ModulesServiceNotificationManager.getManager(this);
+            serviceNotificationManager.createNotificationChannel(this);
+            serviceNotificationManager.sendNotification(this, title, message, UsageStatistics.getStartTime());
         }
 
         App.getInstance().getDaggerComponent().inject(this);
@@ -215,14 +212,17 @@ public class ModulesService extends Service {
                 title = usageStatistic.getTitle();
                 message = usageStatistic.getMessage(System.currentTimeMillis());
             }
-
-            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
+            if (serviceNotificationManager == null) {
+                serviceNotificationManager = ModulesServiceNotificationManager
+                        .getManager(this);
+            }
+            serviceNotificationManager.sendNotification(
                     this,
-                    systemNotificationManager,
+                    title,
+                    message,
                     UsageStatistics.getStartTime()
             );
-            notification.sendNotification(title, message);
-            usageStatistic.setServiceNotification(notification);
+            usageStatistic.setServiceNotification(serviceNotificationManager);
 
             if (usageStatistic.isStatisticAllowed()) {
                 usageStatistic.startUpdate();
@@ -870,8 +870,8 @@ public class ModulesService extends Service {
     private void makeExtraLoop() {
         if (timerPeriod != TIMER_HIGH_SPEED && checkModulesStateTask != null) {
             executor.submit("ModulesService makeExtraLoop", () -> {
-                    checkModulesStateTask.run();
-                    return null;
+                checkModulesStateTask.run();
+                return null;
             });
         }
     }
@@ -923,6 +923,8 @@ public class ModulesService extends Service {
         if (usageStatistic != null) {
             usageStatistic.stopUpdate();
         }
+
+        ModulesServiceNotificationManager.stopManager(this);
 
         releaseWakelocks();
 
@@ -1145,11 +1147,13 @@ public class ModulesService extends Service {
     }
 
     private void startArpScanner() {
-        try {
-            arpScanner = ArpScanner.getArpComponent().get();
-            arpScanner.start();
-        } catch (Exception e) {
-            loge("ModulesService startArpScanner", e);
+        if (arpScanner == null) {
+            try {
+                arpScanner = ArpScanner.getArpComponent().get();
+                arpScanner.start();
+            } catch (Exception e) {
+                loge("ModulesService startArpScanner", e);
+            }
         }
     }
 

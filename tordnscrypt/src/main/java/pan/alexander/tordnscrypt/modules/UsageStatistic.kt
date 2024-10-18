@@ -122,7 +122,7 @@ class UsageStatistic(private val context: Context) {
 
             if (modulesStatus.isDeviceInteractive
                 && (title != savedTitle || message != savedMessage)) {
-                serviceNotification?.updateNotification(title, message)
+                serviceNotification?.updateNotification(context, title, message, startTime)
                 savedTitle = title
                 savedMessage = message
             }

@@ -19,6 +19,9 @@
 
 package pan.alexander.tordnscrypt.modules;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
+
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Notification;
@@ -26,7 +29,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 
@@ -34,43 +40,39 @@ import androidx.core.app.NotificationCompat;
 
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 
 import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
-public class ModulesServiceNotificationManager {
+public class ModulesServiceNotificationManager extends BroadcastReceiver {
 
     private final static String ANDROID_CHANNEL_ID = "InviZible";
-    private final Service service;
-    private final NotificationManager notificationManager;
-    private final Long startTime;
-    private final PendingIntent contentIntent;
-    private final int iconResource;
+    private final static String STOP_ALL_ACTION = "pan.alexander.tordnscrypt.NOTIFICATION_STOP_ALL_ACTION";
+    private final static int STOP_ALL_ACTION_CODE = 1120;
+    private static volatile ModulesServiceNotificationManager instance;
 
-    public ModulesServiceNotificationManager(Service service, NotificationManager notificationManager, Long startTime) {
-        this.service = service;
-        this.notificationManager = notificationManager;
-        this.startTime = startTime;
-        this.contentIntent = getContentIntent();
-        this.iconResource = getIconResource();
+    private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
+
+    public ModulesServiceNotificationManager() {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    private PendingIntent getContentIntent() {
-        Intent notificationIntent = new Intent(service, MainActivity.class);
+    private PendingIntent getContentIntent(Context context) {
+        Intent notificationIntent = new Intent(context, MainActivity.class);
         notificationIntent.setAction(Intent.ACTION_MAIN);
         notificationIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
         PendingIntent contentIntent;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             contentIntent = PendingIntent.getActivity(
-                    service.getApplicationContext(),
+                    context.getApplicationContext(),
                     0,
                     notificationIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         } else {
             contentIntent = PendingIntent.getActivity(
-                    service.getApplicationContext(),
+                    context.getApplicationContext(),
                     0,
                     notificationIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
@@ -79,12 +81,35 @@ public class ModulesServiceNotificationManager {
         return contentIntent;
     }
 
+    private PendingIntent getStopIntent(Context context) {
+
+        Intent intent = new Intent(context, ModulesServiceNotificationManager.class);
+        intent.setAction(STOP_ALL_ACTION);
+
+        PendingIntent stopIntent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            stopIntent = PendingIntent.getBroadcast(
+                    context.getApplicationContext(),
+                    STOP_ALL_ACTION_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        } else {
+            stopIntent = PendingIntent.getBroadcast(
+                    context.getApplicationContext(),
+                    STOP_ALL_ACTION_CODE,
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+        }
+
+        return stopIntent;
+    }
+
     @TargetApi(Build.VERSION_CODES.O)
-    public void createNotificationChannel() {
+    public void createNotificationChannel(Context context) {
         NotificationChannel channel = new NotificationChannel(
                 ANDROID_CHANNEL_ID,
-                service.getString(R.string.notification_channel_services),
-                NotificationManager.IMPORTANCE_MIN
+                context.getString(R.string.notification_channel_services),
+                NotificationManager.IMPORTANCE_LOW
         );
         channel.setSound(null, Notification.AUDIO_ATTRIBUTES_DEFAULT);
         channel.setDescription("");
@@ -92,49 +117,57 @@ public class ModulesServiceNotificationManager {
         channel.enableVibration(false);
         channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
         channel.setShowBadge(false);
-        notificationManager.createNotificationChannel(channel);
+        getNotificationManager(context).createNotificationChannel(channel);
     }
 
-    private int getIconResource() {
+    private NotificationManager getNotificationManager(Context context) {
+        return (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    private int getSmallIcon(Context context) {
 
         int iconResource = android.R.drawable.ic_menu_view;
 
         try {
-            iconResource = service.getResources().getIdentifier(
+            iconResource = context.getResources().getIdentifier(
                     "ic_service_notification",
                     "drawable",
-                    service.getPackageName()
+                    context.getPackageName()
             );
             if (iconResource == 0) {
                 iconResource = android.R.drawable.ic_menu_view;
             }
         } catch (Exception e) {
-            loge("ModulesServiceNotificationManager getIconResource", e);
+            loge("ModulesServiceNotificationManager getSmallIcon", e);
         }
 
         return iconResource;
     }
 
 
-    public synchronized void sendNotification(String title, String text) {
+    public synchronized void sendNotification(Service service, String title, String text, long startTime) {
 
-        if (service == null || notificationManager == null) {
-            return;
-        }
-
-        notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+        getNotificationManager(service).cancel(DEFAULT_NOTIFICATION_ID);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(service, ANDROID_CHANNEL_ID);
-        builder.setContentIntent(contentIntent)
+        builder.setContentIntent(getContentIntent(service))
                 .setOngoing(true)
-                .setSmallIcon(iconResource)
+                .setSmallIcon(getSmallIcon(service))
                 .setContentTitle(title)
                 .setContentText(text)
-                .setPriority(Notification.PRIORITY_MIN)
+                .setPriority(Notification.PRIORITY_LOW)
                 .setOnlyAlertOnce(true)
                 .setSilent(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isAnyModuleRunning()) {
+            builder.addAction(
+                    R.drawable.ic_close_white,
+                    service.getText(R.string.main_fragment_button_stop),
+                    getStopIntent(service)
+            );
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_SERVICE);
@@ -159,22 +192,26 @@ public class ModulesServiceNotificationManager {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    public void updateNotification(String title, String text) {
-        if (service == null || notificationManager == null) {
-            return;
-        }
-
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(service, ANDROID_CHANNEL_ID);
-        builder.setContentIntent(contentIntent)
+    public void updateNotification(Context context, String title, String text, long startTime) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ANDROID_CHANNEL_ID);
+        builder.setContentIntent(getContentIntent(context))
                 .setOngoing(true)
-                .setSmallIcon(iconResource)
+                .setSmallIcon(getSmallIcon(context))
                 .setContentTitle(title)
                 .setContentText(text)
-                .setPriority(Notification.PRIORITY_MIN)
+                .setPriority(Notification.PRIORITY_LOW)
                 .setOnlyAlertOnce(true)
                 .setSilent(true)
                 .setChannelId(ANDROID_CHANNEL_ID)
                 .setVisibility(NotificationCompat.VISIBILITY_PRIVATE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isAnyModuleRunning()) {
+            builder.addAction(
+                    R.drawable.ic_close_white,
+                    context.getText(R.string.main_fragment_button_stop),
+                    getStopIntent(context)
+            );
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setCategory(Notification.CATEGORY_SERVICE);
@@ -187,6 +224,69 @@ public class ModulesServiceNotificationManager {
 
         Notification notification = builder.build();
 
-        notificationManager.notify(DEFAULT_NOTIFICATION_ID, notification);
+        getNotificationManager(context).notify(DEFAULT_NOTIFICATION_ID, notification);
+    }
+
+    private boolean isAnyModuleRunning() {
+        return modulesStatus.getDnsCryptState() == ModuleState.RUNNING
+                || modulesStatus.getTorState() == ModuleState.RUNNING
+                || modulesStatus.getItpdState() == ModuleState.RUNNING
+                || modulesStatus.getFirewallState() == ModuleState.RUNNING;
+    }
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    public static ModulesServiceNotificationManager getManager(Context context) {
+        if (instance == null) {
+            synchronized (ModulesServiceNotificationManager.class) {
+                if (instance == null) {
+                    instance = new ModulesServiceNotificationManager();
+                    IntentFilter filter = new IntentFilter(STOP_ALL_ACTION);
+                    try {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            context.getApplicationContext().registerReceiver(
+                                    instance,
+                                    filter,
+                                    RECEIVER_NOT_EXPORTED
+                            );
+                        } else {
+                            context.getApplicationContext().registerReceiver(
+                                    instance,
+                                    filter
+                            );
+                        }
+                    } catch (Exception e) {
+                        loge("ModulesServiceNotificationManager getNotificationManager", e);
+                    }
+                    return instance;
+                }
+            }
+        }
+        return instance;
+    }
+
+    public static void stopManager(Context context) {
+        if (instance != null) {
+            synchronized (ModulesServiceNotificationManager.class) {
+                if (instance != null) {
+                    try {
+                        context.getApplicationContext().unregisterReceiver(instance);
+                    } catch (Exception e) {
+                        loge("ModulesServiceNotificationManager stopNotificationManager", e);
+                    }
+                    instance = null;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (context != null && intent != null && STOP_ALL_ACTION.equals(intent.getAction())) {
+            stopServices(context);
+        }
+    }
+
+    private void stopServices(Context context) {
+        ModulesAux.stopModulesIfRunning(context);
     }
 }

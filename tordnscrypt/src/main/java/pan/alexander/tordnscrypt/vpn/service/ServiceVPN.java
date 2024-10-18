@@ -64,6 +64,7 @@ import pan.alexander.tordnscrypt.modules.ModulesServiceNotificationManager;
 import pan.alexander.tordnscrypt.modules.UsageStatistics;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.vpn.Allowed;
@@ -97,6 +98,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.TOR_VIRTUAL_ADDR_NETWORK
 import static pan.alexander.tordnscrypt.utils.bootcomplete.BootCompleteManager.ALWAYS_ON_VPN;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -144,6 +146,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     public Lazy<VpnRulesHolder> vpnRulesHolder;
 
     NotificationManager notificationManager;
+    private ModulesServiceNotificationManager serviceNotificationManager;
     private static final Object jni_lock = new Object();
     private static volatile long jni_context = 0;
     private volatile long service_jni_context = 0;
@@ -613,13 +616,14 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 message = UsageStatistics.getSavedMessage();
             }
 
-            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
+            serviceNotificationManager = ModulesServiceNotificationManager.getManager(this);
+            serviceNotificationManager.createNotificationChannel(this);
+            serviceNotificationManager.sendNotification(
                     this,
-                    notificationManager,
+                    title,
+                    message,
                     UsageStatistics.getStartTime()
             );
-            notification.createNotificationChannel();
-            notification.sendNotification(title, message);
         }
 
         App.getInstance().getSubcomponentsManager().modulesServiceSubcomponent().inject(this);
@@ -671,12 +675,16 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 message = UsageStatistics.getSavedMessage();
             }
 
-            ModulesServiceNotificationManager notification = new ModulesServiceNotificationManager(
-                    this,
-                    notificationManager,
-                    UsageStatistics.getStartTime()
-            );
-            notification.sendNotification(title, message);
+            if (serviceNotificationManager == null) {
+                serviceNotificationManager = ModulesServiceNotificationManager
+                        .getManager(this);
+                serviceNotificationManager.sendNotification(
+                        this,
+                        title,
+                        message,
+                        UsageStatistics.getStartTime()
+                );
+            }
         }
 
         logi("VPN Received " + intent);
@@ -779,6 +787,12 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         connectionCheckerInteractor.get().removeListener(this);
         handler.get().removeCallbacksAndMessages(null);
+
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.getMode() == OperationMode.VPN_MODE
+                || modulesStatus.getMode() == OperationMode.PROXY_MODE) {
+            ModulesStatus.getInstance().setFirewallState(STOPPED, preferenceRepository.get());
+        }
 
         final long localJniContext = service_jni_context;
 
