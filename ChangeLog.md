@@ -1192,3 +1192,8 @@
 * Tor apps isolation is enabled by default.
 * Fixed requesting Tor bridges via the app.
 * Updated German and Spanish translations.
+
+**InviZible Pro beta 2.3.4**
+* Implemented the ability to use the firewall when other modules are stopped.
+* Added a stop button to the notification.
+* Fixes and optimizations.
