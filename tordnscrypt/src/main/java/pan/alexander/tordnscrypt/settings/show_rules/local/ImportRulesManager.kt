@@ -29,6 +29,12 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.blackListHostRulesRegex
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.blacklistIPRulesRegex
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.cloakingRulesRegex
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.forwardingRulesRegex
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.hostFileRegex
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.whiteListHostRulesRegex
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -37,20 +43,11 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.io.PrintWriter
-import java.io.Reader
 import java.util.concurrent.locks.ReentrantLock
 
 private val excludeFromHost = listOf("localhost", "localhost.localdomain", "local", META_ADDRESS)
 private val reentrantLock = ReentrantLock()
 private val wakeLocksManager = WakeLocksManager.getInstance()
-
-private val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?,]+$")
-private val blacklistIPRulesRegex = Regex("^[0-9a-fA-F:.=*\\[\\]]+$")
-private val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
-private val forwardingRulesRegex =
-    Regex("^[a-zA-Z\\d-._]+[ \\t]+[0-9a-fA-F:.,\\[\\]]+$")
-private val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
-private val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[a-zA-Z\\d-._]+$")
 
 class ImportRulesManager(
     private val context: Context,
@@ -243,9 +240,7 @@ class ImportRulesManager(
                 wakeLocksManager.stopPowerWakelock()
             }
 
-            if (importedLinesCount > 0 || totalLinesCount > 0) {
-                restartDNSCryptIfRequired()
-            }
+            restartDNSCryptIfRequired()
 
             reentrantLock.unlock()
         }
@@ -702,6 +697,18 @@ class ImportRulesManager(
         REMOTE_RULES,
         LOCAL_RULES,
         SINGLE_RULES
+    }
+
+    interface DnsRulesRegex {
+        companion object {
+            val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?,]+$")
+            val blacklistIPRulesRegex = Regex("^[0-9a-fA-F:.=*\\[\\]]+$")
+            val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
+            val forwardingRulesRegex =
+                Regex("^[a-zA-Z\\d-._]+[ \\t]+[0-9a-fA-F:.,\\[\\]]+$")
+            val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
+            val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[a-zA-Z\\d-._]+$")
+        }
     }
 
     companion object {

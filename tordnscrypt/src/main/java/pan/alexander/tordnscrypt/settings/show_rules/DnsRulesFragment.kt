@@ -139,7 +139,9 @@ class DnsRulesFragment : Fragment(), DnsRulesReceiver.Callback,
             ::addRemoteRules,
             ::deleteRemoteRules,
             ::refreshRemoteRules
-        )
+        ).also {
+            it.rulesType = ruleType
+        }
         binding.rvDnsRules.layoutManager = LinearLayoutManager(context)
         binding.rvDnsRules.adapter = rulesAdapter
     }

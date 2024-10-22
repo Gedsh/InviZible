@@ -39,6 +39,7 @@
                 android:minHeight="48dp"
                 android:singleLine="true"
                 android:textAlignment="center"
+                android:textIsSelectable="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/swRuleActive"
                 app:layout_constraintStart_toStartOf="parent"

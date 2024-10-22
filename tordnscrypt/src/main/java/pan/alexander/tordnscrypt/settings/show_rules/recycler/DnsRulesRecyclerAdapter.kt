@@ -34,6 +34,9 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.ItemButtonBinding
 import pan.alexander.tordnscrypt.databinding.ItemDnsRuleBinding
 import pan.alexander.tordnscrypt.databinding.ItemRulesBinding
+import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
+import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager
+import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_CAPTURING
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.text.DateFormat
@@ -56,6 +59,7 @@ class DnsRulesRecyclerAdapter(
     private val onRemoteRulesRefresh: () -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    var rulesType: DnsRuleType? = null
     private val rules: MutableList<DnsRuleRecycleItem> = mutableListOf()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -370,8 +374,66 @@ class DnsRulesRecyclerAdapter(
     private fun editRule(position: Int, text: String) {
         val rule = rules[position]
         if (rule is DnsRuleRecycleItem.DnsSingleRule) {
-            rule.rule = text
+            if (text.contains("\n")) {
+                text.split("\n").map {
+                    it.trim()
+                }.map {
+                    when (rulesType) {
+                        DnsRuleType.BLACKLIST, DnsRuleType.WHITELIST ->
+                            Utils.getDomainNameFromUrl(it)
+
+                        DnsRuleType.IP_BLACKLIST -> prepareIPv6IfAny(it)
+
+                        else -> it
+                    }
+                }.filter {
+                    it.isNotBlank() && it.matches(getRuleRegex())
+                }.takeIf {
+                    it.isNotEmpty()
+                }?.also {
+                    rule.rule = it.first()
+                    notifyItemChanged(position)
+                }?.drop(1)?.forEachIndexed { index, s ->
+                    rules.add(
+                        position + index + 1,
+                        DnsRuleRecycleItem.DnsSingleRule(
+                            rule = s,
+                            protected = false,
+                            active = true
+                        )
+                    )
+                    notifyItemInserted(position + index + 1)
+                }
+            } else {
+                val textPrepared = when (rulesType) {
+                    DnsRuleType.BLACKLIST, DnsRuleType.WHITELIST -> Utils.getDomainNameFromUrl(text)
+                    DnsRuleType.IP_BLACKLIST -> prepareIPv6IfAny(text)
+                    else -> text
+                }
+                if (textPrepared.matches(getRuleRegex())) {
+                    rule.rule = textPrepared
+                    if (textPrepared != text) {
+                        notifyItemChanged(position)
+                    }
+                }
+            }
         }
+    }
+
+    private fun prepareIPv6IfAny(line: String): String =
+        if (line.matches(Regex(IPv6_REGEX_NO_CAPTURING))) {
+            "[$line]"
+        } else {
+            line
+        }
+
+    private fun getRuleRegex() = when (rulesType) {
+        DnsRuleType.BLACKLIST -> ImportRulesManager.DnsRulesRegex.blackListHostRulesRegex
+        DnsRuleType.WHITELIST -> ImportRulesManager.DnsRulesRegex.whiteListHostRulesRegex
+        DnsRuleType.IP_BLACKLIST -> ImportRulesManager.DnsRulesRegex.blacklistIPRulesRegex
+        DnsRuleType.FORWARDING -> ImportRulesManager.DnsRulesRegex.forwardingRulesRegex
+        DnsRuleType.CLOAKING -> ImportRulesManager.DnsRulesRegex.cloakingRulesRegex
+        null -> throw IllegalArgumentException("DnsRulesRecyclerAdapter getRuleRegex rulesType null")
     }
 
     private fun deleteRule(position: Int) {
