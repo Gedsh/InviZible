@@ -387,19 +387,23 @@ class DnsRulesRecyclerAdapter(
                         else -> it
                     }
                 }.filter {
-                    it.isNotBlank() && it.matches(getRuleRegex())
+                    it.isNotBlank() && it.removePrefix("#").matches(getRuleRegex())
                 }.takeIf {
                     it.isNotEmpty()
                 }?.also {
-                    rule.rule = it.first()
+                    rules[position] = DnsRuleRecycleItem.DnsSingleRule(
+                        rule = it.first().removePrefix("#"),
+                        protected = false,
+                        active = !it.first().startsWith("#")
+                    )
                     notifyItemChanged(position)
                 }?.drop(1)?.forEachIndexed { index, s ->
                     rules.add(
                         position + index + 1,
                         DnsRuleRecycleItem.DnsSingleRule(
-                            rule = s,
+                            rule = s.removePrefix("#"),
                             protected = false,
-                            active = true
+                            active = !s.startsWith("#")
                         )
                     )
                     notifyItemInserted(position + index + 1)
