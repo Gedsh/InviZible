@@ -145,7 +145,7 @@ then
     NDK_PLATFORM_LEVEL=21 NDK_BIT=64 make showsetup
 else
     #compile armeabi-v7a things...
-    export APP_ABI=armeabi
+    export APP_ABI=armeabi-v7a
     make clean
     make
     make showsetup
