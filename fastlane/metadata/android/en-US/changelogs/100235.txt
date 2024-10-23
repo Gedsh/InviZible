@@ -1,0 +1,6 @@
+**InviZible Pro beta 2.3.5**
+* Updated Tor.
+* Updated Tor Snowflake bridge.
+* Updated Tor Lyrebird bridge to version 0.4.0.
+* Implemented the ability to insert a list of DNSCrypt rules.
+* Fixes and optimizations.

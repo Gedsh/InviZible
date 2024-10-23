@@ -1197,3 +1197,10 @@
 * Implemented the ability to use the firewall when other modules are stopped.
 * Added a stop button to the notification.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.3.5**
+* Updated Tor.
+* Updated Tor Snowflake bridge.
+* Updated Tor Lyrebird bridge to version 0.4.0.
+* Implemented the ability to insert a list of DNSCrypt rules.
+* Fixes and optimizations.
