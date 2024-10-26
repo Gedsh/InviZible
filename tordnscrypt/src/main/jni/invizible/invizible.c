@@ -205,6 +205,11 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1stop(
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
         JNIEnv *env, jobject instance, jlong context) {
+
+    if (context == 0) {
+        return;
+    }
+
     struct context *ctx = (struct context *) context;
     clear(ctx);
 }
@@ -281,6 +286,11 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(JN
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1done(
         JNIEnv *env, jobject instance, jlong context) {
+
+    if (context == 0) {
+        return;
+    }
+
     struct context *ctx = (struct context *) context;
     log_android(ANDROID_LOG_INFO, "Done");
 
