@@ -296,7 +296,11 @@ class DnsRulesFragment : Fragment(), DnsRulesReceiver.Callback,
     }
 
     private fun importRulesWithSAF() {
-        importFilesLauncher?.launch(arrayOf("text/plain"))
+        try {
+            importFilesLauncher?.launch(arrayOf("text/plain"))
+        } catch (e: Exception) {
+            loge("DnsRulesFragment importRulesWithSAF", e)
+        }
     }
 
     private fun importRulesCommon(files: Array<*>) {
