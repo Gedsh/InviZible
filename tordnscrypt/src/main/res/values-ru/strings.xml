@@ -516,6 +516,7 @@
     <string name="pref_firewall_show_all_apps_off_summ">Показаны только те приложения, которые могут подключаться к Интернету.</string>
     <string name="pref_common_kill_switch">Аварийный блокировщик</string>
     <string name="pref_common_kill_switch_summ">Блокировать подключение к Интернету, когда Tor, DNSCrypt и Purple I2P остановлены</string>
+    <string name="pref_common_always_on_vpn_summ">Включите Постоянный VPN и Блокировать соединения без VPN для InviZible Pro, чтобы заблокировать интернет, когда приложение не запущено</string>
     <string name="notification_internet_blocked_message">Интернет заблокирован Аварийным блокировщиком. Запустите Tor, DNSCrypt или Purple I2P, чтобы разрешить соединение. Либо выключите Аварийный блокировщик в Общих настройках.</string>
     <string name="list_is_empty">Список пустой</string>
     <string name="pref_dnscrypt_forwarding_rules_categ">Правила переадресации</string>

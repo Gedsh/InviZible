@@ -123,6 +123,7 @@ public interface PreferenceKeys {
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
+    String ALWAYS_ON_VPN = "always_on_vpn";
     String USE_IPTABLES = "pref_common_use_iptables";
     String WAIT_IPTABLES = "pref_common_wait_iptables";
     String REMOTE_CONTROL = "pref_common_shell_control";

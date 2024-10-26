@@ -123,6 +123,11 @@
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_common_categ_other">
 
+        <Preference
+            android:id="@+id/always_on_vpn"
+            android:key="always_on_vpn"
+            android:title="@string/pref_common_kill_switch"
+            android:summary="@string/pref_common_always_on_vpn_summ" />
         <SwitchPreference
             android:id="@+id/swShowNotification"
             android:defaultValue="true"

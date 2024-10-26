@@ -177,6 +177,7 @@
     <string name="pref_common_kill_switch">Kill switch</string>
     <string name="pref_common_kill_switch_summ">Block internet connection when Tor, DNSCrypt and Purple I2P are stopped</string>
     <string name="pref_common_refresh_rules">Refresh rules</string>
+    <string name="pref_common_always_on_vpn_summ">Enable Always-on VPN and Block connections without VPN for InviZible Pro to block the internet when the app is not running</string>
     <string name="pref_common_refresh_rules_summ">Update rules on every connectivity change</string>
     <string name="pref_common_show_notification">Show notification</string>
     <string name="pref_common_wakelock">Prevent device sleep</string>
