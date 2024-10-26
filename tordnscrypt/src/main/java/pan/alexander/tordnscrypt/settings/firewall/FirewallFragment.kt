@@ -246,6 +246,7 @@ class FirewallFragment : Fragment(),
         if (firewallFirstStart) {
             activateAll(true)
             viewModel.activateAllFirsStart()
+            startFirewall()
         }
 
         when {

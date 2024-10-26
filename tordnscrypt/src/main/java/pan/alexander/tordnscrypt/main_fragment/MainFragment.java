@@ -75,6 +75,7 @@ import pan.alexander.tordnscrypt.tor_fragment.TorFragmentView;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
@@ -353,12 +354,14 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
 
                 if (modulesStatus.getFirewallState() == STOPPED
                         && (modulesStatus.getMode() == OperationMode.VPN_MODE
-                        || modulesStatus.getMode() == OperationMode.ROOT_MODE)) {
+                        || modulesStatus.getMode() == OperationMode.ROOT_MODE)
+                        && isChildLockDisabled()) {
                     modulesStatus.setFirewallState(STARTING, preferenceRepository.get());
-                    if (!runDnsCrypt && !runTor && !runITPD) {
+                    if (!runDnsCrypt && !runTor && !runITPD && isFirewallEnabled()) {
                         ModulesAux.makeModulesStateExtraLoop(context);
+                        ServiceVPNHelper.prepareVPNServiceIfRequired(getFragmentActivity(), modulesStatus);
                     }
-                } else {
+                } else if (isChildLockDisabled()) {
                     modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
                 }
 
@@ -375,12 +378,12 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
                 }
             } else {
 
-                if (modulesStatus.getFirewallState() != STOPPED) {
+                if (modulesStatus.getFirewallState() != STOPPED && isChildLockDisabled()) {
                     modulesStatus.setFirewallState(STOPPING, preferenceRepository.get());
-                    if (!runDnsCrypt && !runTor && !runITPD) {
+                    if (!runDnsCrypt && !runTor && !runITPD && isFirewallEnabled()) {
                         ModulesAux.makeModulesStateExtraLoop(context);
                     }
-                } else {
+                } else if (isChildLockDisabled()) {
                     modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
                 }
 
@@ -403,6 +406,15 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
     private boolean isFirewallEnabled() {
         return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)
                 && preferenceRepository.get().getBoolPreference(FIREWALL_WAS_STARTED);
+    }
+
+    private boolean isChildLockDisabled() {
+        boolean childLock = false;
+        Activity activity = getFragmentActivity();
+        if (activity instanceof MainActivity) {
+            childLock = ((MainActivity) activity).childLockActive;
+        }
+        return !childLock;
     }
 
     @Override
