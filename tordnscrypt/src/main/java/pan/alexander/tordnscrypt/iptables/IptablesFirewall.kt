@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.iptables
 
 import android.content.Context
+import android.os.Build
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesConstants.*
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -35,6 +36,7 @@ import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPE
 import pan.alexander.tordnscrypt.utils.Constants.*
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isCellularActive
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isEthernetActive
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isRoaming
@@ -67,13 +69,33 @@ class IptablesFirewall @Inject constructor(
     val uidAllowed by lazy { hashSetOf<Int>() }
     val uidSpecialAllowed by lazy { hashSetOf<Int>() }
     val uidLanAllowed by lazy { hashSetOf<Int>() }
+    private val uidUnderlyingVpnAllowed by lazy { hashSetOf<Int>() }
 
     fun getFirewallRules(tetheringActive: Boolean): List<String> {
 
-        prepareUidAllowed()
+        val vpnActive = isVpnActive(context)
+
+        prepareUidAllowed(vpnActive)
 
         if (modulesStatus.mode == OperationMode.ROOT_MODE) {
             modulesStatus.setFirewallState(ModuleState.RUNNING, preferences)
+        }
+
+        var activeInterface = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            NetworkChecker.getCurrentActiveInterface(context)
+        } else {
+            ""
+        }
+        val underlyingVpnInterface = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            && vpnActive && activeInterface.isNotEmpty()
+        ) {
+            NetworkChecker.getUnderlyingVpnActiveInterface(context).also {
+                if (it.isEmpty()) {
+                    activeInterface = ""
+                }
+            }
+        } else {
+            ""
         }
 
         val iptables = getIptables()
@@ -89,8 +111,14 @@ class IptablesFirewall @Inject constructor(
         ).plus(
             getLanRules(iptables)
         ).plus(
-            getAppRulesByConnectionType(iptables)
-        ).plus(
+            getAppRulesByConnectionType(iptables, activeInterface)
+        ).let {
+            if (underlyingVpnInterface.isNotEmpty() && underlyingVpnInterface != activeInterface) {
+                it.plus(getVpnUnderlyingAppRulesByConnectionType(iptables, underlyingVpnInterface))
+            } else {
+                it
+            }
+        }.plus(
             getSpecialRules(iptables)
         ).plus(
             "$iptables -A $FILTER_OUTPUT_FIREWALL -j REJECT"
@@ -131,7 +159,6 @@ class IptablesFirewall @Inject constructor(
         ).plus(
             VpnUtils.nonTorList
                 .asSequence()
-                .filter { it != "127.0.0.0/8" } //exclude localhost
                 .filter { it != META_ADDRESS } //exclude meta address
                 .map {
                     "$iptables -A $FILTER_OUTPUT_FIREWALL -d $it -j $FILTER_FIREWALL_LAN"
@@ -155,23 +182,61 @@ class IptablesFirewall @Inject constructor(
                         range.first() == SPECIAL_UID_KERNEL -> "$iptables -A $FILTER_FIREWALL_LAN -m owner ! --uid-owner 0:999999999 -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
                         else -> ""
                     }
+
                 range.size > 1 ->
                     when {
                         range.first() >= 0 -> "$iptables -A $FILTER_FIREWALL_LAN -m owner --uid-owner ${range.first()}:${range.last()} -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true"
                         else -> ""
                     }
+
                 else -> ""
             }
         }
     }
 
-    private fun getAppRulesByConnectionType(iptables: String): List<String> = with(IptablesUtils) {
-        uidAllowed.groupToRanges().map {
+    private fun getAppRulesByConnectionType(
+        iptables: String,
+        activeInterface: String
+    ): List<String> = with(IptablesUtils) {
+        if (activeInterface.isNotEmpty()) {
+            uidAllowed.groupToRanges().map {
+                when {
+                    it.size == 1 ->
+                        "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()} -o $activeInterface -j RETURN"
+
+                    it.size > 1 ->
+                        "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()}:${it.last()} -o $activeInterface -j RETURN"
+
+                    else -> ""
+                }
+            }
+        } else {
+            uidAllowed.groupToRanges().map {
+                when {
+                    it.size == 1 ->
+                        "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()} -j RETURN"
+
+                    it.size > 1 ->
+                        "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()}:${it.last()} -j RETURN"
+
+                    else -> ""
+                }
+            }
+        }
+    }
+
+    private fun getVpnUnderlyingAppRulesByConnectionType(
+        iptables: String,
+        underlyingInterface: String
+    ): List<String> = with(IptablesUtils) {
+        uidUnderlyingVpnAllowed.groupToRanges().map {
             when {
                 it.size == 1 ->
-                    "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()} -j RETURN"
+                    "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()} -o $underlyingInterface -j RETURN"
+
                 it.size > 1 ->
-                    "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()}:${it.last()} -j RETURN"
+                    "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner --uid-owner ${it.first()}:${it.last()} -o $underlyingInterface -j RETURN"
+
                 else -> ""
             }
         }
@@ -190,12 +255,14 @@ class IptablesFirewall @Inject constructor(
                             "$iptables -A $FILTER_OUTPUT_FIREWALL -m owner ! --uid-owner 0:999999999 -j RETURN"
                         )
                     }
+
                     SPECIAL_UID_NTP -> {
                         arrayListOf(
                             "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --sport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
                             "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --dport $SPECIAL_PORT_NTP -m owner --uid-owner 1000 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
                         )
                     }
+
                     SPECIAL_UID_AGPS -> {
                         arrayListOf(
                             "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p tcp --dport $SPECIAL_PORT_AGPS1 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true",
@@ -204,11 +271,13 @@ class IptablesFirewall @Inject constructor(
                             "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -p udp --dport $SPECIAL_PORT_AGPS2 -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true"
                         )
                     }
+
                     SPECIAL_UID_CONNECTIVITY_CHECK -> {
                         connectivityCheckManager.get().getConnectivityCheckIps().map { ip ->
                             "$iptables -t mangle -A $MANGLE_FIREWALL_ALLOW -d $ip -j CONNMARK --set-mark $FIREWALL_RETURN_MARK || true"
                         }
                     }
+
                     else -> emptyList()
                 }
             }
@@ -231,10 +300,13 @@ class IptablesFirewall @Inject constructor(
             emptyList()
         }
 
-    fun prepareUidAllowed() {
+    fun prepareUidAllowed(vpnActive: Boolean) {
         clearAllowedUids()
-        fillAllowedAndSpecialUids(getUidsAllowed())
+        fillAllowedAndSpecialUids(getUidsAllowed(vpnActive = vpnActive, skipVpn = false))
         fillLanAllowed()
+        if (vpnActive) {
+            fillAllowedUnderlyingVpnUid(getUidsAllowed(vpnActive = true, skipVpn = true))
+        }
     }
 
     private fun fillAllowedAndSpecialUids(listAllowed: List<String?>) =
@@ -243,6 +315,13 @@ class IptablesFirewall @Inject constructor(
                 uidSpecialAllowed.add(it.toInt())
             } else if (it?.matches(positiveNumberRegex) == true && it.toLong() <= Int.MAX_VALUE) {
                 uidAllowed.add(it.toInt())
+            }
+        }
+
+    private fun fillAllowedUnderlyingVpnUid(listAllowed: List<String?>) =
+        listAllowed.forEach {
+            if (it?.matches(positiveNumberRegex) == true && it.toLong() <= Int.MAX_VALUE) {
+                uidUnderlyingVpnAllowed.add(it.toInt())
             }
         }
 
@@ -258,9 +337,10 @@ class IptablesFirewall @Inject constructor(
         uidAllowed.clear()
         uidSpecialAllowed.clear()
         uidLanAllowed.clear()
+        uidUnderlyingVpnAllowed.clear()
     }
 
-    private fun getUidsAllowed(): List<String> {
+    private fun getUidsAllowed(vpnActive: Boolean, skipVpn: Boolean): List<String> {
 
         val firewallEnabled = preferences.getBoolPreference(FIREWALL_ENABLED)
         if (!firewallEnabled || modulesStatus.mode != OperationMode.ROOT_MODE) {
@@ -275,18 +355,24 @@ class IptablesFirewall @Inject constructor(
         val listAllowed = arrayListOf<String>()
 
         when {
-            isVpnActive(context) && !ttlFix ->
+            vpnActive && !ttlFix && !skipVpn ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_VPN))
+
             isWifiActive(context) || isEthernetActive(context) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF))
+
             isRoaming(context) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_ROAMING))
+
             isCellularActive(context) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF))
+
             isWifiActive(context, true) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF))
+
             isCellularActive(context, true) ->
                 listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF))
+
             else -> listAllowed.apply {
                 add(SPECIAL_UID_KERNEL.toString())
                 add(ROOT_DEFAULT_UID.toString())

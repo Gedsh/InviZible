@@ -29,10 +29,8 @@ import android.telephony.TelephonyManager
 import androidx.annotation.RequiresApi
 import androidx.core.net.ConnectivityManagerCompat
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.getConnectivityManager
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
-import java.util.SortedMap
 import java.util.TreeMap
 
 private const val DEFAULT_MTU = 1400
@@ -310,6 +308,29 @@ object NetworkChecker {
             false
         }
 
+    private fun getVpnInterfaceName(context: Context): String = try {
+        val connectivityManager = context.getConnectivityManager()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && connectivityManager != null) {
+            connectivityManager.allNetworks.let {
+                for (network in it) {
+                    val networkCapabilities =
+                        connectivityManager.getNetworkCapabilities(network)
+                    if (networkCapabilities != null && hasVpnTransport(networkCapabilities)) {
+                        return connectivityManager.getLinkProperties(network)?.interfaceName ?: ""
+                    }
+                }
+                return ""
+            }
+
+        } else {
+            ""
+        }
+    } catch (e: Exception) {
+        loge("NetworkChecker getVpnInterfaceName", e)
+        ""
+    }
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun hasVpnTransport(capabilities: NetworkCapabilities): Boolean =
         capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
@@ -409,6 +430,39 @@ object NetworkChecker {
         return networks.values.toTypedArray()
     }
 
+    @JvmStatic
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun getCurrentActiveInterface(context: Context): String = try {
+        val connectivityManager = context.getConnectivityManager()
+        if (connectivityManager != null) {
+            getVpnInterfaceName(context).ifEmpty {
+                connectivityManager.activeNetwork?.let {
+                    connectivityManager.getLinkProperties(it)?.interfaceName
+                } ?: ""
+            }
+        } else {
+            ""
+        }
+    } catch (e: Exception) {
+        loge("NetworkChecker getCurrentActiveInterface", e)
+        ""
+    }
+
+    @JvmStatic
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun getUnderlyingVpnActiveInterface(context: Context): String = try {
+        val connectivityManager = context.getConnectivityManager()
+        if (connectivityManager != null) {
+            connectivityManager.activeNetwork?.let {
+                connectivityManager.getLinkProperties(it)?.interfaceName
+            } ?: ""
+        } else {
+            ""
+        }
+    } catch (e: Exception) {
+        loge("NetworkChecker getUnderlyingVpnActiveInterface", e)
+        ""
+    }
 
     private fun Context.getConnectivityManager(): ConnectivityManager? =
         getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
