@@ -1204,3 +1204,10 @@
 * Updated Tor Lyrebird bridge to version 0.4.0.
 * Implemented the ability to insert a list of DNSCrypt rules.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.3.6**
+* Added an option for quick access to Always-on VPN settings.
+* Improvements and fixes for standalone firewall operation.
+* Improvements for the firewall in root mode for Android versions above 5.
+* Removed the Fastly rendezvous of the Tor snowflake bridge.
+* Minor fixes and optimisations.
