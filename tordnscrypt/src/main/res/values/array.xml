@@ -493,7 +493,6 @@
 
     <string-array name="pref_tor_snowflake_rendezvous_titles">
         <item>@string/pref_tor_snowflake_amp</item>
-        <item>@string/pref_tor_snowflake_fastly</item>
         <item>@string/pref_tor_snowflake_cdn77</item>
         <item>@string/pref_tor_snowflake_azure</item>
         <item>@string/pref_tor_snowflake_amazon</item>
@@ -503,7 +502,6 @@
         <item>2</item>
         <item>3</item>
         <item>4</item>
-        <item>5</item>
     </string-array>
 
     <string-array name="tor_snowflake_stun_servers">
