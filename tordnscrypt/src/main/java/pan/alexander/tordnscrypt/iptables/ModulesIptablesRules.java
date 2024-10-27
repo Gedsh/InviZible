@@ -650,6 +650,8 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     blockHttpRuleNatUDP,
                     iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
                     nflogDns,
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -m udp --dport 53 -j ACCEPT",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -m tcp --dport 53 -j ACCEPT",
                     blockRejectAddressFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
