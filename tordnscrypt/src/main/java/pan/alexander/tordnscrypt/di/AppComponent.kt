@@ -53,8 +53,8 @@ import pan.alexander.tordnscrypt.settings.dnscrypt_settings.RulesEraser
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment
 import pan.alexander.tordnscrypt.settings.itpd_settings.PreferencesITPDFragment
-import pan.alexander.tordnscrypt.settings.show_rules.DnsRulesFragment
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalDnsRulesWorker
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.DnsRulesFragment
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalDnsRulesWorker
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment
 import pan.alexander.tordnscrypt.settings.tor_bridges.BridgeAdapter
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges
@@ -71,8 +71,9 @@ import pan.alexander.tordnscrypt.utils.filemanager.FileManager
 import pan.alexander.tordnscrypt.utils.integrity.Verifier
 import pan.alexander.tordnscrypt.utils.root.RootExecService
 import pan.alexander.tordnscrypt.utils.web.TorRefreshIPsWork
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteDnsRulesWorker
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingDnsRulesWorker
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteDnsRulesWorker
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingDnsRulesWorker
+import pan.alexander.tordnscrypt.settings.itpd_settings.ITPDSubscriptionsFragment
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandler
 import javax.inject.Singleton
 
@@ -120,6 +121,7 @@ interface AppComponent {
     fun inject(fragment: PreferencesITPDFragment)
     fun inject(fragment: PreferencesDNSCryptRelays)
     fun inject(fragment: PreferencesDNSFragment)
+    fun inject(fragment: ITPDSubscriptionsFragment)
     fun inject(fragment: UpdateModulesDialogFragment)
     fun inject(fragment: NotificationHelper)
     fun inject(fragment: DnsRulesFragment)

@@ -27,15 +27,11 @@ import androidx.fragment.app.Fragment;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.preference.PreferenceManager;
 
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -51,7 +47,7 @@ import pan.alexander.tordnscrypt.settings.dnscrypt_servers.PreferencesDNSCryptSe
 import pan.alexander.tordnscrypt.settings.dnscrypt_settings.PreferencesDNSFragment;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallFragment;
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType;
-import pan.alexander.tordnscrypt.settings.show_rules.DnsRulesFragment;
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.DnsRulesFragment;
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges;
 import pan.alexander.tordnscrypt.settings.itpd_settings.ITPDSubscriptionsFragment;
 import pan.alexander.tordnscrypt.settings.tor_apps.UnlockTorAppsFragment;
@@ -188,25 +184,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             fSupportTrans.replace(android.R.id.content, fragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")) {
-            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-            ArrayList<String> rules_file = new ArrayList<>();
-
-            String subscriptionsSaved = sp.getString("subscriptions", "");
-
-            String[] arr = {""};
-            if (subscriptionsSaved != null && subscriptionsSaved.contains(",")) {
-                arr = subscriptionsSaved.split(",");
-            }
-
-            String subscriptions = "subscriptions";
-            for (String str : arr) {
-                rules_file.add(str.trim());
-            }
-            Bundle bundle = new Bundle();
-            bundle.putStringArrayList("rules_file", rules_file);
-            bundle.putString("path", subscriptions);
             ITPDSubscriptionsFragment frag = new ITPDSubscriptionsFragment();
-            frag.setArguments(bundle);
             fSupportTrans.replace(android.R.id.content, frag);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_sites_unlock")) {

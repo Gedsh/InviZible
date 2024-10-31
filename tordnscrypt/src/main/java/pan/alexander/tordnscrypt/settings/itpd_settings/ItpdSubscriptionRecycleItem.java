@@ -19,18 +19,44 @@
 
 package pan.alexander.tordnscrypt.settings.itpd_settings;
 
-class ITPDSubscription {
+import androidx.annotation.NonNull;
 
-    String text;
-    boolean active;
-    boolean locked;
-    boolean subscription;
+import java.util.Objects;
 
+public class ItpdSubscriptionRecycleItem {
 
-    ITPDSubscription(String text, boolean active, boolean locked, boolean subscription) {
+    private String text;
+
+    public ItpdSubscriptionRecycleItem(String text) {
         this.text = text;
-        this.active = active;
-        this.locked = locked;
-        this.subscription = subscription;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ItpdSubscriptionRecycleItem that = (ItpdSubscriptionRecycleItem) o;
+        return text.equals(that.text);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(text);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "ItpdSubscriptionRecycleItem{" +
+                "text='" + text + '\'' +
+                '}';
     }
 }

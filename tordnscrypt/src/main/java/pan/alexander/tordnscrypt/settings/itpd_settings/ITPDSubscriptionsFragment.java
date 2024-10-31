@@ -19,9 +19,10 @@
 
 package pan.alexander.tordnscrypt.settings.itpd_settings;
 
+import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
+
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -29,9 +30,8 @@ import androidx.annotation.Nullable;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
-import androidx.preference.PreferenceManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -40,32 +40,31 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
-import pan.alexander.tordnscrypt.modules.ModulesAux;
-import pan.alexander.tordnscrypt.modules.ModulesRestarter;
+import pan.alexander.tordnscrypt.databinding.FragmentItpdSubscriptionBinding;
+import pan.alexander.tordnscrypt.databinding.ItemRulesBinding;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
+import javax.inject.Inject;
 
 
 public class ITPDSubscriptionsFragment extends Fragment implements View.OnClickListener {
 
-    private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter<RulesAdapter.RuleViewHolder> mAdapter;
+    @Inject
+    public ViewModelProvider.Factory viewModelFactory;
 
-    private final ArrayList<String> rules_file = new ArrayList<>();
-    private final ArrayList<ITPDSubscription> ITPDSubscription_list = new ArrayList<>();
-    private final ArrayList<String> original_rules = new ArrayList<>();
+    private ItpdSubscriptionsViewModel viewModel;
 
-    private String file_path;
+    private FragmentItpdSubscriptionBinding binding;
+
+    private SubscriptionsAdapter adapter;
 
 
     public ITPDSubscriptionsFragment() {
@@ -74,46 +73,10 @@ public class ITPDSubscriptionsFragment extends Fragment implements View.OnClickL
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
 
-        setRetainInstance(true);
-
-        if (getArguments() != null) {
-            List<String> rules = getArguments().getStringArrayList("rules_file");
-            rules_file.addAll(rules != null ? rules : Collections.emptyList());
-            file_path = getArguments().getString("path");
-        }
-
-    }
-
-
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        View view;
-        try {
-            view = inflater.inflate(R.layout.fragment_itpd_subscription, container, false);
-        } catch (Exception e) {
-            loge("ShowRulesRecycleFrag onCreateView", e);
-            throw e;
-        }
-
-        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(container.getContext());
-        mRecyclerView = view.findViewById(R.id.rvRules);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
-        FloatingActionButton btnAddRule = view.findViewById(R.id.floatingBtnAddRule);
-        btnAddRule.setAlpha(0.8f);
-        btnAddRule.setOnClickListener(this);
-        btnAddRule.requestFocus();
-
-        return view;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
+        viewModel = new ViewModelProvider(this, viewModelFactory).get(ItpdSubscriptionsViewModel.class);
 
         Activity activity = getActivity();
         if (activity == null) {
@@ -121,174 +84,139 @@ public class ITPDSubscriptionsFragment extends Fragment implements View.OnClickL
         }
 
         setTitle(activity);
-
-        if (ITPDSubscription_list.isEmpty()) {
-            fillRules();
-        }
-
-        mAdapter = new RulesAdapter(ITPDSubscription_list);
-        mRecyclerView.setAdapter(mAdapter);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        Context context = getActivity();
-        if (context == null) {
-            return;
-        }
-
-        List<String> rules_file_new = new LinkedList<>();
-
-        for (ITPDSubscription rule : ITPDSubscription_list) {
-            if (rule.active) {
-                rules_file_new.add(rule.text);
-            } else {
-                rules_file_new.add("#" + rule.text);
-            }
-            rules_file_new.add("");
-        }
-
-        if (rules_file_new.equals(original_rules)) return;
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-        StringBuilder sb = new StringBuilder();
-        String str = "";
-        for (ITPDSubscription rule : ITPDSubscription_list) {
-            if (rule.subscription)
-                sb.append(rule.text).append(", ");
-        }
-        if (sb.length() > 2) {
-            str = sb.substring(0, sb.length() - 2);
-        }
-        sp.edit().putString("subscriptions", str).apply();
-
-        rules_file.clear();
-        rules_file.addAll(rules_file_new);
-        original_rules.clear();
-        original_rules.addAll(rules_file_new);
-
-        boolean itpdRunning = ModulesAux.isITPDSavedStateRunning();
-
-        if (itpdRunning) {
-            ModulesRestarter.restartITPD(context);
-        }
     }
 
     private void setTitle(Activity activity) {
         activity.setTitle(R.string.pref_itpd_addressbook_subscriptions);
     }
 
-    private void fillRules() {
-        String[] lockedItems = {".i2p", "onion"};
-
-        for (int i = 0; i < rules_file.size(); i++) {
-            boolean match = !rules_file.get(i).matches("#.*#.*") && !rules_file.get(i).isEmpty();
-            boolean active = !rules_file.get(i).contains("#");
-            boolean locked = false;
-            boolean subscription = file_path.contains("subscriptions") && !rules_file.get(i).isEmpty();
-
-            for (String str : lockedItems) {
-                if (rules_file.get(i).matches(".?" + str + ".*")) {
-                    locked = true;
-                    break;
-                }
-            }
-            if (match) {
-                ITPDSubscription_list.add(new ITPDSubscription(rules_file.get(i).replace("#", ""), active, locked, subscription));
-                original_rules.add(rules_file.get(i));
-                original_rules.add("");
-            }
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        try {
+            binding = FragmentItpdSubscriptionBinding.inflate(inflater, container, false);
+        } catch (Exception e) {
+            loge("ShowRulesRecycleFrag onCreateView", e);
+            throw e;
         }
+
+        initRecycler();
+        initFab();
+
+        return binding.getRoot();
+    }
+
+    private void initRecycler() {
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(requireContext());
+        binding.rvRules.setLayoutManager(mLayoutManager);
+        adapter = new SubscriptionsAdapter();
+        binding.rvRules.setAdapter(adapter);
+    }
+
+    private void initFab() {
+        FloatingActionButton btnAddRule = binding.floatingBtnAddRule;
+        btnAddRule.setAlpha(0.8f);
+        btnAddRule.setOnClickListener(this);
+        btnAddRule.requestFocus();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        observeSubscriptions();
+        requestSubscriptions();
+    }
+
+    private void observeSubscriptions() {
+        viewModel.getSubscriptions().observe(getViewLifecycleOwner(), subscriptions -> {
+            if (subscriptions != null) {
+                adapter.updateSubscriptions(subscriptions);
+            }
+        });
+    }
+
+    private void requestSubscriptions() {
+        viewModel.requestSubscriptions();
     }
 
     @Override
     public void onClick(View v) {
-        boolean subscription = file_path.contains("subscriptions");
-        ITPDSubscription_list.add(new ITPDSubscription("", true, false, subscription));
-        mAdapter.notifyItemInserted(ITPDSubscription_list.size() - 1);
-        mRecyclerView.scrollToPosition(ITPDSubscription_list.size() - 1);
+        adapter.addSubscription();
     }
 
-    class RulesAdapter extends RecyclerView.Adapter<RulesAdapter.RuleViewHolder> {
+    private class SubscriptionsAdapter extends RecyclerView.Adapter<SubscriptionsAdapter.ViewHolder> {
 
-        ArrayList<ITPDSubscription> list_ITPDSubscription_adapter;
-        LayoutInflater lInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        private final List<ItpdSubscriptionRecycleItem> subscriptions = new ArrayList<>();
 
-        RulesAdapter(ArrayList<ITPDSubscription> ITPDSubscription_list) {
-            list_ITPDSubscription_adapter = ITPDSubscription_list;
+        @SuppressLint("NotifyDataSetChanged")
+        void updateSubscriptions(List<ItpdSubscriptionRecycleItem> subscriptions) {
+            this.subscriptions.clear();
+            for (ItpdSubscriptionRecycleItem item : subscriptions) {
+                this.subscriptions.add(new ItpdSubscriptionRecycleItem(item.getText()));
+            }
+            notifyDataSetChanged();
         }
 
+        void addSubscription() {
+            int position = subscriptions.size();
+            subscriptions.add(
+                    position,
+                    new ItpdSubscriptionRecycleItem("")
+            );
+            notifyItemInserted(position);
+            binding.rvRules.scrollToPosition(position);
+        }
 
         @NonNull
         @Override
-        public RuleViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view;
             try {
-                view = lInflater.inflate(R.layout.item_rules, parent, false);
+                view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.item_rules, parent, false);
             } catch (Exception e) {
                 loge("ShowRulesRecycleFrag onCreateViewHolder", e);
                 throw e;
             }
-            return new RuleViewHolder(view);
+            return new ViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull RulesAdapter.RuleViewHolder holder, int position) {
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             holder.bind(position);
         }
 
         @Override
         public int getItemCount() {
-            return list_ITPDSubscription_adapter.size();
+            return subscriptions.size();
         }
 
-        ITPDSubscription getRule(int position) {
-            return list_ITPDSubscription_adapter.get(position);
+        ItpdSubscriptionRecycleItem getRule(int position) {
+            return subscriptions.get(position);
         }
 
         void delRule(int position) {
-
-            try {
-                list_ITPDSubscription_adapter.remove(position);
-            } catch (Exception e) {
-                loge("ShowRulesRecycleFrag getItemCount", e);
-            }
-
-
+            subscriptions.remove(position);
         }
 
-        class RuleViewHolder extends RecyclerView.ViewHolder
+        class ViewHolder extends RecyclerView.ViewHolder
                 implements View.OnClickListener, View.OnFocusChangeListener {
 
-            EditText etRule;
-            ImageButton delBtnRules;
-            SwitchCompat swRuleActive;
+            ItemRulesBinding itemRulesBinding;
 
-            RuleViewHolder(View itemView) {
+            ViewHolder(View itemView) {
                 super(itemView);
 
-                etRule = itemView.findViewById(R.id.etRule);
-                delBtnRules = itemView.findViewById(R.id.delBtnRules);
-                swRuleActive = itemView.findViewById(R.id.swRuleActive);
-                etRule.addTextChangedListener(textWatcher);
-                delBtnRules.setOnClickListener(this);
+                itemRulesBinding = ItemRulesBinding.bind(itemView);
+
+                itemRulesBinding.etRule.addTextChangedListener(textWatcher);
+                itemRulesBinding.delBtnRules.setOnClickListener(this);
             }
 
             void bind(int position) {
-                etRule.setText(getRule(position).text, TextView.BufferType.EDITABLE);
-                etRule.setEnabled(getRule(position).active);
-
-                if (getRule(position).subscription) {
-                    swRuleActive.setVisibility(View.GONE);
-                }
-
-                delBtnRules.setEnabled(true);
-
-                if (getRule(position).locked) {
-                    delBtnRules.setEnabled(false);
-                }
+                itemRulesBinding.etRule.setText(getRule(position).getText(), TextView.BufferType.EDITABLE);
+                itemRulesBinding.swRuleActive.setVisibility(View.GONE);
             }
 
             TextWatcher textWatcher = new TextWatcher() {
@@ -299,8 +227,9 @@ public class ITPDSubscriptionsFragment extends Fragment implements View.OnClickL
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     int position = getBindingAdapterPosition();
-                    if (!getRule(position).locked)
-                        getRule(position).text = s.toString();
+                    if (position != NO_POSITION) {
+                        getRule(position).setText(s.toString());
+                    }
                 }
 
                 @Override
@@ -312,18 +241,36 @@ public class ITPDSubscriptionsFragment extends Fragment implements View.OnClickL
             public void onClick(View v) {
                 if (v.getId() == R.id.delBtnRules) {
                     int position = getBindingAdapterPosition();
-                    delRule(position);
-                    notifyItemRemoved(position);
+                    if (position != NO_POSITION) {
+                        delRule(position);
+                        notifyItemRemoved(position);
+                    }
                 }
             }
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
-                    mRecyclerView.smoothScrollToPosition(getBindingAdapterPosition());
+                    int position = getBindingAdapterPosition();
+                    if (position != NO_POSITION) {
+                        binding.rvRules.smoothScrollToPosition(position);
+                    }
                 }
             }
         }
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        viewModel.saveSubscriptions(requireContext(), adapter.subscriptions);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        binding = null;
+    }
 }
