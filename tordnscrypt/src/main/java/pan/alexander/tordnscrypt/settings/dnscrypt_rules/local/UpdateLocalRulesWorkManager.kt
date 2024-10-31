@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules.local
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.local
 
 import android.content.Context
 import androidx.work.BackoffPolicy

@@ -51,7 +51,7 @@ import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.ConfigEditorFragment;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType;
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager;
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteRulesWorkManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;

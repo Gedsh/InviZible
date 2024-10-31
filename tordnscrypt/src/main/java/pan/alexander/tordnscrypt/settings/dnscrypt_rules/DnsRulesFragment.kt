@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules
 
 import android.content.Context
 import android.os.Build
@@ -47,10 +47,10 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentDnsRuleBinding
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRulesRecyclerAdapter
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRulesRecyclerAdapter
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
-import pan.alexander.tordnscrypt.settings.show_rules.receiver.DnsRulesReceiver
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.receiver.DnsRulesReceiver
 import java.io.File
 import java.util.Date
 import javax.inject.Inject

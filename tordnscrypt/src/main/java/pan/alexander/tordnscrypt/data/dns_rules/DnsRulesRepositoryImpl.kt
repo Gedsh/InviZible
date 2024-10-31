@@ -25,7 +25,7 @@ import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesRepository
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesRepository.Companion.LOCAL_RULES_DEFAULT_HEADER
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesRepository.Companion.REMOTE_RULES_DEFAULT_HEADER
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRuleRecycleItem
 import pan.alexander.tordnscrypt.utils.Utils.getDomainNameFromUrl
 import java.io.BufferedReader
 import java.io.InputStreamReader

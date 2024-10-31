@@ -23,9 +23,9 @@ import androidx.annotation.WorkerThread
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteRulesWorkManager
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_BLACKLIST_URL
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CLOAKING_URL

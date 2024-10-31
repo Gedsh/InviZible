@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -32,10 +32,10 @@ import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.SUPERVISOR_JOB_IO
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRulesInteractor
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteRulesWorkManager
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_BLACKLIST_URL
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CLOAKING_URL

@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules.remote
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -30,21 +30,21 @@ import kotlinx.coroutines.runInterruptible
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_BLACKLIST_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_CLOAKING_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_FORWARDING_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_IP_BLACKLIST_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_WHITELIST_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_BLACKLIST_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_CLOAKING_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_FORWARDING_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_IP_BLACKLIST_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.UpdateLocalRulesWorkManager.Companion.REFRESH_LOCAL_DNS_WHITELIST_WORK
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager.Companion.REMOTE_RULES_NAME_ARG
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager.Companion.REMOTE_RULES_TYPE_ARG
-import pan.alexander.tordnscrypt.settings.show_rules.remote.UpdateRemoteRulesWorkManager.Companion.REMOTE_RULES_URL_ARG
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_BLACKLIST_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_CLOAKING_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_FORWARDING_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_IP_BLACKLIST_WORK
-import pan.alexander.tordnscrypt.settings.show_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_WHITELIST_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteRulesWorkManager.Companion.REMOTE_RULES_NAME_ARG
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteRulesWorkManager.Companion.REMOTE_RULES_TYPE_ARG
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.UpdateRemoteRulesWorkManager.Companion.REMOTE_RULES_URL_ARG
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_BLACKLIST_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_CLOAKING_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_FORWARDING_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_IP_BLACKLIST_WORK
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.existing.RemixExistingRulesWorkManager.Companion.MIX_DNS_WHITELIST_WORK
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Named

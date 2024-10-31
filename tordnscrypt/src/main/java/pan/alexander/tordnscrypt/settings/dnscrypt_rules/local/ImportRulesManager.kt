@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules.local
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.local
 
 import android.content.Context
 import android.content.Intent
@@ -29,12 +29,12 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.blackListHostRulesRegex
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.blacklistIPRulesRegex
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.cloakingRulesRegex
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.forwardingRulesRegex
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.hostFileRegex
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.DnsRulesRegex.Companion.whiteListHostRulesRegex
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.DnsRulesRegex.Companion.blackListHostRulesRegex
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.DnsRulesRegex.Companion.blacklistIPRulesRegex
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.DnsRulesRegex.Companion.cloakingRulesRegex
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.DnsRulesRegex.Companion.forwardingRulesRegex
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.DnsRulesRegex.Companion.hostFileRegex
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.DnsRulesRegex.Companion.whiteListHostRulesRegex
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge

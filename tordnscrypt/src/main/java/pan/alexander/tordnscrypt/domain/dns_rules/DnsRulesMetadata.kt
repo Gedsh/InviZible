@@ -19,7 +19,6 @@
 
 package pan.alexander.tordnscrypt.domain.dns_rules
 
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
 import java.util.Date
 
 sealed class DnsRulesMetadata {

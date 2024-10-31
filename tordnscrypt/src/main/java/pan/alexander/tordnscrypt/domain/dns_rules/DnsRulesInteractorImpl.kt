@@ -23,7 +23,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import pan.alexander.tordnscrypt.di.CoroutinesModule
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRuleRecycleItem
 import pan.alexander.tordnscrypt.utils.Utils.isLogsDirAccessible
 import javax.inject.Inject
 import javax.inject.Named

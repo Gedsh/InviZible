@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules.receiver
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -25,16 +25,16 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import pan.alexander.tordnscrypt.settings.show_rules.remote.DownloadRemoteRulesManager.Companion.DOWNLOAD_REMOTE_DNS_RULES_PROGRESS_ACTION
-import pan.alexander.tordnscrypt.settings.show_rules.remote.DownloadRemoteRulesManager.Companion.DOWNLOAD_REMOTE_DNS_RULES_PROGRESS_DATA
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.Companion.UPDATE_DNS_RULES_PROGRESS_DATA
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.Companion.UPDATE_LOCAL_DNS_RULES_PROGRESS_ACTION
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.Companion.UPDATE_REMOTE_DNS_RULES_PROGRESS_ACTION
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.Companion.UPDATE_TOTAL_DNS_RULES_PROGRESS_ACTION
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager.Companion.UPDATE_TOTAL_DNS_RULES_PROGRESS_DATA
-import pan.alexander.tordnscrypt.settings.show_rules.remote.DnsRulesDownloadProgress
-import pan.alexander.tordnscrypt.settings.show_rules.local.DnsRulesUpdateProgress
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.DownloadRemoteRulesManager.Companion.DOWNLOAD_REMOTE_DNS_RULES_PROGRESS_ACTION
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.DownloadRemoteRulesManager.Companion.DOWNLOAD_REMOTE_DNS_RULES_PROGRESS_DATA
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.Companion.UPDATE_DNS_RULES_PROGRESS_DATA
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.Companion.UPDATE_LOCAL_DNS_RULES_PROGRESS_ACTION
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.Companion.UPDATE_REMOTE_DNS_RULES_PROGRESS_ACTION
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.Companion.UPDATE_TOTAL_DNS_RULES_PROGRESS_ACTION
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager.Companion.UPDATE_TOTAL_DNS_RULES_PROGRESS_DATA
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote.DnsRulesDownloadProgress
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.DnsRulesUpdateProgress
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRuleRecycleItem
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.util.Date
 import javax.inject.Inject

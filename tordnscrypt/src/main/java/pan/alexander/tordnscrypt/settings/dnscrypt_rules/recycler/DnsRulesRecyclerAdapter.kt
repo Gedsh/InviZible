@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules.recycler
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler
 
 import android.annotation.SuppressLint
 import android.text.Editable
@@ -35,7 +35,7 @@ import pan.alexander.tordnscrypt.databinding.ItemButtonBinding
 import pan.alexander.tordnscrypt.databinding.ItemDnsRuleBinding
 import pan.alexander.tordnscrypt.databinding.ItemRulesBinding
 import pan.alexander.tordnscrypt.domain.dns_rules.DnsRuleType
-import pan.alexander.tordnscrypt.settings.show_rules.local.ImportRulesManager
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.local.ImportRulesManager
 import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_CAPTURING
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge

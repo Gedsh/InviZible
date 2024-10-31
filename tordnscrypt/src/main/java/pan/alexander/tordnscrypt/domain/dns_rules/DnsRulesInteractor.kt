@@ -19,7 +19,7 @@
 
 package pan.alexander.tordnscrypt.domain.dns_rules
 
-import pan.alexander.tordnscrypt.settings.show_rules.recycler.DnsRuleRecycleItem
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler.DnsRuleRecycleItem
 
 interface DnsRulesInteractor {
 

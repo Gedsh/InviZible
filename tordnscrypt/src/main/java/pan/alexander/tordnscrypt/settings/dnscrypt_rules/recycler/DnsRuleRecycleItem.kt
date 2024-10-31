@@ -17,7 +17,7 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules.recycler
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler
 
 import java.util.Date
 
