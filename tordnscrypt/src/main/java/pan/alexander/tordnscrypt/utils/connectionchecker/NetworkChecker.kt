@@ -76,6 +76,7 @@ object NetworkChecker {
     private fun hasActiveTransport(capabilities: NetworkCapabilities): Boolean =
         capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
                 (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                        && isCellularInternetMayBeAvailable(capabilities)
                         || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
                         || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
 
@@ -121,6 +122,7 @@ object NetworkChecker {
     private fun hasCellularTransport(capabilities: NetworkCapabilities): Boolean =
         capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                && isCellularInternetMayBeAvailable(capabilities)
 
 
     @JvmStatic
@@ -169,6 +171,7 @@ object NetworkChecker {
     private fun hasRoamingTransport(capabilities: NetworkCapabilities): Boolean =
         capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
                 capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                && isCellularInternetMayBeAvailable(capabilities)
                 && !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING)
 
     @JvmStatic
@@ -397,7 +400,8 @@ object NetworkChecker {
                             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
                                 networks[2] = network
 
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                                    && isCellularInternetMayBeAvailable(capabilities) ->
                                 networks[3] = network
                         }
                     } else if (capabilities != null
@@ -410,7 +414,8 @@ object NetworkChecker {
                             capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ->
                                 networks[5] = network
 
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ->
+                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                                    && isCellularInternetMayBeAvailable(capabilities) ->
                                 networks[6] = network
                         }
                     }
@@ -428,6 +433,14 @@ object NetworkChecker {
         }
 
         return networks.values.toTypedArray()
+    }
+
+    //This is required because the cellular interface may only be available for ims
+    private fun isCellularInternetMayBeAvailable(capabilities: NetworkCapabilities): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        }
+        return true
     }
 
     @JvmStatic
