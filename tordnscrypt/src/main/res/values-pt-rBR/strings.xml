@@ -13,7 +13,7 @@
     <string name="swRunOnBoot">"Iniciar durante o Boot"</string>
     <string name="root_available">"Checando se o Root está disponível…"</string>
     <string name="please_wait">"Por favor, aguarde…"</string>
-    <string name="dont_show">"Não mostrar novamente"</string>
+    <string name="dont_show">Não mostrar</string>
     <string name="tvDNSStop">"DNSCrypt Parado"</string>
     <string name="tvDNSInstalled">"DNSCrypt instalado"</string>
     <string name="tvDNSInstalling">"Instalando DNSCrypt"</string>
@@ -60,9 +60,9 @@
     <string name="backupFolder">"Escolha uma pasta de backup:"</string>
     <string name="title_activity_settings">"Configurações"</string>
     <string name="pref_fast_categ_autostart">"Iniciar automaticamente"</string>
-    <string name="pref_fast_dns_autostart">Iniciar o DNSCrypt durante o boot</string>
-    <string name="pref_fast_tor_autostart">Iniciar o Tor durante o boot</string>
-    <string name="pref_fast_itpd_autostart">Iniciar o I2p durante o boot</string>
+    <string name="pref_fast_dns_autostart">Iniciar o DNSCrypt automaticamente</string>
+    <string name="pref_fast_tor_autostart">Iniciar o Tor automaticamente</string>
+    <string name="pref_fast_itpd_autostart">Iniciar o I2p automaticamente</string>
     <string name="pref_fast_autostart_delay">"Atraso"</string>
     <string name="pref_fast_autostart_delay_summ">Utilize o delay (em segundos) somente se a inicialização automática não funcionar corretamente</string>
     <string name="pref_fast_dns_server">"Servidores DNSCrypt"</string>
@@ -72,16 +72,16 @@
     <string name="pref_fast_all_through_tor">"Rotear todo o tráfego através do Tor"</string>
     <string name="pref_fast_all_through_ipro">"Rotear todo o tráfego através do InviZible"</string>
     <string name="pref_fast_unlock_with_tor">Selecionar websites</string>
-    <string name="pref_fast_unlock_with_tor_summ">Lista de websites para abrir com o Tor</string>
+    <string name="pref_fast_unlock_with_tor_summ">Lista de sites para abrir com Tor. Este recurso não funciona para sites por trás de uma CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Selecionar aplicativos</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">"Lista de aplicativos para utilizar com o Tor"</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"Lista de aplicativos para usar com o InviZible"</string>
     <string name="pref_fast_exclude_from_tor">Websites ignorados</string>
-    <string name="pref_fast_exclude_from_tor_summ">Lista de websites para abrir diretamente</string>
+    <string name="pref_fast_exclude_from_tor_summ">Lista de sites para abrir diretamente. Este recurso não funciona para sites por trás de uma CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Ignorar aplicativos</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Lista de aplicativos para abrir diretamente"</string>
     <string name="pref_fast_site_refresh_interval">Intervalo de atualização</string>
-    <string name="pref_fast_site_refresh_interval_summ">Período, em horas, para atualizar os IPs dos websites; Para o Android 5.1 e superior. Coloque 0 para parar a atualização.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Período, em horas, para atualizar os IPs dos websites. Para o Android 5.1 e superior. Coloque 0 para parar a atualização.</string>
     <string name="pref_fast_use_tor_bridges">"Pontes"</string>
     <string name="pref_fast_use_tor_bridges_summ">"Use isso se você não conseguir se conectar a rede Tor"</string>
     <string name="pref_fast_use_tor_bridges_no">"Não usar Pontes"</string>
@@ -116,15 +116,15 @@
     <string name="pref_common_categ_other">"Outro"</string>
     <string name="pref_common_block_http">"Bloquear HOTSPOT hhtp"</string>
     <string name="pref_common_block_http_summ">"Negar conexão para o http na porta 80 para o HOTSPOT"</string>
-    <string name="pref_common_notification_summ">Proteger o aplicativo no modo sem Root para prevenir que o Android mate o processo</string>
+    <string name="pref_common_notification_summ">Proteger o aplicativo de ser terminado pelo Android</string>
     <string name="pref_common_refresh_rules">"Atualizar regras"</string>
     <string name="pref_common_refresh_rules_summ">"Atualizar regras toda vez que a conexão mudar"</string>
     <string name="pref_common_show_notification">"Mostrar notificação"</string>
     <string name="pref_common_wakelock">"Impedir que o dispositivo durma"</string>
     <string name="pref_common_wakelock_summ">Proteção adicional no modo sem Root para prevenir que o aplicativo seja morto pelo Android. Pode drenar bateria</string>
     <string name="pref_common_show_help">"Mensagens de ajuda"</string>
-    <string name="pref_common_show_help_summ">Sempre mostrar mensagens de ajuda</string>
-    <string name="pref_common_notification_helper">Por favor, exclua o InviZible Pro da otimização de bateria do Android. Caso contrário, o android parará o DNSCrypt, Tor ou I2P em qualquer momento. Em sistemas especiais, como o MIUI, são necessários alguns passos adicionais.</string>
+    <string name="pref_common_show_help_summ">Mostrar todas as mensagens que foram marcadas como não permitidas para exibição</string>
+    <string name="pref_common_notification_helper">Por favor, exclua o InviZible Pro da otimização da bateria do Android para evitar que o sistema termine o DNSCrypt, Tor ou I2P a qualquer momento. Alguns sistemas especiais, como MIUI, podem exigir passos adicionais.</string>
     <string name="pref_common_use_busybox">"Selecionar BusyBox"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimental"</string>
     <!-- Fuzzy -->
@@ -133,7 +133,7 @@
     <string name="pref_common_tor_tethering">Permir Tor Tethering</string>
     <string name="pref_common_tor_route_all">"Rotear tudo através do Tor"</string>
     <string name="pref_common_tor_route_all_summ">"Rotear todo tráfego de entrada através do Tor"</string>
-    <string name="pref_common_unblock_with_tor">Selecionar websites</string>
+    <string name="pref_common_unblock_with_tor">Selecionar sites</string>
     <!-- Fuzzy -->
     <string name="pref_common_unblock_with_tor_summ">Lista de websites para abrir com o Tor pelo HOTSPOT</string>
     <string name="pref_common_excludes_from_tor">Excluir websites</string>
@@ -164,17 +164,17 @@
     <string name="pref_dnscrypt_require_nolog_summ">"O servidor não deve manter log das queries do usuário (declarativo)."</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_require_nofilter_summ">O servidor não deve forçar sua própria lista negra (para controle parental, bloqueio de propaganda…).</string>
-    <string name="pref_dnscrypt_force_tcp_categ">"Sempre usar TCP para conectar com os servidores upstream."</string>
+    <string name="pref_dnscrypt_force_tcp_categ">Sempre use TCP para se conectar a servidores upstream</string>
     <string name="pref_dnscrypt_force_tcp_summ">Isso pode ser útil se você precisar rotear tudo através do Tor.. Caso contrário, deixe como falso, pois isso não melhora a segurança (dnscrypt-proxy sempre criptografará tudo, mesmo usando UDP) e só aumentará a latência.</string>
-    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">SOCKS Proxy.</string>
+    <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">Proxy SOCKS</string>
     <string name="pref_dnscrypt_use_proxy">"Ativar proxy"</string>
     <string name="pref_dnscrypt_proxy_summ">"Roteie todas as conexões TCP para um nó Tor local. Tor não suporta UDP, então defina force_tcp como true também."</string>
-    <string name="pref_dnscrypt_proxy">"Porta de Proxy"</string>
-    <string name="pref_dnscrypt_other_categ">Outras configurações.</string>
-    <string name="pref_dnscrypt_fallback_resolver_summ">Resolvedor substituto. Este é um resolvedor DNS normal, não criptografado, que só será usado para consultas únicas ao recuperar a lista inicial de resolvedores e somente se a configuração DNS do sistema não funcionar. Nunca será usado se as listas já tiverem sido armazenadas em cache.</string>
+    <string name="pref_dnscrypt_proxy">Porta de Proxy</string>
+    <string name="pref_dnscrypt_other_categ">Outras Configurações</string>
+    <string name="pref_dnscrypt_fallback_resolver_summ">Esse é um resolvedor de DNS normal, não criptografado, que será usado somente para consultas únicas ao recuperar a lista inicial de resolvedores e somente se a configuração de DNS do sistema não funcionar. Ele nunca será usado se as listas já tiverem sido armazenadas em cache.</string>
     <!-- Nunca deixar o dnscrypt-proxy tentar utilizar as definições DNS do sistema. Utilizar incondicionalmente o resolvedor de falhas. -->
     <string name="pref_dnscrypt_ignore_system_dns_summ">"Nunca deixe dnscrypt-proxy tentar usar as configurações de DNS do sistema. Use incondicionalmente o resolvedor de fallback."</string>
-    <string name="pref_dnscrypt_filters_categ">"FILTROS"</string>
+    <string name="pref_dnscrypt_filters_categ">Filtros</string>
     <!-- Regras de encaminhamento -->
     <string name="pref_dnscrypt_forwarding_rules_categ">Regras de encaminhamento</string>
     <string name="pref_dnscrypt_forwarding_rules_summ">"Roteie as consultas de domínios específicos para um conjunto dedicado de servidores."</string>
@@ -193,26 +193,26 @@
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_nx_log">"Ativar log de consultas suspeitas"</string>
     <string name="open_nx_log">"Abrir log de consultas suspeitas"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Bloqueio baseado em padrões (lista negra)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">Bloqueio baseado em padrões (lista negra)</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_blacklist">"Lista negra"</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_blacklist_summ">"A lista negra é composta de uma regra a cada linha."</string>
-    <string name="pref_dnscrypt_ipblacklist_categ">"Bloqueio de IP baseado em padrões (lista negra de IP)."</string>
+    <string name="pref_dnscrypt_ipblacklist_categ">Bloqueio de IP baseado em padrões (lista negra de IP)</string>
     <string name="pref_dnscrypt_ipblacklist">"Lista negra de IPs"</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_ipblacklist_summ">"A lista negra de IP é composta de uma regra por linha."</string>
-    <string name="pref_dnscrypt_whitelist_categ">"Lista de permissões baseada em padrões (ignorar listas negras)."</string>
+    <string name="pref_dnscrypt_whitelist_categ">Lista de permissões baseada em padrões (ignorar listas negras)</string>
     <!-- Fuzzy -->
     <string name="pref_dnscrypt_whitelist">Lista branca</string>
     <string name="pref_dnscrypt_whitelist_summ">"A lista branca suporta os mesmos padrões das listas negras. Se um nome corresponder a uma entrada da lista de permissões, a sessão correspondente irá ignorar nomes e filtros de IP."</string>
     <string name="pref_dnscrypt_sources_categ">"Servidores"</string>
     <string name="pref_dnscrypt_sources">"Fontes"</string>
     <string name="pref_dnscrypt_sources_summ">"Listas remotas de servidores disponíveis."</string>
-    <string name="pref_dnscrypt_refresh_delay_summ">"Lista de fontes expirando após horas de refresh_delay."</string>
+    <string name="pref_dnscrypt_refresh_delay_summ">A lista de servidores será atualizada após o atraso especificado em horas.</string>
     <string name="pref_dnscrypt_relays_categ">"Retransmissores"</string>
     <string name="pref_dnscrypt_relays">"Fontes"</string>
-    <string name="pref_dnscrypt_relays_delay_summ">"Lista de Retransmissores expirarár depois de refresh_delay horas."</string>
+    <string name="pref_dnscrypt_relays_delay_summ">A lista de relés será atualizada após o atraso especificado em horas.</string>
     <string name="pref_dnscrypt_relays_title">"DNSCrypt Retransmissores"</string>
     <string name="pref_dnscrypt_not_exist">"Não existe preferência em dnscrypt-proxy.toml!"</string>
     <string name="btn_dnscrypt_delete_log">"Apagar log"</string>
@@ -234,11 +234,11 @@
     <string name="pref_tor_new_circuit_period_summ">"A cada X segundos, considere se deve construir um novo circuito."</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">"Sinta-se à vontade para reutilizar um circuito que foi usado pela primeira vez no máximo NUM segundos atrás, mas nunca conecte um novo fluxo a um circuito que seja muito antigo."</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Se habilitado, o Tor não colocará dois servidores cujos endereços IP estão muito próximos no mesmo circuito. Atualmente, dois endereços estão muito próximos se estiverem no mesmo intervalo / 16."</string>
-    <string name="pref_tor_enable_SOCKS_proxy">"Ativar SOCKS proxy"</string>
+    <string name="pref_tor_enable_SOCKS_proxy">Proxy SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">Abra esta porta para ouvir conexões de aplicativos de fala SOCKS.</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">"Ativar HTTPTunnel"</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">Túnel HTTP</string>
     <string name="pref_tor_HTTPTunnel_port_summ">"Abra esta porta para ouvir conexões de aplicativos de fala SOCKS."</string>
-    <string name="pref_tor_enable_transparent_proxy">"Ativar proxy transparente"</string>
+    <string name="pref_tor_enable_transparent_proxy">Proxy transparente</string>
     <string name="pref_tor_trans_port_summ">Abra esta porta para ouvir conexões de proxy transparentes.</string>
     <string name="pref_tor_enable_DNS">"Ativar DNS"</string>
     <string name="pref_tor_DNS_port_summ">"Abra esta porta para escutar as solicitações UDP DNS e resolvê-las anonimamente."</string>
@@ -297,7 +297,7 @@
     <string name="helper_dnscrypt_stopped">"Parece que o DNSCrypt foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
     <string name="helper_tor_stopped">"Parece que o Tor foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
     <string name="helper_itpd_stopped">"Parece que o I2P foi morto pelo sistema Android. Sua conexão com a Internet foi restaurada. Verifique as configurações do dispositivo!"</string>
-    <string name="helper_dnscrypt_no_internet">"Parece que o DNSCrypt NÃO PODE se conectar à INTERNET."</string>
+    <string name="helper_dnscrypt_no_internet">Parece que o DNSCrypt não consegue se conectar à Internet. Você pode tentar escolher outros servidores DNSCrypt. Encontre-os em MENU -&gt; Configurações Rápidas -&gt; Selecionar servidores DNSCrypt</string>
     <string name="helper_tor_use_bridges">Parece que o Tor não consegue se conectar à Internet. O ISP pode bloquear as conexões Tor. Você pode tentar usar as Tor Bridges. Encontre-as em MENU -&gt; Configurações rápidas -&gt; Bridges</string>
     <string name="action_mode_child_lock">"Bloqueio para crianças"</string>
     <string name="action_mode_dialog_message_lock">"Você pode bloquear o controle deste aplicativo. Por favor, digite a senha ou use a anterior."</string>
@@ -323,7 +323,7 @@
     <string name="update_dnscrypt_has_apdate">"A atualização do DNSCrypt Pro está disponível. Quer fazer o download e atualizá-lo? A atualização continuará em segundo plano."</string>
     <string name="update_tor_has_apdate">"A atualização do Tor está disponível. Quer fazer o download e atualizá-lo? A atualização continuará em segundo plano."</string>
     <string name="update_itpd_has_apdate">"A atualização do I2P está disponível. Quer fazer o download e atualizá-lo? A atualização continuará em segundo plano."</string>
-    <string name="update_checking_title">Verificar Atualizações</string>
+    <string name="update_checking_title">Verificando atualizações</string>
     <string name="update_checking_message">Aguarde enquanto as atualizações estão sendo verificadas.</string>
     <string name="update_check_warning">"O servidor de atualização está temporariamente indisponível. Por favor, tente novamente mais tarde."</string>
     <string name="update_check_warning_menu">"O servidor de atualização não estava disponível."</string>
@@ -338,7 +338,7 @@
     <string name="verifier_error">"Parece que esta versão não é oficial do InviZible. Por favor, cuide disso!"</string>
     <string name="only_for_pro">"Apenas para a versão PRO"</string>
     <string name="donate">"Doação"</string>
-    <string name="donate_project">"O Projeto InviZible Pro precisa de sua ajuda. Visite a página de doações ou insira o código de registro recebido."</string>
+    <string name="donate_project">O projeto InviZible Pro busca sua ajuda. Visite a página de doações ou digite o código premium que você já recebeu.</string>
     <string name="donate_button">"Visite"</string>
     <string name="enter_code_button">"Coloque o código"</string>
     <string name="enter_code">"Coloque o código"</string>
@@ -354,7 +354,7 @@
     <string name="add_custom_server_title">"Adicionar servidor customizado"</string>
     <string name="add_custom_server_error">"Configuração de servidor personalizado inválida. Verifique o campo SDNS."</string>
     <string name="pending_purchase">"Observe que você tem uma compra pendente:"</string>
-    <string name="buy_premium_gp">"O Projeto InviZible Pro precisa de sua ajuda. Pressione OK para adquirir recursos premium."</string>
+    <string name="buy_premium_gp">O projeto InviZible Pro quer sua ajuda. Pressione OK para comprar recursos premium.</string>
     <string name="wrong_purchase_signature_gp">"Desculpe, mas é impossível confirmar sua compra. Você receberá um reembolso após 3 dias."</string>
     <string name="only_premium_feature">"Infelizmente, esse recurso está disponível apenas para a versão premium."</string>
     <string name="pref_itpd_use_HTTP_outproxy">Outproxy HTTP</string>
@@ -510,9 +510,9 @@
     <string name="pref_common_use_iptables_device">"Use device iptables"</string>
     <string name="pref_common_wait_iptables">"Wait for the xtables lock"</string>
     <string name="pref_common_wait_iptables_summ">"Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules."</string>
-    <string name="connectivity_check">"Internet connectivity check"</string>
-    <string name="pref_fast_logs">"Real-time logs"</string>
-    <string name="pref_fast_logs_summ">"Show application connection logs in the DNS tab"</string>
+    <string name="connectivity_check">Verificação de conectividade com a Internet</string>
+    <string name="pref_fast_logs">Registros em tempo real</string>
+    <string name="pref_fast_logs_summ">Mostrar registros de conexão de aplicativos na guia DNS</string>
     <string name="agreement_text">
         \tObrigado porescolher o InviZible Pro. Espero que seja útil para a sua privacidade e conforto no uso da Internet.
         \n\n\tInviZible Pro inclui Tor, DNSCrypt e Purple I2P como módulos.
@@ -540,12 +540,12 @@
     <string name="notification_exclude_data_restriction_title">"Desativar o economizador de dados da rede?"</string>
     <string name="notification_exclude_data_restriction_message">"Por favor, permita o uso de dados em segundo plano e o uso de dados enquanto o economizador de dados está ativado. Isso é essencial para uma experiência online suave."</string>
     <string name="notification_exec_root_commands">"Executando comandos de Root…"</string>
-    <string name="pref_tor_dormant_client_timeout_summ">"O Tor entra em um estado de inatividade se não detectar atividade do cliente por um tempo especificado. Deve ser de pelo menos 10 minutos."</string>
+    <string name="pref_tor_dormant_client_timeout_summ">O Tor entra em um estado de inatividade se não detectar atividade do cliente por um tempo especificado. Deve ser de pelo menos 10 minutos</string>
     <string name="press_to_add">"Pressione para adicionar."</string>
     <string name="long_press_to_add">"Pressione e segure para adicionar."</string>
     <string name="press_to_edit">"Pressione para editar."</string>
     <string name="long_press_to_edit">"Pressione e segure para editar."</string>
-    <string name="anonymize_relays">"Anonimizar retransmissores."</string>
+    <string name="anonymize_relays">Anonimizar retransmissores</string>
     <string name="anonymize_relays_not_used">"Os retransmissores anonimizados não estão em uso."</string>
     <string name="pref_fast_exclude_app_from_tor">"Excluir do Tor"</string>
     <string name="pref_fast_route_to_tor">"Roteirizar para o Tor"</string>
@@ -561,4 +561,11 @@
     <string name="pref_itpd_use_Socks_outproxy_summ">"Endereço do outproxy (IP ou local). As solicitações fora do I2P serão enviadas para lá."</string>
     <string name="pref_tor_fascist_firewall_lock_summ">"Para ativar esta opção, você deve desativar as pontes ou usar pontes com as portas 80 e 443 apenas."</string>
     <string name="pref_tor_isolate_uid_summ">"Não compartilhe circuitos com conexões de diferentes aplicativos."</string>
+    <string name="dns_rule_add_remote_list">Adicionar lista remota</string>
+    <string name="dns_rule_add_local_list">Adicionar lista local</string>
+    <string name="dns_rule_add_rule">Adicionar regra</string>
+    <string name="rules">regras</string>
+    <string name="total_rules">Total: %d regras</string>
+    <string name="dns_rule_add_url">Adicionar URL</string>
+    <string name="pref_dnscrypt_rules_delay_summ">As regras serão atualizadas após o atraso especificado em horas.</string>
 </resources>
