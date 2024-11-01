@@ -27,6 +27,7 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
@@ -306,7 +307,7 @@ class DnsRulesRecyclerAdapter(
             when (val rule = rules[position]) {
                 is DnsRuleRecycleItem.DnsSingleRule -> {
                     ItemRulesBinding.bind(itemView).apply {
-                        etRule.setText(rule.rule)
+                        etRule.setText(rule.rule, TextView.BufferType.EDITABLE)
                         etRule.isEnabled = rule.active
                         etRule.addTextChangedListener(watcher)
                         swRuleActive.isChecked = rule.active
