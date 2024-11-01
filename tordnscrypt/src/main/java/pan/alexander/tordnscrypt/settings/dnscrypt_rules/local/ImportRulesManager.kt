@@ -703,7 +703,7 @@ class ImportRulesManager(
         companion object {
             val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?,]+$")
             val blacklistIPRulesRegex = Regex("^[0-9a-fA-F:.=*\\[\\]]+$")
-            val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
+            val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
             val forwardingRulesRegex =
                 Regex("^[a-zA-Z\\d-._]+[ \\t]+[0-9a-fA-F:.,\\[\\]]+$")
             val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
