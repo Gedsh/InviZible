@@ -1,0 +1,5 @@
+**InviZible Pro beta 2.3.7**
+* Updated Tor to version 4.8.13.
+* Fixed detection of whether a cellular network interface can provide an internet connection.
+* Fixed I2PD subscriptions option.
+* Updated German, Spanish, Greek, Chinese, Portuguese (Brazil), Persian and Bulgarian translations.

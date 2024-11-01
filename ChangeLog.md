@@ -1211,3 +1211,9 @@
 * Improvements for the firewall in root mode for Android versions above 5.
 * Removed the Fastly rendezvous of the Tor snowflake bridge.
 * Minor fixes and optimisations.
+
+**InviZible Pro beta 2.3.7**
+* Updated Tor to version 4.8.13.
+* Fixed detection of whether a cellular network interface can provide an internet connection.
+* Fixed I2PD subscriptions option.
+* Updated German, Spanish, Greek, Chinese, Portuguese (Brazil), Persian and Bulgarian translations.
