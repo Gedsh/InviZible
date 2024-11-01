@@ -43,7 +43,7 @@
     <string name="message_no_root_used">"Puedes usar Invizible Pro con el modo VPN Local incluido, o, configurar aplicaciones con sus propios ajustes de proxy o implementaciones de VPN Local, con el modo Proxy."</string>
     <string name="message_no_root_used_kitkat">"Puedes usar Invizible Pro con aplicaciones con sus propios ajustes de proxy o implementaciones de VPN Local, con el modo Proxy."</string>
     <string name="write_file_error">"¡Error de escritura de archivo!"</string>
-    <string name="drawer_menu_commonSettings">Ajustes comunes</string>
+    <string name="drawer_menu_commonSettings">"Configuración general"</string>
     <string name="drawer_menu_DNSSettings">"Configuración de DNSCrypt"</string>
     <string name="drawer_menu_TorSettings">"Configuración de Tor"</string>
     <string name="drawer_menu_I2PDSettings">"Configuración de I2P"</string>
@@ -62,7 +62,7 @@
     <string name="pref_fast_tor_autostart">Inicio automático de Tor</string>
     <string name="pref_fast_itpd_autostart">Arrancar I2P al inicio del dispositivo</string>
     <string name="pref_fast_autostart_delay">"Retraso"</string>
-    <string name="pref_fast_autostart_delay_summ">Usar un retraso (en segundos) solo si el inicio automático no funciona correctamente</string>
+    <string name="pref_fast_autostart_delay_summ">"Establece un retraso en segundos en el caso en que Inicio Automático no funcione."</string>
     <string name="pref_fast_dns_server">"Servidores DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"Seleccionar servidores DNSCrypt"</string>
     <string name="pref_fast_tor">"Configuración de Tor"</string>
@@ -72,12 +72,12 @@
     <string name="pref_fast_unlock_with_tor">Seleccionar sitios</string>
     <string name="pref_fast_unlock_with_tor_summ">Lista de páginas web para abrir con Tor. Esta característica no funciona para los sitios detrás de CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Seleccionar aplicaciones</string>
-    <string name="pref_fast_unlock_apps_with_tor_summ">Lista de aplicaciones para usar con Tor</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">"Aplicaciones a usar con Tor."</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"Aplicaciones a usar con InviZible"</string>
     <string name="pref_fast_exclude_from_tor">Excluir páginas web</string>
     <string name="pref_fast_exclude_from_tor_summ">Lista de páginas web para abrir directamente. Esta función no funciona para los sitios detrás de CDN</string>
     <string name="pref_fast_exclude_apps_from_tor">Excluir aplicaciones</string>
-    <string name="pref_fast_exclude_apps_from_tor_summ">Lista de aplicaciones que se abrirán directamente</string>
+    <string name="pref_fast_exclude_apps_from_tor_summ">"Lista de aplicaciones a excluir de Tor."</string>
     <string name="pref_fast_site_refresh_interval">Intervalo de refresco</string>
     <string name="pref_fast_site_refresh_interval_summ">Período en horas para actualizar la IP de las páginas. Para Android 5.1 y superior. Ponga 0 para detener el refresco.</string>
     <string name="pref_fast_use_tor_bridges">"Puentes"</string>

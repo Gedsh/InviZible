@@ -125,7 +125,7 @@
     <string name="pref_common_notification_helper">Bitte deaktiviere die Batterieoptimierung deines Telefons für InviZible Pro. Andernfalls können DNSCrypt, Tor oder I2P jederzeit durch Android beendet werden. Auf manchen Systemen, wie zB MIUI, können zusätzliche Schritte nötig sein.</string>
     <string name="pref_common_use_busybox">"BusyBox auswählen"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimentell"</string>
-    <string name="pref_common_tethering_autostart"></string>
+    <string name="pref_common_tethering_autostart">Starte Tethering beim Booten</string>
     <string name="pref_common_tor_tethering">Erlaube Tor-Tethering</string>
     <string name="pref_common_tor_route_all">"Sende jeglichen Datenverkehr durch Tor"</string>
     <string name="pref_common_tor_route_all_summ">"Sende jeglichen eingehenden Datenverkehr durch Tor"</string>
