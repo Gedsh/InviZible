@@ -30,6 +30,8 @@ import pan.alexander.tordnscrypt.TopFragmentViewModel
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.DnsRelayViewModel
 import pan.alexander.tordnscrypt.settings.dnscrypt_servers.DnsServerViewModel
 import pan.alexander.tordnscrypt.settings.firewall.FirewallViewModel
+import pan.alexander.tordnscrypt.settings.dnscrypt_rules.DnsRulesViewModel
+import pan.alexander.tordnscrypt.settings.itpd_settings.ItpdSubscriptionsViewModel
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import pan.alexander.tordnscrypt.settings.tor_ips.UnlockTorIpsViewModel
 
@@ -83,5 +85,19 @@ abstract class ViewModelModule {
     @ViewModelKey(DnsRelayViewModel::class)
     abstract fun provideDnsRelayViewModel(
         dnsRelayViewModel: DnsRelayViewModel
+    ): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(DnsRulesViewModel::class)
+    abstract fun provideDnsRuleViewModel(
+        dnsRulesViewModel: DnsRulesViewModel
+    ): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(ItpdSubscriptionsViewModel::class)
+    abstract fun provideItpdSubscriptionsViewModel(
+        itpdSubscriptionsViewModel: ItpdSubscriptionsViewModel
     ): ViewModel
 }

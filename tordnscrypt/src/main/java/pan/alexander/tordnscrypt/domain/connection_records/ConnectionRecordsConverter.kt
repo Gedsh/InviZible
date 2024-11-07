@@ -506,7 +506,7 @@ class ConnectionRecordsConverter @Inject constructor(
 
     private fun updateVars() {
 
-        iptablesFirewall.get().prepareUidAllowed()
+        iptablesFirewall.get().prepareUidAllowed(NetworkChecker.isVpnActive(context))
         blockIPv6 = isBlockIPv6()
         meteredNetwork = isMeteredNetwork()
         vpnDNS = VpnBuilder.vpnDnsSet

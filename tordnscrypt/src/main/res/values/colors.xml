@@ -5,6 +5,7 @@
     <color name="colorAccent">#0D47A1</color>
     <color name="colorBackground">@color/colorWhite</color>
     <color name="colorText">@color/colorBlack</color>
+    <color name="colorTextSecondary">#808080</color>
     <color name="colorSelected">#803F64B5</color>
     <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#000000</color>

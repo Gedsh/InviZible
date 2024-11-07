@@ -23,7 +23,6 @@ import androidx.appcompat.app.AlertDialog
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment
 import pan.alexander.tordnscrypt.modules.ModulesStatus
-import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.lang.Exception
 
@@ -41,16 +40,7 @@ class SaveFirewallChangesDialog : ExtendedDialogFragment() {
         val firewallFragment = parentFragmentManager.findFragmentByTag(FirewallFragment.TAG)
                 as? FirewallFragment ?: return null
 
-        val modulesRunning = modulesStatus.dnsCryptState == ModuleState.RUNNING
-                || modulesStatus.torState == ModuleState.RUNNING
-        val firewallEnabled = firewallFragment.firewallEnabled
-
-        val message = if (!firewallEnabled || firewallEnabled && modulesRunning) {
-            activity.getString(R.string.ask_save_changes)
-        } else {
-            activity.getString(R.string.ask_save_changes) + "\n\t\n" +
-                    activity.getString(R.string.firewall_warning_enable_module)
-        }
+        val message = activity.getString(R.string.ask_save_changes)
 
         val builder = AlertDialog.Builder(activity)
 

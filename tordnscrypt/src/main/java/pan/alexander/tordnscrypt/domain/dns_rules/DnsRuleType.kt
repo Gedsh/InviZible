@@ -17,13 +17,12 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.utils.enums
+package pan.alexander.tordnscrypt.domain.dns_rules
 
-enum class DNSCryptRulesVariant {
-    BLACKLIST_HOSTS,
-    BLACKLIST_IPS,
-    WHITELIST_HOSTS,
+enum class DnsRuleType {
+    BLACKLIST,
+    WHITELIST,
+    IP_BLACKLIST,
     FORWARDING,
-    CLOAKING,
-    UNDEFINED
+    CLOAKING
 }

@@ -33,16 +33,18 @@
                 android:clickable="true"
                 android:ellipsize="end"
                 android:focusable="true"
-                android:fontFamily="serif"
                 android:gravity="center"
+                android:imeOptions="actionDone"
                 android:inputType="none|textNoSuggestions"
-                android:singleLine="true"
                 android:minHeight="48dp"
+                android:singleLine="true"
                 android:textAlignment="center"
+                android:textIsSelectable="true"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/swRuleActive"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="www.google.com" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swRuleActive"
@@ -54,7 +56,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/etRule"
                 tools:checked="true"
-                tools:visibility="visible"/>
+                tools:visibility="visible" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

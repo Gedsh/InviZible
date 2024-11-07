@@ -16,7 +16,7 @@
     <!-- ...بررسی در دسترس بودن روت -->
     <string name="root_available">بررسی روت بودن دستگاه…</string>
     <string name="please_wait">لطفاً صبر کنید…</string>
-    <string name="dont_show">"مجدداً نشان داده نشود"</string>
+    <string name="dont_show">نشان نده</string>
     <string name="tvDNSStop">"DNSCrypt متوقف شد"</string>
     <string name="tvDNSInstalled">"DNSCrypt نصب شد"</string>
     <!-- DNSCrypt در حال نصب -->
@@ -71,7 +71,7 @@
     <!-- هنگام راه اندازی Tor شروع -->
     <string name="pref_fast_tor_autostart">شروع تور هنگام راه‌اندازی مجدد</string>
     <!-- هنگام راه اندازی I2P شروع -->
-    <string name="pref_fast_itpd_autostart">"شروع خودکار  I2P"</string>
+    <string name="pref_fast_itpd_autostart">شروع خودکار I2P</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
     <string name="pref_fast_autostart_delay_summ">شروع با تأخیر (چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد</string>
     <string name="pref_fast_dns_server">"سرورهای DNSCrypt"</string>
@@ -523,7 +523,7 @@
     <string name="pref_common_use_busybox_app">استفاده از برنامه BusyBox</string>
     <string name="pref_common_use_busybox_not_use">از BusyBox استفاده نکن.</string>
     <string name="pref_fast_use_tor_bridges_ipv6">پل IPv6</string>
-    <string name="pref_common_kill_switch_summ">مسدود کردن اینترنت زمانی که Tor, DNSCrypt و Purple I2P متوقف هستند.</string>
+    <string name="pref_common_kill_switch_summ">مسدود کردن دسترسی به اینترنت زمانی Tor, DNSCrypt و Purple I2P متوقف هستند</string>
     <string name="pref_fast_logs">گزارش لحظه‌ای</string>
     <string name="pref_fast_exclude_app_from_tor">مستثنی کردن از Tor</string>
     <string name="pref_fast_route_to_tor">مسیر به Tor</string>

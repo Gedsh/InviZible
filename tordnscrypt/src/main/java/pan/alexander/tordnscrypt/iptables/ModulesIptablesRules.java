@@ -66,6 +66,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UI
 import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_GROUP;
 import static pan.alexander.tordnscrypt.utils.Constants.NFLOG_PREFIX;
 import static pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_DIRECT_UDP;
@@ -126,7 +127,12 @@ public class ModulesIptablesRules extends IptablesRulesSender {
     }
 
     @Override
-    public List<String> configureIptables(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
+    public List<String> configureIptables(
+            ModuleState dnsCryptState,
+            ModuleState torState,
+            ModuleState itpdState,
+            ModuleState firewallState
+    ) {
 
         iptables = pathVars.getIptablesPath();
         ip6tables = pathVars.getIp6tablesPath();
@@ -377,11 +383,17 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
             commands = getBlockingRules(appUID, blockHOTSPOT, unblockHOTSPOT);
 
-        } else if (killSwitch && dnsCryptState != RUNNING && torState != RUNNING && itpdState != RUNNING) {
+        } else if (killSwitch
+                && dnsCryptState != RUNNING && torState != RUNNING && itpdState != RUNNING
+                && firewallState != RUNNING && firewallState != STARTING) {
 
             showKillSwitchNotification();
 
             commands = getBlockingRules(appUID, blockHOTSPOT, unblockHOTSPOT);
+
+            if (modulesStatus.getMode() == ROOT_MODE) {
+                modulesStatus.setFirewallState(ModuleState.STOPPED, preferences);
+            }
 
         } else if (dnsCryptState == RUNNING && torState == RUNNING) {
 
@@ -590,6 +602,56 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     dnsCryptRootDNSAllowedFilter,
                     dnsCryptDnsDaemonDNSAllowedFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -d " + dnscryptBootstrapResolver + " --dport 53 -m owner --uid-owner " + appUID + " -j ACCEPT",
+                    blockRejectAddressFilter,
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
+                    iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,
+                    nflogPackets,
+                    unblockHOTSPOT,
+                    blockHOTSPOT
+            ));
+
+            List<String> commandsTether = tethering.activateTethering(false);
+            if (!commandsTether.isEmpty()) {
+                commands.addAll(commandsTether);
+            }
+            if (firewallEnabled) {
+                commands.addAll(firewall.getFirewallRules(tethering.isTetheringActive()));
+            } else {
+                commands.addAll(firewall.getClearFirewallRules());
+            }
+            commands.add(iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true");
+        } else if (dnsCryptState == STOPPED && torState == STOPPED
+                && (firewallState == STARTING || firewallState == RUNNING)) {
+
+            cancelKillSwitchNotificationIfNeeded();
+
+            commands = new ArrayList<>(Arrays.asList(
+                    iptables + "-F " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-D OUTPUT -j " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null || true",
+                    iptables + "-N " + FILTER_OUTPUT_BLOCKING + " 2> /dev/null",
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m state --state ESTABLISHED,RELATED -j RETURN",
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -m owner --uid-owner " + appUID + " -j RETURN",
+                    criticalUidsAllowed,
+                    iptables + "-A " + FILTER_OUTPUT_BLOCKING + " -j DROP",
+                    iptables + "-I OUTPUT -j " + FILTER_OUTPUT_BLOCKING,
+                    ip6tables + "-D OUTPUT -j DROP 2> /dev/null || true",
+                    ip6tables + "-D OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT 2> /dev/null || true",
+                    ip6tables + "-I OUTPUT -j DROP",
+                    ip6tables + "-I OUTPUT -m owner --uid-owner " + appUID + " -j ACCEPT",
+                    iptables + "-t nat -F " + NAT_OUTPUT_CORE + " 2> /dev/null",
+                    iptables + "-t nat -D OUTPUT -j " + NAT_OUTPUT_CORE + " 2> /dev/null || true",
+                    iptables + "-F " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                    iptables + "-D OUTPUT -j " + FILTER_OUTPUT_CORE + " 2> /dev/null || true",
+                    busybox + "sleep 1 || true",
+                    iptables + "-t nat -N " + NAT_OUTPUT_CORE + " 2> /dev/null",
+                    iptables + "-t nat -I OUTPUT -j " + NAT_OUTPUT_CORE,
+                    iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p all -d 127.0.0.1/32 -j RETURN",
+                    blockHttpRuleNatTCP,
+                    blockHttpRuleNatUDP,
+                    iptables + "-N " + FILTER_OUTPUT_CORE + " 2> /dev/null",
+                    nflogDns,
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -m udp --dport 53 -j ACCEPT",
+                    iptables + "-A " + FILTER_OUTPUT_CORE + " -p tcp -m tcp --dport 53 -j ACCEPT",
                     blockRejectAddressFilter,
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -m state --state ESTABLISHED,RELATED -j RETURN",
                     iptables + "-I OUTPUT -j " + FILTER_OUTPUT_CORE,

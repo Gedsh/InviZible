@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id "kotlin-parcelize"
 }
 
 def keystorePropertiesFile = file("/home/alexander/.local/KStore/keystore.properties")
@@ -34,7 +35,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.8.0"
+            versionName "6.9.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -42,7 +43,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.8.0"
+            versionName "6.9.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -50,7 +51,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "2.3.2"
+            versionName "2.3.7"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -59,7 +60,7 @@ android {
         google_play {
             minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
-            versionName "6.8.0"
+            versionName "6.9.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -91,7 +92,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 34
-        versionCode 232
+        versionCode 237
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar"
 
@@ -167,7 +168,7 @@ android {
         }
     }
 
-    ndkVersion '23.0.7421159'
+    ndkVersion '23.1.7779620'
 
     buildFeatures {
         viewBinding true
@@ -200,9 +201,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'androidx.lifecycle:lifecycle-process:2.8.4'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.4'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4'
+    implementation 'androidx.lifecycle:lifecycle-process:2.8.6'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.6'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6'
     google_playImplementation 'com.android.billingclient:billing:6.2.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
@@ -210,7 +211,7 @@ dependencies {
     implementation 'eu.chainfire:libsuperuser:1.1.1'
     implementation 'com.jrummyapps:android-shell:1.0.1'
     implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
     implementation project(':filepicker')
 
     //DI

@@ -43,7 +43,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -79,6 +79,7 @@ import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_ON_VPN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_BLOCK_INTERNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_NOT_SUPPORTED;
@@ -180,6 +181,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
         }
 
+        Preference alwaysOnVPN = findPreference(ALWAYS_ON_VPN);
+        if (modulesStatus.getMode() == VPN_MODE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && alwaysOnVPN != null) {
+            alwaysOnVPN.setOnPreferenceClickListener(this);
+        } else if (otherCategory != null && alwaysOnVPN != null) {
+            otherCategory.removePreference(alwaysOnVPN);
+        }
 
         Preference swCompatibilityMode = findPreference(COMPATIBILITY_MODE);
         if (modulesStatus.getMode() != VPN_MODE && otherCategory != null && swCompatibilityMode != null) {
@@ -484,6 +492,13 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 context.startActivity(intent_tether);
             } catch (Exception e) {
                 loge("PreferencesCommonFragment startHOTSPOT", e);
+            }
+        } else if (ALWAYS_ON_VPN.equals(preference.getKey())) {
+            Intent vpnSettingsIntent = new Intent("android.settings.VPN_SETTINGS");
+            try {
+                getActivity().startActivity(vpnSettingsIntent);
+            } catch (Exception e) {
+                loge("PreferencesCommonFragment ALWAYS_ON_VPN", e);
             }
         }
         return false;

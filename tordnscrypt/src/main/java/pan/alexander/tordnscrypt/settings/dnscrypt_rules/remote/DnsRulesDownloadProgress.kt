@@ -17,20 +17,30 @@
     Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.show_rules;
+package pan.alexander.tordnscrypt.settings.dnscrypt_rules.remote
 
-class Rules {
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
-    String text;
-    boolean active;
-    boolean locked;
-    boolean subscription;
+@Parcelize
+sealed class DnsRulesDownloadProgress : Parcelable {
 
+    data class DownloadProgress(
+        val name: String,
+        val url: String,
+        val size: Long,
+        val progress: Int
+    ): DnsRulesDownloadProgress()
 
-    Rules(String text, boolean active, boolean locked, boolean subscription) {
-        this.text = text;
-        this.active = active;
-        this.locked = locked;
-        this.subscription = subscription;
-    }
+    data class DownloadFinished(
+        val name: String,
+        val url: String,
+        val size: Long
+    ): DnsRulesDownloadProgress()
+
+    data class DownloadFailure(
+        val name: String,
+        val url: String,
+        val error: String
+    ): DnsRulesDownloadProgress()
 }

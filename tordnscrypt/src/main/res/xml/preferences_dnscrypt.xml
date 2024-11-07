@@ -186,10 +186,6 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
-            android:key="local_blacklist"
-            android:summary="@string/pref_dnscrypt_import_blacklist_summ"
-            android:title="@string/pref_dnscrypt_import_blacklist" />
-        <Preference
             android:key="erase_blacklist"
             android:title="@string/pref_dnscrypt_erase_blacklist" />
     </PreferenceCategory>
@@ -206,10 +202,6 @@
                 android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <Preference
-            android:key="local_whitelist"
-            android:summary="@string/pref_dnscrypt_import_whitelist_summ"
-            android:title="@string/pref_dnscrypt_import_whitelist" />
         <Preference
             android:key="erase_whitelist"
             android:title="@string/pref_dnscrypt_erase_whitelist" />
@@ -228,10 +220,6 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
-            android:key="local_ipblacklist"
-            android:summary="@string/pref_dnscrypt_import_ipblacklist_summ"
-            android:title="@string/pref_dnscrypt_import_ipblacklist" />
-        <Preference
             android:key="erase_ipblacklist"
             android:title="@string/pref_dnscrypt_erase_ipblacklist" />
     </PreferenceCategory>
@@ -248,10 +236,6 @@
                 android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
-        <Preference
-            android:key="local_forwarding_rules"
-            android:summary="@string/pref_dnscrypt_import_forwarding_rules_summ"
-            android:title="@string/pref_dnscrypt_import_forwarding_rules" />
         <Preference
             android:key="erase_forwarding_rules"
             android:title="@string/pref_dnscrypt_erase_forwarding_rules" />
@@ -270,12 +254,21 @@
                 android:targetPackage="@string/package_name" />
         </Preference>
         <Preference
-            android:key="local_cloaking_rules"
-            android:summary="@string/pref_dnscrypt_import_cloaking_rules_summ"
-            android:title="@string/pref_dnscrypt_import_cloaking_rules" />
-        <Preference
             android:key="erase_cloaking_rules"
             android:title="@string/pref_dnscrypt_erase_cloaking_rules" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="pref_dnscrypt_refresh_rules"
+        android:layout="@layout/preferences_category_custom"
+        android:title="@string/pref_common_refresh_rules">
+        <EditTextPreference
+            android:id="@+id/rules_refresh_delay"
+            android:defaultValue="72"
+            android:key="refresh_delay_rules"
+            android:selectAllOnFocus="false"
+            android:singleLine="true"
+            android:summary="@string/pref_dnscrypt_rules_delay_summ"
+            android:title="@string/pref_dnscrypt_refresh_delay" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="pref_dnscrypt_query_log"

@@ -25,12 +25,15 @@ import android.os.Build;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 
 public class ModulesAux {
@@ -38,6 +41,7 @@ public class ModulesAux {
     private static final String DNSCRYPT_RUNNING_PREF = "DNSCrypt Running";
     private static final String TOR_RUNNING_PREF = "Tor Running";
     private static final String ITPD_RUNNING_PREF = "I2PD Running";
+    private static final String FIREWALL_RUNNING_PREF = "Firewall Running";
 
     public static void switchModes(boolean rootIsAvailable, boolean runModulesWithRoot, OperationMode operationMode) {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
@@ -105,6 +109,18 @@ public class ModulesAux {
         //}
     }
 
+    public static boolean isFirewallSavedStateRunning() {
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
+        return preferences.getBoolPreference(FIREWALL_RUNNING_PREF)
+                && preferences.getBoolPreference(FIREWALL_ENABLED)
+                && preferences.getBoolPreference(FIREWALL_WAS_STARTED);
+    }
+
+    public static void saveFirewallStateRunning(boolean running) {
+        PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
+        preferences.setBoolPreference(FIREWALL_RUNNING_PREF, running);
+    }
+
     public static void stopModulesIfRunning(Context context) {
         boolean dnsCryptRunning = isDnsCryptSavedStateRunning();
         boolean torRunning = isTorSavedStateRunning();
@@ -121,6 +137,13 @@ public class ModulesAux {
         if (itpdRunning) {
             ModulesKiller.stopITPD(context);
         }
+
+        ModulesStatus.getInstance().setFirewallState(
+                ModuleState.STOPPED,
+                App.getInstance().getDaggerComponent().getPreferenceRepository().get()
+        );
+        saveFirewallStateRunning(false);
+        speedupModulesStateLoopTimer(context);
     }
 
     public static void stopModulesService(Context context) {

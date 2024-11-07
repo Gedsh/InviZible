@@ -27,6 +27,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -127,7 +128,7 @@ public abstract class ExtendedDialogFragment extends DialogFragment {
     public void show(@NonNull FragmentManager manager, String tag) {
         try {
             showDialog(manager, tag);
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | WindowManager.BadTokenException e) {
             logw("ExtendedDialogFragment show", e);
 
             if (handler == null) {

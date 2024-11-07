@@ -30,13 +30,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/status_text_margin"
-        android:fontFamily="serif"
         android:singleLine="true"
         android:text="@string/tvTorStop"
         android:textAlignment="center"
         android:textColor="@color/textModuleStatusColorStopped"
-        android:textSize="@dimen/status_text_size"
-        android:typeface="monospace" />
+        android:textSize="@dimen/status_text_size" />
 
 
     <ProgressBar

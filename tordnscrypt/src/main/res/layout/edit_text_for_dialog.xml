@@ -12,6 +12,5 @@
         android:ems="10"
         android:imeOptions="actionDone"
         android:inputType="text"
-        android:textAlignment="center"
-        android:typeface="serif" />
+        android:textAlignment="center" />
 </androidx.appcompat.widget.LinearLayoutCompat>

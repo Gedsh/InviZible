@@ -130,6 +130,10 @@ public class VpnRulesHolder {
 
         boolean fixTTLForPacket = isFixTTLForPacket(packet);
 
+        boolean dnsCryptIsRunning = modulesStatus.getDnsCryptState() == RUNNING
+                || modulesStatus.getDnsCryptState() == STARTING
+                || modulesStatus.getDnsCryptState() == RESTARTING;
+
         lock.readLock().lock();
 
         VpnPreferenceHolder vpnPreferences = vpn.vpnPreferences;
@@ -156,12 +160,14 @@ public class VpnRulesHolder {
         } else if (!isSupported(packet.protocol)) {
             logw("Protocol not supported " + packet);
         } else if (packet.dport == DNS_OVER_TLS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()) {
+                && vpnPreferences.getIgnoreSystemDNS()
+                && (dnsCryptIsRunning || torIsRunning)) {
             logw("Block DNS over TLS " + packet);
         } else if (vpnDnsSet.contains(packet.daddr)
                 && packet.dport != PLAINTEXT_DNS_PORT
                 && vpnPreferences.getIgnoreSystemDNS()
-                && packet.uid != vpnPreferences.getOwnUID()) {
+                && packet.uid != vpnPreferences.getOwnUID()
+                && (dnsCryptIsRunning || torIsRunning)) {
             logw("Block DNS over HTTPS " + packet);
         } else if (packet.uid == vpnPreferences.getOwnUID()
                 || vpnPreferences.getCompatibilityMode()
@@ -449,6 +455,7 @@ public class VpnRulesHolder {
         ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
         ModuleState torState = modulesStatus.getTorState();
         ModuleState itpdState = modulesStatus.getItpdState();
+        ModuleState firewallState = modulesStatus.getFirewallState();
 
         int ownUID = pathVars.getAppUid();
 
@@ -469,22 +476,38 @@ public class VpnRulesHolder {
 
         //If Tor is ready and DNSCrypt is not, app will use Tor Exit node DNS in VPN mode
         if (dnsCryptState == RUNNING && (dnsCryptReady || !systemDNSAllowed)) {
-            addForwardPortRule(17, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, dnsCryptPort, ownUID);
-            addForwardPortRule(6, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, dnsCryptPort, ownUID);
-
+            forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
             if (itpdState == RUNNING) {
-                addForwardAddressRule(17, "10.191.0.1", LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
-                addForwardAddressRule(6, "10.191.0.1", LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
+                forwardAddressToITPD(itpdHttpPort, ownUID);
             }
         } else if (torState == RUNNING && (torReady || !systemDNSAllowed)) {
-            addForwardPortRule(17, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, torDNSPort, ownUID);
-            addForwardPortRule(6, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, torDNSPort, ownUID);
+            forwardDnsToTor(torDNSPort, ownUID);
+        } else if (dnsCryptState != STOPPED) {
+            forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
+        } else if (torState != STOPPED) {
+            forwardDnsToTor(torDNSPort, ownUID);
+        } else if (firewallState == STARTING || firewallState == RUNNING) {
+            logi("Firewall only operation");
         } else {
-            addForwardPortRule(17, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, dnsCryptPort, ownUID);
-            addForwardPortRule(6, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, dnsCryptPort, ownUID);
+            forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
         }
 
         lock.writeLock().unlock();
+    }
+
+    private void forwardDnsToDnsCrypt(int dnsCryptPort, int ownUID) {
+        addForwardPortRule(17, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, dnsCryptPort, ownUID);
+        addForwardPortRule(6, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, dnsCryptPort, ownUID);
+    }
+
+    private void forwardDnsToTor(int torDNSPort, int ownUID) {
+        addForwardPortRule(17, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, torDNSPort, ownUID);
+        addForwardPortRule(6, PLAINTEXT_DNS_PORT, LOOPBACK_ADDRESS, torDNSPort, ownUID);
+    }
+
+    private void forwardAddressToITPD(int itpdHttpPort, int ownUID) {
+        addForwardAddressRule(17, "10.191.0.1", LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
+        addForwardAddressRule(6, "10.191.0.1", LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
     }
 
     @SuppressWarnings("SameParameterValue")

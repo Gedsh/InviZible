@@ -90,7 +90,6 @@ public interface Constants {
     String DNSCRYPT_RESOLVERS_SOURCE_IPV6 = "https://ipv6.download.dnscrypt.info/resolvers-list/v3/public-resolvers.md";
     String DNSCRYPT_RELAYS_SOURCE_IPV6 = "https://ipv6.download.dnscrypt.info/resolvers-list/v3/relays.md";
 
-    int SITES_IPS_REFRESH_JOB_ID = 1;
     int DEFAULT_SITES_IPS_REFRESH_INTERVAL = 12;
 
     int NFLOG_GROUP = 78;
@@ -110,4 +109,5 @@ public interface Constants {
     String NUMBER_REGEX = "\\d+";
 
     String HOST_NAME_REGEX = "[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
+    String URL_REGEX = "(https?:\\/\\/)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
 }

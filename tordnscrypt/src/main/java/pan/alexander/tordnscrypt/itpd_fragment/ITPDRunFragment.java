@@ -27,6 +27,7 @@ import android.content.IntentFilter;
 import android.graphics.Rect;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -44,14 +45,23 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.modules.ModulesAux;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.ITPDVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import com.google.android.material.divider.MaterialDivider;
@@ -76,7 +86,7 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
 
     @SuppressLint("SetTextI18n")
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         View view;
@@ -213,7 +223,29 @@ public class ITPDRunFragment extends Fragment implements ITPDFragmentView, View.
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnITPDStart) {
+            manageFirewall();
             presenter.startButtonOnClick();
+        }
+    }
+
+    private void manageFirewall() {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if ((modulesStatus.getDnsCryptState() == STOPPED
+                || modulesStatus.getDnsCryptState() == STOPPING
+                || modulesStatus.getDnsCryptState() == FAULT)
+                && (modulesStatus.getTorState() == STOPPED
+                || modulesStatus.getTorState()  == STOPPING
+                || modulesStatus.getTorState()  == FAULT)) {
+            PreferenceRepository preferenceRepository = App.getInstance()
+                    .getDaggerComponent().getPreferenceRepository().get();
+            if (modulesStatus.getFirewallState() != STOPPED
+                    && modulesStatus.getItpdState() == RUNNING) {
+                modulesStatus.setFirewallState(STOPPING, preferenceRepository);
+            } else if (modulesStatus.getFirewallState() != RUNNING
+                    && modulesStatus.getItpdState() == STOPPED) {
+                modulesStatus.setFirewallState(STARTING, preferenceRepository);
+                ModulesAux.makeModulesStateExtraLoop(requireContext());
+            }
         }
     }
 

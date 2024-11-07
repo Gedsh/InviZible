@@ -100,6 +100,7 @@ class AppModeManager @Inject constructor(
 
         //This stop iptables adaptation
         modulesStatus.mode = OperationMode.PROXY_MODE
+        modulesStatus.setFirewallState(ModuleState.STOPPED, preferenceRepository.get())
         if (modulesStatus.isRootAvailable && operationMode == OperationMode.ROOT_MODE) {
             val iptablesRules: IptablesRules = ModulesIptablesRules(context)
             val commands = iptablesRules.clearAll()
@@ -137,9 +138,11 @@ class AppModeManager @Inject constructor(
         val dnsCryptState: ModuleState = modulesStatus.dnsCryptState
         val torState: ModuleState = modulesStatus.torState
         val itpdState: ModuleState = modulesStatus.itpdState
+        val firewallState: ModuleState = modulesStatus.firewallState
         if (dnsCryptState != ModuleState.STOPPED
             || torState != ModuleState.STOPPED
             || itpdState != ModuleState.STOPPED
+            || firewallState != ModuleState.STOPPED
         ) {
             if (modulesStatus.isUseModulesWithRoot) {
                 Toast.makeText(context, "Stop modules...", Toast.LENGTH_LONG).show()

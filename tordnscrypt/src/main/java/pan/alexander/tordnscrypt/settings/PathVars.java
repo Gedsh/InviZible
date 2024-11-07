@@ -312,6 +312,10 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/blacklist.txt";
     }
 
+    public String getDNSCryptSingleBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/blacklist-single.txt";
+    }
+
     public String getDNSCryptLocalBlackListPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/blacklist-local.txt";
     }
@@ -322,6 +326,10 @@ public class PathVars {
 
     public String getDNSCryptIPBlackListPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist.txt";
+    }
+
+    public String getDNSCryptSingleIPBlackListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/ip-blacklist-single.txt";
     }
 
     public String getDNSCryptLocalIPBlackListPath() {
@@ -336,6 +344,10 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/whitelist.txt";
     }
 
+    public String getDNSCryptSingleWhiteListPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/whitelist-single.txt";
+    }
+
     public String getDNSCryptLocalWhiteListPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/whitelist-local.txt";
     }
@@ -348,6 +360,10 @@ public class PathVars {
         return appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules.txt";
     }
 
+    public String getDNSCryptSingleCloakingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules-single.txt";
+    }
+
     public String getDNSCryptLocalCloakingRulesPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/cloaking-rules-local.txt";
     }
@@ -358,6 +374,10 @@ public class PathVars {
 
     public String getDNSCryptForwardingRulesPath() {
         return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules.txt";
+    }
+
+    public String getDNSCryptSingleForwardingRulesPath() {
+        return appDataDir + "/app_data/dnscrypt-proxy/forwarding-rules-single.txt";
     }
 
     public String getDNSCryptLocalForwardingRulesPath() {
@@ -471,5 +491,13 @@ public class PathVars {
 
     public String getAppProcVersion() {
         return appProcVersion;
+    }
+
+    public String getDNSCryptDefaultForwardingRule() {
+        return "onion 127.0.0.1:" + getTorDNSPort();
+    }
+
+    public String getDNSCryptDefaultCloakingRule() {
+        return "*.i2p 10.191.0.1";
     }
 }

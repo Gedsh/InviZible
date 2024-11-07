@@ -23,16 +23,22 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED;
 
 public final class ModulesStatus {
 
     private volatile ModuleState dnsCryptState = UNDEFINED;
     private volatile ModuleState torState = UNDEFINED;
     private volatile ModuleState itpdState = UNDEFINED;
+
+    private volatile ModuleState firewallState = STOPPED;
 
     private volatile boolean rootAvailable = false;
     private volatile boolean useModulesWithRoot;
@@ -80,6 +86,10 @@ public final class ModulesStatus {
         return itpdState;
     }
 
+    public ModuleState getFirewallState() {
+        return firewallState;
+    }
+
     public void setDnsCryptState(ModuleState dnsCryptState) {
         this.dnsCryptState = dnsCryptState;
     }
@@ -90,6 +100,17 @@ public final class ModulesStatus {
 
     public void setItpdState(ModuleState itpdState) {
         this.itpdState = itpdState;
+    }
+
+    public void setFirewallState(ModuleState firewallState, PreferenceRepository preferenceRepository) {
+        boolean firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
+                && preferenceRepository.getBoolPreference(FIREWALL_WAS_STARTED);
+        if (firewallEnabled
+                && (mode == OperationMode.VPN_MODE || mode == OperationMode.ROOT_MODE)) {
+            this.firewallState = firewallState;
+        } else {
+            this.firewallState = STOPPED;
+        }
     }
 
     public boolean isUseModulesWithRoot() {

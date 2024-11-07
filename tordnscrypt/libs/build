@@ -6,7 +6,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 ## Config ##
 ############
 
-ndk_version=21.3.6528147
+ndk_version=23.1.7779620
 if [[ -d "/opt/android-sdk/ndk/${ndk_version}" ]]
 then
     NDK="/opt/android-sdk/ndk/${ndk_version}"
@@ -78,7 +78,7 @@ popd
 ################
 
 pushd libzmq/builds/android/
-export NDK_VERSION="android-ndk-r21c"
+export NDK_VERSION="android-ndk-r23b"
 export ANDROID_NDK_ROOT=$NDK
 if [[ $ABI == arm64-v8a ]]
 then
@@ -145,7 +145,7 @@ then
     NDK_PLATFORM_LEVEL=21 NDK_BIT=64 make showsetup
 else
     #compile armeabi-v7a things...
-    export APP_ABI=armeabi
+    export APP_ABI=armeabi-v7a
     make clean
     make
     make showsetup

@@ -43,13 +43,19 @@ import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.MainActivity;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.TopFragment;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.root.RootExecService;
 
 import static android.util.TypedValue.COMPLEX_UNIT_PX;
 import static pan.alexander.tordnscrypt.TopFragment.TorVersion;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import com.google.android.material.divider.MaterialDivider;
@@ -199,7 +205,25 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btnTorStart) {
+            letFirewallStop();
             presenter.startButtonOnClick();
+        }
+    }
+
+    private void letFirewallStop() {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.getFirewallState() != STOPPED
+                && modulesStatus.getTorState() == RUNNING
+                && (modulesStatus.getDnsCryptState() == STOPPED
+                || modulesStatus.getDnsCryptState() == STOPPING
+                || modulesStatus.getDnsCryptState() == FAULT)
+                && (modulesStatus.getItpdState() == STOPPED
+                || modulesStatus.getItpdState() == STOPPING
+                || modulesStatus.getItpdState() == FAULT)) {
+            modulesStatus.setFirewallState(
+                    STOPPING,
+                    App.getInstance().getDaggerComponent().getPreferenceRepository().get()
+            );
         }
     }
 

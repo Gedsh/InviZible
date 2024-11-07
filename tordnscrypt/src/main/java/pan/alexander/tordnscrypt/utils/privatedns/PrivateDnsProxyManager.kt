@@ -39,19 +39,27 @@ import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
+import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.vpn.VpnUtils
+import pan.alexander.tordnscrypt.vpn.VpnUtils.PRIVATE_DNS_MODE_OPPORTUNISTIC
+import pan.alexander.tordnscrypt.vpn.VpnUtils.PRIVATE_DNS_MODE_PROVIDER_HOSTNAME
 
 const val DISABLE_PRIVATE_DNS_NOTIFICATION = 167
 const val DISABLE_PROXY_NOTIFICATION = 168
 
 object PrivateDnsProxyManager {
     @RequiresApi(Build.VERSION_CODES.P)
-    fun checkPrivateDNSAndProxy(context: Context, linkProperties: LinkProperties?) {
+    fun checkPrivateDNSAndProxy(
+        context: Context,
+        linkProperties: LinkProperties?,
+        ignoreSystemDns: Boolean
+    ) {
         try {
-            if (ModulesStatus.getInstance().mode == OperationMode.PROXY_MODE) {
+            val modulesStatus = ModulesStatus.getInstance()
+            if (modulesStatus.mode == OperationMode.PROXY_MODE) {
                 return
             }
 
@@ -68,7 +76,14 @@ object PrivateDnsProxyManager {
 
 
             // localLinkProperties.privateDnsServerName == null - Opportunistic mode ("Automatic")
-            if (VpnUtils.isPrivateDns(context) || localLinkProperties?.isPrivateDnsActive == true) {
+            val privateDnsMode = VpnUtils.getPrivateDnsMode(context)
+            if ((modulesStatus.dnsCryptState == ModuleState.RUNNING
+                        || modulesStatus.torState == ModuleState.RUNNING)
+                && (privateDnsMode == PRIVATE_DNS_MODE_PROVIDER_HOSTNAME
+                        || privateDnsMode == PRIVATE_DNS_MODE_OPPORTUNISTIC && !ignoreSystemDns
+                        || localLinkProperties?.isPrivateDnsActive == true
+                        && (localLinkProperties.privateDnsServerName != null || !ignoreSystemDns))
+            ) {
                 sendNotification(
                     context,
                     context.getString(R.string.app_name),
@@ -77,7 +92,10 @@ object PrivateDnsProxyManager {
                 )
             }
 
-            if (localLinkProperties?.httpProxy != null) {
+            if ((modulesStatus.dnsCryptState == ModuleState.RUNNING
+                        || modulesStatus.torState == ModuleState.RUNNING)
+                && localLinkProperties?.httpProxy != null
+            ) {
 
                 if (NetworkChecker.isWifiActive(context)) {
                     sendNotification(

@@ -31,7 +31,7 @@
                     android:layout_height="wrap_content"
                     android:textIsSelectable="true"
                     android:textSize="@dimen/fragment_file_log_text_size"
-                    android:typeface="serif" />
+                    tools:text="@tools:sample/lorem/random" />
             </androidx.appcompat.widget.LinearLayoutCompat>
         </ScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
@@ -45,10 +45,9 @@
         android:adjustViewBounds="true"
         android:cropToPadding="true"
         android:fitsSystemWindows="false"
-        app:srcCompat="@drawable/ic_clear_white_24dp"
         app:backgroundTint="@color/buttonColor"
         app:fabSize="auto"
-        app:rippleColor="@color/colorAccent" />
-
+        app:rippleColor="@color/colorAccent"
+        app:srcCompat="@drawable/ic_clear_white_24dp" />
 
 </FrameLayout>

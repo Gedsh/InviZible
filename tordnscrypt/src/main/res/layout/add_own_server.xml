@@ -13,8 +13,7 @@
         android:hint="NAME"
         android:imeOptions="actionDone"
         android:inputType="text"
-        android:textAlignment="center"
-        android:typeface="serif" />
+        android:textAlignment="center" />
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/etOwnServerDescription"
@@ -24,8 +23,7 @@
         android:hint="DESCRIPTION"
         android:imeOptions="actionDone"
         android:inputType="textLongMessage|textMultiLine|text"
-        android:textAlignment="center"
-        android:typeface="serif" />
+        android:textAlignment="center" />
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/etOwnServerSDNS"
@@ -35,6 +33,5 @@
         android:hint="SDNS \nhttps://dnscrypt.info/stamps/"
         android:imeOptions="actionDone"
         android:inputType="textLongMessage|textMultiLine|text"
-        android:textAlignment="center"
-        android:typeface="serif" />
+        android:textAlignment="center" />
 </androidx.appcompat.widget.LinearLayoutCompat>

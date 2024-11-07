@@ -87,6 +87,12 @@ public interface PreferenceKeys {
     String GP_DATA = "gpData";
     String GP_SIGNATURE = "gpSign";
 
+    String REMOTE_BLACKLIST_URL = "remote_blacklist_url";
+    String REMOTE_WHITELIST_URL = "remote_whitelist_url";
+    String REMOTE_IP_BLACKLIST_URL = "remote_ip_blacklist_url";
+    String REMOTE_FORWARDING_URL = "remote_forwarding_url";
+    String REMOTE_CLOAKING_URL = "remote_cloaking_url";
+
     //VPN
     String VPN_SERVICE_ENABLED = "VPNServiceEnabled";
 
@@ -117,6 +123,7 @@ public interface PreferenceKeys {
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
+    String ALWAYS_ON_VPN = "always_on_vpn";
     String USE_IPTABLES = "pref_common_use_iptables";
     String WAIT_IPTABLES = "pref_common_wait_iptables";
     String REMOTE_CONTROL = "pref_common_shell_control";
@@ -139,6 +146,10 @@ public interface PreferenceKeys {
     String DNSCRYPT_DNS64_PREFIX = "dns64_prefix";
 
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
+
+    String DNSCRYPT_SERVERS_REFRESH_DELAY = "refresh_delay";
+    String DNSCRYPT_RELAYS_REFRESH_DELAY = "refresh_delay_relays";
+    String DNSCRYPT_RULES_REFRESH_DELAY = "refresh_delay_rules";
 
     //Tor Settings
     String TOR_DNS_PORT = "DNSPort";

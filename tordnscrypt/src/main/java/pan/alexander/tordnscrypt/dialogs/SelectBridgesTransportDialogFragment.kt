@@ -36,6 +36,7 @@ import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
+import pan.alexander.tordnscrypt.databinding.SelectTorTransportBinding
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModel
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -67,26 +68,21 @@ class SelectBridgesTransportDialogFragment : ExtendedDialogFragment() {
     @SuppressLint("InflateParams")
     override fun assignBuilder(): AlertDialog.Builder =
         AlertDialog.Builder(requireActivity()).apply {
-            val layoutInflater =
-                requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
-            val view: View = try {
-                layoutInflater.inflate(R.layout.select_tor_transport, null)
+            val binding = try {
+                SelectTorTransportBinding.inflate(LayoutInflater.from(requireContext()))
             } catch (e: Exception) {
                 loge("SelectBridgesTransportDialogFragment assignBuilder", e)
                 throw e
             }
 
-            val rbgTorTransport = view.findViewById<RadioGroup>(R.id.rbgTorTransport)
-            val chbRequestIPv6Bridges = view.findViewById<CheckBox>(R.id.chbRequestIPv6Bridges)
-
             if (defaultPreferences.getBoolean(TOR_USE_IPV6, true)) {
-                chbRequestIPv6Bridges.visibility = VISIBLE
+                binding.chbRequestIPv6Bridges.visibility = VISIBLE
             } else {
-                chbRequestIPv6Bridges.visibility = GONE
+                binding.chbRequestIPv6Bridges.visibility = GONE
             }
 
-            setView(view)
+            setView(binding.root)
 
             setTitle(R.string.pref_fast_use_tor_bridges_transport_select)
 
@@ -94,23 +90,21 @@ class SelectBridgesTransportDialogFragment : ExtendedDialogFragment() {
 
                 okButtonPressed = true
 
-                val ipv6Bridges = chbRequestIPv6Bridges.isChecked
-
-                when (rbgTorTransport.checkedRadioButtonId) {
+                when (binding.rbgTorTransport.checkedRadioButtonId) {
                     R.id.rbObfsNone ->
                         preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
-                            "0",
-                            ipv6Bridges
+                            "vanilla",
+                            binding.chbRequestIPv6Bridges.isChecked
                         )
                     R.id.rbObfs4 ->
                         preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
                             "obfs4",
-                            ipv6Bridges
+                            binding.chbRequestIPv6Bridges.isChecked
                         )
                     R.id.rbWebTunnel ->
                         preferencesTorBridgesViewModel.requestTorBridgesCaptchaChallenge(
                             "webtunnel",
-                            ipv6Bridges
+                            binding.chbRequestIPv6Bridges.isChecked
                         )
                 }
             }

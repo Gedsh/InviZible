@@ -180,15 +180,15 @@ class FirewallAdapter(
         private val cardAppFirewall = itemView.findViewById<MaterialCardView>(R.id.cardAppFirewall)
         private val imgAppIconFirewall = itemView.findViewById<ImageView>(R.id.imgAppIconFirewall)
         private val btnLanFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnLanFirewall)
-            .also { it.setOnClickListener(this) }
+            ?.also { it.setOnClickListener(this) }
         private val btnWifiFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnWifiFirewall)
-            .also { it.setOnClickListener(this) }
+            ?.also { it.setOnClickListener(this) }
         private val btnGsmFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnGsmFirewall)
-            .also { it.setOnClickListener(this) }
+            ?.also { it.setOnClickListener(this) }
         private val btnRoamingFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnRoamingFirewall)
-            .also { it.setOnClickListener(this) }
+            ?.also { it.setOnClickListener(this) }
         private val btnVpnFirewall = itemView.findViewById<AppCompatImageButton>(R.id.btnVpnFirewall)
-            .also { it.setOnClickListener(this) }
+            ?.also { it.setOnClickListener(this) }
         private val tvAppName = itemView.findViewById<TextView>(R.id.tvAppName)
 
         fun bind(position: Int) {

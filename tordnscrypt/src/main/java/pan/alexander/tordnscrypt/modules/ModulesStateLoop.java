@@ -55,6 +55,8 @@ import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -126,6 +128,7 @@ public class ModulesStateLoop implements Runnable,
     private ModuleState savedDNSCryptState = UNDEFINED;
     private ModuleState savedTorState = UNDEFINED;
     private ModuleState savedItpdState = UNDEFINED;
+    private ModuleState savedFirewallState = UNDEFINED;
 
     private final SharedPreferences sharedPreferences;
 
@@ -184,6 +187,7 @@ public class ModulesStateLoop implements Runnable,
                     modulesStatus.getDnsCryptState(),
                     modulesStatus.getTorState(),
                     modulesStatus.getItpdState(),
+                    modulesStatus.getFirewallState(),
                     operationMode,
                     rootIsAvailable,
                     useModulesWithRoot
@@ -204,6 +208,7 @@ public class ModulesStateLoop implements Runnable,
                 logi("ModulesStateLoop stopCounter is zero. Stop service.");
                 modulesStatus.setContextUIDUpdateRequested(false);
                 safeStopModulesService();
+                modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
             }
 
             slowDownModulesStateTimerIfRequired();
@@ -263,9 +268,14 @@ public class ModulesStateLoop implements Runnable,
         }
     }
 
-    private void updateIptablesRules(ModuleState dnsCryptState, ModuleState torState,
-                                     ModuleState itpdState, OperationMode operationMode,
-                                     boolean rootIsAvailable, boolean useModulesWithRoot) {
+    private void updateIptablesRules(
+            ModuleState dnsCryptState,
+            ModuleState torState,
+            ModuleState itpdState,
+            ModuleState firewallState,
+            OperationMode operationMode,
+            boolean rootIsAvailable,
+            boolean useModulesWithRoot) {
         /* For testing purposes
         logi(String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
                         "Operation mode %s Use modules with Root %s " +
@@ -277,10 +287,11 @@ public class ModulesStateLoop implements Runnable,
         if (dnsCryptState != savedDNSCryptState
                 || torState != savedTorState
                 || itpdState != savedItpdState
+                || firewallState != savedFirewallState
                 || modulesStatus.isIptablesRulesUpdateRequested()) {
-            logi(String.format("DNSCrypt is %s Tor is %s I2P is %s\n" +
+            logi(String.format("DNSCrypt is %s Tor is %s I2P is %s Firewall is %s\n" +
                             "Operation mode %s Use modules with Root %s",
-                    dnsCryptState, torState, itpdState,
+                    dnsCryptState, torState, itpdState, firewallState,
                     operationMode, useModulesWithRoot));
 
             if (dnsCryptState == RESTARTING) {
@@ -372,6 +383,14 @@ public class ModulesStateLoop implements Runnable,
                 }
             }
 
+            if (savedFirewallState != firewallState) {
+                saveFirewallState(firewallState);
+                if (firewallState == STARTING || firewallState == RUNNING) {
+                    modulesStatusBroadcaster.get().broadcastFirewallRunning();
+                } else if (firewallState == STOPPED) {
+                    modulesStatusBroadcaster.get().broadcastFirewallStopped();
+                }
+            }
 
             if (modulesStatus.isIptablesRulesUpdateRequested()) {
                 modulesStatus.setIptablesRulesUpdateRequested(false);
@@ -380,7 +399,12 @@ public class ModulesStateLoop implements Runnable,
             boolean vpnServiceEnabled = sharedPreferences.getBoolean(VPN_SERVICE_ENABLED, false);
 
             if (iptablesRules != null && rootIsAvailable && operationMode == ROOT_MODE) {
-                List<String> commands = iptablesRules.configureIptables(dnsCryptState, torState, itpdState);
+                List<String> commands = iptablesRules.configureIptables(
+                        dnsCryptState,
+                        torState,
+                        itpdState,
+                        firewallState
+                );
                 int hashCode = commands.hashCode();
 
                 if (hashCode == savedIptablesCommandsHash && !iptablesRules.isLastIptablesCommandsReturnError()) {
@@ -396,7 +420,8 @@ public class ModulesStateLoop implements Runnable,
                 stopCounter = STOP_COUNTER_DELAY;
             } else if (operationMode == VPN_MODE) {
 
-                if (dnsCryptState == STOPPED && torState == STOPPED) {
+                if (dnsCryptState == STOPPED && torState == STOPPED
+                        && (firewallState == STOPPED || firewallState == STOPPING)) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled) {
                     ServiceVPNHelper.reload("Modules state changed", modulesService);
@@ -453,7 +478,8 @@ public class ModulesStateLoop implements Runnable,
             stopCounter--;
         } else if ((dnsCryptState == STOPPED || dnsCryptState == FAULT)
                 && (torState == STOPPED || torState == FAULT)
-                && (itpdState == STOPPED || itpdState == FAULT)) {
+                && (itpdState == STOPPED || itpdState == FAULT)
+                && (firewallState == STOPPING || firewallState == STOPPED)) {
             stopCounter--;
         }
 
@@ -507,7 +533,10 @@ public class ModulesStateLoop implements Runnable,
             handler.get().postDelayed(() -> {
                 if (modulesService != null && modulesStatus != null && sharedPreferences != null
                         && !sharedPreferences.getBoolean(VPN_SERVICE_ENABLED, false)
-                        && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getTorState() == RUNNING)) {
+                        && (modulesStatus.getDnsCryptState() == RUNNING
+                        || modulesStatus.getTorState() == RUNNING
+                        || modulesStatus.getFirewallState() == STARTING
+                        || modulesStatus.getFirewallState() == RUNNING)) {
                     sharedPreferences.edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
                     ServiceVPNHelper.start("ModulesStateLoop start VPN service", modulesService);
                 }
@@ -657,6 +686,15 @@ public class ModulesStateLoop implements Runnable,
         modulesStatus.setItpdReady(ready);
         if (ready) {
             modulesStatusBroadcaster.get().broadcastI2PDReady();
+        }
+    }
+
+    private void saveFirewallState(ModuleState firewallState) {
+        savedFirewallState = firewallState;
+        if (firewallState == RUNNING) {
+           ModulesAux.saveFirewallStateRunning(true);
+        } else if (firewallState == STOPPED) {
+            ModulesAux.saveFirewallStateRunning(false);
         }
     }
 

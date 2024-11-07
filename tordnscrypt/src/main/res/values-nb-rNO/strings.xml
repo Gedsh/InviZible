@@ -106,7 +106,7 @@
     <string name="pref_common_proxy">Bruk SOCKS5-mellomtjener</string>
     <string name="pref_common_proxy_summ">Alle tilkoblinger vil bli gjort gjennom SOCKS5-mellomtjeneren</string>
     <string name="pref_common_show_notification">Vis merknad</string>
-    <string name="pref_common_compatibility_mode">Kompabilitetsmodus</string>
+    <string name="pref_common_compatibility_mode">Kompatibilitetsmodus</string>
     <string name="pref_common_show_help">Hjelpemeldinger</string>
     <string name="pref_common_show_help_summ">Alltid vis hjelpemeldinger</string>
     <string name="pref_common_use_busybox">Velg BusyBox</string>
