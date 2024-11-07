@@ -1217,3 +1217,13 @@
 * Fixed detection of whether a cellular network interface can provide an internet connection.
 * Fixed I2PD subscriptions option.
 * Updated German, Spanish, Greek, Chinese, Portuguese (Brazil), Persian and Bulgarian translations.
+
+**InviZible Pro stable 6.9.0**
+* Updated Tor to version 4.8.13.
+* Updated Purple I2P to version 2.54.0.
+* Added a stop button to the notification.
+* Added an option for quick access to Always-on VPN settings.
+* Implemented the ability to use the firewall when other modules are stopped.
+* Tor apps isolation is enabled by default.
+* Fixed requesting Tor bridges via the app.
+* Updated translations.
