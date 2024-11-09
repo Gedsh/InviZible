@@ -166,6 +166,27 @@ class IptablesFirewall @Inject constructor(
         ).plus(
             "$iptables -A $FILTER_OUTPUT_FIREWALL -m mark --mark $FIREWALL_RETURN_MARK -j RETURN"
         ).plus(
+            listOf(
+                //These sources should not be managed as LAN
+                "$iptables -A $FILTER_FIREWALL_LAN -p udp --sport 53 -j RETURN",
+                "$iptables -A $FILTER_FIREWALL_LAN -p tcp --sport 53 -j RETURN"
+            )
+        ).let {
+            if (modulesStatus.torState == ModuleState.RUNNING) {
+                //This destination should not be managed as LAN
+                it.plus("$iptables -A $FILTER_FIREWALL_LAN -p tcp --dport ${pathVars.torTransPort} -j RETURN")
+            } else {
+                it
+            }
+        }.let {
+            if (modulesStatus.itpdState == ModuleState.RUNNING) {
+                //These destinations should not be managed as LAN
+                it.plus("$iptables -A $FILTER_FIREWALL_LAN -p tcp --dport ${pathVars.itpdHttpProxyPort} -j RETURN")
+                    .plus("$iptables -A $FILTER_FIREWALL_LAN -p udp --dport ${pathVars.itpdHttpProxyPort} -j RETURN")
+            } else {
+                it
+            }
+        }.plus(
             getAppLanRules(iptables, uidLanAllowed)
         ).plus(
             "$iptables -A $FILTER_FIREWALL_LAN -m mark --mark $FIREWALL_RETURN_MARK -j RETURN"
