@@ -1227,3 +1227,9 @@
 * Tor apps isolation is enabled by default.
 * Fixed requesting Tor bridges via the app.
 * Updated translations.
+
+**InviZible Pro beta 2.3.8**
+* Updated default Tor bridges.
+* Fixed LAN rules handling for firewall in root mode.
+* Attempt to fix obfs4 protocol blocking in some countries.
+* Updated Polish and French translations.
