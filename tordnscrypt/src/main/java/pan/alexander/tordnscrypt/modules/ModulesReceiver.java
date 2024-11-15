@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.modules;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
@@ -1089,7 +1090,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
 
         if (!defaultPreferences.get().getBoolean(VPN_SERVICE_ENABLED, false)
-                && (modulesStatus.getDnsCryptState() == RUNNING || modulesStatus.getTorState() == RUNNING)) {
+                && (modulesStatus.getDnsCryptState() == RUNNING
+                || modulesStatus.getTorState() == RUNNING
+                || modulesStatus.getFirewallState() == STARTING
+                || modulesStatus.getFirewallState() == RUNNING)
+        ) {
             defaultPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
             ServiceVPNHelper.start(
                     "ModulesReceiver start VPN service after revoke",
