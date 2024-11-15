@@ -20,9 +20,13 @@
 package pan.alexander.tordnscrypt.utils.root;
 
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootServiceNotificationManager.DEFAULT_NOTIFICATION_ID;
 
@@ -31,20 +35,31 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.VpnService;
 import android.os.Build;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.iptables.IptablesRules;
+import pan.alexander.tordnscrypt.iptables.ModulesIptablesRules;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.enums.OperationMode;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 @SuppressLint("UnsafeOptInUsageWarning")
 public class RootExecService extends Service
@@ -59,6 +74,11 @@ public class RootExecService extends Service
 
     @Inject
     RootExecutor rootExecutor;
+    @Inject
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    Lazy<SharedPreferences> defaultPreferences;
+    @Inject
+    Lazy<PreferenceRepository> preferenceRepository;
 
     private NotificationManager systemNotificationManager;
     private RootServiceNotificationManager serviceNotificationManager;
@@ -134,10 +154,12 @@ public class RootExecService extends Service
             RootCommands rootCommands = (RootCommands) intent.getSerializableExtra("Commands");
             int mark = intent.getIntExtra("Mark", 0);
 
-            rootExecutor.execute(
-                    rootCommands.getCommands(),
-                    mark
-            );
+            if (rootCommands != null && rootCommands.getCommands() != null) {
+                rootExecutor.execute(
+                        rootCommands.getCommands(),
+                        mark
+                );
+            }
         }
 
         return START_NOT_STICKY;
@@ -147,6 +169,11 @@ public class RootExecService extends Service
 
         if (commandsResult == null || mark == NULL_MARK) {
             return;
+        }
+
+        if (!commandsResult.isEmpty()
+                && commandsResult.get(0).equals(RootConsoleClosedException.message)) {
+            switchToVpnMode();
         }
 
         RootCommands comResult = new RootCommands(commandsResult);
@@ -210,5 +237,43 @@ public class RootExecService extends Service
     public void onTimeout(int startId) {
         moveServiceToBackground();
         super.onTimeout(startId);
+    }
+
+    private void switchToVpnMode() {
+
+        final Intent prepareIntent = VpnService.prepare(this);
+        final boolean vpnServiceEnabled = defaultPreferences.get().getBoolean(VPN_SERVICE_ENABLED, false);
+        if (prepareIntent != null || vpnServiceEnabled) {
+            return;
+        }
+
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        modulesStatus.setMode(OperationMode.VPN_MODE);
+        preferenceRepository.get()
+                .setStringPreference(OPERATION_MODE, OperationMode.VPN_MODE.toString());
+        logi("VPN mode enabled");
+
+
+        if (modulesStatus.getDnsCryptState() == RUNNING
+                || modulesStatus.getTorState() == RUNNING
+                || modulesStatus.getFirewallState() == STARTING
+                || modulesStatus.getFirewallState() == RUNNING) {
+            defaultPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
+            ServiceVPNHelper.start(
+                    "Root exec service start VPN service after root console failed",
+                    this
+            );
+        }
+    }
+
+    static class RootConsoleClosedException extends IllegalStateException {
+
+        private static final String message = "Root is not available!";
+
+        @Nullable
+        @Override
+        public String getMessage() {
+            return message;
+        }
     }
 }
