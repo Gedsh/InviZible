@@ -136,7 +136,7 @@ public class ServiceVPNHandler extends Handler {
             return;
         }
 
-        final SharedPreferences prefs = serviceVPN.defaultPreferences.get();
+        final SharedPreferences prefs = defaultSharedPreferences.get();
 
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
         String reason = intent.getStringExtra(EXTRA_REASON);
@@ -271,7 +271,7 @@ public class ServiceVPNHandler extends Handler {
             } else {
                 last_builder = builder;
 
-                SharedPreferences prefs = serviceVPN.defaultPreferences.get();
+                SharedPreferences prefs = defaultSharedPreferences.get();
                 boolean handover = prefs.getBoolean("VPN handover", true);
                 logi("VPN Handler restart handover=" + handover);
 
@@ -346,12 +346,20 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void stop() {
+
+        //This prevents the ModulesService from sending a stop signal when the service is already stopping
+        defaultSharedPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
+
         if (serviceVPN != null && serviceVPN.vpn != null) {
-            serviceVPN.stopNative();
-            stopVPN(serviceVPN.vpn);
-            serviceVPN.vpn = null;
-            serviceVPN.vpnRulesHolder.get().unPrepare();
-            listRule.clear();
+            try {
+                serviceVPN.stopNative();
+                stopVPN(serviceVPN.vpn);
+                serviceVPN.vpn = null;
+                serviceVPN.vpnRulesHolder.get().unPrepare();
+                listRule.clear();
+            } catch (Exception e) {
+                loge("ServiceVPNHandler stop()", e);
+            }
         }
 
         stopServiceVPN();
@@ -461,8 +469,7 @@ public class ServiceVPNHandler extends Handler {
             }
         }
 
-        SharedPreferences prefs = serviceVPN.defaultPreferences.get();
-        prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
+        defaultSharedPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
 
         serviceVPN.stopSelf();
 
