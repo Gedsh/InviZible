@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.viewModelScope
 import eu.chainfire.libsuperuser.Shell
 import kotlinx.coroutines.CoroutineDispatcher
