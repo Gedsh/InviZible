@@ -1240,3 +1240,10 @@
 * The app switches to VPN mode from Root mode if root becomes unavailable.
 * Fixes related to root detection and root commands execution.
 * Other minor fixes.
+
+**InviZible Pro stable 6.9.1**
+* Updated default Tor bridges.
+* Updated Tor Obfs4 obfuscation bridge.
+* Updated Tor Snowflake bridge to version 2.10.1.
+* Fixed LAN rules handling for firewall.
+* Updated translations.
