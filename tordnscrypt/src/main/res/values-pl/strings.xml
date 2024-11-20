@@ -543,4 +543,11 @@
     <string name="pref_itpd_HTTP_outproxy_address_summ">Adres URL wyjściowego serwera proxy HTTP (jak np. http://false.i2p)</string>
     <string name="pref_tor_isolate_uid_summ">Nie udostępniaj obwodów strumieniom z różnych aplikacji.</string>
     <string name="pref_itpd_use_Socks_outproxy_summ">Adres serwera wyjściowego proxy (IP lub lokalny). Żądania spoza I2P będą tam kierowane.</string>
+    <string name="pref_common_always_on_vpn_summ">Włącz Always-on VPN i Blokuj połączenia bez VPN dla InviZible Pro, aby blokować Internet, gdy aplikacja nie jest uruchomiona</string>
+    <string name="pref_dnscrypt_rules_delay_summ">Zasady zostaną zaktualizowane po określonym opóźnieniu w godzinach.</string>
+    <string name="dns_rule_add_local_list">Dodaj listę lokalną</string>
+    <string name="dns_rule_replace_local_list">Zastąp listę lokalną</string>
+    <string name="dns_rule_add_rule">Dodaj regułę</string>
+    <string name="total_rules">Razem: %d reguł</string>
+    <string name="dns_rule_add_url">Dodaj adres URL</string>
 </resources>

@@ -89,9 +89,9 @@ class UpdateRemoteDnsRulesWorker(private val appContext: Context, workerParams: 
                 if (it.length() > 0) {
                     importRulesFromFile(it, ruleType, url, ruleName)
                 } else {
-                    return Result.retry()
+                    return Result.failure()
                 }
-            } ?: return Result.failure()
+            } ?: return Result.retry()
             return Result.success()
         } catch (e: Exception) {
             loge("UpdateRemoteDnsRulesWorker doWork", e)

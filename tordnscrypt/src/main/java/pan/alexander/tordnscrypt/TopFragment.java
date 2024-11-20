@@ -362,6 +362,11 @@ public class TopFragment extends Fragment
 
                 setSUInfo(suResult, suVersion);
                 setBBinfo(bbResult);
+            } else if (rootState instanceof RootState.RootNotAvailable) {
+                rootIsAvailable = false;
+                PreferenceRepository preferences = preferenceRepository.get();
+                preferences.setBoolPreference(ROOT_IS_AVAILABLE, false);
+                preferences.setBoolPreference("bbOK", false);
             }
 
             performInitTasksBackgroundWork();

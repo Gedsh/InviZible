@@ -35,7 +35,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.9.0"
+            versionName "6.9.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -43,7 +43,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.9.0"
+            versionName "6.9.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -51,7 +51,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "2.3.7"
+            versionName "2.3.9"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -60,7 +60,7 @@ android {
         google_play {
             minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
-            versionName "6.9.0"
+            versionName "6.9.1"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -92,7 +92,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 34
-        versionCode 237
+        versionCode 239
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar"
 

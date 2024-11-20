@@ -1,0 +1,5 @@
+**InviZible Pro beta 2.3.8**
+* Updated default Tor bridges.
+* Fixed LAN rules handling for firewall in root mode.
+* Attempt to fix obfs4 protocol blocking in some countries.
+* Updated Polish and French translations.

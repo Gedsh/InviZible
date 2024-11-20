@@ -31,6 +31,7 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_START_DELAY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SAVE_ROOT_LOGS
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.BOOT_BROADCAST_MARK
 import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.IPTABLES_MARK
@@ -38,12 +39,11 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.lang.Exception
-import java.lang.IllegalStateException
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.roundToInt
 
-private const val ATTEMPTS_TO_OPEN_ROOT_CONSOLE = 3
+private const val ATTEMPTS_TO_OPEN_ROOT_CONSOLE = 5
 private const val ATTEMPTS_TO_EXECUTE_COMMAND = 3
 private const val NOTIFICATION_UPDATE_INTERVAL_MSEC = 200L
 private const val MAX_EXECUTION_TIME_SEC = 300
@@ -74,6 +74,9 @@ class RootExecutor @Inject constructor(
         }
     )
 
+    @Volatile
+    private var console: Shell.Console? = null
+
     private val commandsInProgress = MutableSharedFlow<CommandsWithMark>(
         10,
         0,
@@ -96,14 +99,14 @@ class RootExecutor @Inject constructor(
                     listOf(e.message ?: ""),
                     it.mark
                 )
+                if (e is RootExecService.RootConsoleClosedException) {
+                    preferenceRepository.get().setBoolPreference(ROOT_IS_AVAILABLE, false)
+                }
             }
         }.catch {
             loge("RootExecutor collect exception", it, true)
         }.launchIn(coroutineScope)
     }
-
-    @Volatile
-    private var console: Shell.Console? = null
 
     fun execute(
         commands: List<String>,
@@ -211,12 +214,12 @@ class RootExecutor @Inject constructor(
             openCommandShell()
         }
 
-        val console = console ?: return null
+        val console = console
+        if (console?.isClosed != false) {
+            throw RootExecService.RootConsoleClosedException()
+        }
 
         return try {
-            if (console.isClosed) {
-                throw IllegalStateException("Root console is closed")
-            }
 
             val commandResult = console.run(command)
 
@@ -240,12 +243,13 @@ class RootExecutor @Inject constructor(
             runCatching {
 
                 if (attempts > 0) {
-                    delay(attempts * 100L)
+                    delay(attempts * 1000L)
                 }
+
+                attempts++
 
                 console = Shell.SU.getConsole()
 
-                attempts++
             }.onFailure {
                 loge("RootExecutor openCommandShell", it)
             }

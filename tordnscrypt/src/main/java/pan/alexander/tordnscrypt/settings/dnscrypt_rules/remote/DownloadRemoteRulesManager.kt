@@ -69,14 +69,12 @@ class DownloadRemoteRulesManager @Inject constructor(
                 if (oldFile.isFile) {
                     oldFile.delete()
                 }
-                outputFile = File(path).apply {
-                    createNewFile()
-                }
                 do {
                     attempts++
                     try {
                         outputFile = tryDownload(ruleName, url, path)
                     } catch (e: IOException) {
+                        outputFile = null
                         error = e.message ?: ""
                         logw(
                             "DownloadRulesManager failed to download file $url, attempt $attempts",

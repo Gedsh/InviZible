@@ -153,7 +153,6 @@ class UpdateRemoteRulesWorkManager @Inject constructor(
     private fun getConstraints() = Constraints.Builder()
         .setRequiresBatteryNotLow(true)
         .setRequiresStorageNotLow(true)
-        .setRequiredNetworkType(NetworkType.CONNECTED)
         .build()
 
     private fun getWorkName(type: DnsRuleType) =

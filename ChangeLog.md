@@ -1217,3 +1217,33 @@
 * Fixed detection of whether a cellular network interface can provide an internet connection.
 * Fixed I2PD subscriptions option.
 * Updated German, Spanish, Greek, Chinese, Portuguese (Brazil), Persian and Bulgarian translations.
+
+**InviZible Pro stable 6.9.0**
+* Updated Tor to version 4.8.13.
+* Updated Purple I2P to version 2.54.0.
+* Added a stop button to the notification.
+* Added an option for quick access to Always-on VPN settings.
+* Implemented the ability to use the firewall when other modules are stopped.
+* Tor apps isolation is enabled by default.
+* Fixed requesting Tor bridges via the app.
+* Updated translations.
+
+**InviZible Pro beta 2.3.8**
+* Updated default Tor bridges.
+* Fixed LAN rules handling for firewall in root mode.
+* Attempt to fix obfs4 protocol blocking in some countries.
+* Updated Polish and French translations.
+
+**InviZible Pro beta 2.3.9**
+* Updated Tor Snowflake bridge to version 2.10.1.
+* Fixed downloading DNSCrypt rules when Block connections without VPN is enabled.
+* The app switches to VPN mode from Root mode if root becomes unavailable.
+* Fixes related to root detection and root commands execution.
+* Other minor fixes.
+
+**InviZible Pro stable 6.9.1**
+* Updated default Tor bridges.
+* Updated Tor Obfs4 obfuscation bridge.
+* Updated Tor Snowflake bridge to version 2.10.1.
+* Fixed LAN rules handling for firewall.
+* Updated translations.

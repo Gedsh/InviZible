@@ -1,0 +1,6 @@
+**InviZible Pro beta 2.3.9**
+* Updated Tor Snowflake bridge to version 2.10.1.
+* Fixed downloading DNSCrypt rules when Block connections without VPN is enabled.
+* The app switches to VPN mode from Root mode if root becomes unavailable.
+* Fixes related to root detection and root commands execution.
+* Other minor fixes.
