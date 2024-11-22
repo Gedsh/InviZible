@@ -349,7 +349,7 @@
         \n\tinvizible.net/en/privacy
         </string>
     <string name="pref_itpd_use_HTTP_outproxy">"Ausgehender HTTP Proxy"</string>
-    <string name="pref_itpd_HTTP_outproxy_address">"Ausgehender HTTP Proxy"</string>
+    <string name="pref_itpd_HTTP_outproxy_address">Addresse des ausgehenden HTTP Proxy</string>
     <string name="pref_itpd_use_Socks_outproxy">"Ausgehender SOCKS Proxy"</string>
     <string name="pref_itpd_Socks_outproxy_address">"Ausgehende SOCKS Proxy Adresse"</string>
     <string name="pref_itpd_Socks_outproxy_port">"Ausgehender SOCKS Proxy Port"</string>
@@ -403,7 +403,7 @@
     <string name="pref_common_local_eth_device_addr">Lokale IP-Adresse</string>
     <string name="pref_common_local_eth_device_addr_summ">Aktiviere Fix TTL und konfiguriere das LAN-Gerät, InviZible zu nutzen. Benutze den Standard-Gateway: %1$s, DNS Server: %2$s.</string>
     <string name="pref_common_multi_user">Unterstützung für mehrere Nutzer</string>
-    <string name="pref_common_multi_user_summ">Unterstützung für Dual-Apps, MIUI, Island, Shelter und Apps mit Arbeitsprofilen</string>
+    <string name="pref_common_multi_user_summ">Unterstützung für Dual-Apps, MIUI, Island, Shelter und Apps mit Arbeitsprofilen. Im VPN Modus möglicherweise ineffektiv</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS-Ausgabe-Proxy</string>
     <string name="pref_tor_SOCKS_output_address_summ">Tor wird alle OR-Verbindungen durch den SOCKS5-Proxy leiten.</string>
     <string name="notification_channel_services">"Laufende Dienste"</string>
@@ -548,4 +548,7 @@
     <string name="dns_rule_add_local_list">Lokale Liste hinzufügen</string>
     <string name="pref_dnscrypt_rules_delay_summ">Regeln werden nach der in Stunden angegebenen Verzögerung aktualisiert.</string>
     <string name="dns_rule_add_remote_list">Remote Liste hinzufügen</string>
+    <string name="pref_common_always_on_vpn_summ">Aktiviere durchgehend aktives VPN sowie die Blockierung aller Verbindungen ohne VPN, um den Internetzugriff bei geschlossenem InviZible Pro zu unterbinden</string>
+    <string name="dns_rule_replace_remote_list">Ersetze die Remote-Liste</string>
+    <string name="dns_rule_replace_local_list">Ersetze die lokale Liste</string>
 </resources>
