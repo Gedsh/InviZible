@@ -20,13 +20,16 @@
 package pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
+import android.view.View.OnFocusChangeListener
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
@@ -303,6 +306,15 @@ class DnsRulesRecyclerAdapter(
 
         }
 
+        val onFocusChangeListener = OnFocusChangeListener { v, hasFocus ->
+            val imm = itemView.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            if (hasFocus) {
+                imm.showSoftInput(v, 0)
+            } else {
+                imm.hideSoftInputFromWindow(v.windowToken, 0)
+            }
+        }
+
         override fun bind(position: Int) {
             when (val rule = rules[position]) {
                 is DnsRuleRecycleItem.DnsSingleRule -> {
@@ -310,6 +322,7 @@ class DnsRulesRecyclerAdapter(
                         etRule.setText(rule.rule, TextView.BufferType.EDITABLE)
                         etRule.isEnabled = rule.active
                         etRule.addTextChangedListener(watcher)
+                        etRule.onFocusChangeListener = onFocusChangeListener
                         swRuleActive.isChecked = rule.active
                         swRuleActive.setOnClickListener(this@DnsSingleRuleViewHolder)
                         if (rule.protected) {
