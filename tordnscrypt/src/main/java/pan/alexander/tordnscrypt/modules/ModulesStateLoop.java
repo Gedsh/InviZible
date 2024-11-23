@@ -420,7 +420,8 @@ public class ModulesStateLoop implements Runnable,
                 stopCounter = STOP_COUNTER_DELAY;
             } else if (operationMode == VPN_MODE) {
 
-                if (dnsCryptState == STOPPED && torState == STOPPED
+                if (vpnServiceEnabled &&
+                        dnsCryptState == STOPPED && torState == STOPPED
                         && (firewallState == STOPPED || firewallState == STOPPING)) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled) {
@@ -692,7 +693,7 @@ public class ModulesStateLoop implements Runnable,
     private void saveFirewallState(ModuleState firewallState) {
         savedFirewallState = firewallState;
         if (firewallState == RUNNING) {
-           ModulesAux.saveFirewallStateRunning(true);
+            ModulesAux.saveFirewallStateRunning(true);
         } else if (firewallState == STOPPED) {
             ModulesAux.saveFirewallStateRunning(false);
         }
