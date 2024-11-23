@@ -185,13 +185,17 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         }
 
         val proxyServer = binding.etProxyServer.text.toString().trim().let {
-            it.ifEmpty {
+            if (it.isEmpty() || !it.matches(IP_REGEX)) {
                 LOOPBACK_ADDRESS
+            } else {
+                it
             }
         }
         val proxyPort = binding.etProxyPort.text.toString().trim().let {
-            it.ifEmpty {
+            if (it.isEmpty() || !it.matches(PORT_REGEX) || it.toLong() > MAX_PORT_NUMBER) {
                 DEFAULT_PROXY_PORT
+            } else {
+                it
             }
         }
         if (proxyServer != sharedPreferences?.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)
@@ -203,8 +207,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         saveToSharedPreferences(PROXY_ADDRESS, proxyServer)
         saveToSharedPreferences(PROXY_PORT, proxyPort)
 
-        val proxyUserName = binding.etProxyUserName.text.toString().trim()
-        val proxyPass = binding.etProxyPass.text.toString().trim()
+        val proxyUserName = binding.etProxyUserName.text.toString().trim().take(127)
+        val proxyPass = binding.etProxyPass.text.toString().trim().take(127)
         if (getTextFromSharedPreferences(PROXY_USER) != proxyUserName) {
             saveToSharedPreferences(PROXY_USER, proxyUserName)
             serverOrPortChanged = true

@@ -40,9 +40,9 @@
                 android:id="@+id/etProxyPort"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ems="10"
+                android:ems="5"
                 android:hint="@string/proxy_server_port_hint"
-                android:inputType="textPersonName" />
+                android:inputType="number" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvProxyUserName"
@@ -56,7 +56,8 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="@string/proxy_server_empty_field_hint"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:maxLength="127" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvProxyPass"
@@ -70,7 +71,8 @@
                 android:layout_height="wrap_content"
                 android:ems="10"
                 android:hint="@string/proxy_server_empty_field_hint"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:maxLength="127" />
 
             <View
                 android:id="@+id/divider2"
