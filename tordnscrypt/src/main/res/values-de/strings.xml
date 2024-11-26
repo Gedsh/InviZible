@@ -349,7 +349,7 @@
         \n\tinvizible.net/en/privacy
         </string>
     <string name="pref_itpd_use_HTTP_outproxy">"Ausgehender HTTP Proxy"</string>
-    <string name="pref_itpd_HTTP_outproxy_address">Addresse des ausgehenden HTTP Proxy</string>
+    <string name="pref_itpd_HTTP_outproxy_address">Adresse des ausgehenden HTTP Proxy</string>
     <string name="pref_itpd_use_Socks_outproxy">"Ausgehender SOCKS Proxy"</string>
     <string name="pref_itpd_Socks_outproxy_address">"Ausgehende SOCKS Proxy Adresse"</string>
     <string name="pref_itpd_Socks_outproxy_port">"Ausgehender SOCKS Proxy Port"</string>
