@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
     id "kotlin-parcelize"
 }
 
@@ -137,10 +137,8 @@ android {
         jvmTarget = '17'
     }
 
-    kapt {
-        javacOptions {
-            option("-Adagger.fastInit=enabled")
-        }
+    ksp {
+        arg("dagger.fastInit", "enabled")
     }
 
     dependenciesInfo {
@@ -179,7 +177,7 @@ dependencies {
 
     //DI
     implementation "com.google.dagger:dagger:$dagger_version"
-    kapt "com.google.dagger:dagger-compiler:$dagger_version"
+    ksp "com.google.dagger:dagger-compiler:$dagger_version"
     //Persistent Work Manager
     implementation "androidx.work:work-runtime-ktx:$work_version"
 }
