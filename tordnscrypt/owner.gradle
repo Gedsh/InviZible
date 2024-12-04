@@ -39,6 +39,8 @@ android {
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
+            dependenciesInfo.includeInApk false
+            dependenciesInfo.includeInBundle false
         }
 
         pro {
@@ -47,6 +49,8 @@ android {
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
+            dependenciesInfo.includeInApk false
+            dependenciesInfo.includeInBundle false
         }
 
         beta {
@@ -55,6 +59,8 @@ android {
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
+            dependenciesInfo.includeInApk false
+            dependenciesInfo.includeInBundle false
         }
 
         google_play {
