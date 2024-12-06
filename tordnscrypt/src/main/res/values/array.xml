@@ -508,10 +508,12 @@
         <item>stun.nextcloud.com:443</item>
         <item>stun.sipgate.net:10000</item>
         <item>stun.epygi.com:3478</item>
-        <item>stun.sonetel.com:3479</item>
         <item>stun.uls.co.za:3478</item>
         <item>stun.voipgate.com:3478</item>
-        <item>stun.voys.nl:3478</item>
+        <item>stun.bethesda.net:3478</item>
+        <item>stun.mixvoip.com:3478</item>
+        <item>stun.voipia.net:3478</item>
+        <item>stun.antisip.com:3478</item>
     </string-array>
 
     <string-array name="pref_common_categ_use_busybox_titles">
