@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.vpn;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
-import android.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,6 +41,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THR
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+
+import androidx.preference.PreferenceManager;
 
 public class Rule {
     public int uid;
