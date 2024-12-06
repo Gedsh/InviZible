@@ -25,10 +25,12 @@ import androidx.annotation.WorkerThread
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.BuildConfig
+import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS
 import java.util.concurrent.atomic.AtomicBoolean
 
 private const val SAVED_VERSION_CODE = "SAVED_VERSION_CODE"
@@ -75,6 +77,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 addTorDormantOption()
                 fixTorIPv6VirtualAddresses()
                 addDNSCryptOdohServers()
+                updateStunServers()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -299,6 +302,15 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 "odoh_servers = true"
             )
         )
+    }
+
+    private fun updateStunServers() {
+        val defaultPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        val builtinServers = context.resources.getStringArray(R.array.tor_snowflake_stun_servers).joinToString(",")
+        val savedServers = defaultPreferences.getString(STUN_SERVERS, builtinServers)
+        if (savedServers?.startsWith("stun.l.google.com:19302") != false) {
+            defaultPreferences.edit().putString(STUN_SERVERS, builtinServers).apply()
+        }
     }
 
 }
