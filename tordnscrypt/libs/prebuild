@@ -2,7 +2,7 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-lyrebird_version=workaround/ntor-auth-mismatch
+lyrebird_version=prod
 dnscryptproxy_version=master
 snowflake_version=feat/check-dns-ip
 libzmq_version=v4.3.5
