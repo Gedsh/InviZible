@@ -1247,3 +1247,8 @@
 * Updated Tor Snowflake bridge to version 2.10.1.
 * Fixed LAN rules handling for firewall.
 * Updated translations.
+
+**InviZible Pro beta 2.4.0**
+* Improved Tor Obfs4 bridges censorship resistance.
+* Updated Tor SnowFlake bridge stun servers.
+* Various fixes and optimisations.
