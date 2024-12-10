@@ -360,6 +360,7 @@ class DnsRulesFragment : Fragment(), DnsRulesReceiver.Callback,
         super.onDestroyView()
 
         unregisterReceiver()
+        _binding?.rvDnsRules?.adapter = null
         _binding = null
         rulesAdapter = null
     }

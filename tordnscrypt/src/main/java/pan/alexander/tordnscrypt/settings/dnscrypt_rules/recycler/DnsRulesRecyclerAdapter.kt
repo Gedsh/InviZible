@@ -21,6 +21,8 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_rules.recycler
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -32,6 +34,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.os.postDelayed
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import pan.alexander.tordnscrypt.R
@@ -65,6 +68,9 @@ class DnsRulesRecyclerAdapter(
 
     var rulesType: DnsRuleType? = null
     private val rules: MutableList<DnsRuleRecycleItem> = mutableListOf()
+
+    private val handler by lazy { Handler(Looper.getMainLooper()) }
+    private var recyclerView: RecyclerView? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return try {
@@ -119,6 +125,17 @@ class DnsRulesRecyclerAdapter(
             is DnsRuleRecycleItem.AddSingleRuleButton -> DNS_SINGLE_RULE_BUTTON
             is DnsRuleRecycleItem.DnsRuleComment -> DNS_RULE_COMMENT
         }
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        this.recyclerView = recyclerView
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        handler.removeCallbacksAndMessages(null)
+        this.recyclerView = null
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -301,13 +318,20 @@ class DnsRulesRecyclerAdapter(
                     return
                 }
 
-                editRule(position, s.toString())
+                if (recyclerView?.isComputingLayout == true) {
+                    handler.postDelayed(50L) {
+                        editRule(position, s.toString())
+                    }
+                } else {
+                    editRule(position, s.toString())
+                }
             }
 
         }
 
         val onFocusChangeListener = OnFocusChangeListener { v, hasFocus ->
-            val imm = itemView.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            val imm =
+                itemView.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             if (hasFocus) {
                 imm.showSoftInput(v, 0)
             } else {
@@ -428,7 +452,7 @@ class DnsRulesRecyclerAdapter(
                     DnsRuleType.IP_BLACKLIST -> prepareIPv6IfAny(text)
                     else -> text
                 }
-                if (textPrepared.matches(getRuleRegex())) {
+                if (textPrepared.matches(getRuleRegex()) && rule.rule != textPrepared) {
                     rule.rule = textPrepared
                     if (textPrepared != text) {
                         notifyItemChanged(position)
