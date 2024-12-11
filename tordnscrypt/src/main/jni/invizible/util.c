@@ -296,4 +296,20 @@ long long get_ms() {
     return ts.tv_sec * 1000LL + ts.tv_nsec / 1e6;
 }
 
+int str_equal(const char *s, const char *f) {
+    if (!s || !f)
+        return 0;
+    size_t slen = strlen(s);
+    size_t flen = strlen(f);
+    return slen == flen && !memcmp(s, f, flen);
+}
+
+int str_ends_with(const char *s, const char *suff) {
+    if (!s || !suff)
+        return 0;
+    size_t slen = strlen(s);
+    size_t sufflen = strlen(suff);
+    return slen >= sufflen && !memcmp(s + slen - sufflen, suff, sufflen);
+}
+
 #pragma clang diagnostic pop

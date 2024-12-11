@@ -25,6 +25,7 @@
 
 extern int own_uid;
 extern int tor_dns_port;
+extern bool bypass_lan;
 
 int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions) {
     int timeout = (ntohs(u->dest) == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
@@ -398,14 +399,26 @@ jboolean handle_udp(const struct arguments *args,
 
             //handle onion websites
             if (tor_dns_port > 0) {
-                char *suffix = strrchr(qname, '.');
-                if (redirect != NULL && suffix != NULL && strcmp(suffix, ".onion") == 0) {
+                if (redirect != NULL && str_ends_with(qname, ".onion")) {
                     redirect->rport = tor_dns_port;
                 }
             }
-            //https://datatracker.ietf.org/doc/html/rfc7050
-            if (redirect != NULL && strcmp(qname, "ipv4only.arpa") == 0) {
-                redirect = NULL;
+
+            if (redirect != NULL) {
+                //https://datatracker.ietf.org/doc/html/rfc7050
+                if (str_equal(qname, "ipv4only.arpa")) {
+                    redirect = NULL;
+                } else if (bypass_lan) {
+                    //https://datatracker.ietf.org/doc/html/rfc6762
+                    if (str_ends_with(qname, ".local")
+                        || str_ends_with(qname, ".254.169.in-addr.arpa")
+                        || str_ends_with(qname, ".8.e.f.ip6.arpa")
+                        || str_ends_with(qname, ".9.e.f.ip6.arpa")
+                        || str_ends_with(qname, ".a.e.f.ip6.arpa")
+                        || str_ends_with(qname, ".b.e.f.ip6.arpa")) {
+                        redirect = NULL;
+                    }
+                }
             }
         }
     }

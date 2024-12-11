@@ -41,6 +41,7 @@ char proxy_socks5_password[127 + 1];
 int own_uid = -2;
 bool compatibility_mode = false;
 bool can_filter = true;
+bool bypass_lan = true;
 
 extern int max_tun_msg;
 
@@ -166,13 +167,14 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1start(
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1run(
         JNIEnv *env, jobject instance, jlong context, jint tun, jboolean fwd53, jint rcode,
-        jboolean compatibility, jboolean filter) {
+        jboolean compatibility, jboolean filter, jboolean lan) {
     struct context *ctx = (struct context *) context;
 
     log_android(ANDROID_LOG_WARN, "Running tun %d fwd53 %d level %d", tun, fwd53, LOG_LEVEL);
 
     compatibility_mode = compatibility;
     can_filter = filter;
+    bypass_lan = lan;
 
     // Set blocking
     int flags = fcntl(tun, F_GETFL, 0);

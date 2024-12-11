@@ -182,7 +182,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native void jni_start(long context);
 
     @Keep
-    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous);
+    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous, boolean bypassLanAddresses);
 
     @Keep
     private native void jni_stop(long context);
@@ -263,7 +263,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                                 vpnRulesHolder.get().mapForwardPort.containsKey(PLAINTEXT_DNS_PORT),
                                 vpnPreferences.getDnsBlockedResponseCode(),
                                 vpnPreferences.getCompatibilityMode(),
-                                canFilterSynchronous
+                                canFilterSynchronous,
+                                vpnPreferences.getLan()
                         );
                         if (Thread.currentThread().equals(tunnelThread)) {
                             tunnelThread = null;

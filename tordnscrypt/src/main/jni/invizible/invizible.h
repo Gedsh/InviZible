@@ -583,6 +583,10 @@ int is_writable(int fd);
 
 long long get_ms();
 
+int str_equal(const char *s, const char *f);
+
+int str_ends_with(const char *s, const char *suff);
+
 void ng_add_alloc(const char *ptr, const char *tag);
 
 void ng_delete_alloc(const char *ptr, const char *file, int line);
