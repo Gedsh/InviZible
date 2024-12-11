@@ -595,4 +595,14 @@
         <item>http://notbob.i2p/hosts-all.txt</item>
         <item>http://rus.i2p/hosts.txt</item>
     </string-array>
+    <string-array name="contains_own_tor">
+        <item>org.torproject.torbrowser_alpha</item>
+        <item>org.torproject.torbrowser</item>
+        <item>org.onionshare.android</item>
+        <item>org.torproject.android</item>
+        <item>org.briarproject.briar.android</item>
+        <item>org.onionshare.android.fdroid</item>
+        <item>org.briarproject.briar.android</item>
+        <item>im.cwtch.flwtch</item>
+    </string-array>
 </resources>
