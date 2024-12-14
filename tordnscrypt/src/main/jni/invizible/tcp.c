@@ -357,7 +357,9 @@ void check_tcp_socket(const struct arguments *args,
                             }
 
                         } else if (s->tcp.socks5 == SOCKS5_CONNECT &&
-                                   bytes == 6 + (s->tcp.version == 4 ? 4 : 16) &&
+                                   (bytes == 6 + (s->tcp.version == 4 ? 4 : 16) ||
+                                   //for IPv4-mapped IPv6 address proxy
+                                    s->tcp.version == 6 && bytes == 6 + 4) &&
                                    buffer[0] == 5) {
                             if (buffer[1] == 0) {
                                 s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -1122,7 +1124,7 @@ int open_tcp_socket(const struct arguments *args,
 
         bool redirect_to_proxy = false;
         if (*proxy_socks5_addr && proxy_socks5_port) {
-            redirect_to_proxy = is_redirect_to_proxy(args,  cur->uid, dest, cur->dest);
+            redirect_to_proxy = is_redirect_to_proxy(args, cur->uid, dest, cur->dest);
         }
 
         if (redirect_to_tor) {
@@ -1150,6 +1152,10 @@ int open_tcp_socket(const struct arguments *args,
                 addr4.sin_family = AF_INET;
                 inet_pton(AF_INET, proxy_socks5_addr, &addr4.sin_addr);
                 addr4.sin_port = htons(proxy_socks5_port);
+            } else if (strcmp(proxy_socks5_addr, LOOPBACK_ADDRESS) == 0) {
+                addr6.sin6_family = AF_INET6;
+                inet_pton(AF_INET6, LOOPBACK_ADDRESS_MAPPED_IPv6, &addr6.sin6_addr);
+                addr6.sin6_port = htons(proxy_socks5_port);
             } else {
                 addr6.sin6_family = AF_INET6;
                 inet_pton(AF_INET6, proxy_socks5_addr, &addr6.sin6_addr);

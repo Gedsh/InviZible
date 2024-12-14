@@ -197,9 +197,7 @@ public class VpnRulesHolder {
                 modulesStatus.getTorState() != STOPPED &&
                 !vpnPreferences.getUseIPv6Tor()
                 || fixTTLForPacket
-                //|| packet.dport == PLAINTEXT_DNS_PORT
-                //|| (torIsRunning && redirectToTor)
-                || (vpnPreferences.getUseProxy() && redirectToProxy))
+                || (vpnPreferences.getUseProxy() && vpnPreferences.getBlockIPv6DnsCrypt()))
                 && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             logi("Block ipv6 " + packet);
         } else if (vpnPreferences.getBlockHttp() && packet.dport == 80
@@ -475,15 +473,18 @@ public class VpnRulesHolder {
         boolean systemDNSAllowed = modulesStatus.isSystemDNSAllowed();
 
         //If Tor is ready and DNSCrypt is not, app will use Tor Exit node DNS in VPN mode
-        if (dnsCryptState == RUNNING && (dnsCryptReady || !systemDNSAllowed)) {
+        if (dnsCryptState == RUNNING && dnsCryptReady) {
             forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
             if (itpdState == RUNNING) {
                 forwardAddressToITPD(itpdHttpPort, ownUID);
             }
-        } else if (torState == RUNNING && (torReady || !systemDNSAllowed)) {
+        } else if (torState == RUNNING && torReady) {
             forwardDnsToTor(torDNSPort, ownUID);
         } else if (dnsCryptState != STOPPED) {
             forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
+            if (itpdState == RUNNING) {
+                forwardAddressToITPD(itpdHttpPort, ownUID);
+            }
         } else if (torState != STOPPED) {
             forwardDnsToTor(torDNSPort, ownUID);
         } else if (firewallState == STARTING || firewallState == RUNNING) {

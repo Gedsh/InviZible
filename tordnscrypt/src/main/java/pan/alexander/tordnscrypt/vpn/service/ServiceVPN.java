@@ -457,6 +457,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         if (uid == vpnPreferences.getOwnUID()
                 || destAddress.equals(vpnPreferences.getItpdRedirectAddress())
                 || destAddress.equals(LOOPBACK_ADDRESS)
+                || destAddress.equals(LOOPBACK_ADDRESS_IPv6)
                 || vpnPreferences.getFixTTL()
                 || (vpnPreferences.getCompatibilityMode() && uid == SPECIAL_UID_KERNEL)) {
             return false;
@@ -510,6 +511,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         if (uid == vpnPreferences.getOwnUID()
                 || destAddress.equals(vpnPreferences.getItpdRedirectAddress())
                 || destAddress.equals(LOOPBACK_ADDRESS)
+                || destAddress.equals(LOOPBACK_ADDRESS_IPv6)
                 || (vpnPreferences.getFixTTL() && !vpnPreferences.getUseProxy())
                 || (vpnPreferences.getCompatibilityMode() && uid == SPECIAL_UID_KERNEL)) {
             return false;

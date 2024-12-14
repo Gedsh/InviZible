@@ -96,6 +96,7 @@
 
 #define LOOPBACK_ADDRESS "127.0.0.1"
 #define LOOPBACK_ADDRESS_IPv6 "::1"
+#define LOOPBACK_ADDRESS_MAPPED_IPv6 "::ffff:127.0.0.1"
 
 struct context {
     pthread_mutex_t lock;
