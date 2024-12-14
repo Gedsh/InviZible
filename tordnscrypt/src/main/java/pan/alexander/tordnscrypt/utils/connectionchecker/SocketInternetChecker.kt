@@ -105,15 +105,17 @@ class SocketInternetChecker @Inject constructor() {
                 InetSocketAddress(InetAddress.getByName(ip), port)
 
             socket.connect(sockAddress, PING_TIMEOUT_SEC * 1000)
-            socket.soTimeout = 100
+            socket.soTimeout = PING_TIMEOUT_SEC * 1000
 
             if (isProxyUsed(proxyAddress, proxyPort)) {
-                if (socket.inetAddress.isReachable(CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC * 1000)) {
-                    return (System.currentTimeMillis() - timeStart).toInt()
-                }
+                socket.shutdownOutput()
+                socket.getInputStream().read(byteArrayOf(0))
+                return ((System.currentTimeMillis() - timeStart) / 2).toInt()
             } else {
                 if (socket.isConnected) {
-                    return (System.currentTimeMillis() - timeStart).toInt()
+                    val time = System.currentTimeMillis()
+                    socket.shutdownOutput()
+                    return (time - timeStart).toInt()
                 }
             }
 
