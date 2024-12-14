@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -272,7 +273,11 @@ public class TorRunFragment extends Fragment implements TorFragmentView, View.On
             pbTor.setIndeterminate(false);
         }
         if (progress >= 0) {
-            pbTor.setProgress(progress);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                pbTor.setProgress(progress, true);
+            } else {
+                pbTor.setProgress(progress);
+            }
             pbTor.setVisibility(View.VISIBLE);
             divTor.setVisibility(View.GONE);
         } else {
