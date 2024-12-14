@@ -59,6 +59,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
@@ -69,6 +70,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -390,16 +392,32 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         //If Tor is ready, app will use Tor Exit node DNS in VPN mode
         if (fragmentManager != null && !(modulesStatus.isTorReady() && modulesStatus.getMode() == VPN_MODE)) {
-            NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
-                    context, context.getString(R.string.helper_dnscrypt_no_internet), "helper_dnscrypt_no_internet");
-            if (notificationHelper != null) {
-                notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+            if (defaultPreferences.get().getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
+                showCheckProxyMessage(fragmentManager);
+            } else {
+                showCannotConnectMessage(fragmentManager);
             }
         }
 
         setFixedErrorState(true);
 
         loge("DNSCrypt Error: " + logData.getLines());
+    }
+
+    private void showCheckProxyMessage(FragmentManager fragmentManager) {
+        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                context, context.getString(R.string.helper_tor_check_proxy), "helper_dnscrypt_check_proxy");
+        if (notificationHelper != null) {
+            notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+        }
+    }
+
+    private void showCannotConnectMessage(FragmentManager fragmentManager) {
+        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                context, context.getString(R.string.helper_dnscrypt_no_internet), "helper_dnscrypt_no_internet");
+        if (notificationHelper != null) {
+            notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+        }
     }
 
     @Override
