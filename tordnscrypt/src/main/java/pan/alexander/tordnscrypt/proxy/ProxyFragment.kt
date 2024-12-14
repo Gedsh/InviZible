@@ -36,12 +36,16 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.databinding.FragmentProxyBinding
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.proxy.ProxyHelper.Companion.CHECK_CONNECTION_TIMEOUT_MSEC
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
@@ -87,6 +91,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
     private var etBackground: Drawable? = null
     private var task: Job? = null
+    private var progressJob: Job? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -131,25 +136,31 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             addTextChangedListener(this@ProxyFragment)
         }
 
+        val nonTorProxified = sharedPreferences?.getBoolean(USE_PROXY, false) ?: false
         val dnsCryptProxified =
             sharedPreferences?.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false) ?: false
         val torProxified = sharedPreferences?.getBoolean(TOR_OUTBOUND_PROXY, false) ?: false
         val itpdProxified = sharedPreferences?.getBoolean(I2PD_OUTBOUND_PROXY, false) ?: false
 
+        saveToSharedPreferences(PROXIFY_DNSCRYPT, dnsCryptProxified)
+        saveToSharedPreferences(PROXIFY_TOR, torProxified)
+        saveToSharedPreferences(PROXIFY_I2PD, itpdProxified)
+
+        (binding.chbProxyNonTor as CompoundButton).apply {
+            isChecked = nonTorProxified
+        }
         val passAndNameIsEmpty = binding.etProxyPass.text.toString().trim().isEmpty()
                 && binding.etProxyUserName.text.toString().trim().isEmpty()
         (binding.chbProxyDNSCrypt as CompoundButton).apply {
-            isEnabled = passAndNameIsEmpty
-            isChecked =
-                getBoolFromSharedPreferences(PROXIFY_DNSCRYPT) && dnsCryptProxified && passAndNameIsEmpty
+            isEnabled = passAndNameIsEmpty || dnsCryptProxified
+            isChecked = dnsCryptProxified
         }
         (binding.chbProxyTor as CompoundButton).apply {
-            isChecked = getBoolFromSharedPreferences(PROXIFY_TOR) && torProxified
+            isChecked = torProxified
         }
         (binding.chbProxyITPD as CompoundButton).apply {
-            isEnabled = passAndNameIsEmpty
-            isChecked =
-                getBoolFromSharedPreferences(PROXIFY_I2PD) && itpdProxified && passAndNameIsEmpty
+            isEnabled = passAndNameIsEmpty || itpdProxified
+            isChecked = itpdProxified
         }
 
         etBackground = binding.etProxyServer.background
@@ -166,11 +177,15 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         var serverOrPortChanged = false
 
+        val activateNonTorProxy = binding.chbProxyNonTor.isChecked
         val activateDNSCryptProxy =
             binding.chbProxyDNSCrypt.isEnabled && binding.chbProxyDNSCrypt.isChecked
         val activateTorProxy = binding.chbProxyTor.isEnabled && binding.chbProxyTor.isChecked
         val activateITPDProxy = binding.chbProxyITPD.isEnabled && binding.chbProxyITPD.isChecked
 
+        if (getBoolFromSharedPreferences(USE_PROXY) != activateNonTorProxy) {
+            settingsChanged = true
+        }
         if (getBoolFromSharedPreferences(PROXIFY_DNSCRYPT) != activateDNSCryptProxy) {
             saveToSharedPreferences(PROXIFY_DNSCRYPT, activateDNSCryptProxy)
             settingsChanged = true
@@ -224,15 +239,15 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             return
         }
 
-        val swUseProxy = sharedPreferences?.getBoolean(USE_PROXY, false) ?: false
         val setBypassProxy =
             preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY)
 
-        if (swUseProxy && (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS)) {
+        if (setBypassProxy.isNotEmpty() || proxyServer != LOOPBACK_ADDRESS) {
             proxyHelper.manageProxy(
                 proxyServer,
                 proxyPort,
                 serverOrPortChanged,
+                activateNonTorProxy,
                 activateDNSCryptProxy,
                 activateTorProxy,
                 activateITPDProxy
@@ -242,6 +257,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
                 proxyServer,
                 proxyPort,
                 serverOrPortChanged = false,
+                enableNonTorProxy = false,
                 enableDNSCryptProxy = false,
                 enableTorProxy = false,
                 enableItpdProxy = false
@@ -288,6 +304,8 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         }
 
         val context = activity as Context
+
+        startProgress()
 
         etBackground?.let {
             binding.etProxyServer.background = it
@@ -337,44 +355,78 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         task = executor.submit("ProxyFragment checkProxy") {
             try {
                 val result = proxyHelper.checkProxyConnectivity(server, port.toInt(), user, pass)
-
-                if (_binding != null) {
+                handler.get().post {
                     if (result.matches(Regex("\\d+"))) {
-                        handler.get().post {
-                            binding.tvProxyHint.apply {
-                                text = String.format(
-                                    getString(R.string.proxy_successful_connection),
-                                    result
-                                )
-                                setTextColor(
-                                    ContextCompat.getColor(
-                                        context,
-                                        R.color.textModuleStatusColorRunning
-                                    )
-                                )
-                                binding.scrollProxy.scrollToBottom()
-                            }
-                        }
+                        setConnectionSuccess(result)
+                        hideProgressBar()
                     } else {
-                        handler.get().post {
-                            binding.tvProxyHint.apply {
-                                text =
-                                    String.format(getString(R.string.proxy_no_connection), result)
-                                setTextColor(
-                                    ContextCompat.getColor(
-                                        context,
-                                        R.color.textModuleStatusColorAlert
-                                    )
-                                )
-                                binding.scrollProxy.scrollToBottom()
-                            }
-                        }
+                        setConnectionFailed(result)
+                        hideProgressBar()
                     }
                 }
             } catch (e: Exception) {
                 loge("ProxyFragment checkProxy", e)
             }
 
+        }
+    }
+
+    private fun startProgress() {
+        binding.tvProxyHint.text = ""
+        binding.pbSocksProxy.visibility = View.VISIBLE
+        binding.scrollProxy.scrollToBottom()
+        progressJob?.cancel()
+        binding.pbSocksProxy.progress = 0
+        val animationDelay = 100
+        progressJob = lifecycleScope.launch {
+            for (i in 0..CHECK_CONNECTION_TIMEOUT_MSEC / animationDelay) {
+                binding.pbSocksProxy.setProgressCompat(
+                    (i * 100) / (CHECK_CONNECTION_TIMEOUT_MSEC / animationDelay),
+                    true
+                )
+                delay(animationDelay.toLong())
+            }
+        }
+    }
+
+    private fun setConnectionSuccess(result: String) {
+        _binding ?: return
+        binding.tvProxyHint.apply {
+            text = String.format(
+                getString(R.string.proxy_successful_connection),
+                result
+            )
+            setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.textModuleStatusColorRunning
+                )
+            )
+            binding.scrollProxy.scrollToBottom()
+        }
+    }
+
+    private fun setConnectionFailed(result: String) {
+        _binding ?: return
+        binding.tvProxyHint.apply {
+            text =
+                String.format(getString(R.string.proxy_no_connection), result)
+            setTextColor(
+                ContextCompat.getColor(
+                    context,
+                    R.color.textModuleStatusColorAlert
+                )
+            )
+            binding.scrollProxy.scrollToBottom()
+        }
+    }
+
+    private fun hideProgressBar() {
+        progressJob?.cancel()
+        lifecycleScope.launch {
+            binding.pbSocksProxy.progress = 100
+            delay(250)
+            binding.pbSocksProxy.visibility = View.GONE
         }
     }
 
@@ -397,7 +449,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         return sharedPreferences?.getBoolean(value, false) ?: false
     }
 
-    private fun NestedScrollView.scrollToBottom() {
+    private fun NestedScrollView.scrollToBottom() = post {
         val lastChild = getChildAt(childCount - 1)
         val bottom = lastChild.bottom + paddingBottom
         val delta = bottom - (scrollY + height)

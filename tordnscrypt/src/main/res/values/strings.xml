@@ -513,6 +513,7 @@
     <string name="helper_tor_stopped">Looks like Tor was killed by android system. Your internet connection was restored. Check device Settings!</string>
     <string name="helper_itpd_stopped">Looks like I2P was killed by android system. Check device Settings!</string>
     <string name="helper_dnscrypt_no_internet">Looks like DNSCrypt can\'t connect to the internet. You can try to choose another DNSCrypt servers. Please find them in MENU -&gt; Fast Settings -&gt; Select DNSCrypt servers</string>
+    <string name="helper_tor_check_proxy">You have configured to use the Socks5 proxy, but the proxy doesn\'t seem to be running. Please check your settings!</string>
     <string name="helper_tor_use_bridges">Looks like Tor can\'t connect to the internet. ISP may blocks Tor connections. You can try to use Tor Bridges. Please find them in MENU -&gt; Fast Settings -&gt; Bridges</string>
     <string name="action_mode_child_lock">Child Lock</string>
     <string name="action_mode_dialog_message_lock">You can lock control of this application. Please enter password, or use previous.</string>
@@ -644,6 +645,7 @@
     <string name="proxy_exclude_apps_from_proxy">Exclude Applications</string>
     <string name="proxy_exclude_apps_from_proxy_summ">Applications list to open directly. These applications will not use Tor or Proxy to connect to the Internet!</string>
     <string name="proxy_select_proxy_app"> Please select proxy owner application at least, if you are using a local proxy.</string>
+    <string name="proxy_use_for_non_tor">Use proxy for apps that bypass Tor</string>
     <string name="proxy_use_for_dnscrypt">Use proxy for DNSCrypt</string>
     <string name="proxy_use_for_tor">Use proxy for Tor</string>
     <string name="proxy_use_for_itpd">Use proxy for Purple I2P</string>

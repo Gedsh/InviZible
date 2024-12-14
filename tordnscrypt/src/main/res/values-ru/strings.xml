@@ -272,6 +272,7 @@
     <string name="helper_tor_stopped">Похоже андроид закрыл модуль Tor. Ваше интернет соединение восстановлено. Проверьте настройки устройства!</string>
     <string name="helper_itpd_stopped">Похоже андроид закрыл модуль I2P. Проверьте настройки устройства!</string>
     <string name="helper_dnscrypt_no_internet">Похоже DNSCrypt не может подключиться к интернету. Можете попробовать выбрать другие сервера DNSCrypt. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Выбрать сервера DNSCrypt</string>
+    <string name="helper_tor_check_proxy">Вы настроили использование Socks5 прокси, но прокси, похоже, не работает. Пожалуйста, проверьте свои настройки!</string>
     <string name="helper_tor_use_bridges">Похоже Tor не може подключиться к интернету. Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Мосты</string>
     <string name="action_mode_child_lock">Детский замок</string>
     <string name="action_mode_dialog_message_lock">Вы можете заблокировать интерфейс этого приложения. Пожалуйста, введите пароль или используйте предыдущий.</string>
@@ -448,6 +449,7 @@
     <string name="proxy_exclude_apps_from_proxy">Исключить приложения</string>
     <string name="proxy_exclude_apps_from_proxy_summ">Список приложений для использования напрямую. Эти приложения не будут использовать Tor или прокси, чтобы подключиться к интернету!</string>
     <string name="proxy_select_proxy_app"> Пожалуйста, выберите как минимум приложение - владелец прокси, если вы используете локальный прокси.</string>
+    <string name="proxy_use_for_non_tor">Использовать прокси для приложений, которые работают без Tor</string>
     <string name="proxy_use_for_dnscrypt">Использовать прокси для DNSCrypt</string>
     <string name="proxy_use_for_tor">Использовать прокси для Tor</string>
     <string name="proxy_use_for_itpd">Использовать прокси для Purple I2P</string>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -105,22 +107,29 @@
                 android:background="?android:attr/listDivider" />
 
             <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/chbProxyNonTor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:text="@string/proxy_use_for_non_tor" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
                 android:id="@+id/chbProxyDNSCrypt"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="false"
                 android:text="@string/proxy_use_for_dnscrypt" />
 
             <androidx.appcompat.widget.AppCompatCheckBox
                 android:id="@+id/chbProxyTor"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="false"
                 android:text="@string/proxy_use_for_tor" />
 
             <androidx.appcompat.widget.AppCompatCheckBox
                 android:id="@+id/chbProxyITPD"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="false"
                 android:text="@string/proxy_use_for_itpd" />
@@ -133,11 +142,25 @@
                 android:text="@string/proxy_save"
                 android:textColor="@color/buttonTextColor" />
 
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/pbSocksProxy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:indeterminateBehavior="cycle"
+                android:visibility="gone"
+                app:indicatorColor="@color/colorAccent"
+                app:trackThickness="2dp"
+                tools:visibility="visible" />
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvProxyHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:singleLine="false" />
+                android:layout_marginTop="4dp"
+                android:singleLine="false"
+                android:textAlignment="center"
+                tools:text="Success" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.core.widget.NestedScrollView>

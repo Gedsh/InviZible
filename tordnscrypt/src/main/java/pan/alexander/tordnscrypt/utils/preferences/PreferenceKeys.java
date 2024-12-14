@@ -179,6 +179,7 @@ public interface PreferenceKeys {
     String SAVE_ROOT_LOGS = "swRootCommandsLog";
 
     //Proxifier
+    String PROXIFY_NON_TOR = "ProxifyNonTor";
     String PROXIFY_DNSCRYPT = "ProxifyDNSCrypt";
     String PROXIFY_TOR = "ProxifyTor";
     String PROXIFY_I2PD = "ProxifyITPD";
