@@ -303,6 +303,7 @@ class ConnectionRecordsConverter @Inject constructor(
             uid = packetRecord.uid,
             saddr = packetRecord.saddr,
             daddr = packetRecord.daddr,
+            dport = packetRecord.dport,
             protocol = packetRecord.protocol
         ).also {
             it.time = packetRecord.time

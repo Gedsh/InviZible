@@ -936,6 +936,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                         uid,
                         sourceAddress,
                         destinationAddress,
+                        destinationPort,
                         protocol,
                         allowed
                 );

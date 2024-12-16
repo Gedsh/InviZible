@@ -75,6 +75,7 @@ class PacketRecord(
     val uid: Int,
     val saddr: String,
     val daddr: String,
+    val dport: Int,
     val protocol: Int = UNDEFINED,
     val allowed: Boolean
 ): ConnectionData(time) {

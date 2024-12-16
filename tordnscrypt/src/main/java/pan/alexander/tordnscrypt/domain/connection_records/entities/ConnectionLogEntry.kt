@@ -37,6 +37,7 @@ data class PacketLogEntry(
     val uid: Int,
     val saddr: String,
     val daddr: String,
+    val dport: Int,
     val protocol: Int = UNDEFINED,
     var reverseDns: String? = null,
     var dnsLogEntry: DnsLogEntry? = null

@@ -35,7 +35,7 @@ class NflogParser @Inject constructor(
 ) {
 
     private val packetPattern =
-        Pattern.compile("PKT TIME:(\\d+?) UID:(-?\\d+?) ([^ ]+?) SIP:([^ ]*) SPT:(\\d+?) DIP:([^ ]*) DPT:(\\d+?)")
+        Pattern.compile("PKT TIME:(\\d+?) UID:(-?\\d+?) ([^ ]+?) SIP:([^ ]*) SPT:(\\d+?) DIP:([^ ]*) DPT:(\\d+)")
     private val dnsPattern =
         Pattern.compile("DNS TIME:(\\d+?) QNAME:([^ ]*) ANAME:([^ ]*) CNAME:([^ ]*) HINFO:(.*?) RCODE:(\\d+?) IP:([^ ]*)")
 
@@ -84,6 +84,7 @@ class NflogParser @Inject constructor(
                 uid = uid.toInt(),
                 saddr = saddr,
                 daddr = daddr,
+                dport = dport,
                 protocol = protocolInt,
                 allowed = true
             )
