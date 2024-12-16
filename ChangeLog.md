@@ -1252,3 +1252,10 @@
 * Improved Tor Obfs4 bridges censorship resistance.
 * Updated Tor SnowFlake bridge stun servers.
 * Various fixes and optimisations.
+
+**InviZible Pro beta 2.4.1**
+* Display the destination port in real-time logs.
+* Socks5 proxy fixes and improvements.
+* Improved handling of local networks.
+* Tor Browser, OnionShare, Orbot, Briar, Cwtch are excluded from Tor by default as they contain their own Tor instance.
+* Fixes and optimizations.
