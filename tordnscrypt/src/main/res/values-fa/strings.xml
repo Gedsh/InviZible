@@ -67,7 +67,7 @@
     <string name="title_activity_settings">"تنظیمات"</string>
     <string name="pref_fast_categ_autostart">"شروع خودکار"</string>
     <!-- هنگام راه اندازی DNSCrypt شروع -->
-    <string name="pref_fast_dns_autostart">راه اندازی خودکار DNSCrypt</string>
+    <string name="pref_fast_dns_autostart">فعال‌سازی DNSCrypt هنگام راه‌اندازی</string>
     <!-- هنگام راه اندازی Tor شروع -->
     <string name="pref_fast_tor_autostart">راه اندازی خودکار TOR</string>
     <!-- هنگام راه اندازی I2P شروع -->
