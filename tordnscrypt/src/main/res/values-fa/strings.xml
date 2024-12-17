@@ -73,14 +73,14 @@
     <!-- هنگام راه اندازی I2P شروع -->
     <string name="pref_fast_itpd_autostart">شروع خودکار I2P</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
-    <string name="pref_fast_autostart_delay_summ">شروع با تأخیر (چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد</string>
+    <string name="pref_fast_autostart_delay_summ">تنها درصورتی که شروع خودکار به درستی کار نکرد، با تاخیر (ثانیه) شروع به کار کند</string>
     <string name="pref_fast_dns_server">"سرورهای DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"انتخاب سرورهای DNSCrypt"</string>
     <string name="pref_fast_tor">"تنظیمات TOR"</string>
     <string name="pref_fast_routing">"تنظیمات مسیریابی"</string>
     <string name="pref_fast_all_through_tor">"انتقال کل ترافیک از طریق TOR"</string>
     <string name="pref_fast_all_through_ipro">"انتقال کل ترافیک از طریق InviZible"</string>
-    <string name="pref_fast_unlock_with_tor">انتخاب سایت‌ها</string>
+    <string name="pref_fast_unlock_with_tor">انتخاب وب‌سایت‌ها</string>
     <string name="pref_fast_unlock_with_tor_summ">این لیست وب سایتها با TOR باز می شوند. این ویژگی برای سایت‌های پشت CDN کار نمی‌کند</string>
     <!-- انتخاب برنامه ها -->
     <string name="pref_fast_unlock_apps_with_tor">انتخاب برنامه‌ها</string>
@@ -517,9 +517,9 @@
     <string name="pref_fast_use_tor_bridges_ipv6">پل IPv6</string>
     <string name="pref_common_kill_switch_summ">مسدود کردن دسترسی به اینترنت زمانی Tor, DNSCrypt و Purple I2P متوقف هستند</string>
     <string name="pref_fast_logs">گزارش لحظه‌ای</string>
-    <string name="pref_fast_exclude_app_from_tor">مستثنی کردن از Tor</string>
-    <string name="pref_fast_route_to_tor">مسیر به Tor</string>
-    <string name="pref_fast_direct_udp_connection">مستثنی کردن UDP از TOR</string>
+    <string name="pref_fast_exclude_app_from_tor">از Tor استفاده نشود</string>
+    <string name="pref_fast_route_to_tor">عبور ترافیک از Tor</string>
+    <string name="pref_fast_direct_udp_connection">UDP از Tor استفاده نکند</string>
     <string name="pref_fast_bypass_app">مستثنی کردن به طور کامل</string>
     <string name="notification_exclude_data_restriction_message">لطفاً استفاده از داده پس‌زمینه را مجاز کنید و وقتی «بهینه‌سازی داده» روشن است، اجازه استفاده از داده را بدهید. این برای یک تجربه آنلاین روان ضروری است.</string>
     <string name="pref_fast_logs_summ">نمایش گزارش‌های ارتباط برنامه در تب DNS</string>
