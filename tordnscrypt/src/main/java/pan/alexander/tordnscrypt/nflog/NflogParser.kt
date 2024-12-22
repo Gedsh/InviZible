@@ -71,11 +71,12 @@ class NflogParser @Inject constructor(
                 return null
             }
 
-            val protocolInt = when(protocol) {
+            val protocolInt = when (protocol) {
                 "TCP" -> 6
                 "UDP" -> 17
                 "ICMPv4" -> 1
                 "ICMPv6" -> 58
+                "IGMP" -> 2
                 else -> UNDEFINED
             }
 
@@ -84,10 +85,12 @@ class NflogParser @Inject constructor(
                 uid = uid.toInt(),
                 saddr = saddr,
                 daddr = daddr,
-                dport = dport,
+                dport = if ((uid == -1L || uid == 0L || uid == 1020L) && sport < dport) sport else dport,
                 protocol = protocolInt,
                 allowed = true
             )
+        } else {
+            loge("NflogParser failed to parse line $line")
         }
 
         return null
