@@ -23,7 +23,7 @@ object IptablesUtils {
     fun Set<Int>.groupToRanges() =
         sorted().fold(mutableListOf<MutableList<Int>>()) { nonBreakingRanges, element ->
             val lastRange = nonBreakingRanges.lastOrNull()
-            if (element >= 0 && lastRange?.lastOrNull() == element - 1) {
+            if (element > 0 && lastRange?.lastOrNull() == element - 1) {
                 lastRange.add(element)
             } else {
                 nonBreakingRanges.add(mutableListOf(element))
