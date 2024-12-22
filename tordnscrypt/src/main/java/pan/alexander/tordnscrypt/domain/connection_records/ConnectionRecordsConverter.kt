@@ -39,8 +39,10 @@ import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesFirewall
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_PORT_NTP
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_KERNEL
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_NTP
 import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS
@@ -359,6 +361,8 @@ class ConnectionRecordsConverter @Inject constructor(
                     || appsSpecialAllowed.contains(SPECIAL_UID_CONNECTIVITY_CHECK)
                     && connectivityCheckManager.getConnectivityCheckIps()
                         .contains(packetRecord.daddr)
+                    || appsSpecialAllowed.contains(SPECIAL_UID_NTP)
+                    && packetRecord.uid == 1000 && packetRecord.dport == SPECIAL_PORT_NTP
                 ) {
                     false
                 } else if (isIpInLanRange(packetRecord.daddr)) {
@@ -369,7 +373,7 @@ class ConnectionRecordsConverter @Inject constructor(
                             if (allThroughTor) {
                                 !appsBypassTor.contains(packetRecord.uid)
                             } else {
-                                !appsThroughTor.contains(packetRecord.uid)
+                                appsThroughTor.contains(packetRecord.uid)
                             }
                         } else {
                             true
