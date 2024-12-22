@@ -73,6 +73,7 @@
 #define UDP_TIMEOUT_53 15 // seconds
 #define UDP_TIMEOUT_ANY 300 // seconds
 #define UDP_KEEP_TIMEOUT 60 // seconds
+#define TCP_YIELD 10 // packets
 #define UDP_YIELD 10 // packets
 
 #define TCP_INIT_TIMEOUT 20 // seconds ~net.inet.tcp.keepinit
@@ -97,6 +98,8 @@
 #define LOOPBACK_ADDRESS "127.0.0.1"
 #define LOOPBACK_ADDRESS_IPv6 "::1"
 #define LOOPBACK_ADDRESS_MAPPED_IPv6 "::ffff:127.0.0.1"
+
+#define I2PD_REDIRECT_ADDRESS "10.191.0.1"
 
 struct context {
     pthread_mutex_t lock;

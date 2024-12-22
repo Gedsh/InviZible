@@ -186,7 +186,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
 }
 
 jboolean is_icmp_supported(const uint8_t *pkt,
-                     const uint8_t *payload) {
+                           const uint8_t *payload) {
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
@@ -237,7 +237,7 @@ jboolean handle_icmp(const struct arguments *args,
     while (cur != NULL &&
            !((cur->protocol == IPPROTO_ICMP || cur->protocol == IPPROTO_ICMPV6) &&
              !cur->icmp.stop && cur->icmp.version == version &&
-                   cur->icmp.id == icmp->icmp_id &&
+             cur->icmp.id == icmp->icmp_id &&
              (version == 4 ? cur->icmp.saddr.ip4 == ip4->saddr &&
                              cur->icmp.daddr.ip4 == ip4->daddr
                            : memcmp(&cur->icmp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
@@ -358,6 +358,13 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
     if (protect_socket(args, sock, cur->uid) < 0)
         return -1;
 
+    // Set non blocking
+    int flags = fcntl(sock, F_GETFL, 0);
+    if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0) {
+        log_android(ANDROID_LOG_ERROR, "fcntl socket O_NONBLOCK error %d: %s",
+                    errno, strerror(errno));
+        return -1;
+    }
 
     return sock;
 }
