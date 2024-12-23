@@ -1259,3 +1259,10 @@
 * Improved handling of local networks.
 * Tor Browser, OnionShare, Orbot, Briar, Cwtch are excluded from Tor by default as they contain their own Tor instance.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.4.2**
+* Added IGMP protocol logging in real-time logs.
+* Optimized performance and battery usage in VPN mode.
+* Various fixes for Root mode.
+* Added Dutch translation.
+* Updated Polish, Portuguese (Brazil), Persian and Spanish translations.
