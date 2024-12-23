@@ -327,9 +327,10 @@ class NflogManager @Inject constructor(
     }
 
     private fun readNflogPidFile(): String = try {
-        File(getPidFilePath()).let { file ->
+        val filePath = getPidFilePath()
+        File(filePath).let { file ->
             if (file.isFile) {
-                file.useLines { it.first() }
+                Shell.SU.run("cat $filePath").stdout.first().trim()
             } else {
                 loge("NflogManager was unable to read pid. The file does not exist.")
                 ""
