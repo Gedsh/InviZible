@@ -534,7 +534,17 @@
     <string name="proxy_exclude_apps_from_proxy_summ">Applicatielijst om direct te openen. Deze toepassingen gebruiken geen Tor of Proxy om verbinding te maken met het internet!</string>
     <string name="firewall_system_apps">Systeem</string>
     <string name="only_premium_feature">Helaas is deze functie alleen beschikbaar voor de premium versie.</string>
-    <string name="agreement_text">Bedankt voor het kiezen van InviZible Pro. Ik ben ervan overtuigd dat het uw privacy zal verbeteren en een soepele online ervaring zal bieden. \n\n\tInviZible Pro bevat Tor, DNSCrypt en Purple I2P als modules. \n\n\tInviZible Pro kan root gebruiken als uw apparaat geroot is, of gebruikt een lokale VPN om internetverkeer rechtstreeks naar de Tor-, DNSCrypt- en I2P-netwerken te leiden. \n\n\tPrivacybeleid: \n\tInviZible Pro verzamelt of deelt geen persoonlijke of gevoelige gebruikersgegevens. \n\n\tCopyright © 2019-2024 \n\tGarmatin Oleksandr \n\tinvizible.soft@gmail.com \n\tinvizible.net/en/privacy</string>
+    <string name="agreement_text">
+        \tBedankt voor het kiezen van InviZible Pro. Ik ben ervan overtuigd dat het uw privacy zal verbeteren en een soepele online ervaring zal bieden.
+        \n\n\tInviZible Pro bevat Tor, DNSCrypt en Purple I2P als modules.
+        \n\n\tInviZible Pro kan root gebruiken als uw apparaat geroot is, of gebruikt een lokale VPN om internetverkeer rechtstreeks naar de Tor-, DNSCrypt- en I2P-netwerken te leiden.
+        \n\n\tPrivacybeleid:
+        \n\tInviZible Pro verzamelt of deelt geen persoonlijke of gevoelige gebruikersgegevens.
+        \n\n\tCopyright © 2019-2024
+        \n\tGarmatin Oleksandr
+        \n\tinvizible.soft@gmail.com
+        \n\tinvizible.net/en/privacy
+    </string>
     <string name="pref_firewall_allow_internet_for_new_apps_off_summ">Internetverbindingen voor nieuw geïnstalleerde applicaties worden geblokkeerd.</string>
     <string name="anonymize_relays_not_used">Anonimiserende relais worden niet gebruikt.</string>
     <string name="firewall_btnTopCheckAllFirewall_tooltip">Alles selecteren</string>

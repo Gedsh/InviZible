@@ -58,7 +58,7 @@ android {
         targetSdkVersion 34
         versionCode 241
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar", "nl"
 
         externalNativeBuild {
             cmake {
