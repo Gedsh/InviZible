@@ -436,7 +436,7 @@
     <string name="reset_settings_title">Attentie</string>
     <string name="ask_reset_settings_text">InviZible Pro kan %1$s niet starten! Probeer de instellingen van %2$s te resetten. Als dit niet helpt, start uw apparaat dan opnieuw op.</string>
     <string name="add_custom_server_title">Aangepaste server toevoegen</string>
-    <string name="main_fragment_protect_dns">Beveiligen met DNSCRYPT</string>
+    <string name="main_fragment_protect_dns">DNSCRYPT beveiligen</string>
     <string name="add_custom_server_error">Ongeldige aangepaste serverconfiguratie. Controleer het SDNS-veld.</string>
     <string name="pending_purchase">Houd er rekening mee dat je een aankoop in behandeling hebt:</string>
     <string name="ask_reset_settings_btn">Opnieuw instellen.</string>
