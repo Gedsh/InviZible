@@ -371,7 +371,7 @@
     <string name="pref_dnscrypt_import_whitelist_summ">"ドメインリストをインポートします。複数のファイルを選択できます。重複する項目は削除されます。"</string>
     <string name="pref_dnscrypt_erase_whitelist">"ホワイトリストを消去"</string>
     <string name="pref_dnscrypt_block_ipv6_summ">"Immediately respond to IPv6-related queries with an empty response. This makes things faster when there is no IPv6 connectivity, but can also cause reliability issues with some stub resolvers."</string>
-    <string name="helper_dnscrypt_private_dns">"Androidのネットワーク設定で「プライベートDNS」機能を無効にしてください。この設定はInvizibleと干渉します。"</string>
+    <string name="helper_dnscrypt_private_dns">Androidのネットワーク設定で「プライベートDNS」機能を無効にしてください。この設定はInvizibleと干渉します。</string>
     <string name="import_dnscrypt_rules_dialog_title">"ルールをインポート"</string>
     <string name="import_dnscrypt_rules_dialog_message">"しばらくお待ちください... %d 個のルールをインポートしました。"</string>
     <string name="import_dnscrypt_rules_complete_dialog_message">"完了！ %d 個のルールをインポートしました。"</string>
