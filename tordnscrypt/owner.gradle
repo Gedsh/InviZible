@@ -111,7 +111,9 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
+        def buildDate= System.getenv("SOURCE_DATE_EPOCH") == null
+                ? System.currentTimeMillis() : 1000 * Long.parseLong(System.getenv("SOURCE_DATE_EPOCH"))
+        buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + buildDate + "L)"
 
         vectorDrawables.useSupportLibrary = true
     }
