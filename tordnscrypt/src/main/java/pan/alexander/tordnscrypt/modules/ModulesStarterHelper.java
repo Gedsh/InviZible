@@ -66,6 +66,8 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_DNS_PORT;
@@ -565,7 +567,14 @@ public class ModulesStarterHelper {
             fixTorProxyPort(lines, TOR_DNS_PORT, dnsPort);
         }
         if (socksPort.matches(NUMBER_REGEX) && checker.isPortBusy(socksPort)) {
+            String savedTorSocksPort = pathVars.getTorSOCKSPort();
+            String savedDnsCryptProxyPort = defaultPreferences.get().getString(DNSCRYPT_OUTBOUND_PROXY_PORT, "9050");
             fixTorProxyPort(lines, TOR_SOCKS_PORT, socksPort);
+            String currentTorSocksPort = pathVars.getTorSOCKSPort();
+            if (!savedTorSocksPort.equals(currentTorSocksPort)
+                    && savedTorSocksPort.equals(savedDnsCryptProxyPort)) {
+                fixDnsCryptProxyPort(savedDnsCryptProxyPort, currentTorSocksPort);
+            }
         }
         if (httpTunnelPort.matches(NUMBER_REGEX) && checker.isPortBusy(httpTunnelPort)) {
             fixTorProxyPort(lines, TOR_HTTP_TUNNEL_PORT, httpTunnelPort);
@@ -574,6 +583,24 @@ public class ModulesStarterHelper {
             fixTorProxyPort(lines, TOR_TRANS_PORT, transPort);
         }
 
+    }
+
+    private void fixDnsCryptProxyPort(String savedPort, String port) {
+        List<String> lines = readDnsCryptConfiguration();
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            if (line.contains("proxy =")) {
+                line = line.replace(savedPort, port);
+                lines.set(i, line);
+                break;
+            }
+        }
+        defaultPreferences.get().edit().putString(DNSCRYPT_OUTBOUND_PROXY_PORT, port).apply();
+        saveDnsCryptConfiguration(lines);
+        if (modulesStatus.getDnsCryptState() != STOPPED
+                && defaultPreferences.get().getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)) {
+            ModulesRestarter.restartDNSCrypt(context);
+        }
     }
 
     private void fixTorProxyPort(List<String> lines, String proxyType, String proxyPort) {

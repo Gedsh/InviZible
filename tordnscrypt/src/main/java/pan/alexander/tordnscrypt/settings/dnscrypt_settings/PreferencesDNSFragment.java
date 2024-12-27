@@ -77,6 +77,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_LISTEN_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_NETPROBE_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_RELAYS_REFRESH_DELAY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_RULES_REFRESH_DELAY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_SERVERS_REFRESH_DELAY;
@@ -139,7 +140,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
         preferences.add(findPreference("ipv6_servers"));
         preferences.add(findPreference("force_tcp"));
         preferences.add(findPreference(DNSCRYPT_OUTBOUND_PROXY));
-        preferences.add(findPreference("proxy_port"));
+        preferences.add(findPreference(DNSCRYPT_OUTBOUND_PROXY_PORT));
         preferences.add(findPreference(DNSCRYPT_BOOTSTRAP_RESOLVERS));
         preferences.add(findPreference(IGNORE_SYSTEM_DNS));
         preferences.add(findPreference(HTTP3_QUIC));
@@ -358,7 +359,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                     VpnBuilder.vpnDnsSet.clear();
                 }
                 return true;
-            } else if (Objects.equals(preference.getKey(), "proxy_port")) {
+            } else if (Objects.equals(preference.getKey(), DNSCRYPT_OUTBOUND_PROXY_PORT)) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
                 if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER

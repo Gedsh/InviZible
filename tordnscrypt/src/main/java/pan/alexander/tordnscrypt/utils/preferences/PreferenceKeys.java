@@ -146,6 +146,7 @@ public interface PreferenceKeys {
     String DNSCRYPT_DNS64_PREFIX = "dns64_prefix";
 
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
+    String DNSCRYPT_OUTBOUND_PROXY_PORT = "proxy_port";
 
     String DNSCRYPT_SERVERS_REFRESH_DELAY = "refresh_delay";
     String DNSCRYPT_RELAYS_REFRESH_DELAY = "refresh_delay_relays";
