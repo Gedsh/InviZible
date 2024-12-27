@@ -364,7 +364,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         }
 
         String nflogDns = "";
-        String nflogPackets = "";
+        String nflogPackets;
         if (showConnectionLogs) {
             nflogDns = TextUtils.join("; ", Arrays.asList(
                     iptables + "-A " + FILTER_OUTPUT_CORE + " -p udp -s " + LOOPBACK_ADDRESS + " --sport " + pathVars.getDNSCryptPort() + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
@@ -377,6 +377,11 @@ public class ModulesIptablesRules extends IptablesRulesSender {
                     iptables + "-t mangle -D OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
                     //iptables + "-t mangle -I OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
                     iptables + "-t mangle -I OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
+            ));
+        } else {
+            nflogPackets = TextUtils.join("; ", Arrays.asList(
+                    iptables + "-t mangle -D OUTPUT -p all -m owner ! --uid-owner " + appUID + " -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true",
+                    iptables + "-t mangle -D OUTPUT -p all -m limit --limit 1000/min -j NFLOG --nflog-prefix " + NFLOG_PREFIX + " --nflog-group " + NFLOG_GROUP + " 2> /dev/null || true"
             ));
         }
 
