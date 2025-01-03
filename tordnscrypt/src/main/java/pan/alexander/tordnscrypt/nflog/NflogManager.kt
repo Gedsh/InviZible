@@ -165,15 +165,20 @@ class NflogManager @Inject constructor(
 
                 delay(1000)
 
-                nflogShell?.waitForIdle() //Waits for nflog to stop
+                val complete = nflogShell?.waitForIdle() //Waits for nflog to stop
 
-                attempts++
+                if (complete != false) {
+                    attempts++
+                }
 
                 if (nflogActive && attempts < ATTEMPTS_TO_OPEN_NFLOG) {
+                    closeNflogShell()
+                    stopNflogHandlerThread()
                     loge("Attempt ${attempts + 1} to restart Nflog")
                 }
 
             }.onFailure {
+                attempts++
                 loge("NflogManager openNflogShell", it)
             }
         } while (nflogActive && attempts < ATTEMPTS_TO_OPEN_NFLOG)
@@ -229,7 +234,6 @@ class NflogManager @Inject constructor(
                     loge("NflogManager startNfLogHandlerThread", e)
                 } finally {
                     if (nflogShell?.isRunning != true || nflogShell?.isIdle != false) {
-                        nflogShell = null
                         handlerThread?.quitSafely()
                     }
                 }
