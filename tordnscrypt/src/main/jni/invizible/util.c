@@ -24,16 +24,69 @@
 #include <arm_neon.h>
 #include "invizible.h"
 
-#define CSUM_NEON_THRESHOLD 1
+#define CSUM_NEON_THRESHOLD 16
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length) {
+    uint32_t sum = start;
 
-    if (length > CSUM_NEON_THRESHOLD) {
-        log_android(ANDROID_LOG_DEBUG, "Checksum buffer length %d", length);
-        return do_csum_neon(start, buffer, length);
+    // Process small inputs with scalar loop
+    if (length <= CSUM_NEON_THRESHOLD) {
+        const uint8_t *byte_buf = buffer;
+        while (length > 1) {
+            sum += *(uint16_t *) byte_buf;
+            byte_buf += 2;
+            length -= 2;
+        }
+        if (length > 0) {
+            sum += *byte_buf;
+        }
+        while (sum >> 16) {
+            sum = (sum & 0xFFFF) + (sum >> 16);
+        }
+        return (uint16_t) sum;
     }
 
-    return (uint16_t) do_csum_generic(start, buffer, length);
+    // Align buffer to 16 bytes for NEON
+    const uint8_t *byte_buf = buffer;
+    while (((uintptr_t) byte_buf & 1) && length > 0) {
+        sum += *byte_buf++;
+        length--;
+    }
+
+    // Process with NEON
+    const uint16_t *buf = (const uint16_t *) byte_buf;
+    size_t vec_len = length / 8; // Number of 128-bit chunks
+    size_t remainder = length % 8;
+
+    uint32x4_t acc = vdupq_n_u32(0); // NEON accumulator
+    while (vec_len--) {
+        uint16x4_t data = vld1_u16(buf); // Load 4x16-bit values
+        acc = vaddw_u16(acc, data); // Accumulate into 32-bit vector
+        buf += 4;                        // Advance pointer
+    }
+
+    // Reduce NEON accumulator into scalar sum
+    uint32_t temp[4];
+    vst1q_u32(temp, acc);
+    sum += temp[0] + temp[1] + temp[2] + temp[3];
+
+    // Process remaining bytes
+    byte_buf = (const uint8_t *) buf;
+    while (remainder > 1) {
+        sum += *(uint16_t *) byte_buf;
+        byte_buf += 2;
+        remainder -= 2;
+    }
+    if (remainder > 0) {
+        sum += *byte_buf; // Add last byte if odd length
+    }
+
+    // Fold 32-bit sum into 16 bits
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    return (uint16_t) sum;
 }
 
 uint16_t do_csum_generic(uint16_t start, const uint8_t *buffer, size_t length) {

@@ -24,7 +24,7 @@ target_link_libraries( invizible
                        ${log-lib} )
 
 if(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
-    target_compile_options(invizible PRIVATE -Ofast -march=armv8-a -flto=thin -funsafe-math-optimizations -ffast-math -ftree-vectorize -fvectorize -fslp-vectorize)
+    target_compile_options(invizible PRIVATE -Ofast -march=armv8-a+simd -flto=thin -funsafe-math-optimizations -ffast-math -ftree-vectorize -fvectorize -fslp-vectorize)
 else()
     target_compile_options(invizible PRIVATE -Ofast -march=armv7-a -flto=thin -funsafe-math-optimizations -ffast-math -ftree-vectorize -fvectorize -fslp-vectorize)
 endif()
