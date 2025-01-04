@@ -178,7 +178,7 @@ Please note that the XMR address has changed. The old address is no longer valid
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
 
-Copyright (c) 2019-2024 Garmatin Oleksandr invizible.soft@gmail.com
+Copyright (c) 2019-2025 Garmatin Oleksandr invizible.soft@gmail.com
 
 All rights reserved
 
