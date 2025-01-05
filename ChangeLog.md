@@ -1266,3 +1266,13 @@
 * Various fixes for Root mode.
 * Added Dutch translation.
 * Updated Polish, Portuguese (Brazil), Persian and Spanish translations.
+
+**InviZible Pro beta 2.4.3**
+* Added x86_64 version for ChromeOS and emulators.
+* Updated Tor.
+* Updated Purple I2P to version 2.55.0.
+* Updated default DNSCrypt servers.
+* Optimized performance in VPN mode.
+* Added Tamil translation.
+* Updated Japanese, Chinese and Dutch translations.
+* Fixes and optimizations.
