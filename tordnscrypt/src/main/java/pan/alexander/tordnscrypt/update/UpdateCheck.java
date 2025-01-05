@@ -189,7 +189,7 @@ public class UpdateCheck {
             return;
         }
 
-        if (!iproArr[2].matches("\\d{3}")) {
+        if (!iproArr[2].matches("\\d{3,4}")) {
             showUpdateMessageAndSaveResult(R.string.update_fault);
             logw("compareVersions function fault iproArr pass regexp mismatch");
             return;
