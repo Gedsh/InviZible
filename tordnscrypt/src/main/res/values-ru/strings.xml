@@ -208,7 +208,7 @@
     <string name="pref_tor_enforce_distinct_subnets_summ">Если активированно, Tor никогда не будет выбирать два сервера, чьи IP адреса слишком близко, для одной и той же цепочки. На данный момент IP серверов считается слишком близкими, если они находятся в одном /16 диаппазоне.</string>
     <string name="pref_tor_enable_SOCKS_proxy">SOCKS прокси</string>
     <string name="pref_tor_SOCKS_port_summ">Открыть этот порт для приложений, поддерживающих SOCKS проксификацию.</string>
-    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTP Tunnel</string>
+    <string name="pref_tor_enable_HTTPTunnel_proxy">HTTP Туннель</string>
     <string name="pref_tor_HTTPTunnel_port_summ">Открыть этот порт для приложений, поддерживающих HTTP CONNECT проксификацию, вместо SOCKS.</string>
     <string name="pref_tor_enable_transparent_proxy">Прозрачный прокси</string>
     <string name="pref_tor_trans_port_summ">Открыть этот порт для Прозрачного прокси.</string>
@@ -225,7 +225,7 @@
     <string name="pref_tor_isolate_uid_summ">Не использовать ту же цепочку для разных приложений.</string>
     <string name="pref_tor_isolate_dest_address_summ">Разделить трафик приложений на основе удаленного адреса.</string>
     <string name="pref_tor_isolate_dest_port_summ">Разделить трафик приложений на основе удаленного порта.</string>
-    <string name="pref_tor_dormant_client_timeout_summ">Tor переходит в режим ожидания, если не видит активности клиента в течении заданного времени. Должно быть не менее 10 минут.</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor переходит в режим ожидания, если не видит активности клиента в течении заданного времени. Должно быть не менее 10 минут</string>
     <string name="country_select_select_all">Активировать все</string>
     <string name="country_select_unselect_all">Деактивировать все</string>
     <string name="pref_itpd_common">Общие настройки</string>
@@ -235,7 +235,7 @@
     <string name="pref_itpd_com_ipv4_summ">Разрешить соединение через IPv4.</string>
     <string name="pref_itpd_com_ipv6_summ">Разрешить соединение через IPv6.</string>
     <string name="pref_itpd_com_notransit_summ">Не разрешать транзитные туннели. Отключает транзит полностью.</string>
-    <string name="pref_itpd_com_floodfill_summ">Устройство будет \"ненасытным\".</string>
+    <string name="pref_itpd_com_floodfill_summ">Устройство будет флудфилом.</string>
     <string name="pref_itpd_com_bandwidth_summ">Ограничение полосы пропускания в KBps.</string>
     <string name="pref_itpd_com_share_summ">Максимальная полоса пропускания для транзита 0–100%.</string>
     <string name="pref_itpd_com_ssu_summ">Включить SSU протокол (использовать UDP).</string>
@@ -382,7 +382,7 @@
     <string name="pref_common_refresh_rules_summ">Обновлять правила при изменении подключения</string>
     <string name="pref_common_refresh_rules">Обновлять правила</string>
     <string name="pref_itpd_use_HTTP_outproxy">HTTP outproxy</string>
-    <string name="pref_itpd_use_HTTP_outproxy_summ">Шлюз в обычный интернет.</string>
+    <string name="pref_itpd_use_HTTP_outproxy_summ">Шлюз в обычный интернет</string>
     <string name="pref_itpd_HTTP_outproxy_address">HTTP outproxy адрес</string>
     <string name="pref_itpd_HTTP_outproxy_address_summ">URL адрес исходящего HTTP прокси (например http://false.i2p)</string>
     <string name="pref_itpd_use_Socks_outproxy">SOCKS outproxy</string>
@@ -425,9 +425,9 @@
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
     <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible. Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
     <string name="pref_common_shell_control">Включить управление скриптами</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями: m broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s Где 1 - запустить, 0 - остановить модуль.</string>
     <string name="notification_channel_services">Запущенные сервисы</string>
-    <string name="notification_channel_update">Обновление</string>
+    <string name="notification_channel_update">Обновление уведомлений</string>
     <string name="notification_channel_root">Команды Рут</string>
     <string name="notification_channel_firewall">Файрвол</string>
     <string name="notification_channel_auxiliary">Вспомогательные</string>
