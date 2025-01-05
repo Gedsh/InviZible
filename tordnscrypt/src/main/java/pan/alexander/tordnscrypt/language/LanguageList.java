@@ -47,6 +47,7 @@ public class LanguageList {
             "UG9ydHVndWVzZS1CUiAoUG9ydHVndcOqcy1CUik=",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
             "U3BhbmlzaCAoRXNwYcOxb2wp",
+            "VGFtaWwgKOCupOCuruCuv+CutOCvjSk=",
             "VHVya2lzaCAoVMO8cmvDp2Up",
             "VWtyYWluaWFuICjQo9C60YDQsNGX0L3RgdGM0LrQsCk="
     };
@@ -70,6 +71,7 @@ public class LanguageList {
             "pt-rBR",
             "ru",
             "es",
+            "ta",
             "tr",
             "uk"
     };
