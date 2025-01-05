@@ -44,7 +44,7 @@ android {
         universal{
             dimension = 'processor'
             resValue 'string', 'appProcVersion', 'universal'
-            versionCode = 4
+            versionCode = 5
 
             ndk {
                 abiFilters 'armeabi-v7a', 'arm64-v8a'

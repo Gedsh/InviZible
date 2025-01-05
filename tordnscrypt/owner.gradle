@@ -93,6 +93,16 @@ android {
             }
         }
 
+        x64 {
+            dimension = 'processor'
+            resValue 'string', 'appProcVersion', 'x86_64'
+            versionCode = 4
+
+            ndk {
+                abiFilters 'x86_64'
+            }
+        }
+
     }
 
     defaultConfig {

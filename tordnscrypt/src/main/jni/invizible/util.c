@@ -21,7 +21,13 @@
     Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+#if defined(__x86_64__)
+//https://github.com/intel/ARM_NEON_2_x86_SSE
+//https://github.com/android/ndk-samples/tree/main/hello-neon
+#include "neon2sse.h"
+#else
 #include <arm_neon.h>
+#endif
 #include "invizible.h"
 
 #define CSUM_NEON_THRESHOLD 16
