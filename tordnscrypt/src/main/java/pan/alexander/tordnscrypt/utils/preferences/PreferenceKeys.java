@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.preferences;
@@ -146,6 +146,7 @@ public interface PreferenceKeys {
     String DNSCRYPT_DNS64_PREFIX = "dns64_prefix";
 
     String DNSCRYPT_OUTBOUND_PROXY = "Enable proxy";
+    String DNSCRYPT_OUTBOUND_PROXY_PORT = "proxy_port";
 
     String DNSCRYPT_SERVERS_REFRESH_DELAY = "refresh_delay";
     String DNSCRYPT_RELAYS_REFRESH_DELAY = "refresh_delay_relays";
@@ -179,6 +180,7 @@ public interface PreferenceKeys {
     String SAVE_ROOT_LOGS = "swRootCommandsLog";
 
     //Proxifier
+    String PROXIFY_NON_TOR = "ProxifyNonTor";
     String PROXIFY_DNSCRYPT = "ProxifyDNSCrypt";
     String PROXIFY_TOR = "ProxifyTor";
     String PROXIFY_I2PD = "ProxifyITPD";

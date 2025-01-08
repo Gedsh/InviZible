@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.proxy
@@ -33,15 +33,12 @@ import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDef
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_PROXY
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_DNSCRYPT
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_I2PD
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXIFY_TOR
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -50,9 +47,6 @@ import java.net.SocketAddress
 import javax.inject.Inject
 import javax.inject.Named
 
-
-private const val CHECK_CONNECTION_TIMEOUT_MSEC = 500
-
 class ProxyHelper @Inject constructor(
     private val context: Context,
     private val pathVars: PathVars,
@@ -60,44 +54,11 @@ class ProxyHelper @Inject constructor(
     @Named(DEFAULT_PREFERENCES_NAME) private val defaultPreferences: SharedPreferences
 ) {
 
-    fun enableProxy() {
-        val proxifyDnsCrypt = defaultPreferences.getBoolean(PROXIFY_DNSCRYPT, false)
-        val proxifyTor = defaultPreferences.getBoolean(PROXIFY_TOR, false)
-        val proxifyItpd = defaultPreferences.getBoolean(PROXIFY_I2PD, false)
-
-        val server =
-            defaultPreferences.getString(
-                PreferenceKeys.PROXY_ADDRESS, LOOPBACK_ADDRESS
-            ) ?: LOOPBACK_ADDRESS
-        val port = defaultPreferences.getString(
-            PreferenceKeys.PROXY_PORT, DEFAULT_PROXY_PORT
-        ) ?: DEFAULT_PROXY_PORT
-
-        manageProxy(server, port, false, proxifyDnsCrypt, proxifyTor, proxifyItpd)
-    }
-
-    fun disableProxy() {
-        val proxyServer =
-            defaultPreferences.getString(
-                PreferenceKeys.PROXY_ADDRESS, LOOPBACK_ADDRESS
-            ) ?: LOOPBACK_ADDRESS
-        val proxyPort = defaultPreferences.getString(
-            PreferenceKeys.PROXY_PORT, DEFAULT_PROXY_PORT
-        ) ?: DEFAULT_PROXY_PORT
-
-        manageProxy(
-            proxyServer, proxyPort,
-            serverOrPortChanged = false,
-            enableDNSCryptProxy = false,
-            enableTorProxy = false,
-            enableItpdProxy = false
-        )
-    }
-
     fun manageProxy(
         server: String,
         port: String,
         serverOrPortChanged: Boolean,
+        enableNonTorProxy: Boolean,
         enableDNSCryptProxy: Boolean,
         enableTorProxy: Boolean,
         enableItpdProxy: Boolean
@@ -105,6 +66,7 @@ class ProxyHelper @Inject constructor(
 
         val modulesStatus = ModulesStatus.getInstance()
 
+        val nonTorProxified = defaultPreferences.getBoolean(USE_PROXY, false)
         val dnsCryptProxified = defaultPreferences.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)
         val torProxified = defaultPreferences.getBoolean(TOR_OUTBOUND_PROXY, false)
         val itpdProxified = defaultPreferences.getBoolean(I2PD_OUTBOUND_PROXY, false)
@@ -116,31 +78,41 @@ class ProxyHelper @Inject constructor(
         }
 
         executor.submit("ProxyHelper manageProxy") {
-            if ((enableDNSCryptProxy xor dnsCryptProxified) || serverOrPortChanged) {
+            val dnsCryptSettingChanged = enableDNSCryptProxy xor dnsCryptProxified
+            if (dnsCryptSettingChanged || serverOrPortChanged) {
                 manageDNSCryptProxy(pathVars.dnscryptConfPath, proxyAddr, enableDNSCryptProxy)
                 defaultPreferences.edit().putBoolean(DNSCRYPT_OUTBOUND_PROXY, enableDNSCryptProxy)
                     .apply()
 
-                if (modulesStatus.dnsCryptState == ModuleState.RUNNING) {
+                if (modulesStatus.dnsCryptState == ModuleState.RUNNING && (enableDNSCryptProxy || dnsCryptSettingChanged)) {
                     ModulesRestarter.restartDNSCrypt(context)
                 }
             }
-            if ((enableTorProxy xor torProxified) || serverOrPortChanged) {
+            val torSettingChanged = enableTorProxy xor torProxified
+            if (torSettingChanged || serverOrPortChanged) {
                 mangeTorProxy(pathVars.torConfPath, proxyAddr, enableTorProxy)
                 defaultPreferences.edit().putBoolean(TOR_OUTBOUND_PROXY, enableTorProxy).apply()
-                if (modulesStatus.torState == ModuleState.RUNNING) {
+                if (modulesStatus.torState == ModuleState.RUNNING && (enableTorProxy || torSettingChanged)) {
                     ModulesRestarter.restartTor(context)
                 }
             }
-            if ((enableItpdProxy xor itpdProxified) || serverOrPortChanged) {
+            val itpdSettingChanged = enableItpdProxy xor itpdProxified
+            if (itpdSettingChanged || serverOrPortChanged) {
                 manageITPDProxy(pathVars.itpdConfPath, proxyAddr, enableItpdProxy)
                 defaultPreferences.edit().putBoolean(I2PD_OUTBOUND_PROXY, enableItpdProxy).apply()
-                if (modulesStatus.itpdState == ModuleState.RUNNING) {
+                if (modulesStatus.itpdState == ModuleState.RUNNING && (enableItpdProxy || itpdSettingChanged)) {
                     ModulesRestarter.restartITPD(context)
                 }
             }
 
-            modulesStatus.setIptablesRulesUpdateRequested(context, true)
+            val nonTorProxySettingsChanged = enableNonTorProxy xor nonTorProxified
+            if (dnsCryptSettingChanged || torSettingChanged || itpdSettingChanged
+                || nonTorProxySettingsChanged || serverOrPortChanged
+            ) {
+                defaultPreferences.edit().putBoolean(USE_PROXY, enableNonTorProxy).apply()
+                modulesStatus.setIptablesRulesUpdateRequested(context, true)
+            }
+
         }
     }
 
@@ -165,7 +137,7 @@ class ProxyHelper @Inject constructor(
             Socket(proxy).use {
                 setDefaultAuth(proxyUser, proxyPass)
                 it.connect(sockaddr, CHECK_CONNECTION_TIMEOUT_MSEC)
-                it.soTimeout = 1
+                it.soTimeout = CHECK_CONNECTION_TIMEOUT_MSEC
 
                 if (!it.isConnected) {
                     throw IllegalStateException("unable to connect to $dnsCryptFallbackRes")
@@ -285,5 +257,9 @@ class ProxyHelper @Inject constructor(
             }
         }
         FileManager.writeTextFileSynchronous(context, itpdConfPath, itpdConf)
+    }
+
+    companion object {
+        const val CHECK_CONNECTION_TIMEOUT_MSEC = 5000
     }
 }

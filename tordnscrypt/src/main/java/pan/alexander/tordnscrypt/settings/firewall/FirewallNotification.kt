@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.firewall
@@ -41,6 +41,7 @@ import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.settings.SettingsActivity
 import pan.alexander.tordnscrypt.modules.ModulesStatus
+import pan.alexander.tordnscrypt.proxy.CLEARNET_APPS_FOR_PROXY
 import pan.alexander.tordnscrypt.utils.Utils.areNotificationsNotAllowed
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
@@ -220,15 +221,18 @@ class FirewallNotification : BroadcastReceiver() {
         }
 
         logi("FirewallNotification package added UID $uid")
+
+        excludeTorSelfContainingAppFromTorIfNeeded(context, packages[0], uid)
     }
 
-    private fun packageRemoved(context: Context?, intent: Intent) {
+    private fun packageRemoved(context: Context, intent: Intent) {
         logi("FirewallNotification packageRemoved received intent $intent")
 
         val uid = intent.getIntExtra(Intent.EXTRA_UID, 0)
 
         if (intent.getBooleanExtra(Intent.EXTRA_DATA_REMOVED, false)) {
             removeFirewallRule(context, uid)
+            removeTorRulesForUid(uid)
         }
 
         logi("FirewallNotification package removed UID $uid")
@@ -272,6 +276,22 @@ class FirewallNotification : BroadcastReceiver() {
         }
     }
 
+    private fun excludeTorSelfContainingAppFromTorIfNeeded(
+        context: Context,
+        pack: String,
+        uid: Int
+    ) {
+        val packetsWithOwnTor = context.resources.getStringArray(R.array.contains_own_tor)
+        if (packetsWithOwnTor.contains(pack)) {
+            preferenceRepository.get().apply {
+                setStringSetPreference(
+                    CLEARNET_APPS,
+                    getStringSetPreference(CLEARNET_APPS) + uid.toString()
+                )
+            }
+        }
+    }
+
     private fun removeFirewallRule(context: Context?, uid: Int) {
         if (uid > 0) {
 
@@ -307,6 +327,20 @@ class FirewallNotification : BroadcastReceiver() {
             }
 
             logi("FirewallNotification removeFirewallRule UID $uid")
+        }
+    }
+
+    private fun removeTorRulesForUid(uid: Int) {
+        val preferences = preferenceRepository.get()
+        val torAppPreferenceKeys = listOf(UNLOCK_APPS, CLEARNET_APPS, CLEARNET_APPS_FOR_PROXY)
+        for (preferenceKey in torAppPreferenceKeys) {
+            val uids = preferences.getStringSetPreference(preferenceKey)
+            if (uids.contains(uid.toString())) {
+                preferences.setStringSetPreference(
+                    preferenceKey,
+                    uids.apply { remove(uid.toString()) }
+                )
+            }
         }
     }
 

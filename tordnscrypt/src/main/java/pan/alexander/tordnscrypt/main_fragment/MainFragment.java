@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.main_fragment;
@@ -28,6 +28,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Spanned;
 import android.view.Gravity;
@@ -717,7 +718,11 @@ public class MainFragment extends Fragment implements DNSCryptFragmentView, TorF
             pbTorMainFragment.setIndeterminate(false);
         }
         if (progress >= 0) {
-            pbTorMainFragment.setProgress(progress);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                pbTorMainFragment.setProgress(progress, true);
+            } else {
+                pbTorMainFragment.setProgress(progress);
+            }
             pbTorMainFragment.setVisibility(View.VISIBLE);
             divTorMainFragment.setVisibility(View.GONE);
         } else {

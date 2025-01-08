@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_bridges;
@@ -767,16 +767,16 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                 pattern = Pattern.compile("^scramblesuit +" + bridgeBase + "( +password=\\w+)?");
             } else if (inputLinesStr.contains(meek_lite.toString())) {
                 inputBridgesType = meek_lite.toString();
-                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w./-]+ +front=[\\w./-]+( +utls=\\w+)?");
+                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w.+/-]+ +front=[\\w./-]+( +utls=\\w+)?");
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w./-]+)?(?: +ampcache=https://[\\w./-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w./-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?");
+                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w.+/-]+)?(?: +ampcache=https://[\\w.+/-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w.+/-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?");
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
                 pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
             } else if (inputLinesStr.contains(webtunnel.toString())) {
                 inputBridgesType = webtunnel.toString();
-                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w./-]+(?: ver=[0-9.]+)?");
+                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w.+/-]+(?: ver=[0-9.]+)?");
             } else {
                 pattern = Pattern.compile(bridgeBase);
             }

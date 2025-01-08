@@ -514,7 +514,7 @@
         \n\n\tInviZible Pro może korzystać z roota, jeśli twoje urządzenie jest zrootowane, lub używa lokalnej sieci VPN do dostarczania ruchu internetowego bezpośrednio do sieci Tor, DNSCrypt i I2P.
         \n\n\tPolityka prywatności:
         \n\tInviZible Pro nie gromadzi ani nie udostępnia żadnych osobistych ani wrażliwych danych użytkownika.
-        \n\n\tCopyright © 2019-2024
+        \n\n\tCopyright © 2019-2025
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -550,4 +550,7 @@
     <string name="dns_rule_add_rule">Dodaj regułę</string>
     <string name="total_rules">Razem: %d reguł</string>
     <string name="dns_rule_add_url">Dodaj adres URL</string>
+    <string name="dns_rule_add_remote_list">Dodaj zdalną listę</string>
+    <string name="dns_rule_replace_remote_list">Zastąp listę zdalną</string>
+    <string name="rules">reguły</string>
 </resources>

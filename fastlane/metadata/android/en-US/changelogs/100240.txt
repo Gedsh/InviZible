@@ -1,0 +1,4 @@
+**InviZible Pro beta 2.4.0**
+* Improved Tor Obfs4 bridges censorship resistance.
+* Updated Tor SnowFlake bridge stun servers.
+* Various fixes and optimisations.

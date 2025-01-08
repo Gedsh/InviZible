@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn;
@@ -22,7 +22,6 @@ package pan.alexander.tordnscrypt.vpn;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
-import android.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,6 +41,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THR
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+
+import androidx.preference.PreferenceManager;
 
 public class Rule {
     public int uid;

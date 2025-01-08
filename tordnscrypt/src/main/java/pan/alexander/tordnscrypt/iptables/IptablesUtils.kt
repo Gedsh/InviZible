@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.iptables
@@ -23,7 +23,7 @@ object IptablesUtils {
     fun Set<Int>.groupToRanges() =
         sorted().fold(mutableListOf<MutableList<Int>>()) { nonBreakingRanges, element ->
             val lastRange = nonBreakingRanges.lastOrNull()
-            if (element >= 0 && lastRange?.lastOrNull() == element - 1) {
+            if (element > 0 && lastRange?.lastOrNull() == element - 1) {
                 lastRange.add(element)
             } else {
                 nonBreakingRanges.add(mutableListOf(element))

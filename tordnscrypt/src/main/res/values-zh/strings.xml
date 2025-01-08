@@ -374,7 +374,7 @@
     <string name="pref_dnscrypt_import_whitelist_summ">"导入域名列表。您可以选择多个文件，重复行将被移除。"</string>
     <string name="pref_dnscrypt_erase_whitelist">"擦除白名单"</string>
     <string name="pref_dnscrypt_block_ipv6_summ">立即使用空响应回答 IPv6 相关请求。 当没有 IPv6 连接时可以加快速度，但也会对一些解析器造成可靠性问题。</string>
-    <string name="helper_dnscrypt_private_dns">"请在 Android 网络设置中关闭“私人 DNS”。此选项与 InviZible 冲突。"</string>
+    <string name="helper_dnscrypt_private_dns">请在 Android 网络设置中关闭“私人 DNS”。此选项与 InviZible 冲突。</string>
     <string name="import_dnscrypt_rules_dialog_title">"导入规则"</string>
     <string name="import_dnscrypt_rules_dialog_message">"请稍候…已导入 %d 条规则。"</string>
     <string name="import_dnscrypt_rules_complete_dialog_message">"完成！已导入 %d 条规则。"</string>
@@ -506,7 +506,7 @@
         \n\n\t如果您的设备是root的，InviZble Pro可以使用root，或者使用本地VPN将互联网流量直接传递到Tor、DNSCryt和I2P网络。
         \n\n\t隐私政策：
         \n\tInviZble Pro不收集或共享任何个人或敏感用户数据。
-        \n\n\t版权所有©2019-2024。
+        \n\n\t版权所有©2019-2025。
         \n\tGarmatin Oleksandr。
         \n\t邮箱：invizible.soft@gmail.com。
         \n\tInvizible.net/en/privacy

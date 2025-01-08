@@ -348,7 +348,7 @@
         \n\n\tInviZible Pro puede usar root si tu dispositivo está rooteado, o usa una VPN local para entregar el tráfico de internet directamente a las redes Tor, DNSCrypt e I2P.
         \n\n\tPolítica de privacidad:
         \n\tInviZible Pro no recopila ni comparte ningún dato personal o sensible del usuario.
-        \n\n\tDerechos de autor © 2019-2024
+        \n\n\tDerechos de autor © 2019-2025
         \n\tGarmatin Oleksandr
         \n\tinvizible.soft@gmail.com
         \n\tinvizible.net/en/privacy
@@ -554,4 +554,6 @@
     <string name="dns_rule_replace_remote_list">Reemplazar lista remota</string>
     <string name="dns_rule_replace_local_list">Reemplazar lista local</string>
     <string name="pref_common_always_on_vpn_summ">Habilite VPN siempre activa y bloquee conexiones sin VPN para que Invisible Pro bloquee Internet cuando la aplicación no se esté ejecutando</string>
+    <string name="helper_tor_check_proxy">Ha configurado para utilizar el proxy Socks5, pero el proxy no parece estar funcionando. ¡Por favor, compruebe su configuración!</string>
+    <string name="proxy_use_for_non_tor">Utilice un proxy para aplicaciones que evitan Tor</string>
 </resources>

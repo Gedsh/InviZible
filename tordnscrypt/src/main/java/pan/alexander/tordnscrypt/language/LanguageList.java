@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.language;
@@ -32,6 +32,7 @@ public class LanguageList {
             "QXJhYmljICjYp9mE2LnYsdio2YrYqSk=",
             "QnVsZ2FyaWFuICjQkdGK0LvQs9Cw0YDRgdC60Lgp",
             "Q2hpbmVzZSAo5Lit5paHKQ==",
+            "RHV0Y2ggKE5lZGVybGFuZHNlKQ==",
             "RW5nbGlzaCAoRW5nbGlzaCk=",
             "RmlubmlzaCAoU3VvbWkp",
             "RnJlbmNoIChGcmFuw6dhaXMp",
@@ -46,6 +47,7 @@ public class LanguageList {
             "UG9ydHVndWVzZS1CUiAoUG9ydHVndcOqcy1CUik=",
             "UnVzc2lhbiAo0KDRg9GB0YHQutC40Lkp",
             "U3BhbmlzaCAoRXNwYcOxb2wp",
+            "VGFtaWwgKOCupOCuruCuv+CutOCvjSk=",
             "VHVya2lzaCAoVMO8cmvDp2Up",
             "VWtyYWluaWFuICjQo9C60YDQsNGX0L3RgdGM0LrQsCk="
     };
@@ -54,6 +56,7 @@ public class LanguageList {
             "ar",
             "bg",
             "zh",
+            "nl",
             "en",
             "fi",
             "fr",
@@ -68,6 +71,7 @@ public class LanguageList {
             "pt-rBR",
             "ru",
             "es",
+            "ta",
             "tr",
             "uk"
     };

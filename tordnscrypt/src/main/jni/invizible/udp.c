@@ -18,13 +18,14 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
 
 extern int own_uid;
 extern int tor_dns_port;
+extern bool bypass_lan;
 
 int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions) {
     int timeout = (ntohs(u->dest) == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
@@ -165,14 +166,6 @@ int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint
 
     if (ntohs(udphdr->dest) == 53)
         return !args->fwd53;
-
-    /*char dest[INET6_ADDRSTRLEN + 1];
-    if (version == 4) {
-        inet_ntop(AF_INET, &ip4->daddr, dest, sizeof(dest));
-        if (strcmp(dest, "10.191.0.1") == 0) {
-            return false;
-        }
-    }*/
 
     // Search session
     struct ng_session *cur = args->ctx->ng_session;
@@ -398,14 +391,26 @@ jboolean handle_udp(const struct arguments *args,
 
             //handle onion websites
             if (tor_dns_port > 0) {
-                char *suffix = strrchr(qname, '.');
-                if (redirect != NULL && suffix != NULL && strcmp(suffix, ".onion") == 0) {
+                if (redirect != NULL && str_ends_with(qname, ".onion")) {
                     redirect->rport = tor_dns_port;
                 }
             }
-            //https://datatracker.ietf.org/doc/html/rfc7050
-            if (redirect != NULL && strcmp(qname, "ipv4only.arpa") == 0) {
-                redirect = NULL;
+
+            if (redirect != NULL) {
+                //https://datatracker.ietf.org/doc/html/rfc7050
+                if (str_equal(qname, "ipv4only.arpa")) {
+                    redirect = NULL;
+                } else if (bypass_lan) {
+                    //https://datatracker.ietf.org/doc/html/rfc6762
+                    if (str_ends_with(qname, ".local")
+                        || str_ends_with(qname, ".254.169.in-addr.arpa")
+                        || str_ends_with(qname, ".8.e.f.ip6.arpa")
+                        || str_ends_with(qname, ".9.e.f.ip6.arpa")
+                        || str_ends_with(qname, ".a.e.f.ip6.arpa")
+                        || str_ends_with(qname, ".b.e.f.ip6.arpa")) {
+                        redirect = NULL;
+                    }
+                }
             }
         }
     }
@@ -518,6 +523,14 @@ int open_udp_socket(const struct arguments *args,
                             "UDP setsockopt IPV6_ADD_MEMBERSHIP error %d: %s",
                             errno, strerror(errno));
         }
+    }
+
+    // Set non blocking
+    int flags = fcntl(sock, F_GETFL, 0);
+    if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0) {
+        log_android(ANDROID_LOG_ERROR, "fcntl socket O_NONBLOCK error %d: %s",
+                    errno, strerror(errno));
+        return -1;
     }
 
     return sock;

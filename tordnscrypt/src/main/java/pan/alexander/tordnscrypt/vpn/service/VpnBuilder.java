@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -185,9 +185,9 @@ public class VpnBuilder {
             listExclude.add(new IPUtil.CIDR("192.168.49.0", 24));
         }
 
-        //if (!firewallEnabled || lan) {
-            listExclude.add(new IPUtil.CIDR("224.0.0.0", 4)); // Broadcast
-        //}
+        if (lan) {
+            listExclude.add(new IPUtil.CIDR("224.0.0.0", 4)); // Multicast
+        }
         // Subnet routing
         if (!listExclude.isEmpty()) {
 
@@ -207,7 +207,7 @@ public class VpnBuilder {
                     start = IPUtil.plus1(exclude.getEnd());
                 }
                 String end = (lan ? "255.255.255.254" : "255.255.255.255");
-                for (IPUtil.CIDR include : IPUtil.toCIDR("224.0.0.0", end))
+                for (IPUtil.CIDR include : IPUtil.toCIDR(lan ? "240.0.0.0" : "224.0.0.0", end))
                     try {
                         builder.addRoute(include.address, include.prefix);
                     } catch (Throwable ex) {

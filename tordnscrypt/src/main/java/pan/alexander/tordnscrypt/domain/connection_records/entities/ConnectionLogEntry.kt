@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records.entities
@@ -37,6 +37,7 @@ data class PacketLogEntry(
     val uid: Int,
     val saddr: String,
     val daddr: String,
+    val dport: Int,
     val protocol: Int = UNDEFINED,
     var reverseDns: String? = null,
     var dnsLogEntry: DnsLogEntry? = null

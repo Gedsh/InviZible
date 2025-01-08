@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service
@@ -68,7 +68,7 @@ class VpnPreferenceHolder @Inject constructor(
     val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
     val ignoreSystemDNS = defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
 
-    val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS) ?: LOOPBACK_ADDRESS
+    val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)?.take(46) ?: LOOPBACK_ADDRESS
     val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {
         if (it?.matches(Regex(NUMBER_REGEX)) == true && it.toLong() <= MAX_PORT_NUMBER) {
             it.toInt()
@@ -76,8 +76,8 @@ class VpnPreferenceHolder @Inject constructor(
             DEFAULT_PROXY_PORT.toInt()
         }
     }
-    val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
-    val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
+    val proxyUser = defaultPreferences.getString(PROXY_USER, "")?.take(127) ?: ""
+    val proxyPass = defaultPreferences.getString(PROXY_PASS, "")?.take(127) ?: ""
 
     val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
             && proxyAddress.isNotBlank()

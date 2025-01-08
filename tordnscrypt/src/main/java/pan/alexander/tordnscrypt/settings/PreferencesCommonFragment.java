@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings;
@@ -29,14 +29,12 @@ import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
-import androidx.preference.SwitchPreferenceCompat;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -45,7 +43,6 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -66,12 +63,10 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
-import pan.alexander.tordnscrypt.views.SwitchPlusClickPreference;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
-import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_ADDRESS;
 import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorFragment.ISOLATE_DEST_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
@@ -90,7 +85,6 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TE
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
@@ -108,7 +102,7 @@ import javax.inject.Named;
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener,
-        SwitchPlusClickPreference.SwitchPlusClickListener, OnTextFileOperationsCompleteListener {
+        OnTextFileOperationsCompleteListener {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -201,10 +195,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 && !modulesStatus.isUseModulesWithRoot();
         PreferenceScreen preferenceScreen = findPreference("pref_common");
         PreferenceCategory proxySettingsCategory = findPreference("categoryCommonProxy");
-        SwitchPlusClickPreference swUseProxy = findPreference(USE_PROXY);
+        Preference swUseProxy = findPreference(USE_PROXY);
         if (preferenceScreen != null && proxySettingsCategory != null) {
             if ((modulesStatus.getMode() == VPN_MODE || fixTTL) && swUseProxy != null) {
-                swUseProxy.setSwitchClickListener(this);
+                swUseProxy.setOnPreferenceClickListener(this);
             } else {
                 preferenceScreen.removePreference(proxySettingsCategory);
             }
@@ -302,19 +296,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         torConfPath = pathVars.get().getTorConfPath();
         itpdConfPath = pathVars.get().getItpdConfPath();
         itpdTunnelsPath = pathVars.get().getItpdTunnelsPath();
-
-        SharedPreferences sharedPreferences = defaultPreferences.get();
-        boolean swUseProxy = sharedPreferences.getBoolean(USE_PROXY, false);
-        String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, "");
-        Set<String> setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
-        if (swUseProxy
-                && setBypassProxy.isEmpty()
-                && proxyServer.equals(LOOPBACK_ADDRESS)) {
-            Preference swUseProxyPreference = findPreference(USE_PROXY);
-            if (swUseProxyPreference != null) {
-                ((SwitchPreferenceCompat) swUseProxyPreference).setChecked(false);
-            }
-        }
 
         executor.submit("PreferencesCommonFragment verifier", () -> {
             try {
@@ -500,35 +481,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             } catch (Exception e) {
                 loge("PreferencesCommonFragment ALWAYS_ON_VPN", e);
             }
+        } else if (USE_PROXY.equals(preference.getKey())) {
+            openProxySettings();
         }
         return false;
-    }
-
-
-    @Override
-    public void onCheckedChanged(SwitchCompat buttonView, boolean isChecked) {
-
-        Context context = getActivity();
-
-        if (context == null) {
-            return;
-        }
-
-        SharedPreferences sharedPreferences = defaultPreferences.get();
-        String proxyServer = sharedPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS);
-        Set<String> setBypassProxy = preferenceRepository.get().getStringSetPreference(CLEARNET_APPS_FOR_PROXY);
-        if (setBypassProxy.isEmpty() && proxyServer.equals(LOOPBACK_ADDRESS)) {
-            openProxySettings();
-        } else if (isChecked) {
-            enableProxy();
-        } else {
-            disableProxy();
-        }
-    }
-
-    @Override
-    public void onClick(View view) {
-        openProxySettings();
     }
 
     private void openProxySettings() {
@@ -541,14 +497,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         Intent intent = new Intent(context, SettingsActivity.class);
         intent.setAction("use_proxy");
         context.startActivity(intent);
-    }
-
-    private void enableProxy() {
-        proxyHelper.get().enableProxy();
-    }
-
-    private void disableProxy() {
-        proxyHelper.get().disableProxy();
     }
 
     private void activityCurrentRecreate() {

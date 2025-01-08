@@ -508,10 +508,12 @@
         <item>stun.nextcloud.com:443</item>
         <item>stun.sipgate.net:10000</item>
         <item>stun.epygi.com:3478</item>
-        <item>stun.sonetel.com:3479</item>
         <item>stun.uls.co.za:3478</item>
         <item>stun.voipgate.com:3478</item>
-        <item>stun.voys.nl:3478</item>
+        <item>stun.bethesda.net:3478</item>
+        <item>stun.mixvoip.com:3478</item>
+        <item>stun.voipia.net:3478</item>
+        <item>stun.antisip.com:3478</item>
     </string-array>
 
     <string-array name="pref_common_categ_use_busybox_titles">
@@ -592,5 +594,14 @@
         <item>http://i2p-projekt.i2p/hosts.txt</item>
         <item>http://notbob.i2p/hosts-all.txt</item>
         <item>http://rus.i2p/hosts.txt</item>
+    </string-array>
+    <string-array name="contains_own_tor">
+        <item>org.torproject.torbrowser_alpha</item>
+        <item>org.torproject.torbrowser</item>
+        <item>org.onionshare.android.fdroid</item>
+        <item>org.onionshare.android</item>
+        <item>org.torproject.android</item>
+        <item>org.briarproject.briar.android</item>
+        <item>im.cwtch.flwtch</item>
     </string-array>
 </resources>

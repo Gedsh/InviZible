@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.domain.connection_records
@@ -146,36 +146,45 @@ class ConnectionRecordsParser @Inject constructor(
 
                 if (Tethering.apIsOn && fixTTL && record.saddr.contains(apAddresses)) {
                     lines.append("<b>").append("WiFi").append("</b>")
-                        .append(protocol).append(" -> ")
+                        .append(protocol).append(" → ")
                 } else if (Tethering.usbTetherOn && fixTTL && record.saddr.contains(usbAddresses)) {
                     lines.append("<b>").append("USB").append("</b>")
-                        .append(protocol).append(" -> ")
+                        .append(protocol).append(" → ")
                 } else if (Tethering.ethernetOn && fixTTL && record.saddr.contains(
                         localEthernetDeviceAddress
                     )
                 ) {
                     lines.append("<b>").append("LAN").append("</b>")
-                        .append(protocol).append(" -> ")
+                        .append(protocol).append(" → ")
                 } else if (appName.isNotEmpty()) {
                     lines.append("<b>").append(appName).append("</b>")
-                        .append(protocol).append(" -> ")
+                        .append(protocol).append(" → ")
                 } else {
                     lines.append("<b>").append("Unknown UID").append(record.uid).append("</b>")
-                        .append(protocol).append(" -> ")
+                        .append(protocol).append(" → ")
                 }
 
                 record.dnsLogEntry?.let {
-                    lines.append(it.domainsChain.joinToString(" -> "))
-                        .append(" -> ")
+                    lines.append(it.domainsChain.joinToString(" → "))
+                        .append(" → ")
                         .append(record.daddr)
+                    if (record.dport != 0) {
+                        lines.append("<i>:</i>${record.dport}")
+                    }
                 } ?: record.reverseDns?.let {
-                    lines.append(it).append(" -> ").append(record.daddr)
+                    lines.append(it).append(" → ").append(record.daddr)
+                    if (record.dport != 0) {
+                        lines.append("<i>:</i>${record.dport}")
+                    }
                 } ?: run {
                     lines.append(record.daddr)
+                    if (record.dport != 0) {
+                        lines.append("<i>:</i>${record.dport}")
+                    }
                 }
             } else if (record is DnsLogEntry) {
                 if (record.domainsChain.isNotEmpty()) {
-                    lines.append(record.domainsChain.joinToString(" -> "))
+                    lines.append(record.domainsChain.joinToString(" → "))
                 }
                 if (record.blocked && record.blockedByIpv6) {
                     lines.append(" ipv6")

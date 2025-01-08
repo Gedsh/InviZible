@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.nflog
@@ -35,7 +35,7 @@ class NflogParser @Inject constructor(
 ) {
 
     private val packetPattern =
-        Pattern.compile("PKT TIME:(\\d+?) UID:(-?\\d+?) ([^ ]+?) SIP:([^ ]*) SPT:(\\d+?) DIP:([^ ]*) DPT:(\\d+?)")
+        Pattern.compile("PKT TIME:(\\d+?) UID:(-?\\d+?) ([^ ]+?) SIP:([^ ]*) SPT:(\\d+?) DIP:([^ ]*) DPT:(\\d+)")
     private val dnsPattern =
         Pattern.compile("DNS TIME:(\\d+?) QNAME:([^ ]*) ANAME:([^ ]*) CNAME:([^ ]*) HINFO:(.*?) RCODE:(\\d+?) IP:([^ ]*)")
 
@@ -71,11 +71,12 @@ class NflogParser @Inject constructor(
                 return null
             }
 
-            val protocolInt = when(protocol) {
+            val protocolInt = when (protocol) {
                 "TCP" -> 6
                 "UDP" -> 17
                 "ICMPv4" -> 1
                 "ICMPv6" -> 58
+                "IGMP" -> 2
                 else -> UNDEFINED
             }
 
@@ -84,9 +85,12 @@ class NflogParser @Inject constructor(
                 uid = uid.toInt(),
                 saddr = saddr,
                 daddr = daddr,
+                dport = if ((uid == -1L || uid == 0L || uid == 1020L) && sport < dport) sport else dport,
                 protocol = protocolInt,
                 allowed = true
             )
+        } else {
+            loge("NflogParser failed to parse line $line")
         }
 
         return null

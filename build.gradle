@@ -2,7 +2,7 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.9.23'
+        kotlin_version = '2.0.21'
         dagger_version = '2.52'
         multidex_version = "2.0.1"
         work_version = "2.9.1"
@@ -21,6 +21,10 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+}
+
+plugins {
+    id 'com.google.devtools.ksp' version '2.0.21-1.0.27' apply false
 }
 
 allprojects {

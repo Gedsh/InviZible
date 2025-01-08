@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -182,7 +182,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native void jni_start(long context);
 
     @Keep
-    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous);
+    private native void jni_run(long context, int tun, boolean fwd53, int rcode, boolean compatibilityMode, boolean canFilterSynchronous, boolean bypassLanAddresses);
 
     @Keep
     private native void jni_stop(long context);
@@ -263,7 +263,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                                 vpnRulesHolder.get().mapForwardPort.containsKey(PLAINTEXT_DNS_PORT),
                                 vpnPreferences.getDnsBlockedResponseCode(),
                                 vpnPreferences.getCompatibilityMode(),
-                                canFilterSynchronous
+                                canFilterSynchronous,
+                                vpnPreferences.getLan()
                         );
                         if (Thread.currentThread().equals(tunnelThread)) {
                             tunnelThread = null;
@@ -453,10 +454,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             return false;
         }
 
-        if (uid == vpnPreferences.getOwnUID()
-                || destAddress.equals(vpnPreferences.getItpdRedirectAddress())
-                || destAddress.equals(LOOPBACK_ADDRESS)
-                || vpnPreferences.getFixTTL()
+        if (vpnPreferences.getFixTTL()
                 || (vpnPreferences.getCompatibilityMode() && uid == SPECIAL_UID_KERNEL)) {
             return false;
         }
@@ -506,10 +504,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             return false;
         }
 
-        if (uid == vpnPreferences.getOwnUID()
-                || destAddress.equals(vpnPreferences.getItpdRedirectAddress())
-                || destAddress.equals(LOOPBACK_ADDRESS)
-                || (vpnPreferences.getFixTTL() && !vpnPreferences.getUseProxy())
+        if ((vpnPreferences.getFixTTL() && !vpnPreferences.getUseProxy())
                 || (vpnPreferences.getCompatibilityMode() && uid == SPECIAL_UID_KERNEL)) {
             return false;
         }
@@ -933,6 +928,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                         uid,
                         sourceAddress,
                         destinationAddress,
+                        destinationPort,
                         protocol,
                         allowed
                 );

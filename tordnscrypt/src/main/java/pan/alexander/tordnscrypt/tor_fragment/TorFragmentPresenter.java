@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.tor_fragment;
@@ -57,6 +57,7 @@ import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
@@ -68,14 +69,19 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         OnTorLogUpdatedListener, OnInternetConnectionCheckedListener {
 
     @Inject
     public Lazy<ConnectionCheckerInteractorImpl> checkConnectionInteractor;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
@@ -460,14 +466,29 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
 
         loge("Problem bootstrapping Tor: " + logData.getLines());
 
-        NotificationHelper notificationHelper;
-        notificationHelper = NotificationHelper.setHelperMessage(
+        if (defaultPreferences.get().getBoolean(TOR_OUTBOUND_PROXY, false)) {
+            showCheckProxyMessage(fragmentManager);
+        } else {
+            showUseBridgesMessage(fragmentManager);
+        }
+
+        setFixedErrorState(true);
+    }
+
+    private void showCheckProxyMessage(FragmentManager fragmentManager) {
+        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
+                context, context.getString(R.string.helper_tor_check_proxy), "helper_tor_check_proxy");
+        if (notificationHelper != null) {
+            notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
+        }
+    }
+
+    private void showUseBridgesMessage(FragmentManager fragmentManager) {
+        NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                 context, context.getString(R.string.helper_tor_use_bridges), "helper_tor_use_bridges");
         if (notificationHelper != null) {
             notificationHelper.show(fragmentManager, NotificationHelper.TAG_HELPER);
         }
-
-        setFixedErrorState(true);
     }
 
     private void checkInternetAvailable() {

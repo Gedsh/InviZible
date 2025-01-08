@@ -18,22 +18,81 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
+#if defined(__x86_64__)
+//https://github.com/intel/ARM_NEON_2_x86_SSE
+//https://github.com/android/ndk-samples/tree/main/hello-neon
+#include "neon2sse.h"
+#else
 #include <arm_neon.h>
+#endif
 #include "invizible.h"
 
-#define CSUM_NEON_THRESHOLD 1
+#define CSUM_NEON_THRESHOLD 16
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length) {
+    uint32_t sum = start;
 
-    if (length > CSUM_NEON_THRESHOLD) {
-        log_android(ANDROID_LOG_DEBUG, "Checksum buffer length %d", length);
-        return do_csum_neon(start, buffer, length);
+    // Process small inputs with scalar loop
+    if (length <= CSUM_NEON_THRESHOLD) {
+        const uint8_t *byte_buf = buffer;
+        while (length > 1) {
+            sum += *(uint16_t *) byte_buf;
+            byte_buf += 2;
+            length -= 2;
+        }
+        if (length > 0) {
+            sum += *byte_buf;
+        }
+        while (sum >> 16) {
+            sum = (sum & 0xFFFF) + (sum >> 16);
+        }
+        return (uint16_t) sum;
     }
 
-    return (uint16_t) do_csum_generic(start, buffer, length);
+    // Align buffer to 16 bytes for NEON
+    const uint8_t *byte_buf = buffer;
+    while (((uintptr_t) byte_buf & 1) && length > 0) {
+        sum += *byte_buf++;
+        length--;
+    }
+
+    // Process with NEON
+    const uint16_t *buf = (const uint16_t *) byte_buf;
+    size_t vec_len = length / 8; // Number of 128-bit chunks
+    size_t remainder = length % 8;
+
+    uint32x4_t acc = vdupq_n_u32(0); // NEON accumulator
+    while (vec_len--) {
+        uint16x4_t data = vld1_u16(buf); // Load 4x16-bit values
+        acc = vaddw_u16(acc, data); // Accumulate into 32-bit vector
+        buf += 4;                        // Advance pointer
+    }
+
+    // Reduce NEON accumulator into scalar sum
+    uint32_t temp[4];
+    vst1q_u32(temp, acc);
+    sum += temp[0] + temp[1] + temp[2] + temp[3];
+
+    // Process remaining bytes
+    byte_buf = (const uint8_t *) buf;
+    while (remainder > 1) {
+        sum += *(uint16_t *) byte_buf;
+        byte_buf += 2;
+        remainder -= 2;
+    }
+    if (remainder > 0) {
+        sum += *byte_buf; // Add last byte if odd length
+    }
+
+    // Fold 32-bit sum into 16 bits
+    while (sum >> 16) {
+        sum = (sum & 0xFFFF) + (sum >> 16);
+    }
+
+    return (uint16_t) sum;
 }
 
 uint16_t do_csum_generic(uint16_t start, const uint8_t *buffer, size_t length) {
@@ -294,6 +353,22 @@ long long get_ms() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ts.tv_sec * 1000LL + ts.tv_nsec / 1e6;
+}
+
+int str_equal(const char *s, const char *f) {
+    if (!s || !f)
+        return 0;
+    size_t slen = strlen(s);
+    size_t flen = strlen(f);
+    return slen == flen && !memcmp(s, f, flen);
+}
+
+int str_ends_with(const char *s, const char *suff) {
+    if (!s || !suff)
+        return 0;
+    size_t slen = strlen(s);
+    size_t sufflen = strlen(suff);
+    return slen >= sufflen && !memcmp(s + slen - sufflen, suff, sufflen);
 }
 
 #pragma clang diagnostic pop

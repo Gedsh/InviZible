@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.update;
@@ -189,7 +189,7 @@ public class UpdateCheck {
             return;
         }
 
-        if (!iproArr[2].matches("\\d{3}")) {
+        if (!iproArr[2].matches("\\d{3,4}")) {
             showUpdateMessageAndSaveResult(R.string.update_fault);
             logw("compareVersions function fault iproArr pass regexp mismatch");
             return;

@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -250,14 +250,21 @@ void *handle_events(void *a) {
                         check_icmp_socket(args, &ev[i]);
                     else if (session->protocol == IPPROTO_UDP) {
                         int count = 0;
-                        while (count < UDP_YIELD && !args->ctx->stopping &&
-                               !(ev[i].events & EPOLLERR) && (ev[i].events & EPOLLIN) &&
-                               is_readable(session->socket)) {
+                        do {
                             count++;
                             check_udp_socket(args, &ev[i]);
-                        }
-                    } else if (session->protocol == IPPROTO_TCP)
-                        check_tcp_socket(args, &ev[i], epoll_fd);
+                        } while (count < UDP_YIELD && !args->ctx->stopping &&
+                                 !(ev[i].events & EPOLLERR) && (ev[i].events & EPOLLIN) &&
+                                 is_readable(session->socket));
+                    } else if (session->protocol == IPPROTO_TCP) {
+                        int count = 0;
+                        do {
+                            count++;
+                            check_tcp_socket(args, &ev[i], epoll_fd);
+                        } while (count < TCP_YIELD && !args->ctx->stopping &&
+                                 !(ev[i].events & EPOLLERR) && (ev[i].events & EPOLLIN) &&
+                                 is_readable(session->socket));
+                    }
                 }
 
                 if (error)

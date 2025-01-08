@@ -2,20 +2,20 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-lyrebird_version=workaround/ntor-auth-mismatch
+lyrebird_version=prod
 dnscryptproxy_version=master
 snowflake_version=feat/check-dns-ip
 libzmq_version=v4.3.5
 conjure_version=prod
 webtunnel_version=prod
-tor_openssl_version=openssl-3.3.1
+tor_openssl_version=openssl-3.4.0
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 tor_version=prod
-i2pd_openssl_version=openssl-3.3.1
+i2pd_openssl_version=openssl-3.4.0
 miniupnpc_version=miniupnpc_2_2_8
-i2pd_version=2.54.0
+i2pd_version=2.55.0
 
 git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
 

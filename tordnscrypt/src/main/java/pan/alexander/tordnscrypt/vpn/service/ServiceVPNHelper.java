@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.preference.PreferenceManager;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -43,6 +42,8 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
+
+import androidx.preference.PreferenceManager;
 
 public class ServiceVPNHelper {
 
@@ -100,7 +101,7 @@ public class ServiceVPNHelper {
             boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                     && !modulesStatus.isUseModulesWithRoot();
 
-            SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(activity);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
             if (((operationMode == VPN_MODE) || fixTTL)
                     && activity instanceof MainActivity
                     && !prefs.getBoolean(VPN_SERVICE_ENABLED, false)) {

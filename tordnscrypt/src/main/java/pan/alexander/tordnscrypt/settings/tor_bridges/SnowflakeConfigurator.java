@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_bridges;
@@ -131,7 +131,7 @@ public class SnowflakeConfigurator {
         if (rendezvous == AMP_CACHE) {
             return "www.google.com,cdn.ampproject.org";
         } else if (rendezvous == CDN77) {
-            return "docs.plesk.com,www.phpmyadmin.net,app.datapacket.com";
+            return "docs.plesk.com,maxst.icons8.com,app.datapacket.com";
         } else if (rendezvous == AZURE) {
             return "ajax.aspnetcdn.com";
         } else {

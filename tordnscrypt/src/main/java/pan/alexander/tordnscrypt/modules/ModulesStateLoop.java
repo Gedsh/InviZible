@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
@@ -420,7 +420,8 @@ public class ModulesStateLoop implements Runnable,
                 stopCounter = STOP_COUNTER_DELAY;
             } else if (operationMode == VPN_MODE) {
 
-                if (dnsCryptState == STOPPED && torState == STOPPED
+                if (vpnServiceEnabled &&
+                        dnsCryptState == STOPPED && torState == STOPPED
                         && (firewallState == STOPPED || firewallState == STOPPING)) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
                 } else if (vpnServiceEnabled) {
@@ -692,7 +693,7 @@ public class ModulesStateLoop implements Runnable,
     private void saveFirewallState(ModuleState firewallState) {
         savedFirewallState = firewallState;
         if (firewallState == RUNNING) {
-           ModulesAux.saveFirewallStateRunning(true);
+            ModulesAux.saveFirewallStateRunning(true);
         } else if (firewallState == STOPPED) {
             ModulesAux.saveFirewallStateRunning(false);
         }

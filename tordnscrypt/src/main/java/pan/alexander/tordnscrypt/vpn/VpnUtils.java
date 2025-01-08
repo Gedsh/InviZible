@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn;
@@ -54,33 +54,33 @@ public class VpnUtils {
 
     public static final ArrayList<String> nonTorList = new ArrayList<>(Arrays.asList(
             /*LAN destinations that shouldn't be routed through Tor*/
-            "127.0.0.0/8",
-            "10.0.0.0/8",
-            "172.16.0.0/12",
-            "192.168.0.0/16",
+            "127.0.0.0/8", //Loopback RFC1122
+            "10.0.0.0/8", //Private-Use RFC1918
+            "172.16.0.0/12", //Private-Use RFC1918
+            "192.168.0.0/16", //Private-Use RFC1918
             /*Other IANA reserved blocks (These are not processed by tor)*/
             META_ADDRESS,
-            "100.64.0.0/10",
-            "169.254.0.0/16",
-            "192.0.0.0/24",
-            "192.0.2.0/24",
-            "192.88.99.0/24",
-            "198.18.0.0/15",
-            "198.51.100.0/24",
-            "203.0.113.0/24",
-            "224.0.0.0/4",
-            "240.0.0.0/4",
-            "255.255.255.255/32"
+            "100.64.0.0/10", //Shared Address Space(CGNAT) RFC6598
+            "169.254.0.0/16", //Link local RFC3927
+            "192.0.0.0/24", //IETF Protocol Assignments RFC6890
+            "192.0.2.0/24", //Documentation(TEST-NET-1) RFC5737
+            "192.88.99.0/24", //6to4 Relay Anycast RFC3068
+            "198.18.0.0/15", //Benchmarking RFC2544
+            "198.51.100.0/24", //Documentation(TEST-NET-2) RFC5737
+            "203.0.113.0/24", //Documentation(TEST-NET-3) RFC5737
+            "224.0.0.0/4", //Multicast RFC 3171
+            "240.0.0.0/4", //Class E address reserved RFC1112
+            "255.255.255.255/32" //	Limited Broadcast RFC0919
     ));
 
     public static final ArrayList<String> nonTorIPv6 = new ArrayList<>(Arrays.asList(
             /*LAN destinations that shouldn't be routed through Tor*/
             //https://www.rfc-editor.org/rfc/rfc3513.html
-            LOOPBACK_ADDRESS_IPv6, //Loopback Address
-            META_ADDRESS_IPv6, //Unspecified Address
-            "FEC0::/10", //Site-local unicast, equivalent to 10.0.0.0/8, ...
-            "FE80::/10", //Link-local unicast, equivalent to 169.254.0.0/16
-            "FD00::/8" //Unique local address
+            LOOPBACK_ADDRESS_IPv6, //Loopback Address RFC4291
+            META_ADDRESS_IPv6, //Unspecified Address RFC4291
+            "FEC0::/10", //Site-local unicast, equivalent to 10.0.0.0/8 RFC3513
+            "FE80::/10", //Link-local unicast, equivalent to 169.254.0.0/16 RFC4291
+            "FD00::/8" //Unique local address RFC4193
     ));
 
     public static final ArrayList<String> multicastIPv6 = new ArrayList<>(Arrays.asList(

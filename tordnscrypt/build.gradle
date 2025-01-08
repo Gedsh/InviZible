@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-    id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
     id "kotlin-parcelize"
 }
 
@@ -16,7 +16,7 @@ android {
 
         fdroid{
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "6.9.1"
+            versionName "7.0.0"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
@@ -44,7 +44,7 @@ android {
         universal{
             dimension = 'processor'
             resValue 'string', 'appProcVersion', 'universal'
-            versionCode = 4
+            versionCode = 5
 
             ndk {
                 abiFilters 'armeabi-v7a', 'arm64-v8a'
@@ -56,9 +56,9 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 34
-        versionCode 239
+        versionCode 243
 
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar"
+        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar", "nl", "ta"
 
         externalNativeBuild {
             cmake {
@@ -69,7 +69,9 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
+        def buildDate= System.getenv("SOURCE_DATE_EPOCH") == null
+                ? System.currentTimeMillis() : 1000 * Long.parseLong(System.getenv("SOURCE_DATE_EPOCH"))
+        buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + buildDate + "L)"
 
         vectorDrawables.useSupportLibrary = true
     }
@@ -137,10 +139,15 @@ android {
         jvmTarget = '17'
     }
 
-    kapt {
-        javacOptions {
-            option("-Adagger.fastInit=enabled")
-        }
+    ksp {
+        arg("dagger.fastInit", "enabled")
+    }
+
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
     }
 
 }
@@ -157,9 +164,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'androidx.lifecycle:lifecycle-process:2.8.6'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.6'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6'
+    implementation 'androidx.lifecycle:lifecycle-process:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
@@ -172,7 +179,7 @@ dependencies {
 
     //DI
     implementation "com.google.dagger:dagger:$dagger_version"
-    kapt "com.google.dagger:dagger-compiler:$dagger_version"
+    ksp "com.google.dagger:dagger-compiler:$dagger_version"
     //Persistent Work Manager
     implementation "androidx.work:work-runtime-ktx:$work_version"
 }

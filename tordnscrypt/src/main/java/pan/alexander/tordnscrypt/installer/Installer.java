@@ -14,13 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.installer;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -32,7 +33,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +49,8 @@ import pan.alexander.tordnscrypt.modules.ModulesAux;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesVersions;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.root.RootCommands;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
@@ -54,6 +59,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
 import static pan.alexander.tordnscrypt.utils.root.RootExecService.COMMAND_RESULT;
@@ -197,6 +203,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
             }
 
             mainActivity.runOnUiThread(installerUIChanger.showDialogAfterInstallation());
+
+            excludeTorSelfContainingAppsFromTor(mainActivity);
 
 
         } catch (Exception e) {
@@ -520,5 +528,26 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         this.activity = mainActivity;
         this.mainActivity = mainActivity;
         installerUIChanger.setMainActivity(mainActivity);
+    }
+
+    private void excludeTorSelfContainingAppsFromTor(Context context) {
+        try {
+            List<String> packetsWithOwnTor = Arrays.asList(
+                    context.getResources().getStringArray(R.array.contains_own_tor)
+            );
+            List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
+                    .build()
+                    .getInstalledApps();
+            Set<String> uidsContainsOwnTor = new HashSet<>();
+            for (ApplicationData app: installedApps) {
+                if (packetsWithOwnTor.contains(app.getPack())) {
+                    uidsContainsOwnTor.add(String.valueOf(app.getUid()));
+                }
+            }
+            preferenceRepository.get().setStringSetPreference(CLEARNET_APPS, uidsContainsOwnTor);
+            logi("Installer: exclude apps from Tor OK");
+        } catch (Exception e) {
+            loge("Installer excludeTorSelfContainingAppsFromTor", e);
+        }
     }
 }

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -197,9 +197,9 @@ public class VpnRulesHolder {
                 modulesStatus.getTorState() != STOPPED &&
                 !vpnPreferences.getUseIPv6Tor()
                 || fixTTLForPacket
-                //|| packet.dport == PLAINTEXT_DNS_PORT
-                //|| (torIsRunning && redirectToTor)
-                || (vpnPreferences.getUseProxy() && redirectToProxy))
+                || (vpnPreferences.getUseProxy()
+                && (!vpnPreferences.getProxyAddress().equals(LOOPBACK_ADDRESS)
+                || vpnPreferences.getBlockIPv6DnsCrypt())))
                 && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             logi("Block ipv6 " + packet);
         } else if (vpnPreferences.getBlockHttp() && packet.dport == 80
@@ -300,7 +300,8 @@ public class VpnRulesHolder {
             vpn.addUIDtoDNSQueryRawRecords(
                     packet.uid,
                     packet.daddr,
-                    packet.dport,
+                    //Unknown incoming packet or Multicast DNS
+                    (packet.uid == -1 || packet.uid == 0 || packet.uid == 1020) && packet.sport < packet.dport ? packet.sport : packet.dport,
                     packet.saddr,
                     packet.allowed,
                     packet.protocol
@@ -472,18 +473,20 @@ public class VpnRulesHolder {
 
         boolean dnsCryptReady = modulesStatus.isDnsCryptReady();
         boolean torReady = modulesStatus.isTorReady();
-        boolean systemDNSAllowed = modulesStatus.isSystemDNSAllowed();
 
         //If Tor is ready and DNSCrypt is not, app will use Tor Exit node DNS in VPN mode
-        if (dnsCryptState == RUNNING && (dnsCryptReady || !systemDNSAllowed)) {
+        if (dnsCryptState == RUNNING && dnsCryptReady) {
             forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
             if (itpdState == RUNNING) {
                 forwardAddressToITPD(itpdHttpPort, ownUID);
             }
-        } else if (torState == RUNNING && (torReady || !systemDNSAllowed)) {
+        } else if (torState == RUNNING && torReady) {
             forwardDnsToTor(torDNSPort, ownUID);
         } else if (dnsCryptState != STOPPED) {
             forwardDnsToDnsCrypt(dnsCryptPort, ownUID);
+            if (itpdState == RUNNING) {
+                forwardAddressToITPD(itpdHttpPort, ownUID);
+            }
         } else if (torState != STOPPED) {
             forwardDnsToTor(torDNSPort, ownUID);
         } else if (firewallState == STARTING || firewallState == RUNNING) {

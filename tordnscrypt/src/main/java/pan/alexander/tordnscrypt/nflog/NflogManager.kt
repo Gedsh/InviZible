@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.nflog
@@ -165,15 +165,20 @@ class NflogManager @Inject constructor(
 
                 delay(1000)
 
-                nflogShell?.waitForIdle() //Waits for nflog to stop
+                val complete = nflogShell?.waitForIdle() //Waits for nflog to stop
 
-                attempts++
+                if (complete != false) {
+                    attempts++
+                }
 
                 if (nflogActive && attempts < ATTEMPTS_TO_OPEN_NFLOG) {
+                    closeNflogShell()
+                    stopNflogHandlerThread()
                     loge("Attempt ${attempts + 1} to restart Nflog")
                 }
 
             }.onFailure {
+                attempts++
                 loge("NflogManager openNflogShell", it)
             }
         } while (nflogActive && attempts < ATTEMPTS_TO_OPEN_NFLOG)
@@ -229,7 +234,6 @@ class NflogManager @Inject constructor(
                     loge("NflogManager startNfLogHandlerThread", e)
                 } finally {
                     if (nflogShell?.isRunning != true || nflogShell?.isIdle != false) {
-                        nflogShell = null
                         handlerThread?.quitSafely()
                     }
                 }
@@ -242,7 +246,7 @@ class NflogManager @Inject constructor(
 
     private fun getNflogStartCommand(): String = with(pathVars.get()) {
         return "$nflogPath " +
-                "-ouid $appUid " +
+                //"-ouid $appUid " +
                 "-group $NFLOG_GROUP " +
                 "-dport $dnsCryptPort " +
                 "-tport $torDNSPort " +
@@ -327,9 +331,10 @@ class NflogManager @Inject constructor(
     }
 
     private fun readNflogPidFile(): String = try {
-        File(getPidFilePath()).let { file ->
+        val filePath = getPidFilePath()
+        File(filePath).let { file ->
             if (file.isFile) {
-                file.useLines { it.first() }
+                Shell.SU.run("cat $filePath").stdout.first().trim()
             } else {
                 loge("NflogManager was unable to read pid. The file does not exist.")
                 ""

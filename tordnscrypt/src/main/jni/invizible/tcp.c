@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -300,14 +300,32 @@ void check_tcp_socket(const struct arguments *args,
                     // https://tools.ietf.org/html/rfc1929
                     // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
 
+                    bool not_own_uid = s->tcp.uid != own_uid;
+                    bool not_dns_request = ntohs(s->tcp.dest) != 53;
+                    bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, dest);
+                    bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, dest) ||
+                                              str_equal(LOOPBACK_ADDRESS_IPv6, dest));
+
                     bool redirect_to_tor = false;
-                    if (*tor_socks5_addr && tor_socks5_port) {
-                        redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest, s->tcp.dest);
+                    if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+                        && *tor_socks5_addr && tor_socks5_port) {
+                        redirect_to_tor = is_redirect_to_tor(
+                                args,
+                                s->tcp.uid,
+                                dest,
+                                ntohs(s->tcp.dest)
+                        );
                     }
 
                     bool redirect_to_proxy = false;
-                    if (*proxy_socks5_addr && proxy_socks5_port) {
-                        redirect_to_proxy = is_redirect_to_proxy(args, s->tcp.uid, dest, s->tcp.dest);
+                    if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+                        && *proxy_socks5_addr && proxy_socks5_port) {
+                        redirect_to_proxy = is_redirect_to_proxy(
+                                args,
+                                s->tcp.uid,
+                                dest,
+                                ntohs(s->tcp.dest)
+                        );
                     }
 
                     if (redirect_to_tor || redirect_to_proxy) {
@@ -357,7 +375,9 @@ void check_tcp_socket(const struct arguments *args,
                             }
 
                         } else if (s->tcp.socks5 == SOCKS5_CONNECT &&
-                                   bytes == 6 + (s->tcp.version == 4 ? 4 : 16) &&
+                                   (bytes == 6 + (s->tcp.version == 4 ? 4 : 16) ||
+                                    //for IPv4-mapped IPv6 address proxy
+                                    s->tcp.version == 6 && bytes == 6 + 4) &&
                                    buffer[0] == 5) {
                             if (buffer[1] == 0) {
                                 s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -409,10 +429,21 @@ void check_tcp_socket(const struct arguments *args,
                 char socks5_username[127 + 1];
                 char socks5_password[127 + 1];
 
-                bool redirect_to_tor = false;
+                bool not_own_uid = s->tcp.uid != own_uid;
+                bool not_dns_request = ntohs(s->tcp.dest) != 53;
+                bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, dest);
+                bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, dest) ||
+                                          str_equal(LOOPBACK_ADDRESS_IPv6, dest));
 
-                if (*tor_socks5_addr && tor_socks5_port) {
-                    redirect_to_tor = is_redirect_to_tor(args, s->tcp.uid, dest, s->tcp.dest);
+                bool redirect_to_tor = false;
+                if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+                    && *tor_socks5_addr && tor_socks5_port) {
+                    redirect_to_tor = is_redirect_to_tor(
+                            args,
+                            s->tcp.uid,
+                            dest,
+                            ntohs(s->tcp.dest)
+                    );
                 }
 
                 if (*proxy_socks5_addr && proxy_socks5_port && !redirect_to_tor) {
@@ -1115,14 +1146,22 @@ int open_tcp_socket(const struct arguments *args,
     struct sockaddr_in6 addr6;
     if (redirect == NULL) {
 
+        bool not_own_uid = cur->uid != own_uid;
+        bool not_dns_request = ntohs(cur->dest) != 53;
+        bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, dest);
+        bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, dest) ||
+                                  str_equal(LOOPBACK_ADDRESS_IPv6, dest));
+
         bool redirect_to_tor = false;
-        if (*tor_socks5_addr && tor_socks5_port) {
-            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest, cur->dest);
+        if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+            && *tor_socks5_addr && tor_socks5_port) {
+            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest, ntohs(cur->dest));
         }
 
         bool redirect_to_proxy = false;
-        if (*proxy_socks5_addr && proxy_socks5_port) {
-            redirect_to_proxy = is_redirect_to_proxy(args,  cur->uid, dest, cur->dest);
+        if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+            && *proxy_socks5_addr && proxy_socks5_port) {
+            redirect_to_proxy = is_redirect_to_proxy(args, cur->uid, dest, ntohs(cur->dest));
         }
 
         if (redirect_to_tor) {
@@ -1150,6 +1189,10 @@ int open_tcp_socket(const struct arguments *args,
                 addr4.sin_family = AF_INET;
                 inet_pton(AF_INET, proxy_socks5_addr, &addr4.sin_addr);
                 addr4.sin_port = htons(proxy_socks5_port);
+            } else if (strcmp(proxy_socks5_addr, LOOPBACK_ADDRESS) == 0) {
+                addr6.sin6_family = AF_INET6;
+                inet_pton(AF_INET6, LOOPBACK_ADDRESS_MAPPED_IPv6, &addr6.sin6_addr);
+                addr6.sin6_port = htons(proxy_socks5_port);
             } else {
                 addr6.sin6_family = AF_INET6;
                 inet_pton(AF_INET6, proxy_socks5_addr, &addr6.sin6_addr);
@@ -1189,7 +1232,7 @@ int open_tcp_socket(const struct arguments *args,
                                    ? sizeof(struct sockaddr_in)
                                    : sizeof(struct sockaddr_in6)));
     if (err < 0 && errno != EINPROGRESS) {
-        log_android(ANDROID_LOG_ERROR, "connect error %d: %s", errno, strerror(errno));
+        log_android(ANDROID_LOG_ERROR, "TCP connect error %d: %s", errno, strerror(errno));
         return -1;
     }
 

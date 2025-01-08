@@ -1247,3 +1247,42 @@
 * Updated Tor Snowflake bridge to version 2.10.1.
 * Fixed LAN rules handling for firewall.
 * Updated translations.
+
+**InviZible Pro beta 2.4.0**
+* Improved Tor Obfs4 bridges censorship resistance.
+* Updated Tor SnowFlake bridge stun servers.
+* Various fixes and optimisations.
+
+**InviZible Pro beta 2.4.1**
+* Display the destination port in real-time logs.
+* Socks5 proxy fixes and improvements.
+* Improved handling of local networks.
+* Tor Browser, OnionShare, Orbot, Briar, Cwtch are excluded from Tor by default as they contain their own Tor instance.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.4.2**
+* Added IGMP protocol logging in real-time logs.
+* Optimized performance and battery usage in VPN mode.
+* Various fixes for Root mode.
+* Added Dutch translation.
+* Updated Polish, Portuguese (Brazil), Persian and Spanish translations.
+
+**InviZible Pro beta 2.4.3**
+* Added x86_64 version for ChromeOS and emulators.
+* Updated Tor.
+* Updated Purple I2P to version 2.55.0.
+* Updated default DNSCrypt servers.
+* Optimized performance in VPN mode.
+* Added Tamil translation.
+* Updated Japanese, Chinese and Dutch translations.
+* Fixes and optimizations.
+
+**InviZible Pro stable 7.0.0**
+* Updated Purple I2P to version 2.55.0.
+* Added x86_64 version for ChromeOS and emulators.
+* Improved Tor Obfs4 bridges censorship resistance.
+* Optimized performance and battery usage in VPN mode.
+* Display the destination port in real-time logs.
+* Socks5 proxy fixes and improvements.
+* Added Dutch and Tamil translations.
+* Various fixes and optimisations.

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2024 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -63,6 +63,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesService.DEFAULT_NOTIFICAT
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
+import static pan.alexander.tordnscrypt.utils.enums.VPNCommand.STOP;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -115,16 +116,18 @@ public class ServiceVPNHandler extends Handler {
         if (cmd != null) {
             msg.what = cmd.ordinal();
             removeMessages(msg.what);
-            sendMessage(msg);
+            if (cmd != STOP) {
+                sendMessage(msg);
+            } else {
+                sendMessageDelayed(msg, 1000);
+            }
         }
     }
 
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
-            //synchronized (serviceVPN) {
             handleIntent((Intent) msg.obj);
-            //}
         } catch (Throwable ex) {
             loge("ServiceVPNHandler handleMessage", ex, true);
         }
