@@ -1276,3 +1276,13 @@
 * Added Tamil translation.
 * Updated Japanese, Chinese and Dutch translations.
 * Fixes and optimizations.
+
+**InviZible Pro stable 7.0.0**
+* Updated Purple I2P to version 2.55.0.
+* Added x86_64 version for ChromeOS and emulators.
+* Improved Tor Obfs4 bridges censorship resistance.
+* Optimized performance and battery usage in VPN mode.
+* Display the destination port in real-time logs.
+* Socks5 proxy fixes and improvements.
+* Added Dutch and Tamil translations.
+* Various fixes and optimisations.
