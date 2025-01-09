@@ -555,4 +555,7 @@
     <string name="total_rules">总计：%d条规则</string>
     <string name="dns_rule_replace_remote_list">替换远程列表</string>
     <string name="dns_rule_replace_local_list">替换本地列表</string>
+    <string name="pref_common_always_on_vpn_summ">为 InviZible Pro 启用 “始终开启 VPN ”和 “阻止没有 VPN 的连接”，以便在应用不运行时阻止网络连接</string>
+    <string name="proxy_use_for_non_tor">对绕过 Tor 的应用使用代理</string>
+    <string name="helper_tor_check_proxy">您已配置使用 Socks5 代理，但代理似乎没有运行。请检查您的设置！</string>
 </resources>
