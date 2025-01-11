@@ -110,7 +110,7 @@
     <string name="pref_fast_through_tor_update_summ">"Vérifier les mises à jour uniquement via Tor et lorsque Tor est en fonctionnement"</string>
     <string name="pref_common_categ_run_with_root">"Utiliser les privilèges Administrateurs"</string>
     <string name="pref_common_run_with_root">"Faire fonctionner les modules avec les Privilèges Administrateurs"</string>
-    <string name="pref_common_run_with_root_summ">"Utiliser les privilèges Administrateurs pour DNSCrypt, Tor, I2P "</string>
+    <string name="pref_common_run_with_root_summ">Utiliser les privilèges Administrateurs pour les modules DNSCrypt, Tor, I2P. L\'activation de cette fonctionnalité laisse les modules non gérés et peut entraîner des problèmes de connexion !</string>
     <string name="pref_common_categ_other">"Autre"</string>
     <string name="pref_common_block_http">"Bloquer l'http sur les POINTS D'ACCÈS"</string>
     <string name="pref_common_block_http_summ">"Refuser la connexion au port http 80 sur les POINTS D'ACCÈS"</string>
@@ -119,7 +119,7 @@
     <string name="pref_common_refresh_rules_summ">"Mettre à jour les règles à chaque changement de connectivité"</string>
     <string name="pref_common_show_notification">"Afficher la notification"</string>
     <string name="pref_common_wakelock">"Empêcher la mise en veille de l'appareil"</string>
-    <string name="pref_common_wakelock_summ">Ne pas laisser l\'appareil passer en mode veille. Peut être utile lors de l\'utilisation de HOTSPOT. Peut décharger la batterie</string>
+    <string name="pref_common_wakelock_summ">Ne pas laisser l\'appareil passer en mode veille. Peut être utile lors de l\'utilisation de Point d\'accès. Peut décharger la batterie !</string>
     <string name="pref_common_show_help">"Messages d'aide"</string>
     <string name="pref_common_show_help_summ">Afficher tous les messages qui ont été marqués comme non autorisés à être affichés</string>
     <string name="pref_common_notification_helper">"Veuillez exclure InviZible Pro de l\'optimisation de la batterie d\'Android. Sinon, le système tuera les services DNSCrypt, Tor ou I2P à n\'importe quel moment. Sur les systèmes spécifiques, comme MIUI, cela nécessite quelques mesures supplémentaires"</string>
@@ -554,4 +554,6 @@
     <string name="dns_rule_add_local_list">Ajouter une liste locale</string>
     <string name="pull_to_refresh">↓ Tirer pour rafraîchir ↓</string>
     <string name="pref_tor_nodes_categ">Nœuds</string>
+    <string name="helper_tor_check_proxy">Vous avez configuré l\'utilisation du proxy Socks5, mais le proxy ne semble pas fonctionner. S\'il vous plaît vérifier vos paramètres !</string>
+    <string name="proxy_use_for_non_tor">Utiliser un proxy pour les applications qui contournent Tor</string>
 </resources>
