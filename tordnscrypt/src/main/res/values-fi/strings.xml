@@ -318,7 +318,7 @@
     <string name="update_over_three_activations">"Näyttää siltä, ​​että olet aktivoinut 3 InviZible-kopiota tällä koodilla. Jos et, ota yhteyttä kehittäjään."</string>
     <string name="update_wrong_code">"Näyttää siltä, ​​että PRO-koodisi on väärä. Ota yhteyttä kehittäjään."</string>
     <string name="update_over_five_times">"Tarkistit InviZible Pro -päivitykset yli 5 kertaa päivässä. Yritä uudelleen myöhemmin."</string>
-    <string name="verifier_error">"Näyttää siltä, ​​että tämä  on epävirallinen InviZible-versio. Ole varovainen!"</string>
+    <string name="verifier_error">Näyttää siltä, että tämä on epävirallinen InviZible-versio. Ole varovainen!</string>
     <string name="only_for_pro">"Vain PRO-versiolle"</string>
     <string name="donate">"Lahjoita"</string>
     <string name="donate_project">"InviZible Pro -projekti tarvitsee apuasi. Ole hyvä ja käy lahjoittajasivulla tai kirjoita vastaanotettu rekisteröintikoodisi."</string>
