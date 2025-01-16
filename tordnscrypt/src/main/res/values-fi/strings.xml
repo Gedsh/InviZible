@@ -110,7 +110,7 @@
     <string name="pref_fast_through_tor_update_summ">"Tarkista päivityksiä vain Tor:lla ja kun se on päällä"</string>
     <string name="pref_common_categ_run_with_root">"Käytä root oikeuksia"</string>
     <string name="pref_common_run_with_root">"Suorita moduulit rootilla"</string>
-    <string name="pref_common_run_with_root_summ">"Käytä root oikeuksia DNSCryptiin, Tor:in ja I2P:n."</string>
+    <string name="pref_common_run_with_root_summ">Käytä pääoikeuksia DNSCrypt-, Tor- ja I2P-moduuleille. Tämän ominaisuuden ottaminen käyttöön jättää moduulit hallitsemattomiksi ja saattaa aiheuttaa yhteysongelmia!</string>
     <string name="pref_common_categ_other">"Muut"</string>
     <string name="pref_common_block_http">"Estä HOTSPOT http"</string>
     <string name="pref_common_block_http_summ">"Estä yhteys HOTSPOT http-porttiin 80"</string>
@@ -119,7 +119,7 @@
     <string name="pref_common_refresh_rules_summ">"Päivitä säännöt jokaisella yhteyden muutoksella"</string>
     <string name="pref_common_show_notification">"Näytä ilmoitus"</string>
     <string name="pref_common_wakelock">"Estä laitetta menemästä lepotilaan"</string>
-    <string name="pref_common_wakelock_summ">Lisäsuojaus ilman Root-tilaa, jotta android ei sulje sovellusta. Saattaa tyhjentää akkua</string>
+    <string name="pref_common_wakelock_summ">Älä anna laitteen pudota torkkutilaan. Siitä saattaa olla hyötyä, kun käytät HOTSPOTia. Tyhjentää akun!</string>
     <string name="pref_common_show_help">"Ohjeviestit"</string>
     <string name="pref_common_show_help_summ">Näytä ohjeviestit aina</string>
     <string name="pref_common_notification_helper">"Ota InviZible Pro pois Android-akun optimoinnista. Muuten android sulkee DNSCryptin, Tor:in tai I2P:n milloin tahansa. Erityisissä järjestelmissä, kuten MIUI, vaati joitain lisävaiheita."</string>
@@ -215,7 +215,7 @@
     <string name="pref_tor_strict_nodes_summ">"Jos StrictNodes on käytössä, Tor käsittelee yksinomaan ExcludeNodes-vaihtoehdon vaatimuksena noudattaa kaikkia luomiasi piirejä, vaikka sen tekeminen rikkoisi toiminnallisuutesi."</string>
     <string name="pref_tor_fascist_firewall_summ">"Jos tämä on käytössä, Tor luo vain lähtevät yhteydet OR:iin, jotka toimivat palomuurin sallimissa porteissa (oletusasetukset 80 ja 443)."</string>
     <string name="pref_tor_new_circuit_period_summ">"Harkitaan uuden piirin rakentamista joka NUM sekunti."</string>
-    <string name="pref_tor_max_circuit_dirtiness_summ">"Voit käyttää uudestaan ​​piiriä, jota käytettiin ensin korkeintaan NUM sekuntia sitten, mutta älä koskaan kiinnitä uutta virtaa piiriin, joka on liian vanha."</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">Voit vapaasti käyttää uudelleen piiriä, jota käytettiin ensimmäisen kerran korkeintaan NUM sekuntia sitten, mutta älä koskaan liitä uutta virtaa liian vanhaan piiriin.</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Jos tämä on käytössä, Tor ei aseta kahta palvelinta, joiden IP-osoitteet ovat liian lähellä samaa piiriä. Tällä hetkellä kaksi osoitetta on liian lähellä, jos ne sijaitsevat samalla / 16 alueella."</string>
     <string name="pref_tor_enable_SOCKS_proxy">"Ota SOCKS-proxy käyttöön"</string>
     <string name="pref_tor_SOCKS_port_summ">"Avaa tämä portti kuunnellaksesi yhteyksiä SOCKSia puhuvista sovelluksista."</string>
@@ -277,11 +277,11 @@
     <string name="pref_itpd_addressbook_subscriptions_summ">"Osoitekirjatilausten (AddressBook) URL-osoitteet."</string>
     <string name="pref_itpd_not_exist">"Preferenssiä ei ole i2pd.conf!"</string>
     <string name="helper_dialog_title">"Tietoja"</string>
-    <string name="helper_dnscrypt_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki DNSCryptin. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
-    <string name="helper_tor_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki Tor:in. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!"</string>
-    <string name="helper_itpd_stopped">"Näyttää siltä, ​​että android-järjestelmä sulki I2P:n. Tarkista laitteen asetukset!"</string>
-    <string name="helper_dnscrypt_no_internet">"Näyttää siltä, ​​että DNSCrypt EI voi muodostaa yhteyttä Internetiin."</string>
-    <string name="helper_tor_use_bridges">"Näyttää siltä, ​​että Tor EI voi muodostaa yhteyttä Internetiin. Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat"</string>
+    <string name="helper_dnscrypt_stopped">Näyttää siltä, että Android-järjestelmä sulki DNSCryptin. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!</string>
+    <string name="helper_tor_stopped">Näyttää siltä, että Android-järjestelmä sulki Tor:in. Internet-yhteytesi palautettiin. Tarkista laitteen asetukset!!</string>
+    <string name="helper_itpd_stopped">Näyttää siltä, että Android-järjestelmä sulki I2P:n. Tarkista laitteen asetukset!</string>
+    <string name="helper_dnscrypt_no_internet">Näyttää siltä, että DNSCrypt ei saa yhteyttä Internetiin. Voit yrittää valita toisen DNSCrypt-palvelimen. Löydät ne kohdasta MENU -&gt; Pika-asetukset -&gt; Valitse DNSCrypt-palvelimet</string>
+    <string name="helper_tor_use_bridges">Näyttää siltä, että Tor EI voi muodostaa yhteyttä Internetiin. Internet-palveluntarjoaja voi/saattaa estää Tor-yhteydet. Voit yrittää käyttää torisiltoja. Löydä ne valikosta MENU -&gt; Pika-asetukset -&gt; Sillat</string>
     <string name="action_mode_child_lock">"Lapsilukko"</string>
     <string name="action_mode_dialog_message_lock">"Voit lukita tämän sovelluksen hallinnan. Anna salasana tai käytä edellistä."</string>
     <string name="action_mode_dialog_message_unlock">"Anna salasana."</string>
@@ -315,8 +315,8 @@
     <string name="update_last_check">"Viimeinen tarkistus:"</string>
     <string name="update_found">"Päivityksiä löytyi."</string>
     <string name="update_installed">"Päivitykset asennettiin."</string>
-    <string name="update_over_three_activations">"Näyttää siltä, ​​että olet aktivoinut 3 InviZible-kopiota tällä koodilla. Jos et, ota yhteyttä kehittäjään."</string>
-    <string name="update_wrong_code">"Näyttää siltä, ​​että PRO-koodisi on väärä. Ota yhteyttä kehittäjään."</string>
+    <string name="update_over_three_activations">Näyttää siltä, että olet jo aktivoinut kolme kopiota InviZiblesta tällä koodilla. Jos se on väärin, ota yhteyttä kehittäjään.</string>
+    <string name="update_wrong_code">Näyttää siltä, että PRO-koodisi on väärä. Ota yhteyttä kehittäjään.</string>
     <string name="update_over_five_times">"Tarkistit InviZible Pro -päivitykset yli 5 kertaa päivässä. Yritä uudelleen myöhemmin."</string>
     <string name="verifier_error">Näyttää siltä, että tämä on epävirallinen InviZible-versio. Ole varovainen!</string>
     <string name="only_for_pro">"Vain PRO-versiolle"</string>
@@ -468,7 +468,7 @@
     <string name="btnResetSettings">"Reset Settings"</string>
     <string name="backupSaved">"Backup saved"</string>
     <string name="backupRestored">"Backup restored"</string>
-    <string name="thanks_for_donate_gp">"InviZible Pro -projekti ja sen tekijä ilmaisee arvostustaan apuasi varten."</string>
+    <string name="thanks_for_donate_gp">InviZible Pro Project ja sen tekijä kiittävät avusta!</string>
     <string name="pref_tor_hardware_accel_summ">"Try to use built-in crypto hardware acceleration when available."</string>
     <string name="notification_connecting">"Connecting…"</string>
     <string name="notification_waiting_network">"Waiting for network…"</string>
