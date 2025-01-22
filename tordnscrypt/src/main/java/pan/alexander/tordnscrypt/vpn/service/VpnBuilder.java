@@ -63,12 +63,11 @@ import android.net.IpPrefix;
 import android.os.Build;
 import android.text.TextUtils;
 
-import androidx.annotation.RequiresApi;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -84,6 +83,7 @@ import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.dns_resolver.DnsInteractor;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.vpn.IPUtil;
 import pan.alexander.tordnscrypt.vpn.Rule;
@@ -118,27 +118,8 @@ public class VpnBuilder {
     BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = defaultPreferences.get();
         boolean lan = prefs.getBoolean(BYPASS_LAN, true);
-        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
-        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
-        boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
-        boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
-        boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
-        Set<String> setVpnBypassApps = preferenceRepository.get().getStringSetPreference(APPS_BYPASS_VPN);
-        boolean useProxy = prefs.getBoolean(USE_PROXY, false);
-        if (useProxy && (prefs.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS).isEmpty()
-                || prefs.getString(PROXY_PORT, DEFAULT_PROXY_PORT).isEmpty())) {
-            useProxy = false;
-        }
-        boolean compatibilityMode;
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
-            compatibilityMode = true;
-        } else {
-            compatibilityMode = defaultPreferences.get().getBoolean(COMPATIBILITY_MODE, false);
-        }
-
-        boolean torIsRunning = modulesStatus.getTorState() == RUNNING
-                || modulesStatus.getTorState() == STARTING
-                || modulesStatus.getTorState() == RESTARTING;
+        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                && !modulesStatus.isUseModulesWithRoot();
 
         // Build VPN service
         BuilderVPN builder = new BuilderVPN(vpn);
@@ -150,9 +131,6 @@ public class VpnBuilder {
 
         // VPN address
         String vpn4 = prefs.getString("vpn4", "10.1.10.1");
-        if (vpn4 == null) {
-            vpn4 = "10.1.10.1";
-        }
         logi("VPN Using VPN4=" + vpn4);
         builder.addAddress(vpn4, 32);
 
@@ -166,9 +144,37 @@ public class VpnBuilder {
             builder.addDnsServer(dns);
         }
 
-        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
-                && !modulesStatus.isUseModulesWithRoot();
+        addIPv4Routes(builder, lan, fixTTL);
+        addIPv6Routes(builder, lan);
 
+        // MTU
+        int mtu = vpn.jni_get_mtu();
+        logi("VPN MTU=" + mtu);
+        builder.setMtu(mtu);
+
+        // Add list of allowed applications
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            manageAppsTunneling(builder, listRule, fixTTL);
+        }
+
+        builder.setConfigureIntent(getConfigureIntent());
+
+        return builder;
+    }
+
+    private void addIPv4Routes(BuilderVPN builder, boolean lan, boolean fixTTL) {
+        boolean firewallEnabled = preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
+        boolean apIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
+        boolean modemIsOn = preferenceRepository.get().getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
+        boolean compatibilityMode;
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            compatibilityMode = true;
+        } else {
+            compatibilityMode = defaultPreferences.get().getBoolean(COMPATIBILITY_MODE, false);
+        }
+        boolean torIsRunning = modulesStatus.getTorState() == RUNNING
+                || modulesStatus.getTorState() == STARTING
+                || modulesStatus.getTorState() == RESTARTING;
 
         List<IPUtil.CIDR> listExclude = new ArrayList<>();
         if (!firewallEnabled || compatibilityMode || fixTTL) {
@@ -188,21 +194,18 @@ public class VpnBuilder {
         if (lan) {
             listExclude.add(new IPUtil.CIDR("224.0.0.0", 4)); // Multicast
         }
-        // Subnet routing
+
+        Collections.sort(listExclude);
+
         if (!listExclude.isEmpty()) {
-
-            // Exclude IP ranges
-            Collections.sort(listExclude);
-
             try {
                 InetAddress start = InetAddress.getByName(META_ADDRESS);
                 for (IPUtil.CIDR exclude : listExclude) {
-                    //logi("Exclude " + exclude.getStart().getHostAddress() + "..." + exclude.getEnd().getHostAddress());
                     for (IPUtil.CIDR include : IPUtil.toCIDR(start, IPUtil.minus1(exclude.getStart())))
                         try {
                             builder.addRoute(include.address, include.prefix);
                         } catch (Throwable ex) {
-                            loge("VPNBuilder", ex, true);
+                            loge("VPNBuilder addIPv4Routes", ex, true);
                         }
                     start = IPUtil.plus1(exclude.getEnd());
                 }
@@ -211,91 +214,115 @@ public class VpnBuilder {
                     try {
                         builder.addRoute(include.address, include.prefix);
                     } catch (Throwable ex) {
-                        loge("VPNBuilder", ex, true);
+                        loge("VPNBuilder addIPv4Routes", ex, true);
                     }
             } catch (UnknownHostException ex) {
-                loge("VPNBuilder", ex, true);
+                loge("VPNBuilder addIPv4Routes", ex, true);
             }
         } else {
             builder.addRoute(META_ADDRESS, 0);
+        }
+    }
+
+    private void addIPv6Routes(BuilderVPN builder, boolean lan) {
+        SharedPreferences prefs = defaultPreferences.get();
+        boolean blockIPv6DnsCrypt = prefs.getBoolean(DNSCRYPT_BLOCK_IPv6, false);
+        boolean useIPv6Tor = prefs.getBoolean(TOR_USE_IPV6, true);
+        boolean captivePortal = false;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            captivePortal = NetworkChecker.isCaptivePortalDetected(context);
         }
 
         if (lan && (!(blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED)
                 || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED
                 && modulesStatus.getTorState() != STOPPED)) {
-
-            builder.addRoute("::", 0);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                excludeIPv6Multicast(builder);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && captivePortal) {
+                try {
+                    builder.addRoute("::", 0);
+                    for (String line: multicastIPv6) {
+                        String address;
+                        int prefix;
+                        if (line.contains("/")) {
+                            address = line.substring(0, line.indexOf("/"));
+                            prefix = Integer.parseInt(line.substring(line.indexOf("/") + 1));
+                        } else {
+                            address = line;
+                            prefix = 128;
+                        }
+                        try {
+                            builder.excludeRoute(new IpPrefix(InetAddress.getByName(address), prefix));
+                        } catch (Exception e) {
+                            loge("VPNBuilder addIPv6Routes", e);
+                        }
+                    }
+                } catch (Exception e) {
+                    loge("VPNBuilder addIPv6Routes", e);
+                }
+            } else {
+                //https://datatracker.ietf.org/doc/html/rfc4291
+                //Exclude "ff00::/8" Multicast
+                final List<String> multicastExcluded = new ArrayList<>(Arrays.asList(
+                        "::/1",
+                        "8000::/2",
+                        "c000::/3",
+                        "e000::/4",
+                        "f000::/5",
+                        "f800::/6",
+                        "fc00::/7",
+                        "fe00::/8"
+                ));
+                for (String route : multicastExcluded) {
+                    String[] address = route.split("/");
+                    try {
+                        builder.addRoute(address[0], Integer.parseInt(address[1]));
+                    } catch (Exception e) {
+                        loge("VPNBuilder addIPv6Routes", e);
+                    }
+                }
             }
         } else {
             builder.addRoute("::", 0);
         }
+    }
 
-        // MTU
-        int mtu = vpn.jni_get_mtu();
-        logi("VPN MTU=" + mtu);
-        builder.setMtu(mtu);
-
-        // Add list of allowed applications
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-
-            try {
-                builder.addDisallowedApplication(context.getPackageName());
-                for (String pack: setVpnBypassApps) {
-                    builder.addDisallowedApplication(pack);
-                    logi("VPN Not routing " + pack);
-                }
-            } catch (PackageManager.NameNotFoundException ex) {
-                loge("VPNBuilder", ex, true);
+    private void manageAppsTunneling(BuilderVPN builder, List<Rule> listRule, boolean fixTTL) {
+        SharedPreferences prefs = defaultPreferences.get();
+        Set<String> setVpnBypassApps = preferenceRepository.get().getStringSetPreference(APPS_BYPASS_VPN);
+        boolean useProxy = prefs.getBoolean(USE_PROXY, false);
+        if (useProxy && (prefs.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS).isEmpty()
+                || prefs.getString(PROXY_PORT, DEFAULT_PROXY_PORT).isEmpty())) {
+            useProxy = false;
+        }
+        try {
+            builder.addDisallowedApplication(context.getPackageName());
+            for (String pack: setVpnBypassApps) {
+                builder.addDisallowedApplication(pack);
+                logi("VPN Not routing " + pack);
             }
+        } catch (PackageManager.NameNotFoundException ex) {
+            loge("VPNBuilder", ex, true);
+        }
 
-            if (fixTTL) {
-                builder.setFixTTL(true);
+        if (fixTTL) {
+            builder.setFixTTL(true);
 
-                if (!useProxy) {
-                    for (Rule rule : listRule) {
-                        try {
-                            //logi("VPN Not routing " + rule.packageName);
-                            builder.addDisallowedApplication(rule.packageName);
-                        } catch (PackageManager.NameNotFoundException ex) {
-                            loge("VPNBuilder", ex, true);
-                        }
-                    }
-                } else {
+            if (!useProxy) {
+                for (Rule rule : listRule) {
                     try {
-                        builder.addDisallowedApplication(context.getPackageName());
+                        //logi("VPN Not routing " + rule.packageName);
+                        builder.addDisallowedApplication(rule.packageName);
                     } catch (PackageManager.NameNotFoundException ex) {
                         loge("VPNBuilder", ex, true);
                     }
                 }
-
-            }
-
-        }
-
-        builder.setConfigureIntent(getConfigureIntent());
-
-        return builder;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
-    private void excludeIPv6Multicast(BuilderVPN builder) {
-        try {
-            for (String line: multicastIPv6) {
-                String address;
-                int prefix;
-                if (line.contains("/")) {
-                    address = line.substring(0, line.indexOf("/"));
-                    prefix = Integer.parseInt(line.substring(line.indexOf("/") + 1));
-                } else {
-                    address = line;
-                    prefix = 128;
+            } else {
+                try {
+                    builder.addDisallowedApplication(context.getPackageName());
+                } catch (PackageManager.NameNotFoundException ex) {
+                    loge("VPNBuilder", ex, true);
                 }
-                builder.excludeRoute(new IpPrefix(InetAddress.getByName(address), prefix));
             }
-        } catch (Exception e) {
-            loge("VPNBuilder", e);
+
         }
     }
 

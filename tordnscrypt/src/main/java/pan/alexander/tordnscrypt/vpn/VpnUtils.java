@@ -96,7 +96,8 @@ public class VpnUtils {
             "FF02::FB", //mDNS .local resolution A12
             //https://datatracker.ietf.org/doc/html/rfc8415
             "FF02::1:2", //All_DHCP_Relay_Agents_and_Servers
-            "FF05::1:3" //All_DHCP_Servers
+            "FF05::1:3", //All_DHCP_Servers
+            "FF02::16" // MLD rfc2710
     ));
 
     public static final ArrayList<String> dnsRebindList = new ArrayList<>(Arrays.asList(

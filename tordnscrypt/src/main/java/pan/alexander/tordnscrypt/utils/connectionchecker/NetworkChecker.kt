@@ -359,6 +359,7 @@ object NetworkChecker {
         }
 
 
+    @JvmStatic
     @RequiresApi(Build.VERSION_CODES.M)
     fun isCaptivePortalDetected(context: Context): Boolean =
         try {
