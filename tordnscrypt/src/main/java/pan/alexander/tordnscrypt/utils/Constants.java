@@ -76,6 +76,11 @@ public interface Constants {
     String QUAD_DNS_61 = "2620:fe::fe";
     String QUAD_DNS_62 = "2620:fe::9";
 
+    String C_DNS_41 = "1.1.1.1";
+    String C_DNS_42 = "1.0.0.1";
+    String C_DNS_61 = "2606:4700:4700::1111";
+    String C_DNS_62 = "2606:4700:4700::1001";
+
     String QUAD_DOH_SERVER = "https://dns.quad9.net/dns-query";
 
     String TOR_BROWSER_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0";

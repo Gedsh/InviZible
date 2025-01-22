@@ -20,6 +20,10 @@
 package pan.alexander.tordnscrypt.vpn.service;
 
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.Constants.C_DNS_41;
+import static pan.alexander.tordnscrypt.utils.Constants.C_DNS_42;
+import static pan.alexander.tordnscrypt.utils.Constants.C_DNS_61;
+import static pan.alexander.tordnscrypt.utils.Constants.C_DNS_62;
 import static pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
@@ -415,7 +419,16 @@ public class VpnBuilder {
         vpnDnsSet.add(G_DNS_61);
         vpnDnsSet.add(G_DNS_62);
 
-        if (vpnDns1.equals(QUAD_DNS_41) || vpnDns1.equals(QUAD_DNS_42)) {
+        vpnDnsSet.add(C_DNS_41);
+        vpnDnsSet.add(C_DNS_42);
+        vpnDnsSet.add(C_DNS_61);
+        vpnDnsSet.add(C_DNS_62);
+
+        if (vpnDns1.equals(QUAD_DNS_41) || vpnDns1.equals(QUAD_DNS_42)
+                || vpnDns1.equals(QUAD_DNS_61) || vpnDns1.equals(QUAD_DNS_62)
+                || vpnDns2.equals(QUAD_DNS_41) || vpnDns2.equals(QUAD_DNS_42)
+                || vpnDns2.equals(QUAD_DNS_61) || vpnDns2.equals(QUAD_DNS_62)
+        ) {
             vpnDnsSet.add(QUAD_DNS_41);
             vpnDnsSet.add(QUAD_DNS_42);
             vpnDnsSet.add(QUAD_DNS_61);
