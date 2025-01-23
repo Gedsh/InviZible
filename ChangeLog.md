@@ -1179,7 +1179,7 @@
 * Updated Purple I2P to version 2.53.1.
 * Updated German, Bulgarian, Chinese, Polish, Arabic, Persian and Portuguese (Brazil) translations.
 * Fixed using socks5 proxy with authentication.
-* A lot of minor fixes and optimisations.
+* A lot of minor fixes and optimizations.
 
 **InviZible Pro beta 2.3.2**
 * Updated Tor.
@@ -1210,7 +1210,7 @@
 * Improvements and fixes for standalone firewall operation.
 * Improvements for the firewall in root mode for Android versions above 5.
 * Removed the Fastly rendezvous of the Tor snowflake bridge.
-* Minor fixes and optimisations.
+* Minor fixes and optimizations.
 
 **InviZible Pro beta 2.3.7**
 * Updated Tor to version 4.8.13.
@@ -1251,7 +1251,7 @@
 **InviZible Pro beta 2.4.0**
 * Improved Tor Obfs4 bridges censorship resistance.
 * Updated Tor SnowFlake bridge stun servers.
-* Various fixes and optimisations.
+* Various fixes and optimizations.
 
 **InviZible Pro beta 2.4.1**
 * Display the destination port in real-time logs.
@@ -1285,4 +1285,12 @@
 * Display the destination port in real-time logs.
 * Socks5 proxy fixes and improvements.
 * Added Dutch and Tamil translations.
-* Various fixes and optimisations.
+* Various fixes and optimizations.
+
+**InviZible Pro beta 2.4.4**
+* Updated DNSCrypt to version 2.1.7.
+* Updated Tor obfuscators: WebTunnel, Lyrebird, SnowFlake.
+* Improved IPv6 handling in VPN mode.
+* Fixed round monochrome icon.
+* Updated Dutch, Chinese, French and Finnish translations.
+* Fixes and optimizations.
