@@ -27,7 +27,9 @@ import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
+import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED;
@@ -110,6 +112,11 @@ public final class ModulesStatus {
             this.firewallState = firewallState;
         } else {
             this.firewallState = STOPPED;
+        }
+        if (this.firewallState == RUNNING) {
+            ModulesAux.saveFirewallStateRunning(true);
+        } else if (this.firewallState == STOPPING || this.firewallState == STOPPED) {
+            ModulesAux.saveFirewallStateRunning(false);
         }
     }
 
