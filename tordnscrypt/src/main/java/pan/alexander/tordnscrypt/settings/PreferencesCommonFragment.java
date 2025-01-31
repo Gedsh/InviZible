@@ -72,6 +72,7 @@ import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorF
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Utils.isInteractAcrossUsersPermissionGranted;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_ON_VPN;
@@ -214,7 +215,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         Preference multiUser = findPreference(MULTI_USER_SUPPORT);
         if (otherCategory != null && multiUser != null) {
-            if (modulesStatus.getMode() == PROXY_MODE) {
+            if (modulesStatus.getMode() == VPN_MODE && !isInteractAcrossUsersPermissionGranted(activity)
+                    || modulesStatus.getMode() == PROXY_MODE) {
                 otherCategory.removePreference(multiUser);
             } else {
                 multiUser.setOnPreferenceChangeListener(this);

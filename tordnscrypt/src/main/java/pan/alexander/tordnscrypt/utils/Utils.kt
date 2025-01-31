@@ -359,7 +359,8 @@ object Utils {
         }
     }
 
-    private fun isInteractAcrossUsersPermissionGranted(context: Context) =
+    @JvmStatic
+    public fun isInteractAcrossUsersPermissionGranted(context: Context) =
         ContextCompat.checkSelfPermission(
             context,
             "android.permission.INTERACT_ACROSS_USERS"

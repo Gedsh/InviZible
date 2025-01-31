@@ -32,10 +32,12 @@ import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
+import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Utils.allowInteractAcrossUsersPermissionIfRequired
 import pan.alexander.tordnscrypt.utils.Utils.getUidForName
+import pan.alexander.tordnscrypt.utils.Utils.isInteractAcrossUsersPermissionGranted
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -82,7 +84,7 @@ class InstalledApplicationsManager private constructor(
 
         try {
 
-            if (multiUserSupport) {
+            if (multiUserSupport && ModulesStatus.getInstance().isRootAvailable) {
                 allowInteractAcrossUsersPermissionIfRequired(context, pathVars)
             }
 
@@ -91,7 +93,9 @@ class InstalledApplicationsManager private constructor(
             val userUids = arrayListOf<Int>()
             val packageManager: PackageManager = context.packageManager
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && multiUserSupport) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+                && multiUserSupport
+                && isInteractAcrossUsersPermissionGranted(context)) {
                 val userService = context.getSystemService(Context.USER_SERVICE) as UserManager
                 val list = userService.userProfiles
 
@@ -112,13 +116,11 @@ class InstalledApplicationsManager private constructor(
 
             var pkgManagerFlags = PackageManager.GET_META_DATA
 
-            if (multiUserSupport) {
-                pkgManagerFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    pkgManagerFlags or PackageManager.MATCH_UNINSTALLED_PACKAGES
-                } else {
-                    @Suppress("DEPRECATION")
-                    pkgManagerFlags or PackageManager.GET_UNINSTALLED_PACKAGES
-                }
+            pkgManagerFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                pkgManagerFlags or PackageManager.MATCH_UNINSTALLED_PACKAGES
+            } else {
+                @Suppress("DEPRECATION")
+                pkgManagerFlags or PackageManager.GET_UNINSTALLED_PACKAGES
             }
 
             val installedApps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
