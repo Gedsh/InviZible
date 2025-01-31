@@ -85,6 +85,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TE
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
@@ -759,11 +760,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         PreferenceCategory categoryOther = findPreference("common_other");
+        Preference refreshRules = findPreference(REFRESH_RULES);
         Preference selectIptables = findPreference(USE_IPTABLES);
         Preference waitIptables = findPreference(WAIT_IPTABLES);
         Preference selectBusybox = findPreference("pref_common_use_busybox");
         Preference killSwitch = findPreference(KILL_SWITCH);
 
+        if (categoryOther != null && refreshRules != null) {
+            categoryOther.removePreference(refreshRules);
+        }
         if (categoryOther != null && selectIptables != null) {
             categoryOther.removePreference(selectIptables);
         }
