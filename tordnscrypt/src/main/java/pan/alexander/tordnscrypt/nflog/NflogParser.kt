@@ -85,7 +85,7 @@ class NflogParser @Inject constructor(
                 uid = uid.toInt(),
                 saddr = saddr,
                 daddr = daddr,
-                dport = if ((uid == -1L || uid == 0L || uid == 1020L) && sport < dport) sport else dport,
+                dport = if ((uid == -1L || uid == 0L || uid == 1020L || uid == 9999L) && sport < dport) sport else dport,
                 protocol = protocolInt,
                 allowed = true
             )

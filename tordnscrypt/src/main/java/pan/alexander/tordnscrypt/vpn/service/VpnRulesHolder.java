@@ -301,7 +301,7 @@ public class VpnRulesHolder {
                     packet.uid,
                     packet.daddr,
                     //Unknown incoming packet or Multicast DNS
-                    (packet.uid == -1 || packet.uid == 0 || packet.uid == 1020) && packet.sport < packet.dport ? packet.sport : packet.dport,
+                    (packet.uid == -1 || packet.uid == 0 || packet.uid == 1020 || packet.uid == 9999) && packet.sport < packet.dport ? packet.sport : packet.dport,
                     packet.saddr,
                     packet.allowed,
                     packet.protocol
