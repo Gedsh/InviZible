@@ -329,7 +329,7 @@
     <string name="vpn_mode_active">VPN-Modus ist aktiv</string>
     <string name="vpn_mode_off">VPN-Modus ist aus</string>
     <string name="vpn_mode_error">VPN-Modus-Fehler!</string>
-    <string name="vpn_tor_tether_summ">Bitte konfiguriere die Benutzung des Proxy-Servers in den Einstellungen des verbundenen Gerätes. Die Standardwerte sind: IP:10.1.10.1 Port:8118</string>
+    <string name="vpn_tor_tether_summ">Bitte konfiguriere die Benutzung des Proxy-Servers in den Einstellungen des verbundenen Gerätes. Die Standardwerte sind: IP:10.1.10.1 Port:%s</string>
     <string name="main_fragment_hide_ip">Verschleiere deine IP mit TOR</string>
     <string name="main_fragment_protect_dns">Schütze dich mit DNSCRYPT</string>
     <string name="main_fragment_access_i2p">"Zugang zum I2P-Netzwerk mit Purple I2P"</string>

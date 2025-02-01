@@ -725,7 +725,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("pref_common_tor_route_all"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteUnlockTether"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
-            preferencesHOTSPOT.add(findPreference(ITPD_TETHERING));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
             preferencesHOTSPOT.add(findPreference(FIX_TTL));
             preferencesHOTSPOT.add(findPreference("pref_common_local_eth_device_addr"));
@@ -739,10 +738,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
 
             Preference pref_common_tor_tethering = findPreference(TOR_TETHERING);
-
             if (pref_common_tor_tethering != null) {
-                pref_common_tor_tethering.setSummary(getText(R.string.vpn_tor_tether_summ));
+                pref_common_tor_tethering.setSummary(String.format(getString(R.string.vpn_tor_tether_summ), pathVars.get().getTorHTTPTunnelPort()));
                 pref_common_tor_tethering.setOnPreferenceChangeListener(this);
+            }
+
+            Preference pref_common_itpd_tethering = findPreference(ITPD_TETHERING);
+            if (pref_common_itpd_tethering != null) {
+                pref_common_itpd_tethering.setSummary(String.format(getString(R.string.vpn_tor_tether_summ), pathVars.get().getITPDHttpProxyPort()));
+                pref_common_itpd_tethering.setOnPreferenceChangeListener(this);
             }
         }
 

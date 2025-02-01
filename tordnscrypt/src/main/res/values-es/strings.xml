@@ -331,7 +331,7 @@
     <string name="vpn_mode_active">"Modo VPN activo."</string>
     <string name="vpn_mode_off">"Modo VPN desactivado."</string>
     <string name="vpn_mode_error">"¡Fallo detectado en modo VPN!"</string>
-    <string name="vpn_tor_tether_summ">"Por favor, configura el uso de un servidor de proxy en la configuración del dispositivo. Configuración por defecto: IP: 10.1.10.1 Puerto:8118"</string>
+    <string name="vpn_tor_tether_summ">"Por favor, configura el uso de un servidor de proxy en la configuración del dispositivo. Configuración por defecto: IP: 10.1.10.1 Puerto:%s"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP con TOR"</string>
     <string name="reset_settings_title">"Atención"</string>
     <string name="main_fragment_protect_dns">Protégete con DNSCRYPT</string>

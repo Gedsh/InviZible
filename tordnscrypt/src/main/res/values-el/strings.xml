@@ -345,7 +345,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="vpn_mode_active">"Λειτουργία VPN ενεργή"</string>
     <string name="vpn_mode_off">"Λειτουργία VPN ανενεργή"</string>
     <string name="vpn_mode_error">"Σφάλμα λειτουργίας VPN!"</string>
-    <string name="vpn_tor_tether_summ">"Διαμορφώστε τη χρήση του διακομιστή μεσολάβησης στις ρυθμίσεις της συνδεδεμένης συσκευής. Προεπιλεγμένες τιμές: IP:10.1.10.1 Θύρα:8118"</string>
+    <string name="vpn_tor_tether_summ">"Διαμορφώστε τη χρήση του διακομιστή μεσολάβησης στις ρυθμίσεις της συνδεδεμένης συσκευής. Προεπιλεγμένες τιμές: IP:10.1.10.1 Θύρα:%s"</string>
     <string name="main_fragment_hide_ip">"Απόκρυψη IP μέσω TOR"</string>
     <string name="main_fragment_protect_dns">"Προστασία DNS μέσω DNSCRYPT"</string>
     <string name="main_fragment_access_i2p">"Πρόσβαση σε ιστοσελίδες I2P μέσω Purple I2P"</string>

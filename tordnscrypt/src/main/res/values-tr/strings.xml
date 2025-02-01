@@ -409,7 +409,7 @@
     <string name="vpn_mode_active">VPN modu etkin</string>
     <string name="vpn_mode_off">VPN modu kapalı</string>
     <string name="vpn_mode_error">VPN modu hatası!</string>
-    <string name="vpn_tor_tether_summ">Lütfen bağlı aygıtın ayarlarında vekil sunucusu kullanımını yapılandırın. Öntanımlı değerler: IP:10.1.10.1 Bağlantı noktası:8118</string>
+    <string name="vpn_tor_tether_summ">Lütfen bağlı aygıtın ayarlarında vekil sunucusu kullanımını yapılandırın. Öntanımlı değerler: IP:10.1.10.1 Bağlantı noktası:%s</string>
     <string name="main_fragment_hide_ip">TOR ile IP\'yi gizle</string>
     <string name="main_fragment_protect_dns">DNSCRYPT ile koru</string>
     <string name="main_fragment_access_i2p">Purple I2P ile I2P ağına eriş</string>

@@ -333,7 +333,7 @@
     <string name="vpn_mode_active">"VPN 模式已激活"</string>
     <string name="vpn_mode_off">"VPN 模式已关闭"</string>
     <string name="vpn_mode_error">"VPN 模式错误！"</string>
-    <string name="vpn_tor_tether_summ">"请再已连接设备中配置代理服务器。默认值：IP:10.1.10.1 端口:8118"</string>
+    <string name="vpn_tor_tether_summ">"请再已连接设备中配置代理服务器。默认值：IP:10.1.10.1 端口:%s"</string>
     <string name="main_fragment_hide_ip">"使用 TOR 隐藏 IP"</string>
     <string name="reset_settings_title">"注意"</string>
     <string name="main_fragment_protect_dns">使用 DNSCRYPT 防护</string>

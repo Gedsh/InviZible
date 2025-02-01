@@ -530,7 +530,7 @@
     <string name="firewall_item_button_tooltip">Groen - verbindingen toestaan, wit - verbindingen weigeren</string>
     <string name="vpn_mode_error">VPN-modus fout!</string>
     <string name="notification_rogue_dhcp">Rogue DHCP gedetecteerd!</string>
-    <string name="vpn_tor_tether_summ">Configureer het gebruik van de proxyserver in de instellingen van het aangesloten apparaat. Standaardwaarden: IP:10.1.10.1 Poort:8118</string>
+    <string name="vpn_tor_tether_summ">Configureer het gebruik van de proxyserver in de instellingen van het aangesloten apparaat. Standaardwaarden: IP:10.1.10.1 Poort:%s</string>
     <string name="proxy_exclude_apps_from_proxy_summ">Applicatielijst om direct te openen. Deze toepassingen gebruiken geen Tor of Proxy om verbinding te maken met het internet!</string>
     <string name="firewall_system_apps">Systeem</string>
     <string name="only_premium_feature">Helaas is deze functie alleen beschikbaar voor de premium versie.</string>

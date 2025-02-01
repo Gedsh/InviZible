@@ -330,7 +330,7 @@
     <string name="vpn_mode_active">"VPN-tila on aktiivinen"</string>
     <string name="vpn_mode_off">"VPN-tila ei ole käytössä"</string>
     <string name="vpn_mode_error">"Virhe VPN-tilassa!"</string>
-    <string name="vpn_tor_tether_summ">"Määritä välityspalvelimen käyttö liitetyn laitteen asetuksissa. Oletusarvot: IP: 10.1.10.1 Portti: 8118"</string>
+    <string name="vpn_tor_tether_summ">"Määritä välityspalvelimen käyttö liitetyn laitteen asetuksissa. Oletusarvot: IP: 10.1.10.1 Portti: %s"</string>
     <string name="main_fragment_hide_ip">"Piilota IP TOR:lla"</string>
     <string name="main_fragment_protect_dns">"Suojaa DNS DNSCRYPT:llä"</string>
     <string name="main_fragment_access_i2p">"Pääsy I2P-sivustoihin Purple I2P:llä"</string>

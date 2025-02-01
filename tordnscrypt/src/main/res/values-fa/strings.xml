@@ -349,7 +349,7 @@
     <string name="vpn_mode_active">"حالت VPN فعال است"</string>
     <string name="vpn_mode_off">"حالت VPN خاموش است"</string>
     <string name="vpn_mode_error">"خطا در حالت VPN!"</string>
-    <string name="vpn_tor_tether_summ">لطفاً استفاده از سرور پروکسی را در تنظیمات دستگاه متصل پیکربندی کنید. مقادیر پیش فرض: آیپی:10.1.10.1 پورت:8118</string>
+    <string name="vpn_tor_tether_summ">لطفاً استفاده از سرور پروکسی را در تنظیمات دستگاه متصل پیکربندی کنید. مقادیر پیش فرض: آیپی:10.1.10.1 پورت:%s</string>
     <string name="main_fragment_hide_ip">پنهان‌سازی IP توسط تور</string>
     <string name="main_fragment_protect_dns">حفاظت با DNSCrypt</string>
     <string name="main_fragment_access_i2p">دسترسی به شبکه I2P با I2P بنفش</string>

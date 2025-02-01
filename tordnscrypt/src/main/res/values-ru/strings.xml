@@ -344,7 +344,7 @@
     <string name="vpn_mode_active">Режим VPN активирован</string>
     <string name="vpn_mode_off">Режим VPN выключен</string>
     <string name="vpn_mode_error">Ошибка VPN!</string>
-    <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование прокси в настройках подключенного устройства. Настройки по умолчанию: IP:10.1.10.1 Порт:8118</string>
+    <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование HTTP прокси в настройках подключенного устройства. Укажите адрес: IP:10.1.10.1 Порт:%s</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">Приложения, открывающиеся через InviZible</string>
     <string name="pref_fast_routing">Настройки маршрутизации</string>
     <string name="pref_fast_all_through_ipro">Весь интернет через InviZible</string>

@@ -600,7 +600,7 @@
     <string name="vpn_mode_active">VPN mode is active</string>
     <string name="vpn_mode_off">VPN mode is off</string>
     <string name="vpn_mode_error">VPN mode error!</string>
-    <string name="vpn_tor_tether_summ">Please configure the use of proxy server in the settings of the connected device. Default values: IP:10.1.10.1 Port:8118</string>
+    <string name="vpn_tor_tether_summ">Please configure the use of HTTP proxy in the settings of the connected device. Specify the address: IP:10.1.10.1 Port:%s</string>
     <string name="main_fragment_button_start" translatable="false">START</string>
     <string name="main_fragment_button_stop" translatable="false">STOP</string>
     <string name="main_fragment_hide_ip">Hide IP with TOR</string>
