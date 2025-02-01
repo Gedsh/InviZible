@@ -427,6 +427,8 @@ class InstalledApplicationsManager private constructor(
         val dnsTether = getUidForName("dns_tether", 1052 + userId * 100_000)
         val shell = getUidForName("shell", 2000 + userId * 100_000)
         val clat = getUidForName("clat", 1029 + userId * 100_000)
+        val nobody = getUidForName("nobody", 9999 + userId * 100_000)
+
         val specialDataApps = arrayListOf(
             ApplicationData(
                 "Kernel",
@@ -526,7 +528,17 @@ class InstalledApplicationsManager private constructor(
                 system = true,
                 true,
                 activeApps.contains(shell.toString())
+            ),
+            ApplicationData(
+                "Nobody",
+                "nobody",
+                nobody,
+                defaultIcon,
+                system = true,
+                true,
+                activeApps.contains(nobody.toString())
             )
+
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
