@@ -32,8 +32,8 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OPERATION_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ROOT_IS_AVAILABLE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
@@ -223,7 +223,7 @@ public class BootCompleteManager {
         }
 
         if (autoStartDNSCrypt && !runModulesWithRoot
-                && !defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
+                && !defaultPreferences.getBoolean(PREVENT_DNS_LEAKS, false)
                 && !action.equalsIgnoreCase(MY_PACKAGE_REPLACED)
                 && !action.equals(SHELL_SCRIPT_CONTROL)) {
             modulesStatus.setSystemDNSAllowed(true);

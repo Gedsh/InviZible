@@ -59,6 +59,8 @@
     <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (сек) только в том случае, если автозапуск работает неправильно</string>
     <string name="pref_fast_dns_server">Сервера DNSCrypt</string>
     <string name="pref_fast_select_dns_server">Выбрать сервера DNSCrypt</string>
+    <string name="pref_fast_prevent_dns_leak">Предотвращать утечку DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Блокировать попытки сокрытия DNS запросов. Может вызвать проблемы с соединением</string>
     <string name="pref_fast_tor">Настройки Tor</string>
     <string name="pref_fast_all_through_tor">Весь интернет через Tor</string>
     <string name="pref_fast_unlock_with_tor">Выбрать сайты</string>
@@ -70,7 +72,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Исключить приложения</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Приложения, открывающиеся в обход Tor</string>
     <string name="pref_fast_site_refresh_interval">Интервал обновления</string>
-    <string name="pref_fast_site_refresh_interval_summ">Период в часах, для обновления IP сайтов. Для Android 5.1 и выше. Введите 0, чтоб не обновлять.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Период в часах, для обновления IP сайтов. Для Android 5.1 и выше. Введите 0, чтоб не обновлять</string>
     <string name="pref_fast_use_tor_bridges">Мосты</string>
     <string name="pref_fast_use_tor_bridges_summ">Используйте, если вы не можете подключиться к сети Tor</string>
     <string name="pref_fast_use_tor_bridges_no">Не использовать мосты</string>

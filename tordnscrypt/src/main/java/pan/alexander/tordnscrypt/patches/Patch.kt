@@ -30,6 +30,8 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.Constants.QUAD_DNS_41
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_BOOTSTRAP_RESOLVERS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.STUN_SERVERS
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -78,6 +80,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 fixTorIPv6VirtualAddresses()
                 addDNSCryptOdohServers()
                 updateStunServers()
+                setPreventDnsLeaks(currentVersionSaved)
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -306,10 +309,26 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
 
     private fun updateStunServers() {
         val defaultPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        val builtinServers = context.resources.getStringArray(R.array.tor_snowflake_stun_servers).joinToString(",")
+        val builtinServers =
+            context.resources.getStringArray(R.array.tor_snowflake_stun_servers).joinToString(",")
         val savedServers = defaultPreferences.getString(STUN_SERVERS, builtinServers)
         if (savedServers?.startsWith("stun.l.google.com:19302") != false) {
             defaultPreferences.edit().putString(STUN_SERVERS, builtinServers).apply()
+        }
+    }
+
+    private fun setPreventDnsLeaks(savedVersion: Int) {
+        if (pathVars.appVersion.startsWith("f") && savedVersion.toString().take(3)
+                .toInt() <= 244
+            || !pathVars.appVersion.startsWith("f") && savedVersion.toString()
+                .takeLast(3).toInt() <= 244
+        ) {
+            val defaultPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+            if (defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
+                && !defaultPreferences.getBoolean(PREVENT_DNS_LEAKS, false)
+            ) {
+                defaultPreferences.edit().putBoolean(PREVENT_DNS_LEAKS, true).apply()
+            }
         }
     }
 

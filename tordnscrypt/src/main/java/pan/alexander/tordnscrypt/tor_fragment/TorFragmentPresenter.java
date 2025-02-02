@@ -60,7 +60,6 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -69,6 +68,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
 
 import javax.inject.Inject;
@@ -727,7 +727,7 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if ((!modulesStatus.isRootAvailable() || !modulesStatus.isUseModulesWithRoot())
-                && !sharedPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)) {
+                && !sharedPreferences.getBoolean(PREVENT_DNS_LEAKS, false)) {
             modulesStatus.setSystemDNSAllowed(true);
         }
     }

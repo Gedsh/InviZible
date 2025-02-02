@@ -66,7 +66,7 @@ class VpnPreferenceHolder @Inject constructor(
     val dnsRebindProtection = defaultPreferences.getBoolean(DNS_REBIND_PROTECTION, false)
     val lan = defaultPreferences.getBoolean(BYPASS_LAN, true)
     val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
-    val ignoreSystemDNS = defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
+    val preventDnsLeaks = defaultPreferences.getBoolean(PREVENT_DNS_LEAKS, false)
 
     val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)?.take(46) ?: LOOPBACK_ADDRESS
     val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {

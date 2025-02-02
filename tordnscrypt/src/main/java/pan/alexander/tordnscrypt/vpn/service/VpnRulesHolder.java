@@ -160,12 +160,12 @@ public class VpnRulesHolder {
         } else if (!isSupported(packet.protocol)) {
             logw("Protocol not supported " + packet);
         } else if (packet.dport == DNS_OVER_TLS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()
+                && vpnPreferences.getPreventDnsLeaks()
                 && (dnsCryptIsRunning || torIsRunning)) {
             logw("Block DNS over TLS " + packet);
         } else if (vpnDnsSet.contains(packet.daddr)
                 && packet.dport != PLAINTEXT_DNS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()
+                && vpnPreferences.getPreventDnsLeaks()
                 && packet.uid != vpnPreferences.getOwnUID()
                 && (dnsCryptIsRunning || torIsRunning)) {
             logw("Block DNS over HTTPS " + packet);

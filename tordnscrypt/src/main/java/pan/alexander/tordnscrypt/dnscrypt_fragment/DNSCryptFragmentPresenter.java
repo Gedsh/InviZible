@@ -60,7 +60,6 @@ import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFE
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_OUTBOUND_PROXY;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -70,7 +69,7 @@ import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -592,7 +591,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if ((!modulesStatus.isRootAvailable() || !modulesStatus.isUseModulesWithRoot())
-                && !sharedPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)) {
+                && !sharedPreferences.getBoolean(PREVENT_DNS_LEAKS, false)) {
             modulesStatus.setSystemDNSAllowed(true);
         }
     }

@@ -80,6 +80,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -444,6 +445,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
             case SITES_IPS_REFRESH_INTERVAL:
             case AUTO_START_DELAY:
                 return newValue.toString().matches("\\d+");
+            case PREVENT_DNS_LEAKS:
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                return true;
         }
 
         return false;
@@ -477,6 +481,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     }
 
     private void changePreferencesWithRootOrVPNMode(Context context) {
+        Preference prefFastPreventDnsLeak = findPreference(PREVENT_DNS_LEAKS);
+        if (prefFastPreventDnsLeak != null) {
+            prefFastPreventDnsLeak.setOnPreferenceChangeListener(this);
+        }
+
         Preference pref_fast_all_through_tor = findPreference(ALL_THROUGH_TOR);
         if (pref_fast_all_through_tor != null) {
             pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
@@ -520,6 +529,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     }
 
     private void changePreferencesWithProxyMode() {
+
+        PreferenceCategory dnsCryptServersCategory = findPreference("DNSCrypt servers");
+        Preference prefFastPreventDnsLeak = findPreference(PREVENT_DNS_LEAKS);
+        if (dnsCryptServersCategory != null && prefFastPreventDnsLeak != null) {
+           dnsCryptServersCategory.removePreference(prefFastPreventDnsLeak);
+        }
 
         PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
 

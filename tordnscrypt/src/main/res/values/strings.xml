@@ -96,6 +96,8 @@
     <string name="pref_fast_autostart_delay_summ">Use a delay (secs) only if Autostart does not work correctly</string>
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
+    <string name="pref_fast_prevent_dns_leak">Prevent DNS leaks</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Block attempts to conceal DNS queries. May cause connection problems</string>
     <string name="pref_fast_tor">Tor Settings</string>
     <string name="pref_fast_routing">Routing Settings</string>
     <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
@@ -114,7 +116,7 @@
     <string name="pref_fast_direct_udp_connection">Exclude UDP from Tor</string>
     <string name="pref_fast_bypass_app">Exclude entirely</string>
     <string name="pref_fast_site_refresh_interval">Refresh interval</string>
-    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh sites IP. For Android 5.1 and higher. Put 0 to stop refresh.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh sites IP. For Android 5.1 and higher. Put 0 to stop refresh</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
     <string name="pref_fast_use_tor_bridges_summ">Use it if you can not connect to Tor network</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges.</string>

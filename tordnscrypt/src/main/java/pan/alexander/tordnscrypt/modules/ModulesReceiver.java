@@ -36,8 +36,8 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYP
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_DNS64_PREFIX;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ACCESS_POINT_IS_ON;
@@ -448,7 +448,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && lastNetwork != network.hashCode()) {
                     PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
-                            context, null, isIgnoreSystemDns()
+                            context, null, isPreventDnsLeaks()
                     );
                 }
 
@@ -545,7 +545,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
-                                    context, linkProperties, isIgnoreSystemDns()
+                                    context, linkProperties, isPreventDnsLeaks()
                             );
                         }
                     }
@@ -748,8 +748,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
     }
 
-    private boolean isIgnoreSystemDns() {
-        return defaultPreferences.get().getBoolean(IGNORE_SYSTEM_DNS, false);
+    private boolean isPreventDnsLeaks() {
+        return defaultPreferences.get().getBoolean(PREVENT_DNS_LEAKS, false);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
