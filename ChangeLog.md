@@ -1294,3 +1294,10 @@
 * Fixed round monochrome icon.
 * Updated Dutch, Chinese, French and Finnish translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.4.5**
+* Updated Tor.
+* Added the option for preventing DNS leaks.
+* Added I2P sharing option for VPN mode.
+* Updated cdn77 meek_lite bridge.
+* Fixes and optimizations.
