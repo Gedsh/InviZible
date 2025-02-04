@@ -36,7 +36,7 @@
     <string name="exit">"Sortir"</string>
     <string name="done">"Terminé"</string>
     <string name="wrong">"Une erreur s'est produite !"</string>
-    <string name="install_message">"Voulez-vous terminer l'installation?"</string>
+    <string name="install_message">Voulez-vous terminer l\'installation ?</string>
     <string name="premium">"Version Premium"</string>
     <string name="agree">"J'approuve"</string>
     <string name="disagree">"Je désapprouve"</string>
@@ -79,7 +79,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Exclure des applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Liste d'applications à ouvrir directement"</string>
     <string name="pref_fast_site_refresh_interval">Intervalle de rafraîchissement</string>
-    <string name="pref_fast_site_refresh_interval_summ">Durée en heures entre chaque actualisation des adresses IP des sites. Pour Android 5.1 et ultérieur. Mettez 0 pour empêcher le rafraîchissement.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Durée en heures entre chaque actualisation des adresses IP des sites. Pour Android 5.1 et ultérieur. Mettre 0 pour empêcher le rafraîchissement :</string>
     <string name="pref_fast_use_tor_bridges">"Passerelles"</string>
     <string name="pref_fast_use_tor_bridges_summ">"Utilisez-le si vous ne pouvez pas vous connecter au réseau Tor"</string>
     <string name="pref_fast_use_tor_bridges_no">"Ne pas utiliser de passerelles"</string>
@@ -476,7 +476,7 @@
     <string name="pref_common_dns_rebind_protection_summ">"Bloquer un site lorsqu'une attaque par rebondissement du DNS est détectée"</string>
     <string name="notification_dns_rebinding_title">"Rebondissements DNS"</string>
     <string name="notification_dns_rebinding_text">"Attaque potentielle par rebond DNS (DNS rebinding) détectée! Le site %s a été bloqué."</string>
-    <string name="areYouSure">"Êtes-vous sûr? Cette action ne pourra être annulée"</string>
+    <string name="areYouSure">Êtes-vous sûr ? Cette action ne pourra être annulée</string>
     <string name="btnResetSettings">"Réinitialiser les paramètres"</string>
     <string name="backupSaved">"Sauvegarde enregistré"</string>
     <string name="backupRestored">"Sauvegarde restauré"</string>
