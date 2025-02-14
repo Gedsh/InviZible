@@ -79,7 +79,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Wyklucz aplikacje</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Lista aplikacji otwierana bezpośrednio</string>
     <string name="pref_fast_site_refresh_interval">Częstotliwość odświeżania</string>
-    <string name="pref_fast_site_refresh_interval_summ">Okres w godzinach do odświeżenia adresu IP witryny. Dla systemu Android 5.1 i nowszych. Ustaw 0, aby zatrzymać odświeżanie.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Okres w godzinach do odświeżenia adresu IP witryny. Dla systemu Android 5.1 i nowszych. Ustaw 0, aby zatrzymać odświeżanie</string>
     <string name="pref_fast_use_tor_bridges">"Mostki"</string>
     <string name="pref_fast_use_tor_bridges_summ">Użyj go, jeśli nie możesz połączyć się z siecią Tor</string>
     <string name="pref_fast_use_tor_bridges_no">Nie używaj mostów</string>
@@ -553,4 +553,8 @@
     <string name="dns_rule_add_remote_list">Dodaj zdalną listę</string>
     <string name="dns_rule_replace_remote_list">Zastąp listę zdalną</string>
     <string name="rules">reguły</string>
+    <string name="proxy_use_for_non_tor">Używaj proxy dla aplikacji, które omijają Tor</string>
+    <string name="helper_tor_check_proxy">Skonfigurowano korzystanie z serwera proxy Socks5, ale serwer proxy wydaje się nie działać. Sprawdź swoje ustawienia!</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Blokuje próby ukrywania zapytań DNS. Może powodować problemy z połączeniem</string>
+    <string name="pref_fast_prevent_dns_leak">Ochrona przed wyciekami DNS</string>
 </resources>
