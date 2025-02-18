@@ -135,8 +135,6 @@ If you cannot build yourself, there are prebuilt versions of **InviZible Pro** a
 
 #### Translating
 
-[Translate InviZible on POEditor](https://poeditor.com/join/project/h6ulNL9gEd).
-
 [Translate InviZible on Hosted Weblate](https://hosted.weblate.org/engage/invizible/).
 
 [![Translation status](https://hosted.weblate.org/widgets/invizible/-/multi-auto.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
