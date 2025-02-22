@@ -451,7 +451,6 @@
     <string name="enter_code">Kodu Gir</string>
     <string name="thanks_for_donate">InviZible Pro Projesi ve yazarı, desteğiniz için teşekkür eder. PRO sürümünü indirmek ve yükseltmek ister misiniz? Güncelleme arka planda devam edecektir.</string>
     <string name="thanks_for_donate_gp">InviZible Pro Projesi ve yazarı, desteğiniz için teşekkür eder!</string>
-    <string name="pref_dnscrypt_relays_summ">Kullanılabilir aktarıcıların uzak listeleri.</string>
     <string name="vpn_mode_active">VPN modu etkin</string>
     <string name="vpn_mode_off">VPN modu kapalı</string>
     <string name="vpn_mode_error">VPN modu hatası!</string>
