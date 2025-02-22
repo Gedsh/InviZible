@@ -418,7 +418,6 @@
     <string name="pref_tor_snowflake_select_rendezvous_summ">Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
     <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
     <string name="pref_tor_snowflake_cdn77" translatable="false">CDN77</string>
-    <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
     <string name="pref_tor_snowflake_amazon" translatable="false">AMAZON</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS outbound proxy</string>
