@@ -170,8 +170,6 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 **XMR** 82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX
 
-Please note that the XMR address has changed. The old address is no longer valid.
-
 ## License
 
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.txt)
