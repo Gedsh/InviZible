@@ -1301,3 +1301,11 @@
 * Added I2P sharing option for VPN mode.
 * Updated cdn77 meek_lite bridge.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.4.6**
+* Updated Tor to version 4.8.14.
+* Updated Purple I2P to version 2.56.0.
+* Updated Tor SnowFlake obfuscating proxy.
+* Updated the default Conjure bridge.
+* Updated Turkish, French, Polish and Chinese translations.
+* Fixes and optimizations.
