@@ -429,12 +429,22 @@ class ImportRulesManager(
     }
 
     private fun cleanRule(line: String, regExp: Regex): String {
+        var output = line
 
-        if (line.startsWith("#") || !line.matches(regExp)) {
+        if (line.isEmpty() || line.startsWith("#")) {
             return ""
         }
 
-        return line
+        val index = line.indexOf(" ")
+        if (index > 0 && index < line.length - 1) {
+            output = line.substring(0, index)
+        }
+
+        if(!output.matches(regExp)) {
+            return ""
+        }
+
+        return output
     }
 
     private fun hostToBlackList(line: String): String {
@@ -513,9 +523,14 @@ class ImportRulesManager(
                 return false
             }
 
-            if (line.isNotEmpty() && !line.contains("#") && !line.contains("!")) {
+            if (line.isNotEmpty() && !line.startsWith("#") && !line.startsWith("!")) {
+                var output = line
+                val spaceIndex = line.indexOf(" ")
+                if (spaceIndex > 0 && spaceIndex < line.length - 1) {
+                    output = line.substring(0, index)
+                }
                 index++
-                if (line.matches(regExp)) {
+                if (output.matches(regExp)) {
                     return true
                 } else if (index > 100) {
                     return false
