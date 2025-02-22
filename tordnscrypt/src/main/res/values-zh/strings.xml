@@ -82,7 +82,7 @@
     <string name="pref_fast_exclude_apps_from_tor">排除应用</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"直接打开的应用列表"</string>
     <string name="pref_fast_site_refresh_interval">刷新间隔</string>
-    <string name="pref_fast_site_refresh_interval_summ">刷新网站 IP 的周期（小时）。用于 Android 5.1 及更高版本。置为 0 停止刷新。</string>
+    <string name="pref_fast_site_refresh_interval_summ">刷新网站 IP 的周期（小时）。用于 Android 5.1 及更高版本。置为 0 停止刷新</string>
     <string name="pref_fast_use_tor_bridges">"网桥"</string>
     <string name="pref_fast_use_tor_bridges_summ">"如果您无法连接到 Tor 网络请使用网桥"</string>
     <string name="pref_fast_use_tor_bridges_no">"不使用网桥"</string>
