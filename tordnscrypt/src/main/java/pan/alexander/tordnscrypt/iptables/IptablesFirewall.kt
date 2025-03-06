@@ -77,7 +77,7 @@ class IptablesFirewall @Inject constructor(
 
         prepareUidAllowed(vpnActive)
 
-        if (modulesStatus.mode == OperationMode.ROOT_MODE) {
+        if (modulesStatus.mode == OperationMode.ROOT_MODE && modulesStatus.firewallState != ModuleState.STOPPING) {
             modulesStatus.setFirewallState(ModuleState.RUNNING, preferences)
         }
 
