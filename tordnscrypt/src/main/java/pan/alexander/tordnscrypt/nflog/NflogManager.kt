@@ -45,11 +45,11 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.Exception
 
 private const val ATTEMPTS_TO_OPEN_NFLOG = 5
-private const val ATTEMPTS_TO_CLOSE_NFLOG = 3
-private const val TIMEOUT_TO_CLOSE_NFLOG_SEC = 5
+private const val ATTEMPTS_TO_CLOSE_NFLOG = 5
+private const val TIMEOUT_TO_CLOSE_NFLOG_SEC = 10
+private const val NFLOG_LIB = "libnflog.so"
 private const val NFLOG_PID_FILE_NAME = "nflog.pid"
 
 @ModulesServiceScope
@@ -60,7 +60,7 @@ class NflogManager @Inject constructor(
     dispatcherIo: CoroutineDispatcher,
     private val nflogParser: NflogParser,
     private val checkConnectionInteractor: dagger.Lazy<ConnectionCheckerInteractor>
-): OnInternetConnectionCheckedListener {
+) : OnInternetConnectionCheckedListener {
 
     @Volatile
     private var nfLogStartFailed = false
@@ -74,7 +74,7 @@ class NflogManager @Inject constructor(
     private val coroutineScope by lazy {
         CoroutineScope(
             SupervisorJob() +
-                    dispatcherIo +
+                    dispatcherIo.limitedParallelism(2) +
                     CoroutineName("NflogManager") +
                     CoroutineExceptionHandler { _, throwable ->
                         loge("NflogManager uncaught exception", throwable, true)
@@ -112,6 +112,11 @@ class NflogManager @Inject constructor(
 
     private suspend fun startSequence() {
         try {
+
+            if (nflogActive) {
+                return
+            }
+
             stopSequence()
 
             coroutineScope.launch {
@@ -256,11 +261,12 @@ class NflogManager @Inject constructor(
 
     private suspend fun killNflog() {
 
-        if (nflogShell?.isIdle != false) {
+        val pid = readNflogPidFile()
+
+        if (nflogShell?.isIdle != false && pid.isEmpty()) {
             return
         }
 
-        val pid = readNflogPidFile()
         var attempt = 0
 
         do {
@@ -275,19 +281,23 @@ class NflogManager @Inject constructor(
                 getNflogKillCommand(pid, "SIGKILL").joinToString("; ")
             }
 
-            Shell.SU.run(command)
+            val result = Shell.SU.run(command)
 
             attempt++
 
-            if (nflogShell?.isIdle == false) {
+            if (nflogShell?.isIdle == false || result.stdout.contains(NFLOG_LIB)) {
                 delay(attempt * 100L)
             }
 
-            if (nflogShell?.isIdle == false && attempt < ATTEMPTS_TO_CLOSE_NFLOG) {
+            if ((nflogShell?.isIdle == false || result.stdout.contains(NFLOG_LIB))
+                && attempt < ATTEMPTS_TO_CLOSE_NFLOG
+            ) {
                 logw("Attempt $attempt to kill nflog failed")
             }
 
-        } while (nflogShell?.isIdle == false && attempt < ATTEMPTS_TO_CLOSE_NFLOG)
+        } while ((nflogShell?.isIdle == false || result.stdout.contains(NFLOG_LIB))
+            && attempt < ATTEMPTS_TO_CLOSE_NFLOG
+        )
 
         if (nflogShell?.isIdle == false) {
             loge("Failed to kill Nflog")
@@ -322,6 +332,8 @@ class NflogManager @Inject constructor(
                 add("$busybox kill -s $signal $pid || true")
             }
         }
+        add("$busybox sleep 1")
+        add("$busybox pgrep -l $NFLOG_LIB || true")
     }
 
     private fun stopNflogHandlerThread() {
@@ -336,7 +348,7 @@ class NflogManager @Inject constructor(
             if (file.isFile) {
                 Shell.SU.run("cat $filePath").stdout.first().trim()
             } else {
-                loge("NflogManager was unable to read pid. The file does not exist.")
+                logw("NflogManager was unable to read pid. The file does not exist.")
                 ""
             }
         }
@@ -353,8 +365,12 @@ class NflogManager @Inject constructor(
                 when (it) {
                     is DnsRecord -> {
                         val creationTime = connectionDataRecords.remove(it)
-                        connectionDataRecords.put(it, creationTime ?: SystemClock.elapsedRealtimeNanos())
+                        connectionDataRecords.put(
+                            it,
+                            creationTime ?: SystemClock.elapsedRealtimeNanos()
+                        )
                     }
+
                     is PacketRecord -> {
                         connectionDataRecords.remove(it)
                         connectionDataRecords.put(it, SystemClock.elapsedRealtimeNanos())
