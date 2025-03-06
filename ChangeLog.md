@@ -1309,3 +1309,9 @@
 * Updated the default Conjure bridge.
 * Updated Turkish, French, Polish and Chinese translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.4.7**
+* Implemented display of real-time logs even when DNSCrypt is not running.
+* Fixed real-time logs not displaying in root mode in some cases.
+* Updated Italian and Arabic translations.
+* Fixes and optimizations.
