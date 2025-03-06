@@ -40,6 +40,7 @@ import pan.alexander.tordnscrypt.TopFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationDialogFragment;
 import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInteractorImpl;
+import pan.alexander.tordnscrypt.domain.connection_records.ConnectionRecordsInteractorInterface;
 import pan.alexander.tordnscrypt.domain.log_reader.TorInteractorInterface;
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel;
@@ -58,6 +59,7 @@ import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
+import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
@@ -86,6 +88,8 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     public Lazy<PreferenceRepository> preferenceRepository;
     @Inject
     public Lazy<TorInteractorInterface> torInteractor;
+    @Inject
+    public Lazy<ConnectionRecordsInteractorInterface> connectionRecordsInteractor;
     @Inject
     public CoroutineExecutor executor;
     @Inject
@@ -661,6 +665,12 @@ public class TorFragmentPresenter implements TorFragmentPresenterInterface,
     }
 
     private void stopTor() {
+
+        if (connectionRecordsInteractor != null && modulesStatus.getDnsCryptState() != RUNNING
+                && (modulesStatus.getMode() == VPN_MODE || modulesStatus.getMode() == ROOT_MODE)) {
+            connectionRecordsInteractor.get().clearConnectionRecords();
+        }
+
         if (isActive()) {
             ModulesKiller.stopTor(context);
         }

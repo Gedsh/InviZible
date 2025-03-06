@@ -96,7 +96,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
     private volatile LogDataModel savedLogData;
     private volatile int savedLinesLength;
-    private volatile String savedConnectionRecords = "";
+    private volatile String savedConnectionRecords = "<br />";
     private boolean fixedDNSCryptReady;
     private boolean fixedDNSCryptError;
 
@@ -150,8 +150,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
                 //modulesStatus.setDnsCryptState(STOPPED);
             }
 
-            if (currentModuleState != STOPPED
-                    && currentModuleState != FAULT) {
+            if (currentModuleState != STOPPED && currentModuleState != FAULT || !isRealTimeLogsDisabled()) {
                 displayLog();
             }
 
@@ -249,7 +248,11 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         view.setDNSCryptStatus(R.string.tvDNSStop, R.color.textModuleStatusColorStopped);
         view.setStartButtonText(R.string.btnDNSCryptStart);
-        view.setDNSCryptLogViewText();
+
+        if (modulesStatus.getTorState() != RUNNING && modulesStatus.getFirewallState() != RUNNING
+                || isRealTimeLogsDisabled()) {
+            view.setDNSCryptLogViewText();
+        }
 
         setFixedReadyState(false);
         setFixedErrorState(false);
@@ -318,11 +321,23 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
+        if (modulesStatus.getDnsCryptState() == STOPPED) {
+            lastLines = "";
+        }
+
         Spanned htmlLines;
-        if (savedConnectionRecords.isEmpty()) {
-            htmlLines = HtmlCompat.fromHtml(dnsCryptLogData.getLines(), FROM_HTML_MODE_LEGACY);
+        if (savedConnectionRecords.replaceFirst("^<br />", "").isEmpty()) {
+            htmlLines = HtmlCompat.fromHtml(lastLines, FROM_HTML_MODE_LEGACY);
+        } else if (lastLines.isEmpty()) {
+            htmlLines = HtmlCompat.fromHtml(
+                    savedConnectionRecords.replaceFirst("^<br />", ""),
+                    FROM_HTML_MODE_LEGACY
+            );
         } else {
-            htmlLines = HtmlCompat.fromHtml(dnsCryptLogData.getLines() + "<br />" + savedConnectionRecords, FROM_HTML_MODE_LEGACY);
+            htmlLines = HtmlCompat.fromHtml(
+                    lastLines + "<br />" + savedConnectionRecords,
+                    FROM_HTML_MODE_LEGACY
+            );
         }
 
         if (!isActive()) {
@@ -422,10 +437,14 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
     @Override
     public void onConnectionRecordsUpdated(@NonNull String connectionRecords) {
         String logLines = "";
-        if (savedLogData != null) {
+        if (savedLogData != null && modulesStatus.getDnsCryptState() != STOPPED) {
             logLines = savedLogData.getLines();
         }
-        displayDnsResponses(logLines, connectionRecords);
+        if (modulesStatus.getDnsCryptState() != STOPPING && modulesStatus.getDnsCryptState() != STOPPED
+                || modulesStatus.getTorState() != STOPPING && modulesStatus.getTorState() != STOPPED
+                || modulesStatus.getFirewallState() != STOPPING && modulesStatus.getFirewallState() != STOPPED) {
+            displayDnsResponses(logLines, connectionRecords);
+        }
     }
 
     private void displayDnsResponses(String savedLogLines, String connectionRecords) {
@@ -458,11 +477,25 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecords.equals(savedConnectionRecords) && !savedLogLines.isEmpty()) {
+        if (connectionRecords.equals(savedConnectionRecords)
+                && (!savedLogLines.isEmpty() || modulesStatus.getDnsCryptState() == STOPPED)) {
             return;
         }
 
-        Spanned htmlLines = HtmlCompat.fromHtml(savedLogLines + "<br />" + connectionRecords, FROM_HTML_MODE_LEGACY);
+        Spanned htmlLines;
+        if (connectionRecords.replaceFirst("^<br />", "").isEmpty()) {
+            htmlLines = HtmlCompat.fromHtml(savedLogLines, FROM_HTML_MODE_LEGACY);
+        } else if (savedLogLines.isEmpty()) {
+            htmlLines = HtmlCompat.fromHtml(
+                    connectionRecords.replaceFirst("^<br />", ""),
+                    FROM_HTML_MODE_LEGACY
+            );
+        } else {
+            htmlLines = HtmlCompat.fromHtml(
+                    savedLogLines + "<br />" + connectionRecords,
+                    FROM_HTML_MODE_LEGACY
+            );
+        }
 
         if (!isActive()) {
             return;
@@ -473,7 +506,7 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
                 if (dnsCryptLogAutoScroll) {
                     view.setDNSCryptLogViewText(htmlLines);
                     view.scrollDNSCryptLogViewToBottom();
-                    if (!savedLogLines.isEmpty()) {
+                    if (!savedLogLines.isEmpty() || modulesStatus.getDnsCryptState() == STOPPED) {
                         savedConnectionRecords = connectionRecords;
                     }
                 }
@@ -538,7 +571,9 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             setDNSCryptProgressBarIndeterminate(true);
         } else if (currentModuleState == STOPPED) {
 
-            stopDisplayLog();
+            if (isRealTimeLogsDisabled()) {
+                stopDisplayLog();
+            }
 
             if (ModulesAux.isDnsCryptSavedStateRunning()) {
                 setDNSCryptStoppedBySystem();
@@ -601,10 +636,8 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
             return;
         }
 
-        if (connectionRecordsInteractor != null &&
-                (modulesStatus.getMode() == VPN_MODE
-                        || modulesStatus.getMode() == ROOT_MODE
-                        || isFixTTL())) {
+        if (connectionRecordsInteractor != null && modulesStatus.getTorState() != RUNNING
+                && (modulesStatus.getMode() == VPN_MODE || modulesStatus.getMode() == ROOT_MODE)) {
             connectionRecordsInteractor.get().clearConnectionRecords();
         }
 
@@ -683,18 +716,18 @@ public class DNSCryptFragmentPresenter implements DNSCryptFragmentPresenterInter
 
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
-            public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+            public boolean onScale(@NonNull ScaleGestureDetector scaleGestureDetector) {
                 setLogsTextSize(scaleGestureDetector.getScaleFactor());
                 return true;
             }
 
             @Override
-            public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+            public boolean onScaleBegin(@NonNull ScaleGestureDetector scaleGestureDetector) {
                 return true;
             }
 
             @Override
-            public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+            public void onScaleEnd(@NonNull ScaleGestureDetector scaleGestureDetector) {
             }
         });
     }
