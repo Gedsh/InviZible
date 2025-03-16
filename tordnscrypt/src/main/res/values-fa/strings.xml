@@ -91,7 +91,7 @@
     <string name="pref_fast_exclude_apps_from_tor">محدود‌سازی برنامه‌ ها</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"برنامه‌هایی که مستقیم اجرا شوند"</string>
     <string name="pref_fast_site_refresh_interval">بازه بازخوانی</string>
-    <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی آیپی های وب‌سایت‌ ها در یک ساعت (فقط اندروید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید.</string>
+    <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی آیپی های وب‌سایت‌ ها در یک ساعت (فقط اندروید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید</string>
     <string name="pref_fast_use_tor_bridges">"پل‌ها"</string>
     <string name="pref_fast_use_tor_bridges_summ">"از این مورد تنها اگر نمی‌توانید به TOR متصل شوید استفاده کنید"</string>
     <string name="pref_fast_use_tor_bridges_no">"عدم استفاده از پل"</string>
@@ -576,4 +576,6 @@
     <string name="dns_rule_add_url">افزودن نشانی اینترنتی</string>
     <string name="dns_rule_replace_local_list">جایگزینی لیست محلی</string>
     <string name="rules">قوانین</string>
+    <string name="pref_fast_prevent_dns_leak">جلوگیری از نشت DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">مسدود کردن تلاش‌ها برای مخفی کردن درخواست‌های DNS. ممکن است مشکلاتی در اتصال ایجاد کند</string>
 </resources>
