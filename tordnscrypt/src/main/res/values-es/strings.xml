@@ -40,9 +40,9 @@
     <string name="premium">"Versión exclusiva"</string>
     <string name="agree">"Acepto"</string>
     <string name="disagree">"No acepto"</string>
-    <string name="message_no_root_used">"Puedes usar Invizible Pro con el modo VPN Local incluido, o, configurar aplicaciones con sus propios ajustes de proxy o implementaciones de VPN Local, con el modo Proxy."</string>
+    <string name="message_no_root_used">Puedes usar Invizible Pro en el modo VPN local, o con aplicaciones con ajustes proxy propios y características VPN locales en el modo Proxy.</string>
     <string name="message_no_root_used_kitkat">"Puedes usar Invizible Pro con aplicaciones con sus propios ajustes de proxy o implementaciones de VPN Local, con el modo Proxy."</string>
-    <string name="write_file_error">"¡Error de escritura de archivo!"</string>
+    <string name="write_file_error">¡Error al guardar el archivo!</string>
     <string name="drawer_menu_commonSettings">"Configuración general"</string>
     <string name="drawer_menu_DNSSettings">"Configuración de DNSCrypt"</string>
     <string name="drawer_menu_TorSettings">"Configuración de Tor"</string>
@@ -57,7 +57,7 @@
     <string name="etPathBackup">"Ruta de carpeta:"</string>
     <string name="backupFolder">"Selecciona carpeta de copia:"</string>
     <string name="title_activity_settings">"Configuración"</string>
-    <string name="pref_fast_categ_autostart">"Inicio Automático"</string>
+    <string name="pref_fast_categ_autostart">Inicio automático</string>
     <string name="pref_fast_dns_autostart">Inicio automático de DNSCrypt</string>
     <string name="pref_fast_tor_autostart">Inicio automático de Tor</string>
     <string name="pref_fast_itpd_autostart">Arrancar I2P al inicio del dispositivo</string>
@@ -68,7 +68,7 @@
     <string name="pref_fast_tor">"Configuración de Tor"</string>
     <string name="pref_fast_routing">"Configuración de rutas"</string>
     <string name="pref_fast_all_through_tor">"Redirigir todo el tráfico a través de Tor"</string>
-    <string name="pref_fast_all_through_ipro">"Dirigir todo el tráfico por InviZible"</string>
+    <string name="pref_fast_all_through_ipro">Redirigir todo el tráfico a través de InviZible</string>
     <string name="pref_fast_unlock_with_tor">Seleccionar sitios</string>
     <string name="pref_fast_unlock_with_tor_summ">Lista de páginas web para abrir con Tor. Esta característica no funciona para los sitios detrás de CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Seleccionar aplicaciones</string>
@@ -84,11 +84,11 @@
     <string name="pref_fast_use_tor_bridges_summ">Úsalos si Tor no conecta</string>
     <string name="pref_fast_use_tor_bridges_no">"Sin puentes"</string>
     <string name="pref_fast_use_tor_bridges_default">"Usar lista de puentes por defecto"</string>
-    <string name="pref_fast_use_tor_bridges_own">"Usar tu propia lista de puentes"</string>
+    <string name="pref_fast_use_tor_bridges_own">Usar lista de puentes propia</string>
     <string name="pref_fast_use_tor_bridges_request">"Pedir puentes"</string>
     <string name="pref_fast_use_tor_bridges_add">"Añadir puentes"</string>
     <string name="pref_fast_use_tor_bridges_edit">"Modificar puente"</string>
-    <string name="pref_fast_use_tor_bridges_deactivate">"¡Desactive el puente primero!"</string>
+    <string name="pref_fast_use_tor_bridges_deactivate">¡Por favor, primero desactiva el puente!</string>
     <string name="pref_fast_use_tor_bridges_obfs">"Ofuscación"</string>
     <string name="pref_fast_use_tor_bridges_transport_select">"Seleccione tipo de ofuscación:"</string>
     <string name="pref_fast_use_tor_bridges_enter_characters">"Resuelve el captcha"</string>
@@ -100,8 +100,8 @@
     <string name="pref_fast_theme">Seleccionar un tema</string>
     <string name="pref_fast_language">Seleccionar idioma</string>
     <string name="pref_fast_block_http">"Bloquear HTTP"</string>
-    <string name="pref_fast_block_http_summ">Bloquear conexiones al puerto 80 de HTTP</string>
-    <string name="pref_fast_categ_update">"Actualizaciones"</string>
+    <string name="pref_fast_block_http_summ">Bloquear conexiones HTTP al puerto 80</string>
+    <string name="pref_fast_categ_update">Actualizar</string>
     <string name="pref_fast_auto_update">Actualizaciones automáticas</string>
     <string name="pref_fast_auto_update_summ">Compruebe diariamente las actualizaciones de InviZible Pro y de los módulos</string>
     <string name="pref_fast_chek_update">Comprobar actualizaciones</string>
@@ -112,10 +112,10 @@
     <string name="pref_common_run_with_root">"Ejecutar Modulos como Superusuario"</string>
     <string name="pref_common_run_with_root_summ">Ejecuta los modulos DNSCrypt, Tor, e I2P con superusuario root. ¡Atención, ésta opción puede causar problemas de conectividad ya que los módulos funcionan de forma independiente de la app!</string>
     <string name="pref_common_categ_other">"Otros"</string>
-    <string name="pref_common_block_http">"Bloquear tráfico HTTP al Compartir Internet"</string>
-    <string name="pref_common_block_http_summ">Bloquea conexiones al puerto 80 de HTTP en Compartir Internet</string>
+    <string name="pref_common_block_http">Bloquear tráfico HTTP con HOTSPOT</string>
+    <string name="pref_common_block_http_summ">Bloquear conexiones HTTP al puerto 80 para HOTSPOT</string>
     <string name="pref_common_notification_summ">Proteger la aplicación para que Android no la elimine</string>
-    <string name="pref_common_refresh_rules">"Reaplicar reglas de tráfico"</string>
+    <string name="pref_common_refresh_rules">Refrescar reglas</string>
     <string name="pref_common_refresh_rules_summ">Reaplicar reglas de tráfico en cambios de conectividad</string>
     <string name="pref_common_show_notification">"Mostrar notificaciones"</string>
     <string name="pref_common_wakelock">"Prevenir sueño profundo del dispositivo"</string>
@@ -205,7 +205,7 @@
     <string name="dnscrypt_empty_log">"El registro está vacío"</string>
     <string name="pref_dnscrypt_block_unqualified_summ">"Responde inmediatamente a tipos de peticiones A y AAAA para nombres sin un dominio."</string>
     <string name="pref_dnscrypt_block_undelegated_summ">"Responde inmediatamente a tipos de peticiones para zonas locales en vez de revelarlas a los servidores autoritativos (que siempre causan errores y cuelgues en las peticiones)."</string>
-    <string name="pref_tor_virtual_addr_network_IPv4_summ">Bloque de direcciones de red, virtual, a usar cuando Tor necesite asignar una dirección solicitada por alguna petición MAPADDRESS desde el controlador o desde la opción AutomapHostsOnResolve.</string>
+    <string name="pref_tor_virtual_addr_network_IPv4_summ">Cuando Tor necesita asignar una dirección virtual (sin usar) debido al comando de la controladora MAPADDRESS o la opción AutomapHostsOnResolve, Tor selecciona una dirección no asignada desde este rango.</string>
     <string name="pref_tor_avoid_disc_writes_summ">"Si se activa, evitará escribir en disco cuando no sea necesario."</string>
     <string name="pref_tor_connections_padding_summ">"Activa un relleno de paquetes de tráfico para dificultar determinados tipos de análisis y detección de tráfico. Desactivalo para ahorrar datos."</string>
     <string name="pref_tor_reduced_connections_padding_summ">"Activa un relleno de paquetes más reducido que el completo y además hará que Tor mantenga conexiones OR abiertas por menos tiempo. Para usar cuando el relleno completo está activo, si se desea. Ahorra más datos que cuando únicamente se activa el relleno completo."</string>
@@ -216,7 +216,7 @@
     <string name="pref_tor_strict_nodes_summ">"La opción Restringir Nodos (StrictNodes) obliga a tomar la directiva Nodos Excluidos (ExcludeNodes) como requisito a seguir para la construcción de los circuitos, incluso aunque resulte en pérdida de la conectividad."</string>
     <string name="pref_tor_fascist_firewall_summ">"Determina que Tor utilice exclusivamente conexiones a puertos OR en los valores 80 y 443 (por defecto), que normalmente se permiten en cortafuegos restrictivos."</string>
     <string name="pref_tor_new_circuit_period_summ">"Número de segundos X a considerar cuando construir un nuevo circuito."</string>
-    <string name="pref_tor_max_circuit_dirtiness_summ">Éste valor indica la reutilización de circuitos creados hasta un número X máximo de segundos de vida.</string>
+    <string name="pref_tor_max_circuit_dirtiness_summ">Puedes usar sin problemas un circuito usado por primera vez hace NUM segundos pero nunca adjuntes un stream nuevo a un circuito demasiado antiguo.</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">"Determina la separación obligatoria, en distintos circuitos, de conexiones hacia destinos que tengan direcciones IP demasiado cerca entre sí. Se considera que dos direcciones IP están demasiado cerca entre sí, si pertenecen al mismo rango de red /16."</string>
     <string name="pref_tor_enable_SOCKS_proxy">Poxy SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">"Indica el puerto donde abrir el proxy SOCKS5."</string>
@@ -400,7 +400,7 @@
     <string name="pref_common_arp_block_internet_summ">La conexión a Internet se interrumpirá automáticamente mientras dure el ataque</string>
     <string name="pref_common_proxy_categ">"Proxy"</string>
     <string name="pref_common_proxy">"Usar proxy SOCKS5"</string>
-    <string name="pref_common_proxy_summ">"InviZible Pro remitirá todas las conexiones al proxy SOCKS5 indicado"</string>
+    <string name="pref_common_proxy_summ">InviZible Pro hará todas las conexiones a través del proxy SOCKS5</string>
     <string name="pref_common_compatibility_mode">"Modo de compatibilidad"</string>
     <string name="pref_common_compatibility_mode_summ">Actívalo si la conectividad se pierde en tu dispositivo con una rom personalizada cuando inicias el programa</string>
     <string name="pref_common_shell_control">"Activar control de scripts"</string>
@@ -476,7 +476,7 @@
     <string name="pref_common_dns_rebind_protection_summ">"Bloquear sitio cuando se detecte un ataque de secuentro de enlace DNS"</string>
     <string name="notification_dns_rebinding_title">"Secuestro de enlace DNS"</string>
     <string name="notification_dns_rebinding_text">"¡Ataque de secuestro de enlace DNS detectado! Se ha bloqueado el sitio %s."</string>
-    <string name="areYouSure">"¿Estás seguro? ¡Ésta acción no se puede deshacer!"</string>
+    <string name="areYouSure">¿Estás seguro? ¡Esta acción no se puede deshacer!</string>
     <string name="btnResetSettings">"Reiniciar configuración"</string>
     <string name="backupSaved">"Copia guardada"</string>
     <string name="backupRestored">"Copia restaurada"</string>
@@ -495,7 +495,7 @@
     <string name="pref_firewall_show_all_apps_on_summ">Muestra las aplicaciones independientemente de si pueden acceder a Internet o no.</string>
     <string name="pref_firewall_show_all_apps_off_summ">Mostrar sólo aplicaciones que puedan acceder a Internet.</string>
     <string name="pref_common_kill_switch">"Interruptor general"</string>
-    <string name="pref_common_kill_switch_summ">Bloquea la conexión a Internet cuando Tor, DNSCrypt o I2Pd están parados</string>
+    <string name="pref_common_kill_switch_summ">Bloquear la conexión a Internet cuando Tor, DNSCrypt o I2Pd están parados</string>
     <string name="notification_internet_blocked_message">"Las conexiones hacia Internet están bloqueadas debido al ajuste del Interruptor general. Arranque Tor, DNSCrypt o I2Pd para permitir conectividad. O desactive el ajuste en Configuración General."</string>
     <string name="list_is_empty">La lista está vacía</string>
     <string name="pref_common_use_busybox_auto">"Auto"</string>
@@ -553,7 +553,7 @@
     <string name="pref_dnscrypt_rules_delay_summ">Las normas se actualizarán tras el plazo especificado en horas.</string>
     <string name="dns_rule_replace_remote_list">Reemplazar lista remota</string>
     <string name="dns_rule_replace_local_list">Reemplazar lista local</string>
-    <string name="pref_common_always_on_vpn_summ">Habilite VPN siempre activa y bloquee conexiones sin VPN para que Invisible Pro bloquee Internet cuando la aplicación no se esté ejecutando</string>
+    <string name="pref_common_always_on_vpn_summ">Habilita VPN siempre activa y Bloquear conexiones sin VPN para que Invisible Pro bloquee Internet cuando la aplicación no se esté ejecutando</string>
     <string name="helper_tor_check_proxy">Ha configurado para usar el proxy Socks5, pero el proxy no parece estar funcionando. ¡Por favor, compruebe su configuración!</string>
     <string name="proxy_use_for_non_tor">Utilice un proxy para aplicaciones que evitan Tor</string>
     <string name="pref_fast_prevent_dns_leak">Prevenir fugas DNS</string>
