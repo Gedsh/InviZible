@@ -117,7 +117,7 @@ class InstalledApplicationsManager private constructor(
             var pkgManagerFlags = PackageManager.GET_META_DATA
 
             pkgManagerFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                pkgManagerFlags or PackageManager.MATCH_UNINSTALLED_PACKAGES
+                pkgManagerFlags or PackageManager.MATCH_UNINSTALLED_PACKAGES or PackageManager.MATCH_DISABLED_COMPONENTS
             } else {
                 @Suppress("DEPRECATION")
                 pkgManagerFlags or PackageManager.GET_UNINSTALLED_PACKAGES
@@ -179,7 +179,7 @@ class InstalledApplicationsManager private constructor(
                         activeApps.contains(uid.toString())
                     )
 
-                    if (isAppInstalled(applicationInfo)) {
+                    if (isAppInstalled(applicationInfo) || isAppStopped(applicationInfo)) {
                         appDataSaved.let {
                             userAppsMap[uid] = it
                             updateDisplayedList(it)
@@ -344,6 +344,10 @@ class InstalledApplicationsManager private constructor(
 
     private fun isAppInstalled(applicationInfo: ApplicationInfo) =
         applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED != 0
+
+    //For archived apps
+    private fun isAppStopped(applicationInfo: ApplicationInfo) =
+        applicationInfo.flags and ApplicationInfo.FLAG_STOPPED != 0
 
     private fun checkPartOfMultiUser(
         applicationInfo: ApplicationInfo,
