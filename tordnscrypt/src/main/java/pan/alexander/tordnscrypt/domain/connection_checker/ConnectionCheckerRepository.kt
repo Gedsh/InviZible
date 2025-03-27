@@ -38,4 +38,6 @@ interface ConnectionCheckerRepository {
     ): Boolean
 
     fun checkNetworkAvailable(): Boolean
+
+    fun isCaptivePortalOnWiFiDetected(): Boolean
 }

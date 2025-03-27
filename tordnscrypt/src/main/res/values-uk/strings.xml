@@ -527,4 +527,6 @@
     <string name="proxy_use_for_non_tor">Використовувати проксі для додатків, що працюють без Tor</string>
     <string name="pref_fast_prevent_dns_leak">Запобігати витоку DNS</string>
     <string name="pref_fast_prevent_dns_leak_summ">Блокувати спроби приховати запити DNS. Може викликати проблеми зі з\'єднанням</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Блокувати LAN на безкоштовному Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокувати доступ до локальної мережі, коли виявлено сторінку реєстрації</string>
 </resources>

@@ -63,4 +63,8 @@ class ConnectionCheckerRepositoryImpl @Inject constructor(
     override fun checkNetworkAvailable(): Boolean {
         return connectionCheckerDataSource.checkNetworkAvailable()
     }
+
+    override fun isCaptivePortalOnWiFiDetected(): Boolean {
+        return connectionCheckerDataSource.isWiFiActive() && connectionCheckerDataSource.isCaptivePortalDetected()
+    }
 }

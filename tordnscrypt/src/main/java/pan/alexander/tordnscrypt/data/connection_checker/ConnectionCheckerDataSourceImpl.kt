@@ -20,6 +20,8 @@
 package pan.alexander.tordnscrypt.data.connection_checker
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import pan.alexander.tordnscrypt.utils.connectionchecker.HttpInternetChecker
 import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.connectionchecker.SocketInternetChecker
@@ -58,5 +60,13 @@ class ConnectionCheckerDataSourceImpl @Inject constructor(
 
     override fun checkNetworkAvailable(): Boolean =
         NetworkChecker.isNetworkAvailable(context)
+
+    override fun isWiFiActive(): Boolean = NetworkChecker.isWifiActive(context)
+
+    override fun isCaptivePortalDetected() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        NetworkChecker.isCaptivePortalDetected(context)
+    } else {
+        false
+    }
 
 }

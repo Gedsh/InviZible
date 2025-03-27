@@ -155,6 +155,11 @@
             android:summary="@string/pref_fast_logs_summ"
             android:title="@string/pref_fast_logs" />
         <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_fast_block_lan_with_free_wifi"
+            android:summary="@string/pref_fast_block_lan_with_free_wifi_summ"
+            android:title="@string/pref_fast_block_lan_with_free_wifi" />
+        <SwitchPreference
             android:defaultValue="false"
             android:key="pref_fast_block_http"
             android:summary="@string/pref_fast_block_http_summ"

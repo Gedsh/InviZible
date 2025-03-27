@@ -42,7 +42,6 @@ class VpnPreferenceHolder @Inject constructor(
     pathVars: PathVars
 ) {
     val dnsBlockedResponseCode = 3
-    val itpdRedirectAddress = "10.191.0.1"
     val ownUID = pathVars.appUid
     val blockHttp = defaultPreferences.getBoolean(BLOCK_HTTP, false)
     val routeAllThroughTor = defaultPreferences.getBoolean(ALL_THROUGH_TOR, true)
@@ -67,6 +66,7 @@ class VpnPreferenceHolder @Inject constructor(
     val lan = defaultPreferences.getBoolean(BYPASS_LAN, true)
     val firewallEnabled = preferenceRepository.getBoolPreference(FIREWALL_ENABLED)
     val preventDnsLeaks = defaultPreferences.getBoolean(PREVENT_DNS_LEAKS, false)
+    val blockLanOnFreeWiFi = defaultPreferences.getBoolean(BLOCK_LAN_ON_FREE_WIFI, true)
 
     val proxyAddress = defaultPreferences.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS)?.take(46) ?: LOOPBACK_ADDRESS
     val proxyPort = defaultPreferences.getString(PROXY_PORT, DEFAULT_PROXY_PORT).let {

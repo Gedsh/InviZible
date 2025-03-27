@@ -49,6 +49,7 @@ import javax.inject.Named
 
 private const val ON_APP_ADDED_REFRESH_PERIOD_MSEC = 250
 private val pattern: Pattern = Pattern.compile("UserHandle\\{(\\d+)\\}")
+private val captivePortalPattern = Pattern.compile("^com\\.(\\s+\\.)?android.captiveportallogin$")
 private val reentrantLock = ReentrantLock()
 
 class InstalledApplicationsManager private constructor(
@@ -95,7 +96,8 @@ class InstalledApplicationsManager private constructor(
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
                 && multiUserSupport
-                && isInteractAcrossUsersPermissionGranted(context)) {
+                && isInteractAcrossUsersPermissionGranted(context)
+            ) {
                 val userService = context.getSystemService(Context.USER_SERVICE) as UserManager
                 val list = userService.userProfiles
 
@@ -159,6 +161,10 @@ class InstalledApplicationsManager private constructor(
 
                 val uid = applicationInfo.uid
                 val packageName = applicationInfo.packageName
+                if (!captivePortalUidSearchingFinished
+                    && captivePortalPattern.matcher(packageName.lowercase()).matches()) {
+                    portalUids.add(uid)
+                }
 
                 if (appDataSaved == null) {
 
@@ -278,6 +284,10 @@ class InstalledApplicationsManager private constructor(
             if (multiUserAppsMap.isNotEmpty()) {
                 multiUserAppsMap.forEach { (uid, applicationData) ->
                     userAppsMap[uid] = applicationData
+                    if (!captivePortalUidSearchingFinished
+                        && captivePortalPattern.matcher(applicationData.pack.lowercase()).matches()) {
+                        portalUids.add(uid)
+                    }
                 }
             }
 
@@ -288,6 +298,8 @@ class InstalledApplicationsManager private constructor(
                     applications.add(knownApp)
                 }
             }
+
+            captivePortalUidSearchingFinished = true
 
             installedAppNamesStorage.updateAppUidToNames(applications)
 
@@ -644,5 +656,18 @@ class InstalledApplicationsManager private constructor(
                 showSpecialApps,
                 iconIsRequired
             )
+    }
+
+    companion object {
+        private var captivePortalUidSearchingFinished = false
+        private val portalUids = hashSetOf<Int>()
+        fun getCaptivePortalUids(): Set<Int> {
+            if (!captivePortalUidSearchingFinished
+                && portalUids.isEmpty()
+                && !reentrantLock.isLocked) {
+                Builder().build().getInstalledApps()
+            }
+            return portalUids
+        }
     }
 }

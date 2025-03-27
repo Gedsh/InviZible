@@ -37,6 +37,7 @@ public interface Constants {
     String STANDARD_USB_MODEM_INTERFACE_RANGE = "192.168.42.";
     String STANDARD_VPN_ADDRESS = "10.1.10.1";
     String STANDARD_ADDRESS_LOCAL_PC = "192.168.0.100";
+    String ITPD_REDIRECT_ADDRESS = "10.191.0.1";
 
     String[] STANDARD_ETHERNET_INTERFACE_NAMES = {"eth+"};
 
