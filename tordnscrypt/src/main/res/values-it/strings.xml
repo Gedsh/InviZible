@@ -557,4 +557,6 @@
     <string name="rules">regole</string>
     <string name="dns_rule_replace_local_list">Sostituisci elenco locale</string>
     <string name="pull_to_refresh">↓ Trascina per aggiornare ↓</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Nega la connessione alla LAN quando viene rilevato un Captive Portal</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Blocca la LAN sulle reti Wi-Fi pubbliche</string>
 </resources>
