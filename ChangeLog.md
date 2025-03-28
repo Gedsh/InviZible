@@ -1315,3 +1315,12 @@
 * Fixed real-time logs not displaying in root mode in some cases.
 * Updated Italian and Arabic translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.4.8**
+* Updated DNSCrypt to version 2.1.8.
+* Updated Tor to version 4.8.16.
+* Updated Tor SnowFlake obfuscating proxy to version 2.11.0.
+* Added an option to block LAN connections when using public Wi-Fi.
+* Fixed display of archived apps on Android 15.
+* Updated German, Persian and Spanish translations.
+* Fixes and optimizations.
