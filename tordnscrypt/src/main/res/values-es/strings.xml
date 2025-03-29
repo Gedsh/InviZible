@@ -319,7 +319,7 @@
     <string name="update_over_three_activations">"Has activado 3 copias de InviZible con éste código. Si consideras éste mensaje como erróneo, por favor contacta al desarrollador."</string>
     <string name="update_wrong_code">"Código PRO erroneo. Por favor, contacta al desarrollador."</string>
     <string name="update_over_five_times">"Comprobaste hoy más de 5 veces si había actualizaciones. Por favor, inténtalo de nuevo pasado un tiempo."</string>
-    <string name="verifier_error">"¡Cuidado! Esta versión de InviZible no es la original."</string>
+    <string name="verifier_error">Parece una versión no oficial de InviZible. ¡Por favor ten cuidado!</string>
     <string name="only_for_pro">"Solo versión PRO"</string>
     <string name="donate">"Donaciones"</string>
     <string name="donate_project">El Proyecto InviZible Pro busca tu ayuda. Visita la página de donaciones o introduce el código premium que ya has recibido.</string>
