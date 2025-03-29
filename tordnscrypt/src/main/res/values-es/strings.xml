@@ -132,7 +132,7 @@
     <string name="pref_common_unblock_with_tor">Seleccionar páginas</string>
     <string name="pref_common_unblock_with_tor_summ">Lista de páginas para abrir con Tor para el HOTSPOT</string>
     <string name="pref_common_excludes_from_tor">Excluir páginas</string>
-    <string name="pref_common_excludes_from_tor_summ">Lista de páginas para abrir directamente para HOTSPOT</string>
+    <string name="pref_common_excludes_from_tor_summ">Lista de páginas web para abrir directamente por el HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Permitir compartir I2P</string>
     <!-- Not sure about this translation. ¿What is it literal meaning, to repair, or to stick a value? -->
     <string name="pref_common_fix_ttl">"Establecer TTL"</string>
