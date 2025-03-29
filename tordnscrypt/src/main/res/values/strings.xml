@@ -150,7 +150,7 @@
     <string name="pref_fast_logs_summ">Show application connection logs in the DNS tab</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
-    <string name="pref_fast_block_lan_with_free_wifi">Block LAN on free Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Block LAN on public Wi-Fi</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Deny connection to the LAN when a Captive Portal is detected</string>
     <string name="pref_fast_categ_update">Update</string>
     <string name="pref_fast_auto_update">Automatic updates</string>
