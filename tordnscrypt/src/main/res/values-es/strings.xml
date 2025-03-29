@@ -402,7 +402,7 @@
     <string name="pref_common_proxy">"Usar proxy SOCKS5"</string>
     <string name="pref_common_proxy_summ">"InviZible Pro remitirá todas las conexiones al proxy SOCKS5 indicado"</string>
     <string name="pref_common_compatibility_mode">"Modo de compatibilidad"</string>
-    <string name="pref_common_compatibility_mode_summ">ActIvar si tu dispositivo cuenta con una ROM personalizada y la conexión se pierde cuando pulsas INICIAR</string>
+    <string name="pref_common_compatibility_mode_summ">Activarla si tu dispositivo cuenta con una ROM personalizada y la conexión se pierde cuando pulsas INICIAR</string>
     <string name="pref_common_shell_control">"Activar control de scripts"</string>
     <string name="pref_common_shell_control_summ">"Utiliza éste comando para controlar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
