@@ -480,7 +480,7 @@
     <string name="btnResetSettings">"Reiniciar configuración"</string>
     <string name="backupSaved">"Copia guardada"</string>
     <string name="backupRestored">"Copia restaurada"</string>
-    <string name="thanks_for_donate_gp">¡El proyecto InviZible Pro y su desarrollador agradecen tu ayuda!</string>
+    <string name="thanks_for_donate_gp">¡El proyecto InviZible Pro y su desarrollador expresan su agradecimiento por la ayuda!</string>
     <string name="pref_tor_hardware_accel_summ">"Intentar usar la aceleración de hardware de cifrado incorporada cuando esté disponible."</string>
     <string name="notification_connecting">"Conectando…"</string>
     <string name="notification_waiting_network">"Esperando red…"</string>
