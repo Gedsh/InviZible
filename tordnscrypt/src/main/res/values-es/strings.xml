@@ -472,7 +472,7 @@
     <string name="helper_dnscrypt_proxy_wifi">"Por favor, desactiva en los ajustes Wi-Fi el proxy de red en la configuración de Android. Ésta opción entra en conflicto con InviZible."</string>
     <string name="helper_dnscrypt_proxy_gsm">"Por favor, desactiva en los ajustes APN el proxy de red móvil en la configuración de Android. Ésta opción entra en conflicto con InviZible."</string>
     <string name="notification_channel_auxiliary">"Notificaciones auxiliares"</string>
-    <string name="pref_common_dns_rebind_protection">Protección contra el cambio de las DNS</string>
+    <string name="pref_common_dns_rebind_protection">Protección contra el cambio de DNS</string>
     <string name="pref_common_dns_rebind_protection_summ">"Bloquear sitio cuando se detecte un ataque de secuentro de enlace DNS"</string>
     <string name="notification_dns_rebinding_title">"Secuestro de enlace DNS"</string>
     <string name="notification_dns_rebinding_text">"¡Ataque de secuestro de enlace DNS detectado! Se ha bloqueado el sitio %s."</string>
