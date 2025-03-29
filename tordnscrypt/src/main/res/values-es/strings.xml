@@ -181,7 +181,7 @@
     <string name="pref_dnscrypt_nx_log_summ">Consultas de registro para zonas inexistentes. Estas consultas pueden revelar la presencia de malware, aplicaciones rotas u obsoletas, y dispositivos que señalan su presencia a terceros.</string>
     <string name="pref_dnscrypt_nx_log">Registro solicitudes dudosas</string>
     <string name="open_nx_log">"Abrir registro dudoso"</string>
-    <string name="pref_dnscrypt_blacklist_categ">"Bloqueo basado en patrones (Lista de bloqueo)."</string>
+    <string name="pref_dnscrypt_blacklist_categ">Bloqueo basado en patrones (listas de bloqueo)</string>
     <string name="pref_dnscrypt_blacklist">"Lista de bloqueo"</string>
     <string name="pref_dnscrypt_blacklist_summ">"La lista de bloqueo se define por un patrón por línea."</string>
     <string name="pref_dnscrypt_ipblacklist_categ">"Bloqueo basado en patrones de direcciones IP (Lista de bloqueo de IPs)"</string>
@@ -402,7 +402,7 @@
     <string name="pref_common_proxy">"Usar proxy SOCKS5"</string>
     <string name="pref_common_proxy_summ">"InviZible Pro remitirá todas las conexiones al proxy SOCKS5 indicado"</string>
     <string name="pref_common_compatibility_mode">"Modo de compatibilidad"</string>
-    <string name="pref_common_compatibility_mode_summ">Activalo si la conectividad se pierde en tu dispositivo con una rom personalizada cuando inicias el programa.</string>
+    <string name="pref_common_compatibility_mode_summ">ActIvar si tu dispositivo cuenta con una ROM personalizada y la conexión se pierde cuando pulsas INICIAR</string>
     <string name="pref_common_shell_control">"Activar control de scripts"</string>
     <string name="pref_common_shell_control_summ">"Utiliza éste comando para controlar los módulos de la aplicación: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Donde 1 - arranca el módulo, y 0 - lo para."</string>
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
@@ -495,7 +495,7 @@
     <string name="pref_firewall_show_all_apps_on_summ">"Muestra las aplicaciones independientemente de si la aplicación declara que usan Internet o no."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Ver sólo aplicaciones que declaran que usan Internet."</string>
     <string name="pref_common_kill_switch">"Interruptor general"</string>
-    <string name="pref_common_kill_switch_summ">"Bloquea cualquier conexión hacia Internet cuando Tor, DNSCrypt and I2Pd están parados."</string>
+    <string name="pref_common_kill_switch_summ">Bloquea la conexión a Internet cuando Tor, DNSCrypt e I2Pd están parados</string>
     <string name="notification_internet_blocked_message">"Las conexiones hacia Internet están bloqueadas debido al ajuste del Interruptor general. Arranque Tor, DNSCrypt o I2Pd para permitir conectividad. O desactive el ajuste en Configuración General."</string>
     <string name="list_is_empty">La lista está vacía</string>
     <string name="pref_common_use_busybox_auto">"Auto"</string>
@@ -558,4 +558,6 @@
     <string name="proxy_use_for_non_tor">Utilice un proxy para aplicaciones que evitan Tor</string>
     <string name="pref_fast_prevent_dns_leak">Prevenir fugas DNS</string>
     <string name="pref_fast_prevent_dns_leak_summ">Bloquear intentos de ocultar peticiones DNS. Puede causar problemas de conectividad</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Bloquear LAN con wifi libre</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Bloquea la conexión a LAN al detectar un Portal Cautivo</string>
 </resources>
