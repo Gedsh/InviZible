@@ -434,7 +434,7 @@
     <string name="notification_arp_spoofing">"¡Envenenamiento ARP detectado!"</string>
     <string name="notification_rogue_dhcp">"¡Suplantación DHCP detectada!"</string>
     <string name="notification_mitm">"¡Ataque de secuestro de la conexión detectado! ¡Tu tráfico podría estar siendo interceptado por otro dispositivo en tu red local!. ¡Por favor, desactive el Wi-Fi, seguir utilizando éste punto de acceso Wi-Fi podría ser peligroso para usted y sus datos!"</string>
-    <string name="toast_arp_detection_not_supported">¡Tu dispositivo no es compatible con la detección de ataques de envenenamiento de tablas ARP!</string>
+    <string name="toast_arp_detection_not_supported">¡Tú dispositivo no admite la detección de la suplantación de la identidad ARP!</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Por favor, desactiva el elemento Nodos de entrada (EntryNodes) en la configuración de Tor, de otra manera no podrá usar los puentes con Tor."</string>
     <string name="pref_fast_tor_bypass_lan">"Excluir direcciones LAN"</string>
     <string name="pref_fast_tor_bypass_lan_summ">Excluye de las reglas de redireccionamiento las direcciones IP reservadas para rangos IANA y LAN</string>
