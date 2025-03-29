@@ -408,7 +408,7 @@
     <string name="pref_common_local_eth_device_addr">"Dirección LAN IP del dispositivo"</string>
     <string name="pref_common_local_eth_device_addr_summ">"Activa \"Establecer TTL\" y configura el dispositivo en LAN para que conecte a InviZible. Usa como router por defecto: %1$s, y como servidor DNS: %2$s."</string>
     <string name="pref_common_multi_user">"Modo Multi-usuario"</string>
-    <string name="pref_common_multi_user_summ">Soporte para aplicaciones duales, MIUI, Island, refugio y aplicaciones de perfil de trabajo. Puede ser ineficaz en modo VPN</string>
+    <string name="pref_common_multi_user_summ">Soporta aplicaciones duales, MIUI, Island, Shelter y aplicaciones de perfil de trabajo</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS proxy de salida</string>
     <string name="pref_tor_SOCKS_output_address_summ">"Tor remitirá todas las conexiones OR al proxy SOCKS5 indicado."</string>
     <string name="notification_channel_services">"Servicios en marcha"</string>
