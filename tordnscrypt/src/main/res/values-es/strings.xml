@@ -119,7 +119,7 @@
     <string name="pref_common_refresh_rules_summ">Reaplicar reglas de tráfico en cambios de conectividad</string>
     <string name="pref_common_show_notification">"Mostrar notificaciones"</string>
     <string name="pref_common_wakelock">"Prevenir sueño profundo del dispositivo"</string>
-    <string name="pref_common_wakelock_summ">Añadida la protección sin necesidad de root para que el sistema Android no elimine las aplicaciones. Esto puede agotar la batería</string>
+    <string name="pref_common_wakelock_summ">No permite que el dispositivo entre en modo suspensión. Puede ser útil cuando se utiliza HOTSPOT. ¡Drena la batería!</string>
     <string name="pref_common_show_help">"Mensajes de ayuda"</string>
     <string name="pref_common_show_help_summ">Mostrar todos los mensajes que han sido marcados como no permitidos para mostrarse</string>
     <string name="pref_common_notification_helper">Por favor, excluye InviZible Pro de la optimización de batería de Android para evitar que el sistema termine DNSCrypt, Tor o I2P en cualquier momento. Algunos sistemas especiales, como MIUI, pueden requerir pasos adicionales.</string>
