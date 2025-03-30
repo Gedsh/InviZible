@@ -1324,3 +1324,13 @@
 * Fixed display of archived apps on Android 15.
 * Updated German, Persian and Spanish translations.
 * Fixes and optimizations.
+
+**InviZible Pro stable 7.1.0**
+* Updated DNSCrypt to version 2.1.8.
+* Updated Tor to version 4.8.16.
+* Updated Purple I2P to version 2.56.0.
+* Added I2P sharing option for VPN mode.
+* Added an option to block LAN connections when using public Wi-Fi.
+* Implemented display of real-time logs even when DNSCrypt is not running.
+* Fixed display of archived apps on Android 15.
+* Fixed round monochrome icon.
