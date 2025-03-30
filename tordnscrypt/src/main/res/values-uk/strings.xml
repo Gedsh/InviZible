@@ -333,7 +333,7 @@
     <string name="vpn_mode_off">Режим VPN вимкнено</string>
     <string name="vpn_mode_active">Режим VPN активовано</string>
     <string name="thanks_for_donate_gp">Проект InviZible Pro та його автор висловлюють подяку за допомогу!</string>
-    <string name="vpn_tor_tether_summ">Будь ласка, налаштуйте використання проксі в налаштуваннях підключеного пристрою. Типове значення: IP:10.1.10.1 Port:8118</string>
+    <string name="vpn_tor_tether_summ">Будь ласка, налаштуйте використання HTTP проксі в налаштуваннях підключеного пристрою. Вкажіть адресу: IP:10.1.10.1 Port:%s</string>
     <string name="vpn_mode_error">Помилка режиму VPN!</string>
     <string name="main_fragment_access_i2p">Доступ до мережі I2P з Purple I2P</string>
     <string name="add_custom_server_title">Додати власний сервер</string>
@@ -525,4 +525,8 @@
     <string name="pref_common_always_on_vpn_summ">Увімкніть Постійний VPN і Блокувати з\'єднання без VPN для InviZible Pro, щоб заблокувати інтернет, коли додаток не запущений</string>
     <string name="helper_tor_check_proxy">Ви налаштували використання Socks5 проксі, але проксі, схоже, не працює. Будь ласка, перевірте ваші налаштування!</string>
     <string name="proxy_use_for_non_tor">Використовувати проксі для додатків, що працюють без Tor</string>
+    <string name="pref_fast_prevent_dns_leak">Запобігати витоку DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Блокувати спроби приховати запити DNS. Може викликати проблеми зі з\'єднанням</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Блокувати LAN на безкоштовному Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокувати доступ до локальної мережі, коли виявлено сторінку реєстрації</string>
 </resources>

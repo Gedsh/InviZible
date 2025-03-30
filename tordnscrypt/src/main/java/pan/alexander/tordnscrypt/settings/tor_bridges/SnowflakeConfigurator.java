@@ -45,8 +45,7 @@ public class SnowflakeConfigurator {
 
     private static final int AMP_CACHE = 1;
     private static final int CDN77 = 2;
-    private static final int AZURE = 3;
-    private static final int AMAZON = 4;
+    private static final int AMAZON = 3;
 
     private final Context context;
     private final Lazy<SharedPreferences> defaultPreferences;
@@ -119,10 +118,8 @@ public class SnowflakeConfigurator {
                     + " ampcache=https://cdn.ampproject.org/";
         } else if (rendezvous == CDN77) {
             return "https://1098762253.rsc.cdn77.org/";
-        } else if (rendezvous == AZURE) {
-            return "https://snowflake-broker.azureedge.net/";
         } else {
-            return "https://snowflake-broker.azureedge.net/";
+            return "https://1098762253.rsc.cdn77.org/";
         }
     }
 
@@ -132,8 +129,6 @@ public class SnowflakeConfigurator {
             return "www.google.com,cdn.ampproject.org";
         } else if (rendezvous == CDN77) {
             return "docs.plesk.com,maxst.icons8.com,app.datapacket.com";
-        } else if (rendezvous == AZURE) {
-            return "ajax.aspnetcdn.com";
         } else {
             return "ajax.aspnetcdn.com";
         }

@@ -56,6 +56,8 @@ import static pan.alexander.tordnscrypt.iptables.Tethering.wifiAPAddressesRange;
 import static pan.alexander.tordnscrypt.proxy.ProxyFragmentKt.CLEARNET_APPS_FOR_PROXY;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.SNOWFLAKE_BRIDGES_DEFAULT;
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridges.SNOWFLAKE_BRIDGES_OWN;
+import static pan.alexander.tordnscrypt.utils.Constants.C_DNS_41;
+import static pan.alexander.tordnscrypt.utils.Constants.C_DNS_42;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNG_41;
 import static pan.alexander.tordnscrypt.utils.Constants.G_DNS_42;
@@ -79,11 +81,11 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECT
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.GSM_ON_REQUESTED;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IGNORE_SYSTEM_DNS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_FOR_CLEARNET;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.IPS_TO_UNLOCK;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
@@ -144,7 +146,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         routeAllThroughTor = shPref.getBoolean(ALL_THROUGH_TOR, true);
         lan = shPref.getBoolean(BYPASS_LAN, true);
         blockHttp = shPref.getBoolean(BLOCK_HTTP, false);
-        ignoreSystemDNS = shPref.getBoolean(IGNORE_SYSTEM_DNS, false);
+        preventDnsLeaks = shPref.getBoolean(PREVENT_DNS_LEAKS, false);
         apIsOn = preferences.getBoolPreference(PreferenceKeys.WIFI_ACCESS_POINT_IS_ON);
         modemIsOn = preferences.getBoolPreference(PreferenceKeys.USB_MODEM_IS_ON);
         boolean showConnectionLogs = defaultPreferences.get().getBoolean(CONNECTION_LOGS, true);
@@ -167,7 +169,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         boolean killSwitch = shPref.getBoolean(KILL_SWITCH, false);
 
         String dnscryptBootstrapResolver = QUAD_DNS_41;
-        for (String resolver: pathVars.getDNSCryptFallbackRes().split(", ?")) {
+        for (String resolver : pathVars.getDNSCryptFallbackRes().split(", ?")) {
             if (resolver.matches(IPv4_REGEX)) {
                 dnscryptBootstrapResolver = resolver;
                 break;
@@ -290,14 +292,20 @@ public class ModulesIptablesRules extends IptablesRulesSender {
         String blockTlsRuleNatTCP = "";
         String blockTlsRuleNatUDP = "";
         String blockGDNSNat = "";
-        if (ignoreSystemDNS) {
+        if (preventDnsLeaks) {
             if (!blockHttp) {
                 blockRejectAddressFilter = iptables + "-A " + FILTER_OUTPUT_CORE + " -d " + rejectAddress + " -j REJECT";
             }
             blockTlsRuleNatTCP = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp --dport " + DNS_OVER_TLS_PORT + " -j DNAT --to-destination " + rejectAddress;
             blockTlsRuleNatUDP = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp --dport " + DNS_OVER_TLS_PORT + " -j DNAT --to-destination " + rejectAddress;
-            blockGDNSNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d " + G_DNG_41 + " -j DNAT --to-destination " + rejectAddress + "; "
-                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -d " + G_DNS_42 + " -j DNAT --to-destination " + rejectAddress;
+            blockGDNSNat = iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + G_DNG_41 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + G_DNG_41 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + G_DNS_42 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + G_DNS_42 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + C_DNS_41 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + C_DNS_41 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p tcp -d " + C_DNS_42 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress + "; "
+                    + iptables + "-t nat -A " + NAT_OUTPUT_CORE + " -p udp -d " + C_DNS_42 + " ! --dport 53 -j DNAT --to-destination " + rejectAddress;
         }
 
         String unblockHOTSPOT = iptables + "-D FORWARD -j DROP 2> /dev/null || true";

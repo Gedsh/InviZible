@@ -37,6 +37,7 @@ public interface Constants {
     String STANDARD_USB_MODEM_INTERFACE_RANGE = "192.168.42.";
     String STANDARD_VPN_ADDRESS = "10.1.10.1";
     String STANDARD_ADDRESS_LOCAL_PC = "192.168.0.100";
+    String ITPD_REDIRECT_ADDRESS = "10.191.0.1";
 
     String[] STANDARD_ETHERNET_INTERFACE_NAMES = {"eth+"};
 
@@ -75,6 +76,11 @@ public interface Constants {
     String QUAD_DNS_42 = "149.112.112.112";
     String QUAD_DNS_61 = "2620:fe::fe";
     String QUAD_DNS_62 = "2620:fe::9";
+
+    String C_DNS_41 = "1.1.1.1";
+    String C_DNS_42 = "1.0.0.1";
+    String C_DNS_61 = "2606:4700:4700::1111";
+    String C_DNS_62 = "2606:4700:4700::1001";
 
     String QUAD_DOH_SERVER = "https://dns.quad9.net/dns-query";
 

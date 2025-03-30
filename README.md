@@ -135,8 +135,6 @@ If you cannot build yourself, there are prebuilt versions of **InviZible Pro** a
 
 #### Translating
 
-[Translate InviZible on POEditor](https://poeditor.com/join/project/h6ulNL9gEd).
-
 [Translate InviZible on Hosted Weblate](https://hosted.weblate.org/engage/invizible/).
 
 [![Translation status](https://hosted.weblate.org/widgets/invizible/-/multi-auto.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
@@ -171,8 +169,6 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 **XLM**: GBID6I3VYR4NIFLZWI3MEQH3M2H72COC3HQDI5WMYYQGAC3TE55TSKAX
 
 **XMR** 82WFzofvGUdY52w9zCfrZWaHVqEDcJH7y1FujzvXdGPeU9UpuFNeCvtCKhtpC6pZmMYuCNgFjcw5mHAgEJQ4RTwV9XRhobX
-
-Please note that the XMR address has changed. The old address is no longer valid.
 
 ## License
 

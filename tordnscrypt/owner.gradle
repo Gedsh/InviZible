@@ -10,7 +10,7 @@ def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
-    compileSdk 34
+    compileSdk 35
 
     namespace 'pan.alexander.tordnscrypt'
 
@@ -35,7 +35,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "7.0.0"
+            versionName "7.1.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -45,7 +45,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "7.0.0"
+            versionName "7.1.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -55,7 +55,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "2.4.3"
+            versionName "2.4.8"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -66,7 +66,7 @@ android {
         google_play {
             minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
-            versionName "7.0.0"
+            versionName "7.1.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -108,7 +108,7 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 34
-        versionCode 243
+        versionCode 248
 
         resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar", "nl", "ta"
 
@@ -121,7 +121,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        def buildDate= System.getenv("SOURCE_DATE_EPOCH") == null
+        def buildDate = System.getenv("SOURCE_DATE_EPOCH") == null
                 ? System.currentTimeMillis() : 1000 * Long.parseLong(System.getenv("SOURCE_DATE_EPOCH"))
         buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + buildDate + "L)"
 
@@ -146,7 +146,7 @@ android {
         sourceCompatibility = 17
         targetCompatibility = 17
     }
-    buildToolsVersion = '34.0.0'
+    buildToolsVersion = '36.0.0'
 
     bundle {
         language {
@@ -156,7 +156,7 @@ android {
 
     externalNativeBuild {
         cmake {
-            version "3.18.1"
+            version "3.31.6"
             path "CMakeLists.txt"
         }
     }
@@ -167,7 +167,7 @@ android {
         }
     }
 
-    packagingOptions{
+    packagingOptions {
         jniLibs.useLegacyPackaging = true
 
         doNotStrip '*/*/libdnscrypt-proxy.so'
@@ -202,7 +202,6 @@ android {
     }
 
 }
-
 
 
 repositories {

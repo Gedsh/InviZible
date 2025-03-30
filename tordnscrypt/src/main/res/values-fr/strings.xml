@@ -36,7 +36,7 @@
     <string name="exit">"Sortir"</string>
     <string name="done">"Terminé"</string>
     <string name="wrong">"Une erreur s'est produite !"</string>
-    <string name="install_message">"Voulez-vous terminer l'installation?"</string>
+    <string name="install_message">Voulez-vous terminer l\'installation ?</string>
     <string name="premium">"Version Premium"</string>
     <string name="agree">"J'approuve"</string>
     <string name="disagree">"Je désapprouve"</string>
@@ -79,7 +79,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Exclure des applications</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Liste d'applications à ouvrir directement"</string>
     <string name="pref_fast_site_refresh_interval">Intervalle de rafraîchissement</string>
-    <string name="pref_fast_site_refresh_interval_summ">Durée en heures entre chaque actualisation des adresses IP des sites. Pour Android 5.1 et ultérieur. Mettez 0 pour empêcher le rafraîchissement.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Durée en heures entre chaque actualisation des adresses IP des sites. Pour Android 5.1 et ultérieur. Mettre 0 pour empêcher le rafraîchissement :</string>
     <string name="pref_fast_use_tor_bridges">"Passerelles"</string>
     <string name="pref_fast_use_tor_bridges_summ">"Utilisez-le si vous ne pouvez pas vous connecter au réseau Tor"</string>
     <string name="pref_fast_use_tor_bridges_no">"Ne pas utiliser de passerelles"</string>
@@ -110,7 +110,7 @@
     <string name="pref_fast_through_tor_update_summ">"Vérifier les mises à jour uniquement via Tor et lorsque Tor est en fonctionnement"</string>
     <string name="pref_common_categ_run_with_root">"Utiliser les privilèges Administrateurs"</string>
     <string name="pref_common_run_with_root">"Faire fonctionner les modules avec les Privilèges Administrateurs"</string>
-    <string name="pref_common_run_with_root_summ">"Utiliser les privilèges Administrateurs pour DNSCrypt, Tor, I2P "</string>
+    <string name="pref_common_run_with_root_summ">Utiliser les privilèges Administrateurs pour les modules DNSCrypt, Tor, I2P. L\'activation de cette fonctionnalité laisse les modules non gérés et peut entraîner des problèmes de connexion !</string>
     <string name="pref_common_categ_other">"Autre"</string>
     <string name="pref_common_block_http">"Bloquer l'http sur les POINTS D'ACCÈS"</string>
     <string name="pref_common_block_http_summ">"Refuser la connexion au port http 80 sur les POINTS D'ACCÈS"</string>
@@ -119,7 +119,7 @@
     <string name="pref_common_refresh_rules_summ">"Mettre à jour les règles à chaque changement de connectivité"</string>
     <string name="pref_common_show_notification">"Afficher la notification"</string>
     <string name="pref_common_wakelock">"Empêcher la mise en veille de l'appareil"</string>
-    <string name="pref_common_wakelock_summ">Ne pas laisser l\'appareil passer en mode veille. Peut être utile lors de l\'utilisation de HOTSPOT. Peut décharger la batterie</string>
+    <string name="pref_common_wakelock_summ">Ne pas laisser l\'appareil passer en mode veille. Peut être utile lors de l\'utilisation de Point d\'accès. Peut décharger la batterie !</string>
     <string name="pref_common_show_help">"Messages d'aide"</string>
     <string name="pref_common_show_help_summ">Afficher tous les messages qui ont été marqués comme non autorisés à être affichés</string>
     <string name="pref_common_notification_helper">"Veuillez exclure InviZible Pro de l\'optimisation de la batterie d\'Android. Sinon, le système tuera les services DNSCrypt, Tor ou I2P à n\'importe quel moment. Sur les systèmes spécifiques, comme MIUI, cela nécessite quelques mesures supplémentaires"</string>
@@ -331,7 +331,7 @@
     <string name="vpn_mode_active">"Le mode VPN est actif"</string>
     <string name="vpn_mode_off">"Le mode VPN est désactivé"</string>
     <string name="vpn_mode_error">"Erreur du mode VPN!"</string>
-    <string name="vpn_tor_tether_summ">"Veuillez configurer l'utilisation du serveur mandataire (proxy) dans les paramètres de l'appareil connecté. Valeurs par défaut: IP:10.1.10.1 Port:8118"</string>
+    <string name="vpn_tor_tether_summ">"Veuillez configurer l'utilisation du serveur mandataire (proxy) dans les paramètres de l'appareil connecté. Valeurs par défaut: IP:10.1.10.1 Port: %s"</string>
     <string name="main_fragment_hide_ip">"Masquer l'IP avec TOR"</string>
     <string name="main_fragment_protect_dns">Se défendre avec DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Accès aux réseaux I2P avec Purple I2P</string>
@@ -476,7 +476,7 @@
     <string name="pref_common_dns_rebind_protection_summ">"Bloquer un site lorsqu'une attaque par rebondissement du DNS est détectée"</string>
     <string name="notification_dns_rebinding_title">"Rebondissements DNS"</string>
     <string name="notification_dns_rebinding_text">"Attaque potentielle par rebond DNS (DNS rebinding) détectée! Le site %s a été bloqué."</string>
-    <string name="areYouSure">"Êtes-vous sûr? Cette action ne pourra être annulée"</string>
+    <string name="areYouSure">Êtes-vous sûr ? Cette action ne pourra être annulée</string>
     <string name="btnResetSettings">"Réinitialiser les paramètres"</string>
     <string name="backupSaved">"Sauvegarde enregistré"</string>
     <string name="backupRestored">"Sauvegarde restauré"</string>
@@ -554,4 +554,8 @@
     <string name="dns_rule_add_local_list">Ajouter une liste locale</string>
     <string name="pull_to_refresh">↓ Tirer pour rafraîchir ↓</string>
     <string name="pref_tor_nodes_categ">Nœuds</string>
+    <string name="helper_tor_check_proxy">Vous avez configuré l\'utilisation du proxy Socks5, mais le proxy ne semble pas fonctionner. S\'il vous plaît vérifier vos paramètres !</string>
+    <string name="proxy_use_for_non_tor">Utiliser un proxy pour les applications qui contournent Tor</string>
+    <string name="pref_fast_prevent_dns_leak">Prévenir les fuites DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Bloquer les tentatives de dissimulation des requêtes DNS. Peut entraîner des problèmes de connexion</string>
 </resources>

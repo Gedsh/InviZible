@@ -20,7 +20,9 @@
 package pan.alexander.tordnscrypt.iptables
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.iptables.IptablesConstants.*
 import pan.alexander.tordnscrypt.modules.ModulesStatus
@@ -48,12 +50,15 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import javax.inject.Inject
+import javax.inject.Named
 
 private const val FIREWALL_RETURN_MARK = 15600
 
 class IptablesFirewall @Inject constructor(
     private val context: Context,
     private val preferences: PreferenceRepository,
+    @Named(SharedPreferencesModule.DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences,
     private val pathVars: PathVars,
     private val connectivityCheckManager: dagger.Lazy<ConnectivityCheckManager>
 ) {
@@ -77,7 +82,7 @@ class IptablesFirewall @Inject constructor(
 
         prepareUidAllowed(vpnActive)
 
-        if (modulesStatus.mode == OperationMode.ROOT_MODE) {
+        if (modulesStatus.mode == OperationMode.ROOT_MODE && modulesStatus.firewallState != ModuleState.STOPPING) {
             modulesStatus.setFirewallState(ModuleState.RUNNING, preferences)
         }
 
@@ -187,7 +192,23 @@ class IptablesFirewall @Inject constructor(
                 it
             }
         }.plus(
-            getAppLanRules(iptables, uidLanAllowed)
+            if (defaultPreferences.getBoolean(BLOCK_LAN_ON_FREE_WIFI, true)
+                && getCaptivePortalUids().isNotEmpty()
+                && isCaptivePortalDetected()
+                && isWiFiActive()) {
+                mutableListOf<String>().apply {
+                    if (uidLanAllowed.contains(SPECIAL_UID_KERNEL)) {
+                        add("$iptables -A $FILTER_FIREWALL_LAN -m owner ! --uid-owner 0:999999999 -j MARK --set-mark $FIREWALL_RETURN_MARK || true")
+                    }
+                    getCaptivePortalUids().filter {
+                        uidLanAllowed.contains(it)
+                    }.forEach {
+                        add("$iptables -A $FILTER_FIREWALL_LAN -m owner --uid-owner $it -j MARK --set-mark $FIREWALL_RETURN_MARK 2> /dev/null || true")
+                    }
+                }
+            } else {
+                getAppLanRules(iptables, uidLanAllowed)
+            }
         ).plus(
             "$iptables -A $FILTER_FIREWALL_LAN -m mark --mark $FIREWALL_RETURN_MARK -j RETURN"
         ).plus(
@@ -417,4 +438,14 @@ class IptablesFirewall @Inject constructor(
             .filter { it.matches(positiveNumberRegex) && it.toLong() <= Int.MAX_VALUE }
             .map { it.toInt() }
             .filter { it <= 2000 }
+
+    fun isCaptivePortalDetected() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        NetworkChecker.isCaptivePortalDetected(context)
+    } else {
+        false
+    }
+
+    fun isWiFiActive() = isWifiActive(context)
+
+    fun getCaptivePortalUids() = InstalledApplicationsManager.getCaptivePortalUids()
 }

@@ -161,15 +161,15 @@ class FirewallNotification : BroadcastReceiver() {
             } else {
                 packageManager.getPackageInfo(packages[0], 0).applicationInfo
             }
-            system = (applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+            system = ((applicationInfo?.flags ?: 1) and ApplicationInfo.FLAG_SYSTEM) != 0
             val pInfo: PackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 packageManager.getPackageInfo(
-                    applicationInfo.packageName,
+                    applicationInfo?.packageName ?: "Undefined package",
                     PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS.toLong())
                 )
             } else {
                 packageManager.getPackageInfo(
-                    applicationInfo.packageName,
+                    applicationInfo?.packageName ?: "Undefined package",
                     PackageManager.GET_PERMISSIONS
                 )
             }
@@ -181,7 +181,9 @@ class FirewallNotification : BroadcastReceiver() {
                     }
                 }
             }
-            label = packageManager.getApplicationLabel(applicationInfo).toString()
+            label = applicationInfo?.let {
+                packageManager.getApplicationLabel(it).toString()
+            } ?: "Undefined label"
         } catch (e: Exception) {
             useInternet = true
             loge("FirewallNotification packageAdded", e)

@@ -72,6 +72,7 @@ import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorF
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Utils.isInteractAcrossUsersPermissionGranted;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_ON_VPN;
@@ -85,6 +86,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TE
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REFRESH_RULES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_CONTROL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
@@ -213,7 +215,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
 
         Preference multiUser = findPreference(MULTI_USER_SUPPORT);
         if (otherCategory != null && multiUser != null) {
-            if (modulesStatus.getMode() == PROXY_MODE) {
+            if (modulesStatus.getMode() == VPN_MODE && !isInteractAcrossUsersPermissionGranted(activity)
+                    || modulesStatus.getMode() == PROXY_MODE) {
                 otherCategory.removePreference(multiUser);
             } else {
                 multiUser.setOnPreferenceChangeListener(this);
@@ -722,7 +725,6 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             preferencesHOTSPOT.add(findPreference("pref_common_tor_route_all"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteUnlockTether"));
             preferencesHOTSPOT.add(findPreference("prefTorSiteExcludeTether"));
-            preferencesHOTSPOT.add(findPreference(ITPD_TETHERING));
             preferencesHOTSPOT.add(findPreference("pref_common_block_http"));
             preferencesHOTSPOT.add(findPreference(FIX_TTL));
             preferencesHOTSPOT.add(findPreference("pref_common_local_eth_device_addr"));
@@ -736,10 +738,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             }
 
             Preference pref_common_tor_tethering = findPreference(TOR_TETHERING);
-
             if (pref_common_tor_tethering != null) {
-                pref_common_tor_tethering.setSummary(getText(R.string.vpn_tor_tether_summ));
+                pref_common_tor_tethering.setSummary(String.format(getString(R.string.vpn_tor_tether_summ), pathVars.get().getTorHTTPTunnelPort()));
                 pref_common_tor_tethering.setOnPreferenceChangeListener(this);
+            }
+
+            Preference pref_common_itpd_tethering = findPreference(ITPD_TETHERING);
+            if (pref_common_itpd_tethering != null) {
+                pref_common_itpd_tethering.setSummary(String.format(getString(R.string.vpn_tor_tether_summ), pathVars.get().getITPDHttpProxyPort()));
+                pref_common_itpd_tethering.setOnPreferenceChangeListener(this);
             }
         }
 
@@ -759,11 +766,15 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         PreferenceCategory categoryOther = findPreference("common_other");
+        Preference refreshRules = findPreference(REFRESH_RULES);
         Preference selectIptables = findPreference(USE_IPTABLES);
         Preference waitIptables = findPreference(WAIT_IPTABLES);
         Preference selectBusybox = findPreference("pref_common_use_busybox");
         Preference killSwitch = findPreference(KILL_SWITCH);
 
+        if (categoryOther != null && refreshRules != null) {
+            categoryOther.removePreference(refreshRules);
+        }
         if (categoryOther != null && selectIptables != null) {
             categoryOther.removePreference(selectIptables);
         }

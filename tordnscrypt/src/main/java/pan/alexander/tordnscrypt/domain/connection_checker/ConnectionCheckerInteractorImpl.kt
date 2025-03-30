@@ -121,6 +121,10 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         networkAvailableViaNetworkCallback = networkIsAvailable
     }
 
+    override fun isFreeWiFiAccessPointDetected(): Boolean {
+        return checkerRepository.isCaptivePortalOnWiFiDetected()
+    }
+
     override fun checkInternetConnection() {
         if (checking.compareAndSet(false, true)) {
             checkConnection()

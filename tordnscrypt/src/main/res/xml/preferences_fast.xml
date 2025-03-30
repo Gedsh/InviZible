@@ -31,6 +31,7 @@
             android:title="@string/pref_fast_autostart_delay" />
     </PreferenceCategory>
     <PreferenceCategory
+        android:key="DNSCrypt servers"
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_fast_dns_server">
         <Preference
@@ -41,6 +42,12 @@
                 android:targetClass="pan.alexander.tordnscrypt.settings.SettingsActivity"
                 android:targetPackage="@string/package_name" />
         </Preference>
+        <SwitchPreference
+            android:id="@+id/pref_fast_prevent_dns_leak"
+            android:defaultValue="false"
+            android:key="pref_fast_prevent_dns_leak"
+            android:title="@string/pref_fast_prevent_dns_leak"
+            android:summary="@string/pref_fast_prevent_dns_leak_summ" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="Tor Settings"
@@ -147,6 +154,11 @@
             android:key="pref_fast_logs"
             android:summary="@string/pref_fast_logs_summ"
             android:title="@string/pref_fast_logs" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="pref_fast_block_lan_with_free_wifi"
+            android:summary="@string/pref_fast_block_lan_with_free_wifi_summ"
+            android:title="@string/pref_fast_block_lan_with_free_wifi" />
         <SwitchPreference
             android:defaultValue="false"
             android:key="pref_fast_block_http"

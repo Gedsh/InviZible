@@ -96,6 +96,8 @@
     <string name="pref_fast_autostart_delay_summ">Use a delay (secs) only if Autostart does not work correctly</string>
     <string name="pref_fast_dns_server">DNSCrypt servers</string>
     <string name="pref_fast_select_dns_server">Select DNSCrypt servers</string>
+    <string name="pref_fast_prevent_dns_leak">Prevent DNS leaks</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Block attempts to conceal DNS queries. May cause connection problems</string>
     <string name="pref_fast_tor">Tor Settings</string>
     <string name="pref_fast_routing">Routing Settings</string>
     <string name="pref_fast_all_through_tor">Route All traffic through Tor</string>
@@ -114,7 +116,7 @@
     <string name="pref_fast_direct_udp_connection">Exclude UDP from Tor</string>
     <string name="pref_fast_bypass_app">Exclude entirely</string>
     <string name="pref_fast_site_refresh_interval">Refresh interval</string>
-    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh sites IP. For Android 5.1 and higher. Put 0 to stop refresh.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Period in hours to refresh sites IP. For Android 5.1 and higher. Put 0 to stop refresh</string>
     <string name="pref_fast_use_tor_bridges">Bridges</string>
     <string name="pref_fast_use_tor_bridges_summ">Use it if you can not connect to Tor network</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">Please disable Entry Nodes in Tor Settings, otherwise you cannot use Bridges.</string>
@@ -148,6 +150,8 @@
     <string name="pref_fast_logs_summ">Show application connection logs in the DNS tab</string>
     <string name="pref_fast_block_http">Block http</string>
     <string name="pref_fast_block_http_summ">Deny connection to http port 80</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Block LAN on public Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Deny connection to the LAN when a Captive Portal is detected</string>
     <string name="pref_fast_categ_update">Update</string>
     <string name="pref_fast_auto_update">Automatic updates</string>
     <string name="pref_fast_auto_update_summ">Check InviZible Pro and modules updates daily</string>
@@ -416,7 +420,6 @@
     <string name="pref_tor_snowflake_select_rendezvous_summ">Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>
     <string name="pref_tor_snowflake_amp" translatable="false">AMP</string>
     <string name="pref_tor_snowflake_cdn77" translatable="false">CDN77</string>
-    <string name="pref_tor_snowflake_azure" translatable="false">AZURE</string>
     <string name="pref_tor_snowflake_amazon" translatable="false">AMAZON</string>
     <string name="pref_tor_snowflake_stun">STUN servers for SnowFlake bridges</string>
     <string name="pref_tor_enable_SOCKS_output_proxy">SOCKS outbound proxy</string>
@@ -600,7 +603,7 @@
     <string name="vpn_mode_active">VPN mode is active</string>
     <string name="vpn_mode_off">VPN mode is off</string>
     <string name="vpn_mode_error">VPN mode error!</string>
-    <string name="vpn_tor_tether_summ">Please configure the use of proxy server in the settings of the connected device. Default values: IP:10.1.10.1 Port:8118</string>
+    <string name="vpn_tor_tether_summ">Please configure the use of HTTP proxy in the settings of the connected device. Specify the address: IP:10.1.10.1 Port:%s</string>
     <string name="main_fragment_button_start" translatable="false">START</string>
     <string name="main_fragment_button_stop" translatable="false">STOP</string>
     <string name="main_fragment_hide_ip">Hide IP with TOR</string>

@@ -33,6 +33,9 @@ import pan.alexander.tordnscrypt.modules.ModulesAux
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.nflog.NflogManager
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
+import pan.alexander.tordnscrypt.utils.enums.ModuleState.RESTARTING
+import pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING
+import pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
@@ -67,13 +70,13 @@ class AppModeManager @Inject constructor(
             appModeManagerCallback?.prepareVPNService()
         }
 
-        modulesStatus.dnsCryptState.let {
-            if (defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)
-                && !modulesStatus.isUseModulesWithRoot &&
-                (it == ModuleState.RUNNING
-                        || it == ModuleState.STARTING
-                        || it == ModuleState.RESTARTING)
-            ) {
+        if (defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)) {
+            val dnsCryptState = modulesStatus.dnsCryptState
+            val torState = modulesStatus.dnsCryptState
+            var firewallState = modulesStatus.firewallState
+            if (dnsCryptState == RUNNING || dnsCryptState == STARTING || dnsCryptState == RESTARTING
+                || torState == RUNNING || torState == STARTING || torState == RESTARTING
+                || firewallState == RUNNING || firewallState == STARTING) {
                 nflogManager.get().startNflog()
             }
         }

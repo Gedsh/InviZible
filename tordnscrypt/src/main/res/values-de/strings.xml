@@ -329,7 +329,7 @@
     <string name="vpn_mode_active">VPN-Modus ist aktiv</string>
     <string name="vpn_mode_off">VPN-Modus ist aus</string>
     <string name="vpn_mode_error">VPN-Modus-Fehler!</string>
-    <string name="vpn_tor_tether_summ">Bitte konfiguriere die Benutzung des Proxy-Servers in den Einstellungen des verbundenen Gerätes. Die Standardwerte sind: IP:10.1.10.1 Port:8118</string>
+    <string name="vpn_tor_tether_summ">Bitte konfiguriere die Benutzung des Proxy-Servers in den Einstellungen des verbundenen Gerätes. Die Standardwerte sind: IP:10.1.10.1 Port:%s</string>
     <string name="main_fragment_hide_ip">Verschleiere deine IP mit TOR</string>
     <string name="main_fragment_protect_dns">Schütze dich mit DNSCRYPT</string>
     <string name="main_fragment_access_i2p">"Zugang zum I2P-Netzwerk mit Purple I2P"</string>
@@ -551,4 +551,8 @@
     <string name="pref_common_always_on_vpn_summ">Aktiviere durchgehend aktives VPN sowie die Blockierung aller Verbindungen ohne VPN, um den Internetzugriff bei geschlossenem InviZible Pro zu unterbinden</string>
     <string name="dns_rule_replace_remote_list">Ersetze die Remote-Liste</string>
     <string name="dns_rule_replace_local_list">Ersetze die lokale Liste</string>
+    <string name="pref_fast_prevent_dns_leak">Verhindere DNS Lecks</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Blockiere Versuche, DNS-Anfragen zu verschleiern. Kann zu Verbindungsproblemen führen</string>
+    <string name="proxy_use_for_non_tor">Verwende den Proxy für Apps, die Tor umgehen</string>
+    <string name="helper_tor_check_proxy">Du hast den Socks5-Proxy aktiviert, aber der Proxy scheint nicht zu laufen. Bitte überprüfe deine Einstellungen!</string>
 </resources>

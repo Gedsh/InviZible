@@ -38,4 +38,8 @@ interface ConnectionCheckerDataSource {
     ): Boolean
 
     fun checkNetworkAvailable(): Boolean
+
+    fun isWiFiActive(): Boolean
+
+    fun isCaptivePortalDetected(): Boolean
 }

@@ -82,7 +82,7 @@
     <string name="pref_fast_exclude_apps_from_tor">排除应用</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"直接打开的应用列表"</string>
     <string name="pref_fast_site_refresh_interval">刷新间隔</string>
-    <string name="pref_fast_site_refresh_interval_summ">刷新网站 IP 的周期（小时）。用于 Android 5.1 及更高版本。置为 0 停止刷新。</string>
+    <string name="pref_fast_site_refresh_interval_summ">刷新网站 IP 的周期（小时）。用于 Android 5.1 及更高版本。置为 0 停止刷新</string>
     <string name="pref_fast_use_tor_bridges">"网桥"</string>
     <string name="pref_fast_use_tor_bridges_summ">"如果您无法连接到 Tor 网络请使用网桥"</string>
     <string name="pref_fast_use_tor_bridges_no">"不使用网桥"</string>
@@ -333,7 +333,7 @@
     <string name="vpn_mode_active">"VPN 模式已激活"</string>
     <string name="vpn_mode_off">"VPN 模式已关闭"</string>
     <string name="vpn_mode_error">"VPN 模式错误！"</string>
-    <string name="vpn_tor_tether_summ">"请再已连接设备中配置代理服务器。默认值：IP:10.1.10.1 端口:8118"</string>
+    <string name="vpn_tor_tether_summ">"请再已连接设备中配置代理服务器。默认值：IP:10.1.10.1 端口:%s"</string>
     <string name="main_fragment_hide_ip">"使用 TOR 隐藏 IP"</string>
     <string name="reset_settings_title">"注意"</string>
     <string name="main_fragment_protect_dns">使用 DNSCRYPT 防护</string>
@@ -555,4 +555,7 @@
     <string name="total_rules">总计：%d条规则</string>
     <string name="dns_rule_replace_remote_list">替换远程列表</string>
     <string name="dns_rule_replace_local_list">替换本地列表</string>
+    <string name="pref_common_always_on_vpn_summ">为 InviZible Pro 启用 “始终开启 VPN ”和 “阻止没有 VPN 的连接”，以便在应用不运行时阻止网络连接</string>
+    <string name="proxy_use_for_non_tor">对绕过 Tor 的应用使用代理</string>
+    <string name="helper_tor_check_proxy">您已配置使用 Socks5 代理，但代理似乎没有运行。请检查您的设置！</string>
 </resources>

@@ -31,6 +31,7 @@ import androidx.core.net.ConnectivityManagerCompat
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
+import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.util.TreeMap
 
 private const val DEFAULT_MTU = 1400
@@ -359,6 +360,7 @@ object NetworkChecker {
         }
 
 
+    @JvmStatic
     @RequiresApi(Build.VERSION_CODES.M)
     fun isCaptivePortalDetected(context: Context): Boolean =
         try {
@@ -369,10 +371,15 @@ object NetworkChecker {
                 capabilities = connectivityManager.getNetworkCapabilities(
                     connectivityManager.activeNetwork
                 )
+            } else {
+                logw("NetworkChecker unable to get connectivity manager")
             }
 
             capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL)
-                ?: false
+                ?: let {
+                    logw("NetworkChecker unable to get network capabilities")
+                    false
+                }
         } catch (e: Exception) {
             loge("NetworkChecker isCaptivePortalDetected", e)
             false

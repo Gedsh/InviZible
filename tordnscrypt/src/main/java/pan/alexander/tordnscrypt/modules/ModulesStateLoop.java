@@ -112,6 +112,8 @@ public class ModulesStateLoop implements Runnable,
     public Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
     @Inject
     public Lazy<UpdateIPsManager> updateIPsManager;
+    @Inject
+    public Lazy<ModulesVersions> modulesVersions;
 
     private boolean iptablesUpdateTemporaryBlocked;
 
@@ -202,11 +204,13 @@ public class ModulesStateLoop implements Runnable,
             }
 
             if (stopCounter <= 0) {
-
                 denySystemDNS();
-
-                logi("ModulesStateLoop stopCounter is zero. Stop service.");
+                if (modulesStatus.isRootAvailable()) {
+                    nflogManager.get().stopNflog();
+                }
                 modulesStatus.setContextUIDUpdateRequested(false);
+                App.getInstance().getSubcomponentsManager().releaseLogReaderScope();
+                logi("ModulesStateLoop stopCounter is zero. Stop service.");
                 safeStopModulesService();
                 modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
             }
@@ -326,6 +330,8 @@ public class ModulesStateLoop implements Runnable,
                 return;
             }
 
+            boolean nflogStop = false;
+
             if (savedDNSCryptState != dnsCryptState) {
 
                 saveDNSCryptState(dnsCryptState);
@@ -343,7 +349,10 @@ public class ModulesStateLoop implements Runnable,
                     modulesStatusBroadcaster.get().broadcastDNSCryptStopped();
                     setDNSCryptReady(false);
                     denySystemDNS();
-                    stopNflogIfRootMode();
+                    if (modulesStatus.getTorState() != RUNNING && modulesStatus.getFirewallState() != RUNNING) {
+                        stopNflogIfRootMode();
+                        nflogStop = true;
+                    }
                 }
             }
 
@@ -356,6 +365,9 @@ public class ModulesStateLoop implements Runnable,
                         torInteractor.addOnTorLogUpdatedListener(this);
                     }
                     modulesStatusBroadcaster.get().broadcastTorRunning();
+                    if (modulesStatus.getDnsCryptState() != RUNNING) {
+                        startNflogIfRootMode();
+                    }
                 } else {
                     if (torInteractor != null) {
                         torInteractor.removeOnTorLogUpdatedListener(this);
@@ -363,6 +375,11 @@ public class ModulesStateLoop implements Runnable,
                     modulesStatusBroadcaster.get().broadcastTorStopped();
                     setTorReady(false);
                     denySystemDNS();
+                    if (!nflogStop && modulesStatus.getDnsCryptState() != RUNNING
+                            && modulesStatus.getFirewallState() != RUNNING) {
+                        stopNflogIfRootMode();
+                        nflogStop = true;
+                    }
                 }
             }
 
@@ -387,8 +404,15 @@ public class ModulesStateLoop implements Runnable,
                 saveFirewallState(firewallState);
                 if (firewallState == STARTING || firewallState == RUNNING) {
                     modulesStatusBroadcaster.get().broadcastFirewallRunning();
+                    if (modulesStatus.getDnsCryptState() != RUNNING && modulesStatus.getTorState() != RUNNING) {
+                        startNflogIfRootMode();
+                    }
                 } else if (firewallState == STOPPED) {
                     modulesStatusBroadcaster.get().broadcastFirewallStopped();
+                    if (!nflogStop && modulesStatus.getDnsCryptState() != RUNNING
+                            && modulesStatus.getTorState() != RUNNING) {
+                        stopNflogIfRootMode();
+                    }
                 }
             }
 
@@ -424,6 +448,7 @@ public class ModulesStateLoop implements Runnable,
                         dnsCryptState == STOPPED && torState == STOPPED
                         && (firewallState == STOPPED || firewallState == STOPPING)) {
                     ServiceVPNHelper.stop("All modules stopped", modulesService);
+                    modulesVersions.get().refreshVersions(modulesService);
                 } else if (vpnServiceEnabled) {
                     ServiceVPNHelper.reload("Modules state changed", modulesService);
                 } else {
@@ -722,11 +747,11 @@ public class ModulesStateLoop implements Runnable,
 
     @SuppressLint("UnsafeOptInUsageWarning")
     private void startNflogIfRootMode() {
-        if (modulesStatus.getMode() == ROOT_MODE
+        if (!nflogIsRunning && modulesStatus.getMode() == ROOT_MODE
                 && !modulesStatus.isUseModulesWithRoot()
                 && defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)) {
-            nflogManager.get().startNflog();
             nflogIsRunning = true;
+            nflogManager.get().startNflog();
         }
     }
 
@@ -735,6 +760,7 @@ public class ModulesStateLoop implements Runnable,
         if (nflogIsRunning || modulesStatus.getMode() == ROOT_MODE && !modulesStatus.isFixTTL()) {
             nflogManager.get().stopNflog();
             nflogIsRunning = false;
+            modulesVersions.get().refreshVersions(modulesService);
         }
     }
 }

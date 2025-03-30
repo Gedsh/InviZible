@@ -24,6 +24,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
@@ -74,12 +75,16 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.AUTO_START_DELAY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_HTTP;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BLOCK_LAN_ON_FREE_WIFI;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.BYPASS_LAN;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNSCRYPT_SERVERS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_WAS_STARTED;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PREVENT_DNS_LEAKS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.SITES_IPS_REFRESH_INTERVAL;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
@@ -421,8 +426,10 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
                 return true;
             case BLOCK_HTTP:
             case BYPASS_LAN:
+            case BLOCK_LAN_ON_FREE_WIFI:
                 if (ModulesAux.isDnsCryptSavedStateRunning()
-                        || ModulesAux.isTorSavedStateRunning()) {
+                        || ModulesAux.isTorSavedStateRunning()
+                        || modulesStatus.getFirewallState() == RUNNING) {
                     modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 }
                 return true;
@@ -444,6 +451,9 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
             case SITES_IPS_REFRESH_INTERVAL:
             case AUTO_START_DELAY:
                 return newValue.toString().matches("\\d+");
+            case PREVENT_DNS_LEAKS:
+                ModulesStatus.getInstance().setIptablesRulesUpdateRequested(context, true);
+                return true;
         }
 
         return false;
@@ -477,6 +487,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     }
 
     private void changePreferencesWithRootOrVPNMode(Context context) {
+        Preference prefFastPreventDnsLeak = findPreference(PREVENT_DNS_LEAKS);
+        if (prefFastPreventDnsLeak != null) {
+            prefFastPreventDnsLeak.setOnPreferenceChangeListener(this);
+        }
+
         Preference pref_fast_all_through_tor = findPreference(ALL_THROUGH_TOR);
         if (pref_fast_all_through_tor != null) {
             pref_fast_all_through_tor.setOnPreferenceChangeListener(this);
@@ -490,6 +505,17 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         Preference pref_fast_logs = findPreference(CONNECTION_LOGS);
         if (pref_fast_logs != null) {
             pref_fast_logs.setOnPreferenceChangeListener(this);
+        }
+
+        PreferenceCategory fast_other_category = findPreference("fast_other");
+        Preference pref_fast_block_lan_on_free_wifi = findPreference(BLOCK_LAN_ON_FREE_WIFI);
+        if (pref_fast_block_lan_on_free_wifi != null
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED)
+                && preferenceRepository.get().getBoolPreference(FIREWALL_WAS_STARTED)) {
+            pref_fast_block_lan_on_free_wifi.setOnPreferenceChangeListener(this);
+        } else if (fast_other_category != null && pref_fast_block_lan_on_free_wifi != null) {
+            fast_other_category.removePreference(pref_fast_block_lan_on_free_wifi);
         }
 
         Preference pref_fast_block_http = findPreference(BLOCK_HTTP);
@@ -521,6 +547,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
 
     private void changePreferencesWithProxyMode() {
 
+        PreferenceCategory dnsCryptServersCategory = findPreference("DNSCrypt servers");
+        Preference prefFastPreventDnsLeak = findPreference(PREVENT_DNS_LEAKS);
+        if (dnsCryptServersCategory != null && prefFastPreventDnsLeak != null) {
+            dnsCryptServersCategory.removePreference(prefFastPreventDnsLeak);
+        }
+
         PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
 
         List<Preference> preferencesList = new ArrayList<>();
@@ -550,6 +582,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         Preference connectionLogs = findPreference(CONNECTION_LOGS);
         if (fastOtherCategory != null && connectionLogs != null) {
             fastOtherCategory.removePreference(connectionLogs);
+        }
+
+        Preference prefFastBlockLanOnFreeWifi = findPreference(BLOCK_LAN_ON_FREE_WIFI);
+        if (fastOtherCategory != null && prefFastBlockLanOnFreeWifi != null) {
+            fastOtherCategory.removePreference(prefFastBlockLanOnFreeWifi);
         }
 
         Preference blockHttp = findPreference(BLOCK_HTTP);

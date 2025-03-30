@@ -117,9 +117,10 @@ public class ServiceVPNHandler extends Handler {
             msg.what = cmd.ordinal();
             removeMessages(msg.what);
             if (cmd != STOP) {
+                removeMessages(STOP.ordinal());
                 sendMessage(msg);
             } else {
-                sendMessageDelayed(msg, 1000);
+                sendMessageDelayed(msg, 3000);
             }
         }
     }

@@ -98,7 +98,7 @@ class LogReaderLoop(
             timer?.stopExecutor()
             timer = null
             connectionRecordsInteractor.stopConverter(true)
-            App.instance.subcomponentsManager.releaseLogReaderScope()
+            //App.instance.subcomponentsManager.releaseLogReaderScope()
             logi("LogReaderLoop stopLogsParser")
         } catch (e: Exception) {
             loge("LogReaderLoop stopLogsParser", e)

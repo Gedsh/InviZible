@@ -28,6 +28,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_KERNEL;
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
+import static pan.alexander.tordnscrypt.utils.Constants.ITPD_REDIRECT_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
@@ -68,6 +69,7 @@ import pan.alexander.tordnscrypt.iptables.Tethering;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.settings.PathVars;
 import pan.alexander.tordnscrypt.utils.Constants;
+import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
 import pan.alexander.tordnscrypt.utils.connectivitycheck.ConnectivityCheckManager;
 import pan.alexander.tordnscrypt.utils.enums.ModuleState;
 import pan.alexander.tordnscrypt.vpn.Allowed;
@@ -100,6 +102,8 @@ public class VpnRulesHolder {
 
     private final Set<String> connectivityCheckIps = new ConcurrentSkipListSet<>();
 
+    private volatile boolean captivePortalDetected = false;
+
     @Inject
     public VpnRulesHolder(@Named(DEFAULT_PREFERENCES_NAME) SharedPreferences defaultPreferences,
                           PreferenceRepository preferenceRepository,
@@ -127,6 +131,10 @@ public class VpnRulesHolder {
         boolean torIsRunning = modulesStatus.getTorState() == RUNNING
                 || modulesStatus.getTorState() == STARTING
                 || modulesStatus.getTorState() == RESTARTING;
+
+        boolean itpdIsRunning = modulesStatus.getItpdState() == RUNNING
+                || modulesStatus.getItpdState() == STARTING
+                || modulesStatus.getItpdState() == RESTARTING;
 
         boolean fixTTLForPacket = isFixTTLForPacket(packet);
 
@@ -160,12 +168,12 @@ public class VpnRulesHolder {
         } else if (!isSupported(packet.protocol)) {
             logw("Protocol not supported " + packet);
         } else if (packet.dport == DNS_OVER_TLS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()
+                && vpnPreferences.getPreventDnsLeaks()
                 && (dnsCryptIsRunning || torIsRunning)) {
             logw("Block DNS over TLS " + packet);
         } else if (vpnDnsSet.contains(packet.daddr)
                 && packet.dport != PLAINTEXT_DNS_PORT
-                && vpnPreferences.getIgnoreSystemDNS()
+                && vpnPreferences.getPreventDnsLeaks()
                 && packet.uid != vpnPreferences.getOwnUID()
                 && (dnsCryptIsRunning || torIsRunning)) {
             logw("Block DNS over HTTPS " + packet);
@@ -204,7 +212,7 @@ public class VpnRulesHolder {
             logi("Block ipv6 " + packet);
         } else if (vpnPreferences.getBlockHttp() && packet.dport == 80
                 && !VpnUtils.isIpInSubnet(packet.daddr, vpnPreferences.getTorVirtualAddressNetwork())
-                && !packet.daddr.equals(vpnPreferences.getItpdRedirectAddress())
+                && !packet.daddr.equals(ITPD_REDIRECT_ADDRESS)
                 && !isIpInLanRange(packet.daddr)) {
             logw("Block http " + packet);
         } else if (packet.uid <= 2000 &&
@@ -242,6 +250,17 @@ public class VpnRulesHolder {
                         packet.daddr,
                         packet.dport
                 );
+            } else if (vpnPreferences.getBlockLanOnFreeWiFi()
+                    && captivePortalDetected
+                    && !getCaptivePortalUids().isEmpty()
+                    && !getCaptivePortalUids().contains(packet.uid) && packet.uid != SPECIAL_UID_KERNEL
+                    && !packet.daddr.equals(LOOPBACK_ADDRESS) && !packet.daddr.equals(LOOPBACK_ADDRESS_IPv6)
+                    && packet.dport != 53
+                    && (!torIsRunning || !redirectToTor && !isToTorTraffic(packet))
+                    && (!itpdIsRunning || !packet.daddr.equals(ITPD_REDIRECT_ADDRESS))
+                    && !redirectToProxy) {
+                packet.allowed = false;
+                logw("Disallowing traffic to lan when a captive portal is detected " + packet);
             } else {
                 packet.allowed = uidLanAllowed.contains(packet.uid);
             }
@@ -301,7 +320,7 @@ public class VpnRulesHolder {
                     packet.uid,
                     packet.daddr,
                     //Unknown incoming packet or Multicast DNS
-                    (packet.uid == -1 || packet.uid == 0 || packet.uid == 1020) && packet.sport < packet.dport ? packet.sport : packet.dport,
+                    (packet.uid == -1 || packet.uid == 0 || packet.uid == 1020 || packet.uid == 9999) && packet.sport < packet.dport ? packet.sport : packet.dport,
                     packet.saddr,
                     packet.allowed,
                     packet.protocol
@@ -427,9 +446,9 @@ public class VpnRulesHolder {
         uidLanAllowed.clear();
         uidSpecialLanAllowed.clear();
         for (String uid : preferenceRepository.getStringSetPreference(APPS_ALLOW_LAN_PREF)) {
-            if (uid != null && uid.matches("\\d+")) {
+            if (uid.matches("\\d+")) {
                 uidLanAllowed.add(Integer.valueOf(uid));
-            } else if (uid != null && uid.matches("-\\d+")) {
+            } else if (uid.matches("-\\d+")) {
                 uidSpecialLanAllowed.add(Integer.valueOf(uid));
             }
         }
@@ -444,6 +463,8 @@ public class VpnRulesHolder {
 
         connectivityCheckIps.clear();
         connectivityCheckIps.addAll(connectivityCheckManager.get().getConnectivityCheckIps());
+
+        captivePortalDetected = connectionCheckerInteractor.get().isFreeWiFiAccessPointDetected();
 
         lock.writeLock().unlock();
     }
@@ -509,8 +530,8 @@ public class VpnRulesHolder {
     }
 
     private void forwardAddressToITPD(int itpdHttpPort, int ownUID) {
-        addForwardAddressRule(17, "10.191.0.1", LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
-        addForwardAddressRule(6, "10.191.0.1", LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
+        addForwardAddressRule(17, ITPD_REDIRECT_ADDRESS, LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
+        addForwardAddressRule(6, ITPD_REDIRECT_ADDRESS, LOOPBACK_ADDRESS, itpdHttpPort, ownUID);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -548,5 +569,9 @@ public class VpnRulesHolder {
         mapForwardPort.clear();
         mapForwardAddress.clear();
         lock.writeLock().unlock();
+    }
+
+    private Set<Integer> getCaptivePortalUids() {
+        return InstalledApplicationsManager.Companion.getCaptivePortalUids();
     }
 }

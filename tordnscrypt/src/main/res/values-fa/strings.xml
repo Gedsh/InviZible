@@ -91,7 +91,7 @@
     <string name="pref_fast_exclude_apps_from_tor">محدود‌سازی برنامه‌ ها</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"برنامه‌هایی که مستقیم اجرا شوند"</string>
     <string name="pref_fast_site_refresh_interval">بازه بازخوانی</string>
-    <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی آیپی های وب‌سایت‌ ها در یک ساعت (فقط اندروید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید.</string>
+    <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی آیپی های وب‌سایت‌ ها در یک ساعت (فقط اندروید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید</string>
     <string name="pref_fast_use_tor_bridges">"پل‌ها"</string>
     <string name="pref_fast_use_tor_bridges_summ">"از این مورد تنها اگر نمی‌توانید به TOR متصل شوید استفاده کنید"</string>
     <string name="pref_fast_use_tor_bridges_no">"عدم استفاده از پل"</string>
@@ -349,7 +349,7 @@
     <string name="vpn_mode_active">"حالت VPN فعال است"</string>
     <string name="vpn_mode_off">"حالت VPN خاموش است"</string>
     <string name="vpn_mode_error">"خطا در حالت VPN!"</string>
-    <string name="vpn_tor_tether_summ">لطفاً استفاده از سرور پروکسی را در تنظیمات دستگاه متصل پیکربندی کنید. مقادیر پیش فرض: آیپی:10.1.10.1 پورت:8118</string>
+    <string name="vpn_tor_tether_summ">لطفاً استفاده از سرور پروکسی را در تنظیمات دستگاه متصل پیکربندی کنید. مقادیر پیش فرض: آیپی:10.1.10.1 پورت:%s</string>
     <string name="main_fragment_hide_ip">پنهان‌سازی IP توسط تور</string>
     <string name="main_fragment_protect_dns">حفاظت با DNSCrypt</string>
     <string name="main_fragment_access_i2p">دسترسی به شبکه I2P با I2P بنفش</string>
@@ -576,4 +576,6 @@
     <string name="dns_rule_add_url">افزودن نشانی اینترنتی</string>
     <string name="dns_rule_replace_local_list">جایگزینی لیست محلی</string>
     <string name="rules">قوانین</string>
+    <string name="pref_fast_prevent_dns_leak">جلوگیری از نشت DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">مسدود کردن تلاش‌ها برای مخفی کردن درخواست‌های DNS. ممکن است مشکلاتی در اتصال ایجاد کند</string>
 </resources>

@@ -330,7 +330,7 @@
     <string name="vpn_mode_active">"VPNモードは有効です"</string>
     <string name="vpn_mode_off">"VPNモードは無効てす"</string>
     <string name="vpn_mode_error">"VPNモードエラー！"</string>
-    <string name="vpn_tor_tether_summ">"接続先のデバイスでプロキシ設定を変更してください。標準の値/IP:10.1.10.1 ポート:8118"</string>
+    <string name="vpn_tor_tether_summ">"接続先のデバイスでプロキシ設定を変更してください。標準の値/IP:10.1.10.1 ポート:%s"</string>
     <string name="main_fragment_hide_ip">"TorでIPを隠す"</string>
     <string name="main_fragment_protect_dns">"DNSCryptでDNSを保護する"</string>
     <string name="main_fragment_access_i2p">"Purple I2Pでeepsitesにアクセスする"</string>

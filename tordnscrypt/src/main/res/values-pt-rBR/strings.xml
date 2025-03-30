@@ -347,7 +347,7 @@
     <string name="vpn_mode_active">"Modo VPN está ativo"</string>
     <string name="vpn_mode_off">"Modo VPN esta desativado"</string>
     <string name="vpn_mode_error">Erro no modo VPN!</string>
-    <string name="vpn_tor_tether_summ">"Configure o uso do servidor proxy nas configurações do dispositivo conectado. Valores padrão: IP:10.1.10.1 Porta:8118"</string>
+    <string name="vpn_tor_tether_summ">"Configure o uso do servidor proxy nas configurações do dispositivo conectado. Valores padrão: IP:10.1.10.1 Porta:%s"</string>
     <string name="main_fragment_hide_ip">"Ocultar IP com TOR"</string>
     <string name="main_fragment_protect_dns">Defenda-se com DNSCRYPT</string>
     <string name="main_fragment_access_i2p">Acesso à rede I2P com Purple I2P</string>

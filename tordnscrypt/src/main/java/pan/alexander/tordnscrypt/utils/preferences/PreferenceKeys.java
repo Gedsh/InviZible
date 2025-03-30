@@ -104,6 +104,8 @@ public interface PreferenceKeys {
     String BYPASS_LAN = "Allow LAN";
     String AUTO_START_DELAY = "pref_fast_autostart_delay";
     String FAKE_SNI = "swFakeSni";
+    String PREVENT_DNS_LEAKS = "pref_fast_prevent_dns_leak";
+    String BLOCK_LAN_ON_FREE_WIFI = "pref_fast_block_lan_with_free_wifi";
 
     //Common Settings
     String ARP_SPOOFING_DETECTION = "pref_common_arp_spoofing_detection";

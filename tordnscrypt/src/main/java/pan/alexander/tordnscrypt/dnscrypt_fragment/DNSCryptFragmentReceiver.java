@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import androidx.fragment.app.FragmentManager;
 
@@ -45,20 +46,26 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
 import static pan.alexander.tordnscrypt.TopFragment.DNSCryptVersion;
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
+import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.modules.ModulesService.DNSCRYPT_KEYWORD;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CONNECTION_LOGS;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.DNSCRYPT_RUN_FRAGMENT_MARK;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.FAULT;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
+    @Inject
+    @Named(DEFAULT_PREFERENCES_NAME)
+    public Lazy<SharedPreferences> defaultPreferences;
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject
@@ -135,7 +142,10 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
                         if (!modulesStatus.isUseModulesWithRoot()) {
 
-                            if (!ModulesAux.isDnsCryptSavedStateRunning()) {
+                            if (!ModulesAux.isDnsCryptSavedStateRunning()
+                                    && (modulesStatus.getTorState() != RUNNING
+                                    && modulesStatus.getFirewallState() != RUNNING
+                                    || isRealTimeLogsDisabled())) {
                                 view.setDNSCryptLogViewText();
                             }
 
@@ -153,7 +163,9 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                     if (modulesStatus.getDnsCryptState() == STOPPED) {
                         ModulesAux.saveDNSCryptStateRunning(false);
                     }
-                    presenter.stopDisplayLog();
+                    if (isRealTimeLogsDisabled()) {
+                        presenter.stopDisplayLog();
+                    }
                     presenter.setDnsCryptStopped();
                     modulesStatus.setDnsCryptState(STOPPED);
                     presenter.refreshDNSCryptState();
@@ -224,5 +236,9 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
 
             view.setDNSCryptProgressBarIndeterminate(true);
         }
+    }
+
+    private boolean isRealTimeLogsDisabled() {
+        return !defaultPreferences.get().getBoolean(CONNECTION_LOGS, true);
     }
 }

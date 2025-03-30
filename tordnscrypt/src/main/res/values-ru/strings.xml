@@ -59,6 +59,8 @@
     <string name="pref_fast_autostart_delay_summ">Используйте задержку автозагрузки (сек) только в том случае, если автозапуск работает неправильно</string>
     <string name="pref_fast_dns_server">Сервера DNSCrypt</string>
     <string name="pref_fast_select_dns_server">Выбрать сервера DNSCrypt</string>
+    <string name="pref_fast_prevent_dns_leak">Предотвращать утечку DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Блокировать попытки сокрытия DNS запросов. Может вызвать проблемы с соединением</string>
     <string name="pref_fast_tor">Настройки Tor</string>
     <string name="pref_fast_all_through_tor">Весь интернет через Tor</string>
     <string name="pref_fast_unlock_with_tor">Выбрать сайты</string>
@@ -70,7 +72,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Исключить приложения</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Приложения, открывающиеся в обход Tor</string>
     <string name="pref_fast_site_refresh_interval">Интервал обновления</string>
-    <string name="pref_fast_site_refresh_interval_summ">Период в часах, для обновления IP сайтов. Для Android 5.1 и выше. Введите 0, чтоб не обновлять.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Период в часах, для обновления IP сайтов. Для Android 5.1 и выше. Введите 0, чтоб не обновлять</string>
     <string name="pref_fast_use_tor_bridges">Мосты</string>
     <string name="pref_fast_use_tor_bridges_summ">Используйте, если вы не можете подключиться к сети Tor</string>
     <string name="pref_fast_use_tor_bridges_no">Не использовать мосты</string>
@@ -290,6 +292,8 @@
     <string name="update_core_no">Позже</string>
     <string name="update_core_not_show_again">Больше не спрашивать</string>
     <string name="update_core_restart">Пожалуйста, перезапустите InviZible и позвольте завершить установку! После установки настройте заново Точку доступа, если вы пользовались ней!</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Блокировать LAN на бесплатном Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокировать доступ к локальной сети при обнаружении страницы регистрации</string>
     <string name="pref_fast_block_http">Заблокировать http</string>
     <string name="pref_fast_block_http_summ">Закрыть http порт 80</string>
     <string name="pref_common_block_http">Заблокировать http</string>
@@ -344,7 +348,7 @@
     <string name="vpn_mode_active">Режим VPN активирован</string>
     <string name="vpn_mode_off">Режим VPN выключен</string>
     <string name="vpn_mode_error">Ошибка VPN!</string>
-    <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование прокси в настройках подключенного устройства. Настройки по умолчанию: IP:10.1.10.1 Порт:8118</string>
+    <string name="vpn_tor_tether_summ">Пожалуйста, настройте использование HTTP прокси в настройках подключенного устройства. Укажите адрес: IP:10.1.10.1 Порт:%s</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">Приложения, открывающиеся через InviZible</string>
     <string name="pref_fast_routing">Настройки маршрутизации</string>
     <string name="pref_fast_all_through_ipro">Весь интернет через InviZible</string>

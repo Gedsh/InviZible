@@ -1179,7 +1179,7 @@
 * Updated Purple I2P to version 2.53.1.
 * Updated German, Bulgarian, Chinese, Polish, Arabic, Persian and Portuguese (Brazil) translations.
 * Fixed using socks5 proxy with authentication.
-* A lot of minor fixes and optimisations.
+* A lot of minor fixes and optimizations.
 
 **InviZible Pro beta 2.3.2**
 * Updated Tor.
@@ -1210,7 +1210,7 @@
 * Improvements and fixes for standalone firewall operation.
 * Improvements for the firewall in root mode for Android versions above 5.
 * Removed the Fastly rendezvous of the Tor snowflake bridge.
-* Minor fixes and optimisations.
+* Minor fixes and optimizations.
 
 **InviZible Pro beta 2.3.7**
 * Updated Tor to version 4.8.13.
@@ -1251,7 +1251,7 @@
 **InviZible Pro beta 2.4.0**
 * Improved Tor Obfs4 bridges censorship resistance.
 * Updated Tor SnowFlake bridge stun servers.
-* Various fixes and optimisations.
+* Various fixes and optimizations.
 
 **InviZible Pro beta 2.4.1**
 * Display the destination port in real-time logs.
@@ -1285,4 +1285,52 @@
 * Display the destination port in real-time logs.
 * Socks5 proxy fixes and improvements.
 * Added Dutch and Tamil translations.
-* Various fixes and optimisations.
+* Various fixes and optimizations.
+
+**InviZible Pro beta 2.4.4**
+* Updated DNSCrypt to version 2.1.7.
+* Updated Tor obfuscators: WebTunnel, Lyrebird, SnowFlake.
+* Improved IPv6 handling in VPN mode.
+* Fixed round monochrome icon.
+* Updated Dutch, Chinese, French and Finnish translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.4.5**
+* Updated Tor.
+* Added the option for preventing DNS leaks.
+* Added I2P sharing option for VPN mode.
+* Updated cdn77 meek_lite bridge.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.4.6**
+* Updated Tor to version 4.8.14.
+* Updated Purple I2P to version 2.56.0.
+* Updated Tor SnowFlake obfuscating proxy.
+* Updated the default Conjure bridge.
+* Updated Turkish, French, Polish and Chinese translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.4.7**
+* Implemented display of real-time logs even when DNSCrypt is not running.
+* Fixed real-time logs not displaying in root mode in some cases.
+* Updated Italian and Arabic translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.4.8**
+* Updated DNSCrypt to version 2.1.8.
+* Updated Tor to version 4.8.16.
+* Updated Tor SnowFlake obfuscating proxy to version 2.11.0.
+* Added an option to block LAN connections when using public Wi-Fi.
+* Fixed display of archived apps on Android 15.
+* Updated German, Persian and Spanish translations.
+* Fixes and optimizations.
+
+**InviZible Pro stable 7.1.0**
+* Updated DNSCrypt to version 2.1.8.
+* Updated Tor to version 4.8.16.
+* Updated Purple I2P to version 2.56.0.
+* Added I2P sharing option for VPN mode.
+* Added an option to block LAN connections when using public Wi-Fi.
+* Implemented display of real-time logs even when DNSCrypt is not running.
+* Fixed display of archived apps on Android 15.
+* Fixed round monochrome icon.

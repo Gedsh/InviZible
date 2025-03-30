@@ -433,7 +433,7 @@ class ModulesControlTileManager @Inject constructor(
 
     private fun allowSystemDNS() {
         if ((!modulesStatus.isRootAvailable || !modulesStatus.isUseModulesWithRoot)
-            && !defaultPreferences.getBoolean(IGNORE_SYSTEM_DNS, false)
+            && !defaultPreferences.getBoolean(PREVENT_DNS_LEAKS, false)
         ) {
             modulesStatus.isSystemDNSAllowed = true
         }

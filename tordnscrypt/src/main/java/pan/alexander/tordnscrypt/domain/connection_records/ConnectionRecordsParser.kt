@@ -137,7 +137,8 @@ class ConnectionRecordsParser @Inject constructor(
                 var appName = installedAppNamesStorage.get().getAppNameByUid(record.uid) ?: ""
                 if (appName.isEmpty() || record.uid == 1000) {
                     appName =
-                        applicationContext.packageManager.getNameForUid(record.uid) ?: "Undefined"
+                        applicationContext.packageManager.getNameForUid(record.uid)
+                            ?: ("Undefined UID" + record.uid)
                 }
 
                 val protocol = ConnectionProtocol.toString(record.protocol).let {

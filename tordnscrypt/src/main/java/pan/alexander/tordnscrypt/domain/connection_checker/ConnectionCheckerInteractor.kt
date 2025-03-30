@@ -28,4 +28,5 @@ interface ConnectionCheckerInteractor {
     fun checkNetworkConnection()
     fun getNetworkConnectionResult(): Boolean
     fun setNetworkConnectionResult(networkIsAvailable: Boolean)
+    fun isFreeWiFiAccessPointDetected(): Boolean
 }

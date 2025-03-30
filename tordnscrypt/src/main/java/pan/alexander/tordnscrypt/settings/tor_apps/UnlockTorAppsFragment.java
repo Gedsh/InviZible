@@ -188,14 +188,6 @@ public class UnlockTorAppsFragment extends Fragment
 
         searchText = null;
 
-        if (chipTorAppsSystem.isChecked()) {
-            chipSelectSystemApps();
-        } else if (chipTorAppsUser.isChecked()) {
-            chipSelectUserApps();
-        } else if (chipTorAppsAll.isChecked()) {
-            chipSelectAllApps();
-        }
-
         return view;
     }
 
@@ -231,7 +223,12 @@ public class UnlockTorAppsFragment extends Fragment
         mAdapter.setHasStableIds(true);
         rvListTorApps.setAdapter(mAdapter);
 
-        getDeviceApps(setUnlockApps);
+        if (appsUnlock.isEmpty()) {
+            getDeviceApps(setUnlockApps);
+        } else {
+            syncAppsWithSelectedChips();
+            mAdapter.notifyDataSetChanged();
+        }
 
         executor.submit("UnlockTorAppsFragment verifier", () -> {
             try {
@@ -530,10 +527,6 @@ public class UnlockTorAppsFragment extends Fragment
 
     private void getDeviceApps(final Set<String> unlockAppsArrListSaved) {
 
-        if (!appsUnlock.isEmpty()) {
-            return;
-        }
-
         task = executor.submit("UnlockTorAppsFragment getDeviceApps", () -> {
             try {
 
@@ -588,19 +581,7 @@ public class UnlockTorAppsFragment extends Fragment
                                 pbTorApp.setIndeterminate(false);
                                 pbTorApp.setVisibility(View.GONE);
 
-                                if (chipTorAppsSystem.isChecked()) {
-                                    chipSelectSystemApps();
-                                } else if (chipTorAppsUser.isChecked()) {
-                                    chipSelectUserApps();
-                                } else if (chipTorAppsAll.isChecked()) {
-                                    chipSelectAllApps();
-                                }
-
-                                if (chipTorAppsSortUid.isChecked()) {
-                                    sortByUid();
-                                } else {
-                                    sortByName();
-                                }
+                                syncAppsWithSelectedChips();
 
                                 mAdapter.notifyDataSetChanged();
                             }
@@ -622,6 +603,22 @@ public class UnlockTorAppsFragment extends Fragment
             return null;
         });
 
+    }
+
+    private void syncAppsWithSelectedChips() {
+        if (chipTorAppsSystem.isChecked()) {
+            chipSelectSystemApps();
+        } else if (chipTorAppsUser.isChecked()) {
+            chipSelectUserApps();
+        } else if (chipTorAppsAll.isChecked()) {
+            chipSelectAllApps();
+        }
+
+        if (chipTorAppsSortUid.isChecked()) {
+            sortByUid();
+        } else {
+            sortByName();
+        }
     }
 
     private List<ApplicationData> filterUserAppsWithoutInternetPermission(List<ApplicationData> installedApps) {
