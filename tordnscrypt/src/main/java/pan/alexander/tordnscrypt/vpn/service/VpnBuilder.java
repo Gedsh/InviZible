@@ -346,7 +346,10 @@ public class VpnBuilder {
 
         boolean ip6 = (!blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED
                 || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED
-                && modulesStatus.getTorState() != STOPPED);
+                && modulesStatus.getTorState() != STOPPED
+                || modulesStatus.getDnsCryptState() == STOPPED
+                && modulesStatus.getTorState() == STOPPED
+                && modulesStatus.getFirewallState() == RUNNING);
 
         // Get custom DNS servers
         List<String> dnscryptBootstrapResolversIPv4 = new ArrayList<>();
