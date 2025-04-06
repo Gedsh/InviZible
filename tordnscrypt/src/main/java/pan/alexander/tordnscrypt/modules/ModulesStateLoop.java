@@ -553,16 +553,15 @@ public class ModulesStateLoop implements Runnable,
 
         //Start VPN service if it is not started by modules presenters
 
-        final Intent prepareIntent = VpnService.prepare(modulesService);
-
-        if (handler != null && prepareIntent == null) {
+        if (handler != null) {
             handler.get().postDelayed(() -> {
                 if (modulesService != null && modulesStatus != null && sharedPreferences != null
                         && !sharedPreferences.getBoolean(VPN_SERVICE_ENABLED, false)
                         && (modulesStatus.getDnsCryptState() == RUNNING
                         || modulesStatus.getTorState() == RUNNING
                         || modulesStatus.getFirewallState() == STARTING
-                        || modulesStatus.getFirewallState() == RUNNING)) {
+                        || modulesStatus.getFirewallState() == RUNNING)
+                        && VpnService.prepare(modulesService) == null) {
                     sharedPreferences.edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
                     ServiceVPNHelper.start("ModulesStateLoop start VPN service", modulesService);
                 }
