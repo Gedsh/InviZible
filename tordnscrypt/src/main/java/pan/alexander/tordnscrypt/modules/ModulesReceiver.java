@@ -46,7 +46,6 @@ import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -937,7 +936,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     && modulesStatus.getTorState() == RUNNING
                     && (isVpnMode() || isRootMode())
                     && isCheckingInternetConnection.compareAndSet(false, true)) {
-                checkInternetConnectionWithDelay();
+                checkInternetConnection();
             }
         } else if (SCREEN_OFF_ACTION.equals(intent.getAction())) {
             modulesStatus.setDeviceInteractive(false);
@@ -1183,9 +1182,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     @SuppressLint("UnsafeOptInUsageWarning")
     public void onConnectionChecked(boolean available) {
 
-        if (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady()) {
+        if (modulesStatus.getTorState() == RUNNING) {
             if (available) {
-                torRestarterReconnector.get().stopRestarterCounter();
+                torRestarterReconnector.get().stopRestarterCounters();
             } else if (isNetworkAvailable()) {
                 torRestarterReconnector.get().startRestarterCounter();
             }
