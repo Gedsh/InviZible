@@ -28,6 +28,7 @@ extern int tor_socks5_port;
 extern char tor_socks5_username[127 + 1];
 extern char tor_socks5_password[127 + 1];
 extern bool tor_isolate_uid;
+extern bool tor_connection_available;
 
 extern char proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
 extern int proxy_socks5_port;
@@ -91,6 +92,23 @@ int check_tcp_session(const struct arguments *args, struct ng_session *s,
             s->tcp.state = TCP_CLOSING;
         else
             write_rst(args, &s->tcp);
+
+        bool not_own_uid = s->tcp.uid != own_uid;
+        bool not_dns_request = ntohs(s->tcp.dest) != 53;
+        bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, dest);
+        bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, dest) ||
+                                  str_equal(LOOPBACK_ADDRESS_IPv6, dest));
+        if (tor_connection_available && s->tcp.socks5 > SOCKS5_NONE && s->tcp.socks5 < SOCKS5_CONNECTED
+            && s->socket >= 0 && not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+            && *tor_socks5_addr && tor_socks5_port) {
+
+            if (check_tor_connection(args)) {
+                tor_connection_available = false;
+            }
+            log_android(ANDROID_LOG_WARN,
+                        "Suspect Tor connection is unavailable %s idle %d/%d sec socks5 state %d",
+                        session, now - s->tcp.time, timeout, s->tcp.socks5);
+        }
     }
 
     // Check closing sessions

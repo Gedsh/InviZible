@@ -560,6 +560,8 @@ jint get_uid_q(const struct arguments *args,
 
 struct allowed *is_address_allowed(const struct arguments *args, jobject objPacket);
 
+int check_tor_connection(const struct arguments *args);
+
 jobject create_packet(const struct arguments *args,
                       jint version,
                       jint protocol,

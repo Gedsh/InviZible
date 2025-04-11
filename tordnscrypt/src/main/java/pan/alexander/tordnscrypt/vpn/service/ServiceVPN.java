@@ -122,6 +122,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     }
 
     public final static int LINES_IN_DNS_QUERY_RAW_RECORDS = 512;
+    private final static int CHECK_TOR_CONNECTION_DELAY_SEC = 300;
 
     static final String EXTRA_COMMAND = "Command";
     static final String EXTRA_REASON = "Reason";
@@ -171,6 +172,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     volatile boolean reloading;
 
+    private volatile boolean blockCheckingTorConnection;
+
     private final Set<Integer> dnsRebindHosts = new ConcurrentSkipListSet<>();
 
     private final VPNBinder binder = new VPNBinder();
@@ -198,6 +201,9 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     @Keep
     private native void jni_socks5_for_proxy(String addr, int port, String username, String password);
+
+    @Keep
+    private native void jni_internet_is_available(boolean available);
 
     @Keep
     private native void jni_done(long context);
@@ -568,6 +574,30 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     // Called from native code
     @Keep
+    public boolean suspectTorConnectionUnavailable() {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (isNetworkAvailable() && !blockCheckingTorConnection
+                && modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady()) {
+            logw("Suspect Tor connection is unavailable.");
+            blockCheckingTorConnection = true;
+            unlockCheckingTorConnectionDelayed();
+            ConnectionCheckerInteractor interactor = connectionCheckerInteractor.get();
+            interactor.setInternetConnectionResult(false);
+            interactor.checkInternetConnection();
+            return true;
+        }
+        return false;
+    }
+
+    private void unlockCheckingTorConnectionDelayed() {
+        handler.get().postDelayed(
+                () -> blockCheckingTorConnection = false,
+                CHECK_TOR_CONNECTION_DELAY_SEC * 1000L
+        );
+    }
+
+    // Called from native code
+    @Keep
     public void accountUsage(Usage usage) {
         //logi(usage.toString());
     }
@@ -853,6 +883,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     @Override
     public void onConnectionChecked(boolean available) {
+        jni_internet_is_available(available);
         if (available) {
             if (!savedInternetAvailable) {
                 reload("VPN - Internet is available due to confirmation.", this);

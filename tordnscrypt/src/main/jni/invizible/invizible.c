@@ -42,6 +42,7 @@ int own_uid = -2;
 bool compatibility_mode = false;
 bool can_filter = true;
 bool bypass_lan = true;
+bool tor_connection_available = false;
 
 extern int max_tun_msg;
 
@@ -283,6 +284,13 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(JN
     ng_delete_alloc(addr, __FILE__, __LINE__);
     ng_delete_alloc(username, __FILE__, __LINE__);
     ng_delete_alloc(password, __FILE__, __LINE__);
+}
+
+JNIEXPORT void JNICALL
+Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1internet_1is_1available(JNIEnv *env,
+                                                                                   jobject instance,
+                                                                                   jboolean available) {
+    tor_connection_available = available;
 }
 
 JNIEXPORT void JNICALL
@@ -839,6 +847,27 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
 #endif
 
     return (jallowed == NULL || exceptionOccurred > 0 ? NULL : &allowed);
+}
+
+static jmethodID midConnectionUnavailable = NULL;
+
+int check_tor_connection(const struct arguments *args) {
+
+    jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
+    ng_add_alloc(clsService, "clsService");
+
+    if (midConnectionUnavailable == NULL)
+        midConnectionUnavailable = jniGetMethodID(args->env, clsService,
+                                                  "suspectTorConnectionUnavailable", "()Z");
+
+    jboolean checking = (*args->env)->CallBooleanMethod(args->env, args->instance,
+                                                        midConnectionUnavailable, socket);
+    jniCheckException(args->env);
+
+    (*args->env)->DeleteLocalRef(args->env, clsService);
+    ng_delete_alloc(clsService, __FILE__, __LINE__);
+
+    return checking;
 }
 
 jmethodID midInitPacket = NULL;
