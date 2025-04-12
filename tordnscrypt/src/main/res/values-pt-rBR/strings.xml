@@ -52,7 +52,7 @@
     <string name="drawer_menu_fastSettings">"Configurações rápidas"</string>
     <string name="drawer_menu_backup">"Backup &amp; Restauração"</string>
     <string name="drawer_menu_about">"Sobre"</string>
-    <string name="drawer_menu_help">"Logs"</string>
+    <string name="drawer_menu_help">Registros</string>
     <string name="drawer_menu_donate">"Doar"</string>
     <string name="btnRestoreBackup">"Restaurar tudo"</string>
     <string name="btnSaveBackup">"Salvar tudo"</string>
@@ -81,7 +81,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Ignorar aplicativos</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"Lista de aplicativos para abrir diretamente"</string>
     <string name="pref_fast_site_refresh_interval">Intervalo de atualização</string>
-    <string name="pref_fast_site_refresh_interval_summ">Período, em horas, para atualizar os IPs dos websites. Para o Android 5.1 e superior. Coloque 0 para parar a atualização.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Período, em horas, para atualizar os IPs dos websites. Para Android 5.1 e superior. Coloque 0 para parar a atualização</string>
     <string name="pref_fast_use_tor_bridges">"Pontes"</string>
     <string name="pref_fast_use_tor_bridges_summ">"Use isso se você não conseguir se conectar a rede Tor"</string>
     <string name="pref_fast_use_tor_bridges_no">"Não usar Pontes"</string>
@@ -128,9 +128,9 @@
     <string name="pref_common_use_busybox">"Selecionar BusyBox"</string>
     <string name="pref_common_categ_hotspot">"HOTSPOT-Experimental"</string>
     <!-- Fuzzy -->
-    <string name="pref_common_tethering_autostart">Iniciar Tethering durante o Boot</string>
+    <string name="pref_common_tethering_autostart">Iniciar o compartilhamento na inicialização</string>
     <!-- Fuzzy -->
-    <string name="pref_common_tor_tethering">Permir Tor Tethering</string>
+    <string name="pref_common_tor_tethering">Permitir o compartilhamento do Tor</string>
     <string name="pref_common_tor_route_all">"Rotear tudo através do Tor"</string>
     <string name="pref_common_tor_route_all_summ">"Rotear todo tráfego de entrada através do Tor"</string>
     <string name="pref_common_unblock_with_tor">Selecionar sites</string>
@@ -139,11 +139,11 @@
     <string name="pref_common_excludes_from_tor">Excluir websites</string>
     <!-- Fuzzy -->
     <string name="pref_common_excludes_from_tor_summ">Lista de websites para abrir diretamente pelo HOTSPOT</string>
-    <string name="pref_common_itpd_tethering">Permitir I2P Tethering</string>
+    <string name="pref_common_itpd_tethering">Permitir o compartilhamento I2P</string>
     <!-- Fuzzy -->
     <string name="pref_common_fix_ttl">"Corrigir TTL"</string>
     <string name="pref_common_fix_ttl_summ">O TTL será fixado em 64 usando uma VPN local. O suporte do kernel não é necessário. Para corrigir o TTL, por favor, inicie o DNSCrypt ou/e o Tor.</string>
-    <string name="pref_common_tethering_settings">Abrir configurações do Tethering</string>
+    <string name="pref_common_tethering_settings">Abrir configurações e tethering</string>
     <string name="pref_common_restart_dnscrypt">"Por favor, reinicie o DNSCrypt"</string>
     <string name="pref_common_restart_tor">"Por favor, reinicie o Tor"</string>
     <string name="pref_common_restart_itpd">"Por favor, reinicie o I2P"</string>
@@ -272,14 +272,14 @@
     <string name="pref_itpd_HTTP_proxy_enabled">"HTTP proxy"</string>
     <string name="pref_itpd_HTTP_proxy_port">porta proxy HTTP</string>
     <string name="pref_itpd_HTTP_proxy_port_summ">"A porta para escutar (Proxy HTTP)."</string>
-    <string name="pref_itpd_Socks_proxy">"Socks proxy"</string>
-    <string name="pref_itpd_Socks_proxy_enabled">"Socks proxy"</string>
+    <string name="pref_itpd_Socks_proxy">Proxy SCOKS</string>
+    <string name="pref_itpd_Socks_proxy_enabled">Proxy SOCKS</string>
     <string name="pref_itpd_Socks_proxy_port">"porta do proxy Socks"</string>
     <string name="pref_itpd_Socks_proxy_port_summ">"Porta de escuta do (Proxy SOCKS)."</string>
     <string name="pref_itpd_SAM_interface">"SAM interface"</string>
     <string name="pref_itpd_SAM_interface_enabled">"SAM interface"</string>
     <string name="pref_itpd_SAM_interface_port">"Porta de interface SAM"</string>
-    <string name="pref_itpd_SAM_interface_port_summ">"Port of SAM bridge."</string>
+    <string name="pref_itpd_SAM_interface_port_summ">Porto da ponte SAM.</string>
     <string name="pref_itpd_Cryptography">"Criptografia"</string>
     <string name="pref_itpd_elgamal_summ">"Use tabelas pré-computadas ElGamal."</string>
     <string name="pref_itpd_UPNP_summ">Habilite ou desabilite o UPnP.</string>
@@ -359,7 +359,7 @@
     <string name="only_premium_feature">"Infelizmente, esse recurso está disponível apenas para a versão premium."</string>
     <string name="pref_itpd_use_HTTP_outproxy">Outproxy HTTP</string>
     <string name="pref_itpd_HTTP_outproxy_address">"Endereço HTTP outproxy"</string>
-    <string name="pref_itpd_use_Socks_outproxy">"SOCKS outproxy"</string>
+    <string name="pref_itpd_use_Socks_outproxy">Proxy SOCKS exterior</string>
     <string name="pref_itpd_Socks_outproxy_address">"Endereço SOCKS outproxy"</string>
     <string name="pref_itpd_Socks_outproxy_port">porta de SOCKS outproxy</string>
     <string name="save_changes">"Salve mudanças"</string>
@@ -493,12 +493,12 @@
     <string name="tile_dialog_over_three_tiles_message">Você adicionou mais de 3 blocos às Configurações Rápidas. Por favor, deixe apenas 3. Adicionar mais de 3 blocos pode causar problemas com o controle de aplicativos.</string>
     <string name="pref_common_rogue_dhcp_detection">"Detecção de DHCP desonesto"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">Detectar os ataques Man-in-the-middle de falso DHCP em redes Wi-Fi.</string>
-    <string name="pref_tor_snowflake_select_rendezvous">"Select rendezvous"</string>
+    <string name="pref_tor_snowflake_select_rendezvous">Selecione o ponto de serviço de conexão</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">"Oculta o nome de domínio do broker do provedor de Internet. O broker é usado para estabelecer uma conexão."</string>
     <string name="pref_firewall_show_all_apps">"Mostrar todos os aplicativos"</string>
     <string name="pref_firewall_show_all_apps_on_summ">"Os aplicativos são mostrados independentemente de suas capacidades de conexão à Internet."</string>
     <string name="pref_firewall_show_all_apps_off_summ">"Somente aplicativos que podem se conectar à Internet são mostrados."</string>
-    <string name="pref_common_kill_switch">"Kill switch"</string>
+    <string name="pref_common_kill_switch">Interruptor de desligamento</string>
     <string name="pref_common_kill_switch_summ">"Bloquear a conexão à Internet quando Tor, DNSCrypt e Purple I2P forem interrompidos"</string>
     <string name="notification_internet_blocked_message">"Internet bloqueada devido ao Kill switch. Inicie o Tor, DNSCrypt ou I2P para permitir a conexão, ou desabilite o Kill switch em Configurações Comuns."</string>
     <string name="list_is_empty">"A lista está vazia"</string>
@@ -508,7 +508,7 @@
     <string name="pref_common_use_busybox_not_use">Não usar BusyBox</string>
     <string name="pref_common_use_iptables_app">Usar iptables do aplicativo</string>
     <string name="pref_common_use_iptables_device">Usar o iptables do dispositivo</string>
-    <string name="pref_common_wait_iptables">"Wait for the xtables lock"</string>
+    <string name="pref_common_wait_iptables">Aguarde o bloqueio do xtables</string>
     <string name="pref_common_wait_iptables_summ">Aguarde até que o bloqueio exclusivo do iptables possa ser obtido para evitar a modificação simultânea das regras.</string>
     <string name="connectivity_check">Verificação de conectividade com a Internet</string>
     <string name="pref_fast_logs">Registros em tempo real</string>
@@ -534,7 +534,7 @@
     <string name="reset_settings_title">"Atenção"</string>
     <string name="ask_reset_settings_text">"O InviZible Pro não pode iniciar %1$s! Por favor, tente redefinir as configurações de %2$s. Se isso não ajudar, reinicie seu dispositivo."</string>
     <string name="ask_reset_settings_btn">"Reiniciar"</string>
-    <string name="pref_fast_fake_sni">"Spoof SNI"</string>
+    <string name="pref_fast_fake_sni">Falsificar SNI</string>
     <string name="pref_tor_track_host_exits_summ">"O Tor rastreará conexões recentes com hosts e tentará reutilizar o mesmo nó de saída para cada uma delas. Esta opção pode ajudar a evitar captchas intermináveis."</string>
     <string name="notification_exclude_bat_optimisation_title">"Parar de otimizar o uso da bateria?"</string>
     <string name="notification_exclude_data_restriction_title">"Desativar o economizador de dados da rede?"</string>
@@ -573,4 +573,8 @@
     <string name="dns_rule_replace_remote_list">Substituir a lista remota</string>
     <string name="dns_rule_replace_local_list">Substituir a lista local</string>
     <string name="helper_tor_check_proxy">Você configurou o uso do proxy Socks5, mas parece que ele não está sendo executado. Verifique suas configurações!</string>
+    <string name="pref_fast_prevent_dns_leak">Evitar vazamentos de DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Bloqueia tentativas de ocultar consultas de DNS. Pode causar problemas de conexão</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Bloquear LAN em Wi-Fi público</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Negar a conexão com a LAN quando um Portal Cativo for detectado</string>
 </resources>
