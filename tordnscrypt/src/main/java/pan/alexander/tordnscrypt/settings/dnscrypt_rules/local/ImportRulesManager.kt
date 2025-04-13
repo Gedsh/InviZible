@@ -435,9 +435,9 @@ class ImportRulesManager(
             return ""
         }
 
-        val index = line.indexOf(" ")
+        val index = line.indexOf("#")
         if (index > 0 && index < line.length - 1) {
-            output = line.substring(0, index)
+            output = line.substring(0, index).trim()
         }
 
         if(!output.matches(regExp)) {
@@ -525,9 +525,9 @@ class ImportRulesManager(
 
             if (line.isNotEmpty() && !line.startsWith("#") && !line.startsWith("!")) {
                 var output = line
-                val spaceIndex = line.indexOf(" ")
-                if (spaceIndex > 0 && spaceIndex < line.length - 1) {
-                    output = line.substring(0, index)
+                val hashIndex = line.indexOf("#")
+                if (hashIndex > 0 && hashIndex < line.length - 1) {
+                    output = line.substring(0, hashIndex).trim()
                 }
                 index++
                 if (output.matches(regExp)) {
