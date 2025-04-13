@@ -166,13 +166,13 @@
     <string name="pref_common_notification_helper">Por favor, exclua o InviZible Pro da otimização da bateria do Android para evitar que o sistema termine o DNSCrypt, Tor ou I2P a qualquer momento. Alguns sistemas especiais, como o MIUI, podem exigir etapas adicionais.</string>
     <string name="pref_common_use_busybox">Selecionar BusyBox</string>
     <string name="pref_common_tethering_autostart">Iniciar a partilha na inicialização</string>
-    <string name="pref_common_tor_tethering">Permir Tor Tethering</string>
+    <string name="pref_common_tor_tethering">Permitir partilha do Tor</string>
     <string name="pref_common_tor_route_all">Rotear tudo através do Tor</string>
     <string name="pref_common_tor_route_all_summ">Rotear todo tráfego de entrada através do Tor</string>
-    <string name="pref_common_unblock_with_tor">Selecionar websites</string>
-    <string name="pref_common_unblock_with_tor_summ">Lista de websites para abrir com o Tor pelo HOTSPOT</string>
-    <string name="pref_common_excludes_from_tor">Excluir websites</string>
-    <string name="pref_common_excludes_from_tor_summ">Lista de websites para abrir diretamente pelo HOTSPOT</string>
+    <string name="pref_common_unblock_with_tor">Selecionar sites</string>
+    <string name="pref_common_unblock_with_tor_summ">Lista de sites para abrir com o Tor pelo HOTSPOT</string>
+    <string name="pref_common_excludes_from_tor">Excluir sites</string>
+    <string name="pref_common_excludes_from_tor_summ">Lista de sites para abrir diretamente pelo HOTSPOT</string>
     <string name="pref_common_itpd_tethering">Permitir I2P Tethering</string>
     <string name="pref_common_fix_ttl">Corrigir TTL</string>
     <string name="pref_common_fix_ttl_summ">O TTL será fixado em 64 usando uma VPN local. O suporte ao kernel não é necessário. Ele só pode ser usado no \"modo Root\" com a opção \"Executar módulos com Root\" desativada. Para corrigir o TTL, inicie DNSCrypt ou / e Tor.</string>
@@ -509,4 +509,6 @@
     <string name="pref_common_kill_switch_summ">Bloquear a ligação à Internet quando o Tor, o DNSCrypt e o Purple I2P são interrompidos</string>
     <string name="pref_fast_block_lan_with_free_wifi">Bloquear LAN em Wi-Fi público</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Bloquear a conexão à LAN quando é detectado um Portal Cativo</string>
+    <string name="pref_common_use_busybox_app">Usar a aplicação BusyBox</string>
+    <string name="pref_common_use_busybox_not_use">Não usar o BusyBox</string>
 </resources>
