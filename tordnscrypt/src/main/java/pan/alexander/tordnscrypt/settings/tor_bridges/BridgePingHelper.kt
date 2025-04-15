@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.settings.tor_bridges
 
+import android.content.Context
 import android.content.SharedPreferences
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,6 +31,7 @@ import kotlinx.coroutines.withContext
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeInteractor
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6
 import pan.alexander.tordnscrypt.vpn.VpnUtils
 import java.net.InetAddress
@@ -40,6 +42,7 @@ import javax.inject.Named
 
 @ExperimentalCoroutinesApi
 class BridgePingHelper @Inject constructor(
+    private val context: Context,
     @Named(CoroutinesModule.DISPATCHER_IO)
     private val dispatcherIo: CoroutineDispatcher,
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
@@ -233,4 +236,6 @@ class BridgePingHelper @Inject constructor(
     private fun String.isIPv6Address() = contains(":")
 
     private fun isUseIPv6() = defaultPreferences.getBoolean(TOR_USE_IPV6, true)
+
+    fun isConnected(): Boolean = NetworkChecker.isNetworkAvailable(context)
 }

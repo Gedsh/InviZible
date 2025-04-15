@@ -19,36 +19,58 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.tor
 
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
 import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
+import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_NO_BOUNDS
+import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS
+import pan.alexander.tordnscrypt.utils.session.AppSessionStore
+import pan.alexander.tordnscrypt.utils.session.SessionKeys.TOR_BRIDGES_IP_WITH_WARNING
 import java.util.regex.Pattern
+import javax.inject.Inject
 
 private const val COUNT_DOWN_TIMER = 5
 private val patternBootstrappedPercents = Pattern.compile("Bootstrapped +(\\d+)%")
+private val patternBridgeWarning =
+    Pattern.compile("((\\[$IPv6_REGEX_NO_BOUNDS])|($IPv4_REGEX_NO_BOUNDS)):\\d+")
 
-class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : AbstractLogParser() {
+class TorLogParser(
+    private val modulesLogRepository: ModulesLogRepository
+) : AbstractLogParser() {
+    @Inject
+    lateinit var sessionStore: AppSessionStore
+
     private var startedSuccessfully = false
     private var startedWithError = false
     private var percentsSaved = -1
     private var linesSaved = listOf<String>()
     private var errorCountDownCounter = COUNT_DOWN_TIMER
 
+    init {
+        App.instance.daggerComponent.inject(this)
+    }
+
     override fun parseLog(): LogDataModel {
 
         val lines = modulesLogRepository.getTorLog()
 
+        var linesChanged = false
         if (lines.size != linesSaved.size) {
-            linesSaved = lines
+            linesChanged = true
+            linesSaved = ArrayList(lines)
+            sessionStore.clearSet(TOR_BRIDGES_IP_WITH_WARNING)
         }
 
-        if (!startedSuccessfully) {
+        var errorFound = false
+        for (i in lines.size - 1 downTo 0) {
+            val line = lines[i]
 
-            var errorFound = false
+            if (linesChanged && line.endsWith("(\"general SOCKS server failure\")")) {
+                parseTorBridgeWithWarning(line)
+            }
 
-            for (i in lines.size - 1 downTo 0) {
-                val line = lines[i]
-
+            if (!startedSuccessfully) {
                 val matcher = patternBootstrappedPercents.matcher(line)
 
                 if (matcher.find()) {
@@ -83,7 +105,6 @@ class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : Abs
                         errorCountDownCounter--
                     }
                 }
-
             }
         }
 
@@ -94,5 +115,21 @@ class TorLogParser(private val modulesLogRepository: ModulesLogRepository) : Abs
             formatLines(linesSaved),
             linesSaved.size
         )
+    }
+
+    private fun parseTorBridgeWithWarning(line: String) {
+        val matcher = patternBridgeWarning.matcher(line)
+        if (matcher.find()) {
+            with(sessionStore) {
+                restoreSet<String>(TOR_BRIDGES_IP_WITH_WARNING).let { ips ->
+                    if (matcher.group().isNotEmpty() && !ips.contains(matcher.group())) {
+                        ips.toMutableSet().also {
+                            it.add(matcher.group())
+                            save(TOR_BRIDGES_IP_WITH_WARNING, it)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

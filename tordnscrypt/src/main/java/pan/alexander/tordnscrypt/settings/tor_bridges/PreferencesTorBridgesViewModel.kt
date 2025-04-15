@@ -45,21 +45,25 @@ import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesInteractor
 import pan.alexander.tordnscrypt.utils.enums.BridgeType
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
+import pan.alexander.tordnscrypt.utils.session.AppSessionStore
+import pan.alexander.tordnscrypt.utils.session.SessionKeys.TOR_BRIDGES_IP_WITH_WARNING
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
-import kotlin.collections.ArrayList
 import kotlin.collections.List
 import kotlin.collections.first
 import kotlin.collections.firstOrNull
 import kotlin.collections.map
 import kotlin.collections.mutableListOf
 
+const val TIMEOUT_REPORTED_BY_TOR = -2
+
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel @Inject constructor(
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
     private val requestBridgesInteractor: RequestBridgesInteractor,
     private val bridgesCountriesInteractor: BridgesCountriesInteractor,
-    private val bridgePingHelper: BridgePingHelper
+    private val bridgePingHelper: BridgePingHelper,
+    private val sessionStore: AppSessionStore
 ) : ViewModel() {
 
     private val timeouts = mutableListOf<BridgePingResult>()
@@ -105,13 +109,45 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
         timeoutsMeasurementJob = viewModelScope.launch {
 
-            when (bridges.firstOrNull()?.obfsType) {
-                BridgeType.webtunnel -> handleWebTunnelBridgesTimeout(bridges)
-                BridgeType.meek_lite -> handleMeekLiteBridgesTimeout(bridges)
-                BridgeType.snowflake -> handleSnowFlakeBridgesTimeout(bridges)
-                else -> handleOtherBridgesTimeout(bridges)
+            val torBridgesToCheckPing = filterAndReportBridgesWithWarning(bridges)
+            if (torBridgesToCheckPing.isEmpty()) {
+                timeouts.add(PingCheckComplete)
+                timeoutMutableLiveData.value = timeouts
+                return@launch
+            }
+
+            when (torBridgesToCheckPing.firstOrNull()?.obfsType) {
+                BridgeType.webtunnel -> handleWebTunnelBridgesTimeout(torBridgesToCheckPing)
+                BridgeType.meek_lite -> handleMeekLiteBridgesTimeout(torBridgesToCheckPing)
+                BridgeType.snowflake -> handleSnowFlakeBridgesTimeout(torBridgesToCheckPing)
+                else -> handleOtherBridgesTimeout(torBridgesToCheckPing)
             }
         }
+    }
+
+    private fun filterAndReportBridgesWithWarning(bridges: List<ObfsBridge>): List<ObfsBridge> {
+
+        if (!bridgePingHelper.isConnected()) {
+            return bridges
+        }
+
+        val torBridgesWithWarning = sessionStore.restoreSet<String>(TOR_BRIDGES_IP_WITH_WARNING)
+        val torBridgesToCheckPing = arrayListOf<ObfsBridge>()
+        for (bridge in bridges) {
+            var withWarn = false
+            for (bridgeWithWarn in torBridgesWithWarning) {
+                if (bridge.bridge.contains(bridgeWithWarn)) {
+                    withWarn = true
+                    timeouts.add(BridgePingData(bridge.bridge.hashCode(), TIMEOUT_REPORTED_BY_TOR))
+                    timeoutMutableLiveData.value = timeouts
+                    break
+                }
+            }
+            if (!withWarn) {
+                torBridgesToCheckPing.add(bridge)
+            }
+        }
+        return torBridgesToCheckPing
     }
 
     private suspend fun handleWebTunnelBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
@@ -208,7 +244,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                                 "${it.address}:${it.port} ${it.fingerprint}"
                             }
                         }
-            } catch (ignored: CancellationException) {
+            } catch (_: CancellationException) {
             } catch (e: Exception) {
                 e.message?.let {
                     errorsMutableLiveData.value = it
@@ -252,7 +288,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
             } catch (e: java.util.concurrent.CancellationException) {
                 logw("PreferencesTorBridgesViewModel requestTorBridgesCaptchaChallenge", e)
-            } catch (e: IllegalStateException) {
+            } catch (_: IllegalStateException) {
                 requestTorBridges(transport, ipv6Bridges, "", "")
             } catch (e: Exception) {
                 e.message?.let { showErrorMessage(it) }

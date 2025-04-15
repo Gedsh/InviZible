@@ -36,6 +36,7 @@ import pan.alexander.tordnscrypt.dialogs.*
 import pan.alexander.tordnscrypt.dialogs.progressDialogs.PleaseWaitDialogBridgesRequest
 
 import pan.alexander.tordnscrypt.dnscrypt_fragment.DNSCryptFragmentReceiver
+import pan.alexander.tordnscrypt.domain.log_reader.tor.TorLogParser
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.help.HelpActivity
 import pan.alexander.tordnscrypt.help.HelpActivityReceiver
@@ -163,4 +164,5 @@ interface AppComponent {
     fun inject(worker: UpdateRemoteDnsRulesWorker)
     fun inject(worker: UpdateLocalDnsRulesWorker)
     fun inject(worker: RemixExistingDnsRulesWorker)
+    fun inject(parser: TorLogParser)
 }

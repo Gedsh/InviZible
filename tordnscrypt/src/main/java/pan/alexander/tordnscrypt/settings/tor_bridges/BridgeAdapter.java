@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.settings.tor_bridges;
 
+import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModelKt.TIMEOUT_REPORTED_BY_TOR;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
@@ -195,7 +196,9 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
         }
 
         private String formatPing(int ping) {
-            if (ping < 0) {
+            if (ping == TIMEOUT_REPORTED_BY_TOR) {
+                return ">> 1 s";
+            } else if (ping < 0) {
                 return "> 1 s";
             } else {
                 return ping + " ms";
