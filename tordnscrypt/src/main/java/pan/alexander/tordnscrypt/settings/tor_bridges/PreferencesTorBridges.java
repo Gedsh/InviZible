@@ -178,6 +178,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private PreferencesTorBridgesViewModel viewModel;
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
+    private long fragmentCreationTime;
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -294,6 +295,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             return;
         }
 
+        fragmentCreationTime = System.currentTimeMillis();
+
         PreferenceRepository preferences = preferenceRepository.get();
 
         if (!preferences.getStringPreference(DEFAULT_BRIDGES_OBFS).isEmpty())
@@ -323,14 +326,20 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             savedBridgesSelector = BridgesSelector.NO_BRIDGES;
         } else if (useNoBridges) {
             noBridgesOperation();
+            rbDefaultBridges.setChecked(false);
+            rbOwnBridges.setChecked(false);
             savedBridgesSelector = BridgesSelector.NO_BRIDGES;
         } else if (useDefaultBridges) {
             FileManager.readTextFile(context, currentBridgesFilePath, DEFAULT_BRIDGES_OPERATION_TAG);
+            rbNoBridges.setChecked(false);
             rbDefaultBridges.setChecked(true);
+            rbOwnBridges.setChecked(false);
             savedBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
         } else {
             currentBridgesFilePath = bridgesCustomFilePath;
             FileManager.readTextFile(context, currentBridgesFilePath, OWN_BRIDGES_OPERATION_TAG);
+            rbNoBridges.setChecked(false);
+            rbDefaultBridges.setChecked(false);
             rbOwnBridges.setChecked(true);
             savedBridgesSelector = BridgesSelector.OWN_BRIDGES;
         }
@@ -361,6 +370,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         if (context == null) {
             return;
         }
+
+        fragmentCreationTime = 0;
 
         if (!bridgesInUse.isEmpty()) {
             switch (savedBridgesSelector) {
@@ -1299,6 +1310,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         Context context = getActivity();
 
         if (context == null) {
+            return;
+        }
+
+        //Hack to prevent double timeout measurement when starting a fragment
+        if (System.currentTimeMillis() - fragmentCreationTime < 1000) {
             return;
         }
 
