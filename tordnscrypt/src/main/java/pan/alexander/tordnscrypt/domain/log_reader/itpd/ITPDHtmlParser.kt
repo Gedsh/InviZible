@@ -39,7 +39,7 @@ class ITPDHtmlParser(val modulesLogRepository: ModulesLogRepository) {
         val linesHash = lines.hashCode()
 
         if (linesHash != linesSavedHash) {
-            linesSaved = lines
+            linesSaved = ArrayList(lines)
             linesSavedHash = linesHash
         }
 

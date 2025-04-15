@@ -32,7 +32,7 @@ class ITPDLogParser(private val modulesLogRepository: ModulesLogRepository) : Ab
         val lines = modulesLogRepository.getITPDLog()
 
         if (lines.size != linesSaved.size) {
-            linesSaved = lines
+            linesSaved = ArrayList(lines)
         }
 
         if (!startedSuccessfully && linesSaved.isNotEmpty()) {

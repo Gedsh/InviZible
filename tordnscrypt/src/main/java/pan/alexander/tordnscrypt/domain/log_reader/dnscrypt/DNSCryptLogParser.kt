@@ -36,7 +36,7 @@ class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) 
         val lines = modulesLogRepository.getDNSCryptLog()
 
         if (lines.size != linesSaved.size) {
-            linesSaved = lines
+            linesSaved = ArrayList(lines)
         }
 
         if (!startedSuccessfully) {
