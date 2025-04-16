@@ -1334,3 +1334,10 @@
 * Implemented display of real-time logs even when DNSCrypt is not running.
 * Fixed display of archived apps on Android 15.
 * Fixed round monochrome icon.
+
+**InviZible Pro beta 2.4.9**
+* Implemented displaying ping >> 1s if a bridge is marked as down by Tor.
+* Optimized Tor connection on unstable networks.
+* Fixed import of DNSCrypt forwarding and cloaking rules.
+* Updated Spanish and Italian translations.
+* Fixes and optimizations.
