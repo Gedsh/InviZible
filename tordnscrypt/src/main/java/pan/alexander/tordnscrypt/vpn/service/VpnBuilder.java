@@ -478,6 +478,8 @@ public class VpnBuilder {
     @SuppressLint("UnspecifiedImmutableFlag")
     private PendingIntent getConfigureIntent() {
         Intent configure = new Intent(context, MainActivity.class);
+        configure.setAction(Intent.ACTION_MAIN);
+        configure.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pi;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pi = PendingIntent.getActivity(
