@@ -20,6 +20,8 @@
 package pan.alexander.tordnscrypt.utils
 
 import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
@@ -29,13 +31,15 @@ import java.lang.Exception
 
 object ThemeUtils {
 
-    @JvmStatic @Suppress("deprecation")
+    @JvmStatic
+    @Suppress("deprecation")
     fun setDayNightTheme(context: Context, pathVars: PathVars) {
         try {
             val theme = if (pathVars.appVersion.startsWith("g") && !accelerated) {
                 "1"
             } else {
-                val defaultSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+                val defaultSharedPreferences =
+                    PreferenceManager.getDefaultSharedPreferences(context)
                 defaultSharedPreferences.getString("pref_fast_theme", "4") ?: "4"
             }
             when (theme) {
@@ -48,4 +52,11 @@ object ThemeUtils {
             loge("ThemeUtils setDayNightTheme", e)
         }
     }
+
+    fun isNightMode(context: Context) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.resources.configuration.isNightModeActive
+        } else {
+            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        }
 }
