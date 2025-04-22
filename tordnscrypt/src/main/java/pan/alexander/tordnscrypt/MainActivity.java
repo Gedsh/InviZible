@@ -108,9 +108,6 @@ import static pan.alexander.tordnscrypt.assistance.AccelerateDevelop.accelerated
 import static pan.alexander.tordnscrypt.main_fragment.ViewPagerAdapter.MAIN_SCREEN_FRAGMENT_QUANTITY;
 import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.FIREWALL;
 import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.MODULE_ARG;
-import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.STATUS_ARG;
-import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.STATUS_RUNNING;
-import static pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster.STATUS_STOPPED;
 import static pan.alexander.tordnscrypt.utils.Utils.isInterfaceLocked;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPING;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
