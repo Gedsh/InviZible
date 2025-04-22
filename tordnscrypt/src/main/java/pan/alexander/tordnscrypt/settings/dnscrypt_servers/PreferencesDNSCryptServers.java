@@ -796,7 +796,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         preferencesDNSCryptRelays.setArguments(bundle);
         FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-        fragmentTransaction.replace(android.R.id.content, preferencesDNSCryptRelays);
+        fragmentTransaction.replace(R.id.fragment_container, preferencesDNSCryptRelays);
         fragmentTransaction.addToBackStack("preferencesDNSCryptRelaysTag");
         fragmentTransaction.commit();
     }

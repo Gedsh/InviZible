@@ -863,7 +863,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
         bndl.putInt("nodes_type", nodesType);
         bndl.putString("countries", val_tor.get(key_tor.indexOf(keyStr)));
         frg.setArguments(bndl);
-        fTrans.replace(android.R.id.content, frg, "CountrySelectFragment");
+        fTrans.replace(R.id.fragment_container, frg, "CountrySelectFragment");
         fTrans.addToBackStack("CountrySelectFragmentTag");
         fTrans.commit();
     }

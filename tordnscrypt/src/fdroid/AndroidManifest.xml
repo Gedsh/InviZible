@@ -154,7 +154,9 @@
             android:foregroundServiceType="dataSync"
             tools:node="remove" />
 
-        <activity android:name=".help.HelpActivity" />
+        <activity
+            android:name=".help.HelpActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <service
             android:name=".utils.root.RootExecService"
@@ -229,13 +231,16 @@
 
         <activity
             android:name=".backup.BackupActivity"
-            android:theme="@style/AppTheme" />
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <activity
             android:name=".settings.SettingsActivity"
             android:label="@string/empty_string"
-            android:theme="@style/AppTheme" />
-        <activity android:name=".about.AboutActivity" />
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <activity
+            android:name=".about.AboutActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
 
         <service
             android:name=".vpn.service.ServiceVPN"

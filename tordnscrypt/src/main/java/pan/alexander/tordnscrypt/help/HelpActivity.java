@@ -27,7 +27,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -107,7 +109,11 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     protected void onCreate(Bundle savedInstanceState) {
         App.getInstance().getDaggerComponent().inject(this);
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_help);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

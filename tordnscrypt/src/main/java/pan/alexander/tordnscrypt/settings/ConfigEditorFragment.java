@@ -163,7 +163,7 @@ public class ConfigEditorFragment extends Fragment implements OnTextFileOperatio
         if (fragmentManager != null) {
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-            fragmentTransaction.replace(android.R.id.content, configEditorFragment);
+            fragmentTransaction.replace(R.id.fragment_container, configEditorFragment);
             fragmentTransaction.addToBackStack("configEditorFragmentTag");
             fragmentTransaction.commit();
         }
