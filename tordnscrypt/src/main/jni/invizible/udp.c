@@ -403,6 +403,12 @@ jboolean handle_udp(const struct arguments *args,
                 } else if (bypass_lan) {
                     //https://datatracker.ietf.org/doc/html/rfc6762
                     if (str_ends_with(qname, ".local")
+                        || str_ends_with(qname, ".lan")
+                        || str_ends_with(qname, ".home")
+                        || str_ends_with(qname, ".corp")
+                        || str_ends_with(qname, ".private")
+                        || str_ends_with(qname, ".internal")
+                        || str_ends_with(qname, ".intranet")
                         || str_ends_with(qname, ".254.169.in-addr.arpa")
                         || str_ends_with(qname, ".8.e.f.ip6.arpa")
                         || str_ends_with(qname, ".9.e.f.ip6.arpa")
