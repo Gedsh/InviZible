@@ -469,7 +469,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                     && ModulesStatus.getInstance().isUseModulesWithRoot();
-            if (!dnsPort.matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
+            if (!dnsPort.matches("^\\d{1,5}$") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                     || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                 return false;
             }
@@ -524,7 +524,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             String[] servers = serversStr.split(", ?");
             for (String server : servers) {
-                if (!server.matches(HOST_NAME_REGEX + ":\\d+")) {
+                if (!server.matches(HOST_NAME_REGEX + ":\\d{1,5}$")) {
                     return false;
                 }
             }
@@ -541,7 +541,7 @@ public class PreferencesTorFragment extends PreferenceFragmentCompat implements 
 
             boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                     && ModulesStatus.getInstance().isUseModulesWithRoot();
-            if (!proxyPort.matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
+            if (!proxyPort.matches("^\\d{1,5}$") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                     || (!useModulesWithRoot && Integer.parseInt(proxyPort) < 1024)) {
                 return false;
             }
