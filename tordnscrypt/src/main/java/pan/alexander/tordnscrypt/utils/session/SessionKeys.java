@@ -21,4 +21,5 @@ package pan.alexander.tordnscrypt.utils.session;
 
 public interface SessionKeys {
     String TOR_BRIDGES_IP_WITH_WARNING = "tor_bridges_with_warning";
+    String MULTIPLE_USERS_EXISTS = "multiple_users_exists";
 }

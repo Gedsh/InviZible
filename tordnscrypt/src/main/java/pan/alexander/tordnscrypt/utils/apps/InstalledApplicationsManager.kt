@@ -37,11 +37,12 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Utils.allowInteractAcrossUsersPermissionIfRequired
 import pan.alexander.tordnscrypt.utils.Utils.getUidForName
-import pan.alexander.tordnscrypt.utils.Utils.isInteractAcrossUsersPermissionGranted
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MULTI_USER_SUPPORT
+import pan.alexander.tordnscrypt.utils.session.AppSessionStore
+import pan.alexander.tordnscrypt.utils.session.SessionKeys.MULTIPLE_USERS_EXISTS
 import java.util.concurrent.locks.ReentrantLock
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -72,6 +73,9 @@ class InstalledApplicationsManager private constructor(
     @Inject
     lateinit var installedAppNamesStorage: InstalledAppNamesStorage
 
+    @Inject
+    lateinit var sessionStore: AppSessionStore
+
     init {
         App.instance.daggerComponent.inject(this)
     }
@@ -96,7 +100,6 @@ class InstalledApplicationsManager private constructor(
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
                 && multiUserSupport
-                && isInteractAcrossUsersPermissionGranted(context)
             ) {
                 val userService = context.getSystemService(Context.USER_SERVICE) as UserManager
                 val list = userService.userProfiles
@@ -111,6 +114,12 @@ class InstalledApplicationsManager private constructor(
                             }
                         }
                     }
+                }
+
+                if (userUids.size > 1) {
+                    sessionStore.save(MULTIPLE_USERS_EXISTS, true)
+                } else {
+                    sessionStore.save(MULTIPLE_USERS_EXISTS, false)
                 }
 
                 logi("Devise Users: ${userUids.joinToString()}")
