@@ -279,7 +279,7 @@
     <string name="pref_itpd_SAM_interface">"SAM interface"</string>
     <string name="pref_itpd_SAM_interface_enabled">"SAM interface"</string>
     <string name="pref_itpd_SAM_interface_port">"Porta de interface SAM"</string>
-    <string name="pref_itpd_SAM_interface_port_summ">Porto da ponte SAM.</string>
+    <string name="pref_itpd_SAM_interface_port_summ">Porta da ponte SAM.</string>
     <string name="pref_itpd_Cryptography">"Criptografia"</string>
     <string name="pref_itpd_elgamal_summ">"Use tabelas pré-computadas ElGamal."</string>
     <string name="pref_itpd_UPNP_summ">Habilite ou desabilite o UPnP.</string>
