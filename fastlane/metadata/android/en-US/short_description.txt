@@ -1,1 +1,1 @@
-Comprehensive application for on-line privacy and security
+Combine the strengths of Tor, DNSCrypt and I2P for security and anonymity
