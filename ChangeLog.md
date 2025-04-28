@@ -1341,3 +1341,10 @@
 * Fixed import of DNSCrypt forwarding and cloaking rules.
 * Updated Spanish and Italian translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.0**
+* Incremented target SDK to Android 15.
+* Dropped support for Android 4.4.2 as the development libraries no longer support it.
+* Added feature for local domains resolution in VPN mode.
+* Fixed support for dual apps.
+* Fixes and optimizations.
