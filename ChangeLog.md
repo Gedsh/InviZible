@@ -1348,3 +1348,10 @@
 * Added feature for local domains resolution in VPN mode.
 * Fixed support for dual apps.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.1**
+* Changed outdated Tor browser user agent to fresh Chromium for requesting bridges.
+* Fixed requesting Tor bridges for Android 9 and below in countries with hard censorship.
+* Fixed bridges are not displayed.
+* Updated Spanish, Chinese, Persian, Portuguese, Portuguese (Brazil) and Arabic translations.
+* Fixes and optimizations.
