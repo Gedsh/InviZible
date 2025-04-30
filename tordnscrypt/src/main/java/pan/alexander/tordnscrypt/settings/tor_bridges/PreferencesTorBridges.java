@@ -330,18 +330,18 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             rbOwnBridges.setChecked(false);
             savedBridgesSelector = BridgesSelector.NO_BRIDGES;
         } else if (useDefaultBridges) {
-            FileManager.readTextFile(context, currentBridgesFilePath, DEFAULT_BRIDGES_OPERATION_TAG);
             rbNoBridges.setChecked(false);
             rbDefaultBridges.setChecked(true);
             rbOwnBridges.setChecked(false);
             savedBridgesSelector = BridgesSelector.DEFAULT_BRIDGES;
+            FileManager.readTextFile(context, currentBridgesFilePath, DEFAULT_BRIDGES_OPERATION_TAG);
         } else {
-            currentBridgesFilePath = bridgesCustomFilePath;
-            FileManager.readTextFile(context, currentBridgesFilePath, OWN_BRIDGES_OPERATION_TAG);
             rbNoBridges.setChecked(false);
             rbDefaultBridges.setChecked(false);
             rbOwnBridges.setChecked(true);
             savedBridgesSelector = BridgesSelector.OWN_BRIDGES;
+            currentBridgesFilePath = bridgesCustomFilePath;
+            FileManager.readTextFile(context, currentBridgesFilePath, OWN_BRIDGES_OPERATION_TAG);
         }
 
         if (!preferences.getBoolPreference("doNotShowNewDefaultBridgesDialog")) {
