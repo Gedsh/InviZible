@@ -231,7 +231,8 @@ class HttpsConnectionManager @Inject constructor(
                 && proxyPort != 0
 
         val proxy = if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady) {
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            //Use http proxy as older android versions use Socks4 proxy which leaks DNS
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logi("Using tor http proxy for url connection")
                 Proxy(
                     Proxy.Type.HTTP,
