@@ -19,7 +19,7 @@
 
 package pan.alexander.tordnscrypt.utils.connectionchecker
 
-import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
+import pan.alexander.tordnscrypt.utils.Constants.CHROME_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDefaultAuth
 import java.net.HttpURLConnection
 import java.net.InetSocketAddress
@@ -87,7 +87,7 @@ class HttpInternetChecker @Inject constructor() {
             requestMethod = REQUEST_METHOD_GET
             connectTimeout = CONNECT_TIMEOUT_SEC * 1000
             readTimeout = READ_TIMEOUT_SEC * 1000
-            setRequestProperty(USER_AGENT_PROPERTY, TOR_BROWSER_USER_AGENT)
+            setRequestProperty(USER_AGENT_PROPERTY, CHROME_BROWSER_USER_AGENT)
             connect()
         }
 
