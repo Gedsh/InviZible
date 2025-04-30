@@ -558,4 +558,8 @@
     <string name="pref_common_always_on_vpn_summ">为 InviZible Pro 启用 “始终开启 VPN ”和 “阻止没有 VPN 的连接”，以便在应用不运行时阻止网络连接</string>
     <string name="proxy_use_for_non_tor">对绕过 Tor 的应用使用代理</string>
     <string name="helper_tor_check_proxy">您已配置使用 Socks5 代理，但代理似乎没有运行。请检查您的设置！</string>
+    <string name="pref_fast_prevent_dns_leak">防止 DNS 泄漏</string>
+    <string name="pref_fast_prevent_dns_leak_summ">阻止尝试隐藏 DNS 查询。可能导致连接问题</string>
+    <string name="pref_fast_block_lan_with_free_wifi">在公共 Wi-Fi 上屏蔽 LAN</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">检测到强制门户时拒绝连接到 LAN</string>
 </resources>
