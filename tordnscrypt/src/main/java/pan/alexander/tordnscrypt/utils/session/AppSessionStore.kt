@@ -23,6 +23,7 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.collections.emptyMap
 
 @Singleton
 class AppSessionStore @Inject constructor() {
@@ -33,6 +34,10 @@ class AppSessionStore @Inject constructor() {
     }
 
     fun <T> save(key: String, value: MutableSet<T>) {
+        keyToValue[key] = value
+    }
+
+    fun <T, V> save(key: String, value: HashMap<T, V>) {
         keyToValue[key] = value
     }
 
@@ -58,5 +63,22 @@ class AppSessionStore @Inject constructor() {
         (keyToValue[key] as? MutableSet<*>)?.clear()
     } catch (e: Exception) {
         loge("AppSessionStore clearSet", e)
+    }
+
+    fun <T, V> restoreMap(key: String): Map<T, V> = try {
+        if (keyToValue.get(key) != null) {
+            keyToValue[key] as Map<T, V>
+        } else {
+            emptyMap<T, V>()
+        }
+    } catch (e: Exception) {
+        loge("AppSessionStore restoreMap", e)
+        emptyMap<T, V>()
+    }
+
+    fun clearMap(key: String) = try {
+        (keyToValue[key] as? MutableMap<*, *>)?.clear()
+    } catch (e: Exception) {
+        loge("AppSessionStore clearMap", e)
     }
 }
