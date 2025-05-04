@@ -66,6 +66,10 @@ class TorLogParser(
         for (i in lines.size - 1 downTo 0) {
             val line = lines[i]
 
+            if (!linesChanged && startedSuccessfully) {
+                break
+            }
+
             if (linesChanged && line.endsWith("(\"general SOCKS server failure\")")) {
                 parseTorBridgeWithWarning(line)
             }
