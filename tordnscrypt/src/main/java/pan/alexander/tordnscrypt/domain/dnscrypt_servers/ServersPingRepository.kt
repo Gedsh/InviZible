@@ -17,10 +17,8 @@
     Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.utils.session;
+package pan.alexander.tordnscrypt.domain.dnscrypt_servers
 
-public interface SessionKeys {
-    String DNSCRYPT_SERVERS_PING = "dnscrypt_servers_ping";
-    String TOR_BRIDGES_IP_WITH_WARNING = "tor_bridges_with_warning";
-    String MULTIPLE_USERS_EXISTS = "multiple_users_exists";
+interface ServersPingRepository {
+    fun getTimeout(address: String): Int
 }

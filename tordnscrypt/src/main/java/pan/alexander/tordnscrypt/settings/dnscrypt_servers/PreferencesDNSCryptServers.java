@@ -40,6 +40,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -86,7 +87,8 @@ import javax.inject.Named;
 
 public class PreferencesDNSCryptServers extends Fragment implements View.OnClickListener,
         PreferencesDNSCryptRelays.OnRoutesChangeListener,
-        AddDNSCryptServerDialogFragment.OnServerAddedListener, SearchView.OnQueryTextListener {
+        AddDNSCryptServerDialogFragment.OnServerAddedListener, SearchView.OnQueryTextListener,
+        OnDnsPingListener {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -782,6 +784,8 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         return true;
     }
 
+
+
     void openDNSRelaysPref(DnsServerItem dnsServer) {
         Bundle bundle = new Bundle();
         if (dnsServer.isProtoDNSCrypt()) {
@@ -799,5 +803,36 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         fragmentTransaction.replace(R.id.fragment_container, preferencesDNSCryptRelays);
         fragmentTransaction.addToBackStack("preferencesDNSCryptRelaysTag");
         fragmentTransaction.commit();
+    }
+
+    void checkServerPing(String serverName, String serverAddress) {
+        viewModel.checkServerPing(this, serverName, serverAddress);
+    }
+
+    @Override
+    public void onPingUpdated(String serverName, int ping) {
+
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            return;
+        }
+
+        for (int i = 0; i < dnsServerItems.size(); i++) {
+            DnsServerItem server = dnsServerItems.get(i);
+            if (serverName.equals(server.getName())) {
+                server.setPing(ping);
+                int positionInSaved = dnsServerItemsSaved.indexOf(server);
+                if (positionInSaved >= 0) {
+                    dnsServerItemsSaved.set(positionInSaved, server);
+                }
+                dnsServerItems.set(i, server);
+                int position = i;
+                rvDNSServers.post(() -> {
+                    if (!rvDNSServers.isComputingLayout()) {
+                        dnsServersAdapter.notifyItemChanged(position, new Object());
+                    }
+                });
+                break;
+            }
+        }
     }
 }

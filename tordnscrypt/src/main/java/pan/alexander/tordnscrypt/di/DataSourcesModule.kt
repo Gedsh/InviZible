@@ -28,6 +28,8 @@ import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSource
 import pan.alexander.tordnscrypt.data.dns_resolver.DnsDataSourceImpl
 import pan.alexander.tordnscrypt.data.dns_rules.DnsRulesDataSource
 import pan.alexander.tordnscrypt.data.dns_rules.DnsRulesDataSourceImpl
+import pan.alexander.tordnscrypt.data.dnscrypt_servers.ServersPingDataSource
+import pan.alexander.tordnscrypt.data.dnscrypt_servers.ServersPingDataSourceImpl
 import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSource
 import pan.alexander.tordnscrypt.data.preferences.PreferenceDataSourceImpl
 
@@ -67,4 +69,9 @@ abstract class DataSourcesModule {
     abstract fun provideDnsRulesDataSource(
         dnsDataSource: DnsRulesDataSourceImpl
     ): DnsRulesDataSource
+
+    @Binds
+    abstract fun provideDnsCryptServersPingDataSource(
+        dnsCryptServersPingDataSource: ServersPingDataSourceImpl
+    ): ServersPingDataSource
 }

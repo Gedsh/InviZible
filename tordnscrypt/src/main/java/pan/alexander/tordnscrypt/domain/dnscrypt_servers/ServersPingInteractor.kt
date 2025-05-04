@@ -17,10 +17,20 @@
     Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.utils.session;
+package pan.alexander.tordnscrypt.domain.dnscrypt_servers
 
-public interface SessionKeys {
-    String DNSCRYPT_SERVERS_PING = "dnscrypt_servers_ping";
-    String TOR_BRIDGES_IP_WITH_WARNING = "tor_bridges_with_warning";
-    String MULTIPLE_USERS_EXISTS = "multiple_users_exists";
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
+import pan.alexander.tordnscrypt.di.CoroutinesModule
+import javax.inject.Inject
+import javax.inject.Named
+
+class ServersPingInteractor @Inject constructor(
+    private val serversPingRepository: ServersPingRepository,
+    @Named(CoroutinesModule.DISPATCHER_IO)
+    private val dispatcherIo: CoroutineDispatcher
+) {
+    suspend fun getTimeout(address: String) = withContext(dispatcherIo) {
+        serversPingRepository.getTimeout(address)
+    }
 }
