@@ -84,6 +84,9 @@ public interface Constants {
 
     String QUAD_DOH_SERVER = "https://dns.quad9.net/dns-query";
 
+    //https://datatracker.ietf.org/doc/html/rfc6762
+    String LAN_DOMAIN_ENDINGS = ".local, .lan, .home, .corp, .private, .internal, .intranet, .254.169.in-addr.arpa, .8.e.f.ip6.arpa, .9.e.f.ip6.arpa, .a.e.f.ip6.arpa, .b.e.f.ip6.arpa";
+
     String CHROME_BROWSER_USER_AGENT = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36";
     String TOR_BROWSER_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0";
     String TOR_SITE_ADDRESS = "https://www.torproject.org/";

@@ -371,6 +371,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                         && !qname.endsWith(".onion")
                         && !qname.endsWith(".i2p")
                         && !qname.equals("ipv4only.arpa") //https://datatracker.ietf.org/doc/html/rfc7050
+                        && (!vpnPreferences.getLan() || !vpnRulesHolder.get().isLanDomain(qname))
                         && !dnsRebindHosts.contains(qname.hashCode())) {
                     if ((destAddress.equals(META_ADDRESS) || destAddress.equals(LOOPBACK_ADDRESS)
                             || destAddress.equals(LOOPBACK_ADDRESS_IPv6) || destAddress.equals(META_ADDRESS_IPv6))
