@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -32,6 +34,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.card.MaterialCardView;
@@ -39,19 +42,29 @@ import com.google.android.material.card.MaterialCardView;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import pan.alexander.tordnscrypt.R;
 
 class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysViewHolder> {
 
+    private static final int MIN_INTERVAL_PING_CHECK_SEC = 1;
+
     private final List<DnsRelayItem> dnsRelayItems = new ArrayList<>();
 
     private final int colorFirst;
     private final int colorSecond;
+    private final int pingGoodColor;
+    private final int pingAverageColor;
+    private final int pingBadColor;
+    private OnRelayPingMeasure pingMeasurer;
 
     DnsRelaysAdapter(Context context) {
         colorFirst = context.getResources().getColor(R.color.colorFirst);
         colorSecond = context.getResources().getColor(R.color.colorSecond);
+        pingGoodColor = ContextCompat.getColor(context, R.color.torBridgePingGood);
+        pingAverageColor = ContextCompat.getColor(context, R.color.torBridgePingAverage);
+        pingBadColor = ContextCompat.getColor(context, R.color.torBridgePingBad);
     }
 
     void addItems(List<DnsRelayItem> items) {
@@ -63,6 +76,21 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
 
     List<DnsRelayItem> getItems() {
         return new ArrayList<>(dnsRelayItems);
+    }
+
+    int updateRelayPing(String relayName, int ping) {
+        for (int i = 0; i < dnsRelayItems.size(); i++) {
+            DnsRelayItem relay = dnsRelayItems.get(i);
+            if (relay.getName().equals(relayName)) {
+                relay.setPing(ping);
+                return i;
+            }
+        }
+        return NO_POSITION;
+    }
+
+    void setOnRelayPingMeasurer(OnRelayPingMeasure measurer) {
+        pingMeasurer = measurer;
     }
 
     @Override
@@ -105,7 +133,10 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
             implements View.OnClickListener, View.OnFocusChangeListener {
         private final TextView tvDNSRelayName;
         private final TextView tvDNSRelayDescription;
+        private final TextView tvDNSRelayPing;
         private final CheckBox chbDNSRelay;
+
+        private Long checkPingTime = 0L;
 
         DNSRelaysViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -118,6 +149,7 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
 
             tvDNSRelayName = itemView.findViewById(R.id.tvDNSRelayName);
             tvDNSRelayDescription = itemView.findViewById(R.id.tvDNSRelayDescription);
+            tvDNSRelayPing = itemView.findViewById(R.id.tvDNSRelayPing);
             chbDNSRelay = itemView.findViewById(R.id.chbDNSRelay);
             chbDNSRelay.setOnClickListener(this);
         }
@@ -125,9 +157,29 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
         private void bind(int position) {
             DnsRelayItem dnsRelayItem = getItem(position);
 
+            Long time = System.currentTimeMillis();
+            if (pingMeasurer != null
+                    && (dnsRelayItem.getPing() == 0 || time - checkPingTime > MIN_INTERVAL_PING_CHECK_SEC * 1000)) {
+                checkPingTime = time;
+                pingMeasurer.measureRelayPing(dnsRelayItem.getName(), dnsRelayItem.getSdns());
+            }
+
             tvDNSRelayName.setText(dnsRelayItem.getName());
             tvDNSRelayDescription.setText(dnsRelayItem.getDescription());
             chbDNSRelay.setChecked(dnsRelayItem.isChecked());
+
+            int ping = dnsRelayItem.getPing();
+            if (ping > 0) {
+                tvDNSRelayPing.setText(String.format(Locale.ROOT, "%d ms", ping));
+                tvDNSRelayPing.setTextColor(getPingColor(ping));
+                tvDNSRelayPing.setVisibility(VISIBLE);
+            } else if (ping < 0) {
+                tvDNSRelayPing.setText(">1 sec");
+                tvDNSRelayPing.setTextColor(pingBadColor);
+                tvDNSRelayPing.setVisibility(VISIBLE);
+            } else {
+                tvDNSRelayPing.setVisibility(GONE);
+            }
         }
 
         @Override
@@ -154,5 +206,17 @@ class DnsRelaysAdapter extends RecyclerView.Adapter<DnsRelaysAdapter.DNSRelaysVi
                 ((CardView) view).setCardBackgroundColor(colorFirst);
             }
         }
+    }
+
+    private int getPingColor(int ping) {
+        if (ping <= 100) {
+            return pingGoodColor;
+        } else {
+            return pingAverageColor;
+        }
+    }
+
+    interface OnRelayPingMeasure {
+        void measureRelayPing(String name, String sdns);
     }
 }

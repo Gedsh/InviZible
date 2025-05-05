@@ -17,10 +17,15 @@
     Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.dnscrypt_relays
+package pan.alexander.tordnscrypt.data.dnscrypt_relays
 
-data class DnsRelay(
-    val name: String,
-    val description: String,
-    val sdns: String
-)
+import pan.alexander.tordnscrypt.utils.parsers.DnsCryptSDNSParser
+import javax.inject.Inject
+
+class RelaysPingDataSourceImpl @Inject constructor(
+    private val dnsCryptSDNSParser: DnsCryptSDNSParser
+) : RelaysPingDataSource {
+    override fun getAddressFromSDNS(sdns: String): String {
+        return dnsCryptSDNSParser.getRelayAddress(sdns)
+    }
+}

@@ -17,10 +17,8 @@
     Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
-package pan.alexander.tordnscrypt.settings.dnscrypt_relays
+package pan.alexander.tordnscrypt.domain.dnscrypt_relays
 
-data class DnsRelay(
-    val name: String,
-    val description: String,
-    val sdns: String
-)
+interface RelaysPingRepository {
+    fun getAddressFromSDNS(sdns: String): String
+}

@@ -26,11 +26,14 @@ import java.util.Objects;
 class DnsRelayItem implements Comparable<DnsRelayItem> {
     private final String name;
     private final String description;
+    private final String sdns;
+    private int ping;
     private boolean checked;
 
-    DnsRelayItem(String name, String description) {
+    DnsRelayItem(String name, String description, String sdns) {
         this.name = name;
         this.description = description;
+        this.sdns = sdns;
     }
 
     String getName() {
@@ -39,6 +42,18 @@ class DnsRelayItem implements Comparable<DnsRelayItem> {
 
     String getDescription() {
         return description;
+    }
+
+    public String getSdns() {
+        return sdns;
+    }
+
+    public int getPing() {
+        return ping;
+    }
+
+    public void setPing(int ping) {
+        this.ping = ping;
     }
 
     boolean isChecked() {
