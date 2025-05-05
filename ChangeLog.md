@@ -1355,3 +1355,7 @@
 * Fixed bridges are not displayed.
 * Updated Spanish, Chinese, Persian, Portuguese, Portuguese (Brazil) and Arabic translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.2**
+* Implemented display of ping of DNSCrypt servers and relays.
+* Updated French translation.
