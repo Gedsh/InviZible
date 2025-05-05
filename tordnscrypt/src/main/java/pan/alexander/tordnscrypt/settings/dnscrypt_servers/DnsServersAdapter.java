@@ -255,7 +255,7 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
                 tvDNSServerPing.setText(String.format(Locale.ROOT, "%d ms", ping));
                 tvDNSServerPing.setTextColor(getPingColor(ping));
                 tvDNSServerPing.setVisibility(VISIBLE);
-            } else if (dnsServer.getPing() < 0) {
+            } else if (ping < 0) {
                 tvDNSServerPing.setText(">1 sec");
                 tvDNSServerPing.setTextColor(pingBadColor);
                 tvDNSServerPing.setVisibility(VISIBLE);

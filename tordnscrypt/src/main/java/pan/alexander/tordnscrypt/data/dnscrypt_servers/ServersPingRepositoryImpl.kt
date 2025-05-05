@@ -39,6 +39,8 @@ class ServersPingRepositoryImpl @Inject constructor(
     @Named(DEFAULT_PREFERENCES_NAME) private val defaultPreferences: SharedPreferences
 ) : ServersPingRepository {
 
+    private val outboundProxyAddress = getDnsCryptOutboundProxyAddress()
+
     private val ipv4WithPortPattern =
         Pattern.compile("([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}):(\\d+)\\b")
 
@@ -59,11 +61,9 @@ class ServersPingRepositoryImpl @Inject constructor(
             return NO_CONNECTION
         }
 
-        val outboundProxyAddress = getDnsCryptOutboundProxyAddress();
-        val outboundProxyIp = outboundProxyAddress.substring(0, outboundProxyAddress.indexOf(":"))
-        val outboundProxyPort = outboundProxyAddress.substring(outboundProxyAddress.indexOf(":") + 1)
-
         return if (isDnsCryptOutboundProxyEnabled()) {
+            val outboundProxyIp = outboundProxyAddress.substring(0, outboundProxyAddress.indexOf(":"))
+            val outboundProxyPort = outboundProxyAddress.substring(outboundProxyAddress.indexOf(":") + 1)
             serversPingDataSource.checkTimeoutViaProxy(
                 ip,
                 port,

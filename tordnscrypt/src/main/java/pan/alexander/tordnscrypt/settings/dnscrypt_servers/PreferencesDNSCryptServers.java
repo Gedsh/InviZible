@@ -826,8 +826,11 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 }
                 dnsServerItems.set(i, server);
                 int position = i;
+                if (rvDNSServers == null) {
+                    return;
+                }
                 rvDNSServers.post(() -> {
-                    if (!rvDNSServers.isComputingLayout()) {
+                    if (dnsServersAdapter != null && !rvDNSServers.isComputingLayout()) {
                         dnsServersAdapter.notifyItemChanged(position, new Object());
                     }
                 });

@@ -149,7 +149,9 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
                     throw new IllegalArgumentException("Invalid sdns host name " + name);
                 }
                 pos++;
-                addr = new String(bin, pos, length, StandardCharsets.UTF_8);
+                if (addr.isEmpty()) {
+                    addr = new String(bin, pos, length, StandardCharsets.UTF_8);
+                }
                 pos += length;
 
                 // Path
@@ -170,7 +172,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
                 }
             }
 
-            if (!addr.contains(":") || !addr.matches(".+:\\d{1,5}$")) {
+            if (!addr.isEmpty() && (!addr.contains(":") || !addr.matches(".+:\\d{1,5}$"))) {
                 addr += ":443";
             }
             address = addr;
