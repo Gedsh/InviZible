@@ -292,7 +292,7 @@
     <string name="update_core_no">Позже</string>
     <string name="update_core_not_show_again">Больше не спрашивать</string>
     <string name="update_core_restart">Пожалуйста, перезапустите InviZible и позвольте завершить установку! После установки настройте заново Точку доступа, если вы пользовались ней!</string>
-    <string name="pref_fast_block_lan_with_free_wifi">Блокировать LAN на бесплатном Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Блокировать LAN на публичном Wi-Fi</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокировать доступ к локальной сети при обнаружении страницы регистрации</string>
     <string name="pref_fast_block_http">Заблокировать http</string>
     <string name="pref_fast_block_http_summ">Закрыть http порт 80</string>
@@ -429,7 +429,7 @@
     <string name="pref_common_local_eth_device_addr">IP адрес устройства в LAN</string>
     <string name="pref_common_local_eth_device_addr_summ">Включите Зафиксировать TTL и настройте устройство в LAN, чтобы подключиться к InviZible. Используйте шлюз: %1$s, DNS сервер: %2$s.</string>
     <string name="pref_common_shell_control">Включить управление скриптами</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">Используйте следующую команду для управления модулями: \"am broadcast -a pan.alexander.tordnscrypt.SHELL_SCRIPT_CONTROL --ei dnscrypt 1 --ei tor 1 --ei i2p 1 %s\". Где 1 - запустить, 0 - остановить модуль.</string>
     <string name="notification_channel_services">Запущенные сервисы</string>
     <string name="notification_channel_update">Обновление</string>
     <string name="notification_channel_root">Команды Рут</string>
