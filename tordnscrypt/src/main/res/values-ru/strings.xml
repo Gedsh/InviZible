@@ -292,7 +292,7 @@
     <string name="update_core_no">Позже</string>
     <string name="update_core_not_show_again">Больше не спрашивать</string>
     <string name="update_core_restart">Пожалуйста, перезапустите InviZible и позвольте завершить установку! После установки настройте заново Точку доступа, если вы пользовались ней!</string>
-    <string name="pref_fast_block_lan_with_free_wifi">Блокировать LAN на бесплатном Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Блокировать LAN на публичном Wi-Fi</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокировать доступ к локальной сети при обнаружении страницы регистрации</string>
     <string name="pref_fast_block_http">Заблокировать http</string>
     <string name="pref_fast_block_http_summ">Закрыть http порт 80</string>
