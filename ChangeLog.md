@@ -1359,3 +1359,11 @@
 **InviZible Pro beta 2.5.2**
 * Implemented display of ping of DNSCrypt servers and relays.
 * Updated French translation.
+
+**InviZible Pro beta 2.5.3**
+* Updated DNSCrypt to version 2.1.12.
+* Updated Purple I2P to version 2.57.0.
+* Updated Tor obfuscators: WebTunnel, SnowFlake.
+* Updated default bridges.
+* Updated Spanish and Arabic translations.
+* Fixes and optimizations.
