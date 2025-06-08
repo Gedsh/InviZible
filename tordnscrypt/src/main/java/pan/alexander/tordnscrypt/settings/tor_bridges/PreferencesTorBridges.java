@@ -674,6 +674,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                             for (ObfsBridge obfsBridge : bridgesToDisplay) {
                                 if (obfsBridge.bridge.hashCode() == ((BridgePingData) bridgePing).getBridgeHash()) {
                                     obfsBridge.ping = ((BridgePingData) bridgePing).getPing();
+                                    obfsBridge.withWarning = ((BridgePingData) bridgePing).getWithWarning();
                                 }
                             }
                         }

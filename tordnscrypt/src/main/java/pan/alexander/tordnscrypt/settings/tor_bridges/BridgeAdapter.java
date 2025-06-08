@@ -185,8 +185,8 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             if (obfsBridge.ping == 0) {
                 tvPing.setVisibility(View.GONE);
             } else {
-                tvPing.setText(formatPing(obfsBridge.ping));
-                tvPing.setTextColor(getPingColor(obfsBridge.ping));
+                tvPing.setText(formatPing(obfsBridge));
+                tvPing.setTextColor(getPingColor(obfsBridge));
                 tvPing.setVisibility(View.VISIBLE);
             }
 
@@ -195,20 +195,22 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
             swBridge.setChecked(obfsBridge.active);
         }
 
-        private String formatPing(int ping) {
-            if (ping == TIMEOUT_REPORTED_BY_TOR) {
+        private String formatPing(ObfsBridge bridge) {
+            if (bridge.ping == TIMEOUT_REPORTED_BY_TOR) {
                 return ">> 1 s";
-            } else if (ping < 0) {
+            } else if (bridge.ping < 0) {
                 return "> 1 s";
+            } else if (bridge.withWarning) {
+                return bridge.ping + " ms!";
             } else {
-                return ping + " ms";
+                return bridge.ping + " ms";
             }
         }
 
-        private int getPingColor(int ping) {
-            if (ping < 0) {
+        private int getPingColor(ObfsBridge bridge) {
+            if (bridge.ping < 0 || bridge.withWarning) {
                 return torBridgePingBadColor;
-            } else if (ping > 100) {
+            } else if (bridge.ping > 100) {
                 return torBridgePingAverageColor;
             } else {
                 return torBridgePingGoodColor;

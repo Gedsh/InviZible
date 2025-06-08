@@ -134,18 +134,14 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         val torBridgesWithWarning = sessionStore.restoreSet<String>(TOR_BRIDGES_IP_WITH_WARNING)
         val torBridgesToCheckPing = arrayListOf<ObfsBridge>()
         for (bridge in bridges) {
-            var withWarn = false
             for (bridgeWithWarn in torBridgesWithWarning) {
                 if (bridge.bridge.contains(bridgeWithWarn)) {
-                    withWarn = true
-                    timeouts.add(BridgePingData(bridge.bridge.hashCode(), TIMEOUT_REPORTED_BY_TOR))
+                    timeouts.add(BridgePingData(bridge.bridge.hashCode(), TIMEOUT_REPORTED_BY_TOR, true))
                     timeoutMutableLiveData.value = timeouts
                     break
                 }
             }
-            if (!withWarn) {
-                torBridgesToCheckPing.add(bridge)
-            }
+            torBridgesToCheckPing.add(bridge)
         }
         return torBridgesToCheckPing
     }
@@ -225,10 +221,28 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                         it
                     }
                 }.onEach {
-                    timeouts.add(it)
+                    when (it) {
+                        is BridgePingData -> if (!updateBridgesPingWithWarning(it)) timeouts.add(it)
+                        else -> timeouts.add(it)
+                    }
                     timeoutMutableLiveData.value = timeouts
                 }.collect()
         }
+    }
+
+    private fun updateBridgesPingWithWarning(currentBridge: BridgePingData): Boolean {
+        var found = false
+        for (bridge in timeouts) {
+            if (bridge is BridgePingData && currentBridge.bridgeHash == bridge.bridgeHash) {
+                if (currentBridge.ping > 0) {
+                    bridge.ping = currentBridge.ping
+                } else {
+                    return true
+                }
+                found = true
+            }
+        }
+        return found
     }
 
     fun requestRelayBridges(allowIPv6Relays: Boolean, fascistFirewall: Boolean) {
