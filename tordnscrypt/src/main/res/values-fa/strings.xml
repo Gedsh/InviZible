@@ -10,7 +10,7 @@
     <string name="tvITPDStopping">"I2P در حال توقف"</string>
     <string name="tvITPDInstalling">"I2P در حال نصب"</string>
     <string name="tvITPDInstalled">"I2P نصب شد"</string>
-    <string name="tvITPDNotInstalled">"I2P نصب نشد"</string>
+    <string name="tvITPDNotInstalled">I2P نصب نشده</string>
     <!-- شروع پس از راه اندازی -->
     <string name="swRunOnBoot">"شروع پس از راه‌اندازی"</string>
     <!-- ...بررسی در دسترس بودن روت -->
