@@ -1367,3 +1367,15 @@
 * Updated default bridges.
 * Updated Spanish and Arabic translations.
 * Fixes and optimizations.
+
+**InviZible Pro stable 7.2.0**
+* Updated DNSCrypt to version 2.1.12.
+* Updated Purple I2P to version 2.57.0.
+* Updated Tor obfuscators: WebTunnel, SnowFlake.
+* Optimized Tor connection on unstable networks.
+* Implemented display of ping of DNSCrypt servers and relays.
+* Implemented displaying ping >> 1s if a bridge is marked as down by Tor.
+* Fixed support for dual apps.
+* Fixed requesting Tor bridges for Android 9 and below in countries with hard censorship.
+* Updated translations.
+* Fixes and optimizations.
