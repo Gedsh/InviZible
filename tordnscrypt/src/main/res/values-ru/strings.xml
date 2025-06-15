@@ -80,6 +80,12 @@
     <string name="pref_fast_use_tor_bridges_own">Использовать свой список мостов</string>
     <string name="pref_fast_use_tor_bridges_request">Запросить мосты</string>
     <string name="pref_fast_use_tor_bridges_add">Добавить мосты</string>
+    <string name="remove_all_bridges">Очистить список мостов</string>
+	<string name="confirm_deletion">Подтверждение удаления</string>
+	<string name="confirm_remove_all_bridges_message">Вы уверены, что хотите удалить все мосты? Это может повлиять на возможность подключения Tor.</string>
+	<string name="yes">Да</string>
+	<string name="no">Нет</string>
+	<string name="all_bridges_removed">Все мосты были удалены</string>
     <string name="pref_fast_use_tor_bridges_edit">Редактировать мост</string>
     <string name="pref_fast_use_tor_bridges_deactivate">Пожалуйста, сначала деактивируйте мост!</string>
     <string name="pref_fast_use_tor_bridges_obfs">Обфускация</string>

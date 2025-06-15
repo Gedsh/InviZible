@@ -125,6 +125,12 @@
     <string name="pref_fast_use_tor_bridges_own">Use Bridges Own List</string>
     <string name="pref_fast_use_tor_bridges_request">Request Bridges</string>
     <string name="pref_fast_use_tor_bridges_add">Add Bridges</string>
+    <string name="remove_all_bridges">Clear bridges list</string>
+    <string name="confirm_deletion">Confirm Deletion</string>
+    <string name="confirm_remove_all_bridges_message">Are you sure you want to remove all bridges? This may affect Tor connection.</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="all_bridges_removed">All bridges removed</string>
     <string name="pref_fast_use_tor_bridges_edit">Edit Bridge</string>
     <string name="pref_fast_use_tor_bridges_deactivate">Pls deactivate bridge first!</string>
     <string name="pref_fast_use_tor_bridges_obfs">Obfuscation</string>
