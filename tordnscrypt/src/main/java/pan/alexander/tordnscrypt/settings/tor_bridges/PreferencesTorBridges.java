@@ -254,6 +254,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
         Button btnAddBridges = view.findViewById(R.id.btnAddBridges);
         btnAddBridges.setOnClickListener(this);
 
+        Button btnRemoveAllBridges = view.findViewById(R.id.btnRemoveAllBridges);
+        btnRemoveAllBridges.setOnClickListener(this);
+
         tvBridgesListEmpty = view.findViewById(R.id.tvBridgesListEmpty);
 
         rvBridges = view.findViewById(R.id.rvBridges);
@@ -573,7 +576,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             FileManager.readTextFile(getActivity(), appDataDir + "/app_data/tor/bridges_custom.lst", ADD_BRIDGES_TAG);
         } else if (id == R.id.btnRequestBridges) {
             viewModel.showSelectRequestBridgesTypeDialog();
-        }
+        } else if (id == R.id.btnRemoveAllBridges) {
+        removeAllBridges();
+    }
     }
 
     private void observeDialogsFlow() {
@@ -733,6 +738,32 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
     private void sortBridgesByPing() {
         Collections.sort(bridgesToDisplay, new BridgePingComparator());
+    }
+
+    private void removeAllBridges() {
+        final Context context = getActivity();
+        if (context == null) {
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.confirm_deletion);
+        builder.setMessage(R.string.confirm_remove_all_bridges_message);
+
+        builder.setPositiveButton(getText(R.string.yes), (dialogInterface, i) -> {
+            bridgesInUse.clear();
+            bridgesToDisplay.clear();
+            bridgesInappropriateType.clear();
+
+            FileManager.writeToTextFile(context, bridgesCustomFilePath, new ArrayList<>(), "clear_own_bridges_tag");
+
+            rbNoBridges.performClick();
+
+            Toast.makeText(context, R.string.all_bridges_removed, Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setNegativeButton(getText(R.string.no), (dialog, i) -> dialog.cancel());
+        builder.show();
     }
 
     private void addBridges(final List<String> persistList) {
