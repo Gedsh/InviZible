@@ -755,6 +755,12 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             bridgesToDisplay.clear();
             bridgesInappropriateType.clear();
 
+            doActionAndUpdateRecycler(() -> {
+                if (tvBridgesListEmpty != null) {
+                    tvBridgesListEmpty.setVisibility(View.GONE);
+                }
+            });
+
             FileManager.writeToTextFile(context, bridgesCustomFilePath, new ArrayList<>(), "clear_own_bridges_tag");
 
             Toast.makeText(context, R.string.all_bridges_removed, Toast.LENGTH_SHORT).show();
