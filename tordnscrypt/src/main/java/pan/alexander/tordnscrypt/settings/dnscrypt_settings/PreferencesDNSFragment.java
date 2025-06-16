@@ -313,7 +313,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             if (Objects.equals(preference.getKey(), DNSCRYPT_LISTEN_PORT)) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
-                if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
+                if (!newValue.toString().matches("^\\d{1,5}$") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }
@@ -362,7 +362,7 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
             } else if (Objects.equals(preference.getKey(), DNSCRYPT_OUTBOUND_PROXY_PORT)) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
-                if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
+                if (!newValue.toString().matches("^\\d{1,5}$") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }

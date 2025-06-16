@@ -62,7 +62,7 @@ import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_CHANNEL_NOTIFICATION_ID;
 import static pan.alexander.tordnscrypt.update.UpdateService.UPDATE_RESULT;
 import static pan.alexander.tordnscrypt.utils.AppExtension.getApp;
-import static pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT;
+import static pan.alexander.tordnscrypt.utils.Constants.CHROME_BROWSER_USER_AGENT;
 import static pan.alexander.tordnscrypt.utils.Utils.areNotificationsAllowed;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
@@ -212,7 +212,7 @@ public class DownloadTask extends Thread {
 
         con.setConnectTimeout(1000 * CONNECT_TIMEOUT);
         con.setReadTimeout(1000 * READ_TIMEOUT);
-        con.setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT);
+        con.setRequestProperty("User-Agent", CHROME_BROWSER_USER_AGENT);
 
         if (range != 0) {
             con.setRequestProperty("Range", "bytes=" + range + "-");

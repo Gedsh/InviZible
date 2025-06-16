@@ -34,8 +34,12 @@ import kotlinx.coroutines.plus
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withTimeout
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.domain.dnscrypt_servers.ServersPingInteractor
+import pan.alexander.tordnscrypt.utils.connectionchecker.SocketInternetChecker.Companion.NO_CONNECTION
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.parsers.DnsCryptConfigurationParser
+import pan.alexander.tordnscrypt.utils.session.AppSessionStore
+import pan.alexander.tordnscrypt.utils.session.SessionKeys.DNSCRYPT_SERVERS_PING
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -45,7 +49,9 @@ class DnsServerViewModel @Inject constructor(
     private val dispatcherIo: CoroutineDispatcher,
     @Named(CoroutinesModule.SUPERVISOR_JOB_IO_DISPATCHER_SCOPE)
     private val baseCoroutineScope: CoroutineScope,
-    coroutineExceptionHandler: CoroutineExceptionHandler
+    coroutineExceptionHandler: CoroutineExceptionHandler,
+    private val sessionStore: AppSessionStore,
+    private val serversPingInteractor: ServersPingInteractor
 ) : ViewModel() {
 
     private val scope: CoroutineScope =
@@ -141,6 +147,18 @@ class DnsServerViewModel @Inject constructor(
     fun saveDnsCryptProxyToml(lines: List<String>) {
         scope.launch {
             dnsCryptConfigurationParser.saveDnsCryptProxyToml(lines)
+        }
+    }
+
+    fun checkServerPing(listener: OnDnsPingListener, name: String, address: String) {
+        viewModelScope.launch {
+            val serverToPing = sessionStore.restoreMap<String, Int>(DNSCRYPT_SERVERS_PING)
+            val ping = serverToPing[name] ?: NO_CONNECTION
+            if (ping > 0) {
+                listener.onPingUpdated(name, ping)
+            } else {
+                listener.onPingUpdated(name, serversPingInteractor.getTimeout(address))
+            }
         }
     }
 }

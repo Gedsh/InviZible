@@ -1334,3 +1334,48 @@
 * Implemented display of real-time logs even when DNSCrypt is not running.
 * Fixed display of archived apps on Android 15.
 * Fixed round monochrome icon.
+
+**InviZible Pro beta 2.4.9**
+* Implemented displaying ping >> 1s if a bridge is marked as down by Tor.
+* Optimized Tor connection on unstable networks.
+* Fixed import of DNSCrypt forwarding and cloaking rules.
+* Updated Spanish and Italian translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.5.0**
+* Incremented target SDK to Android 15.
+* Dropped support for Android 4.4.2 as the development libraries no longer support it.
+* Added feature for local domains resolution in VPN mode.
+* Fixed support for dual apps.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.5.1**
+* Changed outdated Tor browser user agent to fresh Chromium for requesting bridges.
+* Fixed requesting Tor bridges for Android 9 and below in countries with hard censorship.
+* Fixed bridges are not displayed.
+* Updated Spanish, Chinese, Persian, Portuguese, Portuguese (Brazil) and Arabic translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.5.2**
+* Implemented display of ping of DNSCrypt servers and relays.
+* Updated French translation.
+
+**InviZible Pro beta 2.5.3**
+* Updated DNSCrypt to version 2.1.12.
+* Updated Purple I2P to version 2.57.0.
+* Updated Tor obfuscators: WebTunnel, SnowFlake.
+* Updated default bridges.
+* Updated Spanish and Arabic translations.
+* Fixes and optimizations.
+
+**InviZible Pro stable 7.2.0**
+* Updated DNSCrypt to version 2.1.12.
+* Updated Purple I2P to version 2.57.0.
+* Updated Tor obfuscators: WebTunnel, SnowFlake.
+* Optimized Tor connection on unstable networks.
+* Implemented display of ping of DNSCrypt servers and relays.
+* Implemented displaying ping >> 1s if a bridge is marked as down by Tor.
+* Fixed support for dual apps.
+* Fixed requesting Tor bridges for Android 9 and below in countries with hard censorship.
+* Updated translations.
+* Fixes and optimizations.

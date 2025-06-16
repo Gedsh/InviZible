@@ -69,7 +69,7 @@ popd
 ################
 
 pushd snowflake/proxy/
-go build -ldflags="-s -w" -o libsnowflake.so
+go build -ldflags="-s -w -checklinkname=0" -o libsnowflake.so
 mv libsnowflake.so ${LIBS_ROOT}/${ABI}/libsnowflake.so || exit 1
 popd
 
@@ -106,7 +106,7 @@ else
     #compile armeabi-v7a things...
     export PKG_CONFIG_PATH="${LIBS_ROOT}/libzmq/builds/android/prefix/arm/lib/pkgconfig"
 fi
-go build -ldflags="-s -w" -o libconjure.so
+go build -ldflags="-s -w -checklinkname=0" -o libconjure.so
 mv libconjure.so ${LIBS_ROOT}/${ABI}/libconjure.so || exit 1
 popd
 

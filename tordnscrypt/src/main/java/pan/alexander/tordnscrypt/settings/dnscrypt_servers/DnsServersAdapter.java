@@ -19,6 +19,8 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
 
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -45,10 +47,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.List;
+import java.util.Locale;
 
 import pan.alexander.tordnscrypt.R;
 
 class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServersViewHolder> {
+
+    private static final int MIN_INTERVAL_PING_CHECK_SEC = 1;
+
     private final PreferencesDNSCryptServers preferencesDNSCryptServers;
     private final List<DnsServerItem> dnsServerItems;
     private final List<DnsServerItem> dnsServerItemsSaved;
@@ -81,6 +87,9 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
     private final String nonLoggingServer;
     private final String keepLogsServer;
     private final String dnssecServer;
+    private final int pingGoodColor;
+    private final int pingAverageColor;
+    private final int pingBadColor;
 
     private final boolean orientation;
 
@@ -102,6 +111,9 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
         colorNonLoggingServer = getHexFromColors(context, R.color.colorNonLoggingServer);
         colorKeepLogsServer = getHexFromColors(context, R.color.colorKeepLogsServer);
         colorDNSSECServer = getHexFromColors(context, R.color.colorDNSSECServer);
+        pingGoodColor = ContextCompat.getColor(context, R.color.torBridgePingGood);
+        pingAverageColor = ContextCompat.getColor(context, R.color.torBridgePingAverage);
+        pingBadColor = ContextCompat.getColor(context, R.color.torBridgePingBad);
 
         colorFirst = context.getResources().getColor(R.color.colorFirst);
         colorSecond = context.getResources().getColor(R.color.colorSecond);
@@ -180,12 +192,15 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
 
         private final MaterialCardView cardDNSServer;
         private final TextView tvDNSServerName;
+        private final TextView tvDNSServerPing;
         private final CheckBox chbDNSServer;
         private final TextView tvDNSServerDescription;
         private final TextView tvDNSServerFlags;
         private final Button btnDNSServerRelay;
         private final ImageButton delBtnDNSServer;
         private final LinearLayoutCompat llDNSServer;
+
+        private Long checkPingTime = 0L;
 
         DNSServersViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -199,6 +214,7 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
             cardDNSServer.setOnFocusChangeListener(this);
 
             tvDNSServerName = itemView.findViewById(R.id.tvDNSServerName);
+            tvDNSServerPing = itemView.findViewById(R.id.tvDNSServerPing);
             chbDNSServer = itemView.findViewById(R.id.chbDNSServer);
             chbDNSServer.setFocusable(false);
 
@@ -225,8 +241,27 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
 
             DnsServerItem dnsServer = dnsServerItems.get(position);
 
+            Long time = System.currentTimeMillis();
+            if (dnsServer.getPing() == 0 || time - checkPingTime > MIN_INTERVAL_PING_CHECK_SEC * 1000) {
+                checkPingTime = time;
+                preferencesDNSCryptServers.checkServerPing(dnsServer.getName(), dnsServer.getAddress());
+            }
+
             tvDNSServerName.setText(dnsServer.getName());
             tvDNSServerDescription.setText(dnsServer.getDescription());
+
+            int ping = dnsServer.getPing();
+            if (ping > 0) {
+                tvDNSServerPing.setText(String.format(Locale.ROOT, "%d ms", ping));
+                tvDNSServerPing.setTextColor(getPingColor(ping));
+                tvDNSServerPing.setVisibility(VISIBLE);
+            } else if (ping < 0) {
+                tvDNSServerPing.setText(">1 sec");
+                tvDNSServerPing.setTextColor(pingBadColor);
+                tvDNSServerPing.setVisibility(VISIBLE);
+            } else {
+                tvDNSServerPing.setVisibility(GONE);
+            }
 
             StringBuilder sb = new StringBuilder();
             if (dnsServer.isProtoDNSCrypt()) {
@@ -234,24 +269,24 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
 
                 if (dnsServer.isChecked() && relaysMdExist) {
                     String routes = getRoutes(dnsServer).toString();
-                    btnDNSServerRelay.setVisibility(View.VISIBLE);
+                    btnDNSServerRelay.setVisibility(VISIBLE);
                     btnDNSServerRelay.setText(routes);
                 } else {
-                    btnDNSServerRelay.setVisibility(View.GONE);
+                    btnDNSServerRelay.setVisibility(GONE);
                     btnDNSServerRelay.setText("");
                 }
 
             } else if (dnsServer.isProtoDoH()) {
                 sb.append("<font color='").append(colorDohServer).append("'>").append(dohServer).append(" </font>");
-                btnDNSServerRelay.setVisibility(View.GONE);
+                btnDNSServerRelay.setVisibility(GONE);
             } else if (dnsServer.isProtoODoH()) {
                 sb.append("<font color='").append(colorODohServer).append("'>").append(odohServer).append(" </font>");
                 if (dnsServer.isChecked()) {
                     String routes = getRoutes(dnsServer).toString();
-                    btnDNSServerRelay.setVisibility(View.VISIBLE);
+                    btnDNSServerRelay.setVisibility(VISIBLE);
                     btnDNSServerRelay.setText(routes);
                 } else {
-                    btnDNSServerRelay.setVisibility(View.GONE);
+                    btnDNSServerRelay.setVisibility(GONE);
                     btnDNSServerRelay.setText("");
                 }
             }
@@ -275,11 +310,19 @@ class DnsServersAdapter extends RecyclerView.Adapter<DnsServersAdapter.DNSServer
             chbDNSServer.setChecked(dnsServer.isChecked());
 
             if (dnsServer.getOwnServer()) {
-                delBtnDNSServer.setVisibility(View.VISIBLE);
+                delBtnDNSServer.setVisibility(VISIBLE);
             } else {
-                delBtnDNSServer.setVisibility(View.GONE);
+                delBtnDNSServer.setVisibility(GONE);
             }
 
+        }
+
+        private int getPingColor(int ping) {
+            if (ping <= 100) {
+                return pingGoodColor;
+            } else {
+                return pingAverageColor;
+            }
         }
 
         @Override

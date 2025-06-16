@@ -19,8 +19,11 @@
 
 package pan.alexander.tordnscrypt.settings;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.fragment.app.Fragment;
@@ -91,7 +94,13 @@ public class SettingsActivity extends LangAppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         String appDataDir = pathVars.get().getAppDataDir();
 
@@ -121,16 +130,16 @@ public class SettingsActivity extends LangAppCompatActivity {
             FileManager.readTextFile(this, appDataDir + "/app_data/i2pd/i2pd.conf", itpd_conf_tag);
         } else if (Objects.equals(intent.getAction(), "fast_Pref")) {
             PreferencesFastFragment preferencesFastFragment = new PreferencesFastFragment();
-            fSupportTrans.replace(android.R.id.content, preferencesFastFragment, "fastSettingsFragment");
+            fSupportTrans.replace(R.id.fragment_container, preferencesFastFragment, "fastSettingsFragment");
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "common_Pref")) {
-            fSupportTrans.replace(android.R.id.content, new PreferencesCommonFragment());
+            fSupportTrans.replace(R.id.fragment_container, new PreferencesCommonFragment());
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "firewall")) {
-            fSupportTrans.replace(android.R.id.content, new FirewallFragment(), FirewallFragment.TAG);
+            fSupportTrans.replace(R.id.fragment_container, new FirewallFragment(), FirewallFragment.TAG);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "DNS_servers_Pref")) {
-            fSupportTrans.replace(android.R.id.content, new PreferencesDNSCryptServers());
+            fSupportTrans.replace(R.id.fragment_container, new PreferencesDNSCryptServers());
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "open_qery_log")) {
             Bundle bundle = new Bundle();
@@ -138,7 +147,7 @@ public class SettingsActivity extends LangAppCompatActivity {
             bundle.putString("path", path);
             ShowLogFragment frag = new ShowLogFragment();
             frag.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, frag);
+            fSupportTrans.replace(R.id.fragment_container, frag);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "open_nx_log")) {
             Bundle bundle = new Bundle();
@@ -146,70 +155,70 @@ public class SettingsActivity extends LangAppCompatActivity {
             bundle.putString("path", path);
             ShowLogFragment frag = new ShowLogFragment();
             frag.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, frag);
+            fSupportTrans.replace(R.id.fragment_container, frag);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "forwarding_rules_Pref")) {
             Bundle bundle = new Bundle();
             bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.FORWARDING);
             DnsRulesFragment fragment = new DnsRulesFragment();
             fragment.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.replace(R.id.fragment_container, fragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "cloaking_rules_Pref")) {
             Bundle bundle = new Bundle();
             bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.CLOAKING);
             DnsRulesFragment fragment = new DnsRulesFragment();
             fragment.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.replace(R.id.fragment_container, fragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "blacklist_Pref")) {
             Bundle bundle = new Bundle();
             bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.BLACKLIST);
             DnsRulesFragment fragment = new DnsRulesFragment();
             fragment.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.replace(R.id.fragment_container, fragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "ipblacklist_Pref")) {
             Bundle bundle = new Bundle();
             bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.IP_BLACKLIST);
             DnsRulesFragment fragment = new DnsRulesFragment();
             fragment.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.replace(R.id.fragment_container, fragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "whitelist_Pref")) {
             Bundle bundle = new Bundle();
             bundle.putSerializable(DnsRulesFragment.RULE_TYPE_ARG, DnsRuleType.WHITELIST);
             DnsRulesFragment fragment = new DnsRulesFragment();
             fragment.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, fragment);
+            fSupportTrans.replace(R.id.fragment_container, fragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "pref_itpd_addressbook_subscriptions")) {
             ITPDSubscriptionsFragment frag = new ITPDSubscriptionsFragment();
-            fSupportTrans.replace(android.R.id.content, frag);
+            fSupportTrans.replace(R.id.fragment_container, frag);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_sites_unlock")) {
             UnlockTorIpsFragment unlockTorIpsFragment = UnlockTorIpsFragment.getInstance(DEVICE);
-            fSupportTrans.replace(android.R.id.content, unlockTorIpsFragment);
+            fSupportTrans.replace(R.id.fragment_container, unlockTorIpsFragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_sites_unlock_tether")) {
             UnlockTorIpsFragment unlockTorIpsFragment = UnlockTorIpsFragment.getInstance(TETHER);
-            fSupportTrans.replace(android.R.id.content, unlockTorIpsFragment);
+            fSupportTrans.replace(R.id.fragment_container, unlockTorIpsFragment);
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_apps_unlock")) {
-            fSupportTrans.replace(android.R.id.content, new UnlockTorAppsFragment());
+            fSupportTrans.replace(R.id.fragment_container, new UnlockTorAppsFragment());
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "tor_bridges")) {
-            fSupportTrans.replace(android.R.id.content, new PreferencesTorBridges(), "PreferencesTorBridges");
+            fSupportTrans.replace(R.id.fragment_container, new PreferencesTorBridges(), "PreferencesTorBridges");
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "use_proxy")) {
-            fSupportTrans.replace(android.R.id.content, new ProxyFragment(), "ProxyFragment");
+            fSupportTrans.replace(R.id.fragment_container, new ProxyFragment(), "ProxyFragment");
             fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "proxy_apps_exclude")) {
             Bundle bundle = new Bundle();
             bundle.putBoolean("proxy", true);
             UnlockTorAppsFragment unlockTorAppsFragment = new UnlockTorAppsFragment();
             unlockTorAppsFragment.setArguments(bundle);
-            fSupportTrans.replace(android.R.id.content, unlockTorAppsFragment);
+            fSupportTrans.replace(R.id.fragment_container, unlockTorAppsFragment);
             fSupportTrans.commit();
         }
 

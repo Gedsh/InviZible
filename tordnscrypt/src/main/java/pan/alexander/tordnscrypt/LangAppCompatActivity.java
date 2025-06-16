@@ -46,15 +46,17 @@ public abstract class LangAppCompatActivity extends AppCompatActivity {
                     .detectNetwork()
                     .detectAll() //for all detectable problems
                     .penaltyLog()
-                    .penaltyFlashScreen ()
+                    .penaltyFlashScreen()
                     .build());
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder()
                     .detectLeakedSqlLiteObjects()
                     .detectLeakedClosableObjects()
                     .detectNonSdkApiUsage()
-                    .penaltyLog()
-                    //.penaltyDeath()
-                    .build());
+                    .penaltyLog();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                builder.detectUnsafeIntentLaunch();
+            }
+            StrictMode.setVmPolicy(builder.build());
         }
         super.onCreate(savedInstanceState);
 

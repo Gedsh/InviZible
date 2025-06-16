@@ -124,6 +124,25 @@ public class UpdateService extends Service {
     }
 
     @Override
+    public void onTimeout(int startId, int fgsType) {
+        super.onTimeout(startId, fgsType);
+
+        loge("UpdateService timeout");
+
+        for (int i = 0; i < sparseArray.size(); i++) {
+            try {
+                DownloadTask task = sparseArray.valueAt(i);
+                task.interrupt();
+            } catch (Exception e) {
+                loge("UpdateService onTimeout", e);
+            }
+        }
+
+        stopForeground(true);
+        stopSelf();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 

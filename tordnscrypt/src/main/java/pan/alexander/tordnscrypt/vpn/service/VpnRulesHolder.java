@@ -29,6 +29,7 @@ import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIA
 import static pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.SPECIAL_UID_NTP;
 import static pan.alexander.tordnscrypt.utils.Constants.DNS_OVER_TLS_PORT;
 import static pan.alexander.tordnscrypt.utils.Constants.ITPD_REDIRECT_ADDRESS;
+import static pan.alexander.tordnscrypt.utils.Constants.LAN_DOMAIN_ENDINGS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID;
@@ -51,6 +52,7 @@ import static pan.alexander.tordnscrypt.vpn.service.VpnBuilder.vpnDnsSet;
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +105,8 @@ public class VpnRulesHolder {
     private final Set<String> connectivityCheckIps = new ConcurrentSkipListSet<>();
 
     private volatile boolean captivePortalDetected = false;
+
+    private final Set<String> lanDomainEndings = new ConcurrentSkipListSet<>();
 
     @Inject
     public VpnRulesHolder(@Named(DEFAULT_PREFERENCES_NAME) SharedPreferences defaultPreferences,
@@ -573,5 +577,18 @@ public class VpnRulesHolder {
 
     private Set<Integer> getCaptivePortalUids() {
         return InstalledApplicationsManager.Companion.getCaptivePortalUids();
+    }
+
+    //https://datatracker.ietf.org/doc/html/rfc6762
+    boolean isLanDomain(String domain) {
+        if (lanDomainEndings.isEmpty()) {
+            lanDomainEndings.addAll(Arrays.asList(LAN_DOMAIN_ENDINGS.split(", ?")));
+        }
+        for (String ending: lanDomainEndings) {
+            if (domain.endsWith(ending)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

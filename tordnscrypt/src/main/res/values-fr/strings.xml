@@ -558,4 +558,6 @@
     <string name="proxy_use_for_non_tor">Utiliser un proxy pour les applications qui contournent Tor</string>
     <string name="pref_fast_prevent_dns_leak">Prévenir les fuites DNS</string>
     <string name="pref_fast_prevent_dns_leak_summ">Bloquer les tentatives de dissimulation des requêtes DNS. Peut entraîner des problèmes de connexion</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Bloquer le LAN sur les réseaux Wi-Fi publics</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Refuser la connexion au réseau local lorsqu\'un portail captif est détecté</string>
 </resources>

@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_relays;
 
+import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 import android.app.Activity;
@@ -30,6 +31,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -48,7 +50,8 @@ import com.google.android.material.progressindicator.LinearProgressIndicator;
 import javax.inject.Inject;
 
 
-public class PreferencesDNSCryptRelays extends Fragment {
+public class PreferencesDNSCryptRelays extends Fragment
+        implements OnRelayPingListener, DnsRelaysAdapter.OnRelayPingMeasure {
 
     public static String RELAY_TYPE_ARG = "pan.alexander.tordnscrypt.RELAY_TYPE_ARG";
     public static String SERVER_NAME_ARG = "pan.alexander.tordnscrypt.SERVER_NAME_ARG";
@@ -61,6 +64,7 @@ public class PreferencesDNSCryptRelays extends Fragment {
     public ViewModelProvider.Factory viewModelFactory;
 
     private DnsRelayViewModel viewModel;
+    private RecyclerView rvDNSRelay;
     private DnsRelaysAdapter adapter;
     private LinearProgressIndicator pbDnsCryptRelays;
 
@@ -99,12 +103,13 @@ public class PreferencesDNSCryptRelays extends Fragment {
         }
 
         pbDnsCryptRelays = view.findViewById(R.id.pbDnsCryptRelays);
-        RecyclerView rvDNSRelay = view.findViewById(R.id.rvDNSRelays);
+        rvDNSRelay = view.findViewById(R.id.rvDNSRelays);
 
         RecyclerView.LayoutManager manager = new LinearLayoutManager(activity);
         rvDNSRelay.setLayoutManager(manager);
 
         adapter = new DnsRelaysAdapter(activity);
+        adapter.setOnRelayPingMeasurer(this);
         adapter.setHasStableIds(true);
         rvDNSRelay.setAdapter(adapter);
 
@@ -117,6 +122,15 @@ public class PreferencesDNSCryptRelays extends Fragment {
 
         observeConfigurationState();
         requestRelaysConfiguration();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (adapter != null) {
+            adapter.setOnRelayPingMeasurer(this);
+        }
     }
 
     @Override
@@ -140,6 +154,7 @@ public class PreferencesDNSCryptRelays extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
 
+        rvDNSRelay = null;
         adapter = null;
         pbDnsCryptRelays = null;
     }
@@ -175,7 +190,11 @@ public class PreferencesDNSCryptRelays extends Fragment {
         List<DnsServerRelay> routes = getRoutes();
         for (DnsRelay relay : relays) {
             if (ipv6Server && isRelayIPv6(relay) || !ipv6Server && !isRelayIPv6(relay)) {
-                DnsRelayItem item = new DnsRelayItem(relay.getName(), relay.getDescription());
+                DnsRelayItem item = new DnsRelayItem(
+                        relay.getName(),
+                        relay.getDescription(),
+                        relay.getSdns()
+                );
                 item.setChecked(isDnsRelaySelected(routes, dnsServerName, relay.getName()));
                 recyclerItems.add(item);
             }
@@ -275,6 +294,32 @@ public class PreferencesDNSCryptRelays extends Fragment {
                 ((OnRoutesChangeListener) fragment).onRoutesChange(routesNew, server);
                 break;
             }
+        }
+    }
+
+    @Override
+    public void measureRelayPing(String name, String sdns) {
+        viewModel.checkRelayPing(this, name, sdns);
+    }
+
+    @Override
+    public void onPingUpdated(String name, int ping) {
+        if (!getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            return;
+        }
+
+        int position;
+        if (adapter != null) {
+            position = adapter.updateRelayPing(name, ping);
+        } else {
+            position = NO_POSITION;
+        }
+        if (position >= 0 && rvDNSRelay != null) {
+            rvDNSRelay.post(() -> {
+                if (adapter != null && !rvDNSRelay.isComputingLayout()) {
+                    adapter.notifyItemChanged(position, new Object());
+                }
+            });
         }
     }
 

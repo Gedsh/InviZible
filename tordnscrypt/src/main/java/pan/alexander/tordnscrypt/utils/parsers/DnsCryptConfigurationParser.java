@@ -298,6 +298,7 @@ public class DnsCryptConfigurationParser {
         try {
             String name = "";
             String description = "";
+            String sdns = "";
             boolean lockRelay = false;
 
             for (String line : relaysMd) {
@@ -306,16 +307,18 @@ public class DnsCryptConfigurationParser {
                     name = line.replace("##", "").trim();
                     lockRelay = true;
                 } else if (lockRelay && line.startsWith("sdns://")) {
+                    sdns = new String(line.toCharArray(), 7, line.length() - 7);
                     lockRelay = false;
                 } else if (lockRelay) {
                     description = line.replaceAll("\\s", " ").trim();
                 }
 
-                if (!name.isEmpty() && !description.isEmpty() && !lockRelay) {
-                    DnsRelay dnsRelayItem = new DnsRelay(name, description);
+                if (!name.isEmpty() && !description.isEmpty() && !sdns.isEmpty() && !lockRelay) {
+                    DnsRelay dnsRelayItem = new DnsRelay(name, description, sdns);
                     relays.add(dnsRelayItem);
                     name = "";
                     description = "";
+                    sdns = "";
                 }
             }
         } catch (Exception e) {

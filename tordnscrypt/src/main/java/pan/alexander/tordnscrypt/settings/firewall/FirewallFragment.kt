@@ -311,7 +311,7 @@ class FirewallFragment : Fragment(),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.firewall_settings) {
             parentFragmentManager.beginTransaction()
-                .replace(android.R.id.content, FirewallPreferencesFragment())
+                .replace(R.id.fragment_container, FirewallPreferencesFragment())
                 .addToBackStack(null)
                 .commit()
             return true

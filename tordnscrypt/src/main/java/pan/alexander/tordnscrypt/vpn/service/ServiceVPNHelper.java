@@ -24,6 +24,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -43,6 +45,7 @@ import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_COMMAND;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPN.EXTRA_REASON;
 
+import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 
 public class ServiceVPNHelper {
@@ -50,6 +53,15 @@ public class ServiceVPNHelper {
     private static final ReentrantLock reentrantLock = new ReentrantLock();
 
     public static void start(String reason, Context context) {
+        Handler handler = getMainHandler(context);
+        if (handler != null) {
+            handler.post(() -> startVpnService(reason, context));
+        } else {
+            startVpnService(reason, context);
+        }
+    }
+
+    private static void startVpnService(String reason, Context context) {
         Intent intent = new Intent(context, ServiceVPN.class);
         intent.putExtra(EXTRA_COMMAND, VPNCommand.START);
         intent.putExtra(EXTRA_REASON, reason);
@@ -57,13 +69,21 @@ public class ServiceVPNHelper {
     }
 
     public static void reload(String reason, Context context) {
+        Handler handler = getMainHandler(context);
+        if (handler != null) {
+            handler.post(() -> reloadVpnService(reason, context));
+        } else {
+            reloadVpnService(reason, context);
+        }
+    }
+
+    private static void reloadVpnService(String reason, Context context) {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         OperationMode operationMode = modulesStatus.getMode();
         ModuleState dnsCryptState = modulesStatus.getDnsCryptState();
         ModuleState torState = modulesStatus.getTorState();
         ModuleState firewallState = modulesStatus.getFirewallState();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean vpnServiceEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
+        boolean vpnServiceEnabled = isVpnServiceEnabled(context);
 
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
                 && !modulesStatus.isUseModulesWithRoot();
@@ -80,9 +100,16 @@ public class ServiceVPNHelper {
     }
 
     public static void stop(String reason, Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean vpnServiceEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
+        Handler handler = getMainHandler(context);
+        if (handler != null) {
+            handler.post(() -> stopVpnService(reason, context));
+        } else {
+            stopVpnService(reason, context);
+        }
+    }
 
+    private static void stopVpnService(String reason, Context context) {
+        boolean vpnServiceEnabled = isVpnServiceEnabled(context);
         if (vpnServiceEnabled) {
             Intent intent = new Intent(context, ServiceVPN.class);
             intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
@@ -93,25 +120,29 @@ public class ServiceVPNHelper {
 
     public static void prepareVPNServiceIfRequired(Activity activity, ModulesStatus modulesStatus) {
 
-        reentrantLock.lock();
-
-        try {
-            OperationMode operationMode = modulesStatus.getMode();
-
-            boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
-                    && !modulesStatus.isUseModulesWithRoot();
-
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(activity);
-            if (((operationMode == VPN_MODE) || fixTTL)
-                    && activity instanceof MainActivity
-                    && !prefs.getBoolean(VPN_SERVICE_ENABLED, false)) {
-                ((MainActivity) activity).prepareVPNService();
-            }
-        } catch (Exception e) {
-            loge("ServiceVPNHelper prepareVPNServiceIfRequired", e);
-        } finally {
-            reentrantLock.unlock();
+        Handler handler = getMainHandler(activity);
+        if (handler == null || !reentrantLock.tryLock()) {
+            return;
         }
+
+        handler.post(() -> {
+            try {
+                OperationMode operationMode = modulesStatus.getMode();
+
+                boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
+                        && !modulesStatus.isUseModulesWithRoot();
+
+                if (((operationMode == VPN_MODE) || fixTTL)
+                        && activity instanceof MainActivity
+                        && !isVpnServiceEnabled(activity)) {
+                    ((MainActivity) activity).prepareVPNService();
+                }
+            } catch (Exception e) {
+                loge("ServiceVPNHelper prepareVPNServiceIfRequired", e);
+            } finally {
+                reentrantLock.unlock();
+            }
+        });
     }
 
     private static void sendIntent(Context context, Intent intent) {
@@ -126,5 +157,19 @@ public class ServiceVPNHelper {
         } catch (Exception e) {
             loge("ServiceVPNHelper sendIntent", e, true);
         }
+    }
+
+    private static boolean isVpnServiceEnabled(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getBoolean(VPN_SERVICE_ENABLED, false);
+    }
+
+    @Nullable
+    private static Handler getMainHandler(Context context) {
+        Looper looper = context.getMainLooper();
+        if (looper != null) {
+            return new Handler(looper);
+        }
+        return null;
     }
 }

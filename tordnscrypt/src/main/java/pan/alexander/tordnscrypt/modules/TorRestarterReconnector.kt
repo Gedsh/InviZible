@@ -26,12 +26,14 @@ import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInte
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager
+import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.math.pow
 
 private const val DELAY_BEFORE_RESTART_TOR_SEC = 10
-private const val DELAY_BEFORE_FULL_RESTART_TOR_SEC = 35
+private const val DELAY_BEFORE_FULL_RESTART_TOR_SEC = 60
 
 @ExperimentalCoroutinesApi
 class TorRestarterReconnector @Inject constructor(
@@ -53,49 +55,75 @@ class TorRestarterReconnector @Inject constructor(
     private val modulesStatus = ModulesStatus.getInstance()
 
     @Volatile
-    private var counter = 0
+    private var fullRestartCounter = 0
+    @Volatile
+    private var partialRestartCounter = 0
 
     fun startRestarterCounter() {
+        try {
+            if (modulesStatus.isTorReady && !isFullRestartCounterRunning() && !isFullRestartCounterLocked()) {
+                stopRestarterCounters()
+                makeTorDelayedFullRestart()
+            } else if (!modulesStatus.isTorReady && !isPartialRestartCounterRunning() && !isFullRestartCounterLocked()) {
+                stopRestarterCounters()
+                makeTorProgressivePartialRestart()
+            } else if (!modulesStatus.isTorReady && !isPartialRestartCounterRunning()) {
+                cancelPreviousTasks()
+                makeTorProgressivePartialRestart()
+            }
+        } catch (_: CancellationException) {
+            resetCounters()
+        } catch (e: Exception) {
+            loge("TorRestarterReconnector startRestarterCounter", e)
+        }
+    }
 
-        if (isCounterRunning() || isCounterLocked()) {
-            return
+    private fun makeTorProgressivePartialRestart() = scope.launch {
+        logi("Start Tor partial restarter counter")
+        while (coroutineContext.isActive) {
+            if (isNetworkAvailable()) {
+                partialRestartCounter++
+            } else {
+                stopRestarterCounters()
+                break
+            }
+            delay(1000L * 60 * partialRestartCounter.toDouble().pow(2).toLong())// 1, 4, 9, 16, 25, 36 ... minutes
+            if (modulesStatus.isTorReady && !isFullRestartCounterLocked()) {
+                resetCounters()
+                makeTorDelayedFullRestart()
+                break
+            } else if (isNetworkAvailable()) {
+                logi("Reload Tor configuration to re-establish a connection")
+                ModulesRestarter.rebootTor(context)
+            }
+        }
+    }
+
+    private fun makeTorDelayedFullRestart() = scope.launch {
+        logi("Start Tor full restarter counter")
+        while (coroutineContext.isActive && fullRestartCounter < DELAY_BEFORE_FULL_RESTART_TOR_SEC) {
+            if (fullRestartCounter == DELAY_BEFORE_RESTART_TOR_SEC
+                && modulesStatus.isTorReady
+                && isNetworkAvailable()) {
+                logi("Reload Tor configuration to re-establish a connection")
+                ModulesRestarter.rebootTor(context)
+            }
+            fullRestartCounter++
+            delay(1000L)
         }
 
-        scope.launch {
-            try {
-
-                if (isCounterRunning() || isCounterLocked()) {
-                    return@launch
-                }
-
-                logi("Start Tor restarter counter")
-
-                while (counter < DELAY_BEFORE_FULL_RESTART_TOR_SEC) {
-                    if (counter == DELAY_BEFORE_RESTART_TOR_SEC
-                        && modulesStatus.isTorReady
-                        && isNetworkAvailable()) {
-                        ModulesRestarter.rebootTor(context)
-                    }
-                    counter++
-                    delay(1000L)
-                }
-
-                if (modulesStatus.torState == ModuleState.RUNNING
-                    && modulesStatus.isTorReady
-                    && isNetworkAvailable()
-                ) {
-                    deleteTorCachedFiles()
-                    ModulesRestarter.restartTor(context)
-                    lockCounter()
-                    logi("Restart Tor to re-establish a connection")
-                } else {
-                    resetCounter()
-                    logi("Reset Tor restarter counter")
-                }
-
-            } catch (e: CancellationException) {
-                resetCounter()
-            }
+        if (modulesStatus.torState == ModuleState.RUNNING
+            && modulesStatus.isTorReady
+            && isNetworkAvailable()
+            && coroutineContext.isActive
+        ) {
+            deleteTorCachedFiles()
+            ModulesRestarter.restartTor(context)
+            lockFullRestarterCounter()
+            logi("Restart Tor to re-establish a connection")
+        } else {
+            resetCounters()
+            logi("Reset Tor restarter counter")
         }
     }
 
@@ -107,27 +135,40 @@ class TorRestarterReconnector @Inject constructor(
         //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdescs.new")
     }
 
-    fun stopRestarterCounter() {
-        when {
-            counter > 0 -> logi("Stop Tor restarter counter")
-            counter < 0 -> logi("Reset Tor restarter counter")
-            else -> return
+    fun stopRestarterCounters() {
+        try {
+            when {
+                partialRestartCounter > 0 -> logi("Stop Tor partial restarter counter")
+                partialRestartCounter < 0 -> logi("Reset Tor partial restarter counter")
+                fullRestartCounter > 0 -> logi("Stop Tor full restarter counter")
+                fullRestartCounter < 0 -> logi("Reset Tor full restarter counter")
+                else -> return
+            }
+
+            cancelPreviousTasks()
+            resetCounters()
+        } catch (e: Exception) {
+            loge("TorRestarterReconnector stopRestarterCounters", e)
         }
+    }
 
+    private fun cancelPreviousTasks() {
         scope.coroutineContext.cancelChildren()
-        resetCounter()
     }
 
-    private fun isCounterRunning() = counter > 0
+    private fun isPartialRestartCounterRunning() = partialRestartCounter > 0
 
-    private fun isCounterLocked() = counter < 0
+    private fun isFullRestartCounterRunning() = fullRestartCounter > 0
 
-    private fun lockCounter() {
-        counter = -1
+    private fun isFullRestartCounterLocked() = fullRestartCounter < 0
+
+    private fun lockFullRestarterCounter() {
+        fullRestartCounter = -1
     }
 
-    private fun resetCounter() {
-        counter = 0
+    private fun resetCounters() {
+        partialRestartCounter = 0
+        fullRestartCounter = 0
     }
 
     private fun isNetworkAvailable() = with(connectionCheckerInteractor.get()) {

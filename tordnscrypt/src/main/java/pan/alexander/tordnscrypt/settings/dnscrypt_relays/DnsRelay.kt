@@ -21,5 +21,6 @@ package pan.alexander.tordnscrypt.settings.dnscrypt_relays
 
 data class DnsRelay(
     val name: String,
-    val description: String
+    val description: String,
+    val sdns: String
 )

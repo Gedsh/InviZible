@@ -27,11 +27,11 @@ import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.Constants.CHROME_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.Constants.DEFAULT_PROXY_PORT
 import pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS
 import pan.alexander.tordnscrypt.utils.Constants.MAX_PORT_NUMBER
 import pan.alexander.tordnscrypt.utils.Constants.NUMBER_REGEX
-import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.connectionchecker.ProxyAuthManager.setDefaultAuth
 import pan.alexander.tordnscrypt.utils.enums.ModuleState
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
@@ -74,7 +74,7 @@ class HttpsConnectionManager @Inject constructor(
         try {
             httpsURLConnection.apply {
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                setRequestProperty("User-Agent", CHROME_BROWSER_USER_AGENT)
                 connectTimeout = 1000 * connectTimeoutSec
                 readTimeout = 1000 * readTimeoutSec
             }.connect()
@@ -102,7 +102,7 @@ class HttpsConnectionManager @Inject constructor(
             try {
                 httpsURLConnection.apply {
                     requestMethod = "GET"
-                    setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                    setRequestProperty("User-Agent", CHROME_BROWSER_USER_AGENT)
                     connectTimeout = 1000 * connectTimeoutSec
                     readTimeout = 1000 * readTimeoutSec
                 }.connect()
@@ -137,7 +137,7 @@ class HttpsConnectionManager @Inject constructor(
 
             httpsURLConnection.apply {
                 requestMethod = "POST"
-                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                setRequestProperty("User-Agent", CHROME_BROWSER_USER_AGENT)
                 setRequestProperty(
                     "Content-Length",
                     query.toByteArray().size.toString()
@@ -174,7 +174,7 @@ class HttpsConnectionManager @Inject constructor(
 
             httpsURLConnection.apply {
                 requestMethod = "POST"
-                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                setRequestProperty("User-Agent", CHROME_BROWSER_USER_AGENT)
                 setRequestProperty(
                     "Content-Length",
                     query.toByteArray().size.toString()
@@ -231,7 +231,8 @@ class HttpsConnectionManager @Inject constructor(
                 && proxyPort != 0
 
         val proxy = if (modulesStatus.torState == ModuleState.RUNNING && modulesStatus.isTorReady) {
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            //Use http proxy as older android versions use Socks4 proxy which leaks DNS
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 logi("Using tor http proxy for url connection")
                 Proxy(
                     Proxy.Type.HTTP,

@@ -88,6 +88,8 @@ class App : Application() {
         }
 
         initAppLifecycleListener()
+
+        registerActivityLifecycleCallbacks(ActivitiesLifecycleListener())
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -117,7 +119,7 @@ class App : Application() {
             TopExceptionHandler(
                 getSharedPreferences(
                     SharedPreferencesModule.APP_PREFERENCES_NAME,
-                    Context.MODE_PRIVATE
+                    MODE_PRIVATE
                 ),
                 exceptionHandler
             )

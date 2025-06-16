@@ -346,7 +346,10 @@ public class VpnBuilder {
 
         boolean ip6 = (!blockIPv6DnsCrypt && modulesStatus.getDnsCryptState() != STOPPED
                 || useIPv6Tor && modulesStatus.getDnsCryptState() == STOPPED
-                && modulesStatus.getTorState() != STOPPED);
+                && modulesStatus.getTorState() != STOPPED
+                || modulesStatus.getDnsCryptState() == STOPPED
+                && modulesStatus.getTorState() == STOPPED
+                && modulesStatus.getFirewallState() == RUNNING);
 
         // Get custom DNS servers
         List<String> dnscryptBootstrapResolversIPv4 = new ArrayList<>();
@@ -475,6 +478,8 @@ public class VpnBuilder {
     @SuppressLint("UnspecifiedImmutableFlag")
     private PendingIntent getConfigureIntent() {
         Intent configure = new Intent(context, MainActivity.class);
+        configure.setAction(Intent.ACTION_MAIN);
+        configure.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent pi;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             pi = PendingIntent.getActivity(

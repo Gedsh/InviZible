@@ -19,10 +19,13 @@
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
 
+import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
+
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +44,8 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
     private final String description;
     private final String sdns;
     private boolean ownServer;
+    private String address;
+    private int ping;
     private final ArrayList<String> routes = new ArrayList<>();
 
     public DnsServerItem(
@@ -53,7 +58,11 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
         this.description = description;
         this.sdns = sdns;
 
-        byte[] bin = Base64.decode(sdns.substring(0, 7).getBytes(), 16);
+        if (sdns.length() < 15) {
+            throw new IllegalArgumentException("Wrong sever type " + name);
+        }
+
+        byte[] bin = Base64.decode(sdns.getBytes(), Base64.URL_SAFE);
         if (bin[0] == 0x01) {
             protoDNSCrypt = true;
         } else if (bin[0] == 0x02) {
@@ -61,7 +70,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
         } else if (bin[0] == 0x05) {
             protoODoH = true;
         } else {
-            throw new IllegalArgumentException("Wrong sever type");
+            throw new IllegalArgumentException("Wrong sever type " + name);
         }
 
         if (((bin[1]) & 1) == 1) {
@@ -73,6 +82,8 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
         if (((bin[1] >> 2) & 1) == 1) {
             this.nofilter = true;
         }
+
+        calculateAddress(bin);
 
         if (name.contains("v6") || name.contains("ip6")) {
             ipv6 = true;
@@ -104,6 +115,70 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
 
         if (ownServer)
             this.visibility = true;
+    }
+
+    private void calculateAddress(byte[] bin) {
+        try {
+            int binLen = bin.length;
+            int pos = 9;
+            int addrLen = Byte.toUnsignedInt(bin[pos]);
+            if (1 + addrLen >= bin.length - pos) {
+                throw new IllegalArgumentException("Invalid sdns address " + name);
+            }
+            pos++;
+            String addr = new String(bin, pos, addrLen, StandardCharsets.UTF_8);
+            pos += addrLen;
+            if (protoDoH && addr.isBlank()) {
+                // Hashes
+                while (true) {
+                    int vlen = Byte.toUnsignedInt(bin[pos]);
+                    int lengthHash = vlen & ~0x80;
+                    if (1 + lengthHash >= binLen - pos) {
+                        throw new IllegalArgumentException("Invalid sdns hash " + name);
+                    }
+                    pos++;
+                    pos += lengthHash;
+                    if ((vlen & 0x80) != 0x80) {
+                        break;
+                    }
+                }
+
+                // Host name
+                int length = Byte.toUnsignedInt(bin[pos]);
+                if (1 + length >= binLen - pos) {
+                    throw new IllegalArgumentException("Invalid sdns host name " + name);
+                }
+                pos++;
+                if (addr.isEmpty()) {
+                    addr = new String(bin, pos, length, StandardCharsets.UTF_8);
+                }
+                pos += length;
+
+                // Path
+                length = Byte.toUnsignedInt(bin[pos]);
+                if (length >= binLen - pos) {
+                    throw new IllegalArgumentException("Invalid sdns path " + name);
+                }
+                pos++;
+                String path = new String(bin, pos, length, StandardCharsets.UTF_8);
+                pos += length;
+
+                if (pos != binLen) {
+                    throw new Exception("Invalid sdns (garbage after end) " + name);
+                }
+
+                if (addr.isEmpty() && path.contains("/") && path.indexOf("/") > 0) {
+                    addr = path.substring(0, path.indexOf("/"));
+                }
+            }
+
+            if (!addr.isEmpty() && (!addr.contains(":") || !addr.matches(".+:\\d{1,5}$"))) {
+                addr += ":443";
+            }
+            address = addr;
+        } catch (Exception e) {
+            loge("DnsServerItem calculateAddressAndHost " + name, e);
+        }
     }
 
     public boolean isChecked() {
@@ -179,6 +254,18 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
         return ipv6;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public int getPing() {
+        return ping;
+    }
+
+    public void setPing(int ping) {
+        this.ping = ping;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -214,6 +301,8 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
                 ", visibility=" + visibility +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
+                ", addr='" + address + '\'' +
+                ", ping='" + ping + '\'' +
                 ", routes=" + routes +
                 '}';
     }

@@ -302,7 +302,7 @@ public class PreferencesITPDFragment extends PreferenceFragmentCompat implements
                     || Objects.equals(preference.getKey(), "SAM interface port")) {
                 boolean useModulesWithRoot = ModulesStatus.getInstance().getMode() == ROOT_MODE
                         && ModulesStatus.getInstance().isUseModulesWithRoot();
-                if (!newValue.toString().matches("\\d+") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
+                if (!newValue.toString().matches("^\\d{1,5}$") || Long.parseLong(newValue.toString()) > MAX_PORT_NUMBER
                         || (!useModulesWithRoot && Integer.parseInt(newValue.toString()) < 1024)) {
                     return false;
                 }

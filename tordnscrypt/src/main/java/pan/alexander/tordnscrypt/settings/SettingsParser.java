@@ -199,7 +199,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             bundle.putStringArrayList("val_toml", val_toml);
             PreferencesDNSFragment frag = new PreferencesDNSFragment();
             frag.setArguments(bundle);
-            fTrans.replace(android.R.id.content, frag);
+            fTrans.replace(R.id.fragment_container, frag);
             fTrans.commit();
         }
     }
@@ -298,7 +298,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             PreferencesTorFragment frag = new PreferencesTorFragment();
             frag.setArguments(bundle);
             FragmentTransaction fTrans = manager.beginTransaction();
-            fTrans.replace(android.R.id.content, frag);
+            fTrans.replace(R.id.fragment_container, frag);
             fTrans.commit();
         }
     }
@@ -424,7 +424,7 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
             bundle.putStringArrayList("val_itpd", val_itpd);
             PreferencesITPDFragment frag = new PreferencesITPDFragment();
             frag.setArguments(bundle);
-            fTrans.replace(android.R.id.content, frag);
+            fTrans.replace(R.id.fragment_container, frag);
             fTrans.commit();
         }
     }

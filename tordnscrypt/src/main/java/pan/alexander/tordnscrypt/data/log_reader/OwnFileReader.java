@@ -137,6 +137,25 @@ public class OwnFileReader {
         }
     }
 
+    void updateLines(List<String> lines) {
+        File file = new File(filePath);
+        if (!file.isFile()) {
+            return;
+        }
+
+        try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
+            if (lines != null && !lines.isEmpty()) {
+                StringBuilder buffer = new StringBuilder();
+                for (String line : lines) {
+                    buffer.append(line).append("\n");
+                }
+                writer.println(buffer);
+            }
+        } catch (IOException e) {
+            loge("Unable to update lines" + filePath, e);
+        }
+    }
+
     long getFileLength() {
         try {
             reentrantLock.lockInterruptibly();

@@ -22,8 +22,10 @@ package pan.alexander.tordnscrypt.data.log_reader
 import android.content.Context
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
 import pan.alexander.tordnscrypt.settings.PathVars
+import pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import javax.inject.Inject
+import kotlin.text.endsWith
 
 private val asciiVisibleSymbols = 32..126
 
@@ -83,8 +85,24 @@ class ModulesLogRepositoryImpl @Inject constructor(
                 torLog.clear()
                 torLog.addAll(reader.readLastLines())
             }
-            torLog
+            val filtered = if (NetworkChecker.isNetworkAvailable(applicationContext)) {
+                torLog
+            } else {
+                filterBridgesWarning(torLog)
+            }
+            if (filtered.isNotEmpty() && filtered.size != torLog.size) {
+                reader.updateLines(filtered)
+            }
+            if (filtered.isNotEmpty()) {
+                filtered
+            } else {
+                torLog
+            }
         } ?: emptyList()
+    }
+
+    private fun filterBridgesWarning(lines: List<String>): List<String> {
+        return lines.filter { !it.endsWith("(\"general SOCKS server failure\")") }
     }
 
     override fun getITPDLog(): List<String> {

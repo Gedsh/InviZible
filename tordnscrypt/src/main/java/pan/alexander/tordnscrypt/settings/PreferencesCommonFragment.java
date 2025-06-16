@@ -63,6 +63,7 @@ import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 import pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteListener;
+import pan.alexander.tordnscrypt.utils.session.AppSessionStore;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
@@ -72,7 +73,6 @@ import static pan.alexander.tordnscrypt.settings.tor_preferences.PreferencesTorF
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.Constants.LOOPBACK_ADDRESS_IPv6;
 import static pan.alexander.tordnscrypt.utils.Constants.META_ADDRESS;
-import static pan.alexander.tordnscrypt.utils.Utils.isInteractAcrossUsersPermissionGranted;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_ON_VPN;
@@ -97,6 +97,7 @@ import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readT
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.ROOT_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.VPN_MODE;
+import static pan.alexander.tordnscrypt.utils.session.SessionKeys.MULTIPLE_USERS_EXISTS;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -123,6 +124,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
     public Lazy<Verifier> verifierLazy;
     @Inject
     public Lazy<ModulesStatusBroadcaster> modulesStatusBroadcaster;
+    @Inject
+    public AppSessionStore sessionStore;
 
     private static final int ARP_SCANNER_CHANGE_STATE_DELAY_SEC = 5;
 
@@ -214,8 +217,9 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         }
 
         Preference multiUser = findPreference(MULTI_USER_SUPPORT);
+        boolean singleUser = Boolean.FALSE.equals(sessionStore.restore(MULTIPLE_USERS_EXISTS));
         if (otherCategory != null && multiUser != null) {
-            if (modulesStatus.getMode() == VPN_MODE && !isInteractAcrossUsersPermissionGranted(activity)
+            if (modulesStatus.getMode() == VPN_MODE && singleUser
                     || modulesStatus.getMode() == PROXY_MODE) {
                 otherCategory.removePreference(multiUser);
             } else {

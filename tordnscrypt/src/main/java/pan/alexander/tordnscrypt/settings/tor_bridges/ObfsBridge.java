@@ -27,6 +27,7 @@ public class ObfsBridge {
     String bridge;
     BridgeType obfsType;
     int ping;
+    boolean withWarning;
     String country = "";
     boolean active;
 

@@ -23,7 +23,8 @@ sealed class BridgePingResult
 
 data class BridgePingData(
     val bridgeHash: Int,
-    val ping: Int
+    var ping: Int,
+    val withWarning: Boolean = false
 ) : BridgePingResult()
 
 data object PingCheckComplete : BridgePingResult()

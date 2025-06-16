@@ -93,6 +93,8 @@ public class ServiceVPNHandler extends Handler {
     public Lazy<PathVars> pathVars;
     @Inject
     public Lazy<VpnBuilder> vpnBuilder;
+    @Inject
+    public Lazy<Handler> handler;
 
     private final List<Rule> listRule = new CopyOnWriteArrayList<>();
     @Nullable
@@ -352,7 +354,11 @@ public class ServiceVPNHandler extends Handler {
     private void stop() {
 
         //This prevents the ModulesService from sending a stop signal when the service is already stopping
-        defaultSharedPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
+        handler.get().post(() -> defaultSharedPreferences.get()
+                .edit()
+                .putBoolean(VPN_SERVICE_ENABLED, false)
+                .commit()
+        );
 
         if (serviceVPN != null && serviceVPN.vpn != null) {
             try {
@@ -387,20 +393,20 @@ public class ServiceVPNHandler extends Handler {
 
         //if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
 
-            PreferenceRepository preferences = preferenceRepository.get();
+        PreferenceRepository preferences = preferenceRepository.get();
 
-            if (!preferences.getBoolPreference(FIREWALL_ENABLED)
-                    || ModulesStatus.getInstance().getMode() == ROOT_MODE) {
-                for (Rule rule : listRule) {
-                    listAllowed.add(String.valueOf(rule.uid));
-                }
-            } else if (NetworkChecker.isWifiActive(serviceVPN) || NetworkChecker.isEthernetActive(serviceVPN)) {
-                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF));
-            } else if (NetworkChecker.isRoaming(serviceVPN)) {
-                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_ROAMING));
-            } else if (NetworkChecker.isCellularActive(serviceVPN)) {
-                listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF));
+        if (!preferences.getBoolPreference(FIREWALL_ENABLED)
+                || ModulesStatus.getInstance().getMode() == ROOT_MODE) {
+            for (Rule rule : listRule) {
+                listAllowed.add(String.valueOf(rule.uid));
             }
+        } else if (NetworkChecker.isWifiActive(serviceVPN) || NetworkChecker.isEthernetActive(serviceVPN)) {
+            listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF));
+        } else if (NetworkChecker.isRoaming(serviceVPN)) {
+            listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_ROAMING));
+        } else if (NetworkChecker.isCellularActive(serviceVPN)) {
+            listAllowed.addAll(preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF));
+        }
         //}
 
         logi("VPN Handler Allowed " + listAllowed.size() + " of " + listRule.size());
@@ -413,7 +419,7 @@ public class ServiceVPNHandler extends Handler {
 
             // Set underlying network
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-               setUnderlyingNetwork();
+                setUnderlyingNetwork();
             }
 
             return pfd;
@@ -436,7 +442,7 @@ public class ServiceVPNHandler extends Handler {
         Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
         if (networks.length > 0) {
             serviceVPN.setUnderlyingNetworks(networks);
-            for (Network network: networks) {
+            for (Network network : networks) {
                 logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(network));
             }
         }/* else if (!serviceVPN.isNetworkAvailable() && !serviceVPN.isInternetAvailable()) {

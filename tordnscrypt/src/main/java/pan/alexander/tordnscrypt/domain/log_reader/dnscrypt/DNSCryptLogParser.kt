@@ -19,29 +19,61 @@
 
 package pan.alexander.tordnscrypt.domain.log_reader.dnscrypt
 
+import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.domain.log_reader.LogDataModel
 import pan.alexander.tordnscrypt.domain.log_reader.AbstractLogParser
 import pan.alexander.tordnscrypt.domain.log_reader.ModulesLogRepository
+import pan.alexander.tordnscrypt.utils.session.AppSessionStore
+import pan.alexander.tordnscrypt.utils.session.SessionKeys.DNSCRYPT_SERVERS_PING
+import java.util.regex.Pattern
+import javax.inject.Inject
 
 private const val COUNT_DOWN_TIMER = 5
 
-class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) : AbstractLogParser() {
+private val patternDnsCryptServerPing = Pattern.compile("^\\[.+] +\\[NOTICE] +- +(\\d+)ms +(.+)$")
+
+class DNSCryptLogParser(
+    private val modulesLogRepository: ModulesLogRepository
+) : AbstractLogParser() {
+
+    @Inject
+    lateinit var sessionStore: AppSessionStore
 
     private var startedSuccessfully = false
     private var startedWithError = false
     private var linesSaved = listOf<String>()
     private var errorCountDownCounter = COUNT_DOWN_TIMER
+    private var lastPingBlockStartFound = false
+    private var lastPingBlockEndFound = false
+
+    init {
+        App.instance.daggerComponent.inject(this)
+    }
 
     override fun parseLog(): LogDataModel {
         val lines = modulesLogRepository.getDNSCryptLog()
+        lastPingBlockStartFound = false
+        lastPingBlockEndFound = false
 
+        var linesChanged = false
         if (lines.size != linesSaved.size) {
-            linesSaved = lines
+            linesChanged = true
+            linesSaved = ArrayList(lines)
+            sessionStore.clearMap(DNSCRYPT_SERVERS_PING)
         }
 
-        if (!startedSuccessfully) {
-            for (i in lines.size - 1 downTo 0) {
-                val line = lines[i]
+        for (i in lines.size - 1 downTo 0) {
+            val line = lines[i]
+
+            if (!linesChanged && startedSuccessfully) {
+                break
+            }
+
+            if (linesChanged) {
+                parseServersPing(line)
+            }
+
+            if (!startedSuccessfully) {
                 if (line.contains(" OK ") || line.contains("lowest initial latency")) {
                     startedSuccessfully = true
                     startedWithError = false
@@ -76,5 +108,32 @@ class DNSCryptLogParser(private val modulesLogRepository: ModulesLogRepository) 
             formatLines(linesSaved),
             linesSaved.size
         )
+    }
+
+    private fun parseServersPing(line: String) {
+        if (line.contains("Server with the lowest initial latency:")) {
+            lastPingBlockEndFound = true
+        } else if (line.endsWith("Sorted latencies:")) {
+            lastPingBlockStartFound = true
+        } else if (lastPingBlockEndFound && !lastPingBlockStartFound) {
+            var server = ""
+            var ping = -1
+            val matcher = patternDnsCryptServerPing.matcher(line)
+            if (matcher.find()) {
+                ping = matcher.group(1)?.toInt() ?: -1
+                server = matcher.group(2) ?: ""
+            }
+
+            if (server.isNotEmpty() && ping >= 0) {
+                with(sessionStore) {
+                    restoreMap<String, Int>(DNSCRYPT_SERVERS_PING)
+                        .toMutableMap()
+                        .also {
+                            it.put(server, ping)
+                            save(DNSCRYPT_SERVERS_PING, it)
+                        }
+                }
+            }
+        }
     }
 }

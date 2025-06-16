@@ -46,7 +46,6 @@ import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper.reload;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -272,7 +271,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             registerPowerOFF();
         }
 
-        if (isRootMode() && !modulesStatus.isUseModulesWithRoot()) {
+        if (isRootMode() && !modulesStatus.isUseModulesWithRoot()
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (rootVpnReceiverRegistered && modulesStatus.isFixTTL()) {
                 unlistenVpnConnectivityChanges();
                 rootVpnReceiverRegistered = false;
@@ -280,7 +280,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 listenVpnConnectivityChanges();
                 rootVpnReceiverRegistered = true;
             }
-        } else if (rootVpnReceiverRegistered) {
+        } else if (rootVpnReceiverRegistered && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             unlistenVpnConnectivityChanges();
             rootVpnReceiverRegistered = false;
         }
@@ -309,7 +309,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             rootReceiversRegistered = false;
         }
 
-        if (commonNetworkCallback != null) {
+        if (commonNetworkCallback != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             unlistenNetworkChanges();
             commonNetworkCallback = null;
         }
@@ -318,7 +318,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             unregisterFirewallReceiver();
         }
 
-        if (vpnConnectivityReceiver != null) {
+        if (vpnConnectivityReceiver != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             unlistenVpnConnectivityChanges();
             vpnRevoked = false;
         }
@@ -360,6 +360,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         rootReceiversRegistered = true;
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void registerPowerOFF() {
         IntentFilter powerOFF = new IntentFilter();
         powerOFF.addAction(SHUTDOWN_FILTER_ACTION);
@@ -382,7 +383,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         commonReceiversRegistered = true;
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenNetworkChanges() {
 
         logi("ModulesReceiver start listening to network changes");
@@ -752,7 +753,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         return defaultPreferences.get().getBoolean(PREVENT_DNS_LEAKS, false);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void unlistenNetworkChanges() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null) {
@@ -785,6 +786,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         firewallNotificationReceiver = null;
     }
 
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private void registerVpnRevokeReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(VPN_REVOKE_ACTION);
@@ -795,7 +797,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenVpnConnectivityChanges() {
 
         logi("ModulesReceiver start listening to vpn connectivity changes");
@@ -824,7 +826,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         context.registerReceiver(vpnConnectivityReceiver, ifConnectivity);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void unlistenVpnConnectivityChanges() {
 
         if (vpnConnectivityReceiver != null) {
@@ -934,7 +936,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     && modulesStatus.getTorState() == RUNNING
                     && (isVpnMode() || isRootMode())
                     && isCheckingInternetConnection.compareAndSet(false, true)) {
-                checkInternetConnectionWithDelay();
+                checkInternetConnection();
             }
         } else if (SCREEN_OFF_ACTION.equals(intent.getAction())) {
             modulesStatus.setDeviceInteractive(false);
@@ -1065,10 +1067,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private void vpnRevoked(boolean vpnRevoked) {
         this.vpnRevoked = vpnRevoked;
 
-        if (vpnRevoked) {
+        if (vpnRevoked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             listenVpnConnectivityChanges();
             resetArpScanner();
-        } else {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             unlistenVpnConnectivityChanges();
         }
     }
@@ -1083,17 +1085,12 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
     private void startVPNService() {
 
-        final Intent prepareIntent = VpnService.prepare(context);
-
-        if (prepareIntent != null) {
-            return;
-        }
-
         if (!defaultPreferences.get().getBoolean(VPN_SERVICE_ENABLED, false)
                 && (modulesStatus.getDnsCryptState() == RUNNING
                 || modulesStatus.getTorState() == RUNNING
                 || modulesStatus.getFirewallState() == STARTING
                 || modulesStatus.getFirewallState() == RUNNING)
+                && VpnService.prepare(context) == null
         ) {
             defaultPreferences.get().edit().putBoolean(VPN_SERVICE_ENABLED, true).apply();
             ServiceVPNHelper.start(
@@ -1185,9 +1182,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     @SuppressLint("UnsafeOptInUsageWarning")
     public void onConnectionChecked(boolean available) {
 
-        if (modulesStatus.getTorState() == RUNNING && modulesStatus.isTorReady()) {
+        if (modulesStatus.getTorState() == RUNNING) {
             if (available) {
-                torRestarterReconnector.get().stopRestarterCounter();
+                torRestarterReconnector.get().stopRestarterCounters();
             } else if (isNetworkAvailable()) {
                 torRestarterReconnector.get().startRestarterCounter();
             }

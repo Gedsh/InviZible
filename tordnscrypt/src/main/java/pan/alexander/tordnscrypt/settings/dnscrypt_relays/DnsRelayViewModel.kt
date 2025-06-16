@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withTimeout
 import pan.alexander.tordnscrypt.di.CoroutinesModule
+import pan.alexander.tordnscrypt.domain.dnscrypt_relays.RelaysPingInteractor
 import pan.alexander.tordnscrypt.settings.dnscrypt_relays.PreferencesDNSCryptRelays.RelayType
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.parsers.DnsCryptConfigurationParser
@@ -38,7 +39,8 @@ import javax.inject.Named
 class DnsRelayViewModel @Inject constructor(
     private val dnsCryptConfigurationParser: DnsCryptConfigurationParser,
     @Named(CoroutinesModule.DISPATCHER_IO)
-    private val dispatcherIo: CoroutineDispatcher
+    private val dispatcherIo: CoroutineDispatcher,
+    private val relaysPingInteractor: RelaysPingInteractor
 ) : ViewModel() {
 
     private val relaysConfigurationMutable =
@@ -87,4 +89,9 @@ class DnsRelayViewModel @Inject constructor(
             }
         }
     }
+
+    fun checkRelayPing(listener: OnRelayPingListener, name: String, sdns: String) =
+        viewModelScope.launch {
+            listener.onPingUpdated(name, relaysPingInteractor.getTimeout(name, sdns))
+        }
 }

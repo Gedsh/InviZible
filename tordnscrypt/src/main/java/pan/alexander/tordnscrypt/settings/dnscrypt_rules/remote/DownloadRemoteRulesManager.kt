@@ -28,7 +28,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.settings.PathVars
-import pan.alexander.tordnscrypt.utils.Constants.TOR_BROWSER_USER_AGENT
+import pan.alexander.tordnscrypt.utils.Constants.CHROME_BROWSER_USER_AGENT
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -115,7 +115,7 @@ class DownloadRemoteRulesManager @Inject constructor(
             val connection = httpsConnectionManager.getHttpsUrlConnection(url).apply {
                 connectTimeout = CONNECT_TIMEOUT_SEC * 1000
                 readTimeout = READ_TIMEOUT_SEC * 1000
-                setRequestProperty("User-Agent", TOR_BROWSER_USER_AGENT)
+                setRequestProperty("User-Agent", CHROME_BROWSER_USER_AGENT)
                 if (range != 0L) {
                     setRequestProperty("Range", "bytes=$range-")
                 }
