@@ -256,6 +256,8 @@ public class ModulesStarterHelper {
 
                 checkTorPortsForBusyness(newLines);
 
+                boolean webTunnelUsed = isWebTunnelBridgesUsed(newLines);
+
                 if (lines.size() != newLines.size() || !new HashSet<>(lines).containsAll(newLines)) {
                     saveTorConfiguration(newLines);
                 }
@@ -266,7 +268,8 @@ public class ModulesStarterHelper {
                         + " -f " + appDataDir + "/app_data/tor/tor.conf"
                         + " -pidfile " + appDataDir + "/tor.pid";
                 String fakeHosts = getFakeSniHosts();
-                if (defaultPreferences.get().getBoolean(FAKE_SNI, false) && !fakeHosts.isEmpty()) {
+                if (defaultPreferences.get().getBoolean(FAKE_SNI, false)
+                        && !fakeHosts.isEmpty() && !webTunnelUsed) {
                     torCmdString += " -fake-hosts " + fakeHosts;
                 }
                 String waitString = busyboxPath + "sleep 3";
@@ -296,6 +299,8 @@ public class ModulesStarterHelper {
 
                 checkTorPortsForBusyness(newLines);
 
+                boolean webTunnelUsed = isWebTunnelBridgesUsed(newLines);
+
                 if (lines.size() != newLines.size() || !new HashSet<>(lines).containsAll(newLines)) {
                     saveTorConfiguration(newLines);
                 }
@@ -306,7 +311,8 @@ public class ModulesStarterHelper {
                         + " -f " + appDataDir + "/app_data/tor/tor.conf"
                         + " -pidfile " + appDataDir + "/tor.pid";
                 String fakeHosts = getFakeSniHosts();
-                if (defaultPreferences.get().getBoolean(FAKE_SNI, false) && !fakeHosts.isEmpty()) {
+                if (defaultPreferences.get().getBoolean(FAKE_SNI, false)
+                        && !fakeHosts.isEmpty() && !webTunnelUsed) {
                     torCmdString += " -fake-hosts " + fakeHosts;
                 }
                 preferenceRepository.get().setBoolPreference("TorStartedWithRoot", false);
@@ -583,6 +589,21 @@ public class ModulesStarterHelper {
             fixTorProxyPort(lines, TOR_TRANS_PORT, transPort);
         }
 
+    }
+
+    private boolean isWebTunnelBridgesUsed(List<String> torConf) {
+        boolean bridgesUsed = false;
+        boolean webTunnelUsed = false;
+
+        for (String line: torConf) {
+            if (line.contains("UseBridges 1")) {
+                bridgesUsed = true;
+            } else if (bridgesUsed && line.startsWith("Bridge webtunnel")) {
+                webTunnelUsed = true;
+                break;
+            }
+        }
+        return webTunnelUsed;
     }
 
     private void fixDnsCryptProxyPort(String savedPort, String port) {
