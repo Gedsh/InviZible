@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.dialogs
 
+import android.app.ActivityManager
 import android.content.Context
 import android.os.Bundle
 import androidx.annotation.Keep
@@ -54,9 +55,13 @@ class SendCrashReport : ExtendedDialogFragment() {
     @Inject
     lateinit var verifier: dagger.Lazy<Verifier>
 
+    private var activityManager: ActivityManager? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
         super.onCreate(savedInstanceState)
+
+        activityManager = context?.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
     }
 
     override fun assignBuilder(): AlertDialog.Builder? {
@@ -78,11 +83,16 @@ class SendCrashReport : ExtendedDialogFragment() {
 
                                     val logsDirPath = createLogsDir(ctx)
 
+                                    val memoryInfo = ActivityManager.MemoryInfo().also {
+                                        activityManager?.getMemoryInfo(it)
+                                    }
+
                                     val info = Utils.collectInfo(
                                         verifier.get().appSignature,
                                         pathVars.get().appVersion,
                                         pathVars.get().appProcVersion,
-                                        Utils.getAppVersion(ctx, pathVars.get(), preferenceRepository.get())
+                                        Utils.getAppVersion(ctx, pathVars.get(), preferenceRepository.get()),
+                                        memoryInfo
                                     )
 
                                     if (saveLogCat(logsDirPath)) {

@@ -20,6 +20,8 @@
 package pan.alexander.tordnscrypt.help;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Build;
@@ -103,6 +105,7 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
     private ModulesStatus modulesStatus;
     private String info;
     private boolean logsDirAccessible;
+    private ActivityManager activityManager;
 
     @SuppressLint("NewApi")
     @Override
@@ -146,6 +149,8 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
         if (looper != null) {
             mHandler = new Handler(looper);
         }
+
+        activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 
         PathVars pathVars = pathVarsLazy.get();
         appDataDir = pathVars.getAppDataDir();
@@ -196,11 +201,16 @@ public class HelpActivity extends LangAppCompatActivity implements View.OnClickL
             }
 
             try {
+
+                ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+                activityManager.getMemoryInfo(memoryInfo);
+
                 info = Utils.INSTANCE.collectInfo(
                         verifier.get().getAppSignature(),
                         pathVarsLazy.get().getAppVersion(),
                         pathVarsLazy.get().getAppProcVersion(),
-                        Utils.getAppVersion(this, pathVarsLazy.get(), preferenceRepository.get())
+                        Utils.getAppVersion(this, pathVarsLazy.get(), preferenceRepository.get()),
+                        memoryInfo
                 );
             } catch (Exception ignored) {
             }
