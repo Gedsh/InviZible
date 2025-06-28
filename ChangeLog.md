@@ -1379,3 +1379,7 @@
 * Fixed requesting Tor bridges for Android 9 and below in countries with hard censorship.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.4**
+* Implemented SNI spoofing for webtunnel bridges (does not work with all bridges).
+* Fixes and optimizations.
