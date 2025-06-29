@@ -32,6 +32,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 private const val LOG_TAG = "pan.alexander.TPDCLogs"
+private const val MAX_LOG_LENGTH = 16000
+private const val MAX_LOG_ENTRY_LENGTH = 4000
 
 object Logger {
 
@@ -54,12 +56,28 @@ object Logger {
         ).also { flow ->
             flow.distinctUntilChanged()
                 .onEach {
-                    when (it.level) {
-                        LogLevel.INFO -> Log.i(LOG_TAG, it.message)
-                        LogLevel.WARN -> Log.w(LOG_TAG, it.message)
-                        LogLevel.ERROR -> Log.e(LOG_TAG, it.message)
-                    }
+                    truncateLog(it.level, it.message)
                 }.launchIn(coroutineScope)
+        }
+    }
+
+    private fun truncateLog(level: LogLevel, content: String?) {
+        content ?: return
+        if (content.length > MAX_LOG_LENGTH) {
+            truncateLog(level, content.substring(0, MAX_LOG_LENGTH))
+        } else if (content.length > MAX_LOG_ENTRY_LENGTH) {
+            printLog(level, content.substring(0, MAX_LOG_ENTRY_LENGTH))
+            truncateLog(level, content.substring(MAX_LOG_ENTRY_LENGTH))
+        } else {
+            printLog(level, content)
+        }
+    }
+
+    private fun printLog(level: LogLevel, content: String) {
+        when (level) {
+            LogLevel.INFO -> Log.i(LOG_TAG, content)
+            LogLevel.WARN -> Log.w(LOG_TAG, content)
+            LogLevel.ERROR -> Log.e(LOG_TAG, content)
         }
     }
 
