@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,14 +95,11 @@ import pan.alexander.tordnscrypt.utils.filemanager.OnTextFileOperationsCompleteL
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
 import static pan.alexander.tordnscrypt.utils.Utils.unescapeHTML;
-import static pan.alexander.tordnscrypt.utils.Utils.verifyHostsSet;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.webtunnel;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAKE_SNI_HOSTS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RELAY_BRIDGES_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_FASCIST_FIREWALL;
@@ -468,7 +464,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         } else if (currentBridgesType.equals(webtunnel)
                                 && !currentBridge.contains("servername")
                                 && isFakeSniEnabled()
-                                && !getFakeSniHosts().isEmpty()) {
+                                && !getFakeSniHosts(("Bridge " + currentBridge).length()).isEmpty()) {
                             torConfCleaned.add("Bridge " + addWebTunnelSNIs(currentBridge));
                         } else {
                             torConfCleaned.add("Bridge " + currentBridge);
@@ -500,7 +496,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             line = matcher.replaceFirst(
                     urlPart
                             + " servernames="
-                            + getFakeSniHosts()
+                            + getFakeSniHosts(line.length())
             );
         }
         return line;
@@ -1483,18 +1479,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     }
 
     private boolean isFakeSniEnabled() {
-        return defaultPreferences.get().getBoolean(FAKE_SNI, false);
+        return viewModel.isFakeSniEnabled();
     }
 
-    private String getFakeSniHosts() {
-        Set<String> hosts = verifyHostsSet(
-                preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
+    private String getFakeSniHosts(int bridgeLength) {
+        return viewModel.getFakeSniHosts(
+                Arrays.asList(requireContext().getResources()
+                        .getStringArray(R.array.default_fake_sni)),
+                bridgeLength
         );
-        if (hosts.isEmpty()) {
-            hosts = new HashSet<>(
-                    Arrays.asList(requireContext().getResources().getStringArray(R.array.default_fake_sni))
-            );
-        }
-        return TextUtils.join(",", hosts);
     }
 }

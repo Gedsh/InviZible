@@ -73,6 +73,9 @@ import kotlin.math.roundToInt
 
 
 object Utils {
+
+    const val MAX_SOCKS_ARG_LENGTH = 500
+
     fun getScreenOrientationOld(activity: Activity): Int {
         val getOrient: Display = activity.windowManager.defaultDisplay
         val point = Point()
@@ -384,6 +387,24 @@ object Utils {
             it.length < 255
                     && (it.matches(HOST_NAME_REGEX.toRegex()) || it.matches(IPv4_REGEX.toRegex()))
         }.toSet()
+
+    @JvmStatic
+    fun prepareFakeSniHosts(hosts: Set<String>, defaultHosts: List<String>?, remainLength: Int): String {
+        var hosts: Set<String> = verifyHostsSet(hosts)
+        if (defaultHosts != null && hosts.isEmpty()) {
+            hosts = HashSet<String>(defaultHosts)
+        }
+        val output = StringBuilder()
+        for (host in hosts) {
+            if (output.length + host.length + remainLength < MAX_SOCKS_ARG_LENGTH) {
+                output.append(host).append(",")
+            }
+        }
+        if (output.isNotEmpty()) {
+            output.deleteCharAt(output.length - 1)
+        }
+        return output.toString()
+    }
 
     @JvmStatic
     fun hideKeyboard(activity: Activity) =

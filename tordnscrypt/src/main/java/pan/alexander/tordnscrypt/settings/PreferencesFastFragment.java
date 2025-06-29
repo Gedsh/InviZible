@@ -66,6 +66,7 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
+import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
@@ -712,13 +713,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
                     String urlPart = matcher.group(1);
-                    String newLine = matcher.replaceFirst(
-                            urlPart
-                                    + " servernames="
-                                    + TextUtils.join(",", snis)
-                    );
-                    torConf.set(i, newLine);
-                    linesModified = true;
+                    String sni = Utils.prepareFakeSniHosts(snis, getDefaultSni(), line.length());
+                    if (!sni.isEmpty()) {
+                        String newLine = matcher.replaceFirst(urlPart + " servernames=" + sni);
+                        torConf.set(i, newLine);
+                        linesModified = true;
+                    }
                 }
             }
         }
@@ -757,7 +757,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     }
 
     private void tryRewriteTorConfWebTunnelSNIs(Set<String> snis) {
-        Pattern pattern = Pattern.compile("(servernames=\\S+)");
+        Pattern pattern = Pattern.compile("( servernames=\\S+)");
         List<String> torConf = FileManager.readTextFileSynchronous(
                 requireContext(),
                 pathVars.get().getAppDataDir() + "/app_data/tor/tor.conf"
@@ -771,9 +771,20 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
             } else if (bridgesActive && line.startsWith("Bridge webtunnel")) {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
-                    String newLine = matcher.replaceFirst(
-                            snis != null ? "servernames=" + TextUtils.join(",", snis) : ""
-                    );
+                    String newLine = line;
+                    if (snis != null && !snis.isEmpty()) {
+                        String sni = Utils.prepareFakeSniHosts(
+                                snis,
+                                getDefaultSni(),
+                                line.replace(matcher.group(), "").length()
+                        );
+                        if (!sni.isEmpty()) {
+                            newLine = matcher.replaceFirst(" servernames=" + sni);
+                        }
+                    } else {
+                        newLine = matcher.replaceFirst("");
+                    }
+
                     if (!newLine.equals(line)) {
                         torConf.set(i, newLine);
                         linesModified = true;
@@ -791,6 +802,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
         }
 
         restartTorIfNeeded();
+    }
+
+    private List<String> getDefaultSni() {
+        return Arrays.asList(
+                requireContext().getResources().getStringArray(R.array.default_fake_sni)
+        );
     }
 
     private void restartTorIfNeeded() {
