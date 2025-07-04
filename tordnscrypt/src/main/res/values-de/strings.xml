@@ -79,7 +79,7 @@
     <string name="pref_fast_exclude_apps_from_tor">Anwendungen ausschließen</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">Liste der Apps, die direkt geöffnet werden</string>
     <string name="pref_fast_site_refresh_interval">Aktualisierungsintervall</string>
-    <string name="pref_fast_site_refresh_interval_summ">Zeitraum in Stunden, um Webseiten-IPs zu aktualisieren. Für Android 5.1 und höher. Setze auf 0, um die Aktualisierungen zu stoppen.</string>
+    <string name="pref_fast_site_refresh_interval_summ">Zeitraum in Stunden, um Webseiten-IPs zu aktualisieren. Für Android 5.1 und höher. Setze auf 0, um die Aktualisierungen zu stoppen</string>
     <string name="pref_fast_use_tor_bridges">Brücken</string>
     <string name="pref_fast_use_tor_bridges_summ">Benutze diese, falls du dich nicht mit dem Tor-Netzwerk verbinden kannst</string>
     <string name="pref_fast_use_tor_bridges_no">Brücken nicht benutzen</string>
@@ -555,4 +555,6 @@
     <string name="pref_fast_prevent_dns_leak_summ">Blockiere Versuche, DNS-Anfragen zu verschleiern. Kann zu Verbindungsproblemen führen</string>
     <string name="proxy_use_for_non_tor">Verwende den Proxy für Apps, die Tor umgehen</string>
     <string name="helper_tor_check_proxy">Du hast den Socks5-Proxy aktiviert, aber der Proxy scheint nicht zu laufen. Bitte überprüfe deine Einstellungen!</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Blockiere LAN in öffentlichen Netzwerken</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Verweigere die Verbindung zum LAN, wenn ein Captive Portal erkannt wurde</string>
 </resources>
