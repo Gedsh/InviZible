@@ -100,7 +100,7 @@
     <string name="pref_dnscrypt_force_tcp_summ">DNSCRYPT சேவையகங்களுடன் இணைக்க UDP க்கு பதிலாக TCP ஐப் பயன்படுத்தவும். நீங்கள் DOR க்கு மேல் DnScrypt ஐப் பயன்படுத்தினால் இந்த விருப்பம் இயக்கப்பட வேண்டும்.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">சாக்ச் பதிலாள்</string>
     <string name="pref_dnscrypt_force_tcp_categ">மேலோடை சேவையகங்களுடன் இணைக்க எப்போதும் TCP ஐப் பயன்படுத்தவும்</string>
-    <string name="helper_dnscrypt_private_dns">ஆண்ட்ராய்டு பிணையம் அமைப்புகளில் தனியார் டிஎன்எச் அணைக்கவும். இந்த விருப்பம் கண்ணுக்கு தெரியாததில் தலையிடுகிறது.</string>
+    <string name="helper_dnscrypt_private_dns">ஆண்ட்ராய்டு பிணையம் அமைப்புகளில் தனியார் டிஎன்எச் அணைக்கவும். இந்த விருப்பம் கண்ணுக்குத் தெரியாததில் தலையிடுகிறது.</string>
     <string name="pref_dnscrypt_refresh_delay_summ">மணிநேரங்களில் குறிப்பிட்ட தாமதத்திற்குப் பிறகு சேவையக பட்டியல் புதுப்பிக்கப்படும்.</string>
     <string name="pref_dnscrypt_rules_delay_summ">மணிநேரங்களில் குறிப்பிட்ட தாமதத்திற்குப் பிறகு விதிகள் புதுப்பிக்கப்படும்.</string>
     <string name="pref_dnscrypt_relays_title">டி.என்ச்கிரிப்ட் ரிலேக்கள்</string>
@@ -371,7 +371,7 @@
     <string name="pref_fast_exclude_app_from_tor">டோரிலிருந்து விலக்கு</string>
     <string name="pref_fast_route_to_tor">TOR க்கு செல்லும் பாதை</string>
     <string name="pref_fast_bypass_app">முற்றிலும் விலக்கு</string>
-    <string name="pref_fast_site_refresh_interval_summ">தளங்கள் ஐபி புதுப்பிக்க மணிநேரங்களில் காலம். ஆண்ட்ராய்டு 5.1 மற்றும் அதற்கு மேற்பட்டவர்களுக்கு. புதுப்பிப்பதை நிறுத்த 0 வைக்கவும்.</string>
+    <string name="pref_fast_site_refresh_interval_summ">தளங்கள் ஐபி புதுப்பிக்க மணிநேரங்களில் காலம். ஆண்ட்ராய்டு 5.1 மற்றும் அதற்கு மேற்பட்டவர்களுக்கு. புதுப்பிப்பதை நிறுத்த 0 வைக்கவும்</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">TOR அமைப்புகளில் நுழைவு முனைகளை முடக்கு, இல்லையெனில் நீங்கள் பாலங்களைப் பயன்படுத்த முடியாது.</string>
     <string name="pref_fast_use_tor_bridges_no">பாலங்களைப் பயன்படுத்த வேண்டாம்</string>
     <string name="pref_fast_use_tor_bridges_obfs">தெளிவின்மை</string>
@@ -453,7 +453,7 @@
     <string name="notification_arp_spoofing">ஆர்ப் ச்பூஃபிங் கண்டறியப்பட்டது!</string>
     <string name="notification_rogue_dhcp">முரட்டு டி.எச்.சி.பி கண்டறியப்பட்டது!</string>
     <string name="pref_tor_nodes_categ">முனைகள்</string>
-    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">பயன்பாட்டு தொகுதிகளை நிர்வகிக்க பின்வரும் கட்டளையைப் பயன்படுத்தவும்: m ஒளிபரப்பு -a பான்.அலெக்சாண்டர்.டார்ட்ன்ச்கிரிப்ட்.செல்_ச்கிரிப்ட்_கான்ட்ரோல் -ஈ டிஎன்ச்கிரிப்ட் 1 --ei டோர் 1 --ei i2p 1 %s எங்கே 1 -தொடங்குகிறது, 0 -தொகுதியை நிறுத்துகிறது.</string>
+    <string name="pref_common_shell_control_summ" tools:ignore="TypographyDashes">பயன்பாட்டு தொகுதிகளை நிர்வகிக்க பின்வரும் கட்டளையைப் பயன்படுத்தவும்: \"AM BAN.AE PAN.ALEXANDER.TORDNSCRYPT.SHELL_SCRIPT_CONTROL --EI DNSCRYPT 1 --EI TOR 1 --EI I2P 1 %s\". எங்கே 1 - தொடங்குகிறது, 0 - தொகுதியை நிறுத்துகிறது.</string>
     <string name="pref_common_notification_helper">எந்த நேரத்திலும் கணினி டி.என்ச்கிரிப்ட், டோர் அல்லது ஐ 2 பி ஆகியவற்றை நிறுத்துவதைத் தடுக்க ஆண்ட்ராய்டு பேட்டரி உகப்பாக்கத்திலிருந்து இன்விசிபிள் புரோவை விலக்கவும். MIUI போன்ற சில சிறப்பு அமைப்புகளுக்கு கூடுதல் படிகள் தேவைப்படலாம்.</string>
     <string name="notification_exclude_data_restriction_title">பிணைய தரவு சேமிப்பாளரை முடக்கவா?</string>
     <string name="notification_exclude_data_restriction_message">தயவுசெய்து பின்னணி தரவு பயன்பாட்டை அனுமதிக்கவும், தரவு சேமிப்பாளர் இயக்கத்தில் இருக்கும்போது தரவு பயன்பாட்டை அனுமதிக்கவும். மென்மையான நிகழ்நிலை அனுபவத்திற்கு இது தேவை.</string>
@@ -545,4 +545,8 @@
     <string name="dns_rule_add_local_list">உள்ளக பட்டியலைச் சேர்க்கவும்</string>
     <string name="dns_rule_replace_local_list">உள்ளக பட்டியலை மாற்றவும்</string>
     <string name="rules">விதிகள்</string>
+    <string name="pref_fast_prevent_dns_leak">டி.என்.எச் கசிவுகளைத் தடுக்கவும்</string>
+    <string name="pref_fast_prevent_dns_leak_summ">டிஎன்எச் வினவல்களை மறைக்க தொகுதி முயற்சிகள். இணைப்பு சிக்கல்களை ஏற்படுத்தக்கூடும்</string>
+    <string name="pref_fast_block_lan_with_free_wifi">பொது வைஃபை மீது லேன்</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">சிறைப்பிடிக்கப்பட்ட போர்ட்டல் கண்டறியப்படும்போது LAN உடன் இணைப்பை மறுக்கவும்</string>
 </resources>

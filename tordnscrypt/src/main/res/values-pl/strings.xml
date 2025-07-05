@@ -557,4 +557,6 @@
     <string name="helper_tor_check_proxy">Skonfigurowano korzystanie z serwera proxy Socks5, ale serwer proxy wydaje się nie działać. Sprawdź swoje ustawienia!</string>
     <string name="pref_fast_prevent_dns_leak_summ">Blokuje próby ukrywania zapytań DNS. Może powodować problemy z połączeniem</string>
     <string name="pref_fast_prevent_dns_leak">Ochrona przed wyciekami DNS</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Blokowanie sieci LAN w publicznych sieciach Wi-Fi</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Odmowa połączenia z siecią LAN w przypadku wykrycia Captive Portal</string>
 </resources>
