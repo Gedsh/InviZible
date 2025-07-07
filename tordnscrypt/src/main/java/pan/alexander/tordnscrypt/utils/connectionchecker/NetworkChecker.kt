@@ -35,6 +35,10 @@ import pan.alexander.tordnscrypt.utils.logger.Logger.logw
 import java.util.TreeMap
 
 private const val DEFAULT_MTU = 1400
+private const val ETHERNET_NETWORK_HASH = 1
+private const val WIFI_NETWORK_HASH = 2
+private const val CELLULAR_NETWORK_HASH = 3
+const val UNKNOWN_NETWORK_HASH = 4
 private val MTU_REGEX = Regex("\\d{4}")
 
 @Suppress("deprecation")
@@ -359,6 +363,21 @@ object NetworkChecker {
             DEFAULT_MTU
         }
 
+    @JvmStatic
+    fun isVpnNetwork(
+        connectivityManager: ConnectivityManager?,
+        network: Network?
+    ): Boolean {
+        if (connectivityManager == null) {
+            return false
+        }
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        if (capabilities == null) {
+            return false
+        }
+        return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+    }
+
 
     @JvmStatic
     @RequiresApi(Build.VERSION_CODES.M)
@@ -489,5 +508,52 @@ object NetworkChecker {
 
     private fun isRootMode() = ModulesStatus.getInstance().run {
         mode == OperationMode.ROOT_MODE && !isFixTTL
+    }
+
+    @JvmStatic
+    fun isActiveNetwork(
+        connectivityManager: ConnectivityManager?,
+        network: Network?
+    ): Boolean {
+        if (connectivityManager == null) {
+            return true
+        }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            connectivityManager.activeNetwork === network
+        } else {
+            true
+        }
+    }
+
+    @JvmStatic
+    fun getActiveNetworkHash(connectivityManager: ConnectivityManager?): Int {
+        if (connectivityManager == null) {
+            return UNKNOWN_NETWORK_HASH
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val activeNetwork = connectivityManager.activeNetwork
+            if (activeNetwork != null) {
+                return networkToId(connectivityManager, activeNetwork)
+            }
+        }
+        return UNKNOWN_NETWORK_HASH
+    }
+
+    @JvmStatic
+    fun networkToId(connectivityManager: ConnectivityManager?, network: Network?): Int {
+        if (connectivityManager == null || network == null) {
+            return UNKNOWN_NETWORK_HASH
+        }
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+        if (capabilities == null) {
+            return UNKNOWN_NETWORK_HASH
+        }
+
+        return when {
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> ETHERNET_NETWORK_HASH
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> WIFI_NETWORK_HASH
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> CELLULAR_NETWORK_HASH
+            else -> UNKNOWN_NETWORK_HASH
+        }
     }
 }
