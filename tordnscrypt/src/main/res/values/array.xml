@@ -591,7 +591,6 @@
         <item>http://stats.i2p/cgi-bin/newhosts.txt</item>
         <item>http://i2p-projekt.i2p/hosts.txt</item>
         <item>http://notbob.i2p/hosts-all.txt</item>
-        <item>http://rus.i2p/hosts.txt</item>
     </string-array>
     <string-array name="contains_own_tor">
         <item>org.torproject.torbrowser_alpha</item>
