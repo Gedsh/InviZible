@@ -133,7 +133,6 @@ class TorRestarterReconnector @Inject constructor(
         FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdesc-consensus")
         //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdescs")
         //FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "cached-microdescs.new")
-        FileManager.deleteFileSynchronous(context, pathVars.appDataDir + "/tor_data", "state")
     }
 
     fun stopRestarterCounters() {
