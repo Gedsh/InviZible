@@ -1383,3 +1383,9 @@
 **InviZible Pro beta 2.5.4**
 * Implemented SNI spoofing for webtunnel bridges (does not work with all bridges).
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.5**
+* Updated Tor to version 4.8.17.
+* Fixes related to SNI spoofing for webtunnel bridges.
+* Updated Persian, Polish and Tamil translations.
+* Fixes and optimizations.
