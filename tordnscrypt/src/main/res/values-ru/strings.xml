@@ -275,7 +275,7 @@
     <string name="helper_itpd_stopped">Похоже андроид закрыл модуль I2P. Проверьте настройки устройства!</string>
     <string name="helper_dnscrypt_no_internet">Похоже DNSCrypt не может подключиться к интернету. Можете попробовать выбрать другие сервера DNSCrypt. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Выбрать сервера DNSCrypt</string>
     <string name="helper_tor_check_proxy">Вы настроили использование Socks5 прокси, но прокси, похоже, не работает. Пожалуйста, проверьте свои настройки!</string>
-    <string name="helper_tor_use_bridges">Похоже Tor не може подключиться к интернету. Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Мосты</string>
+    <string name="helper_tor_use_bridges">Похоже Tor не может подключиться к интернету. Интернет провайдер может блокировать Tor. Попробуйте использовать мосты Tor. Вы сможете найти их в МЕНЮ -&gt; Быстрые настройки -&gt; Мосты</string>
     <string name="action_mode_child_lock">Детский замок</string>
     <string name="action_mode_dialog_message_lock">Вы можете заблокировать интерфейс этого приложения. Пожалуйста, введите пароль или используйте предыдущий.</string>
     <string name="action_mode_dialog_message_unlock">Пожалуйста, введите пароль.</string>
