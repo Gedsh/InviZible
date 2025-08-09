@@ -1,0 +1,6 @@
+**InviZible Pro beta 2.5.6**
+* Updated Tor.
+* Updated Tor Conjure obfuscator.
+* Updated default Conjure bridges.
+* Fixed ping check for Conjure bridges.
+* Fixes and optimizations.

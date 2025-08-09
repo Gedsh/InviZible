@@ -1389,3 +1389,10 @@
 * Fixes related to SNI spoofing for webtunnel bridges.
 * Updated Persian, Polish and Tamil translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.6**
+* Updated Tor.
+* Updated Tor Conjure obfuscator.
+* Updated default Conjure bridges.
+* Fixed ping check for Conjure bridges.
+* Fixes and optimizations.
