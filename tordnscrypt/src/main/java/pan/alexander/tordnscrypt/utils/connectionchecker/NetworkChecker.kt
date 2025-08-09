@@ -519,7 +519,7 @@ object NetworkChecker {
             return true
         }
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            connectivityManager.activeNetwork === network
+            connectivityManager.activeNetwork == network
         } else {
             true
         }
