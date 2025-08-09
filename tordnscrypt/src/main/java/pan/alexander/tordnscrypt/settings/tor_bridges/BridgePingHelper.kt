@@ -62,6 +62,10 @@ class BridgePingHelper @Inject constructor(
         Pattern.compile("^snowflake +(.+:\\d+)(?: +\\w+)? ")
     }
 
+    private val conjureBridgePattern by lazy {
+        Pattern.compile("^conjure +(.+:\\d+)(?: +\\w+)? ")
+    }
+
     suspend fun getRealIPFromWebTunnelBridges(
         bridges: List<ObfsBridge>,
         bridgesMatcherMap: ConcurrentHashMap<Int, Int>
@@ -199,11 +203,69 @@ class BridgePingHelper @Inject constructor(
         emptyList()
     }
 
+    suspend fun getRealIPFromConjureBridges(
+        bridges: List<ObfsBridge>,
+        bridgesMatcherMap: ConcurrentHashMap<Int, Int>
+    ) = try {
+        withContext(dispatcherIo) {
+            val bridgesToMeasure = mutableListOf<String>()
+            for (bridge in bridges) {
+
+                val matcher = conjureBridgePattern.matcher(bridge.bridge)
+                if (matcher.find()) {
+                    val ipWithPort = matcher.group(1) ?: continue
+                    val front = "front="
+                    val fronts = "fronts="
+                    val domains = if (bridge.bridge.contains(fronts)) {
+                        bridge.bridge.split(Regex(" +"))
+                            .first { it.contains(fronts) }
+                            .removePrefix(fronts)
+                            .split(",")
+                    } else if (bridge.bridge.contains(front)) {
+                        bridge.bridge.split(Regex(" +"))
+                            .first { it.contains(front) }
+                            .removePrefix(front)
+                            .let { listOf(it) }
+                    } else {
+                        emptyList()
+                    }
+
+                    if (domains.isEmpty()) {
+                        continue
+                    }
+
+                    var ip = ""
+                    val port = 443
+                    for (domain in domains.shuffled()) {
+                        ip = getWorkingIp(domain, port)
+                        if (ip.isNotEmpty()) {
+                            break
+                        }
+                    }
+
+                    ensureActive()
+                    if (ip.isEmpty()) {
+                        continue
+                    }
+
+                    val address = getAddress(ip, port)
+                    val bridgeLine = bridge.bridge.replace(ipWithPort, address)
+                    bridgesToMeasure.add(bridgeLine)
+                    bridgesMatcherMap[bridgeLine.hashCode()] =
+                        bridge.bridge.hashCode()
+                }
+            }
+            bridgesToMeasure
+        }
+    } catch (_: Exception) {
+        emptyList()
+    }
+
     private suspend fun getWorkingIp(domain: String, port: Int) = try {
         withContext(dispatcherIo) {
             InetAddress.getAllByName(domain)
         }.mapNotNull { it.hostAddress }
-    } catch (ignored: Exception) {
+    } catch (_: Exception) {
         emptyList()
     }.filter {
         !VpnUtils.isIpInLanRange(it) && (isUseIPv6() || !it.isIPv6Address())
@@ -213,7 +275,7 @@ class BridgePingHelper @Inject constructor(
                 async {
                     try {
                         if (isAddressReachable(ip, port)) ip else ""
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         ""
                     }
                 }
