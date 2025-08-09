@@ -193,6 +193,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     @Inject
     public Lazy<Handler> handlerLazy;
     @Inject
+    public Lazy<BridgeChecker> bridgeChecker;
+    @Inject
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
     @Inject
     public ViewModelProvider.Factory viewModelFactory;
@@ -779,38 +781,31 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             String inputLinesStr = unescapeHTML(input.getText().toString().trim());
 
-            String bridgeBase;
-            if (isBridgeIPv6(inputLinesStr)) {
-                bridgeBase = ipv6BridgeBase;
-            } else {
-                bridgeBase = ipv4BridgeBase;
-            }
-
             String inputBridgesType = "";
-            Pattern pattern;
+            Checkable checkable;
             if (inputLinesStr.contains(obfs4.toString())) {
                 inputBridgesType = obfs4.toString();
-                pattern = Pattern.compile("^obfs4 +" + bridgeBase + " +cert=.+ +iat-mode=\\d");
+                checkable = bridgeChecker.get().getObfs4BridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(obfs3.toString())) {
                 inputBridgesType = obfs3.toString();
-                pattern = Pattern.compile("^obfs3 +" + bridgeBase);
+                checkable = bridgeChecker.get().getObfs3BridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(scramblesuit.toString())) {
                 inputBridgesType = scramblesuit.toString();
-                pattern = Pattern.compile("^scramblesuit +" + bridgeBase + "( +password=\\w+)?");
+                checkable = bridgeChecker.get().getScrambleSuitBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(meek_lite.toString())) {
                 inputBridgesType = meek_lite.toString();
-                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w.+/-]+ +front=[\\w./-]+( +utls=\\w+)?");
+                checkable = bridgeChecker.get().getMeekLiteBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w.+/-]+)?(?: +ampcache=https://[\\w.+/-]+)?(?: +front(s)?=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w.+/-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?");
+                checkable = bridgeChecker.get().getSnowFlakeBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
-                pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
+                checkable = bridgeChecker.get().getConjureBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(webtunnel.toString())) {
                 inputBridgesType = webtunnel.toString();
-                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w.+/-]+(?: servername(s)?=[\\w.+-,]+)?(?: ver=[0-9.]+)?");
+                checkable = bridgeChecker.get().getWebTunnelBridgeChecker(inputLinesStr);
             } else {
-                pattern = Pattern.compile(bridgeBase);
+                checkable = bridgeChecker.get().getOtherBridgeChecker(inputLinesStr);
             }
 
             String[] bridgesArrNew;
@@ -827,13 +822,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             if (bridgesArrNew.length != 0) {
                 for (String brgNew : bridgesArrNew) {
                     if (!brgNew.isEmpty() && inputBridgesType.isEmpty()) {
-                        Matcher matcher = pattern.matcher(brgNew.trim());
-                        if (matcher.matches()) {
+                        if (checkable.check(brgNew.trim())) {
                             bridgesListNew.add(brgNew.trim());
                         }
                     } else if (!brgNew.isEmpty()) {
-                        Matcher matcher = pattern.matcher(inputBridgesType + " " + brgNew.trim());
-                        if (matcher.matches()) {
+                        if (checkable.check(inputBridgesType + " " + brgNew.trim())) {
                             bridgesListNew.add(inputBridgesType + " " + brgNew.trim());
                         }
                     }
@@ -1488,5 +1481,10 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         .getStringArray(R.array.default_fake_sni)),
                 bridgeLength
         );
+    }
+
+    @FunctionalInterface
+    public interface Checkable {
+        boolean check(String bridge);
     }
 }

@@ -119,6 +119,6 @@ public interface Constants {
 
     String NUMBER_REGEX = "\\d+";
 
-    String HOST_NAME_REGEX = "[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
-    String URL_REGEX = "(https?:\\/\\/)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
+    String HOST_NAME_REGEX = "[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,7}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
+    String URL_REGEX = "(https?:\\/\\/)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,7}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
 }
