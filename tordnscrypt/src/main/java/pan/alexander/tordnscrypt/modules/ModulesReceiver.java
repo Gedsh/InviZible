@@ -431,11 +431,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             @Override
             public void onAvailable(@NonNull Network network) {
 
+                Boolean lastConnected = connected;
+
                 if (isVpnNetwork(cm, network)) {
-                    logi("ModulesReceiver available VPN network=" + network + " connected=" + connected);
+                    logi("ModulesReceiver available VPN network=" + network + " connected=" + lastConnected);
                     return;
                 } else {
-                    logi("ModulesReceiver available network=" + network + " connected=" + connected);
+                    logi("ModulesReceiver available network=" + network + " connected=" + lastConnected);
                 }
 
                 int lastActiveNetwork = activeNetwork;
@@ -456,7 +458,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 setNetworkAvailable(true);
 
-                if (connected == null || !connected) {
+                if (lastConnected == null || !lastConnected) {
                     if (isVpnMode() || isRootMode()) {
                         setInternetAvailable(true);
                     }
@@ -629,6 +631,8 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     connected = true;
                 }
 
+                Boolean lastConnected = connected;
+
                 setNetworkAvailable(true);
 
                 boolean networkValidated = false;
@@ -643,7 +647,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     validated.remove(networkToId(cm, network));
                 }
 
-                if ((connected == null || !connected || validatedNetworksCount != validated.size())
+                if ((lastConnected == null || !lastConnected || validatedNetworksCount != validated.size())
                         && isActiveNetwork(cm, network)) {
 
                     if (isVpnMode()) {
