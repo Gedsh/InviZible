@@ -440,7 +440,7 @@ public class ServiceVPNHandler extends Handler {
 
         ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
         Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
-        if (networks.length > 0) {
+        if (networks.length > 1) {
             serviceVPN.setUnderlyingNetworks(networks);
             for (Network network : networks) {
                 logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(network));
