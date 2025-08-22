@@ -85,7 +85,7 @@ public class DnsServerItem implements Comparable<DnsServerItem> {
 
         calculateAddress(bin);
 
-        if (name.contains("v6") || name.contains("ip6")) {
+        if (name.contains("v6") || name.contains("ip6") || name.endsWith("6")) {
             ipv6 = true;
         }
 
