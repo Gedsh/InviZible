@@ -2,35 +2,61 @@
 
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
-lyrebird_version=prod
-dnscryptproxy_version=master
-snowflake_version=feat/check-dns-ip
+lyrebird_branch=prod
+lyrebird_commit=87b832925d54555386d1d06e0c18552d5bf17f18
+
+dnscryptproxy_branch=master
+dnscryptproxy_commit=634168b3abe287b761d89df8ae3bab7c3d1539b4
+
+snowflake_branch=feat/check-dns-ip
+snowflake_commit=b332ab53ed7c968f23ff10cfee4c53518e137483
+
 libzmq_version=v4.3.5
-conjure_version=prod
-webtunnel_version=prod
-tor_openssl_version=openssl-3.4.1
+
+conjure_branch=prod
+conjure_commit=ed87f43293b54d8c510f4b56200c7168a24d263c
+
+webtunnel_branch=prod
+webtunnel_commit=738ccbd3d15c2144f8d4c5dbddbbde6a687ca104
+
+tor_branch=prod
+tor_commit=dc679c743f3dc2c7d3d0e3d5eb5276cbbf32caa8
+tor_openssl_version=openssl-3.5.1
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
-tor_version=prod
+
+i2pd_version=2.57.0
 i2pd_openssl_version=openssl-3.5.0
 miniupnpc_version=miniupnpc_2_2_8
-i2pd_version=2.57.0
 
-git clone --single-branch --branch $lyrebird_version https://gitlab.torproject.org/Gedsh/lyrebird
-
-git clone --single-branch --branch $dnscryptproxy_version https://github.com/Gedsh/dnscrypt-proxy
-
-git clone --single-branch --branch $snowflake_version https://gitlab.torproject.org/Gedsh/snowflake.git
-
-git clone https://github.com/zeromq/libzmq
-pushd libzmq/
-git checkout -f $libzmq_version -b $libzmq_version
+git clone --single-branch --branch $lyrebird_branch https://gitlab.torproject.org/Gedsh/lyrebird
+pushd lyrebird/
+git checkout -f $lyrebird_commit -b $lyrebird_commit
 popd
 
-git clone --single-branch --branch $conjure_version https://gitlab.torproject.org/Gedsh/conjure
+git clone --single-branch --branch $dnscryptproxy_branch https://github.com/Gedsh/dnscrypt-proxy
+pushd dnscrypt-proxy/
+git checkout -f $dnscryptproxy_commit -b $dnscryptproxy_commit
+popd
 
-git clone --single-branch --branch $webtunnel_version https://gitlab.torproject.org/Gedsh/webtunnel
+
+git clone --single-branch --branch $snowflake_branch https://gitlab.torproject.org/Gedsh/snowflake.git
+pushd snowflake/
+git checkout -f $snowflake_commit -b $snowflake_commit
+popd
+
+git clone --single-branch --branch $libzmq_version https://github.com/zeromq/libzmq
+
+git clone --single-branch --branch $conjure_branch https://gitlab.torproject.org/Gedsh/conjure
+pushd conjure/
+git checkout -f $conjure_commit -b $conjure_commit
+popd
+
+git clone --single-branch --branch $webtunnel_branch https://gitlab.torproject.org/Gedsh/webtunnel
+pushd webtunnel/
+git checkout -f $webtunnel_commit -b $webtunnel_commit
+popd
 
 git clone https://github.com/Gedsh/Nflog-android
 
@@ -39,7 +65,10 @@ git clone --single-branch --branch $tor_openssl_version https://github.com/opens
 git clone --single-branch --branch $libevent_version https://github.com/libevent/libevent.git
 git clone --single-branch --branch $zstd_version https://github.com/facebook/zstd.git
 git clone --single-branch --branch $xz_version https://git.tukaani.org/xz.git
-git clone --single-branch --branch $tor_version https://gitlab.torproject.org/Gedsh/tor.git
+git clone --single-branch --branch $tor_branch https://gitlab.torproject.org/Gedsh/tor.git
+pushd tor/
+git checkout -f $tor_commit -b $tor_commit
+popd
 popd
 
 pushd ../../PurpleI2PBuildScript/external/
