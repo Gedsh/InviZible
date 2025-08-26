@@ -164,6 +164,12 @@
             android:summary="@string/pref_common_multi_user_summ"
             android:title="@string/pref_common_multi_user" />
         <SwitchPreference
+            android:id="@+id/pref_common_fast_network_switching"
+            android:defaultValue="true"
+            android:key="pref_common_fast_network_switching"
+            android:summary="@string/pref_common_fast_network_switching_summ"
+            android:title="@string/pref_common_fast_network_switching" />
+        <SwitchPreference
             android:id="@+id/pref_common_show_help"
             android:defaultValue="false"
             android:key="pref_common_show_help"

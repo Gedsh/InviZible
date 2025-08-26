@@ -462,6 +462,8 @@
     <string name="proxy_successful_connection">Успешное соединение. Ping %s ms.</string>
     <string name="pref_common_multi_user">Многопользовательская поддержка</string>
     <string name="pref_common_multi_user_summ">Поддержка двойных приложений, MIUI, Island, Shelter и приложений рабочего профиля. Может быть неэффективным в режиме VPN</string>
+    <string name="pref_common_fast_network_switching">Быстрое переключение между сетями</string>
+    <string name="pref_common_fast_network_switching_summ">Удерживать включенными Wi-Fi и мобильные данные для быстрого переключения между сетями</string>
     <string name="dialog_new_tor_default_bridges_available">Доступны новые мосты Tor по-умолчанию. Вы хотите их обновить?</string>
     <string name="pref_common_mitm_categ">Обнаружение MITM атак</string>
     <string name="pref_common_arp_spoofing_detection">Обнаружение ARP-спуфинга</string>

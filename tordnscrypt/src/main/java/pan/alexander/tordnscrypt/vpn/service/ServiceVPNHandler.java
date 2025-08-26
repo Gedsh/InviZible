@@ -71,6 +71,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_AL
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_ROAMING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_ALLOW_WIFI_PREF;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_DETECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAST_NETWORK_SWITCHING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_ENABLED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.VPN_SERVICE_ENABLED;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STOPPED;
@@ -440,7 +441,7 @@ public class ServiceVPNHandler extends Handler {
 
         ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
         Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
-        if (networks.length > 1) {
+        if (networks.length > 1 && defaultSharedPreferences.get().getBoolean(FAST_NETWORK_SWITCHING, true)) {
             serviceVPN.setUnderlyingNetworks(networks);
             for (Network network : networks) {
                 logi("VPN Handler Setting underlying network=" + cm.getNetworkInfo(network));

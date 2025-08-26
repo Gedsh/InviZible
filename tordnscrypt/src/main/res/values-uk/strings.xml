@@ -529,4 +529,6 @@
     <string name="pref_fast_prevent_dns_leak_summ">Блокувати спроби приховати запити DNS. Може викликати проблеми зі з\'єднанням</string>
     <string name="pref_fast_block_lan_with_free_wifi">Блокувати LAN на безкоштовному Wi-Fi</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокувати доступ до локальної мережі, коли виявлено сторінку реєстрації</string>
+    <string name="pref_common_fast_network_switching">Швидке перемикання між мережами</string>
+    <string name="pref_common_fast_network_switching_summ">Утримувати увімкненими Wi-Fi та мобільні дані для швидкого перемикання між мережами</string>
 </resources>

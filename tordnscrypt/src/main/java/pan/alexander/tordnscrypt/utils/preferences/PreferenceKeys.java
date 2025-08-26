@@ -123,6 +123,7 @@ public interface PreferenceKeys {
     String PROXY_USER = "ProxyUserName";
     String PROXY_PASS = "ProxyPass";
     String MULTI_USER_SUPPORT = "pref_common_multi_user";
+    String FAST_NETWORK_SWITCHING = "pref_common_fast_network_switching";
     String REFRESH_RULES = "swRefreshRules";
     String KILL_SWITCH = "swKillSwitch";
     String ALWAYS_ON_VPN = "always_on_vpn";
