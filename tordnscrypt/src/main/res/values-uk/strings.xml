@@ -543,7 +543,7 @@
     <string name="pref_common_use_iptables_app">Використовуйте iptables програми</string>
     <string name="pref_common_use_iptables_device">Використовувати iptables пристрою</string>
     <string name="pref_common_wait_iptables">Зачекайте блокування xtables</string>
-    <string name="pref_common_wait_iptables_summ">Зачекайте, поки буде отримано ексклюзивне блокування iptables, щоб запобігти одночасному зміненню правил iptables.</string>
+    <string name="pref_common_wait_iptables_summ">Зачекайте, поки буде отримано ексклюзивне блокування iptables, щоб запобігти одночасному зміненню правил iptables</string>
     <string name="notification_internet_blocked_message">Інтернет заблоковано через функцію Kill switch. Запустіть Tor, DNSCrypt або I2P, щоб дозволити з’єднання. Або вимкніть функцію Kill switch у загальних налаштуваннях.</string>
     <string name="pref_dnscrypt_http3_summ">Увімкнути підтримку HTTP/3 (DoH3, HTTP через QUIC). Зверніть увагу, що, як і DNSCrypt, але на відміну від інших версій HTTP, тут використовується UDP та (зазвичай) порт 443 замість TCP.</string>
     <string name="pref_dnscrypt_dns64_summ">Активуйте цю опцію, якщо ви перебуваєте в мережі лише з IPv6, і сайти IPv4 стають недоступними. Не вмикайте її інакше, інакше ви взагалі не зможете підключитися до чогось.</string>
