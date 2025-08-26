@@ -64,7 +64,7 @@
     <string name="deny">Deny</string>
     <string name="areYouSure">Are you sure? This action cannot be undone!</string>
     <string name="ask_later">Ask later</string>
-    <string name="empty_string" translatable="false"/>
+    <string name="empty_string" translatable="false"></string>
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="write_file_error">Save file Error!</string>
