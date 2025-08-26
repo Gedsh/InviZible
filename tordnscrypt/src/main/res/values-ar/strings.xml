@@ -145,7 +145,7 @@
     <string name="pref_common_restart_itpd">الرجاء إعادة تشغيل I2P</string>
     <string name="notification_waiting_network">في انتظار الشبكة…</string>
     <string name="pref_common_wait_iptables">انتظر قفل xtables</string>
-    <string name="pref_common_wait_iptables_summ">انتظر حتى يمكن الحصول على قفل iptables الحصري لمنع التعديل المتزامن لقواعد iptables.</string>
+    <string name="pref_common_wait_iptables_summ">انتظر حتى يمكن الحصول على قفل iptables الحصري لمنع التعديل المتزامن لقواعد iptables</string>
     <string name="pref_advanced">للمستخدم المتقدم فقط!</string>
     <string name="pref_common_log_root_commands">حفظ أوامر الجذر للتسجيل</string>
     <string name="notification_text">DNSCrypt، تور، I2P محمية. لا تختبئ.</string>
@@ -549,4 +549,6 @@
     <string name="press_to_edit">اضغط للتعديل.</string>
     <string name="rules">القواعد</string>
     <string name="dns_rule_add_url">أضف URL</string>
+    <string name="pref_common_fast_network_switching">تبديل الشبكة السريع</string>
+    <string name="pref_common_fast_network_switching_summ">أبقِ Wi-Fi وبيانات الجوال قيد التشغيل لتبديل أسرع بين الشبكات</string>
 </resources>
