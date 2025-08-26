@@ -1396,3 +1396,10 @@
 * Updated default Conjure bridges.
 * Fixed ping check for Conjure bridges.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.7**
+* Updated DNSCrypt to version 2.1.13.
+* Updated Tor SnowFlake obfuscator.
+* Added an option to control fast network switching.
+* Updated German, Spanish and Ukrainian translations.
+* Fixes and optimizations.
