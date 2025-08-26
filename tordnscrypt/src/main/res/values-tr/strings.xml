@@ -403,9 +403,9 @@
     <string name="helper_dnscrypt_stopped">Görünüşe göre DNSCrypt, Android sistemi tarafından kapatıldı. İnternet bağlantınız geri yüklendi. Lütfen cihaz ayarlarını kontrol edin!</string>
     <string name="helper_tor_stopped">Görünüşe göre Tor, Android sistemi tarafından kapatıldı. İnternet bağlantınız geri yüklendi. Lütfen cihaz ayarlarını kontrol edin!</string>
     <string name="helper_itpd_stopped">Görünüşe göre I2P, Android sistemi tarafından kapatıldı. Lütfen cihaz ayarlarını kontrol edin!</string>
-    <string name="helper_dnscrypt_no_internet">Görünüşe göre DNSCrypt internete bağlanamıyor. Başka DNSCrypt sunucuları seçmeyi deneyebilirsiniz. Menüden ulaşabilirsiniz: MENÜ -> Hızlı Ayarlar -> DNSCrypt sunucularını seçin</string>
+    <string name="helper_dnscrypt_no_internet">Görünüşe göre DNSCrypt internete bağlanamıyor. Başka DNSCrypt sunucuları seçmeyi deneyebilirsiniz. Menüden ulaşabilirsiniz: MENÜ -&gt; Hızlı Ayarlar -&gt; DNSCrypt sunucularını seçin</string>
     <string name="helper_tor_check_proxy">Socks5 proxy kullanacak şekilde yapılandırdınız, ancak proxy çalışmıyor gibi görünüyor. Lütfen ayarlarınızı kontrol edin!</string>
-    <string name="helper_tor_use_bridges">Görünüşe göre Tor internete bağlanamıyor. ISS, Tor bağlantılarını engelliyor olabilir. Tor Köprülerini kullanmayı deneyebilirsiniz. Menüden ulaşabilirsiniz: MENÜ -> Hızlı Ayarlar -> Köprüler</string>
+    <string name="helper_tor_use_bridges">Görünüşe göre Tor internete bağlanamıyor. ISS, Tor bağlantılarını engelliyor olabilir. Tor Köprülerini kullanmayı deneyebilirsiniz. Menüden ulaşabilirsiniz: MENÜ -&gt; Hızlı Ayarlar -&gt; Köprüler</string>
     <string name="action_mode_child_lock">Çocuk Kilidi</string>
     <string name="action_mode_dialog_message_lock">Bu uygulamanın kontrolünü kilitleyebilirsiniz. Lütfen şifrenizi girin veya daha önce kullandığınız şifreyi kullanın.</string>
     <string name="action_mode_dialog_message_unlock">Lütfen şifrenizi girin.</string>
