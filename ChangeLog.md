@@ -1403,3 +1403,9 @@
 * Added an option to control fast network switching.
 * Updated German, Spanish and Ukrainian translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.5.8**
+* Updated DNSCrypt to version 2.1.14.
+* Updated Purple I2P to version 2.58.0.
+* Updated Turkish, Arabic, Spanish and Greek translations.
+* Fixes and optimizations.
