@@ -580,4 +580,6 @@
     <string name="pref_fast_prevent_dns_leak_summ">مسدود کردن تلاش‌ها برای مخفی کردن درخواست‌های DNS. ممکن است مشکلاتی در اتصال ایجاد کند</string>
     <string name="pref_fast_block_lan_with_free_wifi">مسدود کردن شبکه محلی در وای‌فای عمومی</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">رد‌کردن اتصال شبکه محلی وقتی کپتیو پورتال شناسایی می‌شود</string>
+    <string name="pref_common_fast_network_switching">تغییر شبکه سریع</string>
+    <string name="pref_common_fast_network_switching_summ">وای فای و اینترنت موبایل رو برای تغییر شبکه سریع تر روشن نگه دارید</string>
 </resources>
