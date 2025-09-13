@@ -504,7 +504,7 @@
     <string name="pref_common_use_iptables_app">"Usa iptables dell'applicazione"</string>
     <string name="pref_common_use_iptables_device">"Usa iptables del dispositivo"</string>
     <string name="pref_common_wait_iptables">"Attendo chiusura xtables"</string>
-    <string name="pref_common_wait_iptables_summ">Aspetta fino a quando non viene ottenuta la chiusura esclusiva degli iptables per evitare la modifica concorrente delle regole iptables.</string>
+    <string name="pref_common_wait_iptables_summ">Aspetta fino a quando non viene ottenuta la chiusura esclusiva degli iptables per evitare la modifica concorrente delle regole iptables</string>
     <string name="connectivity_check">"Controllo connettività Internet"</string>
     <string name="pref_fast_logs">"Registri in tempo reale"</string>
     <string name="pref_fast_logs_summ">"Mostra i registri di connettività delle app nella scheda DNS"</string>
@@ -559,4 +559,6 @@
     <string name="pull_to_refresh">↓ Trascina per aggiornare ↓</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Nega la connessione alla LAN quando viene rilevato un Captive Portal</string>
     <string name="pref_fast_block_lan_with_free_wifi">Blocca la LAN sulle reti Wi-Fi pubbliche</string>
+    <string name="pref_common_fast_network_switching">Cambio rete rapido</string>
+    <string name="pref_common_fast_network_switching_summ">Mantieni il Wi-Fi e la rete mobile arrivi per un cambio più rapidi tra le due reti</string>
 </resources>
