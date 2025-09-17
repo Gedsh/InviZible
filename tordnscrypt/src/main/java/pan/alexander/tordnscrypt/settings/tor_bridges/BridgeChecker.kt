@@ -83,7 +83,7 @@ class BridgeChecker @Inject constructor() {
 
     fun getWebTunnelBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
-        val pattern = Pattern.compile("^webtunnel +$bridgeBase +url=http(s)?://[\\w.+/-]+(?: servername(s)?=[\\w.+-,]+)?(?: ver=[0-9.]+)?")
+        val pattern = Pattern.compile("^webtunnel +$bridgeBase +url=http(s)?://[\\w.+/-:]+(?: servername(s)?=[\\w.+-,]+)?(?: ver=[0-9.]+)?")
         return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
     }
 

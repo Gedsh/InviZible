@@ -51,7 +51,7 @@ class BridgePingHelper @Inject constructor(
 ) {
 
     private val webTunnelBridgePattern by lazy {
-        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.-]+)(?:/[\\w.-]+)*/?")
+        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.:-]+)(/[\\w.-]+)*/?")
     }
 
     private val meekLiteBridgePattern by lazy {
@@ -77,13 +77,16 @@ class BridgePingHelper @Inject constructor(
                 val matcher = webTunnelBridgePattern.matcher(bridge.bridge)
                 if (matcher.find()) {
                     val ipWithPort = matcher.group(1) ?: continue
-                    val domain = matcher.group(2) ?: continue
-                    val port = if (domain.startsWith("https")) {
+                    val url = matcher.group(2) ?: continue
+                    val domain = url.replace(Regex("http(s)?://"), "")
+                    val port = if (domain.contains(":")) {
+                        domain.substringAfter(":").toIntOrNull() ?: 443
+                    } else if (url.startsWith("https")) {
                         443
                     } else {
                         80
                     }
-                    val ip = getWorkingIp(domain.replace(Regex("http(s)?://"), ""), port)
+                    val ip = getWorkingIp(domain.replace(Regex(":\\d+"), ""), port)
 
                     ensureActive()
                     if (ip.isEmpty()) {
