@@ -9,7 +9,7 @@ dnscryptproxy_branch=master
 dnscryptproxy_commit=634168b3abe287b761d89df8ae3bab7c3d1539b4
 
 snowflake_branch=feat/check-dns-ip
-snowflake_commit=b332ab53ed7c968f23ff10cfee4c53518e137483
+snowflake_commit=0bdc069f2e06fb9f61c040b02af3a65b1a40db38
 
 libzmq_version=v4.3.5
 
