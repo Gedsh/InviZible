@@ -20,8 +20,8 @@ webtunnel_branch=prod
 webtunnel_commit=738ccbd3d15c2144f8d4c5dbddbbde6a687ca104
 
 tor_branch=prod
-tor_commit=dc679c743f3dc2c7d3d0e3d5eb5276cbbf32caa8
-tor_openssl_version=openssl-3.5.1
+tor_commit=6076a44be860ff1654f2cdae6caccf0ec97acf68
+tor_openssl_version=openssl-3.5.3
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
