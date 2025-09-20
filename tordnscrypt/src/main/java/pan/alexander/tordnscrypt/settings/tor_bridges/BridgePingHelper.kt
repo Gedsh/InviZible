@@ -86,7 +86,7 @@ class BridgePingHelper @Inject constructor(
                     } else {
                         80
                     }
-                    val ip = getWorkingIp(domain.replace(Regex(":\\d+"), ""), port)
+                    val ip = getWorkingIp(domain.removeSuffix(":$port"), port)
 
                     ensureActive()
                     if (ip.isEmpty()) {
@@ -284,7 +284,7 @@ class BridgePingHelper @Inject constructor(
                 }
             }.awaitAll()
                 .filter { it.isNotEmpty() }
-                .minByOrNull { it.isIPv6Address() } ?: ""
+                .minByOrNull { it.isIPv6Address() } ?: ips.firstOrNull() ?: ""
         }
     }
 
