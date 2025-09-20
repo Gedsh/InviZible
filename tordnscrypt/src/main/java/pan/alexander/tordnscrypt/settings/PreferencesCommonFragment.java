@@ -43,6 +43,7 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -232,7 +233,8 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         if (otherCategory != null && fastNetworkSwitching != null) {
             if (modulesStatus.getMode() == ROOT_MODE
                     || modulesStatus.getMode() == PROXY_MODE
-                    || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    || Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                    || Build.VERSION.SDK_INT >= 36 && Build.BRAND.toLowerCase(Locale.ROOT).equals("google")) {
                 otherCategory.removePreference(fastNetworkSwitching);
             } else {
                 fastNetworkSwitching.setOnPreferenceChangeListener(this);
