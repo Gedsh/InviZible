@@ -49,7 +49,7 @@ abstract class AbstractLogParser {
                     encodedLine = "<font color=#ffa500>$encodedLine</font>"
                 } else if (encodedLineLowerCase.contains("[warning]")) {
                     encodedLine = "<font color=#ffa500>$encodedLine</font>"
-                } else if (encodedLineLowerCase.contains("[error]") || encodedLineLowerCase.contains("/error")) {
+                } else if (encodedLineLowerCase.contains("[error]") || encodedLineLowerCase.contains("[err]") || encodedLineLowerCase.contains("/error")) {
                     encodedLine = "<font color=#f08080>$encodedLine</font>"
                 } else if (encodedLineLowerCase.contains("[critical]")) {
                     encodedLine = "<font color=#990000>$encodedLine</font>"
