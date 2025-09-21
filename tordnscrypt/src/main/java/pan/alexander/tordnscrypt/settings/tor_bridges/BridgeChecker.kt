@@ -20,6 +20,7 @@
 package pan.alexander.tordnscrypt.settings.tor_bridges
 
 import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
+import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX_NO_BOUNDS
 import pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS
 import pan.alexander.tordnscrypt.utils.Constants.URL_REGEX
 import java.util.regex.Pattern
@@ -36,6 +37,9 @@ class BridgeChecker @Inject constructor() {
     private val conjureAmpCacheRegex by lazy { Regex("ampcache=$URL_REGEX") }
     private val conjureTransportRegex by lazy { Regex("transport=(min|prefix|dtls)") }
     private val conjureRegistrarRegex by lazy { Regex("registrar=(dns|ampcache)") }
+    private val webTunnelServerNameRegex by lazy { Regex("servername=$HOST_NAME_REGEX") }
+    private val webTunnelAddrRegex by lazy { Regex("addr=($IPv4_REGEX_NO_BOUNDS:\\d+)|$IPv6_REGEX_NO_BOUNDS:\\d+") }
+    private val webTunnelVersionRegex by lazy { Regex("ver=[0-9.]+") }
 
     fun getObfs4BridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
@@ -57,34 +61,44 @@ class BridgeChecker @Inject constructor() {
 
     fun getMeekLiteBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
-        val pattern = Pattern.compile("^meek_lite +$bridgeBase +url=https://[\\w.+/-]+ +front=[\\w./-]+( +utls=\\w+)?")
+        val pattern =
+            Pattern.compile("^meek_lite +$bridgeBase +url=https://[\\w.+/-]+ +front=[\\w./-]+( +utls=\\w+)?")
         return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
     }
 
     fun getSnowFlakeBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
-        val pattern = Pattern.compile("^snowflake +$bridgeBase(?: +fingerprint=\\w+)?(?: +url=https://[\\w.+/-]+)?(?: +ampcache=https://[\\w.+/-]+)?(?: +front(s)?=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w.+/-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?")
+        val pattern =
+            Pattern.compile("^snowflake +$bridgeBase(?: +fingerprint=\\w+)?(?: +url=https://[\\w.+/-]+)?(?: +ampcache=https://[\\w.+/-]+)?(?: +front(s)?=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w.+/-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?")
         return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
     }
 
     fun getConjureBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
         val pattern = Pattern.compile("^conjure +$bridgeBase .+")
-        return PreferencesTorBridges.Checkable {
-            bridge -> pattern.matcher(bridge).matches()
-                && bridge.contains(urlRegex)
-                && (!bridge.contains("front=") || bridge.contains(frontRegex))
-                && (!bridge.contains("fronts=") || bridge.contains(frontsRegex))
-                && (!bridge.contains("transport=") || bridge.contains(conjureTransportRegex))
-                && (!bridge.contains("registrar=") || bridge.contains(conjureRegistrarRegex))
-                &&(!bridge.contains("registrar=ampcache") || bridge.contains(conjureAmpCacheRegex))
+        return PreferencesTorBridges.Checkable { bridge ->
+            pattern.matcher(bridge).matches()
+                    && bridge.contains(urlRegex)
+                    && (!bridge.contains("front=") || bridge.contains(frontRegex))
+                    && (!bridge.contains("fronts=") || bridge.contains(frontsRegex))
+                    && (!bridge.contains("transport=") || bridge.contains(conjureTransportRegex))
+                    && (!bridge.contains("registrar=") || bridge.contains(conjureRegistrarRegex))
+                    && (!bridge.contains("registrar=ampcache") || bridge.contains(
+                conjureAmpCacheRegex
+            ))
         }
     }
 
     fun getWebTunnelBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
-        val pattern = Pattern.compile("^webtunnel +$bridgeBase +url=http(s)?://[\\w.+/-:]+(?: servername(s)?=[\\w.+-,]+)?(?: ver=[0-9.]+)?")
-        return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
+        val pattern = Pattern.compile("^webtunnel +$bridgeBase .+")
+        return PreferencesTorBridges.Checkable { bridge ->
+            pattern.matcher(bridge).matches()
+                    && bridge.contains(urlRegex)
+                    && (!bridge.contains("servername=") || bridge.contains(webTunnelServerNameRegex))
+                    && (!bridge.contains("addr=") || bridge.contains(webTunnelAddrRegex))
+                    && (!bridge.contains("ver=") || bridge.contains(webTunnelVersionRegex))
+        }
     }
 
     fun getOtherBridgeChecker(input: String): PreferencesTorBridges.Checkable {
