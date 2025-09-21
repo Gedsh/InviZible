@@ -213,7 +213,7 @@
     <string name="pref_tor_exit_nodes_summ">Lista de países a usar como nodo de salida cuando Tor deriva el tráfico fuera de su red.</string>
     <string name="pref_tor_exclude_nodes_summ">Lista de países a evitar al construir circuitos.</string>
     <string name="pref_tor_entry_nodes_summ">Lista de países a usar como primer salto al construir circuitos.</string>
-    <string name="pref_tor_strict_nodes_summ">El parámetro ExcludeNodes se tratará como único requisito obligatorio para la construcción de circuitos, incluso si resulta en pérdida de la conectividad.</string>
+    <string name="pref_tor_strict_nodes_summ">El parámetro ExcludeNodes se tratará como único requisito obligatorio para la construcción de circuitos, incluso si resultase en pérdida de la conectividad.</string>
     <string name="pref_tor_fascist_firewall_summ">Tor usará exclusivamente conexiones a puertos OR en los valores 80 y 443 (por defecto), que normalmente se permiten en cortafuegos restrictivos.</string>
     <string name="pref_tor_new_circuit_period_summ">Cada NUM segundos se evalúa si se debe construir un circuito nuevo.</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">Reutiliza circuitos usados por primera vez hace un máximo de NUM segundos, pero nunca añade una conexión nueva a un circuito viejo.</string>
@@ -221,11 +221,11 @@
     <string name="pref_tor_enable_SOCKS_proxy">Proxy SOCKS</string>
     <string name="pref_tor_SOCKS_port_summ">Puerto de escucha del proxy SOCKS5.</string>
     <string name="pref_tor_enable_HTTPTunnel_proxy">Túnel HTTP</string>
-    <string name="pref_tor_HTTPTunnel_port_summ">"Indica el puerto del proxy HTTP (el proxy funciona exclusivamente con la directiva HTTP CONNECT)."</string>
+    <string name="pref_tor_HTTPTunnel_port_summ">Puerto de escucha del proxy HTTP. Se usa el protocolo HTTP CONNECT en vez de SOCKS.</string>
     <string name="pref_tor_enable_transparent_proxy">Proxy transparente</string>
-    <string name="pref_tor_trans_port_summ">"Indica el puerto donde abrir el proxy transparente."</string>
+    <string name="pref_tor_trans_port_summ">Puerto de escucha del proxy transparente.</string>
     <string name="pref_tor_enable_DNS">Resolver DNS</string>
-    <string name="pref_tor_DNS_port_summ">"Indica el puerto donde Tor abrirá un servidor de escucha para resolución de nombres (UDP), realizando dichas peticiones de forma anónima."</string>
+    <string name="pref_tor_DNS_port_summ">Puerto donde Tor abrirá un servidor de escucha para resolución de nombres (UDP), realizando dichas peticiones de forma anónima.</string>
     <string name="pref_tor_client_use_IPv4_summ">Determina el uso de IPv4 para conectar al directorio de servidores y nodos de entrada.</string>
     <string name="pref_tor_client_use_IPv6_summ">Determina el uso de IPv6 para conectar al directorio de servidores y nodos de entrada.</string>
     <string name="pref_tor_not_exist">"¡Ese ajuste no existe en .torrc!"</string>
