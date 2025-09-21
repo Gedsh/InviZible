@@ -78,22 +78,30 @@ class BridgePingHelper @Inject constructor(
                 if (matcher.find()) {
                     val ipWithPort = matcher.group(1) ?: continue
                     val url = matcher.group(2) ?: continue
-                    val domain = url.replace(Regex("http(s)?://"), "")
-                    val port = if (domain.contains(":")) {
-                        domain.substringAfter(":").toIntOrNull() ?: 443
-                    } else if (url.startsWith("https")) {
-                        443
+                    val addr = bridge.bridge.split(" ").firstOrNull() {
+                        it.startsWith("addr=")
+                    }?.removePrefix("addr=")
+                    val address = if (addr?.isEmpty() != false) {
+                        val domain = url.replace(Regex("http(s)?://"), "")
+                        val port = if (domain.contains(":")) {
+                            domain.substringAfter(":").toIntOrNull() ?: 443
+                        } else if (url.startsWith("https")) {
+                            443
+                        } else {
+                            80
+                        }
+                        val ip = getWorkingIp(domain.removeSuffix(":$port"), port)
+
+                        ensureActive()
+                        if (ip.isEmpty()) {
+                            continue
+                        }
+
+                        getAddress(ip, port)
                     } else {
-                        80
-                    }
-                    val ip = getWorkingIp(domain.removeSuffix(":$port"), port)
-
-                    ensureActive()
-                    if (ip.isEmpty()) {
-                        continue
+                        addr
                     }
 
-                    val address = getAddress(ip, port)
                     val bridgeLine = bridge.bridge.replace(ipWithPort, address)
                     bridgesToMeasure.add(bridgeLine)
                     bridgesMatcherMap[bridgeLine.hashCode()] =
