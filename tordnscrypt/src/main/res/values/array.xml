@@ -568,13 +568,13 @@
         <item>X</item>
     </string-array>
     <string-array name="default_dnscrypt_servers_gp">
-        <item>sth-doh-se-ipv6</item>
+        <item>dns.digitalsize.net-ipv6</item>
         <item>njalla-doh</item>
         <item>mullvad-doh</item>
         <item>dns.digitale-gesellschaft.ch</item>
         <item>plan9dns-nj-doh-ipv6</item>
         <item>libredns</item>
-        <item>dnswarden-uncensor-dc-swiss</item>
+        <item>scaleway-ams</item>
         <item>scaleway-ams-ipv6</item>
         <item>scaleway-fr</item>
     </string-array>
