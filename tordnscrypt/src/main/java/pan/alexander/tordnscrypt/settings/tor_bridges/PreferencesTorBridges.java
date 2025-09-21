@@ -438,14 +438,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + conjurePath + saveLogsString;
-                } else if (currentBridgesType.equals(webtunnel)) {
+                }/* else if (currentBridgesType.equals(webtunnel)) {
                     String saveLogsString = "";
                     if (pathVars.get().getAppVersion().equals("beta")) {
                         saveLogsString = " -log " + appDataDir + "/logs/WebTunnel.log";
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + webTunnelPath + saveLogsString;
-                } else {
+                }*/ else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
                 }
@@ -497,7 +497,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             String urlPart = matcher.group(1);
             line = matcher.replaceFirst(
                     urlPart
-                            + " servernames="
+                            + " servername="
                             + getFakeSniHosts(line.length())
             );
         }
@@ -1125,7 +1125,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         if (!line.contains("#") && line.contains("Bridge ")) {
                             line = line.replace("Bridge ", "");
                             if (line.startsWith("webtunnel") && isFakeSniEnabled()) {
-                                line = line.replaceAll("\\s*servernames=\\S*", "");
+                                line = line.replaceAll("\\s*servername=\\S*", "");
                             }
                             bridgesInUse.add(line.trim());
                         }

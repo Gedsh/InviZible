@@ -81,6 +81,7 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 addDNSCryptOdohServers()
                 updateStunServers()
                 setPreventDnsLeaks(currentVersionSaved)
+                useObfs4ProxyForWebTunnel()
 
                 if (dnsCryptConfigPatches.isNotEmpty()) {
                     configUtil.patchDNSCryptConfig(dnsCryptConfigPatches)
@@ -330,6 +331,16 @@ class Patch(private val context: Context, private val pathVars: PathVars) {
                 defaultPreferences.edit().putBoolean(PREVENT_DNS_LEAKS, true).apply()
             }
         }
+    }
+
+    private fun useObfs4ProxyForWebTunnel() {
+        torConfigPatches.add(
+            AlterConfig.ReplaceLine(
+                "",
+                Regex("^ClientTransportPlugin webtunnel exec .+/libwebtunnel.so$"),
+                "ClientTransportPlugin webtunnel exec ${pathVars.obfsPath}"
+            )
+        )
     }
 
 }
