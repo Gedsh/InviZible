@@ -270,7 +270,7 @@ public class ModulesStarterHelper {
                 String fakeHosts = getFakeSniHosts();
                 if (defaultPreferences.get().getBoolean(FAKE_SNI, false)
                         && !fakeHosts.isEmpty() && !webTunnelUsed) {
-                    torCmdString += " -fake-hosts " + fakeHosts;
+                    torCmdString += " --fake-hosts " + fakeHosts;
                 }
                 String waitString = busyboxPath + "sleep 3";
                 String checkIfModuleRunning = busyboxPath + "pgrep -l /libtor.so";
@@ -313,7 +313,7 @@ public class ModulesStarterHelper {
                 String fakeHosts = getFakeSniHosts();
                 if (defaultPreferences.get().getBoolean(FAKE_SNI, false)
                         && !fakeHosts.isEmpty() && !webTunnelUsed) {
-                    torCmdString += " -fake-hosts " + fakeHosts;
+                    torCmdString += " --fake-hosts " + fakeHosts;
                 }
                 preferenceRepository.get().setBoolPreference("TorStartedWithRoot", false);
 
@@ -551,7 +551,7 @@ public class ModulesStarterHelper {
                         line = line.replaceAll("/.+?/libconjure.so", pathVars.getConjurePath());
                         lines.set(i, line);
                     } else if (line.contains("ClientTransportPlugin ") && line.contains("/libwebtunnel.so")) {
-                        line = line.replaceAll("/.+?/libwebtunnel.so", pathVars.getWebTunnelPath());
+                        line = line.replaceAll("/.+?/libwebtunnel.so", pathVars.getObfsPath());
                         lines.set(i, line);
                     }
                 }
