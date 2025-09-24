@@ -1,0 +1,2 @@
+**InviZible Pro beta 2.6.0**
+* Fixes related to SNI spoofing for vanilla bridges.

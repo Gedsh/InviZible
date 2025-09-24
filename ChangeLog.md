@@ -1420,3 +1420,6 @@
 * Ensured compatibility with 16KB memory page size.
 * Updated Persian, Italian and Spanish translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.0**
+* Fixes related to SNI spoofing for vanilla bridges.
