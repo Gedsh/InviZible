@@ -715,7 +715,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
                     String urlPart = matcher.group(1);
                     String sni = Utils.prepareFakeSniHosts(snis, getDefaultSni(), line.length());
                     if (!sni.isEmpty()) {
-                        String newLine = matcher.replaceFirst(urlPart + " servernames=" + sni);
+                        String newLine = matcher.replaceFirst(urlPart + " servername=" + sni);
                         torConf.set(i, newLine);
                         linesModified = true;
                     }
@@ -757,7 +757,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     }
 
     private void tryRewriteTorConfWebTunnelSNIs(Set<String> snis) {
-        Pattern pattern = Pattern.compile("( servernames=\\S+)");
+        Pattern pattern = Pattern.compile("( servername(s)?=\\S+)");
         List<String> torConf = FileManager.readTextFileSynchronous(
                 requireContext(),
                 pathVars.get().getAppDataDir() + "/app_data/tor/tor.conf"
@@ -779,7 +779,7 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
                                 line.replace(matcher.group(), "").length()
                         );
                         if (!sni.isEmpty()) {
-                            newLine = matcher.replaceFirst(" servernames=" + sni);
+                            newLine = matcher.replaceFirst(" servername=" + sni);
                         }
                     } else {
                         newLine = matcher.replaceFirst("");
