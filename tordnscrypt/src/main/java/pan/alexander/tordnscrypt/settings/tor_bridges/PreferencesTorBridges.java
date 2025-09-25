@@ -816,6 +816,7 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else {
                 bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\[\\]:+=/. ,-]", " ")
                         .replaceAll(" +", " ")
+                        .replaceAll("Bridge ", "")
                         .split(inputBridgesType + " ");
             }
 
@@ -1073,6 +1074,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             if (!obfsType.equals(vanilla) && line.contains(obfsType.toString())) {
                 if (obfsType.equals(snowflake)) {
                     line = snowflakeConfigurator.get().getConfiguration(line);
+                } else if (obfsType.equals(webtunnel) && isFakeSniEnabled()) {
+                    line = line.replaceAll("\\s*servername=\\S*", "");
                 }
                 obfsBridge = new ObfsBridge(line, obfsType, false);
                 if (bridgesInUse.contains(line)) {
