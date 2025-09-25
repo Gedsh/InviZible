@@ -91,13 +91,19 @@ class BridgeChecker @Inject constructor() {
 
     fun getWebTunnelBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
-        val pattern = Pattern.compile("^webtunnel +$bridgeBase .+")
+        val pattern = Pattern.compile("^webtunnel +$bridgeBase ")
         return PreferencesTorBridges.Checkable { bridge ->
-            pattern.matcher(bridge).matches()
+            val matcher = pattern.matcher(bridge)
+            matcher.find()
                     && bridge.contains(urlRegex)
                     && (!bridge.contains("servername=") || bridge.contains(webTunnelServerNameRegex))
                     && (!bridge.contains("addr=") || bridge.contains(webTunnelAddrRegex))
                     && (!bridge.contains("ver=") || bridge.contains(webTunnelVersionRegex))
+                    && (
+                    !bridge.replace(matcher.group(), "")
+                        .split(" ")
+                        .any { !it.contains("=") }
+                    )
         }
     }
 
