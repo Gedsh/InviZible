@@ -1423,3 +1423,9 @@
 
 **InviZible Pro beta 2.6.0**
 * Fixes related to SNI spoofing for vanilla bridges.
+
+**InviZible Pro beta 2.6.1**
+* Fixed changing SNI from the Fast settings.
+* Fixed syntax checking for webtunnel bridges.
+* Fixed adding a bunch of bridges that are prepended with "bridge" word.
+* Fixed DNSCrypt rules counter.
