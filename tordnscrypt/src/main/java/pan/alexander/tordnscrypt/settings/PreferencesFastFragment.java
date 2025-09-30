@@ -48,6 +48,8 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -64,6 +66,9 @@ import pan.alexander.tordnscrypt.modules.ModulesRestarter;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.nflog.NflogManager;
 import pan.alexander.tordnscrypt.utils.ThemeUtils;
+import pan.alexander.tordnscrypt.utils.Utils;
+import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
+import pan.alexander.tordnscrypt.utils.filemanager.FileManager;
 import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
 import pan.alexander.tordnscrypt.views.SwitchPlusClickPreference;
 
@@ -117,6 +122,8 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     public Lazy<FakeSniInputDialogFragment> fakeSniInputDialogFragment;
     @Inject
     public Lazy<UpdateIPsManager> updateIPsManager;
+    @Inject
+    public CoroutineExecutor executor;
 
     private final ModulesStatus modulesStatus = ModulesStatus.getInstance();
 
@@ -462,10 +469,11 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
 
     @Override
     public void onCheckedChanged(SwitchCompat buttonView, boolean isChecked) {
-        boolean torRunning = ModulesAux.isTorSavedStateRunning();
-        if (torRunning) {
-            ModulesRestarter.restartTor(getContext());
-            modulesStatus.setIptablesRulesUpdateRequested(getContext(), true);
+        if (isChecked) {
+            Set<String> sni = preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS);
+            addTorConfWebTunnelSNIs(sni);
+        } else {
+            clearTorConfWebTunnelSNIs();
         }
     }
 
@@ -672,8 +680,139 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
             fakeSni.setSummary(TextUtils.join(", ", sni));
         }
 
+        boolean fakeSniEnabled = defaultPreferences.get().getBoolean(FAKE_SNI, false);
+        if (fakeSniEnabled) {
+            rewriteTorConfWebTunnelSNIs(sni);
+        }
+    }
+
+    private void addTorConfWebTunnelSNIs(Set<String> snis) {
+        executor.submit("PreferencesFastFragment addTorConfWebTunnelSNIs", () -> {
+            try {
+                tryAddTorConfWebTunnelSNIs(snis);
+            } catch (Exception e) {
+                loge("PreferencesFastFragment addTorConfWebTunnelSNIs", e);
+            }
+            return null;
+        });
+    }
+
+    private void tryAddTorConfWebTunnelSNIs(Set<String> snis) {
+        Pattern pattern = Pattern.compile("(url=\\S+)");
+        List<String> torConf = FileManager.readTextFileSynchronous(
+                requireContext(),
+                pathVars.get().getAppDataDir() + "/app_data/tor/tor.conf"
+        );
+        boolean bridgesActive = false;
+        boolean linesModified = false;
+        for (int i = 0; i < torConf.size(); i++) {
+            String line = torConf.get(i);
+            if (line.contains("UseBridges 1")) {
+                bridgesActive = true;
+            } else if (bridgesActive && line.startsWith("Bridge webtunnel")) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    String urlPart = matcher.group(1);
+                    String sni = Utils.prepareFakeSniHosts(snis, getDefaultSni(), line.length());
+                    if (!sni.isEmpty()) {
+                        String newLine = matcher.replaceFirst(urlPart + " servername=" + sni);
+                        torConf.set(i, newLine);
+                        linesModified = true;
+                    }
+                }
+            }
+        }
+
+        if (linesModified) {
+            FileManager.writeTextFileSynchronous(
+                    requireContext(),
+                    pathVars.get().getAppDataDir() + "/app_data/tor/tor.conf",
+                    torConf
+            );
+        }
+
+        restartTorIfNeeded();
+    }
+
+    private void clearTorConfWebTunnelSNIs() {
+        executor.submit("PreferencesFastFragment clearTorConfWebTunnelSNIs", () -> {
+            try {
+                tryRewriteTorConfWebTunnelSNIs(null);
+            } catch (Exception e) {
+                loge("PreferencesFastFragment clearTorConfWebTunnelSNIs", e);
+            }
+            return null;
+        });
+    }
+
+    private void rewriteTorConfWebTunnelSNIs(Set<String> snis) {
+        executor.submit("PreferencesFastFragment rewriteTorConfWebTunnelSNIs", () -> {
+            try {
+                tryRewriteTorConfWebTunnelSNIs(snis);
+            } catch (Exception e) {
+                loge("PreferencesFastFragment rewriteTorConfWebTunnelSNIs", e);
+            }
+            return null;
+        });
+    }
+
+    private void tryRewriteTorConfWebTunnelSNIs(Set<String> snis) {
+        Pattern pattern = Pattern.compile("( servername(s)?=\\S+)");
+        List<String> torConf = FileManager.readTextFileSynchronous(
+                requireContext(),
+                pathVars.get().getAppDataDir() + "/app_data/tor/tor.conf"
+        );
+        boolean bridgesActive = false;
+        boolean linesModified = false;
+        for (int i = 0; i < torConf.size(); i++) {
+            String line = torConf.get(i);
+            if (line.contains("UseBridges 1")) {
+                bridgesActive = true;
+            } else if (bridgesActive && line.startsWith("Bridge webtunnel")) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    String newLine = line;
+                    if (snis != null && !snis.isEmpty()) {
+                        String sni = Utils.prepareFakeSniHosts(
+                                snis,
+                                getDefaultSni(),
+                                line.replace(matcher.group(), "").length()
+                        );
+                        if (!sni.isEmpty()) {
+                            newLine = matcher.replaceFirst(" servername=" + sni);
+                        }
+                    } else {
+                        newLine = matcher.replaceFirst("");
+                    }
+
+                    if (!newLine.equals(line)) {
+                        torConf.set(i, newLine);
+                        linesModified = true;
+                    }
+                }
+            }
+        }
+
+        if (linesModified) {
+            FileManager.writeTextFileSynchronous(
+                    requireContext(),
+                    pathVars.get().getAppDataDir() + "/app_data/tor/tor.conf",
+                    torConf
+            );
+        }
+
+        restartTorIfNeeded();
+    }
+
+    private List<String> getDefaultSni() {
+        return Arrays.asList(
+                requireContext().getResources().getStringArray(R.array.default_fake_sni)
+        );
+    }
+
+    private void restartTorIfNeeded() {
         boolean torRunning = ModulesAux.isTorSavedStateRunning();
-        if (torRunning && defaultPreferences.get().getBoolean(FAKE_SNI, false)) {
+        if (torRunning) {
             ModulesRestarter.restartTor(getContext());
             modulesStatus.setIptablesRulesUpdateRequested(getContext(), true);
         }

@@ -568,13 +568,13 @@
         <item>X</item>
     </string-array>
     <string-array name="default_dnscrypt_servers_gp">
-        <item>sth-doh-se-ipv6</item>
+        <item>dns.digitalsize.net-ipv6</item>
         <item>njalla-doh</item>
         <item>mullvad-doh</item>
         <item>dns.digitale-gesellschaft.ch</item>
         <item>plan9dns-nj-doh-ipv6</item>
         <item>libredns</item>
-        <item>dnswarden-uncensor-dc-swiss</item>
+        <item>scaleway-ams</item>
         <item>scaleway-ams-ipv6</item>
         <item>scaleway-fr</item>
     </string-array>
@@ -591,7 +591,6 @@
         <item>http://stats.i2p/cgi-bin/newhosts.txt</item>
         <item>http://i2p-projekt.i2p/hosts.txt</item>
         <item>http://notbob.i2p/hosts-all.txt</item>
-        <item>http://rus.i2p/hosts.txt</item>
     </string-array>
     <string-array name="contains_own_tor">
         <item>org.torproject.torbrowser_alpha</item>

@@ -146,6 +146,16 @@ class InstalledApplicationsManager private constructor(
             val multiUserAppsMap = hashMapOf<Int, ApplicationData>()
 
             installedApps.forEach { applicationInfo ->
+
+                val hasInternetPermission = isAppUseInternet(packageManager, applicationInfo)
+                val installed = isAppInstalled(applicationInfo)
+                val stopped = isAppStopped(applicationInfo)
+                val archived = !installed && stopped
+
+                if (isAppContainsResourcesOnly(applicationInfo) && !hasInternetPermission) {
+                    return@forEach
+                }
+
                 var appDataSaved = userAppsMap[applicationInfo.uid]
 
                 //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
@@ -182,19 +192,20 @@ class InstalledApplicationsManager private constructor(
                     }
 
                     val system = isAppSystem(applicationInfo)
-                    val useInternet = isAppUseInternet(packageManager, applicationInfo)
+                    val useInternet = hasInternetPermission
 
                     appDataSaved = ApplicationData(
-                        name,
-                        packageName,
-                        uid,
-                        icon,
-                        system,
-                        useInternet,
-                        activeApps.contains(uid.toString())
+                        name = name,
+                        pack = packageName,
+                        uid = uid,
+                        icon = icon,
+                        system = system,
+                        hasInternetPermission = useInternet,
+                        active = activeApps.contains(uid.toString()),
+                        archived = archived
                     )
 
-                    if (isAppInstalled(applicationInfo) || isAppStopped(applicationInfo)) {
+                    if (installed || stopped) {
                         appDataSaved.let {
                             userAppsMap[uid] = it
                             updateDisplayedList(it)
@@ -203,8 +214,7 @@ class InstalledApplicationsManager private constructor(
                 } else {
 
                     val system = isAppSystem(applicationInfo) || appDataSaved.system
-                    val useInternet = isAppUseInternet(packageManager, applicationInfo)
-                            || appDataSaved.hasInternetPermission
+                    val useInternet = hasInternetPermission || appDataSaved.hasInternetPermission
                     val pack = if (packageName.length < appDataSaved.pack.length) {
                         packageName
                     } else {
@@ -220,13 +230,15 @@ class InstalledApplicationsManager private constructor(
                         val iconSaved = appDataSaved.icon
 
                         appDataSaved = ApplicationData(
-                            name,
-                            pack,
-                            uid,
-                            icon ?: iconSaved,
-                            system,
-                            useInternet,
-                            activeApps.contains(uid.toString())
+                            name = name,
+                            pack = pack,
+                            uid = uid,
+                            icon = icon ?: iconSaved,
+                            system =system,
+                            hasInternetPermission =useInternet,
+                            active = activeApps.contains(uid.toString()),
+                            archived = appDataSaved.archived,
+                            user = appDataSaved.user
                         )
 
                         appDataSaved.addAllNames(namesSaved)
@@ -271,7 +283,9 @@ class InstalledApplicationsManager private constructor(
                                     applicationData.icon ?: applicationDataSaved.icon,
                                     system,
                                     useInternet,
-                                    activeApps.contains(uid.toString())
+                                    activeApps.contains(uid.toString()),
+                                    archived = appDataSaved.archived,
+                                    user = appDataSaved.user
                                 )
 
                                 appData.addAllNames(applicationData.names)
@@ -370,6 +384,9 @@ class InstalledApplicationsManager private constructor(
     private fun isAppStopped(applicationInfo: ApplicationInfo) =
         applicationInfo.flags and ApplicationInfo.FLAG_STOPPED != 0
 
+    private fun isAppContainsResourcesOnly(applicationInfo: ApplicationInfo) =
+        applicationInfo.flags and ApplicationInfo.FLAG_HAS_CODE == 0
+
     private fun checkPartOfMultiUser(
         applicationInfo: ApplicationInfo,
         name: String,
@@ -424,14 +441,18 @@ class InstalledApplicationsManager private constructor(
         val system = isAppSystem(appInfo)
         val useInternet = isAppUseInternet(packageManager, appInfo)
         val pack = packages.minByOrNull { it.length } ?: ""
+        val archived = !isAppInstalled(appInfo) && isAppStopped(appInfo)
+
         val appData = ApplicationData(
-            "$name(M)",
-            pack,
-            applicationUID,
-            icon,
-            system,
-            useInternet,
-            activeApps.contains(applicationUID.toString())
+            name = name,
+            pack = pack,
+            uid = applicationUID,
+            icon = icon,
+            system = system,
+            hasInternetPermission = useInternet,
+            active = activeApps.contains(applicationUID.toString()),
+            archived = archived,
+            user = userUid
         )
         singleAppMultiUserAppsMap[applicationUID] = appData
         if (!multiUserAppsMap.containsKey(applicationUID)) {

@@ -232,7 +232,7 @@ public class PreferencesDNSCryptRelays extends Fragment
     }
 
     private boolean isRelayIPv6(DnsRelay relay) {
-        return relay.getName().contains("ipv6");
+        return relay.getName().contains("v6") || relay.getName().contains("ip6") || relay.getName().endsWith("6");
     }
 
     private boolean isDnsRelaySelected(List<DnsServerRelay> routes, String serverName, String relayName) {

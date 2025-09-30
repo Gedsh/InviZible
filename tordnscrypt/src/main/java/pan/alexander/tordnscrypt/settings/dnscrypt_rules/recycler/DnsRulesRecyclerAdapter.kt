@@ -479,8 +479,11 @@ class DnsRulesRecyclerAdapter(
     }
 
     private fun deleteRule(position: Int) {
+        val rule = rules[position]
         rules.removeAt(position)
-        onDeltaSingleRules(-1)
+        if (rule is DnsRuleRecycleItem.DnsSingleRule && rule.active) {
+            onDeltaSingleRules(-1)
+        }
         notifyItemRemoved(position)
     }
 

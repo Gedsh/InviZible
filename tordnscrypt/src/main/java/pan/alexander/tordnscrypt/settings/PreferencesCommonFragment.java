@@ -43,6 +43,7 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import dagger.Lazy;
 import pan.alexander.tordnscrypt.App;
@@ -81,6 +82,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPO
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ARP_SPOOFING_NOT_SUPPORTED;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.COMPATIBILITY_MODE;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DNS_REBIND_PROTECTION;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FAST_NETWORK_SWITCHING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIX_TTL;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ITPD_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.KILL_SWITCH;
@@ -224,6 +226,18 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 otherCategory.removePreference(multiUser);
             } else {
                 multiUser.setOnPreferenceChangeListener(this);
+            }
+        }
+
+        Preference fastNetworkSwitching = findPreference(FAST_NETWORK_SWITCHING);
+        if (otherCategory != null && fastNetworkSwitching != null) {
+            if (modulesStatus.getMode() == ROOT_MODE
+                    || modulesStatus.getMode() == PROXY_MODE
+                    || Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                    || Build.VERSION.SDK_INT >= 36 && Build.BRAND.toLowerCase(Locale.ROOT).equals("google")) {
+                otherCategory.removePreference(fastNetworkSwitching);
+            } else {
+                fastNetworkSwitching.setOnPreferenceChangeListener(this);
             }
         }
 
@@ -404,6 +418,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             case COMPATIBILITY_MODE:
             case DNS_REBIND_PROTECTION:
             case KILL_SWITCH:
+            case FAST_NETWORK_SWITCHING:
                 modulesStatus.setIptablesRulesUpdateRequested(context, true);
                 break;
             case "swWakelock":

@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.18.1)
+cmake_minimum_required(VERSION 3.22.1)
 
 project(inviziblePro)
 
@@ -25,8 +25,10 @@ target_link_libraries( invizible
 
 if(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "arm64-v8a")
     target_compile_options(invizible PRIVATE -Ofast -march=armv8-a+simd -flto=thin -funsafe-math-optimizations -ffast-math -ftree-vectorize -fvectorize -fslp-vectorize)
+    target_link_options(invizible PRIVATE -Wl,-z,max-page-size=16384)
 elseif(${CMAKE_ANDROID_ARCH_ABI} STREQUAL "armeabi-v7a")
     target_compile_options(invizible PRIVATE -Ofast -march=armv7-a -flto=thin -funsafe-math-optimizations -ffast-math -ftree-vectorize -fvectorize -fslp-vectorize)
 else ()
     target_compile_options(invizible PRIVATE -Ofast -march=x86-64 -flto=thin -funsafe-math-optimizations -ffast-math -ftree-vectorize -fvectorize -fslp-vectorize)
+    target_link_options(invizible PRIVATE -Wl,-z,max-page-size=16384)
 endif()

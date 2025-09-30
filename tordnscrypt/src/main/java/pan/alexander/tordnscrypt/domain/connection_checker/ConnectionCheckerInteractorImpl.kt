@@ -131,7 +131,6 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         }
     }
 
-    @Synchronized
     private fun checkConnection() {
 
         if (task?.isCompleted == false) {
@@ -169,14 +168,11 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                         false
                     } catch (e: IOException) {
                         logException(via, e)
-                        checking.getAndSet(false)
                         makeDelay(ADDITIONAL_DELAY_SEC)
                         false
                     } catch (e: Exception) {
                         logException(via, e)
                         false
-                    } finally {
-                        checking.compareAndSet(true, false)
                     }
 
                     ensureActive()
@@ -191,6 +187,8 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                         makeDelay(CHECK_INTERVAL_SEC)
                     }
                 }
+
+                checking.getAndSet(false)
             }
         } catch (e: Exception) {
             if (e !is CancellationException) {
@@ -221,7 +219,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
     private suspend fun makeDelay(delaySec: Int) {
         try {
             delay(delaySec * 1000L)
-        } catch (ignored: Exception) {
+        } catch (_: Exception) {
         }
     }
 
@@ -311,7 +309,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
         } else {
             emptyList()
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         pathVars.dnsCryptFallbackRes.split(Regex(", ?"))
     }
 

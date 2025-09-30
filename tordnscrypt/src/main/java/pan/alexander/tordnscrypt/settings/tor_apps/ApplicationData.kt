@@ -30,7 +30,9 @@ data class ApplicationData(
     val icon: Drawable? = null,
     val system: Boolean = false,
     val hasInternetPermission: Boolean = false,
-    var active: Boolean = false
+    var active: Boolean = false,
+    val archived: Boolean = false,
+    val user: Int = 0
 ) : Comparable<ApplicationData> {
 
     val names = ConcurrentSkipListSet(setOf(name))

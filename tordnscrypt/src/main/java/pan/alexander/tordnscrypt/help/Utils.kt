@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.help
 
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ResolveInfo
@@ -83,7 +84,13 @@ object Utils {
         return false
     }
 
-    fun collectInfo(appSign: String, appVersion: String, appProcVersion: String, version: String): String {
+    fun collectInfo(
+        appSign: String,
+        appVersion: String,
+        appProcVersion: String,
+        version: String,
+        memoryInfo: ActivityManager.MemoryInfo?
+    ): String {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             return "BRAND " + Build.BRAND + 10.toChar() +
                     "MODEL " + Build.MODEL + 10.toChar() +
@@ -97,6 +104,11 @@ object Utils {
                     "SUPPORTED_64_BIT_ABIS " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS) + 10.toChar() +
                     "SDK_INT " + Build.VERSION.SDK_INT + 10.toChar() +
                     "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
+                    "TOTAL_MEMORY " + (memoryInfo?.totalMem ?: 0) / 1024 / 1024 + 10.toChar() +
+                    "AVAILABLE_MEMORY " + (memoryInfo?.availMem ?: 0) / 1024 / 1024 + 10.toChar() +
+                    "LOW_MEMORY " + (memoryInfo?.lowMemory ?: "false") + 10.toChar() +
+                    "MAX_HEAP_SIZE " + Runtime.getRuntime().maxMemory() / 1024 / 1024 + 10.toChar() +
+                    "USED_HEAP_SIZE " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + 10.toChar() +
                     "VERSION " + version + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +
@@ -117,6 +129,11 @@ object Utils {
                     "HARDWARE " + Build.HARDWARE + 10.toChar() +
                     "SDK_INT " + Build.VERSION.SDK_INT + 10.toChar() +
                     "THREADS " + Thread.getAllStackTraces().size + 10.toChar() +
+                    "TOTAL_MEMORY " + (memoryInfo?.totalMem ?: 0) / 1024 / 1024 + 10.toChar() +
+                    "AVAILABLE_MEMORY " + (memoryInfo?.availMem ?: 0) / 1024 / 1024 + 10.toChar() +
+                    "LOW_MEMORY " + (memoryInfo?.lowMemory ?: "false") + 10.toChar() +
+                    "MAX_HEAP_SIZE " + Runtime.getRuntime().maxMemory() / 1024 / 1024 + 10.toChar() +
+                    "USED_HEAP_SIZE " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024 + 10.toChar() +
                     "VERSION " + version + 10.toChar() +
                     "APP_VERSION_CODE " + BuildConfig.VERSION_CODE + 10.toChar() +
                     "APP_VERSION_NAME " + BuildConfig.VERSION_NAME + 10.toChar() +

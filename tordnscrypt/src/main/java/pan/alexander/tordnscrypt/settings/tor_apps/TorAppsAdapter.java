@@ -172,8 +172,25 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
                 tvTorAppName.setTextColor(ContextCompat.getColor(context, R.color.textModuleStatusColorStopped));
             }
             imgTorApp.setImageDrawable(app.getIcon());
-            String pack = String.format("[%s] %s", app.getUid(), app.getPack());
-            tvTorAppPackage.setText(pack);
+
+            StringBuilder description = new StringBuilder();
+            if (app.getArchived()) {
+                description.append("Archived").append("\n");
+            }
+            if (app.getUser() > 0) {
+                description.append("User ").append(app.getUser());
+            }
+            if (app.getUser() > 0 && app.getUid() >= 0) {
+                description.append(" · ");
+            }
+            if (app.getUid() >= 0) {
+                description.append("UID ").append(app.getUid()).append("\n");
+            } else if (app.getUser() > 0){
+                description.append("\n");
+            }
+            description.append(app.getPack());
+            tvTorAppPackage.setText(description.toString());
+
             if (fragment.unlockAppsStr.equals(CLEARNET_APPS_FOR_PROXY)) {
                 swTorApp.setChecked(app.getTorifyApp());
             } else {

@@ -51,7 +51,7 @@ class BridgePingHelper @Inject constructor(
 ) {
 
     private val webTunnelBridgePattern by lazy {
-        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.-]+)(?:/[\\w.-]+)*/?")
+        Pattern.compile("^webtunnel +(.+:\\d+)(?: +\\w+)? +url=(http(s)?://[\\w.:-]+)(/[\\w.-]+)*/?")
     }
 
     private val meekLiteBridgePattern by lazy {
@@ -60,6 +60,10 @@ class BridgePingHelper @Inject constructor(
 
     private val snowFlakeBridgePattern by lazy {
         Pattern.compile("^snowflake +(.+:\\d+)(?: +\\w+)? ")
+    }
+
+    private val conjureBridgePattern by lazy {
+        Pattern.compile("^conjure +(.+:\\d+)(?: +\\w+)? ")
     }
 
     suspend fun getRealIPFromWebTunnelBridges(
@@ -73,20 +77,31 @@ class BridgePingHelper @Inject constructor(
                 val matcher = webTunnelBridgePattern.matcher(bridge.bridge)
                 if (matcher.find()) {
                     val ipWithPort = matcher.group(1) ?: continue
-                    val domain = matcher.group(2) ?: continue
-                    val port = if (domain.startsWith("https")) {
-                        443
+                    val url = matcher.group(2) ?: continue
+                    val addr = bridge.bridge.split(" ").firstOrNull() {
+                        it.startsWith("addr=")
+                    }?.removePrefix("addr=")
+                    val address = if (addr?.isEmpty() != false) {
+                        val domain = url.replace(Regex("http(s)?://"), "")
+                        val port = if (domain.contains(":")) {
+                            domain.substringAfter(":").toIntOrNull() ?: 443
+                        } else if (url.startsWith("https")) {
+                            443
+                        } else {
+                            80
+                        }
+                        val ip = getWorkingIp(domain.removeSuffix(":$port"), port)
+
+                        ensureActive()
+                        if (ip.isEmpty()) {
+                            continue
+                        }
+
+                        getAddress(ip, port)
                     } else {
-                        80
-                    }
-                    val ip = getWorkingIp(domain.replace(Regex("http(s)?://"), ""), port)
-
-                    ensureActive()
-                    if (ip.isEmpty()) {
-                        continue
+                        addr
                     }
 
-                    val address = getAddress(ip, port)
                     val bridgeLine = bridge.bridge.replace(ipWithPort, address)
                     bridgesToMeasure.add(bridgeLine)
                     bridgesMatcherMap[bridgeLine.hashCode()] =
@@ -199,11 +214,69 @@ class BridgePingHelper @Inject constructor(
         emptyList()
     }
 
+    suspend fun getRealIPFromConjureBridges(
+        bridges: List<ObfsBridge>,
+        bridgesMatcherMap: ConcurrentHashMap<Int, Int>
+    ) = try {
+        withContext(dispatcherIo) {
+            val bridgesToMeasure = mutableListOf<String>()
+            for (bridge in bridges) {
+
+                val matcher = conjureBridgePattern.matcher(bridge.bridge)
+                if (matcher.find()) {
+                    val ipWithPort = matcher.group(1) ?: continue
+                    val front = "front="
+                    val fronts = "fronts="
+                    val domains = if (bridge.bridge.contains(fronts)) {
+                        bridge.bridge.split(Regex(" +"))
+                            .first { it.contains(fronts) }
+                            .removePrefix(fronts)
+                            .split(",")
+                    } else if (bridge.bridge.contains(front)) {
+                        bridge.bridge.split(Regex(" +"))
+                            .first { it.contains(front) }
+                            .removePrefix(front)
+                            .let { listOf(it) }
+                    } else {
+                        emptyList()
+                    }
+
+                    if (domains.isEmpty()) {
+                        continue
+                    }
+
+                    var ip = ""
+                    val port = 443
+                    for (domain in domains.shuffled()) {
+                        ip = getWorkingIp(domain, port)
+                        if (ip.isNotEmpty()) {
+                            break
+                        }
+                    }
+
+                    ensureActive()
+                    if (ip.isEmpty()) {
+                        continue
+                    }
+
+                    val address = getAddress(ip, port)
+                    val bridgeLine = bridge.bridge.replace(ipWithPort, address)
+                    bridgesToMeasure.add(bridgeLine)
+                    bridgesMatcherMap[bridgeLine.hashCode()] =
+                        bridge.bridge.hashCode()
+                }
+            }
+            bridgesToMeasure
+        }
+    } catch (_: Exception) {
+        emptyList()
+    }
+
     private suspend fun getWorkingIp(domain: String, port: Int) = try {
         withContext(dispatcherIo) {
             InetAddress.getAllByName(domain)
         }.mapNotNull { it.hostAddress }
-    } catch (ignored: Exception) {
+    } catch (_: Exception) {
         emptyList()
     }.filter {
         !VpnUtils.isIpInLanRange(it) && (isUseIPv6() || !it.isIPv6Address())
@@ -213,13 +286,13 @@ class BridgePingHelper @Inject constructor(
                 async {
                     try {
                         if (isAddressReachable(ip, port)) ip else ""
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         ""
                     }
                 }
             }.awaitAll()
                 .filter { it.isNotEmpty() }
-                .minByOrNull { it.isIPv6Address() } ?: ""
+                .minByOrNull { it.isIPv6Address() } ?: ips.firstOrNull() ?: ""
         }
     }
 

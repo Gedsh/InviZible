@@ -52,6 +52,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -191,6 +192,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
     public CoroutineExecutor executor;
     @Inject
     public Lazy<Handler> handlerLazy;
+    @Inject
+    public Lazy<BridgeChecker> bridgeChecker;
     @Inject
     public Lazy<SnowflakeConfigurator> snowflakeConfigurator;
     @Inject
@@ -435,14 +438,14 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + conjurePath + saveLogsString;
-                } else if (currentBridgesType.equals(webtunnel)) {
+                }/* else if (currentBridgesType.equals(webtunnel)) {
                     String saveLogsString = "";
                     if (pathVars.get().getAppVersion().equals("beta")) {
                         saveLogsString = " -log " + appDataDir + "/logs/WebTunnel.log";
                     }
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + webTunnelPath + saveLogsString;
-                } else {
+                }*/ else {
                     clientTransportPlugin = "ClientTransportPlugin " + currentBridgesTypeToSave + " exec "
                             + obfsPath;
                 }
@@ -460,6 +463,11 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                     if (!currentBridge.isEmpty() && currentBridge.contains(currentBridgesType.toString())) {
                         if (currentBridgesType.equals(snowflake)) {
                             torConfCleaned.add("Bridge " + snowflakeConfigurator.get().getConfiguration(currentBridge));
+                        } else if (currentBridgesType.equals(webtunnel)
+                                && !currentBridge.contains("servername")
+                                && isFakeSniEnabled()
+                                && !getFakeSniHosts(("Bridge " + currentBridge).length()).isEmpty()) {
+                            torConfCleaned.add("Bridge " + addWebTunnelSNIs(currentBridge));
                         } else {
                             torConfCleaned.add("Bridge " + currentBridge);
                         }
@@ -480,6 +488,20 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
         restartTorIfRequired(context);
 
+    }
+
+    private String addWebTunnelSNIs(String line) {
+        Pattern pattern = Pattern.compile("(url=\\S+)");
+        Matcher matcher = pattern.matcher(line);
+        if (matcher.find()) {
+            String urlPart = matcher.group(1);
+            line = matcher.replaceFirst(
+                    urlPart
+                            + " servername="
+                            + getFakeSniHosts(line.length())
+            );
+        }
+        return line;
     }
 
     private boolean isFascistFirewallShouldBeDisabled() {
@@ -759,38 +781,31 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
 
             String inputLinesStr = unescapeHTML(input.getText().toString().trim());
 
-            String bridgeBase;
-            if (isBridgeIPv6(inputLinesStr)) {
-                bridgeBase = ipv6BridgeBase;
-            } else {
-                bridgeBase = ipv4BridgeBase;
-            }
-
             String inputBridgesType = "";
-            Pattern pattern;
+            Checkable checkable;
             if (inputLinesStr.contains(obfs4.toString())) {
                 inputBridgesType = obfs4.toString();
-                pattern = Pattern.compile("^obfs4 +" + bridgeBase + " +cert=.+ +iat-mode=\\d");
+                checkable = bridgeChecker.get().getObfs4BridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(obfs3.toString())) {
                 inputBridgesType = obfs3.toString();
-                pattern = Pattern.compile("^obfs3 +" + bridgeBase);
+                checkable = bridgeChecker.get().getObfs3BridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(scramblesuit.toString())) {
                 inputBridgesType = scramblesuit.toString();
-                pattern = Pattern.compile("^scramblesuit +" + bridgeBase + "( +password=\\w+)?");
+                checkable = bridgeChecker.get().getScrambleSuitBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(meek_lite.toString())) {
                 inputBridgesType = meek_lite.toString();
-                pattern = Pattern.compile("^meek_lite +" + bridgeBase + " +url=https://[\\w.+/-]+ +front=[\\w./-]+( +utls=\\w+)?");
+                checkable = bridgeChecker.get().getMeekLiteBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(snowflake.toString())) {
                 inputBridgesType = snowflake.toString();
-                pattern = Pattern.compile("^snowflake +" + bridgeBase + "(?: +fingerprint=\\w+)?(?: +url=https://[\\w.+/-]+)?(?: +ampcache=https://[\\w.+/-]+)?(?: +front=[\\w./-]+)?(?: +ice=(?:stun:[\\w./-]+?:\\d+,?)+)?(?: +utls-imitate=\\w+)?(?: +sqsqueue=https://[\\w.+/-]+)?(?: +sqscreds=[-A-Za-z0-9+/=]+)?");
+                checkable = bridgeChecker.get().getSnowFlakeBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(conjure.toString())) {
                 inputBridgesType = conjure.toString();
-                pattern = Pattern.compile("^conjure +" + bridgeBase + ".*");
+                checkable = bridgeChecker.get().getConjureBridgeChecker(inputLinesStr);
             } else if (inputLinesStr.contains(webtunnel.toString())) {
                 inputBridgesType = webtunnel.toString();
-                pattern = Pattern.compile("^webtunnel +" + bridgeBase + " +url=http(s)?://[\\w.+/-]+(?: ver=[0-9.]+)?");
+                checkable = bridgeChecker.get().getWebTunnelBridgeChecker(inputLinesStr);
             } else {
-                pattern = Pattern.compile(bridgeBase);
+                checkable = bridgeChecker.get().getOtherBridgeChecker(inputLinesStr);
             }
 
             String[] bridgesArrNew;
@@ -801,19 +816,18 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             } else {
                 bridgesArrNew = inputLinesStr.replaceAll("[^\\w\\[\\]:+=/. ,-]", " ")
                         .replaceAll(" +", " ")
+                        .replaceAll("Bridge ", "")
                         .split(inputBridgesType + " ");
             }
 
             if (bridgesArrNew.length != 0) {
                 for (String brgNew : bridgesArrNew) {
                     if (!brgNew.isEmpty() && inputBridgesType.isEmpty()) {
-                        Matcher matcher = pattern.matcher(brgNew.trim());
-                        if (matcher.matches()) {
+                        if (checkable.check(brgNew.trim())) {
                             bridgesListNew.add(brgNew.trim());
                         }
                     } else if (!brgNew.isEmpty()) {
-                        Matcher matcher = pattern.matcher(inputBridgesType + " " + brgNew.trim());
-                        if (matcher.matches()) {
+                        if (checkable.check(inputBridgesType + " " + brgNew.trim())) {
                             bridgesListNew.add(inputBridgesType + " " + brgNew.trim());
                         }
                     }
@@ -1060,6 +1074,8 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             if (!obfsType.equals(vanilla) && line.contains(obfsType.toString())) {
                 if (obfsType.equals(snowflake)) {
                     line = snowflakeConfigurator.get().getConfiguration(line);
+                } else if (obfsType.equals(webtunnel) && isFakeSniEnabled()) {
+                    line = line.replaceAll("\\s*servername=\\S*", "");
                 }
                 obfsBridge = new ObfsBridge(line, obfsType, false);
                 if (bridgesInUse.contains(line)) {
@@ -1111,6 +1127,9 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
                         String line = tor_conf.get(i);
                         if (!line.contains("#") && line.contains("Bridge ")) {
                             line = line.replace("Bridge ", "");
+                            if (line.startsWith("webtunnel") && isFakeSniEnabled()) {
+                                line = line.replaceAll("\\s*servername=\\S*", "");
+                            }
                             bridgesInUse.add(line.trim());
                         }
                     }
@@ -1453,5 +1472,22 @@ public class PreferencesTorBridges extends Fragment implements View.OnClickListe
             swipeRefreshBridges.setRefreshing(false);
             Toast.makeText(requireContext(), error, Toast.LENGTH_LONG).show();
         });
+    }
+
+    private boolean isFakeSniEnabled() {
+        return viewModel.isFakeSniEnabled();
+    }
+
+    private String getFakeSniHosts(int bridgeLength) {
+        return viewModel.getFakeSniHosts(
+                Arrays.asList(requireContext().getResources()
+                        .getStringArray(R.array.default_fake_sni)),
+                bridgeLength
+        );
+    }
+
+    @FunctionalInterface
+    public interface Checkable {
+        boolean check(String bridge);
     }
 }

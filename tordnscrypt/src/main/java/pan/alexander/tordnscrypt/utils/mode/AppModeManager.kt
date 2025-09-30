@@ -72,8 +72,8 @@ class AppModeManager @Inject constructor(
 
         if (defaultPreferences.get().getBoolean(CONNECTION_LOGS, true)) {
             val dnsCryptState = modulesStatus.dnsCryptState
-            val torState = modulesStatus.dnsCryptState
-            var firewallState = modulesStatus.firewallState
+            val torState = modulesStatus.torState
+            val firewallState = modulesStatus.firewallState
             if (dnsCryptState == RUNNING || dnsCryptState == STARTING || dnsCryptState == RESTARTING
                 || torState == RUNNING || torState == STARTING || torState == RESTARTING
                 || firewallState == RUNNING || firewallState == STARTING) {

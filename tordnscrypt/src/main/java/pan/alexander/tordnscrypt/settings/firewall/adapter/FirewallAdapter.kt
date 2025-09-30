@@ -94,6 +94,8 @@ class FirewallAdapter(
                     label = it.applicationData.toString(),
                     icon = it.applicationData.icon,
                     system = it.applicationData.system,
+                    archived = it.applicationData.archived,
+                    user = it.applicationData.user,
                     hasInternetPermission = it.applicationData.hasInternetPermission,
                     lan = it.allowLan,
                     wifi = it.allowWifi,
@@ -203,9 +205,16 @@ class FirewallAdapter(
             imgAppIconFirewall?.setImageDrawable(appFirewall.icon)
             val description = StringBuilder().apply {
                 append(appFirewall.label)
+                if (appFirewall.user > 0) {
+                    append(" ").append("\u00B7").append(" ")
+                    append("User").append(" ").append(appFirewall.user)
+                }
                 if (appFirewall.uid >= 0) {
                     append(" ").append("\u00B7").append(" ")
                     append("UID").append(" ").append(appFirewall.uid)
+                }
+                if (appFirewall.archived) {
+                    append(" ").append("\u00B7").append(" Archived")
                 }
             }
             if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.M) {
@@ -363,6 +372,8 @@ class FirewallAdapter(
         val label: String,
         val icon: Drawable?,
         val system: Boolean,
+        val archived: Boolean,
+        val user: Int,
         val hasInternetPermission: Boolean,
         var lan: Boolean,
         var wifi: Boolean,

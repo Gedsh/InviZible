@@ -19,8 +19,16 @@
 
 package pan.alexander.tordnscrypt.modules;
 
+import static android.net.NetworkCapabilities.TRANSPORT_CELLULAR;
+import static android.net.NetworkCapabilities.TRANSPORT_ETHERNET;
+import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.Constants.IPv6_REGEX_NO_BOUNDS;
+import static pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.getActiveNetworkHash;
+import static pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isActiveNetwork;
+import static pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.isVpnNetwork;
+import static pan.alexander.tordnscrypt.utils.connectionchecker.NetworkChecker.networkToId;
+import static pan.alexander.tordnscrypt.utils.connectionchecker.NetworkCheckerKt.UNKNOWN_NETWORK_HASH;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.STARTING;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -70,8 +78,11 @@ import androidx.annotation.RequiresApi;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -271,8 +282,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             registerPowerOFF();
         }
 
-        if (isRootMode() && !modulesStatus.isUseModulesWithRoot()
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (isRootMode() && !modulesStatus.isUseModulesWithRoot()) {
             if (rootVpnReceiverRegistered && modulesStatus.isFixTTL()) {
                 unlistenVpnConnectivityChanges();
                 rootVpnReceiverRegistered = false;
@@ -280,7 +290,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 listenVpnConnectivityChanges();
                 rootVpnReceiverRegistered = true;
             }
-        } else if (rootVpnReceiverRegistered && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        } else if (rootVpnReceiverRegistered) {
             unlistenVpnConnectivityChanges();
             rootVpnReceiverRegistered = false;
         }
@@ -309,7 +319,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             rootReceiversRegistered = false;
         }
 
-        if (commonNetworkCallback != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (commonNetworkCallback != null) {
             unlistenNetworkChanges();
             commonNetworkCallback = null;
         }
@@ -318,7 +328,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             unregisterFirewallReceiver();
         }
 
-        if (vpnConnectivityReceiver != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (vpnConnectivityReceiver != null) {
             unlistenVpnConnectivityChanges();
             vpnRevoked = false;
         }
@@ -383,16 +393,15 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         commonReceiversRegistered = true;
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenNetworkChanges() {
 
         logi("ModulesReceiver start listening to network changes");
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkRequest.Builder builder = new NetworkRequest.Builder();
-        builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
-                .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+        builder.addTransportType(TRANSPORT_WIFI)
+                .addTransportType(TRANSPORT_ETHERNET)
+                .addTransportType(TRANSPORT_CELLULAR)
                 .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
         if (isVpnMode()) {
@@ -409,16 +418,20 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         ConnectivityManager.NetworkCallback nc = new ConnectivityManager.NetworkCallback() {
             private final Pattern SIGNAL_STRENGTH_PATTERN = Pattern.compile("SignalStrength: ?-(\\d+)");
             private static final int SIGNAL_STRENGTH_THRESHOLD = 20;
-            private volatile Boolean lastConnected = null;
-            private volatile List<InetAddress> lastDns = null;
-            private volatile String lastNat64 = "";
+            private volatile Boolean connected = null;
+            private final Set<Integer> validated = new HashSet<>();
+            private final Map<Integer, List<InetAddress>> networkToDns = new HashMap<>();
+            private final Map<Integer, String> networkToNat64 = new HashMap<>();
             private volatile boolean dnsChanged;
-            private volatile int lastNetwork = 0;
-            private volatile int lastSignalStrength = 0;
+            private volatile int activeNetwork = 0;
+            private final Set<Integer> networks = new HashSet<>();
+            private volatile int savedSignalStrength = 0;
             private volatile boolean restartLocked = false;
 
             @Override
             public void onAvailable(@NonNull Network network) {
+
+                Boolean lastConnected = connected;
 
                 if (isVpnNetwork(cm, network)) {
                     logi("ModulesReceiver available VPN network=" + network + " connected=" + lastConnected);
@@ -427,16 +440,31 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     logi("ModulesReceiver available network=" + network + " connected=" + lastConnected);
                 }
 
-                lastConnected = true;
+                int lastActiveNetwork = activeNetwork;
+                if (networks.isEmpty()
+                        || !networks.contains(lastActiveNetwork)
+                        || isActiveNetwork(cm, network)
+                        || networkToId(cm, network) < activeNetwork) {
+                    activeNetwork = networkToId(cm, network);
+                }
+                
+                if (lastActiveNetwork != activeNetwork) {
+                    manageNat64AndDns(
+                            networkToNat64.get(activeNetwork),
+                            networkToDns.get(activeNetwork),
+                            networkToDns.get(lastActiveNetwork)
+                    );
+                }
+
                 setNetworkAvailable(true);
 
-                if (!lastConnected) {
-                    lastConnected = true;
-
+                if (lastConnected == null || !lastConnected) {
                     if (isVpnMode() || isRootMode()) {
                         setInternetAvailable(true);
                     }
                 }
+
+                connected = true;
 
                 if (isVpnMode() && !vpnRevoked) {
                     reload("Network available", context);
@@ -447,14 +475,13 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     resetArpScanner(true);
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && lastNetwork != network.hashCode()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && !networks.contains(networkToId(cm, network))) {
                     PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
                             context, null, isPreventDnsLeaks()
                     );
                 }
 
-                lastNetwork = network.hashCode();
-
+                networks.add(networkToId(cm, network));
             }
 
             @Override
@@ -464,6 +491,11 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
                 if (isVpnNetwork(cm, network)) {
                     return;
+                }
+
+                if (networks.isEmpty() || isActiveNetwork(cm, network)) {
+                    activeNetwork = networkToId(cm, network);
+                    connected = true;
                 }
 
                 setNetworkAvailable(true);
@@ -488,70 +520,103 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     }
                 }
 
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
-                        || !same(lastDns, dns) || !nat64.equals(lastNat64)) {
+                String lastNat64 = networkToNat64.get(networkToId(cm, network));
+                if (lastNat64 == null) {
+                    lastNat64 = "";
+                }
+                networkToNat64.put(networkToId(cm, network), nat64);
+
+                List<InetAddress> lastDns = networkToDns.get(networkToId(cm, network));
+                if (lastDns == null) {
+                    lastDns = new ArrayList<>();
+                }
+                networkToDns.put(networkToId(cm, network), dns);
+
+                networks.add(networkToId(cm, network));
+
+                if (networkToId(cm, network) == activeNetwork &&
+                        (!networks.contains(networkToId(cm, network))
+                        || !same(lastDns, dns)
+                        || !lastNat64.equals(nat64))
+                        || Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+
                     logi("DNS cur: " + TextUtils.join(",", dns) +
-                            " prv: " + (lastDns == null ? null : TextUtils.join(",", lastDns)) +
+                            " prv: " + TextUtils.join(",", lastDns) +
                             " NAT64 cur: " + nat64 + " prev: " + lastNat64);
 
-                    boolean restartRequested = false;
-                    if (nat64.isEmpty() && isNat64Active()) {
-                        restartRequested = true;
-                    } else if (!nat64.isEmpty() && (!isNat64Active() || !nat64.equals(getSavedNat64Prefix()))) {
-                        restartRequested = true;
+                    if (isActiveNetwork(cm, network)) {
+                        manageNat64AndDns(nat64, dns, lastDns);
                     }
-
-                    if (isRestartNeeded(lastDns, dns)) {
-                        dnsChanged = true;
-                        restartRequested = true;
-                    }
-
-                    if (restartRequested && !restartLocked) {
-                        restartLocked = true;
-                        handler.get().postDelayed(() -> {
-                            if (lastNat64.isEmpty() && isNat64Active()) {
-                                updateDNSCryptNat64Prefix(false, getSavedNat64Prefix());
-                                restartDNSCryptIfRunning();
-                            } else if (!lastNat64.isEmpty() && (!isNat64Active() || !lastNat64.equals(getSavedNat64Prefix()))) {
-                                updateDNSCryptNat64Prefix(true, lastNat64);
-                                restartDNSCryptIfRunning();
-                            } else if (dnsChanged) {
-                                restartDNSCryptIfRunning();
-                            }
-                            restartLocked = false;
-                            dnsChanged = false;
-                        }, RESTART_DNSCRYPT_DELAY_SEC * 1000);
-
-                    }
-
-                    lastDns = dns;
-                    lastNat64 = nat64;
 
                     if (isRootMode()) {
                         updateIptablesRules(false);
                     }
 
-                    if (network.hashCode() != lastNetwork) {
-                        lastNetwork = network.hashCode();
+                    if (isVpnMode() && !vpnRevoked) {
+                        setInternetAvailable(false);
+                        reload("Link properties changed", context);
+                    } else if (isRootMode() || vpnRevoked) {
+                        resetArpScanner();
+                        checkInternetConnection();
+                    } else if (isProxyMode()) {
+                        resetArpScanner();
+                    }
 
-                        if (isVpnMode() && !vpnRevoked) {
-                            setInternetAvailable(false);
-                            reload("Link properties changed", context);
-                        } else if (isRootMode() || vpnRevoked) {
-                            resetArpScanner();
-                            checkInternetConnection();
-                        } else if (isProxyMode()) {
-                            resetArpScanner();
-                        }
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                            PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
-                                    context, linkProperties, isPreventDnsLeaks()
-                            );
-                        }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        PrivateDnsProxyManager.INSTANCE.checkPrivateDNSAndProxy(
+                                context, linkProperties, isPreventDnsLeaks()
+                        );
                     }
                 }
 
+            }
+
+            private void manageNat64AndDns(
+                    String nat64,
+                    List<InetAddress> dns,
+                    List<InetAddress> lastDns
+            ) {
+
+                if (nat64 == null) {
+                    nat64 = "";
+                }
+                if (dns == null) {
+                    dns = new ArrayList<>();
+                }
+                if (lastDns == null) {
+                    lastDns = new ArrayList<>();
+                }
+
+                boolean restartRequested = false;
+                if (nat64.isEmpty() && isNat64Active()) {
+                    restartRequested = true;
+                } else if (!nat64.isEmpty() && (!isNat64Active() || !nat64.equals(getSavedNat64Prefix()))) {
+                    restartRequested = true;
+                }
+
+                if (isRestartNeeded(lastDns, dns)) {
+                    dnsChanged = true;
+                    restartRequested = true;
+                }
+
+                if (restartRequested && !restartLocked) {
+                    restartLocked = true;
+                    String finalNat6 = nat64;
+                    handler.get().postDelayed(() -> {
+                        if (finalNat6.isEmpty() && isNat64Active()) {
+                            updateDNSCryptNat64Prefix(false, getSavedNat64Prefix());
+                            restartDNSCryptIfRunning();
+                        } else if (!finalNat6.isEmpty() && (!isNat64Active() || !finalNat6.equals(getSavedNat64Prefix()))) {
+                            updateDNSCryptNat64Prefix(true, finalNat6);
+                            restartDNSCryptIfRunning();
+                        } else if (dnsChanged) {
+                            restartDNSCryptIfRunning();
+                        }
+                        restartLocked = false;
+                        dnsChanged = false;
+                    }, RESTART_DNSCRYPT_DELAY_SEC * 1000);
+
+                }
             }
 
             @Override
@@ -561,11 +626,29 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     return;
                 }
 
+                if (networks.isEmpty() || isActiveNetwork(cm, network)) {
+                    activeNetwork = networkToId(cm, network);
+                    connected = true;
+                }
+
+                Boolean lastConnected = connected;
+
                 setNetworkAvailable(true);
 
-                if (lastConnected == null || !lastConnected) {
+                boolean networkValidated = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    networkValidated = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                }
 
-                    lastConnected = true;
+                int validatedNetworksCount = validated.size();
+                if (networkValidated) {
+                    validated.add(networkToId(cm, network));
+                } else {
+                    validated.remove(networkToId(cm, network));
+                }
+
+                if ((lastConnected == null || !lastConnected || validatedNetworksCount != validated.size())
+                        && isActiveNetwork(cm, network)) {
 
                     if (isVpnMode()) {
                         if (vpnRevoked) {
@@ -576,7 +659,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                             reload("Connected state changed", context);
                         }
                         logi("ModulesReceiver changed capabilities=" + network);
-                    } else if (isRootMode() && lastNetwork != network.hashCode()) {
+                    } else if (isRootMode()) {
                         updateIptablesRules(false);
                         resetArpScanner();
                         checkInternetConnection();
@@ -592,16 +675,16 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                         String signalStrength = matcher.group(1);
                         if (signalStrength != null) {
                             int signal_strength = Integer.parseInt(signalStrength);
-                            if (Math.abs(signal_strength - lastSignalStrength) > SIGNAL_STRENGTH_THRESHOLD
+                            if (Math.abs(signal_strength - savedSignalStrength) > SIGNAL_STRENGTH_THRESHOLD
                                     && isCheckingInternetConnection.compareAndSet(false, true)) {
                                 checkInternetConnectionWithDelay();
                                 logi("ModulesReceiver changed signal strength. "
                                         + "Network " + network + " "
                                         + "SignalStrength " + signalStrength);
                             }
-                            lastSignalStrength = signal_strength;
+                            savedSignalStrength = signal_strength;
                         }
-                    } else if (network.hashCode() != lastNetwork
+                    } else if (isActiveNetwork(cm, network)
                             && isCheckingInternetConnection.compareAndSet(false, true)) {
                         checkInternetConnectionWithDelay();
                         logi("ModulesReceiver network has changed. "
@@ -609,7 +692,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     }
                 }
 
-                lastNetwork = network.hashCode();
+                networks.add(networkToId(cm, network));
 
             }
 
@@ -623,8 +706,29 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                     logi("ModulesReceiver lost network=" + network + " connected=false");
                 }
 
-                lastConnected = false;
+                networks.remove(networkToId(cm, network));
+                int lastActiveNetwork = activeNetwork;
+                if (networks.size() == 1) {
+                    activeNetwork = networks.iterator().next();
+                } else {
+                    int hash = getActiveNetworkHash(cm);
+                    if (hash != UNKNOWN_NETWORK_HASH) {
+                        activeNetwork = getActiveNetworkHash(cm);
+                    }
+                }
+                connected = !networks.isEmpty();
+                if (!connected) {
+                    savedSignalStrength = 0;
+                }
                 setNetworkAvailable(false);
+
+                if (isNetworkAvailable() && !networks.isEmpty() && lastActiveNetwork != activeNetwork) {
+                    manageNat64AndDns(
+                            networkToNat64.get(activeNetwork),
+                            networkToDns.get(activeNetwork),
+                            networkToDns.get(lastActiveNetwork)
+                    );
+                }
 
                 if (isVpnMode() && !vpnRevoked) {
                     setInternetAvailable(false);
@@ -639,8 +743,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
                 } else if (isProxyMode()) {
                     resetArpScanner(false);
                 }
-
-                lastNetwork = 0;
             }
 
             boolean same(List<InetAddress> last, List<InetAddress> current) {
@@ -735,7 +837,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
 
             private void restartDNSCryptIfRunning() {
-                if (modulesStatus.getDnsCryptState() == RUNNING) {
+                if (modulesStatus.getDnsCryptState() == RUNNING && isNetworkAvailable()) {
                     logi("Restart DNSCrypt on network DNS change");
                     ModulesRestarter.restartDNSCrypt(context);
                 }
@@ -753,7 +855,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         return defaultPreferences.get().getBoolean(PREVENT_DNS_LEAKS, false);
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void unlistenNetworkChanges() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm != null) {
@@ -797,7 +898,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void listenVpnConnectivityChanges() {
 
         logi("ModulesReceiver start listening to vpn connectivity changes");
@@ -826,7 +926,6 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         context.registerReceiver(vpnConnectivityReceiver, ifConnectivity);
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private void unlistenVpnConnectivityChanges() {
 
         if (vpnConnectivityReceiver != null) {
@@ -1067,10 +1166,10 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     private void vpnRevoked(boolean vpnRevoked) {
         this.vpnRevoked = vpnRevoked;
 
-        if (vpnRevoked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (vpnRevoked) {
             listenVpnConnectivityChanges();
             resetArpScanner();
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        } else {
             unlistenVpnConnectivityChanges();
         }
     }
@@ -1231,15 +1330,4 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         return preferenceRepository.get().getBoolPreference(FIREWALL_ENABLED);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private boolean isVpnNetwork(ConnectivityManager connectivityManager, Network network) {
-        if (connectivityManager == null) {
-            return false;
-        }
-        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-        if (capabilities == null) {
-            return false;
-        }
-        return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN);
-    }
 }

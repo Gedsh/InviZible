@@ -68,7 +68,7 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_fast_tor_autostart">Εκκίνηση Tor κατά την εκκίνηση</string>
     <string name="pref_fast_itpd_autostart">Εναρξη I2P κατά την εκκίνηση</string>
     <string name="pref_fast_autostart_delay">"Καθυστέρηση"</string>
-    <string name="pref_fast_autostart_delay_summ">"Χρησιμοποιήστε την καθυστέρηση (σε δευτερόλεπτα) μόνο εάν η αυτόματη εκκίνηση δεν λειτουργεί σωστά"</string>
+    <string name="pref_fast_autostart_delay_summ">Χρησιμοποιήστε μια καθυστέρηση (σε δευτερόλεπτα) μόνο εάν η αυτόματη εκκίνηση δεν λειτουργεί σωστά</string>
     <string name="pref_fast_dns_server">"Διακομιστές DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"Επιλογή διακομιστών DNSCrypt"</string>
     <string name="pref_fast_tor">"Ρυθμίσεις Tor"</string>
@@ -536,4 +536,6 @@ Should it be named instead "Βασικές Ρυθμίσεις" (originating from
     <string name="pref_dnscrypt_dns64_summ">Ενεργοποιήστε αυτήν την επιλογή εάν βρίσκεστε σε ένα δίκτυο μόνο IPv6 και οι τοποθεσίες IPv4 δεν είναι διαθέσιμες. Μην την ενεργοποιήσετε διαφορετικά, διαφορετικά δεν θα μπορείτε να συνδεθείτε σε τίποτα απολύτως.</string>
     <string name="notification_exclude_data_restriction_message">Παρακαλώ επιτρέψτε τη χρήση δεδομένων στο παρασκήνιο και επιτρέψτε τη χρήση δεδομένων ενώ η εξοικονόμηση δεδομένων είναι ενεργοποιημένη. Αυτό είναι απαραίτητο για μια ομαλή διαδικτυακή εμπειρία.</string>
     <string name="pref_dnscrypt_http3_summ">Ενεργοποιήστε την υποστήριξη για HTTP/3 (DoH3, HTTP over QUIC). Σημειώστε ότι, όπως και το DNSCrypt, αλλά σε αντίθεση με άλλες εκδόσεις HTTP, αυτό χρησιμοποιεί UDP και (συνήθως) τη θύρα 443 αντί για TCP.</string>
+    <string name="pref_fast_prevent_dns_leak">Αποτροπή διαρροών DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Απέκλεισε προσπαθειών απόκρυψης ερωτημάτων DNS. Μπορεί να προκαλέσει προβλήματα σύνδεσης.</string>
 </resources>

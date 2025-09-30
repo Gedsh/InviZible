@@ -19,6 +19,7 @@
 
 package pan.alexander.tordnscrypt.settings.tor_bridges
 
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import pan.alexander.tordnscrypt.di.SharedPreferencesModule.Companion.DEFAULT_PREFERENCES_NAME
 import pan.alexander.tordnscrypt.domain.bridges.BridgeCountryData
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingData
 import pan.alexander.tordnscrypt.domain.bridges.BridgePingResult
@@ -42,23 +44,26 @@ import pan.alexander.tordnscrypt.domain.bridges.DefaultVanillaBridgeInteractor
 import pan.alexander.tordnscrypt.domain.bridges.ParseBridgesResult
 import pan.alexander.tordnscrypt.domain.bridges.PingCheckComplete
 import pan.alexander.tordnscrypt.domain.bridges.RequestBridgesInteractor
+import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
+import pan.alexander.tordnscrypt.utils.Utils.prepareFakeSniHosts
+import pan.alexander.tordnscrypt.utils.Utils.verifyHostsSet
 import pan.alexander.tordnscrypt.utils.enums.BridgeType
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys
 import pan.alexander.tordnscrypt.utils.session.AppSessionStore
 import pan.alexander.tordnscrypt.utils.session.SessionKeys.TOR_BRIDGES_IP_WITH_WARNING
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
-import kotlin.collections.List
-import kotlin.collections.first
-import kotlin.collections.firstOrNull
-import kotlin.collections.map
-import kotlin.collections.mutableListOf
+import javax.inject.Named
 
 const val TIMEOUT_REPORTED_BY_TOR = -2
 
 @ExperimentalCoroutinesApi
 class PreferencesTorBridgesViewModel @Inject constructor(
+    @Named(DEFAULT_PREFERENCES_NAME)
+    private val defaultPreferences: SharedPreferences,
+    private val preferenceRepository: PreferenceRepository,
     private val defaultVanillaBridgeInteractor: DefaultVanillaBridgeInteractor,
     private val requestBridgesInteractor: RequestBridgesInteractor,
     private val bridgesCountriesInteractor: BridgesCountriesInteractor,
@@ -120,6 +125,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 BridgeType.webtunnel -> handleWebTunnelBridgesTimeout(torBridgesToCheckPing)
                 BridgeType.meek_lite -> handleMeekLiteBridgesTimeout(torBridgesToCheckPing)
                 BridgeType.snowflake -> handleSnowFlakeBridgesTimeout(torBridgesToCheckPing)
+                BridgeType.conjure -> handleConjureBridgesTimeout(torBridgesToCheckPing)
                 else -> handleOtherBridgesTimeout(torBridgesToCheckPing)
             }
         }
@@ -150,7 +156,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         val bridgesToMeasure = bridgePingHelper.getRealIPFromWebTunnelBridges(
             ArrayList(bridges),
             bridgesMatcherMap
-        )
+        ).takeIf { it.isNotEmpty() } ?: bridges.map { it.bridge }
         launch {
             defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
         }
@@ -167,7 +173,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         val bridgesToMeasure = bridgePingHelper.getRealIPFromMeekLiteBridges(
             ArrayList(bridges),
             bridgesMatcherMap
-        )
+        ).takeIf { it.isNotEmpty() } ?: bridges.map { it.bridge }
         launch {
             defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
         }
@@ -184,7 +190,24 @@ class PreferencesTorBridgesViewModel @Inject constructor(
         val bridgesToMeasure = bridgePingHelper.getRealIPFromSnowFlakeBridges(
             ArrayList(bridges),
             bridgesMatcherMap
-        )
+        ).takeIf { it.isNotEmpty() } ?: bridges.map { it.bridge }
+        launch {
+            defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
+        }
+        searchBridgeCountries(ArrayList(bridgesToMeasure).map {
+            ObfsBridge(
+                it,
+                BridgeType.vanilla,
+                false
+            )
+        })
+    }
+
+    private suspend fun handleConjureBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
+        val bridgesToMeasure = bridgePingHelper.getRealIPFromConjureBridges(
+            ArrayList(bridges),
+            bridgesMatcherMap
+        ).takeIf { it.isNotEmpty() } ?: bridges.map { it.bridge }
         launch {
             defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
         }
@@ -418,5 +441,15 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
     private fun showErrorMessage(message: String) {
         dialogsFlowMutableLiveData.value = DialogsFlowState.ErrorMessage(message)
+    }
+
+    fun isFakeSniEnabled() =
+        defaultPreferences.getBoolean(PreferenceKeys.FAKE_SNI, false)
+
+    fun getFakeSniHosts(defaultHosts: List<String>, bridgeLength: Int): String {
+        val hosts: Set<String> = verifyHostsSet(
+            preferenceRepository.getStringSetPreference(PreferenceKeys.FAKE_SNI_HOSTS)
+        )
+        return prepareFakeSniHosts(hosts, defaultHosts, bridgeLength)
     }
 }

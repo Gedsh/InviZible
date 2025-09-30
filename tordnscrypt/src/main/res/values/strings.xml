@@ -64,7 +64,7 @@
     <string name="deny">Deny</string>
     <string name="areYouSure">Are you sure? This action cannot be undone!</string>
     <string name="ask_later">Ask later</string>
-    <string name="empty_string" translatable="false"/>
+    <string name="empty_string" translatable="false"></string>
     <string name="message_no_root_used">You can use InviZible Pro with local VPN mode, or applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="message_no_root_used_kitkat">You can use InviZible Pro with applications with own proxy or local VPN feature in proxy mode.</string>
     <string name="write_file_error">Save file Error!</string>
@@ -221,11 +221,13 @@
     <string name="pref_common_restart_itpd">Please restart I2P</string>
     <string name="pref_common_multi_user">Multi-user support</string>
     <string name="pref_common_multi_user_summ">Support for Dual Apps, MIUI, Island, Shelter and Work profile applications. May be ineffective in VPN mode</string>
+    <string name="pref_common_fast_network_switching">Fast network switching</string>
+    <string name="pref_common_fast_network_switching_summ">Keep Wi-Fi and mobile data turned on for faster switching between networks</string>
     <string name="pref_common_use_iptables">Select iptables</string>
     <string name="pref_common_use_iptables_app">Use application iptables</string>
     <string name="pref_common_use_iptables_device">Use device iptables</string>
     <string name="pref_common_wait_iptables">Wait for the xtables lock</string>
-    <string name="pref_common_wait_iptables_summ">Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules.</string>
+    <string name="pref_common_wait_iptables_summ">Wait until the exclusive iptables lock can be obtained to prevent concurrent modification of iptables rules</string>
     <string name="pref_common_log_root_commands">Save Root Commands to Log</string>
     <string name="notification_text">DNSCrypt, Tor, I2P are protected. Don\'t hide.</string>
     <string name="notification_exec_root_commands">Executing Root commands…</string>
