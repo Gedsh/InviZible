@@ -65,7 +65,7 @@ public class ServiceVPNHelper {
         Intent intent = new Intent(context, ServiceVPN.class);
         intent.putExtra(EXTRA_COMMAND, VPNCommand.START);
         intent.putExtra(EXTRA_REASON, reason);
-        sendIntent(context, intent);
+        sendIntent(context, intent, true);
     }
 
     public static void reload(String reason, Context context) {
@@ -95,7 +95,7 @@ public class ServiceVPNHelper {
             Intent intent = new Intent(context, ServiceVPN.class);
             intent.putExtra(EXTRA_COMMAND, VPNCommand.RELOAD);
             intent.putExtra(EXTRA_REASON, reason);
-            sendIntent(context, intent);
+            sendIntent(context, intent, false);
         }
     }
 
@@ -114,7 +114,7 @@ public class ServiceVPNHelper {
             Intent intent = new Intent(context, ServiceVPN.class);
             intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
             intent.putExtra(EXTRA_REASON, reason);
-            sendIntent(context, intent);
+            sendIntent(context, intent, false);
         }
     }
 
@@ -145,13 +145,16 @@ public class ServiceVPNHelper {
         });
     }
 
-    private static void sendIntent(Context context, Intent intent) {
+    private static void sendIntent(Context context, Intent intent, boolean showNotification) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && showNotification) {
                 intent.putExtra("showNotification", true);
                 context.startForegroundService(intent);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                intent.putExtra("showNotification", false);
+                context.startService(intent);
             } else {
-                intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context));
+                intent.putExtra("showNotification", Utils.INSTANCE.isShowNotification(context) && showNotification);
                 context.startService(intent);
             }
         } catch (Exception e) {
