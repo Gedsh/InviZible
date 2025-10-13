@@ -26,8 +26,8 @@ import pan.alexander.tordnscrypt.utils.Constants.URL_REGEX
 import java.util.regex.Pattern
 import javax.inject.Inject
 
-private const val ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w+)?"
-private const val ipv6BridgeBase = "\\[$IPv6_REGEX_NO_BOUNDS]:\\d+( +\\w+)?"
+private const val ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+( +\\w{40})?"
+private const val ipv6BridgeBase = "\\[$IPv6_REGEX_NO_BOUNDS]:\\d+( +\\w{40})?"
 
 class BridgeChecker @Inject constructor() {
 
