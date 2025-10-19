@@ -385,11 +385,35 @@ public class PreferencesDNSFragment extends PreferenceFragmentCompat
                 if (!newValue.toString().matches("\\d+")) {
                     return false;
                 }
+                boolean locked = false;
+                for (int i = 0; i < key_toml.size(); i++) {
+                    String key = key_toml.get(i);
+                    if (key.equals("[sources.'public-resolvers']") || key.equals("[sources.'odoh-servers']")) {
+                        locked = true;
+                    } else if (key.startsWith("[")) {
+                        locked = false;
+                    }
+                    if (locked && key.equals("refresh_delay")) {
+                        val_toml.set(i, newValue.toString());
+                    }
+                }
+                return true;
             } else if (Objects.equals(preference.getKey(), DNSCRYPT_RELAYS_REFRESH_DELAY)) {
                 if (!newValue.toString().matches("\\d+")) {
                     return false;
                 }
-                val_toml.set(key_toml.lastIndexOf("refresh_delay"), newValue.toString());
+                boolean locked = false;
+                for (int i = 0; i < key_toml.size(); i++) {
+                    String key = key_toml.get(i);
+                    if (key.equals("[sources.'relays']") || key.equals("[sources.'odoh-relays']")) {
+                        locked = true;
+                    } else if (key.startsWith("[")) {
+                        locked = false;
+                    }
+                    if (locked && key.equals("refresh_delay")) {
+                        val_toml.set(i, newValue.toString());
+                    }
+                }
                 return true;
             } else if (Objects.equals(preference.getKey(), DNSCRYPT_RULES_REFRESH_DELAY)) {
                 if (!newValue.toString().matches("\\d+")) {
