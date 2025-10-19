@@ -1440,3 +1440,8 @@
 * Ensured compatibility with 16KB memory page size.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.2**
+* Updated Tor to version 4.8.19.
+* Updated Tor Lyrebird obfuscator.
+* Fixes and optimizations.
