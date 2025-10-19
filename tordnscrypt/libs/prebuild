@@ -3,7 +3,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 lyrebird_branch=prod
-lyrebird_commit=4a5f7ca25e13b5db78c2437efd409456ad8fb9c4
+lyrebird_commit=2cfc41346a65b1fa909b213dee6558a08d36cb3b
 
 dnscryptproxy_branch=master
 dnscryptproxy_commit=634168b3abe287b761d89df8ae3bab7c3d1539b4
