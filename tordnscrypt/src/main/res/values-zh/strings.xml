@@ -496,7 +496,7 @@
     <string name="pref_common_use_iptables_app">使用应用程序 iptables</string>
     <string name="pref_common_use_iptables_device">使用设备 iptables</string>
     <string name="pref_common_wait_iptables">等待 xtables 锁定</string>
-    <string name="pref_common_wait_iptables_summ">等待获得独占的 iptables 锁，以防止对 iptables 规则的并发修改。</string>
+    <string name="pref_common_wait_iptables_summ">等待获得独占的 iptables 锁，以防止对 iptables 规则的并发修改</string>
     <string name="connectivity_check">互联网连接检查</string>
     <string name="pref_fast_logs">实时日志</string>
     <string name="pref_fast_logs_summ">在DNS选项卡中显示应用程序连接日志</string>
@@ -562,4 +562,6 @@
     <string name="pref_fast_prevent_dns_leak_summ">阻止尝试隐藏 DNS 查询。可能导致连接问题</string>
     <string name="pref_fast_block_lan_with_free_wifi">在公共 Wi-Fi 上屏蔽 LAN</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">检测到强制门户时拒绝连接到 LAN</string>
+    <string name="pref_common_fast_network_switching">快速网络转换</string>
+    <string name="pref_common_fast_network_switching_summ">保持Wi-Fi和移动的数据处于打开状态，以加快网络之间的切换速度</string>
 </resources>
