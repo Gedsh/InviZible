@@ -51,7 +51,7 @@ mkdir arm64-v8a armeabi-v7a
 #################
 
 pushd lyrebird/cmd/lyrebird/
-go build -ldflags="-s -w" -o libobfs4proxy.so
+go build -ldflags="-s -w -checklinkname=0" -o libobfs4proxy.so
 mv libobfs4proxy.so ${LIBS_ROOT}/${ABI}/libobfs4proxy.so || exit 1
 popd
 
