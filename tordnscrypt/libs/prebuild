@@ -6,7 +6,7 @@ lyrebird_branch=prod
 lyrebird_commit=2cfc41346a65b1fa909b213dee6558a08d36cb3b
 
 dnscryptproxy_branch=master
-dnscryptproxy_commit=634168b3abe287b761d89df8ae3bab7c3d1539b4
+dnscryptproxy_commit=0624ab77f3c05b600943e626ca6b7a27e0cc5026
 
 snowflake_branch=feat/check-dns-ip
 snowflake_commit=0bdc069f2e06fb9f61c040b02af3a65b1a40db38
@@ -20,7 +20,7 @@ webtunnel_branch=prod
 webtunnel_commit=738ccbd3d15c2144f8d4c5dbddbbde6a687ca104
 
 tor_branch=prod
-tor_commit=6076a44be860ff1654f2cdae6caccf0ec97acf68
+tor_commit=395d94d099b53d617a6762fdb35a98081d6ccaea
 tor_openssl_version=openssl-3.5.3
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
