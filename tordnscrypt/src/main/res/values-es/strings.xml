@@ -103,7 +103,7 @@
     <string name="pref_fast_block_http_summ">Bloquear conexiones HTTP al puerto 80</string>
     <string name="pref_fast_categ_update">Actualizar</string>
     <string name="pref_fast_auto_update">Actualizaciones automáticas</string>
-    <string name="pref_fast_auto_update_summ">Compruebe diariamente las actualizaciones de InviZible Pro y de los módulos</string>
+    <string name="pref_fast_auto_update_summ">Comprueba diariamente las actualizaciones de InviZible Pro y de los módulos</string>
     <string name="pref_fast_chek_update">Comprobar actualizaciones</string>
     <string name="pref_fast_chek_update_summ">"Comprobar si hay una nueva versión disponible"</string>
     <string name="pref_fast_through_tor_update">"Actualizar solo a través de Tor"</string>
@@ -118,7 +118,7 @@
     <string name="pref_common_refresh_rules">Refrescar reglas</string>
     <string name="pref_common_refresh_rules_summ">Reaplicar reglas de tráfico en cambios de conectividad</string>
     <string name="pref_common_show_notification">"Mostrar notificaciones"</string>
-    <string name="pref_common_wakelock">"Prevenir sueño profundo del dispositivo"</string>
+    <string name="pref_common_wakelock">Prevenir sueño profundo</string>
     <string name="pref_common_wakelock_summ">No permite que el dispositivo entre en modo suspensión. Puede ser útil cuando se usa HOTSPOT. ¡Drena la batería!</string>
     <string name="pref_common_show_help">"Mensajes de ayuda"</string>
     <string name="pref_common_show_help_summ">Mostrar todos los mensajes que han sido marcados como no permitidos para mostrarse</string>
@@ -272,7 +272,7 @@
     <string name="pref_itpd_limits">"Límites"</string>
     <string name="pref_itpd_limits_transittunnels_summ">"Establece el número máximo de túneles de tránsito. Por defecto, 2500."</string>
     <string name="pref_itpd_limits_openfiles_summ">"Limita el numero de descriptores de archivos abiertos (0 - usa el límite del sistema)."</string>
-    <string name="pref_itpd_limits_coresize_summ">Tamaño máximo del archivo core en Kb (0 - usar límite del sistema).</string>
+    <string name="pref_itpd_limits_coresize_summ">Tamaño máximo del archivo core en Kb (0 - usa el límite del sistema).</string>
     <string name="pref_itpd_addressbook">Agenda</string>
     <string name="pref_itpd_addressbook_defaulturl_summ">URL de subscripción inicial para la agenda.</string>
     <string name="pref_itpd_addressbook_subscriptions_summ">URLs de subscripción para la agenda.</string>
@@ -312,13 +312,13 @@
     <string name="update_check_warning">"El servidor de actualizaciones esta temporalmente fuera de servicio. Por favor, inténtalo de nuevo más tarde."</string>
     <string name="update_check_warning_menu">"El servidor de actualizaciones no esta disponible."</string>
     <string name="update_fault">"Actualización fallida."</string>
-    <string name="update_check_no_update">No se encontraron actualizaciones.</string>
+    <string name="update_check_no_update">No se han encontrado actualizaciones.</string>
     <string name="update_last_check">"Última comprobación:"</string>
     <string name="update_found">"Se han encontrado actualizaciones."</string>
     <string name="update_installed">"La actualización se instalo correctamente."</string>
     <string name="update_over_three_activations">"Has activado 3 copias de InviZible con éste código. Si consideras éste mensaje como erróneo, por favor contacta al desarrollador."</string>
     <string name="update_wrong_code">"Código PRO erroneo. Por favor, contacta al desarrollador."</string>
-    <string name="update_over_five_times">"Comprobaste hoy más de 5 veces si había actualizaciones. Por favor, inténtalo de nuevo pasado un tiempo."</string>
+    <string name="update_over_five_times">Has comprobado las actualizaciones de InviZible Pro más de 5 veces al día. Por favor, inténtalo más tarde.</string>
     <string name="verifier_error">Parece una versión no oficial de InviZible. ¡Por favor ten cuidado!</string>
     <string name="only_for_pro">"Solo versión PRO"</string>
     <string name="donate">"Donaciones"</string>
@@ -393,9 +393,9 @@
     <string name="pref_tor_isolate_dest_address_summ">"Usa circuitos separados para conexiones con direcciones de destino diferentes."</string>
     <string name="pref_tor_isolate_dest_port_summ">"Usa circuitos separados para conexiones con puertos de destino diferentes."</string>
     <string name="dialog_new_tor_default_bridges_available">"Se ha detectado nuevos puentes predeterminados para Tor. ¿Deseas actualizar los valores?"</string>
-    <string name="pref_common_mitm_categ">"Ataques de secuestro de la conexión"</string>
+    <string name="pref_common_mitm_categ">Detección ataque de intermediario (MITM)</string>
     <string name="pref_common_arp_spoofing_detection">"Detectar envenenamiento de tablas ARP"</string>
-    <string name="pref_common_arp_spoofing_detection_summ">Detecta la suplantación ARP Man-in-the-Middle y los ataques DHCP fraudulentos en redes WiFi.</string>
+    <string name="pref_common_arp_spoofing_detection_summ">Detecta suplantación ARP Man-in-the-Middle y ataques DHCP maliciosos en redes WiFi.</string>
     <string name="pref_common_arp_block_internet">"Bloquear el acceso a Internet cuando se detecte un ataque"</string>
     <string name="pref_common_arp_block_internet_summ">La conexión a Internet se interrumpirá automáticamente mientras dure el ataque</string>
     <string name="pref_common_proxy_categ">"Proxy"</string>
@@ -433,7 +433,7 @@
     <string name="proxy_successful_connection">"Conexión establecida. Ping: %s ms."</string>
     <string name="notification_arp_spoofing">"¡Envenenamiento ARP detectado!"</string>
     <string name="notification_rogue_dhcp">"¡Suplantación DHCP detectada!"</string>
-    <string name="notification_mitm">¡Ataque man-in-the-middle detectado! Tu tráfico podría estar siendo interceptado por otro dispositivo en la red local. Desconecta el WiFi, espera unos segundos y conéctete de nuevo. ¡Usar este punto de acceso WiFi no es seguro!</string>
+    <string name="notification_mitm">¡Detectado ataque Man-in-the-Middle! Tus datos pueden ser interceptado por otro dispositivo en la red local. Desconecta el WiFi, espera unos segundos y conecta de nuevo. ¡El punto de acceso WiFi actual puede ser inseguro!</string>
     <string name="toast_arp_detection_not_supported">¡Tu dispositivo no admite la detección de envenenamiento de tablas ARP!</string>
     <string name="pref_fast_use_tor_bridges_alt_summ">"Por favor, desactiva el elemento Nodos de entrada (EntryNodes) en la configuración de Tor, de otra manera no podrá usar los puentes con Tor."</string>
     <string name="pref_fast_tor_bypass_lan">"Excluir direcciones LAN"</string>
@@ -488,7 +488,7 @@
     <string name="tile_changing_tor_ip">"IP Tor cambiando"</string>
     <string name="tile_dialog_over_three_tiles_message">"Ha agregado más de 3 mosaicos a la configuración rápida. Por favor, solo deje 3. Agregar más de 3 mosaicos puede causar problemas con el control de la aplicación."</string>
     <string name="pref_common_rogue_dhcp_detection">"Detección de suplantación DHCP"</string>
-    <string name="pref_common_rogue_dhcp_detection_summ">Detección de ataques Man-in-the-Middle rogue DHCP en redes WiFi.</string>
+    <string name="pref_common_rogue_dhcp_detection_summ">Detecta ataques Man-in-the-Middle de DHCP malicioso en redes WiFi.</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Seleccionar punto de servicio de conexión"</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">"El punto de servicio de conexion se utiliza para determinar un proxy descentralizado voluntario, así la resolución para la conexión queda encapsulada para el ISP, utilizando el punto de servicio de conexión como una suerte de servicio de resolución de solicitudes de proxies en la que está basada la tecnología WebRTC."</string>
     <string name="pref_firewall_show_all_apps">Mostrar todas las aplicaciones</string>
@@ -561,5 +561,5 @@
     <string name="pref_fast_block_lan_with_free_wifi">Bloquear LAN con WiFi libre</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Bloquea la conexión a LAN al detectar un Portal Cautivo</string>
     <string name="pref_common_fast_network_switching">Cambio rápido de red</string>
-    <string name="pref_common_fast_network_switching_summ">Mantener el wifi y datos móviles activados para cambiar más rápido entre redes</string>
+    <string name="pref_common_fast_network_switching_summ">Mantener WiFi y datos móviles activados para cambiar de red más rápido</string>
 </resources>
