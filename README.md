@@ -4,13 +4,32 @@
 ![GitHub Releases](https://img.shields.io/github/downloads/gedsh/invizible/latest/total?color=blue&style=plastic)
 [![Translation status](https://hosted.weblate.org/widgets/invizible/-/invizible/svg-badge.svg)](https://hosted.weblate.org/engage/invizible/?utm_source=widget)
 
-### [Google Play stable version](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/pan.alexander.tordnscrypt.stable)
 
-### [Download the latest version from GitHub](https://github.com/Gedsh/InviZible/releases/latest)
+[<img src="https://www.openapk.net/images/openapk-badge.png" alt="Get it on OpenAPK" height="80">](https://www.openapk.net/invizible-pro-increase-your-security-protect-you/pan.alexander.tordnscrypt/)
 
-### [IzzyOnDroid F-Droid beta version](https://apt.izzysoft.de/fdroid/index/apk/pan.alexander.tordnscrypt)
+[<img src="https://raw.githubusercontent.com/solkin/appteka-android/b46cf2280599f93732bb1ee76a9c12364f313444/art/badge.png" alt="Get it on Appteka" height="60">](https://appteka.store/app/ab7r236585)
 
-### [F-Droid stable version](https://f-droid.org/packages/pan.alexander.tordnscrypt.stable/)
+[<img src="https://www.androidfreeware.net/images/androidfreeware-badge.png" alt="Get it on AndroidFreeware" height="80">](https://www.androidfreeware.net/download-invizible-pro-increase-your-security-protect-you-apk.html)
+
+[<img src="https://raw.githubusercontent.com/zapstore/zapstore/0b2eb07b700c477cf49b4d90cd521e1217d6a126/assets/images/badge.png" alt="Get it on Zapstore" height="60">](https://zapstore.dev/apps/naddr1qvzqqqr7pvpzq7xwd748yfjrsu5yuerm56fcn9tntmyv04w95etn0e23xrczvvraqqs8qctw9eskcetcv9hxgetj9e6x7unydeekxunewp6zuum5v93xcegplgsva)
+
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/fdroid/index/apk/pan.alexander.tordnscrypt)
+</div>
+
+[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/refs/heads/main/assets/graphics/badge_obtainium.png" alt='Get it on Obtainium' height="60">](https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://app/%7B%22id%22%3A%22pan.alexander.tordnscrypt.stable%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2FGedsh%2FInviZible%22%2C%22author%22%3A%22Gedsh%22%2C%22name%22%3A%22InviZible%20Lite%22%2C%22preferredApkIndex%22%3A0%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Atrue%2C%5C%22fallbackToOlderReleases%5C%22%3Atrue%2C%5C%22filterReleaseTitlesByRegEx%5C%22%3A%5C%22Stable%5C%22%2C%5C%22filterReleaseNotesByRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22verifyLatestTag%5C%22%3Afalse%2C%5C%22dontSortReleasesList%5C%22%3Afalse%2C%5C%22useLatestAssetDateAsReleaseDate%5C%22%3Afalse%2C%5C%22releaseTitleAsVersion%5C%22%3Afalse%2C%5C%22trackOnly%5C%22%3Afalse%2C%5C%22versionExtractionRegEx%5C%22%3A%5C%22%5C%22%2C%5C%22matchGroupToUse%5C%22%3A%5C%22%5C%22%2C%5C%22versionDetection%5C%22%3Atrue%2C%5C%22releaseDateAsVersion%5C%22%3Afalse%2C%5C%22useVersionCodeAsOSVersion%5C%22%3Afalse%2C%5C%22apkFilterRegEx%5C%22%3A%5C%22_arm64%5C%22%2C%5C%22invertAPKFilter%5C%22%3Afalse%2C%5C%22autoApkFilterByArch%5C%22%3Atrue%2C%5C%22appName%5C%22%3A%5C%22%5C%22%2C%5C%22shizukuPretendToBeGooglePlay%5C%22%3Afalse%2C%5C%22allowInsecure%5C%22%3Afalse%2C%5C%22exemptFromBackgroundUpdates%5C%22%3Afalse%2C%5C%22skipUpdateNotifications%5C%22%3Afalse%2C%5C%22about%5C%22%3A%5C%22%5C%22%7D%22%2C%22overrideSource%22%3Anull%7D)
+
+
+[<img src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" alt='Get it on GitHub' height="80">](https://github.com/Gedsh/InviZible/releases/latest)
+
+[<img src="https://static.apkpure.com/www/static/imgs/logo_new@2x.png" alt="Get it on Apkpure" height="40">](https://apkpure.com/invizible-pro-tor-firewall/pan.alexander.tordnscrypt.gp)
+
+
+[<img src="https://gitlab.com/-/project/6922885/uploads/dc268935d9bb381bdf17fc7d92fc19e0/badge.png" alt="Get it on Aurora Store" height="70">](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
+
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png" alt="Get it on Google Play" height="80">](https://play.google.com/store/apps/details?id=pan.alexander.tordnscrypt.gp)
+
+[<img src="https://accrescent.app/badges/get-it-on.png" alt="Get it on Accrescent" height="80">](https://accrescent.app/app/dev.clombardo.dnsnet)
 
 ## Android application for online privacy and security
 
