@@ -59,6 +59,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
@@ -327,28 +328,34 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         File app_bin = new File(appDataDir + "/app_bin");
         File app_data = new File(appDataDir + "/app_data");
 
+        String warn = "";
 
         if (app_bin.isDirectory()) {
             if (!FileManager.deleteDirSynchronous(activity, app_bin.getAbsolutePath())) {
-                throw new IllegalStateException(app_bin.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         } else if (app_bin.isFile()) {
             if (FileManager.deleteFileSynchronous(activity, app_bin.getParent(), app_bin.getName())) {
-                throw new IllegalStateException(app_bin.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         }
 
         if (app_data.isDirectory()) {
             if (!FileManager.deleteDirSynchronous(activity, app_data.getAbsolutePath())) {
-                throw new IllegalStateException(app_data.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         } else if (app_data.isFile()) {
             if (FileManager.deleteFileSynchronous(activity, app_data.getParent(), app_data.getName())) {
-                throw new IllegalStateException(app_data.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         }
 
-        logi("Installer: removeInstallationDirsIfExists OK");
+        if (warn.isEmpty()) {
+            logi("Installer: removeInstallationDirsIfExists OK");
+        } else {
+            logw(warn);
+        }
+
     }
 
     protected void chmodExtractedDirs() {
