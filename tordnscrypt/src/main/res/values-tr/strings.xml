@@ -196,12 +196,12 @@
     <string name="pref_common_restart_tor">Lütfen Tor’u yeniden başlatın</string>
     <string name="pref_common_restart_itpd">Lütfen I2P’yi yeniden başlatın</string>
     <string name="pref_common_multi_user">Çoklu kullanıcı desteği</string>
-    <string name="pref_common_multi_user_summ">Dual Apps, MIUI, Island, Shelter ve İş profili uygulamaları için destek. VPN modunda etkisiz olabilir.</string>
+    <string name="pref_common_multi_user_summ">Dual Apps, MIUI, Island, Shelter ve İş profili uygulamaları için destek. VPN modunda etkisiz olabilir</string>
     <string name="pref_common_use_iptables">iptables seçin</string>
     <string name="pref_common_use_iptables_app">Uygulamanın iptables’ını kullan</string>
     <string name="pref_common_use_iptables_device">Cihazın iptables’ını kullan</string>
     <string name="pref_common_wait_iptables">xtables kilidini bekleyin</string>
-    <string name="pref_common_wait_iptables_summ">iptables kurallarının aynı anda değiştirilmesini önlemek için özel iptables kilidi alınana kadar bekleyin.</string>
+    <string name="pref_common_wait_iptables_summ">iptables kurallarının aynı anda değiştirilmesini önlemek için özel iptables kilidi alınana kadar bekleyin</string>
     <string name="pref_common_log_root_commands">Root komutlarını günlüğe kaydet</string>
     <string name="notification_text">DNSCrypt, Tor, I2P korunuyor. Gizlemeyin.</string>
     <string name="notification_exec_root_commands">Root komutları çalıştırılıyor…</string>
@@ -317,7 +317,7 @@
     <string name="pref_tor_fascist_firewall_lock_summ">Bu seçeneği etkinleştirmek için köprüleri devre dışı bırakmalı veya yalnızca 80 ve 443 numaralı bağlantı noktalarını kullanan köprüleri kullanmalısınız.</string>
     <string name="pref_tor_new_circuit_period_summ">Her NUM saniyede bir yeni bir devre oluşturup oluşturmayacağınızı değerlendirin.</string>
     <string name="pref_tor_max_circuit_dirtiness_summ">En fazla NUM saniye önce ilk kez kullanılmış bir devreyi yeniden kullanın, ancak çok eski bir devreye yeni bir akış bağlamayın.</string>
-    <string name="pref_tor_dormant_client_timeout_summ">Tor, belirtilen süre boyunca istemci etkinliği görmezse uyku durumuna geçer. En az 10 dakika olmalıdır.</string>
+    <string name="pref_tor_dormant_client_timeout_summ">Tor, belirtilen süre boyunca istemci etkinliği görmezse uyku durumuna geçer. En az 10 dakika olmalıdır</string>
     <string name="pref_tor_enforce_distinct_subnets_summ">Etkinleştirildiğinde, Tor aynı devrede IP adresleri "çok yakın" olan iki sunucuyu kullanmaz. Şu anda, iki adres aynı /16 aralığında ise "çok yakın" kabul edilir.</string>
     <string name="pref_tor_enable_SOCKS_proxy">SOCKS proxy</string>
     <string name="pref_tor_SOCKS_port_summ">SOCKS protokolünü kullanan uygulamalardan gelen bağlantıları dinlemek için bu bağlantı noktasını açın.</string>
@@ -556,4 +556,9 @@
     <string name="rules">kurallar</string>
     <string name="total_rules">Toplam: %d kural</string>
     <string name="dns_rule_add_url">URL ekle</string>
+    <string name="pref_fast_block_lan_with_free_wifi">Ortak Wi-Fi\'de LAN\'ı engelle</string>
+    <string name="pref_fast_block_lan_with_free_wifi_summ">Captive Portal algılandığında LAN\'a bağlantıyı reddet</string>
+    <string name="pref_common_fast_network_switching">Hızlı ağ geçişi</string>
+    <string name="pref_common_fast_network_switching_summ">Ağlar arasında daha hızlı geçiş yapmak için Wi-Fi ve mobil veriyi açık tut</string>
+    <string name="pref_dnscrypt_relays">Kaynaklar</string>
 </resources>
