@@ -557,4 +557,6 @@
     <string name="helper_tor_check_proxy">Du hast den Socks5-Proxy aktiviert, aber der Proxy scheint nicht zu laufen. Bitte überprüfe deine Einstellungen!</string>
     <string name="pref_fast_block_lan_with_free_wifi">Blockiere LAN in öffentlichen Netzwerken</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Verweigere die Verbindung zum LAN, wenn ein Captive Portal erkannt wurde</string>
+    <string name="pref_common_fast_network_switching">Schnelles Netzwerk Wechseln</string>
+    <string name="pref_common_fast_network_switching_summ">Lassen WLAN und mobile Daten für einen schnelleren Wechsel zwischen Netzwerken eingeschaltet</string>
 </resources>
