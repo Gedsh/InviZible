@@ -22,6 +22,7 @@ package pan.alexander.tordnscrypt.settings;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Process;
 
@@ -32,6 +33,7 @@ import java.io.File;
 import pan.alexander.tordnscrypt.App;
 import pan.alexander.tordnscrypt.R;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
+import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.update.UpdateCheck;
 
 import static pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX;
@@ -174,8 +176,12 @@ public class PathVars {
             default:
                 if (bbOK) {
                     path = "busybox ";
-                } else {
+                } else if (ModulesStatus.getInstance().isRootAvailable()) {
                     path = appDataDir + "/app_bin/busybox ";
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    path = "toybox ";
+                } else {
+                    path = "toolbox ";
                 }
                 break;
         }

@@ -154,7 +154,7 @@ public class TorFragmentReceiver extends BroadcastReceiver {
                 if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
                     logi("TorRunFragment onReceive TOP_BROADCAST");
 
-                    checkTorVersionWithRoot(context);
+                    checkTorVersionWithRoot(context, modulesStatus);
                 }
 
             }
@@ -162,8 +162,8 @@ public class TorFragmentReceiver extends BroadcastReceiver {
         }
     }
 
-    private void checkTorVersionWithRoot(Context context) {
-        if (context != null && presenter.isTorInstalled()) {
+    private void checkTorVersionWithRoot(Context context, ModulesStatus modulesStatus) {
+        if (context != null && presenter.isTorInstalled() && modulesStatus.isRootAvailable()) {
 
             List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libtor.so 2> /dev/null",

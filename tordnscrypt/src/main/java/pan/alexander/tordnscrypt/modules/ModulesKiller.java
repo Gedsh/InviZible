@@ -500,18 +500,25 @@ public class ModulesKiller {
 
     //kill default signal SIGTERM - 15, SIGKILL -9, SIGQUIT - 3
     private List<String> prepareKillCommands(String module, String pid, String signal, boolean killWithRoot) {
+        String shell;
+        if (modulesStatus.isRootAvailable()) {
+            shell = "su";
+        } else {
+            shell = "sh";
+        }
+
         List<String> result;
 
         if (pid.isEmpty() || killWithRoot) {
             String killStringToyBox = "toybox pkill " + module + " || true";
             String killString = "pkill " + module + " || true";
             String killStringBusybox = busyboxPath + "pkill " + module + " || true";
-            String killAllStringBusybox = busyboxPath + "kill $(pgrep " + module + ") || true";
+            String killAllStringBusybox = busyboxPath + shell + " -c \"kill $(" + busyboxPath + "pgrep " + module + ")\" || true";
             if (!signal.isEmpty()) {
                 killStringToyBox = "toybox pkill -" + signal + " " + module + " || true";
                 killString = "pkill -" + signal + " " + module + " || true";
                 killStringBusybox = busyboxPath + "pkill -" + signal + " " + module + " || true";
-                killAllStringBusybox = busyboxPath + "kill -s " + signal + " $(pgrep " + module + ") || true";
+                killAllStringBusybox = busyboxPath + shell + " -c \"kill -s " + signal + " $(" + busyboxPath + "pgrep " + module + ")\" || true";
             }
 
             result = new ArrayList<>(Arrays.asList(

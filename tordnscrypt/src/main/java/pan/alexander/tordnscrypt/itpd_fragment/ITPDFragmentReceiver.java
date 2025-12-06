@@ -153,7 +153,7 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
             if (action.equals(TOP_BROADCAST)) {
                 if (TopFragment.TOP_BROADCAST.contains("TOP_BROADCAST")) {
-                    checkITPDVersionWithRoot(context);
+                    checkITPDVersionWithRoot(context, modulesStatus);
                     logi("ITPDRunFragment onReceive TOP_BROADCAST");
                 }
             }
@@ -161,8 +161,8 @@ public class ITPDFragmentReceiver extends BroadcastReceiver {
 
     }
 
-    private void checkITPDVersionWithRoot(Context context) {
-        if (context != null && presenter.isITPDInstalled()) {
+    private void checkITPDVersionWithRoot(Context context, ModulesStatus modulesStatus) {
+        if (context != null && presenter.isITPDInstalled() && modulesStatus.isRootAvailable()) {
             List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libi2pd.so 2> /dev/null",
                     busyboxPath + "echo 'checkITPDRunning' 2> /dev/null",
