@@ -78,7 +78,7 @@
     <string name="pref_fast_all_through_tor">Định tuyến tất cả lưu lượng qua Tor</string>
     <string name="pref_fast_all_through_ipro">Định tuyến tất cả lưu lượng qua InviZible</string>
     <string name="pref_fast_unlock_with_tor">Chọn trang web</string>
-    <string name="pref_fast_unlock_with_tor_summ">Danh sách trang web để mở với Tor. Tính năng này không hoạt động với các trang web nằm sau CDN.</string>
+    <string name="pref_fast_unlock_with_tor_summ">Danh sách trang web để mở với Tor. Tính năng này không hoạt động với các trang web nằm sau CDN</string>
     <string name="pref_fast_unlock_apps_with_tor">Chọn ứng dụng</string>
     <string name="pref_fast_unlock_apps_with_tor_summ">Danh sách ứng dụng để sử dụng với Tor</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">Danh sách ứng dụng để sử dụng với InviZible</string>
@@ -136,4 +136,8 @@
     <string name="pref_common_run_with_root_summ">Sử dụng quyền root cho các mô-đun DNSCrypt, Tor và I2P. Bật tính năng này sẽ khiến các mô-đun không được quản lý và có thể gây ra vấn đề kết nối!</string>
     <string name="pref_common_categ_other">Khác</string>
     <string name="pref_common_block_http">Chặn http HOTSPOT</string>
+    <string name="drawer_menu_donate">Quyên góp</string>
+    <string name="etPathBackup">Đường dẫn thư mục:</string>
+    <string name="pref_fast_prevent_dns_leak">Ngăn chặn rò rỉ DNS</string>
+    <string name="pref_fast_prevent_dns_leak_summ">Chặn các nỗ lực che giấu truy vấn DNS. Có thể gây ra sự cố kết nối</string>
 </resources>
