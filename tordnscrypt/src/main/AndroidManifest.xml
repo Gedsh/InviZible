@@ -34,6 +34,10 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="31" />
 
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
@@ -61,7 +65,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
-        tools:targetApi="q">
+        android:enableOnBackInvokedCallback="false"
+        tools:targetApi="33">
 
         <profileable android:shell="false" />
 
