@@ -1445,3 +1445,9 @@
 * Updated Tor to version 4.8.19.
 * Updated Tor Lyrebird obfuscator.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.3**
+* Updated DNSCrypt to version 2.1.15.
+* Updated Tor to version 4.8.21.
+* Updated Turkish, Chinese and Spanish translations.
+* Fixes and optimizations.
