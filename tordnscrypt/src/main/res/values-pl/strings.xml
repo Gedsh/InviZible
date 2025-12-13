@@ -492,7 +492,7 @@
     <string name="pref_common_use_iptables_app">Użyj iptables aplikacji</string>
     <string name="pref_common_use_iptables_device">Użyj iptables urządzenia</string>
     <string name="pref_common_wait_iptables">"Poczekaj na zablokowanie xtables"</string>
-    <string name="pref_common_wait_iptables_summ">Poczekaj, aż będzie można uzyskać wyłączną blokadę iptables, aby zapobiec jednoczesnej modyfikacji reguł iptables.</string>
+    <string name="pref_common_wait_iptables_summ">Poczekaj, aż będzie można uzyskać wyłączną blokadę iptables, aby zapobiec jednoczesnej modyfikacji reguł iptables</string>
     <string name="connectivity_check">Sprawdzanie łączności z Internetem</string>
     <string name="pref_fast_logs">Logi w czasie rzeczywistym</string>
     <string name="pref_fast_logs_summ">Pokaz logi połączeń aplikacji na karcie DNS</string>
@@ -559,4 +559,6 @@
     <string name="pref_fast_prevent_dns_leak">Ochrona przed wyciekami DNS</string>
     <string name="pref_fast_block_lan_with_free_wifi">Blokowanie sieci LAN w publicznych sieciach Wi-Fi</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Odmowa połączenia z siecią LAN w przypadku wykrycia Captive Portal</string>
+    <string name="pref_common_fast_network_switching">Szybkie przełączanie się między sieciami</string>
+    <string name="pref_common_fast_network_switching_summ">Aby szybciej przełączać się między sieciami, pozostaw włączoną funkcję Wi-Fi i transmisję danych komórkowych</string>
 </resources>
