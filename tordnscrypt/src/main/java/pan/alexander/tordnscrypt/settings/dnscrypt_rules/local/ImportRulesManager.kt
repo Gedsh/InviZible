@@ -454,9 +454,14 @@ class ImportRulesManager(
             return ""
         }
 
-        val index = line.lastIndexOf(" ") + 1
+        var index = line.lastIndexOf(" ") + 1
         if (index in 8 until line.length) {
             output = line.substring(index)
+        } else {
+            index = line.lastIndexOf("\t") + 1
+            if (index in 8 until line.length) {
+                output = line.substring(index)
+            }
         }
 
         if (excludeFromHost.contains(output)) {
