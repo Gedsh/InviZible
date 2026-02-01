@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
@@ -57,8 +59,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 36
         versionCode 263
-
-        resConfigs "en", "ru", "pl", "de", "fa", "fi", "in", "fr", "ja", "zh", "es", "pt", "pt-rBR", "el", "tr", "it", "uk", "bg", "ar", "nl", "ta"
+        resourceConfigurations += ['en', 'ru', 'pl', 'de', 'fa', 'fi', 'in', 'fr', 'ja', 'zh', 'es', 'pt', 'pt-rBR', 'el', 'tr', 'it', 'uk', 'bg', 'ar', 'nl', 'ta']
 
         externalNativeBuild {
             cmake {
@@ -109,13 +110,11 @@ android {
     }
 
     packagingOptions {
+        jniLibs {
+            keepDebugSymbols += ['*/*/libdnscrypt-proxy.so', '*/*/libobfs4proxy.so', '*/*/libsnowflake.so', '*/*/libconjure.so', '*/*/libwebtunnel.so']
+        }
         jniLibs.useLegacyPackaging = true
 
-        doNotStrip '*/*/libdnscrypt-proxy.so'
-        doNotStrip '*/*/libobfs4proxy.so'
-        doNotStrip '*/*/libsnowflake.so'
-        doNotStrip '*/*/libconjure.so'
-        doNotStrip '*/*/libwebtunnel.so'
     }
 
     applicationVariants.configureEach { variant ->
@@ -134,8 +133,10 @@ android {
         buildConfig true
     }
 
-    kotlinOptions {
-        jvmTarget = '17'
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
 
     ksp {
@@ -171,7 +172,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     implementation 'eu.chainfire:libsuperuser:1.1.1'
     implementation 'com.jrummyapps:android-shell:1.0.1'
-    implementation 'androidx.core:core-ktx:1.16.0'
+    implementation 'androidx.core:core-ktx:1.17.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation project(':filepicker')
