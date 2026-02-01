@@ -277,6 +277,10 @@ public class VpnRulesHolder {
                     packet.daddr,
                     packet.dport
             );
+        } else if (vpnPreferences.getFirewallEnabled()
+                && packet.dport == PLAINTEXT_DNS_PORT
+                && uidLanAllowed.contains(packet.uid)) {
+            packet.allowed = true;
         } else if (vpnPreferences.getFirewallEnabled()) {
 
             if (setUidAllowed.contains(packet.uid)) {

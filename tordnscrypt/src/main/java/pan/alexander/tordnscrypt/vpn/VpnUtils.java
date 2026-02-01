@@ -80,7 +80,7 @@ public class VpnUtils {
             META_ADDRESS_IPv6, //Unspecified Address RFC4291
             "FEC0::/10", //Site-local unicast, equivalent to 10.0.0.0/8 RFC3513
             "FE80::/10", //Link-local unicast, equivalent to 169.254.0.0/16 RFC4291
-            "FD00::/8" //Unique local address RFC4193
+            "FC00::/7" //Unique local address RFC4193
     ));
 
     public static final ArrayList<String> multicastIPv6 = new ArrayList<>(Arrays.asList(
@@ -315,7 +315,7 @@ public class VpnUtils {
             }
 
             if (prefix < 0) {
-                return ip.toLowerCase(Locale.ROOT).equals(net.toLowerCase(Locale.ROOT));
+                return InetAddress.getByName(ip).equals(InetAddress.getByName(net));
             }
 
             final byte[] ipBin = java.net.InetAddress.getByName(ip).getAddress();
