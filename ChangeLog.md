@@ -1451,3 +1451,11 @@
 * Updated Tor to version 4.8.21.
 * Updated Turkish, Chinese and Spanish translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.4**
+* Updated DNSCrypt.
+* Updated Tor to version 4.8.22.
+* Updated Tor obfuscators: Lyrebird, SnowFlake, Conjure.
+* Updated default bridges.
+* Updated German and Polish translations.
+* Fixes and optimizations.
