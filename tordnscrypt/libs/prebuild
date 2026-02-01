@@ -21,7 +21,7 @@ webtunnel_commit=738ccbd3d15c2144f8d4c5dbddbbde6a687ca104
 
 tor_branch=prod
 tor_commit=395d94d099b53d617a6762fdb35a98081d6ccaea
-tor_openssl_version=openssl-3.6.0
+tor_openssl_version=openssl-3.6.1
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
