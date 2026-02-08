@@ -1459,3 +1459,8 @@
 * Updated default bridges.
 * Updated German and Polish translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.5**
+* Improved censorship resistance of webtunnel bridges.
+* Fixed using webtunnel bridges with SNI spoofing.
+* Updated Purple I2P with the latest fixes.
