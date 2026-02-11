@@ -99,7 +99,7 @@
     <string name="pref_fast_unlock_host_wrong">"¡Nombre de sitio erroneo!"</string>
     <string name="pref_fast_theme">Tema</string>
     <string name="pref_fast_language">Idioma</string>
-    <string name="pref_fast_block_http">"Bloquear HTTP"</string>
+    <string name="pref_fast_block_http">Bloquear HTTP</string>
     <string name="pref_fast_block_http_summ">Bloquear conexiones HTTP al puerto 80</string>
     <string name="pref_fast_categ_update">Actualizar</string>
     <string name="pref_fast_auto_update">Actualizaciones automáticas</string>
@@ -156,8 +156,8 @@
     <string name="pref_dnscrypt_doh_servers_summ">Requiere servidores compatibles con el protocolo DNS-sobre-HTTPS.</string>
     <string name="pref_dnscrypt_require_servers_prop_categ">Requerir servidores definidos por fuentes remotas para satisfacer propiedades específicas</string>
     <string name="pref_dnscrypt_require_dnssec_summ">"Requiere servidores compatibles con Extensiones de seguridad DNS (DNSSEC)."</string>
-    <string name="pref_dnscrypt_require_nolog_summ">"Requiere que los servidores no registren las peticiones DNS."</string>
-    <string name="pref_dnscrypt_require_nofilter_summ">Requiere que los servidores no usen ningún tipo de filtro (anuncios, control parental, bloqueos…) para las peticiones DNS.</string>
+    <string name="pref_dnscrypt_require_nolog_summ">El servidor no debe registrar las peticiones (declarativo).</string>
+    <string name="pref_dnscrypt_require_nofilter_summ">El servidor no debe forzar su propia lista negra (anuncios, control parental, bloqueos…).</string>
     <string name="pref_dnscrypt_force_tcp_categ">Usa siempre TCP para conexiones a servidores ascendentes</string>
     <string name="pref_dnscrypt_force_tcp_summ">Usa TCP en vez de UDP para conectarse a servidores DNSCrypt. Esta opción debe estar habilitada si usa DNSCrypt sobre Tor.</string>
     <string name="pref_dnscrypt_HTTP_SOCKS_proxy_categ">Proxy SOCKS</string>
@@ -198,7 +198,7 @@
     <string name="pref_dnscrypt_relays">"Fuentes"</string>
     <string name="pref_dnscrypt_relays_delay_summ">La lista de relés se actualizará después del retraso especificado en horas.</string>
     <string name="pref_dnscrypt_relays_title">"Retransmisores DNSCrypt"</string>
-    <string name="pref_dnscrypt_not_exist">"¡La preferencia no existe en la configuración de DNSCrypt!"</string>
+    <string name="pref_dnscrypt_not_exist">¡La preferencia no existe en dnscrypt-proxy.toml!</string>
     <string name="btn_dnscrypt_delete_log">"Borrar log"</string>
     <string name="title_dnscrypt_query_log">"Registro de peticiones de DNSCrypt"</string>
     <string name="title_dnscrypt_nx_log">"Registro de peticiones dudosas de DNSCrypt"</string>
@@ -490,7 +490,7 @@
     <string name="pref_common_rogue_dhcp_detection">"Detección de suplantación DHCP"</string>
     <string name="pref_common_rogue_dhcp_detection_summ">Detecta ataques Man-in-the-Middle de DHCP malicioso en redes WiFi.</string>
     <string name="pref_tor_snowflake_select_rendezvous">"Seleccionar punto de servicio de conexión"</string>
-    <string name="pref_tor_snowflake_select_rendezvous_summ">"El punto de servicio de conexion se utiliza para determinar un proxy descentralizado voluntario, así la resolución para la conexión queda encapsulada para el ISP, utilizando el punto de servicio de conexión como una suerte de servicio de resolución de solicitudes de proxies en la que está basada la tecnología WebRTC."</string>
+    <string name="pref_tor_snowflake_select_rendezvous_summ">Oculta el nombre de dominio del broker del proveedor de internet. El borker se usa para establecer la conexión.</string>
     <string name="pref_firewall_show_all_apps">Mostrar todas las aplicaciones</string>
     <string name="pref_firewall_show_all_apps_on_summ">Muestra las aplicaciones independientemente de si pueden acceder a Internet o no.</string>
     <string name="pref_firewall_show_all_apps_off_summ">Mostrar sólo aplicaciones que puedan acceder a Internet.</string>
