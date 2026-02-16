@@ -108,15 +108,6 @@ mv libconjure.so ${LIBS_ROOT}/${ABI}/libconjure.so || exit 1
 popd
 
 ################
-# libwebtunnel #
-################
-
-pushd webtunnel/main/client
-go build -ldflags="-s -w" -o libwebtunnel.so
-mv libwebtunnel.so ${LIBS_ROOT}/${ABI}/libwebtunnel.so || exit 1
-popd
-
-################
 # libnflog #
 ################
 
