@@ -1464,3 +1464,7 @@
 * Improved censorship resistance of webtunnel bridges.
 * Fixed using webtunnel bridges with SNI spoofing.
 * Updated Purple I2P with the latest fixes.
+
+**InviZible Pro beta 2.6.6**
+* Updated Purple I2P to version 2.59.0.
+* Fixes and optimizations.
