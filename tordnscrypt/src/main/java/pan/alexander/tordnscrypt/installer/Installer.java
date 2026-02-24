@@ -70,6 +70,8 @@ import javax.inject.Named;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
 
+    private final static int DNSCRYPT_FILES_TIME_BEFORE_NOW_DAYS = 5;
+
     @Inject
     public Lazy<PathVars> pathVars;
     @Inject @Named(DEFAULT_PREFERENCES_NAME)
@@ -234,6 +236,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Command command = new DNSCryptExtractCommand(activity, appDataDir);
         command.execute();
 
+        changeDnsCryptFilesDateToForceUpdate();
+
         command = new BusybExtractCommand(activity, appDataDir);
         command.execute();
 
@@ -243,6 +247,30 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
 
         logi("Installer: extractDNSCrypt OK");
+    }
+
+    private void changeDnsCryptFilesDateToForceUpdate() {
+
+        List<String> files = new ArrayList<>();
+        String dnsCryptFilesPath = appDataDir + "/app_data/dnscrypt-proxy/";
+        files.add(dnsCryptFilesPath + "odoh-relays.md");
+        files.add(dnsCryptFilesPath + "odoh-servers.md");
+        files.add(dnsCryptFilesPath + "public-resolvers.md");
+        files.add(dnsCryptFilesPath + "relays.md");
+
+        try {
+            for (String path: files) {
+                File file = new File(path);
+                if (file.isFile()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    file.setLastModified(
+                            System.currentTimeMillis() - DNSCRYPT_FILES_TIME_BEFORE_NOW_DAYS * 24 * 60 * 60 * 1000
+                    );
+                }
+            }
+        } catch (Exception e) {
+            loge("Installer changeDnsCryptFilesDate", e);
+        }
     }
 
     protected void extractTor() throws Exception {
