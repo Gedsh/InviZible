@@ -77,7 +77,7 @@
                 android:textSize="16sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                tools:text="12.09.2025" />
+                tools:text="12.09.2026" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tvDnsRuleFileQuantity"
