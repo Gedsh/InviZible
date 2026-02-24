@@ -1468,3 +1468,12 @@
 **InviZible Pro beta 2.6.6**
 * Updated Purple I2P to version 2.59.0.
 * Fixes and optimizations.
+
+**InviZible Pro stable 7.4.0**
+* Updated DNSCrypt to version 2.1.15.
+* Updated Tor to version 4.8.22.
+* Updated Purple I2P to version 2.59.0.
+* Updated Tor obfuscators.
+* Improved censorship resistance of webtunnel bridges.
+* Updated translations.
+* Fixes and optimizations.
