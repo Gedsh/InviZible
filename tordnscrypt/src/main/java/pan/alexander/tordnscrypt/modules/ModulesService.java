@@ -83,6 +83,7 @@ import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.SLOWDOWN_L
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.SPEEDUP_LOOP;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.START_ARP_SCANNER;
 import static pan.alexander.tordnscrypt.modules.ModulesServiceActions.STOP_ARP_SCANNER;
+import static pan.alexander.tordnscrypt.utils.Utils.deleteBridgesFromStateFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.UNDEFINED;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
@@ -769,6 +770,9 @@ public class ModulesService extends Service {
                 makeDelay(5);
 
                 if (modulesStatus.getTorState() != RUNNING) {
+                    deleteBridgesFromStateFile(
+                            new File(pathVars.get().getAppDataDir() + "/tor_data/state")
+                    );
                     startTor();
                     checkInternetConnection();
                 }

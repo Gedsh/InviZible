@@ -450,4 +450,50 @@ object Utils {
             .removePrefix("https://")
             .substringBefore("/")
 
+    @JvmStatic
+    fun deleteBridgesFromStateFile(file: File) {
+        try {
+
+            if (!file.exists() || !file.isFile) {
+                return
+            }
+
+            var containedBridges = false
+            val lines = mutableListOf<String>()
+
+            file.bufferedReader().use { reader ->
+                reader.forEachLine { line ->
+                    if (line.startsWith("Guard in=bridges ")) {
+                        containedBridges = true
+                    } else {
+                        lines.add(line)
+                    }
+                }
+            }
+
+            if (containedBridges) {
+                val parentDir = file.parentFile ?: return
+                val tempFile = File(parentDir, "${file.name}.tmp")
+
+                tempFile.bufferedWriter().use { writer ->
+                    for (line in lines) {
+                        writer.write(line)
+                        writer.newLine()
+                    }
+                }
+
+                if (!tempFile.renameTo(file)) {
+                    file.delete()
+                    if (!tempFile.renameTo(file)) {
+                        loge("TorRestarterReconnector deleteBridgesFromStateFile failed to replace file: ${file.absolutePath}")
+                    }
+                } else {
+                    tempFile.delete()
+                }
+            }
+        } catch (e: Exception) {
+            loge("TorRestarterReconnector deleteBridgesFromStateFile", e)
+        }
+    }
+
 }

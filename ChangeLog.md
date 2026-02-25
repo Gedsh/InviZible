@@ -1440,3 +1440,40 @@
 * Ensured compatibility with 16KB memory page size.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.2**
+* Updated Tor to version 4.8.19.
+* Updated Tor Lyrebird obfuscator.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.6.3**
+* Updated DNSCrypt to version 2.1.15.
+* Updated Tor to version 4.8.21.
+* Updated Turkish, Chinese and Spanish translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.6.4**
+* Updated DNSCrypt.
+* Updated Tor to version 4.8.22.
+* Updated Tor obfuscators: Lyrebird, SnowFlake, Conjure.
+* Updated default bridges.
+* Updated German and Polish translations.
+* Fixes and optimizations.
+
+**InviZible Pro beta 2.6.5**
+* Improved censorship resistance of webtunnel bridges.
+* Fixed using webtunnel bridges with SNI spoofing.
+* Updated Purple I2P with the latest fixes.
+
+**InviZible Pro beta 2.6.6**
+* Updated Purple I2P to version 2.59.0.
+* Fixes and optimizations.
+
+**InviZible Pro stable 7.4.0**
+* Updated DNSCrypt to version 2.1.15.
+* Updated Tor to version 4.8.22.
+* Updated Purple I2P to version 2.59.0.
+* Updated Tor obfuscators.
+* Improved censorship resistance of webtunnel bridges.
+* Updated translations.
+* Fixes and optimizations.

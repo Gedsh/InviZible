@@ -178,7 +178,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 if (TOP_BROADCAST.contains("TOP_BROADCAST")) {
                     logi("DNSCryptRunFragment onReceive TOP_BROADCAST");
 
-                    checkDNSVersionWithRoot(context);
+                    checkDNSVersionWithRoot(context, modulesStatus);
                 }
 
                 FragmentManager fragmentManager = view.getFragmentFragmentManager();
@@ -221,9 +221,9 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
         }
     }
 
-    private void checkDNSVersionWithRoot(Context context) {
+    private void checkDNSVersionWithRoot(Context context, ModulesStatus modulesStatus) {
 
-        if (presenter.isDNSCryptInstalled()) {
+        if (context != null && presenter.isDNSCryptInstalled() && modulesStatus.isRootAvailable()) {
 
             List<String> commandsCheck = new ArrayList<>(Arrays.asList(
                     busyboxPath + "pgrep -l /libdnscrypt-proxy.so 2> /dev/null",

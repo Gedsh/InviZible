@@ -3,10 +3,10 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 lyrebird_branch=prod
-lyrebird_commit=4a5f7ca25e13b5db78c2437efd409456ad8fb9c4
+lyrebird_commit=2cfc41346a65b1fa909b213dee6558a08d36cb3b
 
 dnscryptproxy_branch=master
-dnscryptproxy_commit=634168b3abe287b761d89df8ae3bab7c3d1539b4
+dnscryptproxy_commit=f5d7efcc86caaf65d28c6829db693af3b760fd7e
 
 snowflake_branch=feat/check-dns-ip
 snowflake_commit=0bdc069f2e06fb9f61c040b02af3a65b1a40db38
@@ -16,18 +16,15 @@ libzmq_version=v4.3.5
 conjure_branch=prod
 conjure_commit=ed87f43293b54d8c510f4b56200c7168a24d263c
 
-webtunnel_branch=prod
-webtunnel_commit=738ccbd3d15c2144f8d4c5dbddbbde6a687ca104
-
 tor_branch=prod
-tor_commit=6076a44be860ff1654f2cdae6caccf0ec97acf68
-tor_openssl_version=openssl-3.5.3
+tor_commit=395d94d099b53d617a6762fdb35a98081d6ccaea
+tor_openssl_version=openssl-3.6.1
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 
-i2pd_version=2.58.0
-i2pd_openssl_version=openssl-3.5.2
+i2pd_version=2.59.0
+i2pd_openssl_version=openssl-3.6.1
 miniupnpc_version=miniupnpc_2_2_8
 
 git clone --single-branch --branch $lyrebird_branch https://gitlab.torproject.org/Gedsh/lyrebird
@@ -51,11 +48,6 @@ git clone --single-branch --branch $libzmq_version https://github.com/zeromq/lib
 git clone --single-branch --branch $conjure_branch https://gitlab.torproject.org/Gedsh/conjure
 pushd conjure/
 git checkout -f $conjure_commit -b $conjure_commit
-popd
-
-git clone --single-branch --branch $webtunnel_branch https://gitlab.torproject.org/Gedsh/webtunnel
-pushd webtunnel/
-git checkout -f $webtunnel_commit -b $webtunnel_commit
 popd
 
 git clone https://github.com/Gedsh/Nflog-android

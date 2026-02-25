@@ -59,6 +59,7 @@ import static pan.alexander.tordnscrypt.TopFragment.TOP_BROADCAST;
 import static pan.alexander.tordnscrypt.di.SharedPreferencesModule.DEFAULT_PREFERENCES_NAME;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.logi;
+import static pan.alexander.tordnscrypt.utils.logger.Logger.logw;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.MAIN_ACTIVITY_RECREATE;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.INSTALLER_MARK;
@@ -68,6 +69,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 public class Installer implements TopFragment.OnActivityChangeListener {
+
+    private final static int DNSCRYPT_FILES_TIME_BEFORE_NOW_DAYS = 5;
 
     @Inject
     public Lazy<PathVars> pathVars;
@@ -233,6 +236,8 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         Command command = new DNSCryptExtractCommand(activity, appDataDir);
         command.execute();
 
+        changeDnsCryptFilesDateToForceUpdate();
+
         command = new BusybExtractCommand(activity, appDataDir);
         command.execute();
 
@@ -242,6 +247,30 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         }
 
         logi("Installer: extractDNSCrypt OK");
+    }
+
+    private void changeDnsCryptFilesDateToForceUpdate() {
+
+        List<String> files = new ArrayList<>();
+        String dnsCryptFilesPath = appDataDir + "/app_data/dnscrypt-proxy/";
+        files.add(dnsCryptFilesPath + "odoh-relays.md");
+        files.add(dnsCryptFilesPath + "odoh-servers.md");
+        files.add(dnsCryptFilesPath + "public-resolvers.md");
+        files.add(dnsCryptFilesPath + "relays.md");
+
+        try {
+            for (String path: files) {
+                File file = new File(path);
+                if (file.isFile()) {
+                    //noinspection ResultOfMethodCallIgnored
+                    file.setLastModified(
+                            System.currentTimeMillis() - DNSCRYPT_FILES_TIME_BEFORE_NOW_DAYS * 24 * 60 * 60 * 1000
+                    );
+                }
+            }
+        } catch (Exception e) {
+            loge("Installer changeDnsCryptFilesDate", e);
+        }
     }
 
     protected void extractTor() throws Exception {
@@ -327,28 +356,34 @@ public class Installer implements TopFragment.OnActivityChangeListener {
         File app_bin = new File(appDataDir + "/app_bin");
         File app_data = new File(appDataDir + "/app_data");
 
+        String warn = "";
 
         if (app_bin.isDirectory()) {
             if (!FileManager.deleteDirSynchronous(activity, app_bin.getAbsolutePath())) {
-                throw new IllegalStateException(app_bin.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         } else if (app_bin.isFile()) {
             if (FileManager.deleteFileSynchronous(activity, app_bin.getParent(), app_bin.getName())) {
-                throw new IllegalStateException(app_bin.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         }
 
         if (app_data.isDirectory()) {
             if (!FileManager.deleteDirSynchronous(activity, app_data.getAbsolutePath())) {
-                throw new IllegalStateException(app_data.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         } else if (app_data.isFile()) {
             if (FileManager.deleteFileSynchronous(activity, app_data.getParent(), app_data.getName())) {
-                throw new IllegalStateException(app_data.getAbsolutePath() + " delete failed");
+                warn = app_bin.getAbsolutePath() + " delete failed";
             }
         }
 
-        logi("Installer: removeInstallationDirsIfExists OK");
+        if (warn.isEmpty()) {
+            logi("Installer: removeInstallationDirsIfExists OK");
+        } else {
+            logw(warn);
+        }
+
     }
 
     protected void chmodExtractedDirs() {

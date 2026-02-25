@@ -125,6 +125,8 @@ public class SettingsParser implements OnTextFileOperationsCompleteListener {
                     key = "Sources";
                 } else if (header.matches("\\[sources\\.'?relays'?]") && key.equals("urls")) {
                     key = "Relays";
+                } else if (key.equals("refresh_delay") && !header.matches("\\[sources\\.'?public-resolvers'?]")) {
+                    continue;
                 } else if (header.matches("\\[sources\\.'?relays'?]") && key.equals("refresh_delay")) {
                     key = "refresh_delay_relays";
                 } else if (header.equals("[dns64]") && key.matches("#?prefix")) {

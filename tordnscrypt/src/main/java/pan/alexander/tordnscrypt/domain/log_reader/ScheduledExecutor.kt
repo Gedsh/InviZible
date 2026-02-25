@@ -30,7 +30,7 @@ class ScheduledExecutor(private val initialDelay: Long, private val period: Long
     private val timer: ScheduledExecutorService? = Executors.newScheduledThreadPool(0)
 
     fun execute(execute: () -> Unit) {
-        timer?.scheduleAtFixedRate({
+        timer?.scheduleWithFixedDelay({
             if (stopTimer) {
                 if (!timer.isShutdown) {
                     timer.shutdown()

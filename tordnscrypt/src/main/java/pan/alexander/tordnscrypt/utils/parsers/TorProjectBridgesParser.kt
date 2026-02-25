@@ -44,8 +44,8 @@ class TorProjectBridgesParser @Inject constructor() {
         Pattern.compile("input.+?type=\"hidden\".+?name=\"\\w+?\".+?value=\"([A-Za-z0-9-_]+?)\"")
     }
 
-    private val ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w+"
-    private val ipv6BridgeBase = "\\[$IPv6_REGEX_NO_BOUNDS]:\\d+ +\\w+"
+    private val ipv4BridgeBase = "(\\d{1,3}\\.){3}\\d{1,3}:\\d+ +\\w{40}"
+    private val ipv6BridgeBase = "\\[$IPv6_REGEX_NO_BOUNDS]:\\d+ +\\w{40}"
 
     private val vanillaBridgePatternIPv4 by lazy { Pattern.compile(ipv4BridgeBase) }
     private val vanillaBridgePatternIPv6 by lazy { Pattern.compile(ipv6BridgeBase) }

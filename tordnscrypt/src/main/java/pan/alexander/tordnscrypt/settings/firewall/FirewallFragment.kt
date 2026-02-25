@@ -401,8 +401,8 @@ class FirewallFragment : Fragment(),
         }
     }
 
-    override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
-        val context = buttonView?.context ?: return
+    override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+        val context = buttonView.context
 
         if (buttonView.id == R.id.menu_switch) {
             if (isChecked) {
