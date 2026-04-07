@@ -49,14 +49,15 @@ class AppSessionStore @Inject constructor() {
     }
 
     fun <T> restoreSet(key: String): Set<T> = try {
-        if (keyToValue.get(key) != null) {
-            keyToValue[key] as Set<T>
+        val value = keyToValue[key]
+        if (value != null) {
+            value as Set<T>
         } else {
-            emptySet<T>()
+            emptySet()
         }
     } catch (e: Exception) {
         loge("AppSessionStore restoreSet", e)
-        emptySet<T>()
+        emptySet()
     }
 
     fun clearSet(key: String) = try {
@@ -66,14 +67,15 @@ class AppSessionStore @Inject constructor() {
     }
 
     fun <T, V> restoreMap(key: String): Map<T, V> = try {
-        if (keyToValue.get(key) != null) {
-            keyToValue[key] as Map<T, V>
+        val value = keyToValue[key]
+        if (value != null) {
+            value as Map<T, V>
         } else {
-            emptyMap<T, V>()
+            emptyMap()
         }
     } catch (e: Exception) {
         loge("AppSessionStore restoreMap", e)
-        emptyMap<T, V>()
+        emptyMap()
     }
 
     fun clearMap(key: String) = try {
