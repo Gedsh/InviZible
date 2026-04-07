@@ -424,9 +424,9 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     private fun hideProgressBar() {
         progressJob?.cancel()
         lifecycleScope.launch {
-            binding.pbSocksProxy.progress = 100
+            _binding?.pbSocksProxy?.progress = 100
             delay(250)
-            binding.pbSocksProxy.visibility = View.GONE
+            _binding?.pbSocksProxy?.visibility = View.GONE
         }
     }
 
