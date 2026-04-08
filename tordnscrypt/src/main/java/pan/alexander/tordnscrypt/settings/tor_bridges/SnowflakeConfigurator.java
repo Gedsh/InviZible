@@ -86,6 +86,9 @@ public class SnowflakeConfigurator {
         if (!currentBridge.contains(" utls-imitate=")) {
             bridgeBuilder.append(" utls-imitate=").append(getUtlsClientID());
         }
+        if (!currentBridge.contains(" covertdtls-config=")) {
+            bridgeBuilder.append(" covertdtls-config=").append(getCovertDtlsMethod());
+        }
         if (!currentBridge.contains(" sqsqueue=") && isSqsBridge(currentBridge, rendezvousType)) {
             bridgeBuilder.append(" sqsqueue=").append(getSqsQueue());
         }
@@ -204,6 +207,15 @@ public class SnowflakeConfigurator {
         final String helloios_12_1 = "helloios_12_1";
 
         return hellorandomizedalpn;
+    }
+
+    @SuppressWarnings("unused")
+    private String getCovertDtlsMethod() {
+        final String mimic = "mimic";
+        final String randomize = "randomize";
+        final String randomizemimic = "randomizemimic";
+
+        return randomizemimic;
     }
 
     private String getSqsQueue() {
