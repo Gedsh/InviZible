@@ -1477,3 +1477,8 @@
 * Improved censorship resistance of webtunnel bridges.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.7**
+* Updated Tor to version 4.9.6.
+* Updated Tor obfuscators: Lyrebird, SnowFlake, Conjure.
+* Fixes and optimizations.
