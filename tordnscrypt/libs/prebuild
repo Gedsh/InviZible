@@ -3,22 +3,22 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 lyrebird_branch=prod
-lyrebird_commit=2cfc41346a65b1fa909b213dee6558a08d36cb3b
+lyrebird_commit=582c1a8e7d883612078f620ab537cab6e3257c93
 
 dnscryptproxy_branch=master
 dnscryptproxy_commit=f5d7efcc86caaf65d28c6829db693af3b760fd7e
 
 snowflake_branch=feat/check-dns-ip
-snowflake_commit=0bdc069f2e06fb9f61c040b02af3a65b1a40db38
+snowflake_commit=17007899b492651d14b02c13e5601081dbeb2376
 
 libzmq_version=v4.3.5
 
 conjure_branch=prod
-conjure_commit=ed87f43293b54d8c510f4b56200c7168a24d263c
+conjure_commit=6ddeaf147899d84bf268e1286daf01cc086c3bf9
 
-tor_branch=prod
-tor_commit=395d94d099b53d617a6762fdb35a98081d6ccaea
-tor_openssl_version=openssl-3.6.1
+tor_branch=prod-0.4.9
+tor_commit=9c3f99922c743cd30d8a4ac47b3fd8f353093a12
+tor_openssl_version=openssl-3.6.2
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
