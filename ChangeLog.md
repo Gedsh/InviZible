@@ -1482,3 +1482,8 @@
 * Updated Tor to version 4.9.6.
 * Updated Tor obfuscators: Lyrebird, SnowFlake, Conjure.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.6.8**
+* Updated Purple I2P to version 2.60.0.
+* Added unicode support in DNSCrypt rules.
+* Reduced startup time after restarting the phone.
