@@ -721,13 +721,13 @@ class ImportRulesManager(
 
     interface DnsRulesRegex {
         companion object {
-            val blackListHostRulesRegex = Regex("^[\\p{L}\\d-.=_*\\[\\]?,]+$")
+            val blackListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?,]+$")
             val blacklistIPRulesRegex = Regex("^[0-9a-fA-F:.=*\\[\\]]+$")
-            val cloakingRulesRegex = Regex("^[\\p{L}\\d-.=_*\\[\\]?]+[ \\t]+[\\p{L}\\d-.=_*:]+$")
+            val cloakingRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+[ \\t]+[a-zA-Z\\d-.=_*:]+$")
             val forwardingRulesRegex =
-                Regex("^[\\p{L}\\d-._]+[ \\t]+[0-9a-fA-F:.,\\[\\]]+$")
-            val whiteListHostRulesRegex = Regex("^[\\p{L}\\d-.=_*\\[\\]?]+$")
-            val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[\\p{L}\\d-._]+$")
+                Regex("^[a-zA-Z\\d-._]+[ \\t]+[0-9a-fA-F:.,\\[\\]]+$")
+            val whiteListHostRulesRegex = Regex("^[a-zA-Z\\d-.=_*\\[\\]?]+$")
+            val hostFileRegex = Regex("^(?:0.0.0.0|127.0.0.1)[ \\t]+[a-zA-Z\\d-._]+$")
         }
     }
 
