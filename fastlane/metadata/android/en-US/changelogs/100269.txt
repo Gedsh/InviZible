@@ -1,0 +1,2 @@
+**InviZible Pro beta 2.6.9**
+* Updated Tor to version 4.9.8.

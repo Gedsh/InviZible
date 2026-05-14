@@ -1487,3 +1487,6 @@
 * Updated Purple I2P to version 2.60.0.
 * Added unicode support in DNSCrypt rules.
 * Reduced startup time after restarting the phone.
+
+**InviZible Pro beta 2.6.9**
+* Updated Tor to version 4.9.8.
