@@ -1490,3 +1490,7 @@
 
 **InviZible Pro beta 2.6.9**
 * Updated Tor to version 4.9.8.
+
+**InviZible Pro beta 2.7.0**
+* Updated DNSCrypt to version 2.1.16.
+* Added support for DNSTT Tor bridges.
