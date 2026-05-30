@@ -21,6 +21,7 @@ package pan.alexander.tordnscrypt.settings.tor_bridges;
 
 import static pan.alexander.tordnscrypt.settings.tor_bridges.PreferencesTorBridgesViewModelKt.TIMEOUT_REPORTED_BY_TOR;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.conjure;
+import static pan.alexander.tordnscrypt.utils.enums.BridgeType.dnstt;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.meek_lite;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs3;
 import static pan.alexander.tordnscrypt.utils.enums.BridgeType.obfs4;
@@ -175,7 +176,8 @@ public class BridgeAdapter extends RecyclerView.Adapter<BridgeAdapter.BridgeView
                     || obfsType.contains(meek_lite.toString())
                     || obfsType.contains(snowflake.toString())
                     || obfsType.contains(conjure.toString())
-                    || obfsType.contains(webtunnel.toString()))
+                    || obfsType.contains(webtunnel.toString())
+                    || obfsType.contains(dnstt.toString()))
                     && bridgeComponents.length > 1) {
                 tvBridgeText = bridgeComponents[0] + " " + bridgeComponents[1];
             } else {

@@ -126,6 +126,7 @@ class PreferencesTorBridgesViewModel @Inject constructor(
                 BridgeType.meek_lite -> handleMeekLiteBridgesTimeout(torBridgesToCheckPing)
                 BridgeType.snowflake -> handleSnowFlakeBridgesTimeout(torBridgesToCheckPing)
                 BridgeType.conjure -> handleConjureBridgesTimeout(torBridgesToCheckPing)
+                BridgeType.dnstt -> handleDnsttBridgesTimeout(torBridgesToCheckPing)
                 else -> handleOtherBridgesTimeout(torBridgesToCheckPing)
             }
         }
@@ -205,6 +206,23 @@ class PreferencesTorBridgesViewModel @Inject constructor(
 
     private suspend fun handleConjureBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
         val bridgesToMeasure = bridgePingHelper.getRealIPFromConjureBridges(
+            ArrayList(bridges),
+            bridgesMatcherMap
+        ).takeIf { it.isNotEmpty() } ?: bridges.map { it.bridge }
+        launch {
+            defaultVanillaBridgeInteractor.measureTimeouts(ArrayList(bridgesToMeasure))
+        }
+        searchBridgeCountries(ArrayList(bridgesToMeasure).map {
+            ObfsBridge(
+                it,
+                BridgeType.vanilla,
+                false
+            )
+        })
+    }
+
+    private suspend fun handleDnsttBridgesTimeout(bridges: List<ObfsBridge>) = coroutineScope {
+        val bridgesToMeasure = bridgePingHelper.getRealIPFromDnsttBridges(
             ArrayList(bridges),
             bridgesMatcherMap
         ).takeIf { it.isNotEmpty() } ?: bridges.map { it.bridge }

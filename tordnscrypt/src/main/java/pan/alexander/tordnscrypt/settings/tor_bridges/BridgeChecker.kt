@@ -73,6 +73,13 @@ class BridgeChecker @Inject constructor() {
         return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
     }
 
+    fun getDnsttBridgeChecker(input: String): PreferencesTorBridges.Checkable {
+        val bridgeBase = input.getBridgeBase()
+        val pattern =
+            Pattern.compile("^dnstt +$bridgeBase(?: +(doh=https://[\\w.+/:-]+)|(dot=[\\w.+/:-]+))?(?: +pubkey=\\w+)?(?: +domain=$HOST_NAME_REGEX)?")
+        return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
+    }
+
     fun getConjureBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
         val pattern = Pattern.compile("^conjure +$bridgeBase .+")

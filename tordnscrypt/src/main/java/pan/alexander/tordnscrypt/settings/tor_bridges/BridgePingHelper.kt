@@ -110,7 +110,7 @@ class BridgePingHelper @Inject constructor(
             }
             bridgesToMeasure
         }
-    } catch (ignored: Exception) {
+    } catch (_: Exception) {
         emptyList()
     }
 
@@ -143,7 +143,51 @@ class BridgePingHelper @Inject constructor(
             }
             bridgesToMeasure
         }
-    } catch (ignored: Exception) {
+    } catch (_: Exception) {
+        emptyList()
+    }
+
+    suspend fun getRealIPFromDnsttBridges(
+        bridges: List<ObfsBridge>,
+        bridgesMatcherMap: ConcurrentHashMap<Int, Int>
+    ) = try {
+        withContext(dispatcherIo) {
+            val bridgesToMeasure = mutableListOf<String>()
+            for (bridge in bridges) {
+                val parts = bridge.bridge.split(Regex("\\s+"))
+                if (bridge.bridge.startsWith("dnstt") && parts.size >= 4) {
+                    val ipWithPort = parts[1]
+                    var domain = parts[3]
+                    if (domain.startsWith("doh") || domain.startsWith("dot")) {
+                        domain = domain.removePrefix("doh=")
+                            .removePrefix("dot=")
+                            .removePrefix("https://")
+                            .split("/")[0]
+                    } else {
+                        continue
+                    }
+                    val port = if (domain.contains(":")) {
+                        domain.split(":")[1].toIntOrNull() ?: 443
+                    } else {
+                        443
+                    }
+                    val ip = getWorkingIp(domain, port)
+
+                    ensureActive()
+                    if (ip.isEmpty()) {
+                        continue
+                    }
+
+                    val address = getAddress(ip, port)
+                    val bridgeLine = bridge.bridge.replace(ipWithPort, address)
+                    bridgesToMeasure.add(bridgeLine)
+                    bridgesMatcherMap[bridgeLine.hashCode()] =
+                        bridge.bridge.hashCode()
+                }
+            }
+            bridgesToMeasure
+        }
+    } catch (_: Exception) {
         emptyList()
     }
 
@@ -210,7 +254,7 @@ class BridgePingHelper @Inject constructor(
             }
             bridgesToMeasure
         }
-    } catch (ignored: Exception) {
+    } catch (_: Exception) {
         emptyList()
     }
 

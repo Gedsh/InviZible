@@ -108,6 +108,15 @@ mv libconjure.so ${LIBS_ROOT}/${ABI}/libconjure.so || exit 1
 popd
 
 ################
+# libdnstt #
+################
+
+pushd dnstt/dnstt-client/
+go build -ldflags="-s -w -checklinkname=0" -o libdnstt.so
+mv libdnstt.so ${LIBS_ROOT}/${ABI}/libdnstt.so || exit 1
+popd
+
+################
 # libnflog #
 ################
 

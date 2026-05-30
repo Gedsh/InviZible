@@ -28,5 +28,6 @@ public enum BridgeType {
     snowflake,
     conjure,
     webtunnel,
+    dnstt,
     undefined
 }

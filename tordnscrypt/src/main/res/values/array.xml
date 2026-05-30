@@ -553,6 +553,7 @@
         <item>snowflake</item>
         <item>conjure</item>
         <item>webtunnel</item>
+        <item>dnstt</item>
         <item>vanilla</item>
     </string-array>
     <string-array name="itpd_com_bandwidth_title">

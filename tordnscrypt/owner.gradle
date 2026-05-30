@@ -170,7 +170,7 @@ android {
 
     packagingOptions {
         jniLibs {
-            keepDebugSymbols += ['*/*/libdnscrypt-proxy.so', '*/*/libobfs4proxy.so', '*/*/libsnowflake.so', '*/*/libconjure.so', '*/*/libwebtunnel.so']
+            keepDebugSymbols += ['*/*/libdnscrypt-proxy.so', '*/*/libobfs4proxy.so', '*/*/libsnowflake.so', '*/*/libconjure.so', '*/*/libdnstt.so']
         }
         jniLibs.useLegacyPackaging = true
 
