@@ -1494,3 +1494,11 @@
 **InviZible Pro beta 2.7.0**
 * Updated DNSCrypt to version 2.1.16.
 * Added support for DNSTT Tor bridges.
+
+**InviZible Pro beta 2.7.1**
+* Updated Tor to version 4.9.9.
+* Updated Tor Snowflake obfuscator.
+* Updated Tor geoip.
+* Fixed using DNSTT bridges with plaintext DNS resolvers.
+* Added Vietnamese translation.
+* Updated Indonesian, Spanish, Tamil and German translations.
