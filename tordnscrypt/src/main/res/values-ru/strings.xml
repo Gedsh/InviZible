@@ -132,7 +132,7 @@
     <string name="pref_common_use_iptables_app">Использовать iptables приложения</string>
     <string name="pref_common_use_iptables_device">Использовать iptables телефона</string>
     <string name="pref_common_wait_iptables">Ожидать разблокировку iptables</string>
-    <string name="pref_common_wait_iptables_summ">Ждать разблокировку iptables, чтобы предотвратить одновременную модификацию правил iptables несколькими программами.</string>
+    <string name="pref_common_wait_iptables_summ">Ждите, пока можно будет получить эксклюзивный замок iptables, чтобы предотвратить одновременное изменение правил iptables</string>
     <string name="pref_common_log_root_commands">Логировать команды root</string>
     <string name="notification_text">DNSCrypt, Tor, I2P защищены. Не скрывайте уведомление.</string>
     <string name="notification_exec_root_commands">Выполнение Root команд…</string>
@@ -294,8 +294,8 @@
     <string name="update_core_restart">Пожалуйста, перезапустите InviZible и позвольте завершить установку! После установки настройте заново Точку доступа, если вы пользовались ей!</string>
     <string name="pref_fast_block_lan_with_free_wifi">Блокировать LAN на публичном Wi-Fi</string>
     <string name="pref_fast_block_lan_with_free_wifi_summ">Заблокировать доступ к локальной сети при обнаружении страницы регистрации</string>
-    <string name="pref_fast_block_http">Заблокировать HTTP</string>
-    <string name="pref_fast_block_http_summ">Закрыть HTTP порт 80</string>
+    <string name="pref_fast_block_http">Блокировать http</string>
+    <string name="pref_fast_block_http_summ">Закрыть http порт 80</string>
     <string name="pref_common_block_http">Заблокировать HTTP</string>
     <string name="pref_common_block_http_summ">Закрыть HTTP порт 80 для точки доступа</string>
     <string name="pref_common_restart_dnscrypt">Пожалуйста, перезапустите DNSCrypt</string>
