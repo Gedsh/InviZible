@@ -112,7 +112,7 @@ android {
         targetSdkVersion 36
         versionCode 270
 
-        resourceConfigurations += ['en', 'ru', 'pl', 'de', 'fa', 'fi', 'in', 'fr', 'ja', 'zh', 'es', 'pt', 'pt-rBR', 'el', 'tr', 'it', 'uk', 'bg', 'ar', 'nl', 'ta']
+        resourceConfigurations += ['en', 'ru', 'pl', 'de', 'fa', 'fi', 'in', 'fr', 'ja', 'zh', 'es', 'pt', 'pt-rBR', 'el', 'tr', 'it', 'uk', 'bg', 'ar', 'nl', 'ta', 'vi']
 
         externalNativeBuild {
             cmake {

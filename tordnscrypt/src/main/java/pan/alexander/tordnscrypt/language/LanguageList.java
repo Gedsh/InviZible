@@ -49,7 +49,8 @@ public class LanguageList {
             "U3BhbmlzaCAoRXNwYcOxb2wp",
             "VGFtaWwgKOCupOCuruCuv+CutOCvjSk=",
             "VHVya2lzaCAoVMO8cmvDp2Up",
-            "VWtyYWluaWFuICjQo9C60YDQsNGX0L3RgdGM0LrQsCk="
+            "VWtyYWluaWFuICjQo9C60YDQsNGX0L3RgdGM0LrQsCk=",
+            "VmlldG5hbWVzZSAodGnhur9uZyBWaeG7h3Qp"
     };
     private static final String[] MACHINE = {
             "",
@@ -73,7 +74,8 @@ public class LanguageList {
             "es",
             "ta",
             "tr",
-            "uk"
+            "uk",
+            "vi"
     };
     private static String[] mHuman;
 
