@@ -158,18 +158,23 @@ class BridgePingHelper @Inject constructor(
                 if (bridge.bridge.startsWith("dnstt") && parts.size >= 4) {
                     val ipWithPort = parts[1]
                     var domain = parts[3]
-                    if (domain.startsWith("doh") || domain.startsWith("dot")) {
-                        domain = domain.removePrefix("doh=")
+                    if (domain.startsWith("udp")
+                        || domain.startsWith("doh")
+                        || domain.startsWith("dot")) {
+                        domain = domain.removePrefix("udp=")
+                            .removePrefix("doh=")
                             .removePrefix("dot=")
                             .removePrefix("https://")
                             .split("/")[0]
                     } else {
                         continue
                     }
-                    val port = if (domain.contains(":")) {
-                        domain.split(":")[1].toIntOrNull() ?: 443
-                    } else {
-                        443
+
+                    var port = 443
+                    if (domain.contains(":")) {
+                        val domainWithPort = domain.split(":")
+                        domain = domainWithPort[0]
+                        port = domainWithPort[1].toIntOrNull() ?: 443
                     }
                     val ip = getWorkingIp(domain, port)
 

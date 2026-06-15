@@ -76,7 +76,7 @@ class BridgeChecker @Inject constructor() {
     fun getDnsttBridgeChecker(input: String): PreferencesTorBridges.Checkable {
         val bridgeBase = input.getBridgeBase()
         val pattern =
-            Pattern.compile("^dnstt +$bridgeBase(?: +(doh=https://[\\w.+/:-]+)|(dot=[\\w.+/:-]+))?(?: +pubkey=\\w+)?(?: +domain=$HOST_NAME_REGEX)?")
+            Pattern.compile("^dnstt +$bridgeBase(?: +(?:(doh=$URL_REGEX)|((udp|dot)=(($IPv4_REGEX_NO_BOUNDS)|(\\[$IPv6_REGEX_NO_BOUNDS])):\\d{1,5})))?(?: +pubkey=\\w+)?(?: +domain=$HOST_NAME_REGEX)?")
         return PreferencesTorBridges.Checkable { bridge -> pattern.matcher(bridge).matches() }
     }
 
