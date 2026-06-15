@@ -448,7 +448,7 @@
     <string name="firewall_notification_allow_app">"Internet hierfür erlauben?"</string>
     <string name="allow">"Erlauben"</string>
     <string name="deny">"Verweigern"</string>
-    <string name="pref_fast_theme_titles_day_mode">Tagmodus</string>
+    <string name="pref_fast_theme_titles_day_mode">"Tagesmodus"</string>
     <string name="pref_fast_theme_titles_night_mode">"Nachtmodus"</string>
     <string name="pref_fast_theme_titles_auto_mode">"Automodus"</string>
     <string name="pref_fast_theme_titles_default_mode">Systemstandard</string>

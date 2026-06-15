@@ -99,7 +99,7 @@
     <string name="pref_fast_unlock_host_wrong">"¡Nombre de sitio erroneo!"</string>
     <string name="pref_fast_theme">Tema</string>
     <string name="pref_fast_language">Idioma</string>
-    <string name="pref_fast_block_http">Bloquear HTTP</string>
+    <string name="pref_fast_block_http">"Bloquear HTTP"</string>
     <string name="pref_fast_block_http_summ">Bloquear conexiones HTTP al puerto 80</string>
     <string name="pref_fast_categ_update">Actualizar</string>
     <string name="pref_fast_auto_update">Actualizaciones automáticas</string>
