@@ -9,7 +9,7 @@ dnscryptproxy_branch=prod
 dnscryptproxy_commit=434f38d1e27f1a3dfc9de9e3ba3aea5c647e4290
 
 snowflake_branch=feat/check-dns-ip
-snowflake_commit=17007899b492651d14b02c13e5601081dbeb2376
+snowflake_commit=954c0b20cc5a13768ee6adb916b388535a82d7d6
 
 libzmq_version=v4.3.5
 
@@ -20,7 +20,7 @@ dnstt_branch=master
 dnstt_commit=f1b9b97a269f83bad41d2ceef291b4d2c161cd11
 
 tor_branch=prod-0.4.9
-tor_commit=6ceaf45a09c99d00944180c912ce0b1b08800cb8
+tor_commit=7ef4d1559ebc7fa4b96450ccc067a9715320dd57
 tor_openssl_version=openssl-3.6.3
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
