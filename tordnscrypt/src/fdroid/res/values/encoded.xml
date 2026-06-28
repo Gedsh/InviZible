@@ -3,4 +3,7 @@
     <string name="encoded" translatable="false">cGFuLmFsZXhhbmRlci50b3JkbnNjcnlwdC5hY3Rpb24uVE9QX0JST0FEQ0FTVA==</string>
     <string name="appVersion" translatable="false">fd</string>
     <string name="main_activity_label" translatable="false">InviZible Pro</string>
+    <string name="btc" translatable="false">WW1sMFkyOXBiam94UjJaS2QybElSelo0UzBOUlEzQklaVmMyWmtWTWVrWm1aM04yWTFONFZsVlM=</string>
+    <string name="ton" translatable="false">ZEc5dU9sVlJRVmRYZFVsRFNIbDZjVmd4U0haWVVFTkhaMHh5YVZsaE56RmxUMDVIT1VZMlZUTXhTbE0xYWtwVFVEaDFPQT09</string>
+    <string name="xmr" translatable="false">Ylc5dVpYSnZPamd5VjBaNmIyWjJSMVZrV1RVeWR6bDZRMlp5V2xkaFNGWnhSVVJqU2tnM2VURkdkV3A2ZGxoa1IxQmxWVGxWY0hWR1RtVkRkblJEUzJoMGNFTTJjRnB0VFZsMVEwNW5SbXBqZHpWdFNFRm5SVXBSTkZKVWQxWTVXRkpvYjJKWQ==</string>
 </resources>

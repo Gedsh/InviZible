@@ -20,11 +20,11 @@
 package pan.alexander.tordnscrypt.about;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.net.Uri;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.Bundle;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 
@@ -62,8 +62,9 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
 
+    private ClipboardManager clipboard;
 
-    @SuppressLint({"NewApi"})
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         App.getInstance().getDaggerComponent().inject(this);
@@ -77,6 +78,8 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
     }
 
     @Override
@@ -114,20 +117,38 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
         TextView tvDonateTitle = findViewById(R.id.tvDonateTitle);
         TextView tvDonateBitcoin = findViewById(R.id.tvDonateBitcoin);
-        TextView tvDonateLitecoin = findViewById(R.id.tvDonateLitecoin);
+        TextView tvDonateTon = findViewById(R.id.tvDonateTon);
         TextView tvDonateMonero = findViewById(R.id.tvDonateMonero);
         if (pathVars.get().getAppVersion().endsWith("p")) {
             tvDonateTitle.setVisibility(View.GONE);
             tvDonateBitcoin.setVisibility(View.GONE);
-            tvDonateLitecoin.setVisibility(View.GONE);
+            tvDonateTon.setVisibility(View.GONE);
             tvDonateMonero.setVisibility(View.GONE);
         } else {
-            tvDonateBitcoin.setText(getBitcoinUri());
-            tvDonateBitcoin.setOnClickListener(this);
-            tvDonateLitecoin.setText(getLitecoinUri());
-            tvDonateLitecoin.setOnClickListener(this);
-            tvDonateMonero.setText(getMoneroUri());
-            tvDonateMonero.setOnClickListener(this);
+            String btc = getBitcoinUri();
+            String ton = getTonUri();
+            String xmr = getMoneroUri();
+            if (btc.isEmpty() && ton.isEmpty() && xmr.isEmpty()) {
+                tvDonateTitle.setVisibility(View.GONE);
+            }
+            if (!btc.isEmpty()) {
+                tvDonateBitcoin.setText(getBitcoinUri());
+                tvDonateBitcoin.setOnClickListener(this);
+            } else {
+                tvDonateBitcoin.setVisibility(View.GONE);
+            }
+            if (!ton.isEmpty()) {
+                tvDonateTon.setText(getTonUri());
+                tvDonateTon.setOnClickListener(this);
+            } else {
+                tvDonateTon.setVisibility(View.GONE);
+            }
+            if (!xmr.isEmpty()) {
+                tvDonateMonero.setText(getMoneroUri());
+                tvDonateMonero.setOnClickListener(this);
+            } else {
+                tvDonateMonero.setVisibility(View.GONE);
+            }
         }
 
         findViewById(R.id.dnscryptLicense).setOnClickListener(this);
@@ -210,15 +231,27 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
     }
 
     private String getBitcoinUri() {
-        return decodeBase64("WW1sMFkyOXBiam94UjJaS2QybElSelo0UzBOUlEzQklaVmMyWmtWTWVrWm1aM04yWTFONFZsVlM=");
+        try {
+            return decodeBase64(getString(R.string.btc).trim());
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
-    private String getLitecoinUri() {
-        return decodeBase64("YkdsMFpXTnZhVzQ2VFZWVFFWaHJZMEYyYms0eFdYUmhkWHBsYnpsaWQycFdhbUZ5VldSRVNFZG5hdz09");
+    private String getTonUri() {
+        try {
+            return decodeBase64(getString(R.string.ton).trim());
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     private String getMoneroUri() {
-        return decodeBase64("Ylc5dVpYSnZPamd5VjBaNmIyWjJSMVZrV1RVeWR6bDZRMlp5V2xkaFNGWnhSVVJqU2tnM2VURkdkV3A2ZGxoa1IxQmxWVGxWY0hWR1RtVkRkblJEUzJoMGNFTTJjRnB0VFZsMVEwNW5SbXBqZHpWdFNFRm5SVXBSTkZKVWQxWTVXRkpvYjJKWQ==");
+        try {
+            return decodeBase64(getString(R.string.xmr).trim());
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     private static String decodeBase64(final String base64) {
@@ -228,27 +261,26 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         return new String(bytes, StandardCharsets.UTF_8);
     }
 
-    private void sendDonateIntent(String uri) {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setData(Uri.parse(uri));
-        Intent chooser = Intent.createChooser(intent, "Donate with...");
-        try {
-            startActivity(chooser);
-        } catch (Exception ignored) {
+    private void copyToClipboard(String text) {
+        String label = "Donate";
+        String clipboardText = text;
+        if (text.contains(":")) {
+            label = text.substring(0, text.indexOf(":")).toUpperCase();
+            clipboardText = text.substring(text.indexOf(":") + 1);
         }
-
+        ClipData clip = ClipData.newPlainText(label, clipboardText);
+        clipboard.setPrimaryClip(clip);
     }
 
     @Override
     public void onClick(View view) {
         int id = view.getId();
         if (id == R.id.tvDonateBitcoin) {
-            sendDonateIntent(getBitcoinUri());
+            copyToClipboard(getBitcoinUri());
         } else if (id == R.id.tvDonateMonero) {
-            sendDonateIntent(getMoneroUri());
-        } else if (id == R.id.tvDonateLitecoin) {
-            sendDonateIntent(getLitecoinUri());
+            copyToClipboard(getMoneroUri());
+        } else if (id == R.id.tvDonateTon) {
+            copyToClipboard(getTonUri());
         } else if (id == R.id.dnscryptLicense) {
             showLicense(R.string.about_license_dnscrypt, R.raw.dnscrypt_license, false);
         } else if (id == R.id.torLicense) {

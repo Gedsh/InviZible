@@ -249,7 +249,7 @@
                 tools:text="bitcoin://1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvDonateLitecoin"
+                android:id="@+id/tvDonateTon"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -262,7 +262,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/colorAccent"
                 android:textIsSelectable="true"
-                tools:text="litecoin://MUSAXkcAvnN1Ytauzeo9bwjVjarUdDHGgk" />
+                tools:text="ton:UQAWWuICHyzqX1HvXPCGgLriYa71eONG9F6U31JS5jJSP8u8" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvDonateMonero"
