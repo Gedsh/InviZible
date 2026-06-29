@@ -88,7 +88,9 @@ class ModulesLogRepositoryImpl @Inject constructor(
             val filtered = if (NetworkChecker.isNetworkAvailable(applicationContext)) {
                 torLog
             } else {
-                filterBridgesWarning(torLog)
+                filterBridgeGeneralSocksFailure(torLog)
+            }.let {
+                filterSocks5AndDnsWarning(it)
             }
             if (filtered.isNotEmpty() && filtered.size != torLog.size) {
                 reader.updateLines(filtered)
@@ -101,8 +103,13 @@ class ModulesLogRepositoryImpl @Inject constructor(
         } ?: emptyList()
     }
 
-    private fun filterBridgesWarning(lines: List<String>): List<String> {
+    private fun filterBridgeGeneralSocksFailure(lines: List<String>): List<String> {
         return lines.filter { !it.endsWith("(\"general SOCKS server failure\")") }
+    }
+
+    //We use Tor DNSPort to resolve domains.
+    private fun filterSocks5AndDnsWarning(lines: List<String>): List<String> {
+        return lines.filter { !it.contains("#WarningsAboutSOCKSandDNSInformationLeaks") }
     }
 
     override fun getITPDLog(): List<String> {
