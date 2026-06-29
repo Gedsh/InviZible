@@ -49,7 +49,7 @@ abstract class AbstractLogParser {
                 } else if (encodedLineLowerCase.contains("[error]") || encodedLineLowerCase.contains("[err]") || encodedLineLowerCase.contains("/error")) {
                     encodedLine = "<font color=#f08080>${encodedLine.replace("[ERROR]", "").replace("[err]", "").replace("/error", "")}</font>"
                 } else if (encodedLineLowerCase.contains("[critical]") && encodedLineLowerCase.contains("certificate hash")) {
-                    encodedLine = "<font color=#808080>${encodedLine.replace("[CRITICAL]", "")}</font>"
+                    encodedLine = "<font color=#ffa500>${encodedLine.replace("[CRITICAL]", "")}</font>"
                 } else if (encodedLineLowerCase.contains("[critical]")) {
                     encodedLine = "<font color=#990000>${encodedLine.replace("[CRITICAL]", "")}</font>"
                 } else if (encodedLineLowerCase.contains("[fatal]")) {
