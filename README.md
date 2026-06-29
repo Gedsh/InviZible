@@ -160,7 +160,7 @@ and carries no guarantee from The Above Projects about quality, suitability or a
 
 **BTC**: 1GfJwiHG6xKCQCpHeW6fELzFfgsvcSxVUR
 
-**LTC**: MUSAXkcAvnN1Ytauzeo9bwjVjarUdDHGgk
+**LTC**: MGgumSzrC91E8DMMSnH4nRBMepeMjQtxGe
 
 **BCH**: qzl4w4ahh7na2z23056qawwdyuclkgty5gc4q8tw88
 
