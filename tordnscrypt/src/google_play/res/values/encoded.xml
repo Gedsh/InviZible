@@ -3,4 +3,7 @@
     <string name="encoded" translatable="false">p/JXl3lzfQLrpvCNXPibrsTLqF36DH6SMO3I1JEmxAwh+2emiTJw4R73lfUR1ru2</string>
     <string name="appVersion" translatable="false">gp</string>
     <string name="main_activity_label" translatable="false">InviZible Pro</string>
+    <string name="btc" translatable="false" />
+    <string name="ton" translatable="false" />
+    <string name="xmr" translatable="false" />
 </resources>
