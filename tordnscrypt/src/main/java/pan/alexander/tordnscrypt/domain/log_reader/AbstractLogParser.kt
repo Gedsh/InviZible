@@ -43,18 +43,17 @@ abstract class AbstractLogParser {
                 val encodedLineLowerCase = encodedLine.lowercase(Locale.ROOT)
 
                 if (encodedLineLowerCase.contains("[notice]") || encodedLineLowerCase.contains("/info")) {
-                    encodedLine = "<font color=#808080>" + encodedLine.replace("[notice]", "")
-                        .replace("[NOTICE]", "") + "</font>"
-                } else if (encodedLineLowerCase.contains("[warn]") || encodedLineLowerCase.contains("/warn")) {
-                    encodedLine = "<font color=#ffa500>$encodedLine</font>"
-                } else if (encodedLineLowerCase.contains("[warning]")) {
-                    encodedLine = "<font color=#ffa500>$encodedLine</font>"
+                    encodedLine = "<font color=#808080>${encodedLine.replace("[NOTICE]", "").replace("[notice]", "").replace("/info", "")}</font>"
+                } else if (encodedLineLowerCase.contains("[warning]") || encodedLineLowerCase.contains("[warn]") || encodedLineLowerCase.contains("/warn")) {
+                    encodedLine = "<font color=#ffa500>${encodedLine.replace("[WARNING]", "").replace("[warn]", "").replace("/warn", "")}</font>"
                 } else if (encodedLineLowerCase.contains("[error]") || encodedLineLowerCase.contains("[err]") || encodedLineLowerCase.contains("/error")) {
-                    encodedLine = "<font color=#f08080>$encodedLine</font>"
+                    encodedLine = "<font color=#f08080>${encodedLine.replace("[ERROR]", "").replace("[err]", "").replace("/error", "")}</font>"
+                } else if (encodedLineLowerCase.contains("[critical]") && encodedLineLowerCase.contains("certificate hash")) {
+                    encodedLine = "<font color=#808080>${encodedLine.replace("[CRITICAL]", "")}</font>"
                 } else if (encodedLineLowerCase.contains("[critical]")) {
-                    encodedLine = "<font color=#990000>$encodedLine</font>"
+                    encodedLine = "<font color=#990000>${encodedLine.replace("[CRITICAL]", "")}</font>"
                 } else if (encodedLineLowerCase.contains("[fatal]")) {
-                    encodedLine = "<font color=#990000>$encodedLine</font>"
+                    encodedLine = "<font color=#990000>${encodedLine.replace("[FATAL]", "")}</font>"
                 } else if (encodedLineLowerCase.isNotEmpty()) {
                     encodedLine = "<font color=#6897bb>$encodedLine</font>"
                 }
