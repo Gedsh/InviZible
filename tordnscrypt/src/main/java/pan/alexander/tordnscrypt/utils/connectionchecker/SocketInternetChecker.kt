@@ -25,7 +25,7 @@ import java.net.*
 import javax.inject.Inject
 
 private const val CONNECT_TIMEOUT_SEC = 50
-private const val PING_TIMEOUT_SEC = 1
+private const val PING_TIMEOUT_SEC = 1.5
 private const val CHECK_ADDRESS_REACHABLE_TIMEOUT_SEC = 3
 
 class SocketInternetChecker @Inject constructor() {
@@ -104,8 +104,8 @@ class SocketInternetChecker @Inject constructor() {
             val sockAddress: SocketAddress =
                 InetSocketAddress(InetAddress.getByName(ip), port)
 
-            socket.connect(sockAddress, PING_TIMEOUT_SEC * 1000)
-            socket.soTimeout = PING_TIMEOUT_SEC * 1000
+            socket.connect(sockAddress, (PING_TIMEOUT_SEC * 1000).toInt())
+            socket.soTimeout = (PING_TIMEOUT_SEC * 1000).toInt()
 
             if (isProxyUsed(proxyAddress, proxyPort)) {
                 socket.shutdownOutput()
