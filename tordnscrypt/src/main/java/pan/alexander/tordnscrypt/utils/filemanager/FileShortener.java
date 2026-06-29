@@ -27,7 +27,7 @@ import java.io.RandomAccessFile;
 import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 
 public class FileShortener {
-    private final static long TOO_TOO_LONG_FILE_LENGTH = 1024 * 500;
+    private final static long TOO_TOO_LONG_FILE_LENGTH = 1024 * 1000;
     private final static long TOO_TOO_LONG_FILE_LENGTH_HYSTERESIS = 1024 * 100;
 
     public static void shortenTooTooLongFile(String filePath) {
