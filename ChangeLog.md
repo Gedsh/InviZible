@@ -1502,3 +1502,9 @@
 * Fixed using DNSTT bridges with plaintext DNS resolvers.
 * Added Vietnamese translation.
 * Updated Indonesian, Spanish, Tamil and German translations.
+
+**InviZible Pro beta 2.7.2**
+* Updated Tor to version 4.9.11.
+* Updated Tor Snowflake obfuscator to version 2.14.0.
+* Updated Tor default bridges.
+* Fixes and optimizations.
