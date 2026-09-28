@@ -150,7 +150,7 @@ public class BackupHelper {
             return;
         }
 
-        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yy", Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault());
         String currentDate = format.format(new Date());
 
         Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
