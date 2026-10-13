@@ -1523,3 +1523,10 @@
 * Updated DNSCrypt to version 2.1.18.
 * Updated Purple I2P to version 2.61.0.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.7.4**
+* Updated Tor to version 4.9.14.
+* Updated default DNSCrypt servers.
+* Changed the naming convention for backup files.
+* Updated Persian translation.
+* Fixes and optimizations.
