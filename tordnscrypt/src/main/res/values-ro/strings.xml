@@ -1,3 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="nav_header_title">Tor cu DNSCrypt și I2P</string>
+    <string name="nav_header_subtitle">Cea mai bună soluție pentru confidențialitatea ta</string>
+    <string name="action_settings">Setări</string>
+    <string name="tvITPDStop">I2P Oprit</string>
+    <string name="tvITPDRunning">I2P Rulează</string>
+    <string name="tvITPDStarting">I2P Pornește</string>
+    <string name="tvITPDStopping">I2P Se oprește</string>
+    <string name="tvITPDInstalling">I2P se instalează</string>
+    <string name="tvITPDInstalled">I2P Instalat</string>
+    <string name="tvITPDNotInstalled">I2P nu este instalat</string>
+    <string name="swRunOnBoot">Pornește la pornirea sistemului</string>
 </resources>

@@ -25,14 +25,14 @@
     <string name="tvDNSStarting">"در حال راه‌اندازی DNSCrypt"</string>
     <string name="tvDNSRunning">"درحال اجرای DNSCrypt"</string>
     <string name="tvDNSStopping">"در حال توقف DNSCrypt"</string>
-    <string name="tvTorStop">"TOR متوقف شد"</string>
-    <string name="tvTorInstalled">"TOR نصب شد"</string>
-    <string name="tvTorInstalling">"در حال نصب TOR"</string>
-    <string name="tvTorNotInstalled">"TOR نصب نشد"</string>
-    <string name="tvTorStarting">"در حال آغاز TOR"</string>
+    <string name="tvTorStop">تور متوقف شد</string>
+    <string name="tvTorInstalled">تور نصب شد</string>
+    <string name="tvTorInstalling">در حال نصب تور</string>
+    <string name="tvTorNotInstalled">تور نصب نشد</string>
+    <string name="tvTorStarting">در حال آغاز تور</string>
     <string name="tvTorConnecting">"در حال اتصال"</string>
-    <string name="tvTorRunning">"در حال اجرای TOR"</string>
-    <string name="tvTorStopping">"در حال توقف TOR"</string>
+    <string name="tvTorRunning">در حال اجرای تور</string>
+    <string name="tvTorStopping">در حال توقف تور</string>
     <!-- لغو -->
     <string name="cancel">"لغو"</string>
     <string name="error">"خطا!"</string>
@@ -52,7 +52,7 @@
     <string name="write_file_error">"مشکل در ذخیره فایل!"</string>
     <string name="drawer_menu_commonSettings">"تنظیمات عمومی"</string>
     <string name="drawer_menu_DNSSettings">"تنظیمات DNSCrypt"</string>
-    <string name="drawer_menu_TorSettings">"تنظیمات TOR"</string>
+    <string name="drawer_menu_TorSettings">تنظیمات تور</string>
     <string name="drawer_menu_I2PDSettings">"تنظیمات I2P"</string>
     <string name="drawer_menu_fastSettings">"تنظیمات سریع"</string>
     <string name="drawer_menu_backup">"پشتیبان‌گیری و بازیابی"</string>
@@ -69,31 +69,31 @@
     <!-- هنگام راه اندازی DNSCrypt شروع -->
     <string name="pref_fast_dns_autostart">فعال‌سازی DNSCrypt هنگام راه‌اندازی</string>
     <!-- هنگام راه اندازی Tor شروع -->
-    <string name="pref_fast_tor_autostart">راه اندازی خودکار TOR</string>
+    <string name="pref_fast_tor_autostart">شروع خودکار تور</string>
     <!-- هنگام راه اندازی I2P شروع -->
     <string name="pref_fast_itpd_autostart">شروع خودکار I2P</string>
     <string name="pref_fast_autostart_delay">"تأخیر"</string>
-    <string name="pref_fast_autostart_delay_summ">تنها درصورتی که شروع خودکار به درستی کار نکرد، با تاخیر (ثانیه) شروع به کار کند</string>
+    <string name="pref_fast_autostart_delay_summ">شروع با تأخیر (در چند ثانیه) تنها اگر شروع خودکار به درستی کار نکرد</string>
     <string name="pref_fast_dns_server">"سرورهای DNSCrypt"</string>
     <string name="pref_fast_select_dns_server">"انتخاب سرورهای DNSCrypt"</string>
-    <string name="pref_fast_tor">"تنظیمات TOR"</string>
+    <string name="pref_fast_tor">تنظیمات تور</string>
     <string name="pref_fast_routing">"تنظیمات مسیریابی"</string>
-    <string name="pref_fast_all_through_tor">"انتقال کل ترافیک از طریق TOR"</string>
+    <string name="pref_fast_all_through_tor">انتقال کل ترافیک از طریق تور</string>
     <string name="pref_fast_all_through_ipro">"انتقال کل ترافیک از طریق InviZible"</string>
     <string name="pref_fast_unlock_with_tor">انتخاب وب‌سایت‌ها</string>
     <string name="pref_fast_unlock_with_tor_summ">این لیست وب سایتها با TOR باز می شوند. این ویژگی برای سایت‌های پشت CDN کار نمی‌کند</string>
     <!-- انتخاب برنامه ها -->
     <string name="pref_fast_unlock_apps_with_tor">انتخاب برنامه‌ها</string>
-    <string name="pref_fast_unlock_apps_with_tor_summ">"برنامه‌هایی که با TOR می‌توان استفاده کرد"</string>
+    <string name="pref_fast_unlock_apps_with_tor_summ">برنامه‌هایی که با تور می‌توان استفاده کرد</string>
     <string name="pref_fast_unlock_apps_with_ipro_summ">"برنامه‌هایی که با InviZible می‌توان استفاده کرد"</string>
     <string name="pref_fast_exclude_from_tor">محدودسازی سایت‌ ها</string>
     <string name="pref_fast_exclude_from_tor_summ">لیست این وب سایت‌ها به طور مستقیم باز می‌شوند. این ویژگی برای سایت‌های پشت CDN کار نمی‌کند</string>
     <string name="pref_fast_exclude_apps_from_tor">محدود‌سازی برنامه‌ ها</string>
     <string name="pref_fast_exclude_apps_from_tor_summ">"برنامه‌هایی که مستقیم اجرا شوند"</string>
-    <string name="pref_fast_site_refresh_interval">بازه بازخوانی</string>
+    <string name="pref_fast_site_refresh_interval">فاصله بازخوانی</string>
     <string name="pref_fast_site_refresh_interval_summ">تعداد دفعات بازخوانی آیپی های وب‌سایت‌ ها در یک ساعت (فقط اندروید ۵.۱ به بالا). برای توقف بازخوانی عدد صفر را وارد کنید</string>
     <string name="pref_fast_use_tor_bridges">"پل‌ها"</string>
-    <string name="pref_fast_use_tor_bridges_summ">"از این مورد تنها اگر نمی‌توانید به TOR متصل شوید استفاده کنید"</string>
+    <string name="pref_fast_use_tor_bridges_summ">از این مورد تنها اگر نمی‌توانید به تور متصل شوید استفاده کنید</string>
     <string name="pref_fast_use_tor_bridges_no">"عدم استفاده از پل"</string>
     <string name="pref_fast_use_tor_bridges_default">"استفاده از لیست پیش‌فرض پل‌ها"</string>
     <string name="pref_fast_use_tor_bridges_own">"استفاده از لیست شخصی پل‌ها"</string>
@@ -433,7 +433,7 @@
     <string name="proxy_exclude_apps_from_proxy_summ">"لیست برنامه‌ها به طور مستقیم باز می شود. این برنامه ها از TOR یا Proxy برای اتصال به اینترنت استفاده نمی کنند!"</string>
     <string name="proxy_select_proxy_app">"لطفاً حداقل اگر از پروکسی محلی استفاده میکنید، برنامه مالک پروکسی را انتخاب کنید."</string>
     <string name="proxy_use_for_dnscrypt">"برای DNSCrypt از پراکسی استفاده کنید"</string>
-    <string name="proxy_use_for_tor">"برای TOR از پروکسی استفاده کنید"</string>
+    <string name="proxy_use_for_tor">برای تور از پروکسی استفاده کنید</string>
     <string name="proxy_use_for_itpd">"از پروکسی برای I2P بنفش استفاده کنید"</string>
     <string name="proxy_save">"ذخیره و فعال کنید"</string>
     <string name="proxy_no_connection">اتصال به پروکسی امکان پذیر نیست: %s</string>
