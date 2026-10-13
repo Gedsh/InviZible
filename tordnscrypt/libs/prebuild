@@ -20,8 +20,8 @@ dnstt_branch=master
 dnstt_commit=f1b9b97a269f83bad41d2ceef291b4d2c161cd11
 
 tor_branch=prod-0.4.9
-tor_commit=7ef4d1559ebc7fa4b96450ccc067a9715320dd57
-tor_openssl_version=openssl-3.6.3
+tor_commit=988c3a26209cdc7edfd699a341dc166f8c3ad33a
+tor_openssl_version=openssl-3.6.5
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
