@@ -1530,3 +1530,8 @@
 * Changed the naming convention for backup files.
 * Updated Persian translation.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.7.5**
+* Updated DNSCrypt to version 2.1.19.
+* Updated Purple I2P to version 3.0.0.
+* Fixes and optimizations.
