@@ -619,6 +619,12 @@ public class PreferencesFastFragment extends PreferenceFragmentCompat
     }
 
     private void changePreferencesForFDVersion() {
+        SwitchPlusClickPreference fakeSni = findPreference(FAKE_SNI);
+        PreferenceCategory torSettingsCategory = findPreference("Tor Settings");
+        if (torSettingsCategory != null && fakeSni != null) {
+            torSettingsCategory.removePreference(fakeSni);
+        }
+
         PreferenceScreen preferencesFast = findPreference("fast_preferences");
         PreferenceCategory fastUpdateCategory = findPreference("fast_update");
         if (preferencesFast != null && fastUpdateCategory != null) {
