@@ -6,7 +6,7 @@ lyrebird_branch=prod
 lyrebird_commit=582c1a8e7d883612078f620ab537cab6e3257c93
 
 dnscryptproxy_branch=prod
-dnscryptproxy_commit=4ccad4d0ece1ac8f793ca14a5db57e3bdc6f6ff2
+dnscryptproxy_commit=b2f20b5bcc382c0981658eff71d71b3721d64425
 
 snowflake_branch=feat/check-dns-ip
 snowflake_commit=2d9e12253201515d9240109c54e170405618f76c
