@@ -1,0 +1,2 @@
+**InviZible Pro beta 2.7.6**
+* Updated DNSCrypt to version 2.1.20.
