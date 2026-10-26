@@ -1538,3 +1538,11 @@
 
 **InviZible Pro beta 2.7.6**
 * Updated DNSCrypt to version 2.1.20.
+
+**InviZible Pro stable 7.6.0**
+* Updated DNSCrypt to version 2.1.20.
+* Updated Tor to version 4.9.14.
+* Updated Purple I2P to version 3.0.0.
+* Changed the naming convention for backup files.
+* Updated translations.
+* Fixes and optimizations.
