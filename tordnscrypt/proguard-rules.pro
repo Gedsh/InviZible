@@ -24,7 +24,7 @@
 #  public *;
 #}
 
--keep class com.android.vending.billing.**
+-keepclassmembers,allowoptimization,allowobfuscation public class com.android.billingclient.api.** {*;}
 #fix android.view.InflateException: Error inflating class com.google.android.material.chip.Chip for Android 4.4.2
 -keepclassmembers,allowoptimization,allowobfuscation public class com.google.android.material.chip.** {*;}
 
@@ -32,3 +32,8 @@
 -keep class kotlin.coroutines.Continuation
 
 -keepclassmembers,allowoptimization,allowobfuscation public class pan.alexander.tordnscrypt.dialogs.ExtendedDialogFragment {*;}
+
+# Room instantiates WorkManager's generated database with a no-argument constructor.
+-keepclassmembers class androidx.work.impl.WorkDatabase_Impl {
+    public <init>();
+}

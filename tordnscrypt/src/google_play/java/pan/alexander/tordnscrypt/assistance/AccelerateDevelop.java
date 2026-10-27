@@ -41,13 +41,12 @@ import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchaseHistoryRecord;
-import com.android.billingclient.api.PurchaseHistoryResponseListener;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
-import com.android.billingclient.api.QueryPurchaseHistoryParams;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.QueryPurchasesParams;
+import com.android.billingclient.api.UnfetchedProduct;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -251,14 +250,22 @@ public class AccelerateDevelop implements BillingClientStateListener {
         mBillingClient.queryProductDetailsAsync(
                 params,
                 new ProductDetailsResponseListener() {
-                    public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull List<ProductDetails> productDetailsList) {
+                    public void onProductDetailsResponse(@NonNull BillingResult billingResult, @NonNull QueryProductDetailsResult queryProductDetailsResult) {
                         if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                            List<ProductDetails> productDetailsList = queryProductDetailsResult.getProductDetailsList();
                             if (!productDetailsList.isEmpty()) {
                                 for (ProductDetails productDetails : productDetailsList) {
                                     mSkuDetailsMap.put(productDetails.getProductId(), productDetails);
                                 }
                             } else {
                                 logw("Query SKU details is OK, but SKU list is empty " + billingResult.getDebugMessage());
+                            }
+
+                            List<UnfetchedProduct> unfetchedProductList = queryProductDetailsResult.getUnfetchedProductList();
+                            if (!unfetchedProductList.isEmpty()) {
+                                for (UnfetchedProduct unfetchedProduct: unfetchedProductList) {
+                                    logw("Query SKU details unfetched product: " + unfetchedProduct.toString());
+                                }
                             }
 
                         } else {
@@ -436,23 +443,6 @@ public class AccelerateDevelop implements BillingClientStateListener {
                 }
             });
         }
-    }
-
-    private void getPurchaseHistory() {
-        QueryPurchaseHistoryParams params = QueryPurchaseHistoryParams.newBuilder()
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build();
-        mBillingClient.queryPurchaseHistoryAsync(params, new PurchaseHistoryResponseListener() {
-
-            @Override
-            public void onPurchaseHistoryResponse(@NonNull BillingResult billingResult, @Nullable List<PurchaseHistoryRecord> list) {
-                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && list != null) {
-                    loge(list.toString());
-                } else {
-                    logw("Unable to retrieve purchase history. Response: " + billingResult.getResponseCode() + " " + billingResult.getDebugMessage());
-                }
-            }
-        });
     }
 
     private void payComplete() {

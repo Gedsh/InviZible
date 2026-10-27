@@ -228,7 +228,7 @@ public class ModulesStateLoop implements Runnable,
 
     private void updateModulesState(ModuleState dnsCryptState, ModuleState torState, ModuleState itpdState) {
         if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-            if (dnsCryptState == STOPPED || dnsCryptState == UNDEFINED) {
+            if ((dnsCryptState == STOPPED || dnsCryptState == UNDEFINED) && ModulesAux.isDnsCryptSavedStateRunning()) {
                 modulesStatus.setDnsCryptState(ModuleState.RUNNING);
                 stopCounter = STOP_COUNTER_DELAY;
             }
@@ -239,7 +239,7 @@ public class ModulesStateLoop implements Runnable,
         }
 
         if (torThread != null && torThread.isAlive()) {
-            if (torState == STOPPED || torState == UNDEFINED) {
+            if ((torState == STOPPED || torState == UNDEFINED) && ModulesAux.isTorSavedStateRunning()) {
                 modulesStatus.setTorState(ModuleState.RUNNING);
                 stopCounter = STOP_COUNTER_DELAY;
             }
@@ -250,7 +250,7 @@ public class ModulesStateLoop implements Runnable,
         }
 
         if (itpdThread != null && itpdThread.isAlive()) {
-            if (itpdState == STOPPED || itpdState == UNDEFINED) {
+            if ((itpdState == STOPPED || itpdState == UNDEFINED) && ModulesAux.isITPDSavedStateRunning()) {
                 modulesStatus.setItpdState(ModuleState.RUNNING);
                 stopCounter = STOP_COUNTER_DELAY;
             }

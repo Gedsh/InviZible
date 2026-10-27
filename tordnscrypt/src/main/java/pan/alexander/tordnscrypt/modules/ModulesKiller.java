@@ -180,17 +180,12 @@ public class ModulesKiller {
                 }
 
                 if (moduleStartedWithRoot) {
-                    if (!result) {
-                        if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            ModulesAux.saveDNSCryptStateRunning(true);
-                            makeDelay(1);
-                            sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
-                        }
-
+                    if (!result && modulesStatus.getDnsCryptState() != STOPPING) {
+                        ModulesAux.saveDNSCryptStateRunning(true);
                         modulesStatus.setDnsCryptState(RUNNING);
-
+                        makeDelay(1);
+                        sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
                         loge("ModulesKiller cannot stop DNSCrypt!");
-
                     } else {
                         if (modulesStatus.getDnsCryptState() != RESTARTING) {
                             ModulesAux.saveDNSCryptStateRunning(false);
@@ -200,16 +195,11 @@ public class ModulesKiller {
                         }
                     }
                 } else {
-                    if (dnsCryptThread != null && dnsCryptThread.isAlive()) {
-
-                        if (modulesStatus.getDnsCryptState() != RESTARTING) {
-                            ModulesAux.saveDNSCryptStateRunning(true);
-                            makeDelay(1);
-                            sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
-                        }
-
+                    if (dnsCryptThread != null && dnsCryptThread.isAlive() && modulesStatus.getDnsCryptState() != STOPPING) {
+                        ModulesAux.saveDNSCryptStateRunning(true);
                         modulesStatus.setDnsCryptState(RUNNING);
-
+                        makeDelay(1);
+                        sendResultIntent(DNSCRYPT_RUN_FRAGMENT_MARK, DNSCRYPT_KEYWORD, dnscryptPath);
                         loge("ModulesKiller cannot stop DNSCrypt!");
                     } else {
 
@@ -267,17 +257,12 @@ public class ModulesKiller {
                 }
 
                 if (moduleStartedWithRoot) {
-                    if (!result) {
-                        if (modulesStatus.getTorState() != RESTARTING) {
-                            ModulesAux.saveTorStateRunning(true);
-                            makeDelay(1);
-                            sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
-                        }
-
+                    if (!result && modulesStatus.getTorState() != STOPPING) {
+                        ModulesAux.saveTorStateRunning(true);
                         modulesStatus.setTorState(RUNNING);
-
+                        makeDelay(1);
+                        sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
                         loge("ModulesKiller cannot stop Tor!");
-
                     } else {
                         if (modulesStatus.getTorState() != RESTARTING) {
                             ModulesAux.saveTorStateRunning(false);
@@ -287,16 +272,11 @@ public class ModulesKiller {
                         }
                     }
                 } else {
-                    if (torThread != null && torThread.isAlive()) {
-
-                        if (modulesStatus.getTorState() != RESTARTING) {
-                            ModulesAux.saveTorStateRunning(true);
-                            makeDelay(1);
-                            sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
-                        }
-
+                    if (torThread != null && torThread.isAlive() && modulesStatus.getTorState() != STOPPING) {
+                        ModulesAux.saveTorStateRunning(true);
                         modulesStatus.setTorState(RUNNING);
-
+                        makeDelay(1);
+                        sendResultIntent(TOR_RUN_FRAGMENT_MARK, TOR_KEYWORD, torPath);
                         loge("ModulesKiller cannot stop Tor!");
                     } else {
 
@@ -352,17 +332,12 @@ public class ModulesKiller {
                 }
 
                 if (moduleStartedWithRoot) {
-                    if (!result) {
-                        if (modulesStatus.getItpdState() != RESTARTING) {
-                            ModulesAux.saveITPDStateRunning(true);
-                            makeDelay(1);
-                            sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
-                        }
-
+                    if (!result && modulesStatus.getItpdState() != STOPPING) {
+                        ModulesAux.saveITPDStateRunning(true);
                         modulesStatus.setItpdState(RUNNING);
-
+                        makeDelay(1);
+                        sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
                         loge("ModulesKiller cannot stop I2P!");
-
                     } else {
                         if (modulesStatus.getItpdState() != RESTARTING) {
                             ModulesAux.saveITPDStateRunning(false);
@@ -374,16 +349,11 @@ public class ModulesKiller {
                     }
                 }
 
-                if (itpdThread != null && itpdThread.isAlive()) {
-
-                    if (modulesStatus.getItpdState() != RESTARTING) {
-                        ModulesAux.saveITPDStateRunning(true);
-                        makeDelay(1);
-                        sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
-                    }
-
+                if (itpdThread != null && itpdThread.isAlive() && modulesStatus.getItpdState() != STOPPING) {
+                    ModulesAux.saveITPDStateRunning(true);
                     modulesStatus.setItpdState(RUNNING);
-
+                    makeDelay(1);
+                    sendResultIntent(I2PD_RUN_FRAGMENT_MARK, ITPD_KEYWORD, itpdPath);
                     loge("ModulesKiller cannot stop I2P!");
                 } else {
 

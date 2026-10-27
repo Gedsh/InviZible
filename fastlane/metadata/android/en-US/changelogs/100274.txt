@@ -1,0 +1,6 @@
+**InviZible Pro beta 2.7.4**
+* Updated Tor to version 4.9.14.
+* Updated default DNSCrypt servers.
+* Changed the naming convention for backup files.
+* Updated Persian translation.
+* Fixes and optimizations.

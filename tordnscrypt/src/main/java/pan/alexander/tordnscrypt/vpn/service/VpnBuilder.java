@@ -300,8 +300,10 @@ public class VpnBuilder {
         try {
             builder.addDisallowedApplication(context.getPackageName());
             for (String pack: setVpnBypassApps) {
-                builder.addDisallowedApplication(pack);
-                logi("VPN Not routing " + pack);
+                if (isPackageInstalled(pack)) {
+                    builder.addDisallowedApplication(pack);
+                    logi("VPN Not routing " + pack);
+                }
             }
         } catch (PackageManager.NameNotFoundException ex) {
             loge("VPNBuilder", ex, true);
@@ -328,6 +330,27 @@ public class VpnBuilder {
             }
 
         }
+    }
+
+    private boolean isPackageInstalled(String packageName) {
+        boolean installed = true;
+        try {
+            PackageManager packageManager = context.getPackageManager();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(
+                        packageName,
+                        PackageManager.PackageInfoFlags.of(PackageManager.GET_PERMISSIONS)
+                );
+            } else {
+                packageManager.getPackageInfo(
+                        packageName,
+                        PackageManager.GET_PERMISSIONS
+                );
+            }
+        } catch (Exception ignored) {
+            installed = false;
+        }
+        return installed;
     }
 
     private List<InetAddress> getDns() {

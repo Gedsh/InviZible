@@ -6,7 +6,7 @@ lyrebird_branch=prod
 lyrebird_commit=582c1a8e7d883612078f620ab537cab6e3257c93
 
 dnscryptproxy_branch=prod
-dnscryptproxy_commit=434f38d1e27f1a3dfc9de9e3ba3aea5c647e4290
+dnscryptproxy_commit=b2f20b5bcc382c0981658eff71d71b3721d64425
 
 snowflake_branch=feat/check-dns-ip
 snowflake_commit=2d9e12253201515d9240109c54e170405618f76c
@@ -20,14 +20,14 @@ dnstt_branch=master
 dnstt_commit=f1b9b97a269f83bad41d2ceef291b4d2c161cd11
 
 tor_branch=prod-0.4.9
-tor_commit=7ef4d1559ebc7fa4b96450ccc067a9715320dd57
-tor_openssl_version=openssl-3.6.3
+tor_commit=988c3a26209cdc7edfd699a341dc166f8c3ad33a
+tor_openssl_version=openssl-3.6.5
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
 xz_version=v5.2.4
 
-i2pd_version=2.60.0
-i2pd_openssl_version=openssl-3.6.2
+i2pd_version=3.0.0
+i2pd_openssl_version=openssl-3.6.5
 miniupnpc_version=miniupnpc_2_2_8
 
 git clone --single-branch --branch $lyrebird_branch https://gitlab.torproject.org/Gedsh/lyrebird

@@ -18,7 +18,7 @@ android {
 
         fdroid {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "7.5.0"
+            versionName "7.6.0"
             dimension = 'version'
             resValue 'string', 'package_name', applicationId
         }
@@ -58,7 +58,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 272
+        versionCode 276
         resourceConfigurations += ['en', 'ru', 'pl', 'de', 'fa', 'fi', 'in', 'fr', 'ja', 'zh', 'es', 'pt', 'pt-rBR', 'el', 'tr', 'it', 'uk', 'bg', 'ar', 'nl', 'ta', 'vi']
 
         externalNativeBuild {

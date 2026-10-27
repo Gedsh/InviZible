@@ -37,7 +37,7 @@ android {
     productFlavors {
         lite {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "7.5.0"
+            versionName "7.6.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -47,7 +47,7 @@ android {
 
         pro {
             applicationId "pan.alexander.tordnscrypt.stable"
-            versionName "7.5.0"
+            versionName "7.6.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -57,7 +57,7 @@ android {
 
         beta {
             applicationId "pan.alexander.tordnscrypt"
-            versionName "2.7.2"
+            versionName "2.7.6"
             dimension = 'version'
             signingConfig signingConfigs.betasign
             resValue 'string', 'package_name', applicationId
@@ -68,7 +68,7 @@ android {
         google_play {
             minSdkVersion 22
             applicationId "pan.alexander.tordnscrypt.gp"
-            versionName "7.5.0"
+            versionName "7.6.0"
             dimension = 'version'
             signingConfig signingConfigs.stablesign
             resValue 'string', 'package_name', applicationId
@@ -110,7 +110,7 @@ android {
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 272
+        versionCode 276
 
         resourceConfigurations += ['en', 'ru', 'pl', 'de', 'fa', 'fi', 'in', 'fr', 'ja', 'zh', 'es', 'pt', 'pt-rBR', 'el', 'tr', 'it', 'uk', 'bg', 'ar', 'nl', 'ta', 'vi']
 
@@ -221,7 +221,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-process:2.9.4'
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.9.4'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4'
-    google_playImplementation 'com.android.billingclient:billing:7.1.1'
+    google_playImplementation 'com.android.billingclient:billing:8.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
