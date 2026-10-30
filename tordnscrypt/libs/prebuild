@@ -11,7 +11,7 @@ dnscryptproxy_commit=b2f20b5bcc382c0981658eff71d71b3721d64425
 snowflake_branch=feat/check-dns-ip
 snowflake_commit=2d9e12253201515d9240109c54e170405618f76c
 
-libzmq_version=v4.3.5
+libzmq_version=46493370217ac135246617fa2f6ac819d8b61bfc
 
 conjure_branch=prod
 conjure_commit=6ddeaf147899d84bf268e1286daf01cc086c3bf9
@@ -46,7 +46,10 @@ pushd snowflake/
 git checkout -f $snowflake_commit -b $snowflake_commit
 popd
 
-git clone --single-branch --branch $libzmq_version https://github.com/zeromq/libzmq
+git clone https://github.com/zeromq/libzmq
+pushd libzmq/
+git checkout -f $libzmq_version -b $libzmq_version
+popd
 
 git clone --single-branch --branch $conjure_branch https://gitlab.torproject.org/Gedsh/conjure
 pushd conjure/

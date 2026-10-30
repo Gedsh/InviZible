@@ -6,7 +6,7 @@ cd "$( dirname "${BASH_SOURCE[0]}" )"
 ## Config ##
 ############
 
-ndk_version=23.1.7779620
+ndk_version=28.2.13676358
 if [[ -d "/opt/android-sdk/ndk/${ndk_version}" ]]
 then
     NDK="/opt/android-sdk/ndk/${ndk_version}"
@@ -27,12 +27,12 @@ LIBS_ROOT=`pwd`
 
 if [[ $ABI == arm64-v8a ]]
 then
-    export CC="aarch64-linux-android29-clang"
-    export CCX="aarch64-linux-android29-clang++"
+    export CC="aarch64-linux-android21-clang"
+    export CCX="aarch64-linux-android21-clang++"
     export GOARCH=arm64
 else
-    export CC="armv7a-linux-androideabi16-clang"
-    export CCX="armv7a-linux-androideabi16-clang++"
+    export CC="armv7a-linux-androideabi21-clang"
+    export CCX="armv7a-linux-androideabi21-clang++"
     export GOARCH=arm
 fi
 
@@ -78,7 +78,7 @@ popd
 ################
 
 pushd libzmq/builds/android/
-export NDK_VERSION="android-ndk-r23b"
+export NDK_VERSION="android-ndk-r28c"
 export ANDROID_NDK_ROOT=$NDK
 if [[ $ABI == arm64-v8a ]]
 then
@@ -87,7 +87,7 @@ then
     ./build.sh arm64
 else
     #compile armeabi-v7a things...
-    export MIN_SDK_VERSION=19
+    export MIN_SDK_VERSION=21
     ./build.sh arm
 fi
 popd
@@ -143,9 +143,9 @@ then
 else
     #compile armeabi-v7a things...
     export APP_ABI=armeabi-v7a
-    make clean
-    make
-    make showsetup
+    NDK_PLATFORM_LEVEL=21 make clean
+    NDK_PLATFORM_LEVEL=21 make
+    NDK_PLATFORM_LEVEL=21 make showsetup
 fi
 
 mv ../tor-android-binary/src/main/libs/${APP_ABI}/libtor.so ${LIBS_ROOT}/${ABI}/libtor.so || exit 1
@@ -171,10 +171,10 @@ then
     NDK_PLATFORM_LEVEL=21 NDK_BIT=64 make showsetup
 else
     #compile armeabi-v7a things...
-    export TARGET_I2P_PLATFORM=16
-    make clean
-    make
-    make showsetup
+    export TARGET_I2P_PLATFORM=21
+    NDK_PLATFORM_LEVEL=21 make clean
+    NDK_PLATFORM_LEVEL=21 make
+    NDK_PLATFORM_LEVEL=21 make showsetup
 fi
 
 mv ../i2pd-android-binary/src/main/libs/${APP_ABI}/libi2pd.so ${LIBS_ROOT}/${ABI}/libi2pd.so || exit 1
