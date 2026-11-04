@@ -117,16 +117,16 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
 
         TextView tvDonateTitle = findViewById(R.id.tvDonateTitle);
         TextView tvDonateBitcoin = findViewById(R.id.tvDonateBitcoin);
-        TextView tvDonateTon = findViewById(R.id.tvDonateTon);
+        TextView tvDonateTrc = findViewById(R.id.tvDonateTrc);
         TextView tvDonateMonero = findViewById(R.id.tvDonateMonero);
         if (pathVars.get().getAppVersion().endsWith("p")) {
             tvDonateTitle.setVisibility(View.GONE);
             tvDonateBitcoin.setVisibility(View.GONE);
-            tvDonateTon.setVisibility(View.GONE);
+            tvDonateTrc.setVisibility(View.GONE);
             tvDonateMonero.setVisibility(View.GONE);
         } else {
             String btc = getBitcoinUri();
-            String ton = getTonUri();
+            String ton = getTrcUri();
             String xmr = getMoneroUri();
             if (btc.isEmpty() && ton.isEmpty() && xmr.isEmpty()) {
                 tvDonateTitle.setVisibility(View.GONE);
@@ -138,10 +138,10 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
                 tvDonateBitcoin.setVisibility(View.GONE);
             }
             if (!ton.isEmpty()) {
-                tvDonateTon.setText(getTonUri());
-                tvDonateTon.setOnClickListener(this);
+                tvDonateTrc.setText(getTrcUri());
+                tvDonateTrc.setOnClickListener(this);
             } else {
-                tvDonateTon.setVisibility(View.GONE);
+                tvDonateTrc.setVisibility(View.GONE);
             }
             if (!xmr.isEmpty()) {
                 tvDonateMonero.setText(getMoneroUri());
@@ -238,9 +238,9 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
         }
     }
 
-    private String getTonUri() {
+    private String getTrcUri() {
         try {
-            return decodeBase64(getString(R.string.ton).trim());
+            return decodeBase64(getString(R.string.trc).trim());
         } catch (Exception ignored) {
             return "";
         }
@@ -279,8 +279,8 @@ public class AboutActivity extends LangAppCompatActivity implements View.OnClick
             copyToClipboard(getBitcoinUri());
         } else if (id == R.id.tvDonateMonero) {
             copyToClipboard(getMoneroUri());
-        } else if (id == R.id.tvDonateTon) {
-            copyToClipboard(getTonUri());
+        } else if (id == R.id.tvDonateTrc) {
+            copyToClipboard(getTrcUri());
         } else if (id == R.id.dnscryptLicense) {
             showLicense(R.string.about_license_dnscrypt, R.raw.dnscrypt_license, false);
         } else if (id == R.id.torLicense) {

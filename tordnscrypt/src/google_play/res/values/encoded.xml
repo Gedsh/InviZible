@@ -4,6 +4,6 @@
     <string name="appVersion" translatable="false">gp</string>
     <string name="main_activity_label" translatable="false">InviZible Pro</string>
     <string name="btc" translatable="false" />
-    <string name="ton" translatable="false" />
+    <string name="trc" translatable="false" />
     <string name="xmr" translatable="false" />
 </resources>
