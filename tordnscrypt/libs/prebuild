@@ -20,7 +20,7 @@ dnstt_branch=master
 dnstt_commit=f1b9b97a269f83bad41d2ceef291b4d2c161cd11
 
 tor_branch=prod-0.4.9
-tor_commit=988c3a26209cdc7edfd699a341dc166f8c3ad33a
+tor_commit=4416088745cfe9ed35461993dc04d8386bd19c85
 tor_openssl_version=openssl-3.6.5
 libevent_version=release-2.1.12-stable
 zstd_version=v1.4.9
@@ -67,7 +67,7 @@ pushd ../../TorBuildScript/external/
 git clone --single-branch --branch $tor_openssl_version https://github.com/openssl/openssl.git
 git clone --single-branch --branch $libevent_version https://github.com/libevent/libevent.git
 git clone --single-branch --branch $zstd_version https://github.com/facebook/zstd.git
-git clone --single-branch --branch $xz_version https://git.tukaani.org/xz.git
+git clone --single-branch --branch $xz_version https://github.com/tukaani-project/xz.git
 git clone --single-branch --branch $tor_branch https://gitlab.torproject.org/Gedsh/tor.git
 pushd tor/
 git checkout -f $tor_commit -b $tor_commit
