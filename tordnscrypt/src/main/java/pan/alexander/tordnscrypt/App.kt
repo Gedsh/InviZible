@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt
@@ -31,7 +31,6 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import pan.alexander.tordnscrypt.crash_handling.TopExceptionHandler
 import pan.alexander.tordnscrypt.di.*
 import pan.alexander.tordnscrypt.language.Language
-import pan.alexander.tordnscrypt.utils.multidex.MultidexActivator
 
 const val AUX_CHANNEL_ID = "Auxiliary"
 
@@ -59,9 +58,6 @@ class App : Application() {
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
-        if (BuildConfig.DEBUG) {
-            MultidexActivator.activate(this)
-        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
