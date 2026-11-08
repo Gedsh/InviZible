@@ -693,10 +693,6 @@ public class ModulesStarterHelper {
     }
 
     private String getFakeSniHosts() {
-        if (pathVars.getAppVersion().equals("fd")) {
-            return "";
-        }
-
         Set<String> hosts = verifyHostsSet(
                 preferenceRepository.get().getStringSetPreference(FAKE_SNI_HOSTS)
         );
