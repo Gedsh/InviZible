@@ -227,7 +227,11 @@ class DnsRulesRecyclerAdapter(
                             tvDnsRuleFileQuantityRules.setTextColor(textColorGreen)
                         }
                         btnDnsRuleFileDelete.setOnClickListener { deleteRemoteRules() }
-                        btnDnsRuleFileRefresh.setOnClickListener { onRemoteRulesRefresh() }
+                        btnDnsRuleFileRefresh.setOnClickListener {
+                            pbDnsRule.visibility = VISIBLE
+                            pbDnsRule.isIndeterminate = true
+                            onRemoteRulesRefresh()
+                        }
                         if (rule.inProgress) {
                             pbDnsRule.visibility = VISIBLE
                         } else {
