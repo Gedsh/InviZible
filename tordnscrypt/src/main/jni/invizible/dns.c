@@ -17,66 +17,48 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
 
 int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char *qname) {
     *qname = 0;
+    size_t ptr = off;
+    size_t noff = 0;
+    size_t wire_length = 1; // Include the terminating root label.
+    int32_t next = -1;
+    unsigned int jumps = 0;
 
-    if (off >= datalen)
-        return -1;
+    while (ptr < datalen) {
+        uint8_t len = data[ptr++];
+        if (len == 0)
+            return (next < 0 ? (int32_t) ptr : next);
 
-    uint16_t c = 0;
-    uint8_t noff = 0;
-    uint16_t ptr = off;
-    uint8_t len = *(data + ptr);
-    uint8_t count = 0;
-
-    while (len) {
-        if (count++ > 25)
-            break;
-
-        if (ptr + 1 < datalen && (len & 0xC0)) {
-            uint16_t jump = (uint16_t) ((len & 0x3F) * 256 + *(data + ptr + 1));
-            if (jump >= datalen) {
-                log_android(ANDROID_LOG_DEBUG, "DNS invalid jump");
+        if ((len & 0xC0) == 0xC0) {
+            if (ptr >= datalen || jumps++ >= 128)
                 break;
-            }
-            ptr = jump;
-            len = *(data + ptr);
-            log_android(ANDROID_LOG_DEBUG, "DNS qname compression ptr %d len %d", ptr, len);
-            if (!c) {
-                c = 1;
-                off += 2;
-            }
-        } else if (ptr + 1 + len < datalen && noff + len <= DNS_QNAME_MAX) {
-            memcpy(qname + noff, data + ptr + 1, len);
-            *(qname + noff + len) = '.';
-            noff += (len + 1);
-
-            uint16_t jump = (uint16_t) (ptr + 1 + len);
-            if (jump >= datalen) {
-                log_android(ANDROID_LOG_DEBUG, "DNS invalid jump");
+            if (next < 0)
+                next = (int32_t) (ptr + 1);
+            ptr = (size_t) (len & 0x3F) * 256 + data[ptr];
+        } else {
+            if ((len & 0xC0) != 0 || len > datalen - ptr ||
+                wire_length + len + 1 > DNS_QNAME_MAX)
                 break;
-            }
-            ptr = jump;
-            len = *(data + ptr);
-        } else
-            break;
-    }
-    ptr++;
-
-    if (len > 0 || noff == 0) {
-        log_android(ANDROID_LOG_ERROR, "DNS qname invalid len %d noff %d", len, noff);
-        return -1;
+            wire_length += len + 1;
+            if (noff > 0)
+                qname[noff++] = '.';
+            memcpy(qname + noff, data + ptr, len);
+            noff += len;
+            qname[noff] = 0;
+            ptr += len;
+        }
     }
 
-    *(qname + noff - 1) = 0;
-    log_android(ANDROID_LOG_DEBUG, "qname %s", qname);
-
-    return (c ? off : ptr);
+    // Never leave a partial name for callers to treat as a valid string.
+    *qname = 0;
+    log_android(ANDROID_LOG_WARN, "DNS invalid qname");
+    return -1;
 }
 
 void parse_dns_response(const struct arguments *args, const struct ng_session *s,
@@ -101,8 +83,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         char name[DNS_QNAME_MAX + 1];
         int32_t off = sizeof(struct dns_header);
 
-        uint16_t qtype;
-        uint16_t qclass;
+        uint16_t question_type;
+        uint16_t question_class;
         char qname[DNS_QNAME_MAX + 1];
         char cname[DNS_QNAME_MAX + 1];
         const char* SPACE_SYMBOL = (const char *) &" ";
@@ -113,11 +95,11 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                 // TODO multiple qnames?
                 if (q == 0) {
                     strcpy(qname, name);
-                    qtype = ntohs(*((uint16_t *) (data + off)));
-                    qclass = ntohs(*((uint16_t *) (data + off + 2)));
+                    question_type = read_net16(data + off);
+                    question_class = read_net16(data + off + 2);
                     log_android(ANDROID_LOG_DEBUG,
                                 "DNS question %d qtype %d qclass %d qname %s",
-                                q, qtype, qclass, qname);
+                                q, question_type, question_class, qname);
                 }
                 off += 4;
             } else {
@@ -138,10 +120,10 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         for (int a = 0; a < acount; a++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
             if (off > 0 && off + 10 <= *datalen) {
-                uint16_t qtype = ntohs(*((uint16_t *) (data + off)));
-                uint16_t qclass = ntohs(*((uint16_t *) (data + off + 2)));
+                uint16_t qtype = read_net16(data + off);
+                uint16_t qclass = read_net16(data + off + 2);
                 //uint32_t ttl = ntohl(*((uint32_t *) (data + off + 4)));
-                uint16_t rdlength = ntohs(*((uint16_t *) (data + off + 8)));
+                uint16_t rdlength = read_net16(data + off + 8);
                 off += 10;
 
                 if (off + rdlength <= *datalen) {
@@ -150,12 +132,12 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
 
                         char rd[INET6_ADDRSTRLEN + 1];
                         if (qtype == DNS_QTYPE_A) {
-                            if (off + sizeof(__be32) <= *datalen)
+                            if (rdlength == sizeof(__be32))
                                 inet_ntop(AF_INET, data + off, rd, sizeof(rd));
                             else
                                 return;
                         } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_AAAA) {
-                            if (off + sizeof(struct in6_addr) <= *datalen)
+                            if (rdlength == sizeof(struct in6_addr))
                                 inet_ntop(AF_INET6, data + off, rd, sizeof(rd));
                             else
                                 return;
@@ -168,7 +150,9 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                                     a, name, qtype, rcode, rd);
 
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_CNAME) {
-                        get_qname(data, *datalen, (uint16_t) off, cname);
+                        int32_t end = get_qname(data, *datalen, (uint16_t) off, cname);
+                        if (end < 0 || end != off + rdlength)
+                            return;
                         dns_resolved(args, qname, name, cname, SPACE_SYMBOL,
                                      SPACE_SYMBOL, rcode);
                         log_android(ANDROID_LOG_DEBUG,
@@ -259,7 +243,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
 
             // Log qname. Currently is not used.
             /*char name[DNS_QNAME_MAX + 40 + 1];
-            sprintf(name, "qtype %d qname %s rcode %d", qtype, qname, dns->rcode);
+            sprintf(name, "qtype %d qname %s rcode %d", question_type, qname, dns->rcode);
             jobject objPacket = create_packet(
                     args, version, s->protocol, "",
                     source, sport, dest, dport,

@@ -1,0 +1,115 @@
+plugins {
+    id 'com.android.library'
+}
+
+abstract class ExportNativeBaseline extends DefaultTask {
+    @Input abstract Property<String> getRevision()
+    @Internal abstract DirectoryProperty getRepository()
+    @OutputDirectory abstract DirectoryProperty getDestination()
+    @javax.inject.Inject abstract org.gradle.process.ExecOperations getExecOperations()
+
+    @TaskAction void exportSources() {
+        def destination = getDestination().get().asFile
+        destination.mkdirs()
+        ['invizible.c', 'session.c', 'ip.c', 'tcp.c', 'udp.c', 'icmp.c',
+         'dns.c', 'dhcp.c', 'util.c', 'invizible.h', 'neon2sse.h'].each { name ->
+            def output = new ByteArrayOutputStream()
+            execOperations.exec {
+                workingDir repository.get().asFile
+                commandLine 'git', 'show', "${revision.get()}:tordnscrypt/src/main/jni/invizible/${name}"
+                standardOutput = output
+            }
+            new File(destination, name).bytes = output.toByteArray()
+        }
+    }
+}
+
+def appBuild = file('../../build.gradle').text
+def pinnedNdk = appBuild =~ /ndkVersion\s+['"]([^'"]+)['"]/
+if (!pinnedNdk.find()) {
+    throw new GradleException('Pin ndkVersion in tordnscrypt/build.gradle before building native tests')
+}
+def ndkPin = pinnedNdk.group(1)
+def sanitized = providers.gradleProperty('nativeSanitizers').map { it.toBoolean() }.getOrElse(false)
+def baselineRef = providers.gradleProperty('nativeBaseline')
+layout.buildDirectory.set(rootProject.layout.buildDirectory.dir('native-tests'))
+def baselineDirectory = layout.buildDirectory.dir('generated/native-baseline')
+if (baselineRef.isPresent()) {
+    def commit = providers.exec {
+        workingDir rootProject.projectDir
+        commandLine 'git', 'rev-parse', '--verify', "${baselineRef.get()}^{commit}"
+    }.standardOutput.asText.map { it.trim() }
+    def exportBaseline = tasks.register('exportNativeBaseline', ExportNativeBaseline) {
+        revision.set(commit)
+        repository.set(rootProject.layout.projectDirectory)
+        destination.set(baselineDirectory)
+    }
+    tasks.configureEach {
+        if (name.startsWith('configureCMake') || name.startsWith('buildCMake')) {
+            dependsOn exportBaseline
+        }
+    }
+}
+
+android {
+    namespace 'pan.alexander.tordnscrypt.nativetests'
+    compileSdk 37
+    ndkVersion ndkPin
+    buildFeatures { buildConfig = true }
+    defaultConfig {
+        minSdk sanitized ? 27 : 23
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'boolean', 'NATIVE_SANITIZERS', sanitized.toString()
+        buildConfigField 'boolean', 'HAS_NATIVE_BASELINE', baselineRef.isPresent().toString()
+        ndk { abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64' }
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_ARM_NEON=ON', "-DINVIZIBLE_SANITIZERS=${sanitized ? 'ON' : 'OFF'}",
+                        "-DINVIZIBLE_BASELINE_SOURCE=${baselineRef.isPresent() ? baselineDirectory.get().asFile.absolutePath : ''}"
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+            buildStagingDirectory rootProject.file('.externalNativeBuild/native-tests')
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    if (sanitized) {
+        packaging.jniLibs.useLegacyPackaging = true
+        packaging.jniLibs.keepDebugSymbols += ['**/libclang_rt.asan-*-android.so']
+        sourceSets.main.resources.srcDir 'src/sanitizer/resources'
+    }
+}
+
+if (sanitized) {
+    def runtimeRoot = androidComponents.sdkComponents.sdkDirectory.map {
+        it.dir("ndk/${ndkPin}/toolchains/llvm/prebuilt/linux-x86_64/lib/clang")
+    }
+    def runtimes = tasks.register('packageNativeSanitizers', Sync) {
+        into layout.buildDirectory.dir('generated/sanitizer-libs')
+        ['armeabi-v7a': 'arm', 'arm64-v8a': 'aarch64', 'x86_64': 'x86_64'].each { abi, arch ->
+            from(runtimeRoot) {
+                include "**/lib/linux/libclang_rt.asan-${arch}-android.so"
+                eachFile { path = "${abi}/${name}" }
+                includeEmptyDirs = false
+            }
+        }
+    }
+    android.sourceSets.main.jniLibs.srcDir(layout.buildDirectory.dir('generated/sanitizer-libs').get().asFile)
+    tasks.configureEach {
+        if (name.startsWith('merge') && name.endsWith('JniLibFolders')) {
+            dependsOn runtimes
+        }
+    }
+}
+
+dependencies {
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+}

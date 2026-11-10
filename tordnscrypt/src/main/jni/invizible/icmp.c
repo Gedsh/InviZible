@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -355,14 +355,17 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
     }
 
     // Protect socket
-    if (protect_socket(args, sock, cur->uid) < 0)
+    if (protect_socket(args, sock, cur->uid) < 0) {
+        close(sock);
         return -1;
+    }
 
     // Set non blocking
     int flags = fcntl(sock, F_GETFL, 0);
     if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0) {
         log_android(ANDROID_LOG_ERROR, "fcntl socket O_NONBLOCK error %d: %s",
                     errno, strerror(errno));
+        close(sock);
         return -1;
     }
 

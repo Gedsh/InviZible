@@ -1,0 +1,69 @@
+#ifndef INVIZIBLE_TEST_SUPPORT_H
+#define INVIZIBLE_TEST_SUPPORT_H
+
+#include "invizible.h"
+#include <assert.h>
+
+// Turn native assertions into JUnit failures through the shared JNI checkpoint.
+void native_test_fail(const char *condition, const char *file, int line)
+        __attribute__((noreturn));
+#undef assert
+#define assert(condition) ((condition) ? (void) 0 : native_test_fail(#condition, __FILE__, __LINE__))
+
+enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT };
+extern enum failure failure;
+extern int allocations, sockets, last_socket, udp_calls, resolved_calls;
+extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
+extern int capture_packets, capture_dhcp, fake_proc;
+extern int real_network, real_udp_packets, block_domain, trace_dns;
+extern uint64_t accounted_sent, accounted_received;
+extern unsigned int cases;
+extern const struct JNINativeInterface jni;
+
+extern int own_uid, tor_dns_port, tor_socks5_port, proxy_socks5_port;
+extern bool bypass_lan, tor_isolate_uid, tor_connection_available;
+extern char tor_socks5_addr[INET6_ADDRSTRLEN + 1], proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
+extern char tor_socks5_username[128], tor_socks5_password[128];
+extern char proxy_socks5_username[128], proxy_socks5_password[128];
+void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(
+        JNIEnv *, jobject, jstring, jint, jstring, jstring);
+void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(
+        JNIEnv *, jobject, jstring, jint, jstring, jstring, jboolean, jint);
+
+int __real_socket(int domain, int type, int protocol);
+int __real_close(int fd);
+FILE *__real_fopen(const char *path, const char *mode);
+int __real_fclose(FILE *file);
+void reset_test_state(void);
+uint32_t fingerprint(const void *data, size_t len);
+uint16_t load16(const uint8_t *p);
+void store16(uint8_t *p, uint16_t value);
+void readable_at(int fd, int line);
+#define readable(fd) readable_at(fd, __LINE__)
+size_t tun_packet(int fd, uint8_t *packet, int version, int protocol);
+size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
+                 const char *destination);
+
+// Entry points grouped by the production source they exercise.
+void test_socks5(void); // invizible.c
+void test_names(void); // dns.c
+void test_dns(const struct arguments *args);
+void dns_flows(void);
+void test_packets(struct arguments *args); // ip.c
+void test_uid_file_cleanup(void);
+void test_udp_short_dns(struct arguments *args); // udp.c
+void test_udp_socket_cleanup(const struct arguments *args);
+void udp_flow(int version, int redirect, int extension);
+void test_tcp(const struct arguments *args); // tcp.c
+void test_tcp_socket_cleanup(const struct arguments *args);
+void test_tcp_data_cleanup(void);
+void tcp_flow(int version);
+void socks_flow(int version, int authentication, int max_credentials);
+void test_icmp_socket_cleanup(const struct arguments *args); // icmp.c
+void icmp_packets(int version);
+void test_dhcp_response_bounds(const struct arguments *args); // dhcp.c
+void dhcp_offer(void);
+void test_event_loop_shutdown(struct arguments *args); // session.c
+void compatibility_suite(void); // Multiple sources; valid-input comparison only.
+
+#endif

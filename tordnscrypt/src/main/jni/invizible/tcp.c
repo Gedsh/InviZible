@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -39,6 +39,7 @@ extern int own_uid;
 
 void clear_tcp_data(struct tcp_session *cur) {
     struct segment *s = cur->forward;
+    cur->forward = NULL;
     while (s != NULL) {
         struct segment *p = s;
         s = s->next;
@@ -700,14 +701,25 @@ jboolean handle_tcp(const struct arguments *args,
                     const uint8_t *payload,
                     int uid, int allowed, struct allowed *redirect,
                     const int epoll_fd) {
+    size_t payload_offset = (size_t) (payload - pkt);
+    if (payload_offset > length || length - payload_offset < sizeof(struct tcphdr))
+        return 0;
+
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
     const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
     const struct tcphdr *tcphdr = (struct tcphdr *) payload;
-    const uint8_t tcpoptlen = (uint8_t) ((tcphdr->doff - 5) * 4);
+    const size_t header_length = (size_t) tcphdr->doff * 4;
+    if (header_length < sizeof(struct tcphdr) || header_length > length - payload_offset) {
+        log_android(ANDROID_LOG_WARN, "TCP invalid header length %zu", header_length);
+        return 0;
+    }
+    const size_t tcpoptlen = header_length - sizeof(struct tcphdr);
     const uint8_t *tcpoptions = payload + sizeof(struct tcphdr);
-    const uint8_t *data = payload + sizeof(struct tcphdr) + tcpoptlen;
+    const uint8_t *data = payload + header_length;
+    if (length - (data - pkt) > UINT16_MAX)
+        return 0;
     const uint16_t datalen = (const uint16_t) (length - (data - pkt));
 
     // Search session
@@ -772,30 +784,39 @@ jboolean handle_tcp(const struct arguments *args,
             uint16_t mss = get_default_mss(version);
             uint8_t ws = 0;
             int optlen = tcpoptlen;
-            uint8_t *options = (uint8_t *) tcpoptions;
+            const uint8_t *options = tcpoptions;
             while (optlen > 0) {
                 uint8_t kind = *options;
-                uint8_t len = *(options + 1);
                 if (kind == 0) // End of options list
                     break;
-
-                if (kind == 2 && len == 4)
-                    mss = ntohs(*((uint16_t *) (options + 2)));
-
-                else if (kind == 3 && len == 3)
-                    ws = *(options + 2);
-
-                if (kind == 1) {
+                if (kind == 1) { // No operation has no length byte.
                     optlen--;
                     options++;
-                } else {
-                    optlen -= len;
-                    options += len;
+                    continue;
                 }
+                if (optlen < 2)
+                    return 0;
+                uint8_t len = options[1];
+                if (len < 2 || len > optlen)
+                    return 0;
+
+                if (kind == 2) {
+                    if (len != 4)
+                        return 0;
+                    mss = read_net16(options + 2);
+                    if (mss == 0)
+                        return 0;
+                } else if (kind == 3) {
+                    if (len != 3)
+                        return 0;
+                    ws = (options[2] > 14 ? 14 : options[2]);
+                }
+                optlen -= len;
+                options += len;
             }
 
             log_android(ANDROID_LOG_INFO, "%s new session mss %u ws %u window %u",
-                        packet, mss, ws, ntohs(tcphdr->window) << ws);
+                        packet, mss, ws, (uint32_t) ntohs(tcphdr->window) << ws);
 
             // Register session
             struct ng_session *s = ng_malloc(sizeof(struct ng_session), "tcp session");
@@ -851,6 +872,7 @@ jboolean handle_tcp(const struct arguments *args,
                 write_rst(args, &s->tcp);
                 write_connection_unreach(args, s, EHOSTDOWN);
 
+                clear_tcp_data(&s->tcp);
                 ng_free(s, __FILE__, __LINE__);
                 return 0;
             }
@@ -859,6 +881,7 @@ jboolean handle_tcp(const struct arguments *args,
             s->socket = open_tcp_socket(args, &s->tcp, redirect);
             if (s->socket < 0) {
                 // Remote might retry
+                clear_tcp_data(&s->tcp);
                 ng_free(s, __FILE__, __LINE__);
                 return 0;
             }
@@ -1135,8 +1158,10 @@ int open_tcp_socket(const struct arguments *args,
     }
 
     // Protect
-    if (protect_socket(args, sock, cur->uid) < 0)
+    if (protect_socket(args, sock, cur->uid) < 0) {
+        close(sock);
         return -1;
+    }
 
 
     int on = 1;
@@ -1149,6 +1174,7 @@ int open_tcp_socket(const struct arguments *args,
     if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0) {
         log_android(ANDROID_LOG_ERROR, "fcntl socket O_NONBLOCK error %d: %s",
                     errno, strerror(errno));
+        close(sock);
         return -1;
     }
 
@@ -1251,6 +1277,7 @@ int open_tcp_socket(const struct arguments *args,
                                    : sizeof(struct sockaddr_in6)));
     if (err < 0 && errno != EINPROGRESS) {
         log_android(ANDROID_LOG_ERROR, "TCP connect error %d: %s", errno, strerror(errno));
+        close(sock);
         return -1;
     }
 

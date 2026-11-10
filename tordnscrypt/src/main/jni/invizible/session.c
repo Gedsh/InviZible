@@ -16,7 +16,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -285,9 +285,8 @@ void *handle_events(void *a) {
                     "epoll close error %d: %s", errno, strerror(errno));
 
     // Cleanup
-    ng_free(args, __FILE__, __LINE__);
-
     log_android(ANDROID_LOG_WARN, "Stopped events tun=%d", args->tun);
+    ng_free(args, __FILE__, __LINE__);
     return NULL;
 }
 

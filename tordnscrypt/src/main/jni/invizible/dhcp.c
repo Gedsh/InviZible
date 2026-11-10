@@ -17,7 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -84,7 +84,7 @@ int check_dhcp(const struct arguments *args, const struct udp_session *u,
         memset(&response->giaddr, 0, sizeof(response->giaddr));
 
         // https://tools.ietf.org/html/rfc2132
-        uint8_t *options = (uint8_t *) (response + sizeof(struct dhcp_packet));
+        uint8_t *options = (uint8_t *) response + sizeof(*response);
 
         int idx = 0;
         *(options + idx++) = 53; // Message type
@@ -113,7 +113,8 @@ int check_dhcp(const struct arguments *args, const struct udp_session *u,
 
         *(options + idx++) = 51; // lease time
         *(options + idx++) = 4; // quad
-        *((uint32_t *) (options + idx)) = 3600;
+        uint32_t lease_time = htonl(3600);
+        memcpy(options + idx, &lease_time, sizeof(lease_time));
         idx += 4;
 
         *(options + idx++) = 54; // DHCP

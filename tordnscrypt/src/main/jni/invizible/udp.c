@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -245,6 +245,11 @@ jboolean handle_udp(const struct arguments *args,
     const uint8_t *data = payload + sizeof(struct udphdr);
     const size_t datalen = length - (data - pkt);
 
+    if (ntohs(udphdr->dest) == 53 && datalen < sizeof(struct dns_header)) {
+        log_android(ANDROID_LOG_WARN, "DNS request too short");
+        return 0;
+    }
+
     // Search session
     struct ng_session *cur = args->ctx->ng_session;
     while (cur != NULL &&
@@ -376,8 +381,8 @@ jboolean handle_udp(const struct arguments *args,
                 if (off > 0 && off + 4 <= datalen) {
                     // TODO multiple qnames?
                     if (q == 0) {
-                        qtype = ntohs(*((uint16_t *) (data + off)));
-                        qclass = ntohs(*((uint16_t *) (data + off + 2)));
+                        qtype = read_net16(data + off);
+                        qclass = read_net16(data + off + 2);
                         log_android(ANDROID_LOG_INFO,
                                     "DNS question %d qtype %d qclass %d qname %s",
                                     q, qtype, qclass, qname);
@@ -386,6 +391,7 @@ jboolean handle_udp(const struct arguments *args,
                 } else {
                     log_android(ANDROID_LOG_WARN,
                                 "DNS request Q invalid off %d datalen %d", off, datalen);
+                    return 0;
                 }
             }
 
@@ -489,8 +495,10 @@ int open_udp_socket(const struct arguments *args,
     }
 
     // Protect socket
-    if (protect_socket(args, sock, cur->uid) < 0)
+    if (protect_socket(args, sock, cur->uid) < 0) {
+        close(sock);
         return -1;
+    }
 
 
 
@@ -536,6 +544,7 @@ int open_udp_socket(const struct arguments *args,
     if (flags < 0 || fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0) {
         log_android(ANDROID_LOG_ERROR, "fcntl socket O_NONBLOCK error %d: %s",
                     errno, strerror(errno));
+        close(sock);
         return -1;
     }
 

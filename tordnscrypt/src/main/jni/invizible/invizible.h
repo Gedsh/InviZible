@@ -14,11 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -344,6 +345,11 @@ typedef struct dhcp_option {
 } __packed dhcp_option;
 
 // Prototypes
+
+// DNS fields and TCP options need not be aligned to a uint16_t boundary.
+static inline uint16_t read_net16(const uint8_t *data) {
+    return (uint16_t) ((uint16_t) data[0] << 8 | data[1]);
+}
 
 void handle_signal(int sig, siginfo_t *info, void *context);
 

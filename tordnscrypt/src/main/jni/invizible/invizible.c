@@ -17,7 +17,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -222,6 +222,24 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(JNIEnv *env,
     return get_mtu();
 }
 
+static int copy_socks5_string(JNIEnv *env, jstring value, char *dest, size_t capacity) {
+    if (value == NULL || (size_t) (*env)->GetStringUTFLength(env, value) >= capacity) {
+        jclass cls = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
+        if (cls != NULL) {
+            (*env)->ThrowNew(env, cls, "SOCKS5 setting exceeds its encoded byte limit or is null");
+            (*env)->DeleteLocalRef(env, cls);
+        }
+        return 0;
+    }
+
+    const char *text = (*env)->GetStringUTFChars(env, value, NULL);
+    if (text == NULL)
+        return 0; // Preserve the pending JNI exception.
+    strcpy(dest, text);
+    (*env)->ReleaseStringUTFChars(env, value, text);
+    return 1;
+}
+
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(JNIEnv *env,
                                                                             jobject instance,
@@ -231,12 +249,13 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(JNIE
                                                                             jstring password_,
                                                                             jboolean isolate_uid,
                                                                             jint dnsport) {
-    const char *addr = (*env)->GetStringUTFChars(env, addr_, 0);
-    const char *username = (*env)->GetStringUTFChars(env, username_, 0);
-    const char *password = (*env)->GetStringUTFChars(env, password_, 0);
-    ng_add_alloc(addr, "tor_addr");
-    ng_add_alloc(username, "tor_username");
-    ng_add_alloc(password, "tor_password");
+    char addr[sizeof(tor_socks5_addr)];
+    char username[sizeof(tor_socks5_username)];
+    char password[sizeof(tor_socks5_password)];
+    if (!copy_socks5_string(env, addr_, addr, sizeof(addr)) ||
+        !copy_socks5_string(env, username_, username, sizeof(username)) ||
+        !copy_socks5_string(env, password_, password, sizeof(password)))
+        return;
 
     strcpy(tor_socks5_addr, addr);
     tor_socks5_port = port;
@@ -247,13 +266,6 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(JNIE
 
     log_android(ANDROID_LOG_WARN, "TOR SOCKS5 %s:%d user=%s",
                 tor_socks5_addr, tor_socks5_port, tor_socks5_username);
-
-    (*env)->ReleaseStringUTFChars(env, addr_, addr);
-    (*env)->ReleaseStringUTFChars(env, username_, username);
-    (*env)->ReleaseStringUTFChars(env, password_, password);
-    ng_delete_alloc(addr, __FILE__, __LINE__);
-    ng_delete_alloc(username, __FILE__, __LINE__);
-    ng_delete_alloc(password, __FILE__, __LINE__);
 }
 
 JNIEXPORT void JNICALL
@@ -263,12 +275,13 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(JN
                                                                               jint port,
                                                                               jstring username_,
                                                                               jstring password_) {
-    const char *addr = (*env)->GetStringUTFChars(env, addr_, 0);
-    const char *username = (*env)->GetStringUTFChars(env, username_, 0);
-    const char *password = (*env)->GetStringUTFChars(env, password_, 0);
-    ng_add_alloc(addr, "proxy_addr");
-    ng_add_alloc(username, "proxy_username");
-    ng_add_alloc(password, "proxy_password");
+    char addr[sizeof(proxy_socks5_addr)];
+    char username[sizeof(proxy_socks5_username)];
+    char password[sizeof(proxy_socks5_password)];
+    if (!copy_socks5_string(env, addr_, addr, sizeof(addr)) ||
+        !copy_socks5_string(env, username_, username, sizeof(username)) ||
+        !copy_socks5_string(env, password_, password, sizeof(password)))
+        return;
 
     strcpy(proxy_socks5_addr, addr);
     proxy_socks5_port = port;
@@ -277,13 +290,6 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(JN
 
     log_android(ANDROID_LOG_WARN, "PROXY SOCKS5 %s:%d user=%s",
                 proxy_socks5_addr, proxy_socks5_port, proxy_socks5_username);
-
-    (*env)->ReleaseStringUTFChars(env, addr_, addr);
-    (*env)->ReleaseStringUTFChars(env, username_, username);
-    (*env)->ReleaseStringUTFChars(env, password_, password);
-    ng_delete_alloc(addr, __FILE__, __LINE__);
-    ng_delete_alloc(username, __FILE__, __LINE__);
-    ng_delete_alloc(password, __FILE__, __LINE__);
 }
 
 JNIEXPORT void JNICALL

@@ -18,7 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
 
 #include "invizible.h"
@@ -133,6 +133,9 @@ void handle_ip(const struct arguments *args,
     int flen = 0;
     uint8_t *payload;
 
+    if (length == 0)
+        return;
+
     // Get protocol, addresses & payload
     uint8_t version = (*pkt) >> 4;
     if (version == 4) {
@@ -147,14 +150,18 @@ void handle_ip(const struct arguments *args,
         saddr = &ip4hdr->saddr;
         daddr = &ip4hdr->daddr;
 
-        if (ip4hdr->frag_off & IP_MF) {
-            log_android(ANDROID_LOG_ERROR, "IP fragment offset %u",
-                        (ip4hdr->frag_off & IP_OFFMASK) * 8);
-            //return;
+        if (ntohs(ip4hdr->frag_off) & (IP_MF | IP_OFFMASK)) {
+            // Fragment reassembly is not supported.
+            log_android(ANDROID_LOG_WARN, "IP4 fragmented packet");
+            return;
         }
 
-        uint8_t ipoptlen = (uint8_t) ((ip4hdr->ihl - 5) * 4);
-        payload = (uint8_t *) (pkt + sizeof(struct iphdr) + ipoptlen);
+        size_t header_length = (size_t) ip4hdr->ihl * 4;
+        if (header_length < sizeof(struct iphdr) || header_length > length) {
+            log_android(ANDROID_LOG_WARN, "IP4 invalid header length %zu", header_length);
+            return;
+        }
+        payload = (uint8_t *) (pkt + header_length);
 
         if (ntohs(ip4hdr->tot_len) != length) {
             log_android(ANDROID_LOG_ERROR, "Invalid length %u header length %u",
@@ -176,31 +183,49 @@ void handle_ip(const struct arguments *args,
 
         struct ip6_hdr *ip6hdr = (struct ip6_hdr *) pkt;
 
-        // Skip extension headers
-        uint16_t off = 0;
-        protocol = ip6hdr->ip6_nxt;
-        if (!is_upper_layer(protocol)) {
-            log_android(ANDROID_LOG_WARN, "IP6 extension %d", protocol);
-            off = sizeof(struct ip6_hdr);
-            struct ip6_ext *ext = (struct ip6_ext *) (pkt + off);
-            while (is_lower_layer(ext->ip6e_nxt) && !is_upper_layer(protocol)) {
-                protocol = ext->ip6e_nxt;
-                log_android(ANDROID_LOG_WARN, "IP6 extension %d", protocol);
+        if (ntohs(ip6hdr->ip6_plen) != length - sizeof(struct ip6_hdr)) {
+            log_android(ANDROID_LOG_WARN, "IP6 invalid payload length");
+            return;
+        }
 
-                off += (8 + ext->ip6e_len);
-                ext = (struct ip6_ext *) (pkt + off);
+        // Skip complete extension headers, using each header's length format.
+        size_t off = sizeof(struct ip6_hdr);
+        protocol = ip6hdr->ip6_nxt;
+        while (is_lower_layer(protocol)) {
+            // ESP is encrypted and does not have a generic extension header.
+            if (protocol == IPPROTO_ESP || length - off < 2) {
+                log_android(ANDROID_LOG_WARN, "IP6 unsupported or truncated extension %u", protocol);
+                return;
             }
-            if (!is_upper_layer(protocol)) {
-                off = 0;
-                protocol = ip6hdr->ip6_nxt;
-                log_android(ANDROID_LOG_WARN, "IP6 final extension %d", protocol);
+
+            const uint8_t *ext = pkt + off;
+            size_t ext_length;
+            if (protocol == IPPROTO_FRAGMENT)
+                ext_length = 8;
+            else if (protocol == IPPROTO_AH)
+                ext_length = ((size_t) ext[1] + 2) * 4;
+            else
+                ext_length = ((size_t) ext[1] + 1) * 8;
+
+            if (ext_length > length - off ||
+                (protocol == IPPROTO_AH && ext_length < 12)) {
+                log_android(ANDROID_LOG_WARN, "IP6 invalid extension length %zu", ext_length);
+                return;
             }
+            if (protocol == IPPROTO_FRAGMENT &&
+                (((uint16_t) ext[2] << 8 | ext[3]) & 0xFFF9)) {
+                // Only atomic fragments can be handled without reassembly.
+                log_android(ANDROID_LOG_WARN, "IP6 fragmented packet");
+                return;
+            }
+            protocol = ext[0];
+            off += ext_length;
         }
 
         saddr = &ip6hdr->ip6_src;
         daddr = &ip6hdr->ip6_dst;
 
-        payload = (uint8_t *) (pkt + sizeof(struct ip6_hdr) + off);
+        payload = (uint8_t *) (pkt + off);
 
         // TODO checksum
     } else {
@@ -237,6 +262,11 @@ void handle_ip(const struct arguments *args,
         }
 
         struct udphdr *udp = (struct udphdr *) payload;
+
+        if (ntohs(udp->len) != length - (payload - pkt)) {
+            log_android(ANDROID_LOG_WARN, "UDP invalid length");
+            return;
+        }
 
         sport = ntohs(udp->source);
         dport = ntohs(udp->dest);
@@ -533,6 +563,7 @@ jint get_uid_sub(const int version, const int protocol,
             uid_cache[c].time = now;
         } else {
             log_android(ANDROID_LOG_ERROR, "Invalid field #%d: %s", fields, line);
+            fclose(fd);
             return -2;
         }
     }
