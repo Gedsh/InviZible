@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings;
@@ -319,11 +319,12 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
         itpdTunnelsPath = pathVars.get().getItpdTunnelsPath();
 
         executor.submit("PreferencesCommonFragment verifier", () -> {
+            Verifier verifier = verifierLazy.get();
             try {
-                Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                    verifier.invalidateSignatureCache();
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             context, getString(R.string.verifier_error), "5889");
                     if (notificationHelper != null && isAdded()) {
@@ -332,6 +333,7 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 }
 
             } catch (Exception e) {
+                verifier.invalidateSignatureCache();
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         context, getString(R.string.verifier_error), "5804");
                 if (notificationHelper != null && isAdded()) {

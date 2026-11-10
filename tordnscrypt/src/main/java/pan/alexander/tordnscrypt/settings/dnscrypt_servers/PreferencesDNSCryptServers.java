@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.dnscrypt_servers;
@@ -138,11 +138,12 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
         }
 
         executor.submit("PreferencesDNSCryptServers verifier", () -> {
+            Verifier verifier = verifierLazy.get();
             try {
-                Verifier verifier = verifierLazy.get();
                 String appSign = verifier.getAppSignature();
                 String appSignAlt = verifier.getApkSignature();
                 if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                    verifier.invalidateSignatureCache();
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, getText(R.string.verifier_error).toString(), "6787");
                     if (notificationHelper != null && isAdded()) {
@@ -151,6 +152,7 @@ public class PreferencesDNSCryptServers extends Fragment implements View.OnClick
                 }
 
             } catch (Exception e) {
+                verifier.invalidateSignatureCache();
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         activity, getText(R.string.verifier_error).toString(), "8990");
                 if (isAdded() && notificationHelper != null) {

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.dnscrypt_fragment;
@@ -185,15 +185,16 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                 Activity activity = view.getFragmentActivity();
 
                 executor.submit("DNSCryptFragmentReceiver onReceive", () -> {
+                    Verifier verifier = verifierLazy.get();
                     try {
                         if (activity == null || activity.isFinishing()) {
                             return null;
                         }
 
-                        Verifier verifier = verifierLazy.get();
                         String appSign = verifier.getAppSignature();
                         String appSignAlt = verifier.getApkSignature();
                         if (!verifier.decryptStr(verifier.getWrongSign(), appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                            verifier.invalidateSignatureCache();
 
                             if (fragmentManager != null) {
                                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
@@ -205,6 +206,7 @@ public class DNSCryptFragmentReceiver extends BroadcastReceiver {
                         }
 
                     } catch (Exception e) {
+                        verifier.invalidateSignatureCache();
                         if (fragmentManager != null) {
                             NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                                     context, context.getString(R.string.verifier_error), "18");

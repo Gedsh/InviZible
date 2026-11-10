@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt;
@@ -425,13 +425,14 @@ public class TopFragment extends Fragment
     }
 
     private void checkIntegrity(Activity activity) {
+        Verifier verifier = verifierLazy.get();
         try {
-            Verifier verifier = verifierLazy.get();
             String appSign = verifier.getAppSignature();
             String appSignAlt = verifier.getApkSignature();
             verifier.encryptStr(TOP_BROADCAST, appSign, appSignAlt);
             String wrongSign = verifier.getWrongSign();
             if (!verifier.decryptStr(wrongSign, appSign, appSignAlt).equals(TOP_BROADCAST)) {
+                verifier.invalidateSignatureCache();
                 if (isAdded() && !isStateSaved()) {
                     NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                             activity, getString(R.string.verifier_error), "1112");
@@ -442,6 +443,7 @@ public class TopFragment extends Fragment
             }
 
         } catch (Exception e) {
+            verifier.invalidateSignatureCache();
             if (isAdded()) {
                 NotificationHelper notificationHelper = NotificationHelper.setHelperMessage(
                         activity, getString(R.string.verifier_error), "2235");
