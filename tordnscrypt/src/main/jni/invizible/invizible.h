@@ -562,7 +562,23 @@ int jniCheckException(JNIEnv *env);
 
 int sdk_int(JNIEnv *env);
 
-void log_android(int prio, const char *fmt, ...);
+// Keep diagnostic arguments unevaluated when their level is disabled.
+#define log_android(prio, ...) do { \
+    int log_priority = (prio); \
+    if (log_priority >= LOG_LEVEL) \
+        log_android_write(log_priority, __VA_ARGS__); \
+} while (0)
+
+void log_android_write(int prio, const char *fmt, ...);
+
+struct log_address {
+    int version;
+    const void *address;
+    char text[INET6_ADDRSTRLEN + 1];
+};
+
+// Stack-local cache: also usable where policy/accounting needs a textual address.
+const char *format_log_address(struct log_address *address);
 
 void log_packet(const struct arguments *args, jobject jpacket);
 

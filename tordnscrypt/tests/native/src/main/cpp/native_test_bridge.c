@@ -25,7 +25,13 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "jniLoadFailures") == 0)
+    if (strcmp(id, "lazyLogging") == 0)
+        test_lazy_logging();
+    else if (strcmp(id, "lazyTcpLogging") == 0)
+        test_lazy_tcp_logging(&args);
+    else if (strcmp(id, "lazyUdpLogging") == 0)
+        test_lazy_udp_logging(&args);
+    else if (strcmp(id, "jniLoadFailures") == 0)
         test_jni_load_failures();
     else if (strcmp(id, "ipChecksumHeader") == 0)
         test_ip_checksums(&args, 0);

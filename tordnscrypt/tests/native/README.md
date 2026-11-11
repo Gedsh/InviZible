@@ -30,6 +30,11 @@ Ten TCP shutdown cases use real local socket pairs to verify IPv4/IPv6 data
 after upstream EOF, app-first and simultaneous close, FIN behind a sequence gap,
 repeated FIN, data queued before EOF, timeout/reset cleanup, failed write shutdown,
 and stored UID logging.
+Lazy diagnostic cases count address conversions on IPv4/IPv6 TCP and UDP paths:
+disabled logs skip their arguments and normal packet/session diagnostics, enabled
+errors retain addresses and the original TCP state, and usage accounting still
+receives its destination. Address formatting is cached only within a call and
+preserves errno; no persistent session cache or allocation is added.
 Incoming IPv4 header checksums are always validated, including options and padding.
 TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
 creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.

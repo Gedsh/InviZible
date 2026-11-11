@@ -27,7 +27,7 @@ function(add_native_tests target source)
     set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect sendto shutdown
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp handle_tcp handle_icmp
             get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
-            epoll_wait get_ms pipe pthread_mutex_init)
+            epoll_wait get_ms pipe pthread_mutex_init inet_ntop)
     if(ANDROID_ABI STREQUAL "x86_64")
         list(APPEND wraps calc_checksum)
         target_compile_options(${target} PRIVATE -mssse3 -DNEON2SSE_DISABLE_PERFORMANCE_WARNING)

@@ -1,5 +1,35 @@
 #include "test_support.h"
 
+void test_lazy_udp_logging(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    real_udp_packets = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        struct ng_session s = {.protocol = IPPROTO_UDP, .socket = -1};
+        s.udp.version = version; s.udp.time = time(NULL); s.udp.state = UDP_ACTIVE;
+        s.udp.source = htons(12345); s.udp.dest = htons(5000);
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                version == 4 ? "203.0.113.2" : "2001:db8::2", &s.udp.daddr) == 1);
+        address_formats = 0;
+        assert(check_udp_session(&running, &s, 0, SESSION_MAX) == 0);
+        uint8_t data[] = {1, 2, 3};
+        assert(write_udp(&running, &s.udp, data, sizeof(data)) >= 0);
+        uint8_t output[128];
+        tun_packet(tunnel[0], output, version, IPPROTO_UDP);
+        assert(address_formats == 0 && allocations == 0);
+        // Accounting still needs the destination even with informational logs disabled.
+        s.udp.state = UDP_CLOSED; s.udp.sent = 7;
+        uint64_t previous = accounted_sent;
+        assert(check_udp_session(&running, &s, 0, SESSION_MAX) == 0);
+        assert(address_formats == 1 && accounted_sent == previous + 7 && s.udp.sent == 0);
+    }
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_dns_counts(int version, int response) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];

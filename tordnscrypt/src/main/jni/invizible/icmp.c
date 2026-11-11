@@ -40,17 +40,11 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
 
     int timeout = get_icmp_timeout(&s->icmp, sessions, maxsessions);
     if (s->icmp.stop || s->icmp.time + timeout < now) {
-        char source[INET6_ADDRSTRLEN + 1];
-        char dest[INET6_ADDRSTRLEN + 1];
-        if (s->icmp.version == 4) {
-            inet_ntop(AF_INET, &s->icmp.saddr.ip4, source, sizeof(source));
-            inet_ntop(AF_INET, &s->icmp.daddr.ip4, dest, sizeof(dest));
-        } else {
-            inet_ntop(AF_INET6, &s->icmp.saddr.ip6, source, sizeof(source));
-            inet_ntop(AF_INET6, &s->icmp.daddr.ip6, dest, sizeof(dest));
-        }
+        struct log_address source = {.version = s->icmp.version, .address = &s->icmp.saddr};
+        struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
         log_android(ANDROID_LOG_WARN, "ICMP idle %d/%d sec stop %d from %s to %s",
-                    now - s->icmp.time, timeout, s->icmp.stop, dest, source);
+                    now - s->icmp.time, timeout, s->icmp.stop,
+                    format_log_address(&dest), format_log_address(&source));
 
         if (close(s->socket))
             log_android(ANDROID_LOG_ERROR, "ICMP close %d error %d: %s",
@@ -146,11 +140,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
 
             } else {
                 // Socket read data
-                char dest[INET6_ADDRSTRLEN + 1];
-                if (s->icmp.version == 4)
-                    inet_ntop(AF_INET, &s->icmp.daddr.ip4, dest, sizeof(dest));
-                else
-                    inet_ntop(AF_INET6, &s->icmp.daddr.ip6, dest, sizeof(dest));
+                struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
 
                 // cur->id should be equal to icmp->icmp_id
                 // but for some unexplained reason this is not the case
@@ -159,7 +149,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 log_android(
                         s->icmp.id == icmp->icmp_id ? ANDROID_LOG_INFO : ANDROID_LOG_WARN,
                         "ICMP recv bytes %d from %s for tun type %d code %d id %x/%x seq %d",
-                        bytes, dest,
+                        bytes, format_log_address(&dest),
                         icmp->icmp_type, icmp->icmp_code,
                         s->icmp.id, icmp->icmp_id, icmp->icmp_seq);
 
@@ -191,21 +181,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
 
 jboolean is_icmp_supported(const uint8_t *pkt,
                            const uint8_t *payload) {
-    // Get headers
-    const uint8_t version = (*pkt) >> 4;
-    const struct iphdr *ip4 = (struct iphdr *) pkt;
-    const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
-    struct icmp *icmp = (struct icmp *) payload;
-
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
-    if (version == 4) {
-        inet_ntop(AF_INET, &ip4->saddr, source, sizeof(source));
-        inet_ntop(AF_INET, &ip4->daddr, dest, sizeof(dest));
-    } else {
-        inet_ntop(AF_INET6, &ip6->ip6_src, source, sizeof(source));
-        inet_ntop(AF_INET6, &ip6->ip6_dst, dest, sizeof(dest));
-    }
+    const struct icmp *icmp = (const struct icmp *) payload;
 
     if (icmp->icmp_type != ICMP_ECHO && icmp->icmp_type != 128 /* ICMP_ECHOV6 */) {
         return 0;
@@ -226,15 +202,8 @@ jboolean handle_icmp(const struct arguments *args,
     struct icmp *icmp = (struct icmp *) payload;
     size_t icmplen = length - (payload - pkt);
 
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
-    if (version == 4) {
-        inet_ntop(AF_INET, &ip4->saddr, source, sizeof(source));
-        inet_ntop(AF_INET, &ip4->daddr, dest, sizeof(dest));
-    } else {
-        inet_ntop(AF_INET6, &ip6->ip6_src, source, sizeof(source));
-        inet_ntop(AF_INET6, &ip6->ip6_dst, dest, sizeof(dest));
-    }
+    struct log_address source = {.version = version, .address = version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src};
+    struct log_address dest = {.version = version, .address = version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst};
 
     // Search session
     struct ng_session *cur = args->ctx->ng_session;
@@ -250,7 +219,7 @@ jboolean handle_icmp(const struct arguments *args,
 
     // Create new session if needed
     if (cur == NULL) {
-        log_android(ANDROID_LOG_INFO, "ICMP new session from %s to %s", source, dest);
+        log_android(ANDROID_LOG_INFO, "ICMP new session from %s to %s", format_log_address(&source), format_log_address(&dest));
 
         // Register session
         struct ng_session *s = ng_malloc(sizeof(struct ng_session), "icmp session");
@@ -316,7 +285,7 @@ jboolean handle_icmp(const struct arguments *args,
 
     log_android(ANDROID_LOG_WARN,
                 "ICMP forward from tun %s to %s type %d code %d id %x seq %d data %d",
-                source, dest,
+                format_log_address(&source), format_log_address(&dest),
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq, icmplen);
 
     cur->icmp.time = time(NULL);
@@ -383,8 +352,6 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
     size_t len;
     u_int8_t *buffer;
     struct icmp *icmp = (struct icmp *) data;
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
 
     // Build packet
     if (cur->version == 4) {
@@ -428,17 +395,13 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
         memcpy(&(ip6->ip6_dst), &cur->saddr.ip6, 16);
     }
 
-    inet_ntop(cur->version == 4 ? AF_INET : AF_INET6,
-              cur->version == 4 ? (const void *) &cur->saddr.ip4 : (const void *) &cur->saddr.ip6,
-              source, sizeof(source));
-    inet_ntop(cur->version == 4 ? AF_INET : AF_INET6,
-              cur->version == 4 ? (const void *) &cur->daddr.ip4 : (const void *) &cur->daddr.ip6,
-              dest, sizeof(dest));
+    struct log_address source = {.version = cur->version, .address = &cur->saddr};
+    struct log_address dest = {.version = cur->version, .address = &cur->daddr};
 
     // Send raw ICMP message
     log_android(ANDROID_LOG_WARN,
                 "ICMP sending to tun %d from %s to %s data %u type %d code %d id %x seq %d",
-                args->tun, dest, source, datalen,
+                args->tun, format_log_address(&dest), format_log_address(&source), datalen,
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);
 
     ssize_t res = write(args->tun, buffer, len);

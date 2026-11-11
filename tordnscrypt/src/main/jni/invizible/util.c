@@ -115,7 +115,17 @@ int sdk_int(JNIEnv *env) {
     return (*env)->GetStaticIntField(env, clsVersion, fid);
 }
 
-void log_android(int prio, const char *fmt, ...) {
+const char *format_log_address(struct log_address *address) {
+    int saved_errno = errno;
+    if (address->text[0] == 0 &&
+        inet_ntop(address->version == 4 ? AF_INET : AF_INET6, address->address,
+                  address->text, sizeof(address->text)) == NULL)
+        strcpy(address->text, "?");
+    errno = saved_errno;
+    return address->text;
+}
+
+void log_android_write(int prio, const char *fmt, ...) {
     if (prio >= LOG_LEVEL) {
         char line[1024];
         va_list argptr;

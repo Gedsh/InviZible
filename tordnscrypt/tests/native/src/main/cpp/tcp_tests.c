@@ -1,5 +1,54 @@
 #include "test_support.h"
 
+void test_lazy_tcp_logging(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[128], output[128];
+        size_t off = ip_header(packet, version, IPPROTO_TCP, 20,
+                               version == 4 ? "203.0.113.2" : "2001:db8::2");
+        struct tcphdr *tcp = (void *) (packet + off);
+        tcp->source = htons(12345); tcp->dest = htons(443);
+        tcp->seq = htonl(1000); tcp->ack_seq = htonl(2000);
+        tcp->doff = 5; tcp->ack = 1; tcp->window = htons(16000);
+        packet_checksums(packet, off + 20, off, IPPROTO_TCP);
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = -1};
+        s.tcp.version = version; s.tcp.uid = 12345; s.tcp.time = time(NULL);
+        s.tcp.state = TCP_ESTABLISHED; s.tcp.source = tcp->source; s.tcp.dest = tcp->dest;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.local_start = 100;
+        s.tcp.remote_seq = 1000; s.tcp.remote_start = 500;
+        s.tcp.recv_window = s.tcp.send_window = 16000;
+        memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+        memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+        args->ctx->ng_session = &s;
+        address_formats = 0;
+        assert(check_tcp_session(&running, &s, 0, SESSION_MAX) == 0);
+        handle_ip(&running, packet, off + 20, -1, 0, SESSION_MAX);
+        assert(s.tcp.state == TCP_ESTABLISHED && s.tcp.acked == 2000);
+        struct epoll_event event = {.data.ptr = &s};
+        check_tcp_socket(&running, &event, -1);
+        assert(write_ack(&running, &s.tcp) >= 0);
+        tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+        assert(address_formats == 0 && allocations == 0 && sockets == 0);
+
+        // An enabled error must still contain addresses and the state before reset.
+        tcp->ack_seq = htonl(2001);
+        assert(handle_tcp(&running, packet, off + 20, packet + off, -1, 1, NULL, -1) == 0);
+        assert(address_formats == 2);
+        assert(strstr(last_log, version == 4 ? "10.0.0.2/12345 > 203.0.113.2/443"
+                                            : "2001:db8::1/12345 > 2001:db8::2/443") != NULL);
+        assert(strstr(last_log, "uid 12345 ESTABLISHED loc 1900 rem 500 acked 1900 future ACK") != NULL);
+        assert(s.tcp.state == TCP_CLOSING);
+        tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+        args->ctx->ng_session = NULL;
+    }
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_tcp_destination(const struct arguments *args) {
     for (int version = 4; version <= 6; version += 2) {
         const char *direct = version == 4 ? "198.51.100.1" : "fe80::1";

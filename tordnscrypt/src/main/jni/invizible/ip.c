@@ -156,8 +156,6 @@ void handle_ip(const struct arguments *args,
     uint8_t protocol;
     void *saddr;
     void *daddr;
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
     char flags[10];
     char data[16];
     int flen = 0;
@@ -313,8 +311,8 @@ void handle_ip(const struct arguments *args,
         return;
     }
 
-    inet_ntop(version == 4 ? AF_INET : AF_INET6, saddr, source, sizeof(source));
-    inet_ntop(version == 4 ? AF_INET : AF_INET6, daddr, dest, sizeof(dest));
+    struct log_address source = {.version = version, .address = saddr};
+    struct log_address dest = {.version = version, .address = daddr};
 
     // Get ports & flags
     int syn = 0;
@@ -417,7 +415,7 @@ void handle_ip(const struct arguments *args,
         if (args->ctx->sdk <= 28 || (compatibility_mode && can_filter)) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
         } else {
-            uid = get_uid_q(args, version, protocol, source, sport, dest, dport);
+            uid = get_uid_q(args, version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport);
         }
 
         if (uid < 0 && dport != 53) {
@@ -428,8 +426,8 @@ void handle_ip(const struct arguments *args,
                               sport,
                               daddr,
                               dport,
-                              source,
-                              dest,
+                              format_log_address(&source),
+                              format_log_address(&dest),
                               flags,
                               payload);
         }
@@ -437,7 +435,7 @@ void handle_ip(const struct arguments *args,
 
     log_android(ANDROID_LOG_DEBUG,
                 "Packet v%d %s/%u > %s/%u proto %d flags %s uid %d",
-                version, source, sport, dest, dport, protocol, flags, uid);
+                version, format_log_address(&source), sport, format_log_address(&dest), dport, protocol, flags, uid);
 
     // Check if allowed
     int allowed = 0;
@@ -452,14 +450,14 @@ void handle_ip(const struct arguments *args,
                 && !is_icmp_supported(pkt, payload)) {
         //Only ICMP ping traffic can be routed through the Android VPN service
         log_android(ANDROID_LOG_WARN, "ICMP v%d p%d %s/%u uid %d not supported",
-                    version, protocol, dest, dport, uid);
+                    version, protocol, format_log_address(&dest), dport, uid);
     } else if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP
                 && protocol != IPPROTO_ICMP && protocol != IPPROTO_ICMPV6) {
         log_android(ANDROID_LOG_ERROR, "PROTOCOL v%d p%d %s/%u uid %d not supported",
-                    version, protocol, dest, dport, uid);
+                    version, protocol, format_log_address(&dest), dport, uid);
     } else {
         jobject objPacket = create_packet(
-                args, version, protocol, flags, source, sport, dest, dport, data, uid, 0);
+                args, version, protocol, flags, format_log_address(&source), sport, format_log_address(&dest), dport, data, uid, 0);
         redirect = is_address_allowed(args, objPacket);
         allowed = (redirect != NULL);
         if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
@@ -481,7 +479,7 @@ void handle_ip(const struct arguments *args,
             handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
 
         log_android(ANDROID_LOG_WARN, "Address v%d p%d %s/%u syn %d uid %d not allowed",
-                    version, protocol, dest, dport, syn, uid);
+                    version, protocol, format_log_address(&dest), dport, syn, uid);
     }
 }
 

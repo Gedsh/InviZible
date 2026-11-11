@@ -9,6 +9,13 @@ int fail_cache_alloc;
 const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
+int address_formats;
+
+const char *__real_inet_ntop(int family, const void *address, char *text, socklen_t size);
+const char *__wrap_inet_ntop(int family, const void *address, char *text, socklen_t size) {
+    address_formats++;
+    return __real_inet_ntop(family, address, text, size);
+}
 int real_exit_reports, exit_reports;
 int real_network, real_udp_packets, block_domain, trace_dns;
 uint64_t accounted_sent, accounted_received;
@@ -439,6 +446,7 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 }
 
 void reset_test_state(void) {
+    address_formats = 0;
     destination_length = destination_calls = 0;
     connect_errno = 0;
     connect_fd = -1;
