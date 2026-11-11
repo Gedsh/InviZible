@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -34,13 +34,12 @@ import android.os.ParcelFileDescriptor;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import dagger.Lazy;
@@ -99,25 +98,46 @@ public class ServiceVPNHandler extends Handler {
     public Lazy<Handler> handler;
 
     private final List<Rule> listRule = new CopyOnWriteArrayList<>();
-    @Nullable
+    @NonNull
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
 
-    private ServiceVPNHandler(Looper looper, @Nullable ServiceVPN serviceVPN) {
-        super(looper);
-        App.getInstance().getDaggerComponent().inject(this);
-        this.serviceVPN = serviceVPN;
+    static final class ReloadPlan {
+        final ServiceVPN.Builder builder;
+        final List<String> allowed;
+
+        ReloadPlan(ServiceVPN.Builder builder, List<String> allowed) {
+            this.builder = builder;
+            this.allowed = allowed;
+        }
     }
 
-    static ServiceVPNHandler getInstance(Looper looper, ServiceVPN serviceVPN) {
+    private static final class CommandRequest {
+        final Intent intent;
+        final long generation;
+
+        CommandRequest(Intent intent, long generation) {
+            this.intent = new Intent(intent);
+            this.generation = generation;
+        }
+    }
+
+    ServiceVPNHandler(Looper looper, @NonNull ServiceVPN serviceVPN) {
+        super(looper);
+        this.serviceVPN = Objects.requireNonNull(serviceVPN, "serviceVPN");
+        App.getInstance().getDaggerComponent().inject(this);
+    }
+
+    static ServiceVPNHandler getInstance(Looper looper, @NonNull ServiceVPN serviceVPN) {
         return new ServiceVPNHandler(looper, serviceVPN);
     }
 
     void queue(Intent intent) {
         VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
         Message msg = obtainMessage();
-        msg.obj = intent;
         if (cmd != null) {
+            long generation = serviceVPN.cancelNativeRetry();
+            msg.obj = new CommandRequest(intent, generation);
             msg.what = cmd.ordinal();
             removeMessages(msg.what);
             if (cmd != STOP) {
@@ -132,17 +152,14 @@ public class ServiceVPNHandler extends Handler {
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
-            handleIntent((Intent) msg.obj);
+            CommandRequest request = (CommandRequest) msg.obj;
+            handleIntent(request.intent, request.generation);
         } catch (Throwable ex) {
             loge("ServiceVPNHandler handleMessage", ex, true);
         }
     }
 
-    private void handleIntent(Intent intent) {
-
-        if (serviceVPN == null) {
-            return;
-        }
+    private void handleIntent(Intent intent, long generation) {
 
         final SharedPreferences prefs = defaultSharedPreferences.get();
 
@@ -171,23 +188,34 @@ public class ServiceVPNHandler extends Handler {
             // Request garbage collection
             System.gc();
         } catch (Throwable ex) {
-            loge("ServiceVPNHandler handleIntent", ex, true);
-
             serviceVPN.reloading = false;
 
+            if ((cmd == VPNCommand.START || cmd == VPNCommand.RELOAD)
+                    && ex instanceof NativeTunnel.ShutdownTimeoutException timeout) {
+                Intent retryIntent = new Intent(intent);
+                if (serviceVPN.retryAfterNativeCleanup(timeout, generation,
+                        () -> handleIntent(retryIntent, generation))) {
+                    logi("VPN Handler waiting for native cleanup before retrying " + cmd);
+                }
+                return;
+            }
+
+            loge("ServiceVPNHandler handleIntent", ex, true);
+
             if (cmd == VPNCommand.START || cmd == VPNCommand.RELOAD) {
+                serviceVPN.nativeStartFailed(generation);
                 if (VpnService.prepare(serviceVPN) == null) {
                     logw("VPN Handler prepared connected=" + serviceVPN.isNetworkAvailable());
-                    if (serviceVPN.isNetworkAvailable() && !(ex instanceof StartFailedException)) {
-                        serviceVPN.handler.get().post(() -> {
-                            Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
-                        });
+                    if (ex instanceof IllegalArgumentException
+                            || (serviceVPN.isNetworkAvailable() && !(ex instanceof StartFailedException))) {
+                        serviceVPN.handler.get().post(() ->
+                                Toast.makeText(serviceVPN, ex instanceof IllegalArgumentException
+                                        ? ex.getMessage() : serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show());
                     }
                     // Retried on connectivity change
                 } else {
-                    serviceVPN.handler.get().post(() -> {
-                        Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show();
-                    });
+                    serviceVPN.handler.get().post(() ->
+                            Toast.makeText(serviceVPN, serviceVPN.getText(R.string.vpn_mode_error), Toast.LENGTH_SHORT).show());
                     // Disable firewall
                     if (!(ex instanceof StartFailedException)) {
                         prefs.edit().putBoolean(VPN_SERVICE_ENABLED, false).apply();
@@ -198,136 +226,64 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void start() {
-
-        if (serviceVPN == null) {
-            return;
-        }
-
         if (serviceVPN.vpn == null) {
-
-            listRule.clear();
-            listRule.addAll(Rule.getRules(serviceVPN));
-            List<String> listAllowed = getAllowedRules();
-
-            last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
-            serviceVPN.vpn = startVPN(last_builder);
-
-            if (serviceVPN.vpn == null) {
-                throw new StartFailedException("VPN Handler Start VPN Service Failed");
-            }
-
-            serviceVPN.startNative(serviceVPN.vpn, listAllowed);
-
-            ModulesStatus modulesStatus = ModulesStatus.getInstance();
-            if (modulesStatus.getMode() == OperationMode.VPN_MODE
-                    && serviceVPN.vpnPreferences.getFirewallEnabled()) {
-                modulesStatus.setFirewallState(RUNNING, preferenceRepository.get());
-            } else {
-                modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
-            }
+            VpnPreferenceHolder preferences = serviceVPN.prepareNativeSettings();
+            serviceVPN.withNativeOwnership(() -> startPrepared(preferences));
+        } else if (!serviceVPN.isNativeRunning()) {
+            reload();
         }
     }
 
-    private void reload() {
-
-        if (serviceVPN == null) {
-            return;
-        }
-
-        serviceVPN.reloading = true;
-
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
-                && !modulesStatus.isUseModulesWithRoot();
-
-        String oldVpnInterfaceName = "";
-        if (fixTTL) {
-            oldVpnInterfaceName = ModulesIptablesRules.blockTethering(serviceVPN, pathVars.get());
-        }
-
+    void startPrepared(VpnPreferenceHolder preferences) {
         listRule.clear();
         listRule.addAll(Rule.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
 
-        ServiceVPN.Builder builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
+        last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
+        serviceVPN.vpn = startVPN(last_builder);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
-            last_builder = builder;
-            logi("VPN Handler Legacy restart");
-
-            if (serviceVPN.vpn != null) {
-                serviceVPN.stopNative();
-                stopVPN(serviceVPN.vpn);
-                serviceVPN.vpn = null;
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ignored) {
-                }
-            }
-            serviceVPN.vpn = startVPN(last_builder);
-
-        } else {
-            if (serviceVPN.vpn != null && builder.equals(last_builder)) {
-                logi("VPN Handler Native restart");
-                serviceVPN.stopNative();
-
-                // Set underlying network
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    setUnderlyingNetwork();
-                }
-
-            } else {
-                last_builder = builder;
-
-                SharedPreferences prefs = defaultSharedPreferences.get();
-                boolean handover = prefs.getBoolean("VPN handover", true);
-                logi("VPN Handler restart handover=" + handover);
-
-                if (handover) {
-                    // Attempt seamless handover
-                    ParcelFileDescriptor prev = serviceVPN.vpn;
-                    serviceVPN.vpn = startVPN(builder);
-
-                    if (prev != null && serviceVPN.vpn == null) {
-                        logw("VPN Handler Handover failed");
-                        serviceVPN.stopNative();
-                        stopVPN(prev);
-                        prev = null;
-                        try {
-                            Thread.sleep(3000);
-                        } catch (InterruptedException ignored) {
-                        }
-                        serviceVPN.vpn = startVPN(last_builder);
-                        if (serviceVPN.vpn == null)
-                            throw new IllegalStateException("VPN Handler Handover failed");
-                    }
-
-                    if (prev != null) {
-                        serviceVPN.stopNative();
-                        stopVPN(prev);
-                    }
-                } else {
-                    if (serviceVPN.vpn != null) {
-                        serviceVPN.stopNative();
-                        stopVPN(serviceVPN.vpn);
-                    }
-
-                    serviceVPN.vpn = startVPN(builder);
-                }
-            }
+        if (serviceVPN.vpn == null) {
+            throw new StartFailedException("VPN Handler Start VPN Service Failed");
         }
 
-        if (serviceVPN.vpn == null)
-            throw new StartFailedException("VPN Handler Start VPN Service Failed");
+        startNative(serviceVPN.vpn, listAllowed, preferences);
 
-        serviceVPN.startNative(serviceVPN.vpn, listAllowed);
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        if (modulesStatus.getMode() == OperationMode.VPN_MODE
+                && serviceVPN.vpnPreferences.getFirewallEnabled()) {
+            modulesStatus.setFirewallState(RUNNING, preferenceRepository.get());
+        } else {
+            modulesStatus.setFirewallState(STOPPED, preferenceRepository.get());
+        }
+    }
+
+    private void reload() {
+        VpnPreferenceHolder preferences = serviceVPN.prepareNativeSettings();
+        serviceVPN.withNativeOwnership(() -> reloadPrepared(preferences));
+    }
+
+    private void reloadPrepared(VpnPreferenceHolder preferences) {
+        serviceVPN.reloading = true;
+
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        boolean fixTTL = shouldFixTTL();
+
+        ReloadPlan plan = prepareReload();
+
+        // A shutdown timeout must leave no temporary tethering rule for the retry to duplicate.
+        // Confirm termination before blocking tethering or changing any TUN descriptor.
+        serviceVPN.stopNative();
+
+        String oldVpnInterfaceName = "";
+        if (fixTTL) {
+            oldVpnInterfaceName = blockTethering();
+        }
+
+        restartVpn(plan, preferences);
 
         if (fixTTL) {
             String finalOldVpnInterfaceName = oldVpnInterfaceName;
-            postDelayed(() -> {
-                modulesStatus.setFixTTLRulesUpdateRequested(serviceVPN, true);
-                ModulesIptablesRules.allowTethering(serviceVPN, pathVars.get(), finalOldVpnInterfaceName);
-            }, 1000);
+            postDelayed(() -> allowTethering(finalOldVpnInterfaceName), 1000);
         }
 
         serviceVPN.reloading = false;
@@ -353,7 +309,93 @@ public class ServiceVPNHandler extends Handler {
         }
     }
 
-    private void stop() {
+    // Keep platform operations separate from the queue and reload sequencing exercised by instrumentation.
+    boolean shouldFixTTL() {
+        ModulesStatus modulesStatus = ModulesStatus.getInstance();
+        return modulesStatus.isFixTTL() && modulesStatus.getMode() == ROOT_MODE
+                && !modulesStatus.isUseModulesWithRoot();
+    }
+
+    String blockTethering() {
+        return ModulesIptablesRules.blockTethering(serviceVPN, pathVars.get());
+    }
+
+    void allowTethering(String oldVpnInterfaceName) {
+        ModulesStatus.getInstance().setFixTTLRulesUpdateRequested(serviceVPN, true);
+        ModulesIptablesRules.allowTethering(serviceVPN, pathVars.get(), oldVpnInterfaceName);
+    }
+
+    ReloadPlan prepareReload() {
+        listRule.clear();
+        listRule.addAll(Rule.getRules(serviceVPN));
+        List<String> listAllowed = getAllowedRules();
+        return new ReloadPlan(vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule), listAllowed);
+    }
+
+    void restartVpn(ReloadPlan plan, VpnPreferenceHolder preferences) {
+        ServiceVPN.Builder builder = plan.builder;
+        if (serviceVPN.vpn != null && builder.equals(last_builder)) {
+            logi("VPN Handler Native restart");
+            // Set underlying network
+            setUnderlyingNetwork();
+        } else {
+            last_builder = builder;
+
+            SharedPreferences prefs = defaultSharedPreferences.get();
+            boolean handover = prefs.getBoolean("VPN handover", true);
+            logi("VPN Handler restart handover=" + handover);
+
+            if (handover) {
+                // Attempt seamless handover
+                ParcelFileDescriptor prev = serviceVPN.vpn;
+                serviceVPN.vpn = startVPN(builder);
+
+                if (prev != null && serviceVPN.vpn == null) {
+                    logw("VPN Handler Handover failed");
+                    stopVPN(prev);
+                    prev = null;
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException ignored) {
+                    }
+                    serviceVPN.vpn = startVPN(last_builder);
+                    if (serviceVPN.vpn == null)
+                        throw new IllegalStateException("VPN Handler Handover failed");
+                }
+
+                if (prev != null) {
+                    stopVPN(prev);
+                }
+            } else {
+                if (serviceVPN.vpn != null) {
+                    stopVPN(serviceVPN.vpn);
+                }
+
+                serviceVPN.vpn = startVPN(builder);
+            }
+        }
+
+        if (serviceVPN.vpn == null)
+            throw new StartFailedException("VPN Handler Start VPN Service Failed");
+
+        startNative(serviceVPN.vpn, plan.allowed, preferences);
+    }
+
+    private void startNative(ParcelFileDescriptor tunnel, List<String> allowed,
+                             VpnPreferenceHolder preferences) {
+        try {
+            serviceVPN.startNative(tunnel, allowed, preferences);
+        } catch (RuntimeException | Error failure) {
+            // NativeTunnel releases a failed start; do not retain an interface with no worker.
+            stopVPN(tunnel);
+            if (serviceVPN.vpn == tunnel)
+                serviceVPN.vpn = null;
+            serviceVPN.vpnRulesHolder.get().unPrepare();
+            throw failure;
+        }
+    }
+
+    void stop() {
 
         //This prevents the ModulesService from sending a stop signal when the service is already stopping
         handler.get().post(() -> defaultSharedPreferences.get()
@@ -362,7 +404,7 @@ public class ServiceVPNHandler extends Handler {
                 .commit()
         );
 
-        if (serviceVPN != null && serviceVPN.vpn != null) {
+        if (serviceVPN.vpn != null) {
             try {
                 serviceVPN.stopNative();
                 stopVPN(serviceVPN.vpn);
@@ -380,10 +422,6 @@ public class ServiceVPNHandler extends Handler {
     private List<String> getAllowedRules() {
         List<String> listAllowed = new ArrayList<>();
 
-        if (serviceVPN == null) {
-            return listAllowed;
-        }
-
         //Update connected state
         ConnectionCheckerInteractor interactor = serviceVPN.connectionCheckerInteractor.get();
         interactor.checkNetworkConnection();
@@ -392,8 +430,6 @@ public class ServiceVPNHandler extends Handler {
         if (!serviceVPN.isInternetAvailable()) {
             interactor.checkInternetConnection();
         }
-
-        //if (serviceVPN.isNetworkAvailable() || serviceVPN.isInternetAvailable()) {
 
         PreferenceRepository preferences = preferenceRepository.get();
 
@@ -420,9 +456,7 @@ public class ServiceVPNHandler extends Handler {
             ParcelFileDescriptor pfd = builder.establish();
 
             // Set underlying network
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                setUnderlyingNetwork();
-            }
+            setUnderlyingNetwork();
 
             return pfd;
         } catch (SecurityException ex) {
@@ -433,12 +467,7 @@ public class ServiceVPNHandler extends Handler {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     private void setUnderlyingNetwork() {
-
-        if (serviceVPN == null) {
-            return;
-        }
 
         ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
         Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
@@ -461,7 +490,7 @@ public class ServiceVPNHandler extends Handler {
     }
 
     void stopVPN(ParcelFileDescriptor pfd) {
-        logi("VPN Handler Stopping");
+        logi("VPN Handler Closing VPN interface descriptor");
         try {
             pfd.close();
         } catch (IOException ex) {
@@ -470,10 +499,6 @@ public class ServiceVPNHandler extends Handler {
     }
 
     private void stopServiceVPN() {
-
-        if (serviceVPN == null) {
-            return;
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && serviceVPN.notificationManager != null) {
             try {

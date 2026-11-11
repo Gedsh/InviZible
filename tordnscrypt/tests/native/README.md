@@ -13,7 +13,7 @@ owner-specific signing files. Set `ANDROID_SERIAL` to select a device.
 Reports are written to `build/native-tests/reports/androidTests/connected/`
 and `build/native-tests/outputs/androidTest-results/connected/`.
 
-The 28 tests cover malformed packet and DNS bounds, DNS compression, JNI
+The 28 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
 credential byte limits, failed TCP setup, socket/file cleanup, event-loop
 shutdown, UDP forwarding and redirects, IP options/extensions, TCP data and
 shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
@@ -38,6 +38,33 @@ The comparison across protocols remains in `compatibility_tests.c` and
 `NativeBaselineComparisonTest`. The former combined resource case is split into
 individual socket, file, DHCP, queued-data, and shutdown tests, so JUnit reports
 each failure against its source. Existing assertions and scenarios are retained.
+
+Three additional Android JUnit classes exercise JNI callers:
+
+- `NativeTunnelTest` runs twelve lifecycle tests against the production Java owner
+  with controllable workers. These cover initialization/configuration order,
+  shutdown timeouts, interruption, service replacement, delayed cleanup,
+  configuration rejection, and restart after a worker exits. The interleaving
+  cases also cover retired prepared commands, atomic interface creation/start,
+  bounded replacement attempts during cleanup, and delayed cleanup after takeover.
+- `NativeTunnelRetryTest` runs eight cleanup-triggered retry tests. These cover
+  replacement and reload after a shutdown timeout, cancellation by queued commands
+  or service retirement, superseded requests, and protection of a newer VPN owner.
+  `NativeTunnelTestBackend` supplies the controlled workers shared by these classes.
+- `Socks5SettingsTest` runs eight tests comparing the production JNI preflight
+  check with the setters through the device's real JNI implementation. It covers
+  byte limits for ASCII, multibyte characters, supplementary characters, embedded
+  NUL, addresses, null fields, and disabled settings.
+
+Gradle stages the production `NativeTunnel.java` as a generated test source;
+there is no separately maintained copy of the owner. The full run contains 56
+tests plus the optional comparison test.
+
+A START or RELOAD that times out waiting for the previous worker registers one
+retry. It waits for that worker to exit and native cleanup to finish, then posts
+the original command back to the VPN handler. A newer command, service destruction,
+or VPN permission revocation cancels the pending retry. Ordinary configuration
+and startup errors do not trigger this retry.
 
 For example, run just the TCP tests with:
 
@@ -84,5 +111,44 @@ probe retries for up to two minutes to allow firewall approval. VPN output is
 captured through pipes, and JNI policy callbacks use test implementations. ARM
 runs production SIMD checksums; x86-64 uses the fixture's scalar checksum to
 avoid the bundled NEON emulation's different alignment requirements. These tests
-do not establish a VPN interface or exercise the app's Java/Kotlin lifecycle.
+do not establish a VPN interface or launch the Android service lifecycle. The
+ownership tests exercise lifecycle coordination through controlled Java workers.
 Only the dedicated test APK contains the fixtures and test dependencies.
+
+The app also has five handler integration regressions in
+`tests/handler/src/androidTest/java/pan/alexander/tordnscrypt/vpn/service/ServiceVPNHandlerTest.java`
+(relative to `tordnscrypt/`). They compile the actual `ServiceVPNHandler` and use
+an Android `HandlerThread` to exercise its command queue, timeout catch, retry
+dispatch, and reload ordering. Controlled native workers and overrides for VPN
+and root operations avoid establishing a VPN or changing iptables. The cases
+cover START after previous-owner cleanup, RELOAD after timeout with exactly one
+tethering block/unblock, cancellation as soon as a delayed STOP is queued, and
+a newer START superseding a waiting RELOAD, and terminal startup failure
+notification. Run them with the app's matching
+debug variant, for example:
+
+```sh
+./gradlew :tordnscrypt:connectedFdroidArmv7aDebugAndroidTest \
+  -Pandroid.testInstrumentationRunnerArguments.class=pan.alexander.tordnscrypt.vpn.service.ServiceVPNHandlerTest
+```
+
+Both app build files register `tests/handler/src/androidTest/java` as an
+`androidTest` source directory; the checkout ignores the default `src/androidTest`.
+These app tests are separate from the `:native-tests` suite above. Select the
+appropriate app build/signing configuration for your checkout when running them.
+
+The same app instrumentation source directory also contains fifteen boot-recovery
+regressions. `BootCompleteManagerTest` records service requests without launching
+them and verifies that VPN/TTL recovery targets the manifest-declared `ServiceVPN`,
+while other modes only target `ModulesService`. `ServiceVPNRecoveryTest` runs the
+production `onStartCommand` on the main thread, substituting native command delivery
+and framework shutdown. It checks bootstrap cleanup, overlapping package-replaced
+and Always-on recovery after START, cleanup after RELOAD, and shutdown after explicit
+or generated STOP commands. Late recovery cleanup must preserve an accepted start
+and its foreground state. Real commandless system Always-on intents and null restart
+intents must also preserve an accepted START or RELOAD, while bootstrap and recovery
+after STOP remain available. Terminal startup failures release the recovery guard
+when no worker remains; a running tunnel or a newer command keeps its protection.
+The handler tests also check terminal failure notification and distinguish it from
+cleanup retries. The complete app instrumentation suite has twenty tests;
+omit the class filter above to run all of them.

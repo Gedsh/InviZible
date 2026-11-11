@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.vpn.service;
@@ -148,9 +148,32 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     NotificationManager notificationManager;
     private ModulesServiceNotificationManager serviceNotificationManager;
-    private static final Object jni_lock = new Object();
-    private static volatile long jni_context = 0;
-    private volatile long service_jni_context = 0;
+    private final NativeTunnel nativeTunnel = new NativeTunnel(new NativeTunnel.Backend() {
+        @Override
+        public long initialize() {
+            return jni_init(Build.VERSION.SDK_INT);
+        }
+
+        @Override
+        public void start(long context) {
+            jni_start(context);
+        }
+
+        @Override
+        public void stop(long context) {
+            jni_stop(context);
+        }
+
+        @Override
+        public void clear(long context) {
+            jni_clear(context);
+        }
+
+        @Override
+        public void destroy(long context) {
+            jni_done(context);
+        }
+    });
 
     private volatile boolean savedInternetAvailable = false;
 
@@ -166,7 +189,9 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private volatile Looper commandLooper;
     private volatile ServiceVPNHandler commandHandler;
 
-    private volatile Thread tunnelThread = null;
+    // onStartCommand runs on the main thread. Recovery cleanup must not undo an accepted start.
+    private boolean vpnStartRequested;
+    private volatile long nativeCommandGeneration;
 
     public volatile boolean canFilter = true;
 
@@ -203,131 +228,120 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native void jni_socks5_for_proxy(String addr, int port, String username, String password);
 
     @Keep
+    private native void jni_validate_socks5(String addr, String username, String password);
+
+    @Keep
     private native void jni_internet_is_available(boolean available);
 
     @Keep
     private native void jni_done(long context);
 
-    synchronized void startNative(final ParcelFileDescriptor vpn, List<String> listAllowed) {
+    VpnPreferenceHolder prepareNativeSettings() {
+        VpnPreferenceHolder preferences = vpnPreferenceHolder.get();
+        if (preferences.getUseProxy()) {
+            jni_validate_socks5(preferences.getProxyAddress(),
+                    preferences.getProxyUser(), preferences.getProxyPass());
+        }
+        // Retire any previous service's worker before establishing a new interface.
+        nativeTunnel.prepare();
+        return preferences;
+    }
 
-        vpnPreferences = vpnPreferenceHolder.get();
+    void withNativeOwnership(Runnable operation) {
+        nativeTunnel.withOwnership(operation);
+    }
 
-        // Prepare rules
+    long cancelNativeRetry() {
+        long generation = nativeTunnel.cancelPendingRetry();
+        nativeCommandGeneration = generation;
+        return generation;
+    }
+
+    // Called on the command thread after a terminal failure, never for a cleanup retry.
+    void nativeStartFailed(long generation) {
+        if (isNativeRunning())
+            return;
+        // Keep the main thread out of the native ownership lock, which may wait for shutdown.
+        handler.get().post(() -> {
+            if (nativeCommandGeneration == generation)
+                vpnStartRequested = false;
+        });
+    }
+
+    boolean retryAfterNativeCleanup(NativeTunnel.ShutdownTimeoutException timeout,
+                                    long generation, Runnable retry) {
+        return nativeTunnel.retryAfterCleanup(timeout, generation,
+                action -> commandHandler.post(action), retry);
+    }
+
+    boolean isNativeRunning() {
+        return nativeTunnel.isRunning();
+    }
+
+    void startNative(final ParcelFileDescriptor vpn, List<String> listAllowed,
+                     VpnPreferenceHolder preferences) {
+        vpnPreferences = preferences;
+
         vpnRulesHolder.get().prepareUidAllowed(listAllowed, commandHandler.getAppsList());
         vpnRulesHolder.get().prepareForwarding();
 
-        ModulesStatus modulesStatus = ModulesStatus.getInstance();
-        if ((modulesStatus.getTorState() == RUNNING
-                || modulesStatus.getTorState() == STARTING
-                || modulesStatus.getTorState() == RESTARTING)) {
-            jni_socks5_for_tor(
-                    LOOPBACK_ADDRESS,
-                    vpnPreferences.getTorSOCKSPort(),
-                    "",
-                    "",
-                    vpnPreferences.getTorIsolateUid(),
-                    vpnPreferences.getTorDNSPort()
-            );
-        } else {
-            jni_socks5_for_tor("", 0, "", "", false, 0);
-        }
-
-        if (vpnPreferences.getUseProxy()) {
-            jni_socks5_for_proxy(
-                    vpnPreferences.getProxyAddress(),
-                    vpnPreferences.getProxyPort(),
-                    vpnPreferences.getProxyUser(),
-                    vpnPreferences.getProxyPass()
-            );
-        } else {
-            jni_socks5_for_proxy("", 0, "", "");
-        }
-
-        synchronized (jni_lock) {
-            if (tunnelThread == null) {
-
-                if (jni_context == 0) {
-                    jni_context = jni_init(Build.VERSION.SDK_INT);
-                    service_jni_context = jni_context;
-                    logi("VPN Created context=" + jni_context);
-                }
-
-                logi("VPN Starting tunnel thread context=" + jni_context);
-                jni_start(jni_context);
-
-                long local_jni_context = jni_context;
-                tunnelThread = new Thread(() -> {
-                    try {
-                        logi("VPN Running tunnel context=" + local_jni_context);
-                        boolean canFilterSynchronous = true;
-                        if (vpnPreferences.getCompatibilityMode() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            canFilterSynchronous = VpnUtils.canFilter();
-                        }
-                        jni_run(
-                                local_jni_context,
-                                vpn.getFd(),
-                                vpnRulesHolder.get().mapForwardPort.containsKey(PLAINTEXT_DNS_PORT),
-                                vpnPreferences.getDnsBlockedResponseCode(),
-                                vpnPreferences.getCompatibilityMode(),
-                                canFilterSynchronous,
-                                vpnPreferences.getLan()
-                        );
-                        if (Thread.currentThread().equals(tunnelThread)) {
-                            tunnelThread = null;
-                            logi("VPN Tunnel exited");
-                        }
-                    } catch (Exception e) {
-                        handler.get().post(() ->
-                                Toast.makeText(
-                                        ServiceVPN.this,
-                                        e.getMessage() + " " + e.getCause(),
-                                        Toast.LENGTH_LONG
-                                ).show());
-                        loge("ServiceVPN startNative exception", e);
-                    }
-
-                });
-
-                tunnelThread.setName("VPN tunnel thread");
-                tunnelThread.start();
-
-                logi("VPN Started tunnel thread");
+        nativeTunnel.start(() -> {
+            ModulesStatus modulesStatus = ModulesStatus.getInstance();
+            if ((modulesStatus.getTorState() == RUNNING
+                    || modulesStatus.getTorState() == STARTING
+                    || modulesStatus.getTorState() == RESTARTING)) {
+                jni_socks5_for_tor(
+                        LOOPBACK_ADDRESS,
+                        preferences.getTorSOCKSPort(),
+                        "",
+                        "",
+                        preferences.getTorIsolateUid(),
+                        preferences.getTorDNSPort()
+                );
+            } else {
+                jni_socks5_for_tor("", 0, "", "", false, 0);
             }
-        }
+
+            if (preferences.getUseProxy()) {
+                jni_socks5_for_proxy(
+                        preferences.getProxyAddress(),
+                        preferences.getProxyPort(),
+                        preferences.getProxyUser(),
+                        preferences.getProxyPass()
+                );
+            } else {
+                jni_socks5_for_proxy("", 0, "", "");
+            }
+        }, context -> {
+            try {
+                logi("VPN Running tunnel context=" + context);
+                boolean canFilterSynchronous = true;
+                if (preferences.getCompatibilityMode() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    canFilterSynchronous = VpnUtils.canFilter();
+                }
+                jni_run(
+                        context,
+                        vpn.getFd(),
+                        vpnRulesHolder.get().mapForwardPort.containsKey(PLAINTEXT_DNS_PORT),
+                        preferences.getDnsBlockedResponseCode(),
+                        preferences.getCompatibilityMode(),
+                        canFilterSynchronous,
+                        preferences.getLan()
+                );
+            } catch (Exception e) {
+                handler.get().post(() -> Toast.makeText(ServiceVPN.this,
+                        e.getMessage() + " " + e.getCause(), Toast.LENGTH_LONG).show());
+                loge("ServiceVPN startNative exception", e);
+            } finally {
+                logi("VPN Tunnel exited");
+            }
+        });
     }
 
-    synchronized void stopNative() {
+    void stopNative() {
         logi("VPN Stop native");
-
-        synchronized (jni_lock) {
-            if (tunnelThread != null) {
-                logi("VPN Stopping tunnel thread");
-
-                if (jni_context != 0) {
-                    jni_stop(jni_context);
-                }
-
-                Thread thread = tunnelThread;
-                int counter = 0;
-                while (thread != null && thread.isAlive() && counter < 3) {
-                    try {
-                        logi("VPN Joining tunnel thread context=" + jni_context);
-                        thread.join(3000);
-                    } catch (InterruptedException e) {
-                        logi("VPN Joined tunnel interrupted");
-                    }
-                    thread = tunnelThread;
-                    counter++;
-                }
-                tunnelThread = null;
-
-                if (jni_context != 0) {
-                    jni_clear(jni_context);
-                }
-
-                logi("VPN Stopped tunnel thread");
-            }
-        }
+        nativeTunnel.stop();
+        logi("VPN Stopped tunnel thread");
     }
 
     // Called from native code
@@ -617,20 +631,6 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         VpnUtils.canFilterAsynchronous(this);
 
-        synchronized (jni_lock) {
-            if (jni_context != 0) {
-                logw("VPN Create with context=" + jni_context);
-                jni_stop(jni_context);
-                jni_done(jni_context);
-                jni_context = 0;
-            }
-
-            // Native init
-            jni_context = jni_init(Build.VERSION.SDK_INT);
-            service_jni_context = jni_context;
-            logi("VPN Created context=" + jni_context);
-        }
-
         super.onCreate();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -672,17 +672,24 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
+            if (vpnStartRequested) {
+                logi("VPN Ignoring recovery foreground cleanup after START or RELOAD");
+                return START_STICKY;
+            }
+            logi("VPN Recovery foreground cleanup stopping bootstrap service");
+            stopForegroundForRecovery(startId);
+            return START_NOT_STICKY;
+        }
+
         SharedPreferences prefs = defaultPreferences.get();
         boolean vpnEnabled = prefs.getBoolean(VPN_SERVICE_ENABLED, false);
+        VPNCommand cmd = intent == null ? null
+                : (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
 
-        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
-
-            try {
-                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-                stopForeground(true);
-            } catch (Exception e) {
-                loge("VPNService stop Service foreground1 exception", e);
-            }
+        if (vpnEnabled && vpnStartRequested && cmd == null) {
+            logi("VPN Ignoring duplicate recovery request after START or RELOAD");
+            return START_STICKY;
         }
 
         boolean showNotification;
@@ -715,50 +722,30 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         logi("VPN Received " + intent);
 
-        if (intent != null && Objects.equals(intent.getAction(), ACTION_STOP_SERVICE_FOREGROUND)) {
-
-            try {
-                notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
-                stopForeground(true);
-            } catch (Exception e) {
-                loge("VPNService stop Service foreground2 exception", e);
-            }
-
-            stopSelf(startId);
-
-            return START_NOT_STICKY;
-        }
-
         // Handle service restart
         if (intent == null) {
             logi("VPN OnStart Restart");
 
             if (vpnEnabled) {
-                Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
-                starterIntent.setAction(ALWAYS_ON_VPN);
-                sendBroadcast(starterIntent);
-                stopSelf(startId);
+                requestVpnRecovery(startId);
                 return START_NOT_STICKY;
             } else {
                 // Recreate intent
                 intent = new Intent(this, ServiceVPN.class);
                 intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+                cmd = VPNCommand.STOP;
             }
         }
-
-        VPNCommand cmd = (VPNCommand) intent.getSerializableExtra(EXTRA_COMMAND);
 
         if (cmd == null) {
             logi("VPN OnStart ALWAYS_ON_VPN");
 
             if (vpnEnabled) {
-                Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
-                starterIntent.setAction(ALWAYS_ON_VPN);
-                sendBroadcast(starterIntent);
-                stopSelf(startId);
+                requestVpnRecovery(startId);
                 return START_NOT_STICKY;
             } else {
                 intent.putExtra(EXTRA_COMMAND, VPNCommand.STOP);
+                cmd = VPNCommand.STOP;
             }
         }
 
@@ -774,13 +761,40 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
                 + " user="
                 + (pathVars.get().getAppUid() / 100000));
 
-        commandHandler.queue(intent);
+        if (cmd == VPNCommand.START || cmd == VPNCommand.RELOAD)
+            vpnStartRequested = true;
+        else if (cmd == VPNCommand.STOP)
+            vpnStartRequested = false;
+
+        queueNativeCommand(intent);
 
         return START_STICKY;
     }
 
+    void queueNativeCommand(Intent intent) {
+        commandHandler.queue(intent);
+    }
+
+    void requestVpnRecovery(int startId) {
+        Intent starterIntent = new Intent(this, BootCompleteReceiver.class);
+        starterIntent.setAction(ALWAYS_ON_VPN);
+        sendBroadcast(starterIntent);
+        stopSelf(startId);
+    }
+
+    void stopForegroundForRecovery(int startId) {
+        try {
+            notificationManager.cancel(DEFAULT_NOTIFICATION_ID);
+            stopForeground(true);
+        } catch (Exception e) {
+            loge("VPNService stop foreground for recovery", e);
+        }
+        stopSelf(startId);
+    }
+
     @Override
     public void onRevoke() {
+        nativeTunnel.retire();
         logi("VPN Revoke");
 
         SharedPreferences prefs = defaultPreferences.get();
@@ -802,6 +816,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
         logi("VPN Destroy " + this.hashCode());
 
+        nativeTunnel.retire();
+
         commandLooper.quit();
 
         for (VPNCommand command : VPNCommand.values())
@@ -820,31 +836,17 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
             ModulesStatus.getInstance().setFirewallState(STOPPED, preferenceRepository.get());
         }
 
-        final long localJniContext = service_jni_context;
-
         executor.get().submit("ServiceVPN onDestroy", () -> {
-
             try {
-                if (vpn != null) {
-                    stopNative();
-                    commandHandler.stopVPN(vpn);
-                    vpn = null;
+                // No service monitor may be held while waiting on the native owner.
+                nativeTunnel.close();
+                ParcelFileDescriptor tunnel = vpn;
+                if (tunnel != null) {
+                    commandHandler.stopVPN(tunnel);
+                    if (vpn == tunnel)
+                        vpn = null;
                     vpnRulesHolder.get().unPrepare();
                 }
-
-                if (localJniContext == jni_context) {
-                    synchronized (jni_lock) {
-                        jni_done(jni_context);
-                        logi("VPN Destroy context=" + jni_context);
-                        jni_context = 0;
-                        service_jni_context = 0;
-                    }
-                } else {
-                    jni_done(localJniContext);
-                    logi("VPN Destroy context=" + localJniContext);
-                    service_jni_context = 0;
-                }
-
             } catch (Throwable ex) {
                 loge("VPN Destroy", ex, true);
             }

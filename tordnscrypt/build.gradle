@@ -107,6 +107,9 @@ android {
         main {
             jniLibs.srcDirs 'libs/'
         }
+        androidTest {
+            java.srcDir 'tests/handler/src/androidTest/java'
+        }
     }
 
     packagingOptions {
@@ -126,7 +129,7 @@ android {
         }
     }
 
-    ndkVersion '23.1.7779620'
+    ndkVersion '28.2.13676358'
 
     buildFeatures {
         viewBinding true

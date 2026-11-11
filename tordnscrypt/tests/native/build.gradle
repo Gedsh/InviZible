@@ -24,6 +24,20 @@ abstract class ExportNativeBaseline extends DefaultTask {
     }
 }
 
+abstract class StageVpnTestSources extends DefaultTask {
+    @InputFiles @PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract ConfigurableFileCollection getSources()
+    @OutputDirectory abstract DirectoryProperty getDestination()
+    @javax.inject.Inject abstract org.gradle.api.file.FileSystemOperations getFileSystemOperations()
+
+    @TaskAction void stage() {
+        fileSystemOperations.sync {
+            from sources
+            into destination
+        }
+    }
+}
+
 def appBuild = file('../../build.gradle').text
 def pinnedNdk = appBuild =~ /ndkVersion\s+['"]([^'"]+)['"]/
 if (!pinnedNdk.find()) {
@@ -85,6 +99,15 @@ android {
         packaging.jniLibs.keepDebugSymbols += ['**/libclang_rt.asan-*-android.so']
         sourceSets.main.resources.srcDir 'src/sanitizer/resources'
     }
+}
+
+// Compile the production owner without the app's service dependencies.
+def vpnSources = tasks.register('stageVpnTestSources', StageVpnTestSources) {
+    sources.from(file('../../src/main/java/pan/alexander/tordnscrypt/vpn/service/NativeTunnel.java'))
+    destination.set(layout.buildDirectory.dir('generated/vpn-test-sources'))
+}
+androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+    variant.sources.java.addGeneratedSourceDirectory(vpnSources) { it.destination }
 }
 
 if (sanitized) {
