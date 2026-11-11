@@ -1,5 +1,23 @@
 #include "test_support.h"
 
+void test_tcp_destination(const struct arguments *args) {
+    for (int version = 4; version <= 6; version += 2) {
+        const char *direct = version == 4 ? "198.51.100.1" : "fe80::1";
+        const char *target = version == 4 ? "127.0.0.1" : "::1";
+        struct tcp_session session = {.version = version, .uid = own_uid, .dest = htons(443)};
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6, direct, &session.daddr) == 1);
+        struct allowed redirect = {.rport = 8443};
+        strcpy(redirect.raddr, target);
+        for (int redirected = 0; redirected <= 1; redirected++) {
+            expect_destination(version, redirected ? target : direct, redirected ? 8443 : 443);
+            int fd = open_tcp_socket(args, &session, redirected ? &redirect : NULL);
+            assert(fd >= 0 && destination_calls == 1);
+            close(fd);
+            assert(sockets == 0);
+        }
+    }
+}
+
 static void drain_gap(const struct arguments *args, struct ng_session *s, int peer,
                       uint32_t target, size_t head_length, size_t *delivered) {
     struct epoll_event event = {.events = EPOLLOUT, .data.ptr = s};

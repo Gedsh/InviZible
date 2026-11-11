@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void destinationAddressesAreFullyInitialized() { check("tcpDestination"); }
     @Test public void fullPayloadQueueAcceptsMissingHeadAndRecovers() { check("tcpGapBytes"); }
     @Test public void fullSegmentQueueAcceptsMissingHeadAndRecovers() { check("tcpGapSegments"); }
     @Test public void gapRecoveryPreservesOverlappingBytesAndReplaysTail() { check("tcpGapOverlap"); }

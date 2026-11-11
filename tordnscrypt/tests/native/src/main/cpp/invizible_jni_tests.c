@@ -179,3 +179,65 @@ void test_jni_allocation_failures(int kind) {
     }
     clsPacket = saved[0]; clsAllowed = saved[1]; clsRR = saved[2]; clsUsage = saved[3];
 }
+
+jint invizible_app_JNI_OnLoad(JavaVM *, void *);
+void invizible_app_JNI_OnUnload(JavaVM *, void *);
+static int global_refs, fail_get_env;
+static jclass JNICALL load_class(JNIEnv *env, const char *name) {
+    return fails(CLASS_REF) ? NULL : (jclass) new_ref();
+}
+static jobject JNICALL load_global(JNIEnv *env, jobject local) {
+    assert(local != NULL);
+    if (fails(OBJECT_REF))
+        return NULL;
+    global_refs++;
+    return new_ref();
+}
+static void JNICALL release_global(JNIEnv *env, jobject global) {
+    assert(global != NULL && global_refs > 0);
+    global_refs--;
+    release_ref(env, global);
+}
+static const struct JNINativeInterface load_jni = {
+    .FindClass = load_class, .NewGlobalRef = load_global,
+    .DeleteLocalRef = release_ref, .DeleteGlobalRef = release_global,
+    .ExceptionOccurred = exception, .ExceptionCheck = exception_check
+};
+static JNIEnv load_env = &load_jni;
+static jint JNICALL load_get_env(JavaVM *vm, void **env, jint version) {
+    assert(version == JNI_VERSION_1_6);
+    if (fail_get_env)
+        return JNI_EVERSION;
+    *env = &load_env;
+    return JNI_OK;
+}
+
+void test_jni_load_failures(void) {
+    jclass saved[] = {clsPacket, clsAllowed, clsRR, clsUsage};
+    clsPacket = clsAllowed = clsRR = clsUsage = NULL;
+    const struct JNIInvokeInterface table = {.GetEnv = load_get_env};
+    JavaVM vm = &table;
+    fail_get_env = 1;
+    assert(invizible_app_JNI_OnLoad(&vm, NULL) == JNI_ERR);
+    fail_get_env = 0;
+    for (int operation = 0; operation < 2; operation++) {
+        for (int occurrence = 1; occurrence <= 4; occurrence++) {
+            fault = operation == 0 ? CLASS_REF : OBJECT_REF;
+            nth = occurrence;
+            seen = hit = pending = ref_count = ref_index = global_refs = 0;
+            memset(live, 0, sizeof(live));
+            assert(invizible_app_JNI_OnLoad(&vm, NULL) == JNI_ERR);
+            assert(hit && pending && ref_count == 0 && global_refs == 0);
+            assert(clsPacket == NULL && clsAllowed == NULL && clsRR == NULL && clsUsage == NULL);
+            // Model Java handling the failed load before retrying it.
+            pending = 0;
+            fault = NO_FAULT;
+            assert(invizible_app_JNI_OnLoad(&vm, NULL) == JNI_VERSION_1_6);
+            assert(!pending && ref_count == 4 && global_refs == 4);
+            invizible_app_JNI_OnUnload(&vm, NULL);
+            assert(ref_count == 0 && global_refs == 0);
+            assert(clsPacket == NULL && clsAllowed == NULL && clsRR == NULL && clsUsage == NULL);
+        }
+    }
+    clsPacket = saved[0]; clsAllowed = saved[1]; clsRR = saved[2]; clsUsage = saved[3];
+}

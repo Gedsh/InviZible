@@ -56,6 +56,17 @@ jclass clsAllowed;
 jclass clsRR;
 jclass clsUsage;
 
+static void jniDeleteClasses(JNIEnv *env) {
+    jclass *classes[] = {&clsPacket, &clsAllowed, &clsRR, &clsUsage};
+    for (size_t i = 0; i < sizeof(classes) / sizeof(classes[0]); i++) {
+        if (*classes[i] != NULL) {
+            (*env)->DeleteGlobalRef(env, *classes[i]);
+            ng_delete_alloc(*classes[i], __FILE__, __LINE__);
+            *classes[i] = NULL;
+        }
+    }
+}
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     log_android(ANDROID_LOG_INFO, "JNI load");
 
@@ -65,21 +76,27 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
 
-    const char *packet = "pan/alexander/tordnscrypt/vpn/Packet";
-    clsPacket = jniGlobalRef(env, jniFindClass(env, packet));
-    ng_add_alloc(clsPacket, "clsPacket");
-
-    const char *allowed = "pan/alexander/tordnscrypt/vpn/Allowed";
-    clsAllowed = jniGlobalRef(env, jniFindClass(env, allowed));
-    ng_add_alloc(clsAllowed, "clsAllowed");
-
-    const char *rr = "pan/alexander/tordnscrypt/vpn/ResourceRecord";
-    clsRR = jniGlobalRef(env, jniFindClass(env, rr));
-    ng_add_alloc(clsRR, "clsRR");
-
-    const char *usage = "pan/alexander/tordnscrypt/vpn/Usage";
-    clsUsage = jniGlobalRef(env, jniFindClass(env, usage));
-    ng_add_alloc(clsUsage, "clsUsage");
+    const char *names[] = {
+            "pan/alexander/tordnscrypt/vpn/Packet",
+            "pan/alexander/tordnscrypt/vpn/Allowed",
+            "pan/alexander/tordnscrypt/vpn/ResourceRecord",
+            "pan/alexander/tordnscrypt/vpn/Usage"
+    };
+    jclass *classes[] = {&clsPacket, &clsAllowed, &clsRR, &clsUsage};
+    for (size_t i = 0; i < sizeof(classes) / sizeof(classes[0]); i++) {
+        jclass local = jniFindClass(env, names[i]);
+        if (local == NULL) {
+            jniDeleteClasses(env);
+            return JNI_ERR;
+        }
+        *classes[i] = jniGlobalRef(env, local);
+        (*env)->DeleteLocalRef(env, local);
+        if (*classes[i] == NULL) {
+            jniDeleteClasses(env);
+            return JNI_ERR;
+        }
+        ng_add_alloc(*classes[i], names[i]);
+    }
 
     // Raise file number limit to maximum
     struct rlimit rlim;
@@ -103,16 +120,8 @@ void JNI_OnUnload(JavaVM *vm, void *reserved) {
     JNIEnv *env;
     if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6) != JNI_OK)
         log_android(ANDROID_LOG_INFO, "JNI load GetEnv failed");
-    else {
-        (*env)->DeleteGlobalRef(env, clsPacket);
-        (*env)->DeleteGlobalRef(env, clsAllowed);
-        (*env)->DeleteGlobalRef(env, clsRR);
-        (*env)->DeleteGlobalRef(env, clsUsage);
-        ng_delete_alloc(clsPacket, __FILE__, __LINE__);
-        ng_delete_alloc(clsAllowed, __FILE__, __LINE__);
-        ng_delete_alloc(clsRR, __FILE__, __LINE__);
-        ng_delete_alloc(clsUsage, __FILE__, __LINE__);
-    }
+    else
+        jniDeleteClasses(env);
 }
 
 // JNI ServiceSinkhole

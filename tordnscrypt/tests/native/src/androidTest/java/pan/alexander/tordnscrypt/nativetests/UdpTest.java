@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for udp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class UdpTest extends NativeTestSupport {
+    @Test public void destinationAddressesAreFullyInitialized() { check("udpDestination"); }
     @Test public void allocationFailuresReleaseResources() { check("udpAllocationFailure"); }
     @Test public void truncatedDnsHeader() { check("udpShortDns"); }
     @Test public void socketSetupFailureCleanup() { check("udpSocketCleanup"); }

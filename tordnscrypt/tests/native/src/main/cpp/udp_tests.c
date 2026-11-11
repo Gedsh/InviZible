@@ -1,5 +1,28 @@
 #include "test_support.h"
 
+void test_udp_destination(const struct arguments *args) {
+    for (int version = 4; version <= 6; version += 2) {
+        const char *direct = version == 4 ? "198.51.100.1" : "fe80::1";
+        const char *target = version == 4 ? "127.0.0.1" : "::1";
+        for (int redirected = 0; redirected <= 1; redirected++) {
+            _Alignas(8) uint8_t packet[64];
+            size_t off = ip_header(packet, version, IPPROTO_UDP, 9, direct);
+            struct udphdr *udp = (void *) (packet + off);
+            udp->source = htons(1234);
+            udp->dest = htons(5000);
+            udp->len = htons(9);
+            struct allowed redirect = {.rport = 5354};
+            strcpy(redirect.raddr, target);
+            expect_destination(version, redirected ? target : direct, redirected ? 5354 : 5000);
+            assert(handle_udp(args, packet, off + 9, packet + off, own_uid,
+                               redirected ? &redirect : NULL, -1) == 1);
+            assert(destination_calls == 1 && args->ctx->ng_session->udp.sent == 1);
+            clear(args->ctx);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+}
+
 void test_udp_allocation_failure(const struct arguments *args) {
     uint8_t packet[48];
     for (int version = 4; version <= 6; version += 2) {

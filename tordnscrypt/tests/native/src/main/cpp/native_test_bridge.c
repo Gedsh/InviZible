@@ -25,7 +25,15 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "nativeInitialization") == 0)
+    if (strcmp(id, "jniLoadFailures") == 0)
+        test_jni_load_failures();
+    else if (strcmp(id, "tcpDestination") == 0)
+        test_tcp_destination(&args);
+    else if (strcmp(id, "udpDestination") == 0)
+        test_udp_destination(&args);
+    else if (strcmp(id, "icmpDestination") == 0)
+        test_icmp_destination(&args);
+    else if (strcmp(id, "nativeInitialization") == 0)
         test_native_initialization();
     else if (strcmp(id, "boundedLogging") == 0)
         test_bounded_logging();

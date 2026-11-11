@@ -1,5 +1,20 @@
 #include "test_support.h"
 
+void test_icmp_destination(const struct arguments *args) {
+    for (int version = 4; version <= 6; version += 2) {
+        const char *dest = version == 4 ? "198.51.100.1" : "fe80::1";
+        _Alignas(8) uint8_t packet[64];
+        size_t off = ip_header(packet, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6,
+                               8, dest);
+        packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+        expect_destination(version, dest, 0);
+        assert(handle_icmp(args, packet, off + 8, packet + off, own_uid, -1) == 1);
+        assert(destination_calls == 1);
+        clear(args->ctx);
+        assert(allocations == 0 && sockets == 0);
+    }
+}
+
 void test_icmp_allocation_failure(const struct arguments *args) {
     uint8_t packet[64] = {0};
     for (int version = 4; version <= 6; version += 2) {

@@ -28,6 +28,11 @@ limit, including with a zero window. Regressions verify allocation-failure recov
 overlapping bytes, bounded queues, and delivery of evicted tails after retransmission.
 JNI callback tests inject each class, object, string, UTF, and field-lookup failure,
 verify reference cleanup and no calls with pending exceptions, and retry successfully.
+Library-load tests fail each class lookup and global-reference allocation, check
+local/global reference cleanup, preserve the pending exception, and retry successfully.
+TCP, UDP, and ICMP destination tests inspect complete IPv4/IPv6 socket addresses,
+including redirects. The test build poisons uninitialized automatic variables so
+missing initialization is detected reliably.
 The test build disables function inlining and preserves symbol interposition so allocation failure injection also
 intercepts calls within the source that defines the allocation helpers.
 The C fixtures live in `src/main/cpp`; JUnit entry points live in

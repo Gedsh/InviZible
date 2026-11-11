@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /** Regressions for invizible.c. */
 @RunWith(AndroidJUnit4.class)
 public final class InvizibleTest extends NativeTestSupport {
+    @Test public void libraryLoadFailuresReleaseReferencesAndCanRetry() { check("jniLoadFailures"); }
     @Test public void packetAllocationFailuresCleanUpAndCanRetry() { check("jniPacketFailures"); }
     @Test public void forwardingAllocationFailuresDenyAndCleanUp() { check("jniAllowedFailures"); }
     @Test public void dnsRecordAllocationFailuresCleanUpAndCanRetry() { check("jniDnsFailures"); }

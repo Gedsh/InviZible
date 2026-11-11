@@ -12,6 +12,33 @@ int real_exit_reports, exit_reports;
 int real_network, real_udp_packets, block_domain, trace_dns;
 uint64_t accounted_sent, accounted_received;
 enum failure failure;
+static struct sockaddr_storage expected_destination;
+static socklen_t destination_length;
+int destination_calls;
+
+void expect_destination(int version, const char *address, uint16_t port) {
+    memset(&expected_destination, 0, sizeof(expected_destination));
+    if (version == 4) {
+        struct sockaddr_in *addr = (void *) &expected_destination;
+        addr->sin_family = AF_INET;
+        addr->sin_port = htons(port);
+        assert(inet_pton(AF_INET, address, &addr->sin_addr) == 1);
+        destination_length = sizeof(*addr);
+    } else {
+        struct sockaddr_in6 *addr = (void *) &expected_destination;
+        addr->sin6_family = AF_INET6;
+        addr->sin6_port = htons(port);
+        assert(inet_pton(AF_INET6, address, &addr->sin6_addr) == 1);
+        destination_length = sizeof(*addr);
+    }
+    destination_calls = 0;
+}
+
+static void check_destination(const struct sockaddr *addr, socklen_t len) {
+    assert(len == destination_length);
+    assert(memcmp(addr, &expected_destination, len) == 0);
+    destination_calls++;
+}
 
 void *__wrap_ng_malloc(size_t n, const char *tag) {
     if (fail_alloc_tag != NULL && strcmp(tag, fail_alloc_tag) == 0 && --fail_alloc_match == 0)
@@ -105,10 +132,22 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t 
 
 int __real_connect(int fd, const struct sockaddr *addr, socklen_t len);
 int __wrap_connect(int fd, const struct sockaddr *addr, socklen_t len) {
+    if (destination_length)
+        check_destination(addr, len);
     if (real_network)
         return __real_connect(fd, addr, len);
     errno = (failure == CONNECT ? ECONNREFUSED : EINPROGRESS);
     return -1;
+}
+
+ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+ssize_t __wrap_sendto(int fd, const void *buffer, size_t length, int flags,
+                      const struct sockaddr *addr, socklen_t addrlen) {
+    if (destination_length) {
+        check_destination(addr, addrlen);
+        return (ssize_t) length;
+    }
+    return __real_sendto(fd, buffer, length, flags, addr, addrlen);
 }
 
 int __wrap_protect_socket(const struct arguments *args, int fd, int uid) {
@@ -334,6 +373,7 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 }
 
 void reset_test_state(void) {
+    destination_length = destination_calls = 0;
     allocations = sockets = udp_calls = resolved_calls = 0;
     string_refs = string_calls = fail_string_call = exceptions = file_closes = 0;
     capture_packets = capture_dhcp = fake_proc = 0;

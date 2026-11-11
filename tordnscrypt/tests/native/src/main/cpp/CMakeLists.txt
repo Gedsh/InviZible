@@ -17,12 +17,14 @@ function(add_native_tests target source)
     target_compile_options(${target} PRIVATE -UNDEBUG -O1 -g
             -ffunction-sections -fdata-sections -Wno-unknown-pragmas
             # Calls within invizible.c must reach the wrapped allocation helpers.
-            -fno-inline-functions -fsemantic-interposition)
+            -fno-inline-functions -fsemantic-interposition
+            # Make missing initialization visible in socket-address regressions.
+            -ftrivial-auto-var-init=pattern)
     target_link_options(${target} PRIVATE -Wl,--gc-sections -Wl,-Bsymbolic)
     # Do not run the application's JNI class lookups in the test APK.
     set_source_files_properties("${source}/invizible.c" PROPERTIES
             COMPILE_DEFINITIONS "JNI_OnLoad=invizible_app_JNI_OnLoad;JNI_OnUnload=invizible_app_JNI_OnUnload")
-    set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect
+    set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect sendto
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp
             get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
             epoll_wait get_ms pipe pthread_mutex_init)

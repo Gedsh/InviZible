@@ -33,6 +33,8 @@ extern struct uid_cache_entry *uid_cache;
 extern int real_network, real_udp_packets, block_domain, trace_dns;
 extern uint64_t accounted_sent, accounted_received;
 extern unsigned int cases;
+extern int destination_calls;
+void expect_destination(int version, const char *address, uint16_t port);
 extern const struct JNINativeInterface jni;
 
 extern int own_uid, tor_dns_port, tor_socks5_port, proxy_socks5_port;
@@ -69,6 +71,10 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 // Entry points grouped by the production source they exercise.
 void test_socks5(void); // invizible.c
 void test_native_initialization(void);
+void test_jni_load_failures(void);
+void test_tcp_destination(const struct arguments *args);
+void test_udp_destination(const struct arguments *args);
+void test_icmp_destination(const struct arguments *args);
 void test_bounded_logging(void);
 void test_exception_failures(void);
 void test_atomic_flags(void);

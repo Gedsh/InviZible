@@ -1271,8 +1271,8 @@ int open_tcp_socket(const struct arguments *args,
     }
 
     // Build target address
-    struct sockaddr_in addr4;
-    struct sockaddr_in6 addr6;
+    struct sockaddr_in addr4 = {0};
+    struct sockaddr_in6 addr6 = {0};
     if (redirect == NULL) {
 
         bool not_own_uid = cur->uid != own_uid;
