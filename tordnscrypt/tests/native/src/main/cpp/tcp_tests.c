@@ -1,5 +1,98 @@
 #include "test_support.h"
 
+static void drain_gap(const struct arguments *args, struct ng_session *s, int peer,
+                      uint32_t target, size_t head_length, size_t *delivered) {
+    struct epoll_event event = {.events = EPOLLOUT, .data.ptr = s};
+    for (int turn = 0; turn < 4096 && s->tcp.remote_seq != target; turn++) {
+        check_tcp_socket(args, &event, -1);
+        while (is_readable(peer)) {
+            uint8_t received[4096];
+            ssize_t count = read(peer, received, sizeof(received));
+            assert(count > 0);
+            for (ssize_t i = 0; i < count; i++, (*delivered)++)
+                assert(received[i] == (*delivered < head_length ? 0xA5 : 0x5A));
+        }
+    }
+    assert(s->tcp.remote_seq == target);
+}
+
+void test_tcp_gap_recovery(const struct arguments *args, int kind) {
+#ifdef TCP_QUEUE_BYTES
+    int upstream[2], tunnel[2];
+    assert(socketpair(AF_UNIX, SOCK_STREAM, 0, upstream) == 0);
+    assert(pipe(tunnel) == 0);
+    real_network = 1;
+    assert(fcntl(upstream[0], F_SETFL, O_NONBLOCK) == 0);
+    struct ng_session s = {.protocol = IPPROTO_TCP, .socket = upstream[0]};
+    s.tcp.version = 4;
+    s.tcp.state = TCP_ESTABLISHED;
+    s.tcp.remote_seq = UINT32_MAX - 1024;
+    s.tcp.recv_window = TCP_QUEUE_BYTES * 2;
+    uint32_t start = s.tcp.remote_seq;
+    size_t len = kind == 0 ? 1024 : 1;
+    unsigned int count = kind == 0 ? TCP_QUEUE_BYTES / len : TCP_QUEUE_SEGMENTS;
+    uint8_t data[1024];
+    memset(data, 0x5A, sizeof(data));
+    struct tcphdr header = {0};
+    if (kind == 2) {
+        // The missing packet overlaps an existing segment, whose unacknowledged
+        // suffix must remain recoverable by a later retransmission.
+        header.seq = htonl(start + 1);
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, 8) == 1);
+        header.seq = htonl(start + 9);
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, 1) == 1);
+        len = 2;
+        count = 2;
+    } else {
+        for (unsigned int i = 0; i < count; i++) {
+            header.seq = htonl(start + (i + 1) * len);
+            assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 1);
+        }
+        assert(get_receive_window(&s) == 0);
+    }
+    s.tcp.recv_window = 0;
+    struct segment *original = s.tcp.forward;
+    header.seq = htonl(start);
+    memset(data, 0xA5, sizeof(data));
+    for (int match = 1; match <= 2; match++) {
+        fail_alloc_tag = "tcp segment";
+        fail_alloc_match = match;
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 0);
+        assert(fail_alloc_match == 0 && s.tcp.forward == original && allocations == count * 2);
+    }
+    fail_alloc_tag = NULL;
+    assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 1);
+    size_t retained = 0;
+    unsigned int segments = 0;
+    for (struct segment *q = s.tcp.forward; q != NULL; q = q->next) {
+        retained += q->len;
+        segments++;
+    }
+    assert(retained <= TCP_QUEUE_BYTES && segments <= TCP_QUEUE_SEGMENTS);
+    assert(s.tcp.forward->seq == start);
+
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    size_t delivered = 0;
+    uint32_t first_end = start + (kind == 2 ? 2 : count * len);
+    drain_gap(&running, &s, upstream[1], first_end, kind == 2 ? 1 : len, &delivered);
+    assert(delivered == (uint32_t) (first_end - start));
+    assert(get_receive_window(&s) > 0);
+
+    // Replay the evicted tail and verify that the entire byte stream is delivered.
+    header.seq = htonl(first_end);
+    memset(data, 0x5A, sizeof(data));
+    size_t replay = kind == 2 ? 7 : len;
+    assert(queue_tcp(args, &header, "test", &s.tcp, data, replay) == 1);
+    uint32_t end = start + (kind == 2 ? 10 : (count + 1) * len);
+    drain_gap(&running, &s, upstream[1], end, kind == 2 ? 1 : len, &delivered);
+    assert(delivered == (uint32_t) (end - start));
+    assert(s.tcp.forward == NULL && allocations == 0);
+    close(upstream[0]); close(upstream[1]);
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_tcp_allocation_failure(const struct arguments *args) {
     uint8_t packet[44] = {0x45};
     struct tcphdr *header = (void *) (packet + 20);
@@ -31,7 +124,7 @@ void test_tcp_allocation_failure(const struct arguments *args) {
         assert(fail_alloc_match == 0 && allocations == 0);
     }
     // Both a new segment and its payload may fail before it is linked.
-    struct tcp_session tcp = {0};
+    struct tcp_session tcp = {.recv_window = UINT16_MAX};
     const uint8_t data[] = {1, 2, 3, 4};
     for (int match = 1; match <= 2; match++) {
         fail_alloc_tag = "tcp segment";
@@ -46,14 +139,92 @@ void test_tcp_allocation_failure(const struct arguments *args) {
     fail_alloc_match = 1;
     assert(queue_tcp(args, header, "test", &tcp, data, 4) == 0);
     assert(tcp.forward->data == original && tcp.forward->len == 2);
-    fail_alloc_tag = "tcp segment larger";
-    fail_alloc_match = 1;
-    assert(queue_tcp(args, header, "test", &tcp, data, 1) == 0);
+    fail_alloc_tag = NULL;
+    assert(queue_tcp(args, header, "test", &tcp, data, 1) == 1);
     assert(tcp.forward->data == original && tcp.forward->len == 2);
     assert(memcmp(original, data, 2) == 0 && allocations == 2);
     clear_tcp_data(&tcp);
 #endif
     fail_alloc_tag = NULL;
+}
+
+void test_tcp_queue_limits(const struct arguments *args, int kind) {
+#ifdef TCP_QUEUE_BYTES
+    struct ng_session s = {.socket = socket(AF_INET, SOCK_STREAM, 0)};
+    s.tcp.recv_window = TCP_QUEUE_BYTES * 2;
+    s.tcp.remote_seq = UINT32_MAX - 1024;
+    struct tcphdr header = {0};
+    uint8_t data[1024] = {0};
+    if (kind == 2) {
+        s.tcp.recv_window = 0;
+        header.seq = htonl(s.tcp.remote_seq);
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, 8) == 0);
+        assert(s.tcp.forward == NULL && allocations == 0);
+        s.tcp.recv_window = 8;
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, 8) == 1);
+        header.seq = htonl(s.tcp.remote_seq + 8);
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, 1) == 0);
+        assert(allocations == 2);
+    } else {
+        size_t len = kind == 0 ? sizeof(data) : 1;
+        unsigned int count = kind == 0 ? TCP_QUEUE_BYTES / len : TCP_QUEUE_SEGMENTS;
+        assert(get_receive_window(&s) > 0 && get_receive_window(&s) <= TCP_QUEUE_BYTES);
+        for (unsigned int i = 0; i < count; i++) {
+            header.seq = htonl(s.tcp.remote_seq + i * len);
+            assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 1);
+        }
+        header.seq = htonl(s.tcp.remote_seq + count * len);
+        assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 0);
+        assert(allocations == count * 2 && get_receive_window(&s) == 0);
+        if (kind == 0) {
+            uint8_t larger[2048] = {0};
+            header.seq = htonl(s.tcp.remote_seq);
+            uint8_t *original = s.tcp.forward->data;
+            assert(queue_tcp(args, &header, "test", &s.tcp, larger, sizeof(larger)) == 0);
+            assert(s.tcp.forward->data == original && s.tcp.forward->len == len);
+        }
+    }
+    clear_tcp_data(&s.tcp);
+    assert(get_receive_window(&s) > 0 && allocations == 0);
+    close(s.socket);
+#endif
+}
+
+void test_tcp_partial_retransmission(const struct arguments *args) {
+    struct tcp_session tcp = {.recv_window = 32, .remote_seq = 100};
+    struct tcphdr header = {.seq = htonl(100)};
+    uint8_t original[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    uint8_t retransmission[12] = {0};
+    assert(queue_tcp(args, &header, "test", &tcp, original, sizeof(original)) == 1);
+    tcp.forward->sent = 6;
+    uint8_t *buffer = tcp.forward->data;
+    assert(queue_tcp(args, &header, "test", &tcp, retransmission, 2) == 1);
+    assert(tcp.forward->data == buffer && tcp.forward->len == 8 && tcp.forward->sent == 6);
+    assert(memcmp(tcp.forward->data, original, sizeof(original)) == 0);
+    assert(queue_tcp(args, &header, "test", &tcp, retransmission, 12) == 1);
+    assert(tcp.forward->len == 12 && tcp.forward->sent == 6);
+    assert(memcmp(tcp.forward->data, original, sizeof(original)) == 0);
+    assert(memcmp(tcp.forward->data + 8, retransmission + 8, 4) == 0);
+
+    // Resume the partial send through a real socket: only the unsent suffix is sent.
+    int upstream[2], tunnel[2];
+    assert(socketpair(AF_UNIX, SOCK_STREAM, 0, upstream) == 0);
+    assert(pipe(tunnel) == 0);
+    struct ng_session s = {.protocol = IPPROTO_TCP, .socket = upstream[0], .tcp = tcp};
+    s.tcp.version = 4;
+    s.tcp.state = TCP_ESTABLISHED;
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    struct epoll_event event = {.events = EPOLLOUT, .data.ptr = &s};
+    check_tcp_socket(&running, &event, -1);
+    readable(upstream[1]);
+    uint8_t received[12];
+    assert(read(upstream[1], received, sizeof(received)) == 6);
+    const uint8_t expected[] = {7, 8, 0, 0, 0, 0};
+    assert(memcmp(received, expected, sizeof(expected)) == 0);
+    assert(s.tcp.remote_seq == 112 && s.tcp.forward == NULL && allocations == 0);
+    close(upstream[0]); close(upstream[1]);
+    close(tunnel[0]); close(tunnel[1]);
 }
 
 void test_tcp(const struct arguments *args) {

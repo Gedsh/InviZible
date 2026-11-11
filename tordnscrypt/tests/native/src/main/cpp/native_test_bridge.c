@@ -35,6 +35,28 @@ static const char *run_case(const char *id) {
         test_atomic_flags();
     else if (strcmp(id, "tcpAllocationFailure") == 0)
         test_tcp_allocation_failure(&args);
+    else if (strcmp(id, "tcpQueueBytes") == 0)
+        test_tcp_queue_limits(&args, 0);
+    else if (strcmp(id, "tcpQueueSegments") == 0)
+        test_tcp_queue_limits(&args, 1);
+    else if (strcmp(id, "tcpQueueWindow") == 0)
+        test_tcp_queue_limits(&args, 2);
+    else if (strcmp(id, "tcpGapBytes") == 0)
+        test_tcp_gap_recovery(&args, 0);
+    else if (strcmp(id, "tcpGapSegments") == 0)
+        test_tcp_gap_recovery(&args, 1);
+    else if (strcmp(id, "tcpGapOverlap") == 0)
+        test_tcp_gap_recovery(&args, 2);
+    else if (strcmp(id, "tcpPartialRetransmission") == 0)
+        test_tcp_partial_retransmission(&args);
+    else if (strcmp(id, "jniPacketFailures") == 0)
+        test_jni_allocation_failures(0);
+    else if (strcmp(id, "jniAllowedFailures") == 0)
+        test_jni_allocation_failures(1);
+    else if (strcmp(id, "jniDnsFailures") == 0)
+        test_jni_allocation_failures(2);
+    else if (strcmp(id, "jniUsageFailures") == 0)
+        test_jni_allocation_failures(3);
     else if (strcmp(id, "udpAllocationFailure") == 0)
         test_udp_allocation_failure(&args);
     else if (strcmp(id, "icmpAllocationFailure") == 0)

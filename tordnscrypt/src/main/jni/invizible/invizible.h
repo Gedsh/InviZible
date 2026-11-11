@@ -93,6 +93,8 @@
 
 #define UID_MAX_AGE 30000 // milliseconds
 #define UID_CACHE_MAX 4096 // entries; bound proc-table snapshots independently of traffic rate
+#define TCP_QUEUE_BYTES (256 * 1024) // retained payload per TCP session
+#define TCP_QUEUE_SEGMENTS 1024 // also bound metadata for small/out-of-order packets
 
 #define SOCKS5_NONE 1
 #define SOCKS5_HELLO 2

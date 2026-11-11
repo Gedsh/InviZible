@@ -245,9 +245,13 @@ uint32_t get_receive_buffer(const struct ng_session *cur) {
 uint32_t get_receive_window(const struct ng_session *cur) {
     // Get data to forward size
     uint32_t toforward = 0;
+    uint32_t retained = 0;
+    unsigned int segments = 0;
     struct segment *q = cur->tcp.forward;
     while (q != NULL) {
         toforward += (q->len - q->sent);
+        retained += q->len;
+        segments++;
         q = q->next;
     }
 
@@ -260,6 +264,11 @@ uint32_t get_receive_window(const struct ng_session *cur) {
     }
 
     uint32_t total = (toforward < window ? window - toforward : 0);
+    uint32_t capacity = (retained < TCP_QUEUE_BYTES ? TCP_QUEUE_BYTES - retained : 0);
+    if (total > capacity)
+        total = capacity;
+    if (segments >= TCP_QUEUE_SEGMENTS)
+        total = 0;
 
     log_android(ANDROID_LOG_DEBUG, "Receive window toforward %u window %u total %u",
                 toforward, window, total);
@@ -1098,6 +1107,44 @@ jboolean handle_tcp(const struct arguments *args,
     return 1;
 }
 
+static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
+    size_t retained = head->len;
+    unsigned int segments = 1;
+    size_t copied = 0;
+    struct segment **link = &cur->forward;
+    while (*link != NULL) {
+        struct segment *q = *link;
+        uint32_t offset = q->seq - head->seq;
+        if (offset < head->len) {
+            // Preserve previously accepted overlapping bytes. Any unacknowledged
+            // suffix beyond this packet can be retransmitted after the gap closes.
+            size_t start = (offset > copied ? offset : copied);
+            size_t end = offset + q->len;
+            if (end > head->len)
+                end = head->len;
+            if (start < end)
+                memcpy(head->data + start, q->data + (start - offset), end - start);
+            if (end > copied)
+                copied = end;
+            *link = q->next;
+            ng_free(q->data, __FILE__, __LINE__);
+            ng_free(q, __FILE__, __LINE__);
+        } else if (retained + q->len > TCP_QUEUE_BYTES || segments >= TCP_QUEUE_SEGMENTS) {
+            // Keep the nearest data and discard the furthest unacknowledged tail.
+            struct tcp_session discarded = {.forward = q};
+            *link = NULL;
+            clear_tcp_data(&discarded);
+            break;
+        } else {
+            retained += q->len;
+            segments++;
+            link = &q->next;
+        }
+    }
+    head->next = cur->forward;
+    cur->forward = head;
+}
+
 int queue_tcp(const struct arguments *args,
                const struct tcphdr *tcphdr,
                const char *session, struct tcp_session *cur,
@@ -1110,10 +1157,30 @@ int queue_tcp(const struct arguments *args,
     else {
         struct segment *p = NULL;
         struct segment *s = cur->forward;
+        size_t retained = 0;
+        unsigned int segments = 0;
+        for (struct segment *q = cur->forward; q != NULL; q = q->next) {
+            retained += q->len;
+            segments++;
+        }
         while (s != NULL && compare_u32(s->seq, seq) < 0) {
             p = s;
             s = s->next;
         }
+
+        // A shorter retransmission must not discard an existing unsent tail or
+        // leave the partial-send offset beyond the replacement allocation.
+        if (s != NULL && s->seq == seq && datalen <= s->len)
+            return 1;
+
+        uint32_t offset = seq - cur->remote_seq;
+        size_t previous = (s != NULL && s->seq == seq ? s->len : 0);
+        int fills_gap = (seq == cur->remote_seq && cur->forward != NULL &&
+                         cur->forward->seq != seq);
+        if (!fills_gap && (offset >= cur->recv_window || datalen > cur->recv_window - offset ||
+            retained - previous + datalen > TCP_QUEUE_BYTES ||
+            (previous == 0 && segments >= TCP_QUEUE_SEGMENTS)))
+            return 0; // No ACK: let the peer retry after the window reopens.
 
         if (s == NULL || compare_u32(s->seq, seq) > 0) {
             log_android(ANDROID_LOG_DEBUG, "%s queuing %u...%u",
@@ -1132,41 +1199,25 @@ int queue_tcp(const struct arguments *args,
                 return 0;
             }
             memcpy(n->data, data, datalen);
-            n->next = s;
-            if (p == NULL)
-                cur->forward = n;
-            else
-                p->next = n;
-        } else if (s != NULL && s->seq == seq) {
-            if (s->len == datalen)
-                log_android(ANDROID_LOG_WARN, "%s segment already queued %u..%u",
-                            session,
-                            s->seq - cur->remote_start, s->seq + s->len - cur->remote_start);
-            else if (s->len < datalen) {
-                log_android(ANDROID_LOG_WARN, "%s segment smaller %u..%u > %u",
-                            session,
-                            s->seq - cur->remote_start, s->seq + s->len - cur->remote_start,
-                            s->seq + datalen - cur->remote_start);
-                uint8_t *replacement = ng_malloc(datalen, "tcp segment smaller");
-                if (replacement == NULL)
-                    return 0;
-                memcpy(replacement, data, datalen);
-                ng_free(s->data, __FILE__, __LINE__);
-                s->data = replacement;
-                s->len = datalen;
-            } else {
-                log_android(ANDROID_LOG_ERROR, "%s segment larger %u..%u < %u",
-                            session,
-                            s->seq - cur->remote_start, s->seq + s->len - cur->remote_start,
-                            s->seq + datalen - cur->remote_start);
-                uint8_t *replacement = ng_malloc(datalen, "tcp segment larger");
-                if (replacement == NULL)
-                    return 0;
-                memcpy(replacement, data, datalen);
-                ng_free(s->data, __FILE__, __LINE__);
-                s->data = replacement;
-                s->len = datalen;
+            if (fills_gap)
+                insert_tcp_gap(cur, n);
+            else {
+                n->next = s;
+                if (p == NULL)
+                    cur->forward = n;
+                else
+                    p->next = n;
             }
+        } else {
+            // Extend a retransmission without rewriting bytes already accepted.
+            uint8_t *replacement = ng_malloc(datalen, "tcp segment smaller");
+            if (replacement == NULL)
+                return 0;
+            memcpy(replacement, s->data, s->len);
+            memcpy(replacement + s->len, data + s->len, datalen - s->len);
+            ng_free(s->data, __FILE__, __LINE__);
+            s->data = replacement;
+            s->len = datalen;
         }
     }
     return 1;

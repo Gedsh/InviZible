@@ -13,13 +13,21 @@ owner-specific signing files. Set `ANDROID_SERIAL` to select a device.
 Reports are written to `build/native-tests/reports/androidTests/connected/`
 and `build/native-tests/outputs/androidTest-results/connected/`.
 
-The 52 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
+The 63 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
 credential byte limits, failed TCP setup, socket/file cleanup, event-loop
 shutdown, UDP forwarding and redirects, IP options/extensions, TCP data and
 shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
 They also inject allocation, mutex, pipe, and descriptor-configuration failures;
 check initialization retry and partial-session cleanup; preserve TCP queues on
 allocation failure; and exercise bounded logging and JNI exception-reporting failures.
+TCP queues enforce a 256 KiB payload budget and a 1024-segment metadata limit per
+session. Tests cover receive-window boundaries, sequence wraparound, and shorter
+or longer retransmissions after partial sends, including forwarding through a real socket.
+Missing-head packets can displace the furthest unacknowledged data at either queue
+limit, including with a zero window. Regressions verify allocation-failure recovery,
+overlapping bytes, bounded queues, and delivery of evicted tails after retransmission.
+JNI callback tests inject each class, object, string, UTF, and field-lookup failure,
+verify reference cleanup and no calls with pending exceptions, and retry successfully.
 The test build disables function inlining and preserves symbol interposition so allocation failure injection also
 intercepts calls within the source that defines the allocation helpers.
 The C fixtures live in `src/main/cpp`; JUnit entry points live in
@@ -28,7 +36,7 @@ source they exercise:
 
 | Production source | Native fixture | JUnit class |
 | --- | --- | --- |
-| `invizible.c` | `invizible_tests.c` | `InvizibleTest` |
+| `invizible.c` | `invizible_tests.c`, `invizible_jni_tests.c` | `InvizibleTest` |
 | `util.c` | `util_tests.c` | `UtilTest` |
 | `session.c` | `session_tests.c` | `SessionTest` |
 | `ip.c` | `ip_tests.c` | `IpTest` |
@@ -76,7 +84,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 85
+The full run contains 96
 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one

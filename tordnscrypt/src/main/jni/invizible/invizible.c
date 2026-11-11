@@ -460,8 +460,10 @@ int protect_socket(const struct arguments *args, int socket, int uid) {
     if (midProtect == NULL)
         midProtect = jniGetMethodID(args->env, clsService, "protectSocket", "(I)Z");
 
-    jboolean isProtected = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midProtect, socket);
+    jboolean isProtected = JNI_FALSE;
+    if (clsService != NULL && midProtect != NULL && !(*args->env)->ExceptionCheck(args->env))
+        isProtected = (*args->env)->CallBooleanMethod(
+                args->env, args->instance, midProtect, socket);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, clsService);
@@ -477,6 +479,19 @@ int protect_socket(const struct arguments *args, int socket, int uid) {
 
 // http://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/functions.html
 // http://journals.ecs.soton.ac.uk/java/tutorial/native1.1/implementing/index.html
+
+static void jniDeleteLocal(JNIEnv *env, jobject ref) {
+    if (ref != NULL) {
+        (*env)->DeleteLocalRef(env, ref);
+        ng_delete_alloc(ref, __FILE__, __LINE__);
+    }
+}
+
+static jstring jniNewString(JNIEnv *env, const char *text) {
+    if ((*env)->ExceptionCheck(env))
+        return NULL;
+    return (*env)->NewStringUTF(env, text);
+}
 
 jobject jniGlobalRef(JNIEnv *env, jobject cls) {
     jobject gcls = (*env)->NewGlobalRef(env, cls);
@@ -495,6 +510,8 @@ jclass jniFindClass(JNIEnv *env, const char *name) {
 }
 
 jmethodID jniGetMethodID(JNIEnv *env, jclass cls, const char *name, const char *signature) {
+    if (cls == NULL || (*env)->ExceptionCheck(env))
+        return NULL;
     jmethodID method = (*env)->GetMethodID(env, cls, name, signature);
     if (method == NULL) {
         log_android(ANDROID_LOG_ERROR, "Method %s %s not found", name, signature);
@@ -504,6 +521,8 @@ jmethodID jniGetMethodID(JNIEnv *env, jclass cls, const char *name, const char *
 }
 
 jfieldID jniGetFieldID(JNIEnv *env, jclass cls, const char *name, const char *type) {
+    if (cls == NULL || (*env)->ExceptionCheck(env))
+        return NULL;
     jfieldID field = (*env)->GetFieldID(env, cls, name, type);
     if (field == NULL)
         log_android(ANDROID_LOG_ERROR, "Field %s type %s not found", name, type);
@@ -511,6 +530,8 @@ jfieldID jniGetFieldID(JNIEnv *env, jclass cls, const char *name, const char *ty
 }
 
 jobject jniNewObject(JNIEnv *env, jclass cls, jmethodID constructor, const char *name) {
+    if (cls == NULL || constructor == NULL || (*env)->ExceptionCheck(env))
+        return NULL;
     jobject object = (*env)->NewObject(env, cls, constructor);
     if (object == NULL)
         log_android(ANDROID_LOG_ERROR, "Create object %s failed", name);
@@ -572,7 +593,9 @@ void log_packet(const struct arguments *args, jobject jpacket) {
     if (midLogPacket == NULL)
         midLogPacket = jniGetMethodID(args->env, clsService, "logPacket", signature);
 
-    (*args->env)->CallVoidMethod(args->env, args->instance, midLogPacket, jpacket);
+    if (jpacket != NULL && clsService != NULL && midLogPacket != NULL &&
+        !(*args->env)->ExceptionCheck(args->env))
+        (*args->env)->CallVoidMethod(args->env, args->instance, midLogPacket, jpacket);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, clsService);
@@ -621,8 +644,14 @@ void dns_resolved(const struct arguments *args,
 
     jobject jrr = jniNewObject(args->env, clsRR, midInitRR, rr);
     ng_add_alloc(jrr, "jrr");
+    if (jrr == NULL || clsService == NULL || midDnsResolved == NULL) {
+        jniCheckException(args->env);
+        jniDeleteLocal(args->env, jrr);
+        jniDeleteLocal(args->env, clsService);
+        return;
+    }
 
-    if (fidQTime == NULL) {
+    if (fidRcode == NULL) {
         const char *string = "Ljava/lang/String;";
         fidQTime = jniGetFieldID(args->env, clsRR, "Time", "J");
         fidQName = jniGetFieldID(args->env, clsRR, "QName", string);
@@ -634,26 +663,30 @@ void dns_resolved(const struct arguments *args,
     }
 
     jlong jtime = time(NULL) * 1000LL;
-    jstring jqname = (*args->env)->NewStringUTF(args->env, qname);
-    jstring janame = (*args->env)->NewStringUTF(args->env, aname);
-    jstring jcname = (*args->env)->NewStringUTF(args->env, cname);
-    jstring jhinfo = (*args->env)->NewStringUTF(args->env, hinfo);
-    jstring jresource = (*args->env)->NewStringUTF(args->env, resource);
+    jstring jqname = jniNewString(args->env, qname);
+    jstring janame = jniNewString(args->env, aname);
+    jstring jcname = jniNewString(args->env, cname);
+    jstring jhinfo = jniNewString(args->env, hinfo);
+    jstring jresource = jniNewString(args->env, resource);
     ng_add_alloc(jqname, "jqname");
     ng_add_alloc(janame, "janame");
     ng_add_alloc(jcname, "jcname");
     ng_add_alloc(jhinfo, "jhinfo");
     ng_add_alloc(jresource, "jresource");
 
-    (*args->env)->SetLongField(args->env, jrr, fidQTime, jtime);
-    (*args->env)->SetObjectField(args->env, jrr, fidQName, jqname);
-    (*args->env)->SetObjectField(args->env, jrr, fidAName, janame);
-    (*args->env)->SetObjectField(args->env, jrr, fidCName, jcname);
-    (*args->env)->SetObjectField(args->env, jrr, fidHInfo, jhinfo);
-    (*args->env)->SetObjectField(args->env, jrr, fidResource, jresource);
-    (*args->env)->SetIntField(args->env, jrr, fidRcode, rcode);
+    if (fidQTime != NULL && fidQName != NULL && fidAName != NULL && fidCName != NULL &&
+        fidHInfo != NULL && fidResource != NULL && fidRcode != NULL &&
+        jqname != NULL && janame != NULL && jcname != NULL && jhinfo != NULL && jresource != NULL) {
+        (*args->env)->SetLongField(args->env, jrr, fidQTime, jtime);
+        (*args->env)->SetObjectField(args->env, jrr, fidQName, jqname);
+        (*args->env)->SetObjectField(args->env, jrr, fidAName, janame);
+        (*args->env)->SetObjectField(args->env, jrr, fidCName, jcname);
+        (*args->env)->SetObjectField(args->env, jrr, fidHInfo, jhinfo);
+        (*args->env)->SetObjectField(args->env, jrr, fidResource, jresource);
+        (*args->env)->SetIntField(args->env, jrr, fidRcode, rcode);
 
-    (*args->env)->CallVoidMethod(args->env, args->instance, midDnsResolved, jrr);
+        (*args->env)->CallVoidMethod(args->env, args->instance, midDnsResolved, jrr);
+    }
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jresource);
@@ -696,12 +729,15 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name) {
     if (midIsDomainBlocked == NULL)
         midIsDomainBlocked = jniGetMethodID(args->env, clsService, "isDomainBlocked", signature);
 
-    jstring jname = (*args->env)->NewStringUTF(args->env, name);
+    jstring jname = jniNewString(args->env, name);
     ng_add_alloc(jname, "jname");
 
-    jboolean jallowed = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midIsDomainBlocked, jname);
-    jniCheckException(args->env);
+    jboolean jallowed = JNI_TRUE; // Allocation failure must not bypass DNS blocking.
+    if (clsService != NULL && midIsDomainBlocked != NULL && jname != NULL)
+        jallowed = (*args->env)->CallBooleanMethod(
+                args->env, args->instance, midIsDomainBlocked, jname);
+    if (jniCheckException(args->env))
+        jallowed = JNI_TRUE;
 
     (*args->env)->DeleteLocalRef(args->env, jname);
     (*args->env)->DeleteLocalRef(args->env, clsService);
@@ -736,11 +772,13 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
     if (midIsRedirectToTor == NULL)
         midIsRedirectToTor = jniGetMethodID(args->env, clsService, "isRedirectToTor", signature);
 
-    jstring jdaddr = (*args->env)->NewStringUTF(args->env, daddr);
+    jstring jdaddr = jniNewString(args->env, daddr);
     ng_add_alloc(jdaddr, "jdaddr");
 
-    jboolean jredirect_to_tor = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midIsRedirectToTor, uid, jdaddr, dport);
+    jboolean jredirect_to_tor = JNI_TRUE;
+    if (clsService != NULL && midIsRedirectToTor != NULL && jdaddr != NULL)
+        jredirect_to_tor = (*args->env)->CallBooleanMethod(
+                args->env, args->instance, midIsRedirectToTor, uid, jdaddr, dport);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdaddr);
@@ -777,11 +815,13 @@ jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const
         midIsRedirectToProxy = jniGetMethodID(args->env, clsService, "isRedirectToProxy",
                                               signature);
 
-    jstring jdaddr = (*args->env)->NewStringUTF(args->env, daddr);
+    jstring jdaddr = jniNewString(args->env, daddr);
     ng_add_alloc(jdaddr, "jdaddr");
 
-    jboolean jredirect_to_proxy = (*args->env)->CallBooleanMethod(
-            args->env, args->instance, midIsRedirectToProxy, uid, jdaddr, dport);
+    jboolean jredirect_to_proxy = JNI_TRUE;
+    if (clsService != NULL && midIsRedirectToProxy != NULL && jdaddr != NULL)
+        jredirect_to_proxy = (*args->env)->CallBooleanMethod(
+                args->env, args->instance, midIsRedirectToProxy, uid, jdaddr, dport);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdaddr);
@@ -819,14 +859,16 @@ jint get_uid_q(const struct arguments *args,
     if (midGetUidQ == NULL)
         midGetUidQ = jniGetMethodID(args->env, clsService, "getUidQ", signature);
 
-    jstring jsource = (*args->env)->NewStringUTF(args->env, source);
-    jstring jdest = (*args->env)->NewStringUTF(args->env, dest);
+    jstring jsource = jniNewString(args->env, source);
+    jstring jdest = jniNewString(args->env, dest);
     ng_add_alloc(jsource, "jsource");
     ng_add_alloc(jdest, "jdest");
 
-    jint juid = (*args->env)->CallIntMethod(
-            args->env, args->instance, midGetUidQ,
-            version, protocol, jsource, sport, jdest, dport);
+    jint juid = -1;
+    if (clsService != NULL && midGetUidQ != NULL && jsource != NULL && jdest != NULL)
+        juid = (*args->env)->CallIntMethod(
+                args->env, args->instance, midGetUidQ,
+                version, protocol, jsource, sport, jdest, dport);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdest);
@@ -859,12 +901,23 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
     gettimeofday(&start, NULL);
 #endif
 
+    if (jpacket == NULL) {
+        jniCheckException(args->env);
+        return NULL;
+    }
+
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
     ng_add_alloc(clsService, "clsService");
 
     const char *signature = "(Lpan/alexander/tordnscrypt/vpn/Packet;)Lpan/alexander/tordnscrypt/vpn/Allowed;";
     if (midIsAddressAllowed == NULL)
         midIsAddressAllowed = jniGetMethodID(args->env, clsService, "isAddressAllowed", signature);
+    if (clsService == NULL || midIsAddressAllowed == NULL) {
+        jniCheckException(args->env);
+        jniDeleteLocal(args->env, jpacket);
+        jniDeleteLocal(args->env, clsService);
+        return NULL;
+    }
 
     jobject jallowed = (*args->env)->CallObjectMethod(
             args->env, args->instance, midIsAddressAllowed, jpacket);
@@ -872,30 +925,45 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
     int exceptionOccurred = jniCheckException(args->env);
 
     if (jallowed != NULL && exceptionOccurred == 0) {
-        if (fidRaddr == NULL) {
+        if (fidRport == NULL) {
             const char *string = "Ljava/lang/String;";
             fidRaddr = jniGetFieldID(args->env, clsAllowed, "raddr", string);
             fidRport = jniGetFieldID(args->env, clsAllowed, "rport", "I");
         }
 
-        jstring jraddr = (*args->env)->GetObjectField(args->env, jallowed, fidRaddr);
+        jstring jraddr = NULL;
+        if (fidRaddr == NULL || fidRport == NULL || (*args->env)->ExceptionCheck(args->env))
+            exceptionOccurred = 1;
+        else
+            jraddr = (*args->env)->GetObjectField(args->env, jallowed, fidRaddr);
         ng_add_alloc(jraddr, "jraddr");
+        if ((*args->env)->ExceptionCheck(args->env))
+            exceptionOccurred = 1;
         if (jraddr == NULL)
             *allowed.raddr = 0;
-        else {
+        else if (!exceptionOccurred) {
             const char *raddr = (*args->env)->GetStringUTFChars(args->env, jraddr, NULL);
             ng_add_alloc(raddr, "raddr");
-            strcpy(allowed.raddr, raddr);
-            (*args->env)->ReleaseStringUTFChars(args->env, jraddr, raddr);
-            ng_delete_alloc(raddr, __FILE__, __LINE__);
+            if (raddr == NULL)
+                exceptionOccurred = 1;
+            else {
+                if (strlen(raddr) >= sizeof(allowed.raddr))
+                    exceptionOccurred = 1;
+                else
+                    strcpy(allowed.raddr, raddr);
+                (*args->env)->ReleaseStringUTFChars(args->env, jraddr, raddr);
+                ng_delete_alloc(raddr, __FILE__, __LINE__);
+            }
         }
-        allowed.rport = (uint16_t) (*args->env)->GetIntField(args->env, jallowed, fidRport);
+        if (!exceptionOccurred)
+            allowed.rport = (uint16_t) (*args->env)->GetIntField(args->env, jallowed, fidRport);
 
         (*args->env)->DeleteLocalRef(args->env, jraddr);
         ng_delete_alloc(jraddr, __FILE__, __LINE__);
     }
 
 
+    exceptionOccurred |= jniCheckException(args->env);
     (*args->env)->DeleteLocalRef(args->env, jpacket);
     (*args->env)->DeleteLocalRef(args->env, clsService);
     (*args->env)->DeleteLocalRef(args->env, jallowed);
@@ -925,8 +993,11 @@ int check_tor_connection(const struct arguments *args) {
         midConnectionUnavailable = jniGetMethodID(args->env, clsService,
                                                   "suspectTorConnectionUnavailable", "()Z");
 
-    jboolean checking = (*args->env)->CallBooleanMethod(args->env, args->instance,
-                                                        midConnectionUnavailable, socket);
+    jboolean checking = JNI_FALSE;
+    if (clsService != NULL && midConnectionUnavailable != NULL &&
+        !(*args->env)->ExceptionCheck(args->env))
+        checking = (*args->env)->CallBooleanMethod(args->env, args->instance,
+                                                  midConnectionUnavailable);
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, clsService);
@@ -979,8 +1050,12 @@ jobject create_packet(const struct arguments *args,
         midInitPacket = jniGetMethodID(env, clsPacket, "<init>", "()V");
     jobject jpacket = jniNewObject(env, clsPacket, midInitPacket, packet);
     ng_add_alloc(jpacket, "jpacket");
+    if (jpacket == NULL) {
+        jniCheckException(env);
+        return NULL;
+    }
 
-    if (fidTime == NULL) {
+    if (fidAllowed == NULL) {
         const char *string = "Ljava/lang/String;";
         fidTime = jniGetFieldID(env, clsPacket, "time", "J");
         fidVersion = jniGetFieldID(env, clsPacket, "version", "I");
@@ -998,26 +1073,33 @@ jobject create_packet(const struct arguments *args,
     struct timeval tv;
     gettimeofday(&tv, NULL);
     jlong t = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
-    jstring jflags = (*env)->NewStringUTF(env, flags);
-    jstring jsource = (*env)->NewStringUTF(env, source);
-    jstring jdest = (*env)->NewStringUTF(env, dest);
-    jstring jdata = (*env)->NewStringUTF(env, data);
+    jstring jflags = jniNewString(env, flags);
+    jstring jsource = jniNewString(env, source);
+    jstring jdest = jniNewString(env, dest);
+    jstring jdata = jniNewString(env, data);
     ng_add_alloc(jflags, "jflags");
     ng_add_alloc(jsource, "jsource");
     ng_add_alloc(jdest, "jdest");
     ng_add_alloc(jdata, "jdata");
 
-    (*env)->SetLongField(env, jpacket, fidTime, t);
-    (*env)->SetIntField(env, jpacket, fidVersion, version);
-    (*env)->SetIntField(env, jpacket, fidProtocol, protocol);
-    (*env)->SetObjectField(env, jpacket, fidFlags, jflags);
-    (*env)->SetObjectField(env, jpacket, fidSaddr, jsource);
-    (*env)->SetIntField(env, jpacket, fidSport, sport);
-    (*env)->SetObjectField(env, jpacket, fidDaddr, jdest);
-    (*env)->SetIntField(env, jpacket, fidDport, dport);
-    (*env)->SetObjectField(env, jpacket, fidData, jdata);
-    (*env)->SetIntField(env, jpacket, fidUid, uid);
-    (*env)->SetBooleanField(env, jpacket, fidAllowed, allowed);
+    int complete = fidTime != NULL && fidVersion != NULL && fidProtocol != NULL &&
+            fidFlags != NULL && fidSaddr != NULL && fidSport != NULL && fidDaddr != NULL &&
+            fidDport != NULL && fidData != NULL && fidUid != NULL && fidAllowed != NULL &&
+            jflags != NULL && jsource != NULL && jdest != NULL && jdata != NULL;
+    if (complete) {
+        (*env)->SetLongField(env, jpacket, fidTime, t);
+        (*env)->SetIntField(env, jpacket, fidVersion, version);
+        (*env)->SetIntField(env, jpacket, fidProtocol, protocol);
+        (*env)->SetObjectField(env, jpacket, fidFlags, jflags);
+        (*env)->SetObjectField(env, jpacket, fidSaddr, jsource);
+        (*env)->SetIntField(env, jpacket, fidSport, sport);
+        (*env)->SetObjectField(env, jpacket, fidDaddr, jdest);
+        (*env)->SetIntField(env, jpacket, fidDport, dport);
+        (*env)->SetObjectField(env, jpacket, fidData, jdata);
+        (*env)->SetIntField(env, jpacket, fidUid, uid);
+        (*env)->SetBooleanField(env, jpacket, fidAllowed, allowed);
+    }
+    complete = !jniCheckException(env) && complete;
 
     (*env)->DeleteLocalRef(env, jdata);
     (*env)->DeleteLocalRef(env, jdest);
@@ -1027,6 +1109,10 @@ jobject create_packet(const struct arguments *args,
     ng_delete_alloc(jdest, __FILE__, __LINE__);
     ng_delete_alloc(jsource, __FILE__, __LINE__);
     ng_delete_alloc(jflags, __FILE__, __LINE__);
+    if (!complete) {
+        jniDeleteLocal(env, jpacket);
+        return NULL;
+    }
     // Caller needs to delete reference to packet
 
 #ifdef PROFILE_JNI
@@ -1072,8 +1158,14 @@ void account_usage(const struct arguments *args, jint version, jint protocol,
 
     jobject jusage = jniNewObject(args->env, clsUsage, midInitUsage, usage);
     ng_add_alloc(jusage, "jusage");
+    if (jusage == NULL || clsService == NULL || midAccountUsage == NULL) {
+        jniCheckException(args->env);
+        jniDeleteLocal(args->env, jusage);
+        jniDeleteLocal(args->env, clsService);
+        return;
+    }
 
-    if (fidUsageTime == NULL) {
+    if (fidUsageReceived == NULL) {
         const char *string = "Ljava/lang/String;";
         fidUsageTime = jniGetFieldID(args->env, clsUsage, "Time", "J");
         fidUsageVersion = jniGetFieldID(args->env, clsUsage, "Version", "I");
@@ -1086,19 +1178,23 @@ void account_usage(const struct arguments *args, jint version, jint protocol,
     }
 
     jlong jtime = time(NULL) * 1000LL;
-    jstring jdaddr = (*args->env)->NewStringUTF(args->env, daddr);
+    jstring jdaddr = jniNewString(args->env, daddr);
     ng_add_alloc(jdaddr, "jdaddr");
 
-    (*args->env)->SetLongField(args->env, jusage, fidUsageTime, jtime);
-    (*args->env)->SetIntField(args->env, jusage, fidUsageVersion, version);
-    (*args->env)->SetIntField(args->env, jusage, fidUsageProtocol, protocol);
-    (*args->env)->SetObjectField(args->env, jusage, fidUsageDAddr, jdaddr);
-    (*args->env)->SetIntField(args->env, jusage, fidUsageDPort, dport);
-    (*args->env)->SetIntField(args->env, jusage, fidUsageUid, uid);
-    (*args->env)->SetLongField(args->env, jusage, fidUsageSent, sent);
-    (*args->env)->SetLongField(args->env, jusage, fidUsageReceived, received);
+    if (fidUsageTime != NULL && fidUsageVersion != NULL && fidUsageProtocol != NULL &&
+        fidUsageDAddr != NULL && fidUsageDPort != NULL && fidUsageUid != NULL &&
+        fidUsageSent != NULL && fidUsageReceived != NULL && jdaddr != NULL) {
+        (*args->env)->SetLongField(args->env, jusage, fidUsageTime, jtime);
+        (*args->env)->SetIntField(args->env, jusage, fidUsageVersion, version);
+        (*args->env)->SetIntField(args->env, jusage, fidUsageProtocol, protocol);
+        (*args->env)->SetObjectField(args->env, jusage, fidUsageDAddr, jdaddr);
+        (*args->env)->SetIntField(args->env, jusage, fidUsageDPort, dport);
+        (*args->env)->SetIntField(args->env, jusage, fidUsageUid, uid);
+        (*args->env)->SetLongField(args->env, jusage, fidUsageSent, sent);
+        (*args->env)->SetLongField(args->env, jusage, fidUsageReceived, received);
 
-    (*args->env)->CallVoidMethod(args->env, args->instance, midAccountUsage, jusage);
+        (*args->env)->CallVoidMethod(args->env, args->instance, midAccountUsage, jusage);
+    }
     jniCheckException(args->env);
 
     (*args->env)->DeleteLocalRef(args->env, jdaddr);

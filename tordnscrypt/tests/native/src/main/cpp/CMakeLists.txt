@@ -7,7 +7,7 @@ get_filename_component(INVIZIBLE_SOURCE
 
 function(add_native_tests target source)
     add_library(${target} SHARED native_test_bridge.c test_support.c
-            invizible_tests.c util_tests.c session_tests.c ip_tests.c tcp_tests.c udp_tests.c
+            invizible_tests.c invizible_jni_tests.c util_tests.c session_tests.c ip_tests.c tcp_tests.c udp_tests.c
             icmp_tests.c dns_tests.c dhcp_tests.c compatibility_tests.c
             "${source}/invizible.c" "${source}/session.c" "${source}/ip.c"
             "${source}/tcp.c" "${source}/udp.c" "${source}/icmp.c"
