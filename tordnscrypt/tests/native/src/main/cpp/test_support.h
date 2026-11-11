@@ -29,6 +29,8 @@ void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1pro
         JNIEnv *, jobject, jstring, jint, jstring, jstring);
 void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1tor(
         JNIEnv *, jobject, jstring, jint, jstring, jstring, jboolean, jint);
+void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1validate_1socks5(
+        JNIEnv *, jobject, jstring, jstring, jstring);
 
 int __real_socket(int domain, int type, int protocol);
 int __real_close(int fd);

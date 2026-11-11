@@ -91,6 +91,27 @@ static const char *run_case(const char *id) {
 }
 
 #ifndef INVIZIBLE_BASELINE_TESTS
+JNIEXPORT void JNICALL
+Java_pan_alexander_tordnscrypt_vpn_service_Socks5SettingsTest_validateProxy(
+        JNIEnv *env, jclass cls, jstring address, jstring user, jstring password) {
+    Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1validate_1socks5(
+            env, NULL, address, user, password);
+}
+
+JNIEXPORT jint JNICALL
+Java_pan_alexander_tordnscrypt_vpn_service_Socks5SettingsTest_encodedLength(
+        JNIEnv *env, jclass cls, jstring value) {
+    return (*env)->GetStringUTFLength(env, value);
+}
+
+JNIEXPORT void JNICALL
+Java_pan_alexander_tordnscrypt_vpn_service_Socks5SettingsTest_configureProxy(
+        JNIEnv *env, jclass cls, jstring address, jstring user, jstring password) {
+    reset_test_state();
+    Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1socks5_1for_1proxy(
+            env, NULL, address, 1080, user, password);
+}
+
 JNIEXPORT jstring JNICALL
 Java_pan_alexander_tordnscrypt_nativetests_NativeTestSupport_runNativeCase(
         JNIEnv *env, jclass cls, jstring name) {

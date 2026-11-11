@@ -222,7 +222,7 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(JNIEnv *env,
     return get_mtu();
 }
 
-static int copy_socks5_string(JNIEnv *env, jstring value, char *dest, size_t capacity) {
+static int validate_socks5_string(JNIEnv *env, jstring value, size_t capacity) {
     if (value == NULL || (size_t) (*env)->GetStringUTFLength(env, value) >= capacity) {
         jclass cls = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
         if (cls != NULL) {
@@ -231,6 +231,21 @@ static int copy_socks5_string(JNIEnv *env, jstring value, char *dest, size_t cap
         }
         return 0;
     }
+    return 1;
+}
+
+JNIEXPORT void JNICALL
+Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1validate_1socks5(
+        JNIEnv *env, jobject instance, jstring address, jstring username, jstring password) {
+    if (!validate_socks5_string(env, address, sizeof(proxy_socks5_addr)) ||
+        !validate_socks5_string(env, username, sizeof(proxy_socks5_username)))
+        return;
+    validate_socks5_string(env, password, sizeof(proxy_socks5_password));
+}
+
+static int copy_socks5_string(JNIEnv *env, jstring value, char *dest, size_t capacity) {
+    if (!validate_socks5_string(env, value, capacity))
+        return 0;
 
     const char *text = (*env)->GetStringUTFChars(env, value, NULL);
     if (text == NULL)
