@@ -442,6 +442,51 @@ jint get_uid(const int version, const int protocol,
 int uid_cache_size = 0;
 struct uid_cache_entry *uid_cache = NULL;
 
+static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t sport,
+                      const uint8_t *daddr, uint16_t dport, jint uid, long now) {
+    size_t address_size = (version == 4 ? 4 : 16);
+    int slot = -1;
+    int oldest = 0;
+    for (int i = 0; i < uid_cache_size; i++) {
+        struct uid_cache_entry *entry = &uid_cache[i];
+        if (entry->version == version && entry->protocol == protocol &&
+            entry->sport == sport && entry->dport == dport &&
+            memcmp(entry->saddr, saddr, address_size) == 0 &&
+            memcmp(entry->daddr, daddr, address_size) == 0) {
+            slot = i;
+            break;
+        }
+        if (slot < 0 && now - entry->time > UID_MAX_AGE)
+            slot = i;
+        if (entry->time < uid_cache[oldest].time)
+            oldest = i;
+    }
+
+    if (slot < 0 && uid_cache_size < UID_CACHE_MAX) {
+        size_t bytes = sizeof(struct uid_cache_entry) * (uid_cache_size + 1);
+        struct uid_cache_entry *resized = (uid_cache == NULL
+                ? ng_malloc(bytes, "uid_cache init")
+                : ng_realloc(uid_cache, bytes, "uid_cache extend"));
+        // Caching is optional: keep the previous allocation and finish the proc lookup.
+        if (resized == NULL)
+            return;
+        uid_cache = resized;
+        slot = uid_cache_size++;
+    }
+    if (slot < 0)
+        slot = oldest;
+
+    struct uid_cache_entry *entry = &uid_cache[slot];
+    entry->version = (uint8_t) version;
+    entry->protocol = (uint8_t) protocol;
+    memcpy(entry->saddr, saddr, address_size);
+    entry->sport = sport;
+    memcpy(entry->daddr, daddr, address_size);
+    entry->dport = dport;
+    entry->uid = uid;
+    entry->time = now;
+}
+
 jint get_uid_sub(const int version, const int protocol,
                  const void *saddr, const uint16_t sport,
                  const void *daddr, const uint16_t dport,
@@ -511,7 +556,6 @@ jint get_uid_sub(const int version, const int protocol,
     // Scan proc file
     int l = 0;
     *line = 0;
-    int c = 0;
     const char *fmt = (version == 4
                        ? "%*d: %8s:%X %8s:%X %*X %*lX:%*lX %*X:%*X %*X %d %*d %*ld"
                        : "%*d: %32s:%X %32s:%X %*X %*lX:%*lX %*X:%*X %*X %d %*d %*ld");
@@ -538,29 +582,8 @@ jint get_uid_sub(const int version, const int protocol,
                  memcmp(_daddr, zero, (size_t) (ws * 4)) == 0))
                 uid = _uid;
 
-            for (; c < uid_cache_size; c++)
-                if (now - uid_cache[c].time > UID_MAX_AGE)
-                    break;
-
-            if (c >= uid_cache_size) {
-                if (uid_cache_size == 0)
-                    uid_cache = ng_malloc(sizeof(struct uid_cache_entry), "uid_cache init");
-                else
-                    uid_cache = ng_realloc(uid_cache,
-                                           sizeof(struct uid_cache_entry) *
-                                           (uid_cache_size + 1), "uid_cache extend");
-                c = uid_cache_size;
-                uid_cache_size++;
-            }
-
-            uid_cache[c].version = (uint8_t) version;
-            uid_cache[c].protocol = (uint8_t) protocol;
-            memcpy(uid_cache[c].saddr, _saddr, (size_t) (ws * 4));
-            uid_cache[c].sport = (uint16_t) _sport;
-            memcpy(uid_cache[c].daddr, _daddr, (size_t) (ws * 4));
-            uid_cache[c].dport = (uint16_t) _dport;
-            uid_cache[c].uid = _uid;
-            uid_cache[c].time = now;
+            cache_uid(version, protocol, _saddr, (uint16_t) _sport,
+                      _daddr, (uint16_t) _dport, _uid, now);
         } else {
             log_android(ANDROID_LOG_ERROR, "Invalid field #%d: %s", fields, line);
             fclose(fd);

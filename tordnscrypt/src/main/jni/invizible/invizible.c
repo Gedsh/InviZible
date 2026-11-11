@@ -1167,7 +1167,8 @@ void *ng_calloc(size_t __item_count, size_t __item_size, const char *tag) {
 void *ng_realloc(void *__ptr, size_t __byte_count, const char *tag) {
     ng_delete_alloc(__ptr, NULL, 0);
     void *ptr = realloc(__ptr, __byte_count);
-    ng_add_alloc(ptr, tag);
+    // A failed nonzero resize leaves the original allocation owned by the caller.
+    ng_add_alloc(ptr == NULL && __byte_count != 0 ? __ptr : ptr, tag);
     return ptr;
 }
 

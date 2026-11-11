@@ -3,15 +3,30 @@
 int allocations, sockets, last_socket = -1, udp_calls, resolved_calls;
 int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 int capture_packets, capture_dhcp, fake_proc;
+const char *proc_contents;
+int fail_cache_alloc;
 int real_network, real_udp_packets, block_domain, trace_dns;
 uint64_t accounted_sent, accounted_received;
 enum failure failure;
 
 void *__wrap_ng_malloc(size_t n, const char *tag) {
+    if (fail_cache_alloc && strncmp(tag, "uid_cache", 9) == 0)
+        return NULL;
     void *p = malloc(n);
     assert(p != NULL);
     allocations++;
     return p;
+}
+
+void *__real_ng_realloc(void *p, size_t n, const char *tag);
+void *__wrap_ng_realloc(void *p, size_t n, const char *tag) {
+    if (fail_cache_alloc && strncmp(tag, "uid_cache", 9) == 0)
+        return NULL;
+    void *resized = __real_ng_realloc(p, n, tag);
+    assert(resized != NULL);
+    if (p == NULL)
+        allocations++;
+    return resized;
 }
 
 void *__wrap_ng_calloc(size_t n, size_t size, const char *tag) {
@@ -147,7 +162,8 @@ void __wrap_account_usage(const struct arguments *args, jint version, jint proto
 FILE *__real_fopen(const char *, const char *);
 FILE *__wrap_fopen(const char *path, const char *mode) {
     static char proc[] = "header\ninvalid entry\n";
-    return (fake_proc ? fmemopen(proc, sizeof(proc) - 1, "r") : __real_fopen(path, mode));
+    const char *contents = (proc_contents == NULL ? proc : proc_contents);
+    return (fake_proc ? fmemopen((void *) contents, strlen(contents), "r") : __real_fopen(path, mode));
 }
 
 int __real_fclose(FILE *file);
@@ -281,6 +297,8 @@ void reset_test_state(void) {
     allocations = sockets = udp_calls = resolved_calls = 0;
     string_refs = string_calls = fail_string_call = exceptions = file_closes = 0;
     capture_packets = capture_dhcp = fake_proc = 0;
+    proc_contents = NULL;
+    fail_cache_alloc = 0;
     real_network = real_udp_packets = block_domain = trace_dns = 0;
     accounted_sent = accounted_received = 0;
     failure = NONE;

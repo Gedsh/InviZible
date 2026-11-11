@@ -72,3 +72,111 @@ void test_uid_file_cleanup(void) {
     assert(file_closes == before + 1);
     fake_proc = 0;
 }
+
+static const char *proc_one =
+        "header\n0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 10001 0 0\n";
+static const char *proc_two =
+        "header\n0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 10001 0 0\n"
+        "1: 0100007F:04D3 00000000:0000 07 0:0 0:0 0 10002 0 0\n";
+
+static jint lookup_uid(int version, int protocol, uint16_t sport, long now) {
+    uint8_t address[16];
+    const char *text = (version == 4 ? "127.0.0.1" : "::1");
+    assert(inet_pton(version == 4 ? AF_INET : AF_INET6, text, address) == 1);
+    return get_uid_sub(version, protocol, address, sport, address, 53, text, text, now);
+}
+
+static void release_uid_cache(void) {
+    ng_free(uid_cache, __FILE__, __LINE__);
+    uid_cache = NULL;
+    uid_cache_size = 0;
+    fake_proc = fail_cache_alloc = 0;
+    proc_contents = NULL;
+    assert(allocations == 0);
+}
+
+void test_uid_cache_allocation_failure(void) {
+    assert(uid_cache == NULL && uid_cache_size == 0);
+    fake_proc = fail_cache_alloc = 1;
+    proc_contents = proc_one;
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+    assert(uid_cache == NULL && uid_cache_size == 0 && allocations == 0);
+    assert(file_closes == 1);
+
+    fail_cache_alloc = 0;
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+    assert(uid_cache_size == 1 && allocations == 1);
+    struct uid_cache_entry *original = uid_cache;
+    fail_cache_alloc = 1;
+    proc_contents = proc_two;
+    assert(lookup_uid(4, IPPROTO_UDP, 1235, 0) == 10002);
+    assert(uid_cache == original && uid_cache_size == 1 && allocations == 1);
+    assert(uid_cache[0].uid == 10001 && file_closes == 3);
+
+    fail_cache_alloc = 0;
+    assert(lookup_uid(4, IPPROTO_UDP, 1235, 0) == 10002);
+    assert(uid_cache_size == 2 && allocations == 1);
+    int before = file_closes;
+    assert(lookup_uid(4, IPPROTO_UDP, 1235, 0) == 10002);
+    assert(file_closes == before); // Successful growth still supports cache hits.
+    release_uid_cache();
+}
+
+void test_uid_cache_refresh(void) {
+    fake_proc = 1;
+    proc_contents = proc_one;
+    for (int i = 0; i < 100; i++) {
+        assert(lookup_uid(4, IPPROTO_UDP, 9999, i) == -1);
+        assert(uid_cache_size == 1);
+    }
+    proc_contents = "header\n0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 20001 0 0\n";
+    assert(lookup_uid(4, IPPROTO_UDP, 9999, 100) == -1);
+    assert(uid_cache_size == 1);
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, 100) == 20001);
+    struct uid_cache_entry *original = uid_cache;
+    proc_contents = "header\n0: 0100007F:04D3 00000000:0000 07 0:0 0:0 0 20002 0 0\n";
+    assert(lookup_uid(4, IPPROTO_UDP, 1235, UID_MAX_AGE + 101) == 20002);
+    assert(uid_cache == original && uid_cache_size == 1); // Reuse an expired slot.
+    release_uid_cache();
+}
+
+void test_uid_cache_limit(void) {
+    size_t capacity = (UID_CACHE_MAX + 1) * 128;
+    char *table = malloc(capacity);
+    assert(table != NULL);
+    size_t used = (size_t) snprintf(table, capacity, "header\n");
+    for (int i = 0; i <= UID_CACHE_MAX; i++) {
+        int length = snprintf(table + used, capacity - used,
+                "%d: 0100007F:%04X 00000000:0000 07 0:0 0:0 0 %d 0 0\n",
+                i, 1000 + i, 10000 + i);
+        assert(length > 0 && (size_t) length < capacity - used);
+        used += (size_t) length;
+    }
+    fake_proc = 1;
+    proc_contents = table;
+    assert(lookup_uid(4, IPPROTO_UDP, 1000 + UID_CACHE_MAX, 0) == 10000 + UID_CACHE_MAX);
+    assert(uid_cache_size == UID_CACHE_MAX && allocations == 1);
+    int before = file_closes;
+    assert(lookup_uid(4, IPPROTO_UDP, 1000 + UID_CACHE_MAX, 0) == 10000 + UID_CACHE_MAX);
+    assert(file_closes == before); // The last row is cached even when the table exceeds the cap.
+    free(table);
+    release_uid_cache();
+}
+
+void test_uid_cache_keys(void) {
+    fake_proc = 1;
+    proc_contents = proc_one;
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+    proc_contents = "header\n0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 20001 0 0\n";
+    assert(lookup_uid(4, IPPROTO_TCP, 1234, 0) == 20001);
+    proc_contents = "header\n0: 00000000000000000000000001000000:04D2 "
+                    "00000000000000000000000000000000:0000 07 0:0 0:0 0 30001 0 0\n";
+    assert(lookup_uid(6, IPPROTO_UDP, 1234, 0) == 30001);
+    assert(uid_cache_size == 3);
+    int before = file_closes;
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+    assert(lookup_uid(4, IPPROTO_TCP, 1234, 0) == 20001);
+    assert(lookup_uid(6, IPPROTO_UDP, 1234, 0) == 30001);
+    assert(file_closes == before);
+    release_uid_cache();
+}

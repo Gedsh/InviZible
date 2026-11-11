@@ -57,6 +57,29 @@ void test_tcp_data_cleanup(void) {
 
 }
 
+void test_tcp_closed_data_cleanup(const struct arguments *args) {
+    for (int closing = 0; closing <= 1; closing++) {
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = -1};
+        s.tcp.version = 4;
+        s.tcp.time = time(NULL);
+        s.tcp.state = (closing ? TCP_CLOSING : TCP_CLOSE);
+        s.tcp.sent = 10;
+        s.tcp.received = 20;
+        if (closing)
+            s.socket = socket(PF_INET, SOCK_STREAM, 0);
+        s.tcp.forward = ng_calloc(1, sizeof(*s.tcp.forward), "test segment");
+        s.tcp.forward->data = ng_malloc(65535, "test queued payload");
+        s.tcp.forward->len = 65535;
+        assert(check_tcp_session(args, &s, 1, 100) == 0);
+        assert(s.tcp.state == TCP_CLOSE && s.socket == -1);
+        assert(s.tcp.forward == NULL && allocations == 0 && sockets == 0);
+        assert(s.tcp.sent == 0 && s.tcp.received == 0);
+        assert(check_tcp_session(args, &s, 1, 100) == 0); // Metadata still handles late packets.
+        clear_tcp_data(&s.tcp); // Later session destruction remains safe.
+    }
+    assert(accounted_sent == 20 && accounted_received == 40);
+}
+
 static size_t tcp_packet(uint8_t *packet, int version, uint32_t seq, uint32_t ack,
                           int syn, int fin, const uint8_t *data, size_t len) {
     size_t optlen = (syn ? 8 : 0);

@@ -15,6 +15,17 @@ extern enum failure failure;
 extern int allocations, sockets, last_socket, udp_calls, resolved_calls;
 extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 extern int capture_packets, capture_dhcp, fake_proc;
+extern const char *proc_contents;
+extern int fail_cache_alloc;
+extern int uid_cache_size;
+extern struct uid_cache_entry *uid_cache;
+// Older baseline exports do not define the cache cap; only current code runs these cases.
+#ifndef UID_CACHE_MAX
+#define UID_CACHE_MAX 4096
+#endif
+#ifndef UDP_BLOCKED_MAX
+#define UDP_BLOCKED_MAX 1024
+#endif
 extern int real_network, real_udp_packets, block_domain, trace_dns;
 extern uint64_t accounted_sent, accounted_received;
 extern unsigned int cases;
@@ -53,12 +64,19 @@ void test_dns(const struct arguments *args);
 void dns_flows(void);
 void test_packets(struct arguments *args); // ip.c
 void test_uid_file_cleanup(void);
+void test_uid_cache_allocation_failure(void);
+void test_uid_cache_refresh(void);
+void test_uid_cache_limit(void);
+void test_uid_cache_keys(void);
 void test_udp_short_dns(struct arguments *args); // udp.c
 void test_udp_socket_cleanup(const struct arguments *args);
+void test_udp_blocked_limit(struct arguments *args, int version);
+void test_udp_blocked_duplicates(struct arguments *args);
 void udp_flow(int version, int redirect, int extension);
 void test_tcp(const struct arguments *args); // tcp.c
 void test_tcp_socket_cleanup(const struct arguments *args);
 void test_tcp_data_cleanup(void);
+void test_tcp_closed_data_cleanup(const struct arguments *args);
 void tcp_flow(int version);
 void socks_flow(int version, int authentication, int max_credentials);
 void test_icmp_socket_cleanup(const struct arguments *args); // icmp.c
@@ -66,6 +84,7 @@ void icmp_packets(int version);
 void test_dhcp_response_bounds(const struct arguments *args); // dhcp.c
 void dhcp_offer(void);
 void test_event_loop_shutdown(struct arguments *args); // session.c
+void test_event_loop_idle_cleanup(struct arguments *args, int kind);
 void compatibility_suite(void); // Multiple sources; valid-input comparison only.
 
 #endif

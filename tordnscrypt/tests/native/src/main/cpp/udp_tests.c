@@ -28,6 +28,74 @@ void test_udp_socket_cleanup(const struct arguments *args) {
     assert(sockets == 0);
 }
 
+static size_t blocked_packet(uint8_t *packet, int version, uint16_t source, uint16_t dest) {
+    size_t off = ip_header(packet, version, IPPROTO_UDP, sizeof(struct udphdr),
+                           version == 4 ? "198.51.100.1" : "2001:db8::2");
+    struct udphdr *udp = (void *) (packet + off);
+    udp->source = htons(source);
+    udp->dest = htons(dest);
+    udp->len = htons(sizeof(*udp));
+    return off;
+}
+
+void test_udp_blocked_limit(struct arguments *args, int version) {
+    struct ng_session *active = ng_calloc(1, sizeof(*active), "test active UDP");
+    active->protocol = IPPROTO_UDP;
+    active->udp.state = UDP_ACTIVE;
+    active->udp.uid = 12345;
+    active->socket = socket(AF_INET, SOCK_DGRAM, 0);
+    struct ng_session *closed = ng_calloc(1, sizeof(*closed), "test closed UDP");
+    closed->protocol = IPPROTO_UDP;
+    closed->udp.state = UDP_CLOSED;
+    closed->socket = -1;
+    active->next = closed;
+    args->ctx->ng_session = active;
+
+    uint8_t packet[48];
+    for (int i = 0; i < UDP_BLOCKED_MAX + 50; i++) {
+        size_t off = blocked_packet(packet, version, 1000 + i, 5000);
+        block_udp(args, packet, off + sizeof(struct udphdr), packet + off, own_uid);
+        assert(allocations <= UDP_BLOCKED_MAX + 2 && sockets == 1);
+    }
+
+    int blocked = 0, active_seen = 0, closed_seen = 0;
+    for (struct ng_session *s = args->ctx->ng_session; s != NULL; s = s->next) {
+        if (s == active)
+            active_seen++;
+        else if (s == closed)
+            closed_seen++;
+        else {
+            assert(s->protocol == IPPROTO_UDP && s->udp.state == UDP_BLOCKED && s->socket == -1);
+            blocked++;
+        }
+    }
+    assert(blocked == UDP_BLOCKED_MAX && active_seen == 1 && closed_seen == 1);
+    assert(active->udp.state == UDP_ACTIVE && active->udp.uid == 12345);
+    assert(active->socket == last_socket && closed->udp.state == UDP_CLOSED);
+    size_t off = blocked_packet(packet, version, 1000, 5000);
+    assert(!has_udp_session(args, packet, packet + off)); // Oldest blocked records are evicted.
+    off = blocked_packet(packet, version, 1000 + UDP_BLOCKED_MAX + 49, 5000);
+    assert(has_udp_session(args, packet, packet + off));
+    int before = allocations;
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, 54321);
+    assert(allocations == before && args->ctx->ng_session->udp.uid == 54321);
+    clear(args->ctx);
+    assert(allocations == 0 && sockets == 0);
+}
+
+void test_udp_blocked_duplicates(struct arguments *args) {
+    uint8_t packet[48];
+    size_t off = blocked_packet(packet, 4, 1234, 53);
+    // Forwarded DNS is rechecked against policy on each packet, even for an existing flow.
+    for (int i = 0; i < 100; i++) {
+        block_udp(args, packet, off + sizeof(struct udphdr), packet + off, i);
+        assert(allocations == 1 && args->ctx->ng_session->next == NULL);
+        assert(args->ctx->ng_session->udp.uid == i);
+    }
+    clear(args->ctx);
+    assert(allocations == 0);
+}
+
 static int udp_server(int version, uint16_t *port) {
     int family = (version == 4 ? AF_INET : AF_INET6);
     int fd = __real_socket(family, SOCK_DGRAM | SOCK_NONBLOCK, IPPROTO_UDP);

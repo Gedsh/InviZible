@@ -10,6 +10,9 @@ import org.junit.runner.RunWith;
 public final class UdpTest extends NativeTestSupport {
     @Test public void truncatedDnsHeader() { check("udpShortDns"); }
     @Test public void socketSetupFailureCleanup() { check("udpSocketCleanup"); }
+    @Test public void ipv4BlockedFlowsStayBounded() { check("udpBlocked4Limit"); }
+    @Test public void ipv6BlockedFlowsStayBounded() { check("udpBlocked6Limit"); }
+    @Test public void repeatedBlockedDnsReusesRecord() { check("udpBlockedDuplicates"); }
     @Test public void ipv4UdpForwarding() { check("udp4Direct"); }
     @Test public void ipv4UdpRedirect() { check("udp4Redirect"); }
     @Test public void ipv6UdpForwarding() { check("udp6Direct"); }

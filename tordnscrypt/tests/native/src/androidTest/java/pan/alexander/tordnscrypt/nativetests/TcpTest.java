@@ -11,6 +11,7 @@ public final class TcpTest extends NativeTestSupport {
     @Test public void tcpOptionsAndFailedSetupCleanup() { check("memoryTcp"); }
     @Test public void socketSetupFailureCleanup() { check("tcpSocketCleanup"); }
     @Test public void queuedDataCleanupIsIdempotent() { check("tcpDataCleanup"); }
+    @Test public void closedSessionsReleaseQueuedPayloads() { check("tcpClosedDataCleanup"); }
     @Test public void ipv4TcpConnectionAndData() { check("tcp4"); }
     @Test public void ipv6TcpConnectionAndData() { check("tcp6"); }
     @Test public void socksWithoutAuthentication() { check("socks4NoAuth"); }

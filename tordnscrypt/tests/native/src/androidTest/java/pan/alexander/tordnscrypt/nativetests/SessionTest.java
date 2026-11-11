@@ -9,4 +9,10 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public final class SessionTest extends NativeTestSupport {
     @Test public void stoppedEventLoopReleasesArguments() { check("eventLoopShutdown"); }
+    @Test public void idleClosedUdpExpiresOnTime() { check("idleUdpClosed"); }
+    @Test public void idleBlockedUdpExpiresOnTime() { check("idleUdpBlocked"); }
+    @Test public void idleClosedTcpExpiresOnTime() { check("idleTcpClosed"); }
+    @Test public void finishingUdpSchedulesCleanup() { check("idleUdpFinishing"); }
+    @Test public void closingTcpSchedulesCleanup() { check("idleTcpClosing"); }
+    @Test public void earliestCleanupDeadlineWins() { check("idleMixed"); }
 }

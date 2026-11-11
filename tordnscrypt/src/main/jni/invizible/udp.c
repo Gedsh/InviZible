@@ -205,8 +205,39 @@ void block_udp(const struct arguments *args,
     log_android(ANDROID_LOG_INFO, "UDP blocked session from %s/%u to %s/%u",
                 source, ntohs(udphdr->source), dest, ntohs(udphdr->dest));
 
-    // Register session
-    struct ng_session *s = ng_malloc(sizeof(struct ng_session), "udp session block");
+    // Blocked flows have no socket or epoll registration, so their records can be reused.
+    int blocked = 0;
+    struct ng_session **match = NULL;
+    struct ng_session **oldest = NULL;
+    for (struct ng_session **link = &args->ctx->ng_session; *link != NULL; link = &(*link)->next) {
+        struct ng_session *cur = *link;
+        if (cur->protocol != IPPROTO_UDP || cur->udp.state != UDP_BLOCKED)
+            continue;
+        blocked++;
+        if (cur->udp.version == version && cur->udp.source == udphdr->source &&
+            cur->udp.dest == udphdr->dest &&
+            (version == 4 ? cur->udp.saddr.ip4 == ip4->saddr && cur->udp.daddr.ip4 == ip4->daddr
+                          : memcmp(&cur->udp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
+                            memcmp(&cur->udp.daddr.ip6, &ip6->ip6_dst, 16) == 0)) {
+            match = link;
+            break;
+        }
+        // The tail is older when timestamps tie because new records are prepended.
+        if (oldest == NULL || cur->udp.time <= (*oldest)->udp.time)
+            oldest = link;
+    }
+
+    struct ng_session *s;
+    struct ng_session **reuse = (match != NULL ? match : blocked >= UDP_BLOCKED_MAX ? oldest : NULL);
+    if (reuse != NULL) {
+        s = *reuse;
+        *reuse = s->next;
+    } else {
+        s = ng_malloc(sizeof(struct ng_session), "udp session block");
+        if (s == NULL)
+            return;
+    }
+    memset(s, 0, sizeof(*s));
     s->protocol = IPPROTO_UDP;
 
     s->udp.time = time(NULL);

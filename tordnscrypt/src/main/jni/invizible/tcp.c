@@ -128,6 +128,10 @@ int check_tcp_session(const struct arguments *args, struct ng_session *s,
         s->tcp.state = TCP_CLOSE;
     }
 
+    // Keep the closed-session metadata for late packets, but no payload can be forwarded now.
+    if (s->tcp.state == TCP_CLOSE)
+        clear_tcp_data(&s->tcp);
+
     if ((s->tcp.state == TCP_CLOSING || s->tcp.state == TCP_CLOSE) &&
         (s->tcp.sent || s->tcp.received)) {
         account_usage(args, s->tcp.version, IPPROTO_TCP,

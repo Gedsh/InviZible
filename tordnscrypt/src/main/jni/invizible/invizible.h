@@ -74,6 +74,7 @@
 #define UDP_TIMEOUT_53 15 // seconds
 #define UDP_TIMEOUT_ANY 300 // seconds
 #define UDP_KEEP_TIMEOUT 60 // seconds
+#define UDP_BLOCKED_MAX 1024 // cached blocked flows, independent of the active socket limit
 #define TCP_YIELD 10 // packets
 #define UDP_YIELD 10 // packets
 
@@ -89,6 +90,7 @@
 #define SEND_BUF_DEFAULT 163840 // bytes
 
 #define UID_MAX_AGE 30000 // milliseconds
+#define UID_CACHE_MAX 4096 // entries; bound proc-table snapshots independently of traffic rate
 
 #define SOCKS5_NONE 1
 #define SOCKS5_HELLO 2

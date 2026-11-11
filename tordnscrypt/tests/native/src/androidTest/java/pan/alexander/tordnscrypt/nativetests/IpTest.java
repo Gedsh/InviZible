@@ -10,6 +10,10 @@ import org.junit.runner.RunWith;
 public final class IpTest extends NativeTestSupport {
     @Test public void packetHeaderBounds() { check("memoryPackets"); }
     @Test public void uidLookupClosesMalformedProcFile() { check("uidFileCleanup"); }
+    @Test public void uidLookupSurvivesCacheAllocationFailure() { check("uidCacheAllocationFailure"); }
+    @Test public void uidCacheRefreshDoesNotDuplicateEntries() { check("uidCacheRefresh"); }
+    @Test public void uidCacheRemainsBounded() { check("uidCacheLimit"); }
+    @Test public void uidCacheSeparatesProtocolsAndAddressFamilies() { check("uidCacheKeys"); }
     @Test public void ipv4HeaderOptions() { check("udp4Options"); }
     @Test public void ipv6ExtensionHeaders() { check("udp6Extensions"); }
 }

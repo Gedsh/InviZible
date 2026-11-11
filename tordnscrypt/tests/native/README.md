@@ -13,7 +13,7 @@ owner-specific signing files. Set `ANDROID_SERIAL` to select a device.
 Reports are written to `build/native-tests/reports/androidTests/connected/`
 and `build/native-tests/outputs/androidTest-results/connected/`.
 
-The 28 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
+The 42 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
 credential byte limits, failed TCP setup, socket/file cleanup, event-loop
 shutdown, UDP forwarding and redirects, IP options/extensions, TCP data and
 shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
@@ -38,6 +38,15 @@ The comparison across protocols remains in `compatibility_tests.c` and
 `NativeBaselineComparisonTest`. The former combined resource case is split into
 individual socket, file, DHCP, queued-data, and shutdown tests, so JUnit reports
 each failure against its source. Existing assertions and scenarios are retained.
+The IP cases also inject initial allocation and resize failures into the UID cache,
+check deduplication and refresh, verify its 4,096-entry cap, and preserve IPv4/IPv6
+and TCP/UDP lookup behavior. A TCP case checks that closing frees queued payloads
+immediately while retaining the metadata needed for late packets and usage accounting.
+Six event-loop cases intercept polling and advance a test clock to verify idle
+UDP/TCP cleanup deadlines, closing-state transitions, earliest-deadline selection,
+and eventual release of session records without waiting minutes on the phone.
+Three UDP cases verify the independent 1,024-record blocked-flow cap, IPv4/IPv6
+eviction without disturbing active sessions, and reuse of repeated blocked DNS flows.
 
 Three additional Android JUnit classes exercise JNI callers:
 
@@ -57,7 +66,7 @@ Three additional Android JUnit classes exercise JNI callers:
   NUL, addresses, null fields, and disabled settings.
 
 Gradle stages the production `NativeTunnel.java` as a generated test source;
-there is no separately maintained copy of the owner. The full run contains 56
+there is no separately maintained copy of the owner. The full run contains 70
 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one

@@ -41,12 +41,40 @@ static const char *run_case(const char *id) {
         test_icmp_socket_cleanup(&args);
     else if (strcmp(id, "uidFileCleanup") == 0)
         test_uid_file_cleanup();
+    else if (strcmp(id, "uidCacheAllocationFailure") == 0)
+        test_uid_cache_allocation_failure();
+    else if (strcmp(id, "uidCacheRefresh") == 0)
+        test_uid_cache_refresh();
+    else if (strcmp(id, "uidCacheLimit") == 0)
+        test_uid_cache_limit();
+    else if (strcmp(id, "uidCacheKeys") == 0)
+        test_uid_cache_keys();
     else if (strcmp(id, "dhcpResponseBounds") == 0)
         test_dhcp_response_bounds(&args);
     else if (strcmp(id, "tcpDataCleanup") == 0)
         test_tcp_data_cleanup();
+    else if (strcmp(id, "tcpClosedDataCleanup") == 0)
+        test_tcp_closed_data_cleanup(&args);
     else if (strcmp(id, "eventLoopShutdown") == 0)
         test_event_loop_shutdown(&args);
+    else if (strcmp(id, "idleUdpClosed") == 0)
+        test_event_loop_idle_cleanup(&args, 0);
+    else if (strcmp(id, "idleUdpBlocked") == 0)
+        test_event_loop_idle_cleanup(&args, 1);
+    else if (strcmp(id, "idleTcpClosed") == 0)
+        test_event_loop_idle_cleanup(&args, 2);
+    else if (strcmp(id, "idleUdpFinishing") == 0)
+        test_event_loop_idle_cleanup(&args, 3);
+    else if (strcmp(id, "idleTcpClosing") == 0)
+        test_event_loop_idle_cleanup(&args, 4);
+    else if (strcmp(id, "idleMixed") == 0)
+        test_event_loop_idle_cleanup(&args, 5);
+    else if (strcmp(id, "udpBlocked4Limit") == 0)
+        test_udp_blocked_limit(&args, 4);
+    else if (strcmp(id, "udpBlocked6Limit") == 0)
+        test_udp_blocked_limit(&args, 6);
+    else if (strcmp(id, "udpBlockedDuplicates") == 0)
+        test_udp_blocked_duplicates(&args);
     else if (strcmp(id, "udpShortDns") == 0)
         test_udp_short_dns(&args);
     else if (strcmp(id, "memorySocks5") == 0)

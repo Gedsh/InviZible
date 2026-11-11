@@ -136,18 +136,24 @@ void *handle_events(void *a) {
                     }
                 } else if (s->protocol == IPPROTO_UDP) {
                     del = check_udp_session(args, s, sessions, maxsessions);
-                    if (s->udp.state == UDP_ACTIVE && !del) {
-                        int stimeout = s->udp.time +
-                                       get_udp_timeout(&s->udp, sessions, maxsessions) - now + 1;
-                        if (stimeout > 0 && stimeout < timeout)
+                    if (!del) {
+                        int lifetime = (s->udp.state == UDP_CLOSED || s->udp.state == UDP_BLOCKED
+                                ? UDP_KEEP_TIMEOUT : get_udp_timeout(&s->udp, sessions, maxsessions));
+                        int stimeout = s->udp.time + lifetime - now + 1;
+                        if (stimeout < 1)
+                            stimeout = 1;
+                        if (stimeout < timeout)
                             timeout = stimeout;
                     }
                 } else if (s->protocol == IPPROTO_TCP) {
                     del = check_tcp_session(args, s, sessions, maxsessions);
-                    if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE && !del) {
-                        int stimeout = s->tcp.time +
-                                       get_tcp_timeout(&s->tcp, sessions, maxsessions) - now + 1;
-                        if (stimeout > 0 && stimeout < timeout)
+                    if (!del) {
+                        int lifetime = (s->tcp.state == TCP_CLOSE
+                                ? TCP_KEEP_TIMEOUT : get_tcp_timeout(&s->tcp, sessions, maxsessions));
+                        int stimeout = s->tcp.time + lifetime - now + 1;
+                        if (stimeout < 1)
+                            stimeout = 1;
+                        if (stimeout < timeout)
                             timeout = stimeout;
                     }
                 }

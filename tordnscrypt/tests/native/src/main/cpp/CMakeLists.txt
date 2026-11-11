@@ -20,9 +20,10 @@ function(add_native_tests target source)
     # Do not run the application's JNI class lookups in the test APK.
     set_source_files_properties("${source}/invizible.c" PROPERTIES
             COMPILE_DEFINITIONS "JNI_OnLoad=invizible_app_JNI_OnLoad;JNI_OnUnload=invizible_app_JNI_OnUnload")
-    set(wraps ng_malloc ng_calloc ng_free socket close fcntl connect
+    set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp
-            get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage)
+            get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
+            epoll_wait get_ms)
     if(ANDROID_ABI STREQUAL "x86_64")
         list(APPEND wraps calc_checksum)
         target_compile_options(${target} PRIVATE -mssse3 -DNEON2SSE_DISABLE_PERFORMANCE_WARNING)
