@@ -1,5 +1,74 @@
 #include "test_support.h"
 
+void test_udp_dns_counts(int version, int response) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    struct context ctx = {.sdk = 29};
+    struct arguments args = {.ctx = &ctx, .tun = tunnel[1]};
+    real_udp_packets = 1;
+    _Alignas(8) uint8_t packet[2048], output[2048];
+    const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+    if (!response) {
+        const uint16_t counts[] = {2, UINT16_MAX, 0, 1, 2};
+        for (size_t i = 0; i < sizeof(counts) / sizeof(*counts); i++) {
+            size_t dns_len = i == 3 ? 17 : 12;
+            size_t off = ip_header(packet, version, IPPROTO_UDP, 8 + dns_len, dest);
+            struct udphdr *udp = (void *) (packet + off);
+            udp->source = htons(12345); udp->dest = htons(53);
+            udp->len = htons(8 + dns_len);
+            uint8_t *dns = packet + off + 8;
+            store16(dns, 1234); dns[2] = 1; dns[3] = 0x10; // RD and CD.
+            if (i == 4) dns[2] |= 5 << 3; // UPDATE is outside RFC 9619's QUERY rule.
+            store16(dns + 4, counts[i]);
+            if (i == 3) { store16(dns + 13, 1); store16(dns + 15, 1); }
+            expect_destination(version, dest, 53);
+            assert(handle_udp(&args, packet, off + 8 + dns_len, packet + off, own_uid, NULL, -1) == 1);
+            if (i < 2) {
+                assert(ctx.ng_session == NULL && sockets == 0 && allocations == 0 && destination_calls == 0);
+                size_t len = tun_packet(tunnel[0], output, version, IPPROTO_UDP);
+                assert(len == off + 8 + 12);
+                const struct udphdr *reply_udp = (const void *) (output + off);
+                assert(reply_udp->source == htons(53) && reply_udp->dest == htons(12345));
+                const uint8_t *reply = output + off + 8;
+                assert(load16(reply) == 1234 && reply[2] == 0x81 && reply[3] == 0x11);
+                for (int field = 4; field < 12; field += 2) assert(load16(reply + field) == 0);
+            } else {
+                struct ng_session *s = ctx.ng_session;
+                assert(s != NULL && destination_calls == 1 && !is_readable(tunnel[0]));
+                close(s->socket);
+                ng_free(s, __FILE__, __LINE__);
+                ctx.ng_session = NULL;
+            }
+        }
+    } else {
+        int upstream[2];
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+        real_network = 1;
+        struct ng_session s = {.protocol = IPPROTO_UDP, .socket = upstream[0]};
+        s.udp.version = version; s.udp.source = htons(12345); s.udp.dest = htons(53); s.udp.mss = 1500;
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        const uint16_t counts[] = {0, 2, UINT16_MAX};
+        for (size_t i = 0; i < sizeof(counts) / sizeof(*counts); i++) {
+            uint8_t dns[12] = {0};
+            dns[2] = 0x81; store16(dns + 4, counts[i]);
+            s.udp.state = UDP_ACTIVE;
+            assert(send(upstream[1], dns, sizeof(dns), 0) == sizeof(dns));
+            check_udp_socket(&args, &event);
+            if (i == 0) {
+                tun_packet(tunnel[0], output, version, IPPROTO_UDP);
+                assert(memcmp(output + (version == 4 ? 28 : 48), dns, sizeof(dns)) == 0);
+            }
+            assert(!is_readable(tunnel[0]) && resolved_calls == 0 && allocations == 0);
+            assert(s.udp.state == UDP_FINISHING);
+        }
+        close(upstream[0]); close(upstream[1]);
+    }
+    assert(allocations == 0 && sockets == 0);
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_destination(const struct arguments *args) {
     for (int version = 4; version <= 6; version += 2) {
         const char *direct = version == 4 ? "198.51.100.1" : "fe80::1";

@@ -27,6 +27,46 @@ static const char *run_case(const char *id) {
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
     if (strcmp(id, "jniLoadFailures") == 0)
         test_jni_load_failures();
+    else if (strcmp(id, "dnsQuestionCounts") == 0)
+        test_dns_question_counts();
+    else if (strcmp(id, "dnsTcpFraming") == 0)
+        test_dns_tcp_framing();
+    else if (strcmp(id, "udpDnsRequest4") == 0)
+        test_udp_dns_counts(4, 0);
+    else if (strcmp(id, "udpDnsRequest6") == 0)
+        test_udp_dns_counts(6, 0);
+    else if (strcmp(id, "udpDnsResponse4") == 0)
+        test_udp_dns_counts(4, 1);
+    else if (strcmp(id, "udpDnsResponse6") == 0)
+        test_udp_dns_counts(6, 1);
+    else if (strcmp(id, "tcpDnsResponse4") == 0)
+        test_tcp_dns_counts(4);
+    else if (strcmp(id, "tcpDnsResponse6") == 0)
+        test_tcp_dns_counts(6);
+    else if (strcmp(id, "tcpDnsCoalesced") == 0)
+        test_tcp_dns_buffer(0);
+    else if (strcmp(id, "tcpDnsPartialTail") == 0)
+        test_tcp_dns_buffer(1);
+    else if (strcmp(id, "tcpDnsByteSplits") == 0)
+        test_tcp_dns_buffer(2);
+    else if (strcmp(id, "tcpDnsAllocFailure") == 0)
+        test_tcp_dns_buffer(3);
+    else if (strcmp(id, "tcpDnsResizeFailure") == 0)
+        test_tcp_dns_buffer(4);
+    else if (strcmp(id, "tcpDnsPartialTimeout") == 0)
+        test_tcp_dns_buffer(5);
+    else if (strcmp(id, "tcpDnsPartialEof") == 0)
+        test_tcp_dns_buffer(6);
+    else if (strcmp(id, "tcpDnsWindow") == 0)
+        test_tcp_dns_buffer(7);
+    else if (strcmp(id, "tcpDnsWriteFailure") == 0)
+        test_tcp_dns_buffer(8);
+    else if (strcmp(id, "tcpDnsTeardown") == 0)
+        test_tcp_dns_buffer(9);
+    else if (strcmp(id, "tcpDnsMaxFrame") == 0)
+        test_tcp_dns_buffer(10);
+    else if (strcmp(id, "tcpDnsUpstreamBackpressure") == 0)
+        test_tcp_dns_buffer(11);
     else if (strcmp(id, "tcpDestination") == 0)
         test_tcp_destination(&args);
     else if (strcmp(id, "udpDestination") == 0)

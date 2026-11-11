@@ -61,23 +61,65 @@ int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char 
     return -1;
 }
 
+bool dns_has_multiple_questions(const uint8_t *data, size_t datalen) {
+    // RFC 9619 applies to standard QUERY messages, including responses. Zero is valid.
+    return datalen >= sizeof(struct dns_header) && (data[2] & 0x78) == 0 &&
+           read_net16(data + 4) > 1;
+}
+
+bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t datalen) {
+    while (datalen > 0) {
+        if (cur->dns_body_remaining) {
+            size_t skip = (datalen < cur->dns_body_remaining ? datalen : cur->dns_body_remaining);
+            cur->dns_body_remaining -= skip;
+            data += skip;
+            datalen -= skip;
+        } else {
+            size_t target = 2;
+            if (cur->dns_header_used >= 2) {
+                size_t length = read_net16(cur->dns_header);
+                target += (length < sizeof(struct dns_header) ? length : sizeof(struct dns_header));
+            }
+            size_t take = target - cur->dns_header_used;
+            if (take > datalen)
+                take = datalen;
+            memcpy(cur->dns_header + cur->dns_header_used, data, take);
+            cur->dns_header_used += take;
+            data += take;
+            datalen -= take;
+            if (cur->dns_header_used >= 2) {
+                size_t length = read_net16(cur->dns_header);
+                size_t header = (length < sizeof(struct dns_header) ? length : sizeof(struct dns_header));
+                if (cur->dns_header_used == header + 2) {
+                    if (dns_has_multiple_questions(cur->dns_header + 2, header))
+                        return false;
+                    cur->dns_body_remaining = length - header;
+                    cur->dns_header_used = 0;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 void parse_dns_response(const struct arguments *args, const struct ng_session *s,
                         const uint8_t *data, size_t *datalen) {
-    if (*datalen < sizeof(struct dns_header) + 1) {
+    if (dns_has_multiple_questions(data, *datalen)) {
+        log_android(ANDROID_LOG_WARN, "DNS response has multiple questions");
+        return;
+    }
+    if (*datalen < sizeof(struct dns_header)) {
         log_android(ANDROID_LOG_WARN, "DNS response length %d", *datalen);
         return;
     }
 
     // Check if standard DNS query
-    // TODO multiple qnames
     struct dns_header *dns = (struct dns_header *) data;
     int qcount = ntohs(dns->q_count);
     int acount = ntohs(dns->ans_count);
     uint16_t rcode = dns->rcode;
     if (dns->qr == 1 && dns->opcode == 0 && qcount > 0) {
         log_android(ANDROID_LOG_DEBUG, "DNS response qcount %d acount %d", qcount, acount);
-        if (qcount > 1)
-            log_android(ANDROID_LOG_WARN, "DNS response qcount %d acount %d", qcount, acount);
 
         // http://tools.ietf.org/html/rfc1035
         char name[DNS_QNAME_MAX + 1];
@@ -92,7 +134,6 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         for (int q = 0; q < 1; q++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
             if (off > 0 && off + 4 <= *datalen) {
-                // TODO multiple qnames?
                 if (q == 0) {
                     strcpy(qname, name);
                     question_type = read_net16(data + off);

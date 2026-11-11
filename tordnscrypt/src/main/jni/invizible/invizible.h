@@ -229,6 +229,14 @@ struct tcp_session {
     bool fin_received;
     bool fin_acked;
     uint32_t fin_seq; // App FIN position, excluding the FIN byte.
+    uint8_t dns_header[14]; // TCP length prefix and DNS header for incremental validation.
+    uint8_t dns_header_used;
+    uint16_t dns_body_remaining;
+    uint8_t *dns_response; // At most one length-prefixed frame (65537 bytes).
+    size_t dns_response_size;
+    size_t dns_response_used;
+    size_t dns_response_sent;
+    bool dns_response_ready;
     struct segment *forward;
 };
 
@@ -408,6 +416,10 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
 void check_udp_socket(const struct arguments *args, const struct epoll_event *ev);
 
 int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char *qname);
+
+bool dns_has_multiple_questions(const uint8_t *data, size_t datalen);
+
+bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t datalen);
 
 void parse_dns_response(const struct arguments *args, const struct ng_session *session,
                         const uint8_t *data, size_t *datalen);

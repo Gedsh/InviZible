@@ -30,6 +30,22 @@ Ten TCP shutdown cases use real local socket pairs to verify IPv4/IPv6 data
 after upstream EOF, app-first and simultaneous close, FIN behind a sequence gap,
 repeated FIN, data queued before EOF, timeout/reset cleanup, failed write shutdown,
 and stored UID logging.
+Eight DNS question-count cases cover RFC 9619 handling for standard QUERY messages:
+UDP requests with more than one question receive a header-only FORMERR before any
+upstream socket is opened; UDP replies with multiple questions are dropped, and TCP
+replies reset the stream. Zero-question messages and other opcodes retain their existing
+forwarding behavior. TCP responses retain at most one length-prefixed DNS frame per
+session (65,537 bytes maximum, allocated to its declared size). Every complete frame is
+inspected before forwarding, including coalesced messages and split headers/bodies.
+Rewriting updates the TCP DNS length prefix. Output respects the app window and MSS;
+pending output resumes during event-loop monitoring when the app window reopens,
+independently of upstream socket writability. Each monitor pass sends at most TCP_YIELD
+packets, with a short poll deadline if writable-to-app output remains. Twelve TCP cases
+cover domain/HTTPS filtering and callbacks across coalesced and byte-split replies,
+maximum-size frames, window pressure, allocation/output failures, partial EOF, timeout,
+and tunnel teardown. The backpressure case fills the upstream send buffer, reopens the
+app window through an actual TCP ACK, and verifies progress across monitor passes while
+epoll reports no upstream readiness. All release the retained frame through normal TCP cleanup.
 These cases use real `fcntl(F_GETFD)` checks to verify that the retained socket
 stays open after EOF and is actually closed after completion or error cleanup.
 EOF disables upstream reads while app data continues to drain. App FIN shuts

@@ -91,6 +91,11 @@ void test_dhcp_allocation_failure(const struct arguments *args);
 void test_tun_allocation_failure(const struct arguments *args);
 void test_names(void); // dns.c
 void test_dns(const struct arguments *args);
+void test_dns_question_counts(void);
+void test_dns_tcp_framing(void);
+void test_udp_dns_counts(int version, int response);
+void test_tcp_dns_counts(int version);
+void test_tcp_dns_buffer(int kind);
 void dns_flows(void);
 void test_packets(struct arguments *args); // ip.c
 void test_uid_file_cleanup(void);

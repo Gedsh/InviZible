@@ -143,6 +143,13 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
 
                 s->udp.received += bytes;
 
+                if (ntohs(s->udp.dest) == 53 && dns_has_multiple_questions(buffer, (size_t) bytes)) {
+                    log_android(ANDROID_LOG_WARN, "Dropping DNS response with multiple questions");
+                    s->udp.state = UDP_FINISHING;
+                    ng_free(buffer, __FILE__, __LINE__);
+                    return;
+                }
+
                 // Process DNS response
                 if (ntohs(s->udp.dest) == 53)
                     parse_dns_response(args, s, buffer, (size_t *) &bytes);
@@ -285,6 +292,29 @@ jboolean handle_udp(const struct arguments *args,
         return 0;
     }
 
+    if (ntohs(udphdr->dest) == 53 && datalen >= sizeof(struct dns_header) &&
+        (data[2] & 0x80) == 0 && dns_has_multiple_questions(data, datalen)) {
+        // A header-only FORMERR avoids reflecting malformed names or section counts.
+        struct dns_header response = {0};
+        const struct dns_header *request = (const void *) data;
+        response.id = request->id;
+        response.qr = 1;
+        response.rd = request->rd;
+        response.cd = request->cd;
+        response.rcode = 1;
+        struct udp_session reply = {.version = version, .source = udphdr->source,
+                                     .dest = udphdr->dest};
+        if (version == 4) {
+            reply.saddr.ip4 = ip4->saddr;
+            reply.daddr.ip4 = ip4->daddr;
+        } else {
+            memcpy(&reply.saddr.ip6, &ip6->ip6_src, 16);
+            memcpy(&reply.daddr.ip6, &ip6->ip6_dst, 16);
+        }
+        log_android(ANDROID_LOG_WARN, "DNS request has multiple questions; returning FORMERR");
+        return write_udp(args, &reply, (uint8_t *) &response, sizeof(response)) >= 0;
+    }
+
     // Search session
     struct ng_session *cur = args->ctx->ng_session;
     while (cur != NULL &&
@@ -416,7 +446,6 @@ jboolean handle_udp(const struct arguments *args,
             for (int q = 0; q < 1; q++) {
                 off = get_qname(data, datalen, (uint16_t) off, qname);
                 if (off > 0 && off + 4 <= datalen) {
-                    // TODO multiple qnames?
                     if (q == 0) {
                         qtype = read_net16(data + off);
                         qclass = read_net16(data + off + 2);

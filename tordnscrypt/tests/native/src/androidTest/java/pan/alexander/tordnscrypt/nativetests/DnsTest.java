@@ -8,6 +8,8 @@ import org.junit.runner.RunWith;
 /** Regressions for dns.c. */
 @RunWith(AndroidJUnit4.class)
 public final class DnsTest extends NativeTestSupport {
+    @Test public void questionCountsRespectOpcodeAndDoNotRewriteMalformedReplies() { check("dnsQuestionCounts"); }
+    @Test public void tcpQuestionValidationHandlesSplitAndCoalescedFrames() { check("dnsTcpFraming"); }
     @Test public void hinfoAllocationFailure() { check("dnsAllocationFailure"); }
     @Test public void dnsNameBoundsAndCompression() { check("memoryNames"); }
     @Test public void malformedDnsResponses() { check("memoryDns"); }

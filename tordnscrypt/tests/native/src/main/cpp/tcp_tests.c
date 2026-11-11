@@ -413,6 +413,271 @@ void test_tcp_connect_failure(int version, int transient) {
 #endif
 }
 
+void test_tcp_dns_counts(int version) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int kind = 0; kind < 4; kind++) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(pipe(tunnel) == 0);
+        real_network = 1;
+        struct context ctx = {.sdk = 29};
+        struct arguments args = {.ctx = &ctx, .tun = tunnel[1], .rcode = 3};
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED;
+        s.tcp.source = htons(12345); s.tcp.dest = htons(53);
+        s.tcp.mss = 1500; s.tcp.recv_window = s.tcp.send_window = 16000;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        uint8_t frame[64] = {0};
+        _Alignas(8) uint8_t output[2048];
+        store16(frame, 12); frame[4] = 0x81;
+        size_t len = 14;
+        if (kind == 0) {
+            store16(frame + 6, 2);
+            assert(send(stream[1], frame, 5, 0) == 5);
+            check_tcp_socket(&args, &event, -1);
+            check_tcp_socket(&args, &event, -1);
+            assert(!is_readable(tunnel[0]) && s.tcp.local_seq == 2000 && s.tcp.dns_header_used == 5);
+            assert(send(stream[1], frame + 5, len - 5, 0) == len - 5);
+        } else if (kind == 1) {
+            memcpy(frame + 14, frame, 14);
+            store16(frame + 20, 2);
+            len = 28;
+            assert(send(stream[1], frame, len, 0) == len);
+        } else if (kind == 2) {
+            assert(send(stream[1], frame, len, 0) == len); // Zero questions passes unchanged.
+        } else {
+            // A blocked single-question A reply must keep its TCP length prefix consistent.
+            store16(frame, 33); store16(frame + 6, 1); store16(frame + 8, 1);
+            store16(frame + 15, 1); store16(frame + 17, 1);
+            frame[19] = 0xC0; frame[20] = 12;
+            store16(frame + 21, 1); store16(frame + 23, 1); store16(frame + 29, 4);
+            frame[31] = 192; frame[33] = 2; frame[34] = 1;
+            len = 35; block_domain = 1;
+            assert(send(stream[1], frame, len, 0) == len);
+        }
+        for (int turn = 0; turn < 8; turn++) {
+            check_tcp_socket(&args, &event, -1);
+            if (is_readable(tunnel[0])) {
+                if (kind == 1 && s.tcp.state != TCP_CLOSING) {
+                    half_close_reply(tunnel[0], output, version); // The preceding valid frame is preserved.
+                } else
+                    break;
+            }
+        }
+        const struct tcphdr *reply = half_close_reply(tunnel[0], output, version);
+        if (kind < 2) {
+            assert(reply->rst && s.tcp.state == TCP_CLOSING && allocations == 1);
+            assert(check_tcp_session(&args, &s, 0, SESSION_MAX) == 0);
+            assert(s.socket == -1 && __real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);
+        } else {
+            assert(!reply->rst && s.tcp.state == TCP_ESTABLISHED);
+            const uint8_t *dns = output + (version == 4 ? 40 : 60);
+            if (kind == 2) assert(memcmp(dns, frame, len) == 0);
+            else {
+                assert(load16(dns) == 17 && (dns[5] & 15) == 3 && load16(dns + 8) == 0);
+                assert(s.tcp.local_seq == 2019 && resolved_calls > 0);
+            }
+            close(stream[0]);
+        }
+        assert(allocations == 0 && !is_readable(tunnel[0]));
+        block_domain = 0;
+        close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+    }
+#endif
+}
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+static void dns_filter_frame(uint8_t *frame, uint16_t type, uint16_t id) {
+    memset(frame, 0, 35);
+    store16(frame, 33); store16(frame + 2, id); frame[4] = 0x81;
+    store16(frame + 6, 1); store16(frame + 8, 1);
+    store16(frame + 15, 1); store16(frame + 17, 1);
+    frame[19] = 0xC0; frame[20] = 12;
+    store16(frame + 21, type); store16(frame + 23, 1); store16(frame + 29, 4);
+    frame[31] = 192; frame[33] = 2; frame[34] = 1;
+}
+
+static size_t collect_dns_test(struct ng_session *s, int tunnel,
+                               uint8_t *collected, int acknowledge) {
+    size_t total = 0;
+    _Alignas(8) uint8_t packet[2048];
+    while (is_readable(tunnel)) {
+        size_t len = tun_packet(tunnel, packet, s->tcp.version, IPPROTO_TCP);
+        size_t off = s->tcp.version == 4 ? 20 : 40;
+        const struct tcphdr *tcp = (const void *) (packet + off);
+        size_t header = off + tcp->doff * 4;
+        assert(!tcp->rst && len >= header && total + len - header <= 65537);
+        memcpy(collected + total, packet + header, len - header);
+        total += len - header;
+        if (acknowledge) {
+            s->tcp.acked = s->tcp.local_seq;
+            s->tcp.unconfirmed = 0;
+        }
+    }
+    return total;
+}
+
+static size_t drain_dns_test(const struct arguments *args, struct ng_session *s,
+                             int tunnel, uint8_t *collected, int acknowledge) {
+    size_t total = 0;
+    for (int turn = 0; turn < 2048 && s->tcp.state == TCP_ESTABLISHED &&
+         (is_readable(s->socket) || s->tcp.dns_response_ready); turn++) {
+        if (get_send_window(&s->tcp) == 0) break;
+        struct epoll_event event = {.events = EPOLLIN | EPOLLOUT, .data.ptr = s};
+        check_tcp_socket(args, &event, -1);
+        assert(s->tcp.dns_response_size <= 65537);
+        total += collect_dns_test(s, tunnel, collected + total, acknowledge);
+    }
+    return total;
+}
+#endif
+
+void test_tcp_dns_buffer(int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        // Preserve packet boundaries when one monitor pass flushes several packets.
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        real_network = 1;
+        struct context ctx = {.sdk = 29};
+        struct arguments args = {.ctx = &ctx, .tun = tunnel[1], .rcode = 3};
+        struct ng_session *s = ng_calloc(1, sizeof(*s), "test DNS session");
+        ctx.ng_session = s;
+        s->protocol = IPPROTO_TCP; s->socket = stream[0];
+        s->tcp.version = version; s->tcp.state = TCP_ESTABLISHED;
+        s->tcp.source = htons(12345); s->tcp.dest = htons(53);
+        s->tcp.mss = kind == 7 || kind == 11 ? 7 : 1500;
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                         version == 4 ? "10.0.0.2" : "2001:db8::1", &s->tcp.saddr) == 1);
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                         version == 4 ? "203.0.113.2" : "2001:db8::2", &s->tcp.daddr) == 1);
+        s->tcp.recv_window = s->tcp.send_window = 16000;
+        s->tcp.local_seq = s->tcp.acked = 2000; s->tcp.remote_seq = 1000;
+        s->tcp.time = time(NULL);
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = s};
+        uint8_t *input = calloc(1, 65537), *output = malloc(65537);
+        assert(input != NULL && output != NULL);
+        dns_filter_frame(input, DNS_QTYPE_A, 1234);
+        dns_filter_frame(input + 35, DNS_QTYPE_HTTPS, 5678);
+        block_domain = kind <= 2;
+        if (kind <= 2) {
+            size_t total = 0;
+            if (kind == 0) {
+                assert(send(stream[1], input, 70, 0) == 70);
+                total = drain_dns_test(&args, s, tunnel[0], output, 1);
+            } else if (kind == 1) {
+                assert(send(stream[1], input, 40, 0) == 40);
+                total = drain_dns_test(&args, s, tunnel[0], output, 1);
+                assert(total == 19 && s->tcp.dns_response_used == 5);
+                assert(send(stream[1], input + 40, 30, 0) == 30);
+                total += drain_dns_test(&args, s, tunnel[0], output + total, 1);
+            } else {
+                for (size_t i = 0; i < 70; i++) {
+                    assert(send(stream[1], input + i, 1, 0) == 1);
+                    total += drain_dns_test(&args, s, tunnel[0], output + total, 1);
+                    assert(total == (i < 34 ? 0 : i < 69 ? 19 : 38));
+                }
+            }
+            assert(total == 38 && load16(output) == 17 && load16(output + 19) == 17);
+            assert(load16(output + 2) == 1234 && load16(output + 21) == 5678);
+            assert((output[5] & 15) == 3 && (output[24] & 15) == 3);
+            assert(load16(output + 8) == 0 && load16(output + 27) == 0);
+            assert(resolved_calls == version / 2 - 1); // One A callback per version; HTTPS has none.
+            assert(s->tcp.dns_response == NULL && allocations == 1);
+        } else if (kind == 7 || kind == 10 || kind == 11) {
+            size_t len = kind == 10 ? 65537 : kind == 11 ? 155 : 35;
+            if (kind == 10) {
+                memset(input, 0, len); store16(input, UINT16_MAX); input[4] = 0x81;
+            } else {
+                s->tcp.send_window = 50; // After the first seven bytes, the app window is exhausted.
+                if (kind == 11) {
+                    // A valid TXT answer needs more than one monitor pass to flush.
+                    store16(input, 153); store16(input + 15, 16);
+                    store16(input + 21, 16); store16(input + 29, 124);
+                    input[31] = 123; memset(input + 32, 'a', 123);
+                    int small = 4096;
+                    assert(setsockopt(stream[0], SOL_SOCKET, SO_SNDBUF, &small, sizeof(small)) == 0);
+                    uint8_t junk[4096] = {0};
+                    ssize_t sent;
+                    do { sent = send(stream[0], junk, sizeof(junk), 0); } while (sent > 0);
+                    assert(sent == -1 && errno == EAGAIN);
+                }
+            }
+            assert(send(stream[1], input, len, 0) == len);
+            size_t total = drain_dns_test(&args, s, tunnel[0], output, kind == 10);
+            if (kind == 7 || kind == 11) {
+                assert(total == 7 && s->tcp.dns_response_ready && allocations == 2);
+                int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+                assert(epoll_fd >= 0);
+                s->ev.events = EPOLLIN | EPOLLOUT | EPOLLERR; s->ev.data.ptr = s;
+                assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev) == 0);
+                struct epoll_event ready;
+                if (kind == 11) assert(epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+                s->tcp.last_keep_alive = get_ms();
+                assert(monitor_tcp_session(&args, s, epoll_fd) == 1);
+                assert(!(s->ev.events & (EPOLLIN | EPOLLOUT)));
+                _Alignas(8) uint8_t ack[128];
+                size_t ack_len = tcp_packet(ack, version, s->tcp.remote_seq, s->tcp.local_seq,
+                                            0, 0, NULL, 0);
+                size_t ip_len = version == 4 ? 20 : 40;
+                ((struct tcphdr *) (ack + ip_len))->dest = htons(53);
+                assert(handle_tcp(&args, ack, ack_len, ack + ip_len, own_uid, 1, NULL, epoll_fd) == 1);
+                assert(get_send_window(&s->tcp) > 0);
+                for (int turn = 0; turn < 8 && s->tcp.dns_response_ready; turn++) {
+                    int recheck = monitor_tcp_session(&args, s, epoll_fd);
+                    size_t count = collect_dns_test(s, tunnel[0], output + total, 0);
+                    assert(count > 0 && count <= TCP_YIELD * s->tcp.mss);
+                    total += count;
+                    assert(!(s->ev.events & EPOLLOUT));
+                    if (s->tcp.dns_response_ready) {
+                        assert(recheck == 1 && !(s->ev.events & EPOLLIN));
+                    } else
+                        assert(s->ev.events & EPOLLIN);
+                    if (kind == 11) assert(epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+                }
+                close(epoll_fd);
+            }
+            assert(total == len && memcmp(input, output, len) == 0);
+            assert(s->tcp.dns_response == NULL && allocations == 1);
+        } else {
+            if (kind == 3 || kind == 4) {
+                fail_alloc_tag = "tcp dns frame"; fail_alloc_match = kind == 3 ? 1 : 2;
+            } else if (kind == 8) {
+                fail_alloc_tag = version == 4 ? "tcp write4" : "tcp write 6";
+                fail_alloc_match = 1;
+            }
+            size_t len = kind == 3 || kind == 4 || kind == 8 ? 35 : 5;
+            assert(send(stream[1], input, len, 0) == len);
+            for (int turn = 0; turn < 8 && s->tcp.state == TCP_ESTABLISHED && is_readable(s->socket); turn++)
+                check_tcp_socket(&args, &event, -1);
+            if (kind == 5) {
+                assert(s->tcp.dns_response_used == 5);
+                s->tcp.time = time(NULL) - TCP_IDLE_TIMEOUT - 1;
+            } else if (kind == 6) {
+                assert(shutdown(stream[1], SHUT_WR) == 0);
+                check_tcp_socket(&args, &event, -1);
+            }
+            fail_alloc_tag = NULL;
+            if (kind != 9) {
+                if (kind == 3 || kind == 4 || kind == 8) assert(fail_alloc_match == 0);
+                assert(check_tcp_session(&args, s, 0, SESSION_MAX) == 0);
+                assert(s->tcp.state == TCP_CLOSE && s->socket == -1 && allocations == 1);
+                assert(s->tcp.dns_response == NULL);
+            } else
+                assert(s->tcp.dns_response_used == 5 && allocations == 2);
+        }
+        clear(&ctx);
+        assert(ctx.ng_session == NULL && allocations == 0 && sockets == 0);
+        assert(__real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);
+        block_domain = 0;
+        free(input); free(output);
+        close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+    }
+#endif
+}
+
 void test_tcp_half_close(int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int version = kind == 1 ? 6 : 4;

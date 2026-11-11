@@ -41,7 +41,18 @@ static int open_tcp_socket_with_error(const struct arguments *args,
                                      const struct tcp_session *cur,
                                      struct allowed *redirect, int *connect_error_out);
 
+static void clear_dns_response(struct tcp_session *cur) {
+    if (cur->dns_response != NULL)
+        ng_free(cur->dns_response, __FILE__, __LINE__);
+    cur->dns_response = NULL;
+    cur->dns_response_size = cur->dns_response_used = cur->dns_response_sent = 0;
+    cur->dns_response_ready = false;
+    cur->dns_header_used = 0;
+    cur->dns_body_remaining = 0;
+}
+
 void clear_tcp_data(struct tcp_session *cur) {
+    clear_dns_response(cur);
     struct segment *s = cur->forward;
     cur->forward = NULL;
     while (s != NULL) {
@@ -107,6 +118,98 @@ static int finish_tcp_input(const struct arguments *args, struct ng_session *s) 
         return -1;
     s->tcp.time = time(NULL);
     return 1;
+}
+
+static void flush_dns_response(const struct arguments *args, struct tcp_session *cur,
+                               uint32_t window) {
+    size_t count = cur->dns_response_size - cur->dns_response_sent;
+    if (count > cur->mss)
+        count = cur->mss;
+    if (count > window)
+        count = window;
+    if (count == 0)
+        return;
+    if (write_data(args, cur, cur->dns_response + cur->dns_response_sent, count) < 0)
+        return;
+    cur->dns_response_sent += count;
+    cur->local_seq += count;
+    cur->unconfirmed++;
+    if (cur->dns_response_sent == cur->dns_response_size)
+        clear_dns_response(cur);
+}
+
+static void read_dns_response(const struct arguments *args, struct ng_session *s,
+                              uint32_t window) {
+    struct tcp_session *cur = &s->tcp;
+    if (cur->dns_response_ready) {
+        flush_dns_response(args, cur, window);
+        return;
+    }
+    if (cur->dns_response == NULL) {
+        cur->dns_response = ng_malloc(2, "tcp dns frame");
+        if (cur->dns_response == NULL) {
+            write_rst(args, cur);
+            return;
+        }
+        cur->dns_response_size = 2;
+    }
+    size_t count = cur->dns_response_size - cur->dns_response_used;
+    if (count > cur->mss)
+        count = cur->mss;
+    if (count > window)
+        count = window;
+    ssize_t bytes = recv(s->socket, cur->dns_response + cur->dns_response_used, count, 0);
+    if (bytes < 0) {
+        if (errno != EINTR && errno != EAGAIN) {
+            log_android(ANDROID_LOG_WARN, "TCP DNS recv error %d: %s", errno, strerror(errno));
+            write_rst(args, cur);
+        }
+        return;
+    }
+    if (bytes == 0) {
+        if (cur->dns_response_used != 0) {
+            log_android(ANDROID_LOG_WARN, "TCP DNS incomplete response at EOF");
+            write_rst(args, cur);
+        } else {
+            clear_dns_response(cur);
+            cur->upstream_eof = true;
+            if (write_fin_ack(args, cur) >= 0) {
+                cur->local_seq++;
+                cur->state = (cur->fin_acked ? TCP_LAST_ACK : TCP_FIN_WAIT1);
+                if (cur->fin_acked)
+                    close_tcp_socket(s);
+            }
+        }
+        return;
+    }
+    cur->received += bytes;
+    if (!check_dns_tcp_response(cur, cur->dns_response + cur->dns_response_used, (size_t) bytes)) {
+        log_android(ANDROID_LOG_WARN, "TCP DNS response has multiple questions");
+        write_rst(args, cur);
+        return;
+    }
+    cur->dns_response_used += bytes;
+    if (cur->dns_response_used == 2 && cur->dns_response_size == 2) {
+        size_t size = (size_t) read_net16(cur->dns_response) + 2;
+        if (size > 2) {
+            uint8_t *resized = ng_realloc(cur->dns_response, size, "tcp dns frame");
+            if (resized == NULL) {
+                write_rst(args, cur);
+                return;
+            }
+            cur->dns_response = resized;
+            cur->dns_response_size = size;
+        }
+    }
+    if (cur->dns_response_used == cur->dns_response_size) {
+        size_t length = cur->dns_response_size - 2;
+        parse_dns_response(args, s, cur->dns_response + 2, &length);
+        uint16_t prefix = htons((uint16_t) length);
+        memcpy(cur->dns_response, &prefix, sizeof(prefix));
+        cur->dns_response_size = length + 2;
+        cur->dns_response_ready = true;
+        flush_dns_response(args, cur, window);
+    }
 }
 
 int get_tcp_timeout(const struct tcp_session *t, int sessions, int maxsessions) {
@@ -212,6 +315,22 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
     int recheck = 0;
     unsigned int events = EPOLLERR;
 
+    // DNS output is already in memory and targets TUN, not the upstream socket.
+    // Make bounded progress each loop even if that socket's send buffer is full.
+    if (!s->tcp.upstream_eof &&
+        (s->tcp.state == TCP_ESTABLISHED || s->tcp.state == TCP_CLOSE_WAIT)) {
+        for (int count = 0; count < TCP_YIELD && s->tcp.dns_response_ready; count++) {
+            uint32_t window = get_send_window(&s->tcp);
+            if (window == 0)
+                break;
+            uint32_t local_seq = s->tcp.local_seq;
+            flush_dns_response(args, &s->tcp, window);
+            if (s->tcp.local_seq == local_seq)
+                break;
+            s->tcp.time = time(NULL);
+        }
+    }
+
     if (s->tcp.state == TCP_LISTEN) {
         // Check for connected = writable
         if (s->tcp.socks5 == SOCKS5_NONE)
@@ -222,9 +341,12 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
                s->tcp.state == TCP_FIN_WAIT1 || s->tcp.state == TCP_FIN_WAIT2) {
 
         // Check for incoming data
-        if (!s->tcp.upstream_eof && get_send_window(&s->tcp) > 0)
-            events = events | EPOLLIN;
-        else if (!s->tcp.upstream_eof) {
+        if (!s->tcp.upstream_eof && get_send_window(&s->tcp) > 0) {
+            if (s->tcp.dns_response_ready)
+                recheck = 1; // More buffered output after this loop's packet budget.
+            else
+                events |= EPOLLIN;
+        } else if (!s->tcp.upstream_eof) {
             recheck = 1;
 
             long long ms = get_ms();
@@ -703,8 +825,13 @@ void check_tcp_socket(const struct arguments *args,
                 // Send window can be changed in the mean time
 
                 uint32_t send_window = get_send_window(&s->tcp);
-                if (!s->tcp.upstream_eof && (ev->events & EPOLLIN) && send_window > 0) {
+                if (!s->tcp.upstream_eof && ((ev->events & EPOLLIN) || s->tcp.dns_response_ready) && send_window > 0) {
                     s->tcp.time = time(NULL);
+
+                    if (ntohs(s->tcp.dest) == 53) {
+                        read_dns_response(args, s, send_window);
+                        return;
+                    }
 
                     uint32_t buffer_size = (send_window > s->tcp.mss
                                             ? s->tcp.mss : send_window);
@@ -737,12 +864,6 @@ void check_tcp_socket(const struct arguments *args,
                         // Socket read data
                         log_android(ANDROID_LOG_DEBUG, "%s recv bytes %d", session, bytes);
                         s->tcp.received += bytes;
-
-                        // Process DNS response
-                        if (ntohs(s->tcp.dest) == 53 && bytes > 2) {
-                            ssize_t dlen = bytes - 2;
-                            parse_dns_response(args, s, buffer + 2, (size_t *) &dlen);
-                        }
 
                         // Forward to tun
                         if (write_data(args, &s->tcp, buffer, (size_t) bytes) >= 0) {
@@ -923,6 +1044,11 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.fin_received = false;
             s->tcp.fin_acked = false;
             s->tcp.fin_seq = 0;
+            s->tcp.dns_header_used = 0;
+            s->tcp.dns_body_remaining = 0;
+            s->tcp.dns_response = NULL;
+            s->tcp.dns_response_size = s->tcp.dns_response_used = s->tcp.dns_response_sent = 0;
+            s->tcp.dns_response_ready = false;
             s->tcp.forward = NULL;
             s->next = NULL;
 
@@ -1618,7 +1744,8 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     // Continue checksum
     csum = calc_checksum(csum, (uint8_t *) tcp, sizeof(struct tcphdr));
     csum = calc_checksum(csum, options, (size_t) optlen);
-    csum = calc_checksum(csum, data, datalen);
+    // Buffered DNS output can start at an odd offset; checksum the aligned packet copy.
+    csum = calc_checksum(csum, options + optlen, datalen);
     tcp->check = ~csum;
 
     inet_ntop(cur->version == 4 ? AF_INET : AF_INET6,

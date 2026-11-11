@@ -8,6 +8,20 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void coalescedDnsRepliesKeepCallbacksAndDomainAndHttpsBlocking() { check("tcpDnsCoalesced"); }
+    @Test public void completeDnsReplyAndPartialTailAreBothFiltered() { check("tcpDnsPartialTail"); }
+    @Test public void dnsRepliesSplitAtEveryByteAreFiltered() { check("tcpDnsByteSplits"); }
+    @Test public void dnsPrefixAllocationFailureClosesWithoutLeaking() { check("tcpDnsAllocFailure"); }
+    @Test public void dnsFrameResizeFailureClosesWithoutLeaking() { check("tcpDnsResizeFailure"); }
+    @Test public void partialDnsReplyExpiresAndReleasesMemory() { check("tcpDnsPartialTimeout"); }
+    @Test public void partialDnsReplyAtEofResetsAndReleasesMemory() { check("tcpDnsPartialEof"); }
+    @Test public void inspectedDnsReplyResumesWhenAppWindowReopens() { check("tcpDnsWindow"); }
+    @Test public void dnsReplyResumesDespiteFullUpstreamSendBuffer() { check("tcpDnsUpstreamBackpressure"); }
+    @Test public void dnsOutputAllocationFailureReleasesBufferedReply() { check("tcpDnsWriteFailure"); }
+    @Test public void tunnelTeardownReleasesPartialDnsReply() { check("tcpDnsTeardown"); }
+    @Test public void maximumDnsFrameIsForwardedInBoundedPackets() { check("tcpDnsMaxFrame"); }
+    @Test public void ipv4DnsResponsesValidateFramesAndReleaseInvalidStreams() { check("tcpDnsResponse4"); }
+    @Test public void ipv6DnsResponsesValidateFramesAndReleaseInvalidStreams() { check("tcpDnsResponse6"); }
     @Test public void ipv4DefinitiveConnectFailuresResetAndReleaseResources() { check("tcpConnectFailure4"); }
     @Test public void ipv6DefinitiveConnectFailuresResetAndReleaseResources() { check("tcpConnectFailure6"); }
     @Test public void ipv4TemporaryConnectFailuresRemainRetryable() { check("tcpConnectTransient4"); }

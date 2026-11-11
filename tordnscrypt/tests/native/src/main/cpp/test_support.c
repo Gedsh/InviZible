@@ -54,6 +54,8 @@ void *__wrap_ng_malloc(size_t n, const char *tag) {
 
 void *__real_ng_realloc(void *p, size_t n, const char *tag);
 void *__wrap_ng_realloc(void *p, size_t n, const char *tag) {
+    if (fail_alloc_tag != NULL && strcmp(tag, fail_alloc_tag) == 0 && --fail_alloc_match == 0)
+        return NULL;
     if (fail_cache_alloc && strncmp(tag, "uid_cache", 9) == 0)
         return NULL;
     void *resized = __real_ng_realloc(p, n, tag);

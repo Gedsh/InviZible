@@ -1,5 +1,80 @@
 #include "test_support.h"
 
+void test_dns_question_counts(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint8_t data[64] = {0}, original[64];
+    struct ng_session s = {.protocol = IPPROTO_UDP};
+    struct arguments args = {.rcode = 3};
+    data[2] = 0x81;
+    for (int opcode = 0; opcode <= 5; opcode += 5) {
+        data[2] = (uint8_t) (0x81 | opcode << 3);
+        const uint16_t counts[] = {0, 1, 2, UINT16_MAX};
+        for (size_t i = 0; i < sizeof(counts) / sizeof(*counts); i++) {
+            store16(data + 4, counts[i]);
+            assert(dns_has_multiple_questions(data, sizeof(data)) == (opcode == 0 && counts[i] > 1));
+        }
+    }
+    data[2] = 0x81;
+    store16(data + 4, 2);
+    store16(data + 6, 1);
+    // The remainder looks like a normal answer. It must never produce callbacks or rewriting.
+    memcpy(original, data, sizeof(data));
+    size_t len = sizeof(data);
+    block_domain = 1;
+    parse_dns_response(&args, &s, data, &len);
+    assert(resolved_calls == 0 && allocations == 0);
+    assert(len == sizeof(data) && memcmp(data, original, len) == 0);
+    for (size_t short_len = 0; short_len < sizeof(struct dns_header); short_len++)
+        assert(!dns_has_multiple_questions(data, short_len));
+    store16(data + 4, 0);
+    len = sizeof(struct dns_header);
+    parse_dns_response(&args, &s, data, &len);
+    assert(len == sizeof(struct dns_header) && resolved_calls == 0);
+    block_domain = 0;
+#endif
+}
+
+void test_dns_tcp_framing(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint8_t frames[42] = {0};
+    for (int i = 0; i < 3; i++) {
+        store16(frames + i * 14, 12);
+        frames[i * 14 + 4] = 0x81;
+        store16(frames + i * 14 + 6, i == 1 ? 0 : 1);
+    }
+    for (size_t split = 0; split <= sizeof(frames); split++) {
+        struct tcp_session tcp = {0};
+        assert(check_dns_tcp_response(&tcp, frames, split));
+        assert(check_dns_tcp_response(&tcp, frames + split, sizeof(frames) - split));
+        assert(tcp.dns_header_used == 0 && tcp.dns_body_remaining == 0);
+    }
+    // Reject the second frame, including when either prefix/header is split at any byte.
+    store16(frames + 20, 2);
+    for (size_t split = 0; split < 28; split++) {
+        struct tcp_session tcp = {0};
+        assert(check_dns_tcp_response(&tcp, frames, split));
+        assert(!check_dns_tcp_response(&tcp, frames + split, sizeof(frames) - split));
+    }
+    struct tcp_session tcp = {0};
+    uint8_t header[14] = {0}, body[256] = {0};
+    store16(header, UINT16_MAX);
+    header[4] = 0x81;
+    store16(header + 6, 1);
+    assert(check_dns_tcp_response(&tcp, header, sizeof(header)));
+    size_t left = UINT16_MAX - 12;
+    while (left) {
+        size_t chunk = left < sizeof(body) ? left : sizeof(body);
+        assert(check_dns_tcp_response(&tcp, body, chunk));
+        left -= chunk;
+    }
+    assert(tcp.dns_header_used == 0 && tcp.dns_body_remaining == 0 && allocations == 0);
+    // Zero-length frames still make progress and cannot hide a following invalid frame.
+    uint8_t empty[2] = {0};
+    assert(check_dns_tcp_response(&tcp, empty, sizeof(empty)));
+    assert(!check_dns_tcp_response(&tcp, frames + 14, 14));
+#endif
+}
+
 void test_names(void) {
     char name[DNS_QNAME_MAX + 1];
     const uint8_t plain[] = {1, 'a', 3, 'c', 'o', 'm', 0};
