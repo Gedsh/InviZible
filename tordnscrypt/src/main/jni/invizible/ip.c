@@ -395,10 +395,21 @@ void handle_ip(const struct arguments *args,
 
     flags[flen] = 0;
 
+    struct udp_session_lookup udp_lookup = {0};
+    bool udp_existing = false;
+    if (protocol == IPPROTO_UDP) {
+        if (dport == 53)
+            udp_existing = !args->fwd53; // DNS policy shortcut, not a flow lookup.
+        else {
+            udp_lookup.session = find_udp_session(args, pkt, payload);
+            udp_existing = udp_lookup.session != NULL;
+        }
+    }
+
     // Limit number of sessions
     if (sessions >= maxsessions) {
         if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) ||
-            (protocol == IPPROTO_UDP && !has_udp_session(args, pkt, payload)) ||
+            (protocol == IPPROTO_UDP && !udp_existing) ||
             (protocol == IPPROTO_TCP && syn)) {
             log_android(ANDROID_LOG_ERROR,
                         "%d of max %d sessions, dropping version %d protocol %d",
@@ -410,7 +421,7 @@ void handle_ip(const struct arguments *args,
     // Get uid
     jint uid = -1;
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
-        (protocol == IPPROTO_UDP && !has_udp_session(args, pkt, payload)) ||
+        (protocol == IPPROTO_UDP && !udp_existing) ||
         (protocol == IPPROTO_TCP && syn)) {
         if (args->ctx->sdk <= 28 || (compatibility_mode && can_filter)) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
@@ -440,8 +451,7 @@ void handle_ip(const struct arguments *args,
     // Check if allowed
     int allowed = 0;
     struct allowed *redirect = NULL;
-    if (protocol == IPPROTO_UDP
-        && has_udp_session(args, pkt, payload)) {
+    if (protocol == IPPROTO_UDP && udp_existing) {
         allowed = 1; // could be a lingering/blocked session
     } else if (protocol == IPPROTO_TCP
                && (!syn || (!args->fwd53 && uid == 0 && dport == 53))) {
@@ -469,7 +479,8 @@ void handle_ip(const struct arguments *args,
         if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6)
             handle_icmp(args, pkt, length, payload, uid, epoll_fd);
         else if (protocol == IPPROTO_UDP)
-            handle_udp(args, pkt, length, payload, uid, redirect, epoll_fd);
+            handle_udp_with_lookup(args, pkt, length, payload, uid, redirect, epoll_fd,
+                                   dport == 53 ? NULL : &udp_lookup);
         else if (protocol == IPPROTO_TCP)
             handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
     } else {

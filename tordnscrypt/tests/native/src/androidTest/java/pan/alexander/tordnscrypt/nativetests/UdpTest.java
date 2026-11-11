@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for udp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class UdpTest extends NativeTestSupport {
+    @Test public void cachedLookupPreservesActiveFinishingClosedAndBlockedFlows() { check("udpLookupStates"); }
     @Test public void datagramsReuseBuffersThroughMaximumPayloadAndSmallerReplies() { check("udpBufferReuse"); }
     @Test public void disabledLogsSkipFormattingButAccountingKeepsDestination() { check("lazyUdpLogging"); }
     @Test public void ipv4MultiQuestionDnsRequestsGetFormerr() { check("udpDnsRequest4"); }

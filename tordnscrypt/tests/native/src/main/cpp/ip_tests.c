@@ -1,5 +1,79 @@
 #include "test_support.h"
 
+void test_udp_packet_lookup(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    capture_packets = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[128], output[2048];
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 20,
+                               version == 4 ? "203.0.113.2" : "2001:db8::2");
+        struct udphdr *udp = (void *) (packet + off);
+        udp->source = htons(12345); udp->dest = htons(kind == 0 ? 5000 : 53); udp->len = htons(20);
+        packet_checksums(packet, off + 20, off, IPPROTO_UDP);
+        struct ng_session target = {.protocol = IPPROTO_UDP, .socket = -1};
+        target.udp.version = version; target.udp.source = udp->source; target.udp.dest = udp->dest;
+        target.udp.uid = 12345; target.udp.state = UDP_ACTIVE;
+        memcpy(&target.udp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+        memcpy(&target.udp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+        struct ng_session decoys[6];
+        for (size_t i = 0; i < 6; i++) {
+            decoys[i] = target;
+            decoys[i].next = i == 5 ? NULL : &decoys[i + 1];
+        }
+        decoys[0].protocol = IPPROTO_TCP;
+        decoys[1].udp.version = version == 4 ? 6 : 4;
+        decoys[2].udp.source = htons(12346);
+        decoys[3].udp.dest = htons(kind == 0 ? 5001 : 5353);
+        decoys[4].udp.saddr.ip6.s6_addr[version == 4 ? 0 : 15] ^= 1;
+        decoys[5].udp.daddr.ip6.s6_addr[version == 4 ? 0 : 15] ^= 1;
+        for (int present = 0; present <= 1; present++) for (int full = 0; full <= 1; full++) {
+            for (int option = 0; option < (kind == 0 ? 4 : 2); option++) {
+                int states[] = {UDP_ACTIVE, UDP_FINISHING, UDP_CLOSED, UDP_BLOCKED};
+                target.udp.state = kind == 0 ? states[option] : UDP_ACTIVE;
+                running.fwd53 = kind == 0 ? 1 : option;
+                decoys[5].next = present ? &target : NULL;
+                args->ctx->ng_session = decoys;
+                udp_lookups = uid_lookups = policy_checks = udp_calls = udp_lookup_supplied = 0;
+                udp_lookup_session = NULL;
+                handle_ip(&running, packet, off + 20, -1, full ? SESSION_MAX : 0, SESSION_MAX);
+                bool existing = kind == 0 ? present : !running.fwd53;
+                bool dropped = full && !existing;
+                assert(udp_lookups == (kind == 0 ? 1 : 0));
+                assert(uid_lookups == (!dropped && !existing));
+                assert(policy_checks == (!dropped && !existing));
+                assert(udp_calls == !dropped);
+                assert(udp_lookup_supplied == (!dropped && kind == 0));
+                assert(udp_lookup_session == (!dropped && kind == 0 && present ? &target : NULL));
+                assert(allocations == 0 && args->ctx->ng_session == decoys);
+            }
+        }
+        if (kind == 1) {
+            // Forwarded DNS must still consult policy for an existing active flow.
+            running.fwd53 = 1; decoys[5].next = &target;
+            target.udp.state = UDP_ACTIVE;
+            args->ctx->ng_session = decoys;
+            deny_address = 1;
+            udp_lookups = uid_lookups = policy_checks = udp_calls = 0;
+            handle_ip(&running, packet, off + 20, -1, 0, SESSION_MAX);
+            assert(uid_lookups == 1 && policy_checks == 1 && udp_calls == 0 && udp_lookups == 0);
+            struct ng_session *blocked = args->ctx->ng_session;
+            assert(blocked != decoys && blocked->udp.state == UDP_BLOCKED && blocked->next == decoys);
+            tun_packet(tunnel[0], output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+            ng_free(blocked, __FILE__, __LINE__);
+            deny_address = 0;
+            assert(allocations == 0);
+        }
+        args->ctx->ng_session = NULL;
+    }
+    capture_packets = 0;
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_tun_buffer_reuse(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];

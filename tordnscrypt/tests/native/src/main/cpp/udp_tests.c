@@ -1,5 +1,64 @@
 #include "test_support.h"
 
+void test_udp_lookup_states(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    int active_socket = open("/dev/null", O_RDWR);
+    assert(active_socket >= 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[128], output[2048];
+        const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 9, dest);
+        struct udphdr *udp = (void *) (packet + off);
+        udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+        packet[off + 8] = 0xA5;
+        packet_checksums(packet, off + 9, off, IPPROTO_UDP);
+        struct ng_session s = {.protocol = IPPROTO_UDP};
+        s.udp.version = version; s.udp.source = udp->source; s.udp.dest = udp->dest;
+        s.udp.uid = 12345;
+        memcpy(&s.udp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+        memcpy(&s.udp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+        const int states[] = {UDP_ACTIVE, UDP_FINISHING, UDP_CLOSED, UDP_BLOCKED};
+        args->ctx->ng_session = &s;
+        for (size_t i = 0; i < sizeof(states) / sizeof(*states); i++) {
+            s.udp.state = states[i];
+            s.socket = i < 2 ? active_socket : -1;
+            udp_lookups = uid_lookups = policy_checks = udp_lookup_supplied = 0;
+            if (i == 0) expect_destination(version, dest, 5000);
+            handle_ip(&running, packet, off + 9, -1, SESSION_MAX, SESSION_MAX);
+            assert(udp_lookups == 1 && uid_lookups == 0 && policy_checks == 0);
+            assert(udp_lookup_supplied && udp_lookup_session == &s);
+            assert(args->ctx->ng_session == &s && s.next == NULL && s.udp.state == states[i]);
+            assert(s.udp.uid == 12345 && allocations == 0 && sockets == 0);
+            if (i == 0) assert(destination_calls == 1);
+            if (i >= 2)
+                tun_packet(tunnel[0], output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+            assert(!is_readable(tunnel[0]));
+        }
+        args->ctx->ng_session = NULL;
+        // A completed miss must also be reused when the real handler creates a flow.
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        assert(epoll_fd >= 0);
+        real_network = 1; // Real, pollable socket; sendto remains captured locally.
+        expect_destination(version, dest, 5000);
+        udp_lookups = uid_lookups = policy_checks = udp_lookup_supplied = 0;
+        handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+        assert(udp_lookups == 1 && uid_lookups == 1 && policy_checks == 1);
+        assert(udp_lookup_supplied && udp_lookup_session == NULL && destination_calls == 1);
+        assert(args->ctx->ng_session != NULL && args->ctx->ng_session->udp.state == UDP_ACTIVE);
+        assert(allocations == 1 && sockets == 1);
+        clear(args->ctx);
+        real_network = 0;
+        close(epoll_fd);
+        assert(allocations == 0 && sockets == 0);
+    }
+    close(active_socket); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_buffer_reuse(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     real_udp_packets = 1;

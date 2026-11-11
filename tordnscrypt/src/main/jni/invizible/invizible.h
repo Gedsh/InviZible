@@ -468,6 +468,20 @@ jboolean is_icmp_supported(const uint8_t *pkt,
 
 int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint8_t *payload);
 
+struct ng_session *find_udp_session(const struct arguments *args, const uint8_t *pkt,
+                                    const uint8_t *payload);
+
+// A non-NULL lookup records a completed search, including a NULL (missing) session.
+// Valid only while processing this packet on the event thread under ctx->lock.
+struct udp_session_lookup {
+    struct ng_session *session;
+};
+
+jboolean handle_udp_with_lookup(const struct arguments *args,
+                                const uint8_t *pkt, size_t length, const uint8_t *payload,
+                                int uid, struct allowed *redirect, int epoll_fd,
+                                const struct udp_session_lookup *lookup);
+
 void block_udp(const struct arguments *args,
                const uint8_t *pkt, size_t length,
                const uint8_t *payload,

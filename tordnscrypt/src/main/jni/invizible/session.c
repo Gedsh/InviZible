@@ -21,6 +21,23 @@
 
 #include "invizible.h"
 
+struct ng_session *find_udp_session(const struct arguments *args, const uint8_t *pkt,
+                                    const uint8_t *payload) {
+    const uint8_t version = pkt[0] >> 4;
+    const struct iphdr *ip4 = (const struct iphdr *) pkt;
+    const struct ip6_hdr *ip6 = (const struct ip6_hdr *) pkt;
+    const struct udphdr *udp = (const struct udphdr *) payload;
+    struct ng_session *cur = args->ctx->ng_session;
+    while (cur != NULL &&
+           !(cur->protocol == IPPROTO_UDP && cur->udp.version == version &&
+             cur->udp.source == udp->source && cur->udp.dest == udp->dest &&
+             (version == 4 ? cur->udp.saddr.ip4 == ip4->saddr && cur->udp.daddr.ip4 == ip4->daddr
+                           : memcmp(&cur->udp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
+                             memcmp(&cur->udp.daddr.ip6, &ip6->ip6_dst, 16) == 0)))
+        cur = cur->next;
+    return cur;
+}
+
 void clear(struct context *ctx) {
     struct ng_session *s = ctx->ng_session;
     while (s != NULL) {

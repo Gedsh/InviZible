@@ -28,6 +28,9 @@ function(add_native_tests target source)
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp handle_tcp handle_icmp
             get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
             epoll_wait get_ms pipe pthread_mutex_init inet_ntop)
+    if("${source}" STREQUAL "${INVIZIBLE_SOURCE}")
+        list(APPEND wraps find_udp_session handle_udp_with_lookup)
+    endif()
     if(ANDROID_ABI STREQUAL "x86_64")
         list(APPEND wraps calc_checksum)
         target_compile_options(${target} PRIVATE -mssse3 -DNEON2SSE_DISABLE_PERFORMANCE_WARNING)

@@ -10,6 +10,33 @@ const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
 int address_formats;
+int udp_lookups, uid_lookups, policy_checks, deny_address;
+int udp_lookup_supplied;
+struct ng_session *udp_lookup_session;
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+struct ng_session *__real_find_udp_session(const struct arguments *, const uint8_t *, const uint8_t *);
+struct ng_session *__wrap_find_udp_session(const struct arguments *args, const uint8_t *pkt,
+                                           const uint8_t *payload) {
+    udp_lookups++;
+    return __real_find_udp_session(args, pkt, payload);
+}
+
+jboolean __real_handle_udp_with_lookup(const struct arguments *, const uint8_t *, size_t,
+        const uint8_t *, int, struct allowed *, int, const struct udp_session_lookup *);
+jboolean __wrap_handle_udp_with_lookup(const struct arguments *args, const uint8_t *pkt,
+        size_t length, const uint8_t *payload, int uid, struct allowed *redirect, int epoll_fd,
+        const struct udp_session_lookup *lookup) {
+    udp_lookup_supplied = lookup != NULL;
+    udp_lookup_session = lookup == NULL ? NULL : lookup->session;
+    if (capture_packets) {
+        assert(payload + sizeof(struct udphdr) <= pkt + length);
+        udp_calls++;
+        return 1;
+    }
+    return __real_handle_udp_with_lookup(args, pkt, length, payload, uid, redirect, epoll_fd, lookup);
+}
+#endif
 
 const char *__real_inet_ntop(int family, const void *address, char *text, socklen_t size);
 const char *__wrap_inet_ntop(int family, const void *address, char *text, socklen_t size) {
@@ -224,6 +251,7 @@ jboolean __wrap_handle_udp(const struct arguments *args, const uint8_t *pkt, siz
 
 jint __wrap_get_uid_q(const struct arguments *args, jint version, jint protocol,
                       const char *source, jint sport, const char *dest, jint dport) {
+    uid_lookups++;
     return own_uid;
 }
 
@@ -251,7 +279,8 @@ jobject __wrap_create_packet(const struct arguments *args, jint version, jint pr
 
 struct allowed *__wrap_is_address_allowed(const struct arguments *args, jobject packet) {
     static struct allowed allowed = {0};
-    return &allowed;
+    policy_checks++;
+    return deny_address ? NULL : &allowed;
 }
 
 void __real_report_exit(const struct arguments *args, const char *fmt, ...);
@@ -446,6 +475,9 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 }
 
 void reset_test_state(void) {
+    udp_lookups = uid_lookups = policy_checks = deny_address = 0;
+    udp_lookup_supplied = 0;
+    udp_lookup_session = NULL;
     address_formats = 0;
     destination_length = destination_calls = 0;
     connect_errno = 0;

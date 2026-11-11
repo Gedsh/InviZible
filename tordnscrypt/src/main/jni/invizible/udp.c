@@ -158,28 +158,10 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
 }
 
 int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint8_t *payload) {
-    // Get headers
-    const uint8_t version = (*pkt) >> 4;
-    const struct iphdr *ip4 = (struct iphdr *) pkt;
-    const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
-    const struct udphdr *udphdr = (struct udphdr *) payload;
-
-    if (ntohs(udphdr->dest) == 53)
+    const struct udphdr *udp = (const struct udphdr *) payload;
+    if (ntohs(udp->dest) == 53)
         return !args->fwd53;
-
-    // Search session
-    struct ng_session *cur = args->ctx->ng_session;
-    while (cur != NULL &&
-           !(cur->protocol == IPPROTO_UDP &&
-             cur->udp.version == version &&
-             cur->udp.source == udphdr->source && cur->udp.dest == udphdr->dest &&
-             (version == 4 ? cur->udp.saddr.ip4 == ip4->saddr &&
-                             cur->udp.daddr.ip4 == ip4->daddr
-                           : memcmp(&cur->udp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
-                             memcmp(&cur->udp.daddr.ip6, &ip6->ip6_dst, 16) == 0)))
-        cur = cur->next;
-
-    return (cur != NULL);
+    return find_udp_session(args, pkt, payload) != NULL;
 }
 
 void block_udp(const struct arguments *args,
@@ -261,6 +243,14 @@ jboolean handle_udp(const struct arguments *args,
                     const uint8_t *payload,
                     int uid, struct allowed *redirect,
                     const int epoll_fd) {
+    return handle_udp_with_lookup(args, pkt, length, payload, uid, redirect, epoll_fd, NULL);
+}
+
+jboolean handle_udp_with_lookup(const struct arguments *args,
+                    const uint8_t *pkt, size_t length,
+                    const uint8_t *payload,
+                    int uid, struct allowed *redirect,
+                    const int epoll_fd, const struct udp_session_lookup *lookup) {
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
@@ -297,17 +287,8 @@ jboolean handle_udp(const struct arguments *args,
         return write_udp(args, &reply, (uint8_t *) &response, sizeof(response)) >= 0;
     }
 
-    // Search session
-    struct ng_session *cur = args->ctx->ng_session;
-    while (cur != NULL &&
-           !(cur->protocol == IPPROTO_UDP &&
-             cur->udp.version == version &&
-             cur->udp.source == udphdr->source && cur->udp.dest == udphdr->dest &&
-             (version == 4 ? cur->udp.saddr.ip4 == ip4->saddr &&
-                             cur->udp.daddr.ip4 == ip4->daddr
-                           : memcmp(&cur->udp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
-                             memcmp(&cur->udp.daddr.ip6, &ip6->ip6_dst, 16) == 0)))
-        cur = cur->next;
+    struct ng_session *cur = (lookup == NULL ? find_udp_session(args, pkt, payload)
+                                              : lookup->session);
 
     struct log_address source = {.version = version, .address = version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src};
     struct log_address dest = {.version = version, .address = version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst};

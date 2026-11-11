@@ -45,6 +45,14 @@ UDP and ICMP replies, queued TCP data surviving input reuse, DNS filtering and
 partial frames, maximum UDP packet construction, and cleanup after loop exit.
 Large UDP construction uses a local sink because some device kernels cannot
 allocate a maximum-size Unix datagram; smaller replies exercise real socket pairs.
+UDP lookup cases count exact flow searches, UID lookups and policy callbacks.
+Non-DNS packets reuse one packet-local result for capacity, UID, policy and
+forwarding checks, including a completed lookup that found no session. IPv4/IPv6
+cases distinguish protocol, family, ports and addresses, and preserve active,
+finishing, closed and blocked flows. DNS keeps its forwarding-policy shortcut
+separate from the handler's actual flow lookup; an existing DNS flow must not
+bypass UID/policy checks when DNS forwarding is enabled. The lookup is never
+stored beyond the packet or reused across event-loop iterations.
 Incoming IPv4 header checksums are always validated, including options and padding.
 TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
 creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.
