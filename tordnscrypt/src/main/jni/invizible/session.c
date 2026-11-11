@@ -123,6 +123,7 @@ void *handle_events(void *a) {
 
             time_t now = time(NULL);
             struct ng_session *sl = NULL;
+            unsigned int closed_sessions = 0;
             s = args->ctx->ng_session;
             while (s != NULL) {
                 int del = 0;
@@ -156,6 +157,15 @@ void *handle_events(void *a) {
                         if (stimeout < timeout)
                             timeout = stimeout;
                     }
+                }
+
+                // New sessions are prepended. Retain the most recently created
+                // closed records, after closing sockets and accounting usage.
+                // Evict before polling so no current event batch refers to them.
+                if (!del && ((s->protocol == IPPROTO_UDP && s->udp.state == UDP_CLOSED) ||
+                             (s->protocol == IPPROTO_TCP && s->tcp.state == TCP_CLOSE))) {
+                    if (++closed_sessions > SESSION_CLOSED_MAX)
+                        del = 1;
                 }
 
                 if (del) {

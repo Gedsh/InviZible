@@ -105,6 +105,12 @@ static const char *run_case(const char *id) {
         test_tcp_data_cleanup();
     else if (strcmp(id, "tcpClosedDataCleanup") == 0)
         test_tcp_closed_data_cleanup(&args);
+    else if (strcmp(id, "closedUdpLimit") == 0)
+        test_closed_session_limit(&args, 0);
+    else if (strcmp(id, "closedTcpLimit") == 0)
+        test_closed_session_limit(&args, 1);
+    else if (strcmp(id, "closedMixedLimit") == 0)
+        test_closed_session_limit(&args, 2);
     else if (strcmp(id, "eventLoopShutdown") == 0)
         test_event_loop_shutdown(&args);
     else if (strcmp(id, "idleUdpClosed") == 0)

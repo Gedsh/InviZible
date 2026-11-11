@@ -88,6 +88,7 @@
 
 #define SESSION_LIMIT 40 // percent
 #define SESSION_MAX (1024 * SESSION_LIMIT / 100) // number
+#define SESSION_CLOSED_MAX 1024 // retained closed TCP/UDP records, independent of active/blocked limits
 
 #define SEND_BUF_DEFAULT 163840 // bytes
 
@@ -530,10 +531,6 @@ jint restore_uid(const struct arguments *args,
 int protect_socket(const struct arguments *args, int socket, int uid);
 
 uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length);
-
-uint16_t do_csum_generic(uint16_t start, const uint8_t *buffer, size_t length);
-
-uint16_t do_csum_neon(uint16_t start, const uint8_t *buffer, size_t length);
 
 jobject jniGlobalRef(JNIEnv *env, jobject cls);
 

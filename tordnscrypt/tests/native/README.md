@@ -13,7 +13,7 @@ owner-specific signing files. Set `ANDROID_SERIAL` to select a device.
 Reports are written to `build/native-tests/reports/androidTests/connected/`
 and `build/native-tests/outputs/androidTest-results/connected/`.
 
-The 63 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
+The native regression tests cover malformed packet and DNS bounds, DNS compression, JNI
 credential byte limits, failed TCP setup, socket/file cleanup, event-loop
 shutdown, UDP forwarding and redirects, IP options/extensions, TCP data and
 shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
@@ -64,6 +64,10 @@ immediately while retaining the metadata needed for late packets and usage accou
 Six event-loop cases intercept polling and advance a test clock to verify idle
 UDP/TCP cleanup deadlines, closing-state transitions, earliest-deadline selection,
 and eventual release of session records without waiting minutes on the phone.
+Three churn cases verify the shared 1,024-record closed TCP/UDP cache limit across
+repeated bursts, preserving active and blocked flows, closing sockets, freeing
+queued TCP data, and accounting usage before eviction. Cleanup keeps the most
+recently created closed records; normal TCP/UDP expiration deadlines still apply.
 Three UDP cases verify the independent 1,024-record blocked-flow cap, IPv4/IPv6
 eviction without disturbing active sessions, and reuse of repeated blocked DNS flows.
 

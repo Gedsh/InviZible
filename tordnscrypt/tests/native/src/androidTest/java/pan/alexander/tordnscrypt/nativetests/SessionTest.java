@@ -8,6 +8,9 @@ import org.junit.runner.RunWith;
 /** Regressions for session.c. */
 @RunWith(AndroidJUnit4.class)
 public final class SessionTest extends NativeTestSupport {
+    @Test public void closedUdpRecordsStayBoundedDuringChurn() { check("closedUdpLimit"); }
+    @Test public void closedTcpRecordsStayBoundedDuringChurn() { check("closedTcpLimit"); }
+    @Test public void mixedClosedRecordsShareLimitAndPreserveActiveFlows() { check("closedMixedLimit"); }
     @Test public void stoppedEventLoopReleasesArguments() { check("eventLoopShutdown"); }
     @Test public void idleClosedUdpExpiresOnTime() { check("idleUdpClosed"); }
     @Test public void idleBlockedUdpExpiresOnTime() { check("idleUdpBlocked"); }
