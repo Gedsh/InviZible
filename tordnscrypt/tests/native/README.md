@@ -53,6 +53,17 @@ finishing, closed and blocked flows. DNS keeps its forwarding-policy shortcut
 separate from the handler's actual flow lookup; an existing DNS flow must not
 bypass UID/policy checks when DNS forwarding is enabled. The lookup is never
 stored beyond the packet or reused across event-loop iterations.
+TCP backpressure uses socket writability for queued, contiguous app data and TUN
+readiness for sequence gaps. Nonblocking sends retain partial writes and retry on
+EAGAIN without a periodic buffer-space poll. Closed app windows schedule probes
+after 1 second, doubling to a 60-second cap; app ACKs can reopen reads immediately.
+TCP cases exercise both families with full socket buffers, partial writes, probe
+timing and ACK-driven recovery. A session case checks the earliest probe deadline
+across flows and stop-pipe readiness using a controlled monotonic clock.
+IPv4/IPv6 loopback TCP cases fill the upstream buffer exactly, empty the native
+queue and advertise a zero receive window. They verify that writability remains
+monitored until a window-update ACK is sent, further app data resumes, and writable
+monitoring stops once the window reopens or app input has shut down.
 Incoming IPv4 header checksums are always validated, including options and padding.
 TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
 creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.

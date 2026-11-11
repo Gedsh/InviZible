@@ -8,6 +8,10 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void ipv4EmptyQueueReopensAdvertisedZeroWindow() { check("tcpWindowReopen4"); }
+    @Test public void ipv6EmptyQueueReopensAdvertisedZeroWindow() { check("tcpWindowReopen6"); }
+    @Test public void closedAppWindowBacksOffAndAckResumesReadsImmediately() { check("tcpWindowProbes"); }
+    @Test public void upstreamBackpressureUsesReadinessAndPreservesPartialWrites() { check("tcpWriteBackpressure"); }
     @Test public void reusedOutputKeepsDnsFilteringAndPartialFrameOwnership() { check("tcpDnsBufferReuse"); }
     @Test public void socketBuffersReuseStorageWithoutOverwritingQueuedTcpData() { check("tcpBufferReuse"); }
     @Test public void normalTrafficSkipsFormattingAndErrorsKeepContext() { check("lazyTcpLogging"); }

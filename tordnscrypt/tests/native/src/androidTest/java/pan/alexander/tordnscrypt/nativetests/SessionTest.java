@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for session.c. */
 @RunWith(AndroidJUnit4.class)
 public final class SessionTest extends NativeTestSupport {
+    @Test public void earliestTcpProbeDeadlineWinsAndStopPipeRemainsReady() { check("tcpProbeDeadlines"); }
     @Test public void eventLoopFreesScratchBuffersOnStopAndPollFailure() { check("eventBufferCleanup"); }
     @Test public void closedUdpRecordsStayBoundedDuringChurn() { check("closedUdpLimit"); }
     @Test public void closedTcpRecordsStayBoundedDuringChurn() { check("closedTcpLimit"); }

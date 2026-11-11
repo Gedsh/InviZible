@@ -25,7 +25,17 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "udpPacketLookup") == 0)
+    if (strcmp(id, "tcpWindowReopen4") == 0)
+        test_tcp_window_reopen(&args, 4);
+    else if (strcmp(id, "tcpWindowReopen6") == 0)
+        test_tcp_window_reopen(&args, 6);
+    else if (strcmp(id, "tcpProbeDeadlines") == 0)
+        test_tcp_probe_deadlines(&args);
+    else if (strcmp(id, "tcpWindowProbes") == 0)
+        test_tcp_backpressure(&args, 0);
+    else if (strcmp(id, "tcpWriteBackpressure") == 0)
+        test_tcp_backpressure(&args, 1);
+    else if (strcmp(id, "udpPacketLookup") == 0)
         test_udp_packet_lookup(&args, 0);
     else if (strcmp(id, "udpDnsLookupPolicy") == 0)
         test_udp_packet_lookup(&args, 1);

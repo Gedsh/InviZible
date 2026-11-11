@@ -84,6 +84,8 @@
 #define TCP_IDLE_TIMEOUT 3600 // seconds ~net.inet.tcp.keepidle
 #define TCP_CLOSE_TIMEOUT 20 // seconds
 #define TCP_KEEP_TIMEOUT 300 // seconds
+#define TCP_WINDOW_PROBE_MIN 1000 // milliseconds
+#define TCP_WINDOW_PROBE_MAX 60000 // milliseconds
 // https://en.wikipedia.org/wiki/Maximum_segment_lifetime
 
 #define SESSION_LIMIT 40 // percent
@@ -221,6 +223,7 @@ struct tcp_session {
 
     uint32_t acked; // host notation
     long long last_keep_alive;
+    int window_probe_interval; // milliseconds; zero when the app window is open
 
     uint64_t sent;
     uint64_t received;
@@ -408,6 +411,7 @@ int check_tcp_session(const struct arguments *args,
                       struct ng_session *s,
                       int sessions, int maxsessions);
 
+// Returns milliseconds until scheduled work, or zero when socket/TUN events suffice.
 int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd);
 
 int get_icmp_timeout(const struct icmp_session *u, int sessions, int maxsessions);

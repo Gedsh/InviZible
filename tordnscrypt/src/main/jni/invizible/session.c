@@ -113,6 +113,7 @@ void *handle_events(void *a) {
         log_android(ANDROID_LOG_DEBUG, "Loop");
 
         int recheck = 0;
+        int tcp_wait = 0;
         int timeout = EPOLL_TIMEOUT;
 
         // Count sessions
@@ -130,8 +131,11 @@ void *handle_events(void *a) {
             } else if (s->protocol == IPPROTO_TCP) {
                 if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE)
                     tsessions++;
-                if (s->socket >= 0)
-                    recheck = recheck | monitor_tcp_session(args, s, epoll_fd);
+                if (s->socket >= 0) {
+                    int wait = monitor_tcp_session(args, s, epoll_fd);
+                    if (wait > 0 && (tcp_wait == 0 || wait < tcp_wait))
+                        tcp_wait = wait;
+                }
             }
             s = s->next;
         }
@@ -216,8 +220,11 @@ void *handle_events(void *a) {
 
         // Poll
         struct epoll_event ev[EPOLL_EVENTS];
+        int wait = recheck ? EPOLL_MIN_CHECK : timeout * 1000;
+        if (tcp_wait > 0 && tcp_wait < wait)
+            wait = tcp_wait;
         int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS,
-                               recheck ? EPOLL_MIN_CHECK : timeout * 1000);
+                               wait);
 
         if (ready < 0) {
             if (errno == EINTR) {

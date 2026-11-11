@@ -396,6 +396,8 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
             uint32_t window = get_send_window(&s->tcp);
             if (window == 0)
                 break;
+            // Even a small reopening resets probe backoff if DNS fills it again.
+            s->tcp.window_probe_interval = 0;
             uint32_t local_seq = s->tcp.local_seq;
             flush_dns_response(args, &s->tcp, window);
             if (s->tcp.local_seq == local_seq)
@@ -416,30 +418,43 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
         // Check for incoming data
         if (!s->tcp.upstream_eof && get_send_window(&s->tcp) > 0) {
             if (s->tcp.dns_response_ready)
-                recheck = 1; // More buffered output after this loop's packet budget.
+                recheck = EPOLL_MIN_CHECK; // More buffered output after this loop's packet budget.
             else
                 events |= EPOLLIN;
+            s->tcp.window_probe_interval = 0;
         } else if (!s->tcp.upstream_eof) {
-            recheck = 1;
-
             long long ms = get_ms();
-            if (ms - s->tcp.last_keep_alive > EPOLL_MIN_CHECK) {
+            if (s->tcp.window_probe_interval == 0) {
+                s->tcp.window_probe_interval = TCP_WINDOW_PROBE_MIN;
                 s->tcp.last_keep_alive = ms;
+            }
+            long long remaining = s->tcp.window_probe_interval - (ms - s->tcp.last_keep_alive);
+            if (remaining <= 0) {
+                s->tcp.last_keep_alive = ms;
+                if (s->tcp.window_probe_interval < TCP_WINDOW_PROBE_MAX) {
+                    s->tcp.window_probe_interval *= 2;
+                    if (s->tcp.window_probe_interval > TCP_WINDOW_PROBE_MAX)
+                        s->tcp.window_probe_interval = TCP_WINDOW_PROBE_MAX;
+                }
                 log_android(ANDROID_LOG_INFO, "Sending keep alive to update send window");
                 s->tcp.remote_seq--;
                 write_ack(args, &s->tcp);
                 s->tcp.remote_seq++;
+                remaining = s->tcp.window_probe_interval;
             }
+            recheck = (int) remaining;
         }
 
         // Check for outgoing data
         if (s->tcp.forward != NULL) {
-            uint32_t buffer_size = get_receive_buffer(s);
-            if (s->tcp.forward->seq == s->tcp.remote_seq &&
-                s->tcp.forward->len - s->tcp.forward->sent < buffer_size)
+            // Nonblocking send handles partial writes. Let epoll wait for space;
+            // a sequence gap instead waits for the missing packet from TUN.
+            if (s->tcp.forward->seq == s->tcp.remote_seq)
                 events = events | EPOLLOUT;
-            else
-                recheck = 1;
+        } else if (!s->tcp.fin_acked && s->tcp.recv_window == 0) {
+            // The final queued write can fill the socket exactly. Wait for
+            // space so check_tcp_socket can advertise the reopened app window.
+            events |= EPOLLOUT;
         }
     }
 
@@ -804,10 +819,8 @@ void check_tcp_socket(const struct arguments *args,
             int fwd = 0;
             if (ev->events & EPOLLOUT) {
                 // Forward data
-                uint32_t buffer_size = get_receive_buffer(s);
                 while (s->tcp.forward != NULL &&
-                       s->tcp.forward->seq == s->tcp.remote_seq &&
-                       s->tcp.forward->len - s->tcp.forward->sent < buffer_size) {
+                       s->tcp.forward->seq == s->tcp.remote_seq) {
                     log_android(ANDROID_LOG_DEBUG, "%s fwd %u...%u sent %u",
                                 tcp_socket_text(&diagnostic),
                                 s->tcp.forward->seq - s->tcp.remote_start,
@@ -821,7 +834,8 @@ void check_tcp_socket(const struct arguments *args,
                                                                         ? 0
                                                                         : MSG_MORE)));
                     if (sent < 0) {
-                        log_android(ANDROID_LOG_ERROR, "%s send error %d: %s",
+                        log_android(errno == EINTR || errno == EAGAIN ? ANDROID_LOG_DEBUG : ANDROID_LOG_ERROR,
+                                    "%s send error %d: %s",
                                     tcp_socket_text(&diagnostic), errno, strerror(errno));
                         if (errno == EINTR || errno == EAGAIN) {
                             // Retry later
@@ -830,9 +844,10 @@ void check_tcp_socket(const struct arguments *args,
                             write_rst(args, &s->tcp);
                             break;
                         }
+                    } else if (sent == 0) {
+                        break;
                     } else {
                         fwd = 1;
-                        buffer_size -= sent;
                         s->tcp.sent += sent;
                         s->tcp.forward->sent += sent;
 
@@ -1056,6 +1071,7 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.local_start = s->tcp.local_seq;
             s->tcp.acked = 0;
             s->tcp.last_keep_alive = 0;
+            s->tcp.window_probe_interval = 0;
             s->tcp.sent = 0;
             s->tcp.received = 0;
 

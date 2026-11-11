@@ -463,6 +463,240 @@ static void tcp_input(const struct arguments *args, uint8_t *packet, size_t len,
                       own_uid, 1, NULL, -1) == 1);
 }
 
+void test_tcp_backpressure(const struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        assert(epoll_fd >= 0);
+        struct arguments running = *args;
+        running.tun = tunnel[1];
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED;
+        s.tcp.uid = own_uid; s.tcp.time = time(NULL); s.tcp.mss = 1200;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+        s.tcp.recv_window = 65535;
+        s.ev.events = EPOLLERR; s.ev.data.ptr = &s;
+        assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+        _Alignas(8) uint8_t packet[128], output[2048];
+        size_t length = tcp_packet(packet, version, 1000, 2000, 0, 0, NULL, 0);
+        size_t off = version == 4 ? 20 : 40;
+        struct tcphdr *header = (void *) (packet + off);
+        s.tcp.source = header->source; s.tcp.dest = header->dest;
+        memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+        memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+        args->ctx->ng_session = &s;
+        struct epoll_event ready;
+        if (kind == 0) {
+            tcp_test_clock = 100000;
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 1000);
+            assert(!is_readable(tunnel[0]) && !(s.ev.events & EPOLLIN));
+            tcp_test_clock += 999;
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 1);
+            assert(!is_readable(tunnel[0]));
+            tcp_test_clock++;
+            int intervals[] = {2000, 4000, 8000, 16000, 32000, 60000, 60000};
+            for (size_t i = 0; i < sizeof(intervals) / sizeof(*intervals); i++) {
+                assert(monitor_tcp_session(&running, &s, epoll_fd) == intervals[i]);
+                tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+                const struct tcphdr *probe = (const void *) (output + off);
+                assert(probe->ack && ntohl(probe->seq) == 2000 && ntohl(probe->ack_seq) == 999);
+                assert(s.tcp.remote_seq == 1000 && !is_readable(tunnel[0]));
+                tcp_test_clock += intervals[i];
+            }
+            // A tiny app window can be consumed entirely by pending DNS output.
+            // It must still restart the probe interval rather than retain 60 s.
+            s.tcp.dns_response = ng_calloc(1, 14, "pending DNS output");
+            assert(s.tcp.dns_response != NULL);
+            s.tcp.dns_response[1] = 12; s.tcp.dns_response[4] = 0x80;
+            s.tcp.dns_response_size = s.tcp.dns_response_used = 14;
+            s.tcp.dns_response_ready = true;
+            s.tcp.send_window = 41; // One byte after the existing header allowance.
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 1000);
+            assert(s.tcp.dns_response_sent == 1 && s.tcp.window_probe_interval == 1000);
+            assert(tun_packet(tunnel[0], output, version, IPPROTO_TCP) == off + 21);
+            assert(!is_readable(tunnel[0]));
+            clear_tcp_data(&s.tcp);
+            header->ack_seq = htonl(s.tcp.local_seq);
+            // A real app ACK wakes TUN independently of the probe deadline.
+            assert(handle_tcp(&running, packet, length, packet + off, own_uid, 1, NULL, epoll_fd) == 1);
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+            assert(s.tcp.window_probe_interval == 0 && (s.ev.events & EPOLLIN));
+            assert(send(stream[1], "reply", 5, 0) == 5);
+            assert(epoll_wait(epoll_fd, &ready, 1, 100) == 1);
+            check_tcp_socket(&running, &ready, epoll_fd);
+            assert(tun_packet(tunnel[0], output, version, IPPROTO_TCP) == off + 25);
+            assert(memcmp(output + off + 20, "reply", 5) == 0);
+            s.tcp.send_window = 0;
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 1000);
+            assert(!is_readable(tunnel[0]));
+            s.tcp.upstream_eof = true;
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+            tcp_test_clock = 0;
+        } else {
+            s.tcp.send_window = 16000;
+            uint8_t data[16384];
+            for (size_t i = 0; i < sizeof(data); i++) data[i] = (uint8_t) i;
+            struct tcphdr queued = {.seq = htonl(1001)};
+            assert(queue_tcp(&running, &queued, "gap", &s.tcp, data, 1) == 1);
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+            assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+            clear_tcp_data(&s.tcp);
+
+            int small = 4096;
+            assert(setsockopt(stream[0], SOL_SOCKET, SO_SNDBUF, &small, sizeof(small)) == 0);
+            while (send(stream[0], data, sizeof(data), 0) > 0) {}
+            assert(errno == EAGAIN);
+            queued.seq = htonl(1000);
+            assert(queue_tcp(&running, &queued, "blocked", &s.tcp, data, sizeof(data)) == 1);
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+            assert((s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+            ready.events = EPOLLOUT; ready.data.ptr = &s;
+            check_tcp_socket(&running, &ready, epoll_fd); // Stale readiness / EAGAIN.
+            assert(s.tcp.forward != NULL && s.tcp.forward->sent == 0 && allocations == 2);
+            while (read(stream[1], output, sizeof(output)) > 0) {}
+            assert(errno == EAGAIN);
+            size_t received = 0;
+            for (int turn = 0; turn < 16 && s.tcp.forward != NULL; turn++) {
+                assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+                assert(epoll_wait(epoll_fd, &ready, 1, 100) == 1 && (ready.events & EPOLLOUT));
+                check_tcp_socket(&running, &ready, epoll_fd);
+                if (turn == 0) {
+                    assert(s.tcp.forward != NULL && s.tcp.forward->sent > 0);
+                    assert(s.tcp.forward->sent < sizeof(data) && s.tcp.remote_seq == 1000);
+                }
+                ssize_t count;
+                while ((count = read(stream[1], output, sizeof(output))) > 0) {
+                    assert(received + count <= sizeof(data));
+                    assert(memcmp(output, data + received, count) == 0);
+                    received += count;
+                }
+                while (is_readable(tunnel[0])) tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+            }
+            assert(received == sizeof(data) && s.tcp.remote_seq == 1000 + sizeof(data));
+            assert(s.tcp.forward == NULL && allocations == 0);
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+            assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+        }
+        args->ctx->ng_session = NULL;
+        close(epoll_fd); close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+    real_network = 0;
+#endif
+}
+
+void test_tcp_window_reopen(const struct arguments *args, int version) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    // Bypass the single-socket setup spy for this real loopback TCP fixture.
+    int __real_socket(int domain, int type, int protocol);
+    int __real_connect(int fd, const struct sockaddr *addr, socklen_t len);
+    real_network = 1;
+    int family = version == 4 ? AF_INET : AF_INET6;
+    int listener = __real_socket(family, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    assert(listener >= 0);
+    struct sockaddr_storage address = {0};
+    socklen_t address_length;
+    if (version == 4) {
+        struct sockaddr_in *addr = (void *) &address;
+        addr->sin_family = AF_INET;
+        addr->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+        address_length = sizeof(*addr);
+    } else {
+        struct sockaddr_in6 *addr = (void *) &address;
+        addr->sin6_family = AF_INET6;
+        addr->sin6_addr = in6addr_loopback;
+        address_length = sizeof(*addr);
+    }
+    assert(bind(listener, (void *) &address, address_length) == 0);
+    assert(listen(listener, 1) == 0);
+    assert(getsockname(listener, (void *) &address, &address_length) == 0);
+    int client = __real_socket(family, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    assert(client >= 0);
+    int small = 4096, cork = 1;
+    assert(setsockopt(client, SOL_SOCKET, SO_SNDBUF, &small, sizeof(small)) == 0);
+    int connected = __real_connect(client, (void *) &address, address_length);
+    assert(connected == 0 || (connected == -1 && errno == EINPROGRESS));
+    struct pollfd accepted = {.fd = listener, .events = POLLIN};
+    assert(poll(&accepted, 1, 5000) == 1);
+    int peer = accept4(listener, NULL, NULL, SOCK_NONBLOCK | SOCK_CLOEXEC);
+    assert(peer >= 0);
+    struct pollfd writable = {.fd = client, .events = POLLOUT};
+    assert(poll(&writable, 1, 5000) == 1);
+    assert(setsockopt(client, IPPROTO_TCP, TCP_CORK, &cork, sizeof(cork)) == 0);
+    int tunnel[2];
+    assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    struct ng_session s = {.protocol = IPPROTO_TCP, .socket = client};
+    s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED; s.tcp.time = time(NULL);
+    s.tcp.uid = own_uid; s.tcp.mss = 1200;
+    s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+    s.tcp.send_window = 16000; s.tcp.recv_window = get_receive_window(&s);
+    assert(s.tcp.recv_window == 8192);
+    uint8_t data[8192], output[256];
+    for (size_t i = 0; i < sizeof(data); i++) data[i] = (uint8_t) i;
+    struct tcphdr queued = {.seq = htonl(1000)};
+    assert(queue_tcp(&running, &queued, "exact window", &s.tcp, data, sizeof(data)) == 1);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+    assert(epoll_fd >= 0);
+    s.ev.events = EPOLLERR; s.ev.data.ptr = &s;
+    assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client, &s.ev) == 0);
+    struct epoll_event ready;
+    assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+    assert(epoll_wait(epoll_fd, &ready, 1, 1000) == 1 && (ready.events & EPOLLOUT));
+    check_tcp_socket(&running, &ready, epoll_fd);
+    size_t off = version == 4 ? 20 : 40;
+    tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+    const struct tcphdr *ack = (const void *) (output + off);
+    assert(s.tcp.forward == NULL && allocations == 0 && s.tcp.remote_seq == 9192);
+    assert(s.tcp.recv_window == 0 && ack->window == 0 && ntohl(ack->ack_seq) == 9192);
+    assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+    assert(s.ev.events & EPOLLOUT); // Keep waiting for a window update despite the empty queue.
+
+    cork = 0;
+    assert(setsockopt(client, IPPROTO_TCP, TCP_CORK, &cork, sizeof(cork)) == 0);
+    uint8_t received[8192];
+    size_t used = 0;
+    while (used < sizeof(received)) {
+        struct pollfd readable = {.fd = peer, .events = POLLIN};
+        assert(poll(&readable, 1, 5000) == 1);
+        ssize_t count = read(peer, received + used, sizeof(received) - used);
+        assert(count > 0);
+        used += count;
+    }
+    assert(memcmp(received, data, sizeof(data)) == 0);
+    assert(epoll_wait(epoll_fd, &ready, 1, 5000) == 1 && (ready.events & EPOLLOUT));
+    check_tcp_socket(&running, &ready, epoll_fd);
+    tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+    assert(s.tcp.recv_window > 0 && ntohs(ack->window) > 0 && ntohl(ack->ack_seq) == 9192);
+    assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+    assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+    assert(!is_readable(tunnel[0])); // No repeated update ACKs or writable-event spin.
+
+    queued.seq = htonl(9192); queued.psh = 1;
+    assert(queue_tcp(&running, &queued, "resumed input", &s.tcp, data, 5) == 1);
+    assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+    assert(epoll_wait(epoll_fd, &ready, 1, 1000) == 1 && (ready.events & EPOLLOUT));
+    check_tcp_socket(&running, &ready, epoll_fd);
+    struct pollfd readable = {.fd = peer, .events = POLLIN};
+    assert(poll(&readable, 1, 5000) == 1);
+    assert(read(peer, received, sizeof(received)) == 5 && memcmp(received, data, 5) == 0);
+    tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+    assert(s.tcp.remote_seq == 9197 && s.tcp.forward == NULL && allocations == 0);
+    // Once app input has shut down, a zero window needs no writable monitoring.
+    s.tcp.fin_acked = true; s.tcp.recv_window = 0;
+    assert(monitor_tcp_session(&running, &s, epoll_fd) == 0 && !(s.ev.events & EPOLLOUT));
+    close(epoll_fd); close(client); close(peer); close(listener);
+    close(tunnel[0]); close(tunnel[1]);
+    assert(allocations == 0 && sockets == 0);
+    real_network = 0;
+#endif
+}
+
 #ifndef INVIZIBLE_BASELINE_TESTS
 int __real_fcntl(int fd, int cmd, ...);
 
@@ -734,8 +968,16 @@ void test_tcp_dns_buffer(int kind) {
                 struct epoll_event ready;
                 if (kind == 11) assert(epoll_wait(epoll_fd, &ready, 1, 0) == 0);
                 s->tcp.last_keep_alive = get_ms();
-                assert(monitor_tcp_session(&args, s, epoll_fd) == 1);
-                assert(!(s->ev.events & (EPOLLIN | EPOLLOUT)));
+                assert(monitor_tcp_session(&args, s, epoll_fd) > 0);
+                unsigned int expected_write = 0;
+#ifndef INVIZIBLE_BASELINE_TESTS
+                // A full upstream buffer also closes the advertised app-input
+                // window. Subscribe to its reopening without waiting for it to
+                // become writable before flushing DNS output to TUN.
+                if (s->tcp.recv_window == 0)
+                    expected_write = EPOLLOUT;
+#endif
+                assert((s->ev.events & (EPOLLIN | EPOLLOUT)) == expected_write);
                 _Alignas(8) uint8_t ack[128];
                 size_t ack_len = tcp_packet(ack, version, s->tcp.remote_seq, s->tcp.local_seq,
                                             0, 0, NULL, 0);
@@ -748,9 +990,9 @@ void test_tcp_dns_buffer(int kind) {
                     size_t count = collect_dns_test(s, tunnel[0], output + total, 0);
                     assert(count > 0 && count <= TCP_YIELD * s->tcp.mss);
                     total += count;
-                    assert(!(s->ev.events & EPOLLOUT));
+                    assert((s->ev.events & EPOLLOUT) == expected_write);
                     if (s->tcp.dns_response_ready) {
-                        assert(recheck == 1 && !(s->ev.events & EPOLLIN));
+                        assert(recheck > 0 && !(s->ev.events & EPOLLIN));
                     } else
                         assert(s->ev.events & EPOLLIN);
                     if (kind == 11) assert(epoll_wait(epoll_fd, &ready, 1, 0) == 0);
