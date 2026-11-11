@@ -1,5 +1,61 @@
 #include "test_support.h"
 
+void test_tcp_allocation_failure(const struct arguments *args) {
+    uint8_t packet[44] = {0x45};
+    struct tcphdr *header = (void *) (packet + 20);
+    header->syn = 1;
+    header->doff = 5;
+    const char *tags[] = {"tcp session", "syn segment", "syn segment data"};
+    for (size_t i = 0; i < sizeof(tags) / sizeof(*tags); i++) {
+        fail_alloc_tag = tags[i];
+        fail_alloc_match = 1;
+        assert(handle_tcp(args, packet, sizeof(packet), packet + 20, own_uid, 1, NULL, -1) == 0);
+        assert(fail_alloc_match == 0);
+        assert(allocations == 0 && sockets == 0 && args->ctx->ng_session == NULL);
+    }
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        struct ng_session s = {.socket = -1};
+        s.tcp.version = version;
+        s.tcp.state = TCP_ESTABLISHED;
+        s.tcp.send_window = 4096;
+        s.tcp.mss = 1500;
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        fail_alloc_tag = "tcp socket";
+        fail_alloc_match = 1;
+        check_tcp_socket(args, &event, -1);
+        assert(s.tcp.state == TCP_CLOSING && fail_alloc_match == 0);
+        fail_alloc_tag = version == 4 ? "tcp write4" : "tcp write 6";
+        fail_alloc_match = 1;
+        assert(write_tcp(args, &s.tcp, packet, 1, 0, 1, 0, 0) == -1);
+        assert(fail_alloc_match == 0 && allocations == 0);
+    }
+    // Both a new segment and its payload may fail before it is linked.
+    struct tcp_session tcp = {0};
+    const uint8_t data[] = {1, 2, 3, 4};
+    for (int match = 1; match <= 2; match++) {
+        fail_alloc_tag = "tcp segment";
+        fail_alloc_match = match;
+        assert(queue_tcp(args, header, "test", &tcp, data, sizeof(data)) == 0);
+        assert(tcp.forward == NULL && allocations == 0);
+    }
+    fail_alloc_tag = NULL;
+    assert(queue_tcp(args, header, "test", &tcp, data, 2) == 1);
+    uint8_t *original = tcp.forward->data;
+    fail_alloc_tag = "tcp segment smaller";
+    fail_alloc_match = 1;
+    assert(queue_tcp(args, header, "test", &tcp, data, 4) == 0);
+    assert(tcp.forward->data == original && tcp.forward->len == 2);
+    fail_alloc_tag = "tcp segment larger";
+    fail_alloc_match = 1;
+    assert(queue_tcp(args, header, "test", &tcp, data, 1) == 0);
+    assert(tcp.forward->data == original && tcp.forward->len == 2);
+    assert(memcmp(original, data, 2) == 0 && allocations == 2);
+    clear_tcp_data(&tcp);
+#endif
+    fail_alloc_tag = NULL;
+}
+
 void test_tcp(const struct arguments *args) {
     for (int doff = 0; doff <= 15; doff++) {
         uint8_t *pkt = calloc(1, 40);

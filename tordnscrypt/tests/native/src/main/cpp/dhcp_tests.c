@@ -1,5 +1,17 @@
 #include "test_support.h"
 
+void test_dhcp_allocation_failure(const struct arguments *args) {
+    struct udp_session udp = {.version = 4};
+    dhcp_packet request = {.opcode = 1, .htype = 1, .hlen = 6,
+                          .option_format = htonl(DHCP_OPTION_MAGIC_NUMBER)};
+    fail_alloc_tag = "dhcp";
+    fail_alloc_match = 1;
+    assert(check_dhcp(args, &udp, (const uint8_t *) &request, sizeof(request)) == -1);
+    assert(fail_alloc_match == 0);
+    assert(allocations == 0);
+    fail_alloc_tag = NULL;
+}
+
 void test_dhcp_response_bounds(const struct arguments *args) {
     struct udp_session udp = {.version = 4, .uid = own_uid};
     dhcp_packet request = {.opcode = 1, .htype = 1, .hlen = 6,

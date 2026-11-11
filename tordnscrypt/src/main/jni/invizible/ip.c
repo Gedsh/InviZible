@@ -60,6 +60,10 @@ int check_tun(const struct arguments *args,
     // Check tun read
     if (ev->events & EPOLLIN) {
         uint8_t *buffer = ng_malloc(get_mtu(), "tun read");
+        if (buffer == NULL) {
+            report_exit(args, "Cannot allocate tunnel read buffer");
+            return -1;
+        }
         ssize_t length = read(args->tun, buffer, get_mtu());
         if (length < 0) {
             ng_free(buffer, __FILE__, __LINE__);

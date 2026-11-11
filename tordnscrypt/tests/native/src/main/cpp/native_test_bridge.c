@@ -25,7 +25,27 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "memoryNames") == 0)
+    if (strcmp(id, "nativeInitialization") == 0)
+        test_native_initialization();
+    else if (strcmp(id, "boundedLogging") == 0)
+        test_bounded_logging();
+    else if (strcmp(id, "exceptionFailures") == 0)
+        test_exception_failures();
+    else if (strcmp(id, "atomicFlags") == 0)
+        test_atomic_flags();
+    else if (strcmp(id, "tcpAllocationFailure") == 0)
+        test_tcp_allocation_failure(&args);
+    else if (strcmp(id, "udpAllocationFailure") == 0)
+        test_udp_allocation_failure(&args);
+    else if (strcmp(id, "icmpAllocationFailure") == 0)
+        test_icmp_allocation_failure(&args);
+    else if (strcmp(id, "dnsAllocationFailure") == 0)
+        test_dns_allocation_failure(&args);
+    else if (strcmp(id, "dhcpAllocationFailure") == 0)
+        test_dhcp_allocation_failure(&args);
+    else if (strcmp(id, "tunAllocationFailure") == 0)
+        test_tun_allocation_failure(&args);
+    else if (strcmp(id, "memoryNames") == 0)
         test_names();
     else if (strcmp(id, "memoryDns") == 0)
         test_dns(&args);
@@ -119,6 +139,44 @@ static const char *run_case(const char *id) {
 }
 
 #ifndef INVIZIBLE_BASELINE_TESTS
+void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1run(
+        JNIEnv *, jobject, jlong, jint, jboolean, jint, jboolean, jboolean, jboolean);
+
+JNIEXPORT jboolean JNICALL
+Java_pan_alexander_tordnscrypt_nativetests_InvizibleTest_runArgumentsFailure(
+        JNIEnv *env, jobject instance) {
+    reset_test_state();
+    struct context ctx = {0};
+    fail_alloc_tag = "arguments";
+    fail_alloc_match = 1;
+    real_exit_reports = 1;
+    Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1run(
+            env, instance, (jlong) &ctx, -1, 0, 0, 0, 0, 0);
+    real_exit_reports = 0;
+    fail_alloc_tag = NULL;
+    return fail_alloc_match == 0 && allocations == 0 && sockets == 0 &&
+            exit_reports == 1 && !(*env)->ExceptionCheck(env);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_pan_alexander_tordnscrypt_nativetests_InvizibleTest_reportException(
+        JNIEnv *env, jclass cls, jthrowable exception) {
+    (*env)->Throw(env, exception);
+    int found = jniCheckException(env);
+    return found && !(*env)->ExceptionCheck(env);
+}
+
+void __real_report_exit(const struct arguments *args, const char *fmt, ...);
+JNIEXPORT void JNICALL
+Java_pan_alexander_tordnscrypt_nativetests_InvizibleTest_reportLongExit(
+        JNIEnv *env, jobject instance) {
+    struct arguments args = {.env = env, .instance = instance};
+    char reason[16384];
+    memset(reason, 'x', sizeof(reason) - 1);
+    reason[sizeof(reason) - 1] = 0;
+    __real_report_exit(&args, "%s", reason);
+}
+
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_Socks5SettingsTest_validateProxy(
         JNIEnv *env, jclass cls, jstring address, jstring user, jstring password) {

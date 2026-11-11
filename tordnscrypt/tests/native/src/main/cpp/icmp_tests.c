@@ -1,5 +1,33 @@
 #include "test_support.h"
 
+void test_icmp_allocation_failure(const struct arguments *args) {
+    uint8_t packet[64] = {0};
+    for (int version = 4; version <= 6; version += 2) {
+        size_t off = ip_header(packet, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6,
+                               8, version == 4 ? "198.51.100.1" : "2001:db8::2");
+        packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+        fail_alloc_tag = "icmp session";
+        fail_alloc_match = 1;
+        assert(handle_icmp(args, packet, off + 8, packet + off, own_uid, -1) == 0);
+        assert(fail_alloc_match == 0);
+        assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+        struct ng_session s = {.socket = -1};
+        s.icmp.version = version;
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        fail_alloc_tag = "icmp socket";
+        fail_alloc_match = 1;
+        check_icmp_socket(args, &event);
+        assert(fail_alloc_match == 0);
+        assert(s.icmp.stop);
+        fail_alloc_tag = version == 4 ? "icmp write4" : "icmp write6";
+        fail_alloc_match = 1;
+        assert(write_icmp(args, &s.icmp, packet + off, 8) == -1);
+        assert(fail_alloc_match == 0);
+        assert(allocations == 0);
+    }
+    fail_alloc_tag = NULL;
+}
+
 void test_icmp_socket_cleanup(const struct arguments *args) {
     struct icmp_session session = {.version = 4, .uid = own_uid};
     for (failure = PROTECT; failure <= SETFL; failure++) {

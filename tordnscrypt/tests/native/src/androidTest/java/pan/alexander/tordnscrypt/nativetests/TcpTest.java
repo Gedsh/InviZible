@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void allocationFailuresPreserveQueuesAndReleasePartialSessions() { check("tcpAllocationFailure"); }
     @Test public void tcpOptionsAndFailedSetupCleanup() { check("memoryTcp"); }
     @Test public void socketSetupFailureCleanup() { check("tcpSocketCleanup"); }
     @Test public void queuedDataCleanupIsIdempotent() { check("tcpDataCleanup"); }

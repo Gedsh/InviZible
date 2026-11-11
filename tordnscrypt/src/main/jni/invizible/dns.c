@@ -160,6 +160,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                                     a, name, cname, qclass, qtype, rcode, rdlength);
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_HINFO) {
                         char *hinfo = (char *) ng_malloc(rdlength, "hinfo");
+                        if (hinfo == NULL)
+                            return;
                         memset(hinfo, '\0', rdlength);
                         if (rdlength > 1) {
                             hinfo = memcpy(hinfo, data + off + 1, (size_t) (rdlength - 1));

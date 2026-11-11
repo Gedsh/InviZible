@@ -42,7 +42,7 @@ int own_uid = -2;
 bool compatibility_mode = false;
 bool can_filter = true;
 bool bypass_lan = true;
-bool tor_connection_available = false;
+atomic_bool tor_connection_available = false;
 
 extern int max_tun_msg;
 
@@ -121,7 +121,38 @@ JNIEXPORT jlong JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(
         JNIEnv *env, jobject instance, jint sdk) {
     struct context *ctx = ng_calloc(1, sizeof(struct context), "init");
+    if (ctx == NULL)
+        return 0;
     ctx->sdk = sdk;
+    atomic_init(&ctx->stopping, 0);
+    ctx->pipefds[0] = ctx->pipefds[1] = -1;
+
+    int error = pthread_mutex_init(&ctx->lock, NULL);
+    if (error != 0) {
+        log_android(ANDROID_LOG_ERROR, "pthread_mutex_init failed: %s", strerror(error));
+        ng_free(ctx, __FILE__, __LINE__);
+        return 0;
+    }
+
+    // Publish a context only after both wakeup descriptors are usable.
+    int ready = (pipe(ctx->pipefds) == 0);
+    if (!ready)
+        log_android(ANDROID_LOG_ERROR, "Create pipe error %d: %s", errno, strerror(errno));
+    for (int i = 0; ready && i < 2; i++) {
+        int flags = fcntl(ctx->pipefds[i], F_GETFL, 0);
+        ready = (flags >= 0 && fcntl(ctx->pipefds[i], F_SETFL, flags | O_NONBLOCK) >= 0);
+        if (!ready)
+            log_android(ANDROID_LOG_ERROR, "fcntl pipefds[%d] O_NONBLOCK error %d: %s",
+                        i, errno, strerror(errno));
+    }
+    if (!ready) {
+        for (int i = 0; i < 2; i++)
+            if (ctx->pipefds[i] >= 0)
+                close(ctx->pipefds[i]);
+        pthread_mutex_destroy(&ctx->lock);
+        ng_free(ctx, __FILE__, __LINE__);
+        return 0;
+    }
 
     *tor_socks5_addr = 0;
     tor_socks5_port = 0;
@@ -135,20 +166,6 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(
     *proxy_socks5_password = 0;
 
     own_uid = getuid();
-
-    if (pthread_mutex_init(&ctx->lock, NULL))
-        log_android(ANDROID_LOG_ERROR, "pthread_mutex_init failed");
-
-    // Create signal pipe
-    if (pipe(ctx->pipefds))
-        log_android(ANDROID_LOG_ERROR, "Create pipe error %d: %s", errno, strerror(errno));
-    else
-        for (int i = 0; i < 2; i++) {
-            int flags = fcntl(ctx->pipefds[i], F_GETFL, 0);
-            if (flags < 0 || fcntl(ctx->pipefds[i], F_SETFL, flags | O_NONBLOCK) < 0)
-                log_android(ANDROID_LOG_ERROR, "fcntl pipefds[%d] O_NONBLOCK error %d: %s",
-                            i, errno, strerror(errno));
-        }
 
     return (jlong) ctx;
 }
@@ -185,6 +202,12 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1run(
 
     // Get arguments
     struct arguments *args = ng_malloc(sizeof(struct arguments), "arguments");
+    if (args == NULL) {
+        // Reporting failure must not require the allocation that just failed.
+        struct arguments failed = {.env = env, .instance = instance};
+        report_exit(&failed, "Cannot allocate native tunnel arguments");
+        return;
+    }
     args->env = env;
     args->instance = instance;
     args->tun = tun;
@@ -346,7 +369,11 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1done(
 
 JNIEXPORT jstring JNICALL
 Java_pan_alexander_tordnscrypt_vpn_VpnUtils_jni_1getprop(JNIEnv *env, jclass type, jstring name_) {
+    if (name_ == NULL)
+        return NULL;
     const char *name = (*env)->GetStringUTFChars(env, name_, 0);
+    if (name == NULL)
+        return NULL;
     ng_add_alloc(name, "name");
 
     char value[PROP_VALUE_MAX + 1] = "";
@@ -362,14 +389,18 @@ JNIEXPORT jboolean JNICALL
 Java_pan_alexander_tordnscrypt_vpn_VpnUtils_is_1numeric_1address(JNIEnv *env, jclass type,
                                                                  jstring ip_) {
     jboolean numeric = 0;
+    if (ip_ == NULL)
+        return numeric;
     const char *ip = (*env)->GetStringUTFChars(env, ip_, 0);
+    if (ip == NULL)
+        return numeric;
     ng_add_alloc(ip, "ip");
 
     struct addrinfo hints;
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;
     hints.ai_flags = AI_NUMERICHOST;
-    struct addrinfo *result;
+    struct addrinfo *result = NULL;
     int err = getaddrinfo(ip, NULL, &hints, &result);
     if (err)
         log_android(ANDROID_LOG_DEBUG, "getaddrinfo(%s) error %d: %s", ip, err, gai_strerror(err));
@@ -386,21 +417,26 @@ Java_pan_alexander_tordnscrypt_vpn_VpnUtils_is_1numeric_1address(JNIEnv *env, jc
 
 void report_exit(const struct arguments *args, const char *fmt, ...) {
     jclass cls = (*args->env)->GetObjectClass(args->env, args->instance);
+    if (cls == NULL) {
+        jniCheckException(args->env);
+        return;
+    }
     ng_add_alloc(cls, "cls");
     jmethodID mid = jniGetMethodID(args->env, cls, "nativeExit", "(Ljava/lang/String;)V");
 
     jstring jreason = NULL;
-    if (fmt != NULL) {
+    if (mid != NULL && fmt != NULL) {
         char line[1024];
         va_list argptr;
         va_start(argptr, fmt);
-        vsprintf(line, fmt, argptr);
+        vsnprintf(line, sizeof(line), fmt, argptr);
         jreason = (*args->env)->NewStringUTF(args->env, line);
         ng_add_alloc(jreason, "jreason");
         va_end(argptr);
     }
 
-    (*args->env)->CallVoidMethod(args->env, args->instance, mid, jreason);
+    if (mid != NULL && (fmt == NULL || jreason != NULL))
+        (*args->env)->CallVoidMethod(args->env, args->instance, mid, jreason);
     jniCheckException(args->env);
 
     if (jreason != NULL) {
@@ -483,26 +519,34 @@ jobject jniNewObject(JNIEnv *env, jclass cls, jmethodID constructor, const char 
     return object;
 }
 
-static jmethodID midGetMessage = NULL;
-
 int jniCheckException(JNIEnv *env) {
     jthrowable ex = (*env)->ExceptionOccurred(env);
     if (ex) {
-        (*env)->ExceptionDescribe(env);
+        ng_add_alloc(ex, "exception");
         (*env)->ExceptionClear(env);
 
-        jclass clazz = (*env)->GetObjectClass(env, ex);
+        // Resolve the base method each time: subclasses may override getMessage.
+        // Do not recursively use jniGetMethodID while reporting an exception.
+        jclass clazz = (*env)->FindClass(env, "java/lang/Throwable");
         ng_add_alloc(clazz, "clsException");
-        const char *signature = "()Ljava/lang/String;";
-        if (midGetMessage == NULL)
-            midGetMessage = jniGetMethodID(env, clazz, "getMessage", signature);
-        jstring message = (jstring) (*env)->CallObjectMethod(env, ex, midGetMessage);
+        jmethodID method = (clazz == NULL ? NULL : (*env)->GetMethodID(
+                env, clazz, "getMessage", "()Ljava/lang/String;"));
+        jstring message = (method == NULL ? NULL :
+                (jstring) (*env)->CallObjectMethod(env, ex, method));
         ng_add_alloc(message, "exceptionMessage");
-        const char *exception = (*env)->GetStringUTFChars(env, message, NULL);
-        log_android(ANDROID_LOG_ERROR, "JNI Exception %s", exception);
-        (*env)->ReleaseStringUTFChars(env, message, exception);
-        (*env)->DeleteLocalRef(env, message);
-        (*env)->DeleteLocalRef(env, clazz);
+        const char *exception = NULL;
+        if (!(*env)->ExceptionCheck(env) && message != NULL)
+            exception = (*env)->GetStringUTFChars(env, message, NULL);
+        log_android(ANDROID_LOG_ERROR, "JNI Exception %s",
+                    exception == NULL ? "(message unavailable)" : exception);
+        if (exception != NULL)
+            (*env)->ReleaseStringUTFChars(env, message, exception);
+        // A secondary lookup, overridden getter or UTF conversion may fail.
+        (*env)->ExceptionClear(env);
+        if (message != NULL)
+            (*env)->DeleteLocalRef(env, message);
+        if (clazz != NULL)
+            (*env)->DeleteLocalRef(env, clazz);
         (*env)->DeleteLocalRef(env, ex);
         ng_delete_alloc(message, __FILE__, __LINE__);
         ng_delete_alloc(clazz, __FILE__, __LINE__);

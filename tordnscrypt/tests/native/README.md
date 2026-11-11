@@ -13,10 +13,15 @@ owner-specific signing files. Set `ANDROID_SERIAL` to select a device.
 Reports are written to `build/native-tests/reports/androidTests/connected/`
 and `build/native-tests/outputs/androidTest-results/connected/`.
 
-The 42 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
+The 52 native-handler tests cover malformed packet and DNS bounds, DNS compression, JNI
 credential byte limits, failed TCP setup, socket/file cleanup, event-loop
 shutdown, UDP forwarding and redirects, IP options/extensions, TCP data and
 shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
+They also inject allocation, mutex, pipe, and descriptor-configuration failures;
+check initialization retry and partial-session cleanup; preserve TCP queues on
+allocation failure; and exercise bounded logging and JNI exception-reporting failures.
+The test build disables function inlining and preserves symbol interposition so allocation failure injection also
+intercepts calls within the source that defines the allocation helpers.
 The C fixtures live in `src/main/cpp`; JUnit entry points live in
 `src/androidTest/java`. Fixtures compile separately and follow the production
 source they exercise:
@@ -24,6 +29,7 @@ source they exercise:
 | Production source | Native fixture | JUnit class |
 | --- | --- | --- |
 | `invizible.c` | `invizible_tests.c` | `InvizibleTest` |
+| `util.c` | `util_tests.c` | `UtilTest` |
 | `session.c` | `session_tests.c` | `SessionTest` |
 | `ip.c` | `ip_tests.c` | `IpTest` |
 | `tcp.c` | `tcp_tests.c` | `TcpTest` |
@@ -66,7 +72,11 @@ Three additional Android JUnit classes exercise JNI callers:
   NUL, addresses, null fields, and disabled settings.
 
 Gradle stages the production `NativeTunnel.java` as a generated test source;
-there is no separately maintained copy of the owner. The full run contains 70
+there is no separately maintained copy of the owner. Five real-JNI exception and
+exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
+case runs on a Java worker with the production Exception catch, checks that no
+Error escapes, and verifies that the native exit callback receives the failure reason.
+The full run contains 85
 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one

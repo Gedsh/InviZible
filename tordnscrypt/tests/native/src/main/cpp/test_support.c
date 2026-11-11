@@ -5,11 +5,17 @@ int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 int capture_packets, capture_dhcp, fake_proc;
 const char *proc_contents;
 int fail_cache_alloc;
+const char *fail_alloc_tag;
+int fail_alloc_match, fail_fcntl_call, fcntl_calls;
+char last_log[2048];
+int real_exit_reports, exit_reports;
 int real_network, real_udp_packets, block_domain, trace_dns;
 uint64_t accounted_sent, accounted_received;
 enum failure failure;
 
 void *__wrap_ng_malloc(size_t n, const char *tag) {
+    if (fail_alloc_tag != NULL && strcmp(tag, fail_alloc_tag) == 0 && --fail_alloc_match == 0)
+        return NULL;
     if (fail_cache_alloc && strncmp(tag, "uid_cache", 9) == 0)
         return NULL;
     void *p = malloc(n);
@@ -30,6 +36,8 @@ void *__wrap_ng_realloc(void *p, size_t n, const char *tag) {
 }
 
 void *__wrap_ng_calloc(size_t n, size_t size, const char *tag) {
+    if (fail_alloc_tag != NULL && strcmp(tag, fail_alloc_tag) == 0 && --fail_alloc_match == 0)
+        return NULL;
     void *p = calloc(n, size);
     assert(p != NULL);
     allocations++;
@@ -62,7 +70,7 @@ int __wrap_close(int fd) {
 
 int __real_fcntl(int fd, int cmd, ...);
 int __wrap_fcntl(int fd, int cmd, ...) {
-    if ((cmd == F_GETFL && failure == GETFL) ||
+    if (++fcntl_calls == fail_fcntl_call || (cmd == F_GETFL && failure == GETFL) ||
         (cmd == F_SETFL && failure == SETFL)) {
         errno = EIO;
         return -1;
@@ -77,6 +85,22 @@ int __wrap_fcntl(int fd, int cmd, ...) {
         return __real_fcntl(fd, cmd, flags);
     }
     return 0;
+}
+
+int __real_pipe(int descriptors[2]);
+int __wrap_pipe(int descriptors[2]) {
+    if (failure == PIPE) {
+        errno = EMFILE;
+        return -1;
+    }
+    return __real_pipe(descriptors);
+}
+
+int __real_pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attributes);
+int __wrap_pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t *attributes) {
+    if (failure == MUTEX)
+        return EAGAIN;
+    return __real_pthread_mutex_init(mutex, attributes);
 }
 
 int __real_connect(int fd, const struct sockaddr *addr, socklen_t len);
@@ -151,7 +175,19 @@ struct allowed *__wrap_is_address_allowed(const struct arguments *args, jobject 
     return &allowed;
 }
 
-void __wrap_report_exit(const struct arguments *args, const char *fmt, ...) {}
+void __real_report_exit(const struct arguments *args, const char *fmt, ...);
+void __wrap_report_exit(const struct arguments *args, const char *fmt, ...) {
+    exit_reports++;
+    if (real_exit_reports) {
+        char reason[1024];
+        va_list ap;
+        va_start(ap, fmt);
+        if (fmt != NULL)
+            vsnprintf(reason, sizeof(reason), fmt, ap);
+        va_end(ap);
+        __real_report_exit(args, fmt == NULL ? NULL : "%s", reason);
+    }
+}
 
 void __wrap_account_usage(const struct arguments *args, jint version, jint protocol,
                            const char *daddr, jint dport, jint uid, jlong sent, jlong received) {
@@ -173,6 +209,10 @@ int __wrap_fclose(FILE *file) {
 }
 
 int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
+    va_list capture;
+    va_start(capture, fmt);
+    vsnprintf(last_log, sizeof(last_log), fmt, capture);
+    va_end(capture);
     if (real_network) {
         va_list ap;
         va_start(ap, fmt);
@@ -299,6 +339,10 @@ void reset_test_state(void) {
     capture_packets = capture_dhcp = fake_proc = 0;
     proc_contents = NULL;
     fail_cache_alloc = 0;
+    fail_alloc_tag = NULL;
+    fail_alloc_match = fail_fcntl_call = fcntl_calls = 0;
+    last_log[0] = 0;
+    real_exit_reports = exit_reports = 0;
     real_network = real_udp_packets = block_domain = trace_dns = 0;
     accounted_sent = accounted_received = 0;
     failure = NONE;

@@ -239,7 +239,7 @@ void log_android(int prio, const char *fmt, ...) {
         char line[1024];
         va_list argptr;
         va_start(argptr, fmt);
-        vsprintf(line, fmt, argptr);
+        vsnprintf(line, sizeof(line), fmt, argptr);
         __android_log_print(prio, TAG, "%s", line);
         va_end(argptr);
     }
@@ -304,7 +304,11 @@ char *hex(const u_int8_t *data, const size_t len) {
     char hex_str[] = "0123456789ABCDEF";
 
     char *hexout;
+    if (len > (SIZE_MAX - 1) / 3)
+        return NULL;
     hexout = (char *) ng_malloc(len * 3 + 1, "hex");
+    if (hexout == NULL)
+        return NULL;
 
     for (size_t i = 0; i < len; i++) {
         hexout[i * 3 + 0] = hex_str[(data[i] >> 4) & 0x0F];

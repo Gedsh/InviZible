@@ -1,5 +1,40 @@
 #include "test_support.h"
 
+void test_udp_allocation_failure(const struct arguments *args) {
+    uint8_t packet[48];
+    for (int version = 4; version <= 6; version += 2) {
+        size_t off = ip_header(packet, version, IPPROTO_UDP, sizeof(struct udphdr),
+                               version == 4 ? "198.51.100.1" : "2001:db8::2");
+        struct udphdr *header = (void *) (packet + off);
+        header->source = htons(1234);
+        header->dest = htons(5000);
+        header->len = htons(sizeof(*header));
+        fail_alloc_tag = "udp session";
+        fail_alloc_match = 1;
+        assert(handle_udp(args, packet, off + sizeof(*header), packet + off, own_uid, NULL, -1) == 0);
+        assert(fail_alloc_match == 0);
+        assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+        struct ng_session s = {.protocol = IPPROTO_UDP, .socket = -1};
+        s.udp.version = version;
+        s.udp.state = UDP_ACTIVE;
+        s.udp.mss = 1500;
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        fail_alloc_tag = "udp recv";
+        fail_alloc_match = 1;
+        check_udp_socket(args, &event);
+        assert(fail_alloc_match == 0);
+        assert(s.udp.state == UDP_FINISHING);
+        fail_alloc_tag = version == 4 ? "udp write4" : "udp write6";
+        fail_alloc_match = 1;
+        real_udp_packets = 1;
+        assert(write_udp(args, &s.udp, packet, 1) == -1);
+        assert(fail_alloc_match == 0);
+        real_udp_packets = 0;
+        assert(allocations == 0);
+    }
+    fail_alloc_tag = NULL;
+}
+
 void test_udp_short_dns(struct arguments *args) {
     uint8_t *pkt = calloc(1, 28);
     pkt[0] = 0x45;

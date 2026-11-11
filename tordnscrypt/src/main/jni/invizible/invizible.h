@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdatomic.h>
+#define INVIZIBLE_ATOMIC_FLAGS 1
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
@@ -107,7 +109,7 @@
 struct context {
     pthread_mutex_t lock;
     int pipefds[2];
-    int stopping;
+    atomic_int stopping;
     int sdk;
     struct ng_session *ng_session;
 };
@@ -455,7 +457,7 @@ jboolean handle_tcp(const struct arguments *args,
                     int uid, int allowed, struct allowed *redirect,
                     const int epoll_fd);
 
-void queue_tcp(const struct arguments *args,
+int queue_tcp(const struct arguments *args,
                const struct tcphdr *tcphdr,
                const char *session, struct tcp_session *cur,
                const uint8_t *data, uint16_t datalen);

@@ -1,5 +1,15 @@
 #include "test_support.h"
 
+void test_tun_allocation_failure(const struct arguments *args) {
+    struct epoll_event event = {.events = EPOLLIN};
+    fail_alloc_tag = "tun read";
+    fail_alloc_match = 1;
+    assert(check_tun(args, &event, -1, 0, 100) == -1);
+    assert(fail_alloc_match == 0);
+    assert(allocations == 0);
+    fail_alloc_tag = NULL;
+}
+
 static void ip_packet(const struct arguments *args, size_t len, int version,
                        int extension, int extension_len, int expected) {
     uint8_t *pkt = calloc(1, len);

@@ -10,13 +10,17 @@ void native_test_fail(const char *condition, const char *file, int line)
 #undef assert
 #define assert(condition) ((condition) ? (void) 0 : native_test_fail(#condition, __FILE__, __LINE__))
 
-enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT };
+enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT, PIPE, MUTEX };
 extern enum failure failure;
 extern int allocations, sockets, last_socket, udp_calls, resolved_calls;
 extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 extern int capture_packets, capture_dhcp, fake_proc;
 extern const char *proc_contents;
 extern int fail_cache_alloc;
+extern const char *fail_alloc_tag;
+extern int fail_alloc_match, fail_fcntl_call, fcntl_calls;
+extern char last_log[2048];
+extern int real_exit_reports, exit_reports;
 extern int uid_cache_size;
 extern struct uid_cache_entry *uid_cache;
 // Older baseline exports do not define the cache cap; only current code runs these cases.
@@ -32,7 +36,12 @@ extern unsigned int cases;
 extern const struct JNINativeInterface jni;
 
 extern int own_uid, tor_dns_port, tor_socks5_port, proxy_socks5_port;
-extern bool bypass_lan, tor_isolate_uid, tor_connection_available;
+extern bool bypass_lan, tor_isolate_uid;
+#ifdef INVIZIBLE_ATOMIC_FLAGS
+extern atomic_bool tor_connection_available;
+#else
+extern bool tor_connection_available;
+#endif
 extern char tor_socks5_addr[INET6_ADDRSTRLEN + 1], proxy_socks5_addr[INET6_ADDRSTRLEN + 1];
 extern char tor_socks5_username[128], tor_socks5_password[128];
 extern char proxy_socks5_username[128], proxy_socks5_password[128];
@@ -59,6 +68,16 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 
 // Entry points grouped by the production source they exercise.
 void test_socks5(void); // invizible.c
+void test_native_initialization(void);
+void test_bounded_logging(void);
+void test_exception_failures(void);
+void test_atomic_flags(void);
+void test_tcp_allocation_failure(const struct arguments *args);
+void test_udp_allocation_failure(const struct arguments *args);
+void test_icmp_allocation_failure(const struct arguments *args);
+void test_dns_allocation_failure(const struct arguments *args);
+void test_dhcp_allocation_failure(const struct arguments *args);
+void test_tun_allocation_failure(const struct arguments *args);
 void test_names(void); // dns.c
 void test_dns(const struct arguments *args);
 void dns_flows(void);

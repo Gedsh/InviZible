@@ -115,6 +115,10 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
             s->udp.time = time(NULL);
 
             uint8_t *buffer = ng_malloc(s->udp.mss, "udp recv");
+            if (buffer == NULL) {
+                s->udp.state = UDP_FINISHING;
+                return;
+            }
             ssize_t bytes = recv(s->socket, buffer, s->udp.mss, 0);
             if (bytes < 0) {
                 // Socket error
@@ -329,6 +333,8 @@ jboolean handle_udp(const struct arguments *args,
 
         // Register session
         struct ng_session *s = ng_malloc(sizeof(struct ng_session), "udp session");
+        if (s == NULL)
+            return 0;
         s->protocol = IPPROTO_UDP;
 
         s->udp.time = time(NULL);
@@ -595,6 +601,8 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
     if (cur->version == 4) {
         len = sizeof(struct iphdr) + sizeof(struct udphdr) + datalen;
         buffer = ng_malloc(len, "udp write4");
+        if (buffer == NULL)
+            return -1;
         struct iphdr *ip4 = (struct iphdr *) buffer;
         udp = (struct udphdr *) (buffer + sizeof(struct iphdr));
         if (datalen)
@@ -625,6 +633,8 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
     } else {
         len = sizeof(struct ip6_hdr) + sizeof(struct udphdr) + datalen;
         buffer = ng_malloc(len, "udp write6");
+        if (buffer == NULL)
+            return -1;
         struct ip6_hdr *ip6 = (struct ip6_hdr *) buffer;
         udp = (struct udphdr *) (buffer + sizeof(struct ip6_hdr));
         if (datalen)

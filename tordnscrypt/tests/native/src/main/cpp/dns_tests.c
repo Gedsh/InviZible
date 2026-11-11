@@ -79,6 +79,19 @@ static size_t dns_answer(uint8_t *data, uint16_t type) {
     return 34 + len;
 }
 
+void test_dns_allocation_failure(const struct arguments *args) {
+    struct ng_session session = {.protocol = IPPROTO_UDP};
+    session.udp.version = 4;
+    uint8_t response[512];
+    size_t length = dns_answer(response, DNS_QTYPE_HINFO);
+    fail_alloc_tag = "hinfo";
+    fail_alloc_match = 1;
+    parse_dns_response(args, &session, response, &length);
+    assert(fail_alloc_match == 0);
+    assert(allocations == 0 && resolved_calls == 0);
+    fail_alloc_tag = NULL;
+}
+
 void dns_flows(void) {
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .rcode = 3};

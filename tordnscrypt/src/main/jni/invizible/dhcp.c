@@ -57,6 +57,8 @@ int check_dhcp(const struct arguments *args, const struct udp_session *u,
 
     if (request->opcode == 1) { // Discover/request
         struct dhcp_packet *response = ng_calloc(500, 1, "dhcp");
+        if (response == NULL)
+            return -1;
 
         // Hack
         inet_pton(AF_INET, "10.1.10.1", (void *) &u->saddr);
