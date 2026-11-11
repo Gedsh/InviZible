@@ -59,14 +59,14 @@ int check_tun(const struct arguments *args,
 
     // Check tun read
     if (ev->events & EPOLLIN) {
-        uint8_t *buffer = ng_malloc(get_mtu(), "tun read");
+        uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, get_mtu(), "tun read");
         if (buffer == NULL) {
             report_exit(args, "Cannot allocate tunnel read buffer");
             return -1;
         }
         ssize_t length = read(args->tun, buffer, get_mtu());
         if (length < 0) {
-            ng_free(buffer, __FILE__, __LINE__);
+            release_packet_buffer(args, buffer);
 
             log_android(ANDROID_LOG_ERROR, "tun %d read error %d: %s",
                         args->tun, errno, strerror(errno));
@@ -88,10 +88,10 @@ int check_tun(const struct arguments *args,
             // Handle IP from tun
             handle_ip(args, buffer, (size_t) length, epoll_fd, sessions, maxsessions);
 
-            ng_free(buffer, __FILE__, __LINE__);
+            release_packet_buffer(args, buffer);
         } else {
             // tun eof
-            ng_free(buffer, __FILE__, __LINE__);
+            release_packet_buffer(args, buffer);
 
             log_android(ANDROID_LOG_ERROR, "tun %d empty read", args->tun);
             report_exit(args, "tun %d empty read", args->tun);

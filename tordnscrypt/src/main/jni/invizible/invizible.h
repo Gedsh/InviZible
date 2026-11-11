@@ -117,6 +117,17 @@ struct context {
     struct ng_session *ng_session;
 };
 
+enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };
+
+struct packet_buffer {
+    uint8_t *data;
+    size_t capacity;
+};
+
+struct packet_buffers {
+    struct packet_buffer buffer[PACKET_BUFFER_COUNT];
+};
+
 struct arguments {
     JNIEnv *env;
     jobject instance;
@@ -124,6 +135,9 @@ struct arguments {
     jboolean fwd53;
     jint rcode;
     struct context *ctx;
+    // Borrowed from handle_events; only that event thread may use these buffers.
+    // NULL retains standalone helper calls' allocate/free behavior.
+    struct packet_buffers *buffers;
 };
 
 struct allowed {
@@ -561,6 +575,11 @@ jobject jniNewObject(JNIEnv *env, jclass cls, jmethodID constructor, const char 
 int jniCheckException(JNIEnv *env);
 
 int sdk_int(JNIEnv *env);
+
+uint8_t *get_packet_buffer(const struct arguments *args, enum packet_buffer_kind kind,
+                           size_t length, const char *tag);
+void release_packet_buffer(const struct arguments *args, uint8_t *buffer);
+void clear_packet_buffers(struct packet_buffers *buffers);
 
 // Keep diagnostic arguments unevaluated when their level is disabled.
 #define log_android(prio, ...) do { \

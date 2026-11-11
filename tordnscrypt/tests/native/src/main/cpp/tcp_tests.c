@@ -1,5 +1,70 @@
 #include "test_support.h"
 
+void test_tcp_buffer_reuse(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        struct packet_buffers buffers = {0};
+        struct arguments running = *args;
+        running.tun = tunnel[1]; running.buffers = &buffers;
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.uid = own_uid; s.tcp.time = time(NULL);
+        s.tcp.state = TCP_ESTABLISHED; s.tcp.mss = 1200;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+        s.tcp.recv_window = s.tcp.send_window = 16000;
+        uint8_t *packet = get_packet_buffer(&running, PACKET_INPUT, 128, "tcp test input");
+        assert(packet != NULL);
+        size_t off = ip_header(packet, version, IPPROTO_TCP, 24,
+                               version == 4 ? "203.0.113.2" : "2001:db8::2");
+        struct tcphdr *tcp = (void *) (packet + off);
+        tcp->source = htons(12345); tcp->dest = htons(443);
+        tcp->seq = htonl(1000); tcp->ack_seq = htonl(2000);
+        tcp->doff = 5; tcp->ack = tcp->psh = 1; tcp->window = htons(16000);
+        memcpy(packet + off + 20, "keep", 4);
+        memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+        memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+        s.tcp.source = tcp->source; s.tcp.dest = tcp->dest;
+        args->ctx->ng_session = &s;
+        assert(handle_tcp(&running, packet, off + 24, packet + off, own_uid, 1, NULL, -1) == 1);
+        assert(s.tcp.forward != NULL && s.tcp.forward->data != packet + off + 20);
+        packet = get_packet_buffer(&running, PACKET_INPUT, 4096, "tcp test input");
+        assert(packet != NULL);
+        memset(packet, 0xA5, 4096); // Simulate the next input, including a realloc.
+        assert(memcmp(s.tcp.forward->data, "keep", 4) == 0);
+        struct epoll_event event = {.events = EPOLLOUT, .data.ptr = &s};
+        check_tcp_socket(&running, &event, -1);
+        uint8_t output[2048], received[8];
+        assert(read(stream[1], received, sizeof(received)) == 4 && memcmp(received, "keep", 4) == 0);
+        tun_packet(tunnel[0], output, version, IPPROTO_TCP); // ACK after forwarding.
+        assert(s.tcp.forward == NULL && allocations == 2);
+
+        event.events = EPOLLIN;
+        const size_t lengths[] = {17, 1200, 3};
+        uint8_t data[1200];
+        for (size_t i = 0; i < 3; i++) {
+            memset(data, (int) i + 1, lengths[i]);
+            assert(send(stream[1], data, lengths[i], 0) == lengths[i]);
+            check_tcp_socket(&running, &event, -1);
+            size_t length = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+            assert(length == off + 20 + lengths[i]);
+            assert(memcmp(output + off + 20, data, lengths[i]) == 0);
+            uint16_t checksum = load16(output + off + 16);
+            packet_checksums(output, length, off, IPPROTO_TCP);
+            assert(load16(output + off + 16) == checksum);
+            assert(allocations == 2 && buffers.buffer[PACKET_INPUT].data == packet);
+        }
+        assert(s.tcp.local_seq == 2000 + 17 + 1200 + 3 && s.tcp.remote_seq == 1004);
+        clear_packet_buffers(&buffers);
+        args->ctx->ng_session = NULL;
+        close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_lazy_tcp_logging(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];
@@ -584,6 +649,8 @@ static size_t drain_dns_test(const struct arguments *args, struct ng_session *s,
 
 void test_tcp_dns_buffer(int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    bool reuse = kind == 12;
+    if (reuse) kind = 1; // A complete response followed by a partial next frame.
     for (int version = 4; version <= 6; version += 2) {
         int stream[2], tunnel[2];
         assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
@@ -592,6 +659,8 @@ void test_tcp_dns_buffer(int kind) {
         real_network = 1;
         struct context ctx = {.sdk = 29};
         struct arguments args = {.ctx = &ctx, .tun = tunnel[1], .rcode = 3};
+        struct packet_buffers buffers = {0};
+        args.buffers = reuse ? &buffers : NULL;
         struct ng_session *s = ng_calloc(1, sizeof(*s), "test DNS session");
         ctx.ng_session = s;
         s->protocol = IPPROTO_TCP; s->socket = stream[0];
@@ -634,7 +703,7 @@ void test_tcp_dns_buffer(int kind) {
             assert((output[5] & 15) == 3 && (output[24] & 15) == 3);
             assert(load16(output + 8) == 0 && load16(output + 27) == 0);
             assert(resolved_calls == version / 2 - 1); // One A callback per version; HTTPS has none.
-            assert(s->tcp.dns_response == NULL && allocations == 1);
+            assert(s->tcp.dns_response == NULL && allocations == (reuse ? 2 : 1));
         } else if (kind == 7 || kind == 10 || kind == 11) {
             size_t len = kind == 10 ? 65537 : kind == 11 ? 155 : 35;
             if (kind == 10) {
@@ -717,6 +786,7 @@ void test_tcp_dns_buffer(int kind) {
             } else
                 assert(s->tcp.dns_response_used == 5 && allocations == 2);
         }
+        clear_packet_buffers(&buffers);
         clear(&ctx);
         assert(ctx.ng_session == NULL && allocations == 0 && sockets == 0);
         assert(__real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);

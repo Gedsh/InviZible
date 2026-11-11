@@ -896,7 +896,7 @@ void check_tcp_socket(const struct arguments *args,
 
                     uint32_t buffer_size = (send_window > s->tcp.mss
                                             ? s->tcp.mss : send_window);
-                    uint8_t *buffer = ng_malloc(buffer_size, "tcp socket");
+                    uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, buffer_size, "tcp socket");
                     if (buffer == NULL) {
                         write_rst(args, &s->tcp);
                         return;
@@ -932,7 +932,7 @@ void check_tcp_socket(const struct arguments *args,
                             s->tcp.unconfirmed++;
                         }
                     }
-                    ng_free(buffer, __FILE__, __LINE__);
+                    release_packet_buffer(args, buffer);
                 }
             }
         }
@@ -1672,7 +1672,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     uint8_t *options;
     if (cur->version == 4) {
         len = sizeof(struct iphdr) + sizeof(struct tcphdr) + optlen + datalen;
-        buffer = ng_malloc(len, "tcp write4");
+        buffer = get_packet_buffer(args, PACKET_OUTPUT, len, "tcp write4");
         if (buffer == NULL)
             return -1;
         struct iphdr *ip4 = (struct iphdr *) buffer;
@@ -1705,7 +1705,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
         csum = calc_checksum(0, (uint8_t *) &pseudo, sizeof(struct ippseudo));
     } else {
         len = sizeof(struct ip6_hdr) + sizeof(struct tcphdr) + optlen + datalen;
-        buffer = ng_malloc(len, "tcp write 6");
+        buffer = get_packet_buffer(args, PACKET_OUTPUT, len, "tcp write 6");
         if (buffer == NULL)
             return -1;
         struct ip6_hdr *ip6 = (struct ip6_hdr *) buffer;
@@ -1798,7 +1798,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     }
 
 
-    ng_free(buffer, __FILE__, __LINE__);
+    release_packet_buffer(args, buffer);
 
     if (res != len) {
         log_android(ANDROID_LOG_ERROR, "TCP write %d/%d", res, len);

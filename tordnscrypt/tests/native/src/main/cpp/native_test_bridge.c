@@ -25,7 +25,21 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "lazyLogging") == 0)
+    if (strcmp(id, "tcpDnsBufferReuse") == 0)
+        test_tcp_dns_buffer(12);
+    else if (strcmp(id, "eventBufferCleanup") == 0)
+        test_event_buffer_cleanup(&args);
+    else if (strcmp(id, "packetBuffers") == 0)
+        test_packet_buffers(&args);
+    else if (strcmp(id, "tunBufferReuse") == 0)
+        test_tun_buffer_reuse(&args);
+    else if (strcmp(id, "tcpBufferReuse") == 0)
+        test_tcp_buffer_reuse(&args);
+    else if (strcmp(id, "udpBufferReuse") == 0)
+        test_udp_buffer_reuse(&args);
+    else if (strcmp(id, "icmpBufferReuse") == 0)
+        test_icmp_buffer_reuse(&args);
+    else if (strcmp(id, "lazyLogging") == 0)
         test_lazy_logging();
     else if (strcmp(id, "lazyTcpLogging") == 0)
         test_lazy_tcp_logging(&args);

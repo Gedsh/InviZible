@@ -107,7 +107,7 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
         if (ev->events & EPOLLIN) {
             s->udp.time = time(NULL);
 
-            uint8_t *buffer = ng_malloc(s->udp.mss, "udp recv");
+            uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, s->udp.mss, "udp recv");
             if (buffer == NULL) {
                 s->udp.state = UDP_FINISHING;
                 return;
@@ -135,7 +135,7 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
                 if (ntohs(s->udp.dest) == 53 && dns_has_multiple_questions(buffer, (size_t) bytes)) {
                     log_android(ANDROID_LOG_WARN, "Dropping DNS response with multiple questions");
                     s->udp.state = UDP_FINISHING;
-                    ng_free(buffer, __FILE__, __LINE__);
+                    release_packet_buffer(args, buffer);
                     return;
                 }
 
@@ -152,7 +152,7 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
                         s->udp.state = UDP_FINISHING;
                 }
             }
-            ng_free(buffer, __FILE__, __LINE__);
+            release_packet_buffer(args, buffer);
         }
     }
 }
@@ -602,7 +602,7 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
     // Build packet
     if (cur->version == 4) {
         len = sizeof(struct iphdr) + sizeof(struct udphdr) + datalen;
-        buffer = ng_malloc(len, "udp write4");
+        buffer = get_packet_buffer(args, PACKET_OUTPUT, len, "udp write4");
         if (buffer == NULL)
             return -1;
         struct iphdr *ip4 = (struct iphdr *) buffer;
@@ -634,7 +634,7 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
         csum = calc_checksum(0, (uint8_t *) &pseudo, sizeof(struct ippseudo));
     } else {
         len = sizeof(struct ip6_hdr) + sizeof(struct udphdr) + datalen;
-        buffer = ng_malloc(len, "udp write6");
+        buffer = get_packet_buffer(args, PACKET_OUTPUT, len, "udp write6");
         if (buffer == NULL)
             return -1;
         struct ip6_hdr *ip6 = (struct ip6_hdr *) buffer;
@@ -689,7 +689,7 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
     }
 
 
-    ng_free(buffer, __FILE__, __LINE__);
+    release_packet_buffer(args, buffer);
 
     if (res != len) {
         log_android(ANDROID_LOG_ERROR, "write %d/%d", res, len);

@@ -1,5 +1,39 @@
 #include "test_support.h"
 
+void test_packet_buffers(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    struct packet_buffers buffers = {0};
+    struct arguments running = *args;
+    running.buffers = &buffers;
+    uint8_t *input = get_packet_buffer(&running, PACKET_INPUT, 8, "buffer input");
+    assert(input != NULL && allocations == 1);
+    memset(input, 0xA5, 8);
+    size_t capacity = buffers.buffer[PACKET_INPUT].capacity;
+    assert(capacity >= get_mtu());
+    fail_alloc_tag = "buffer input"; fail_alloc_match = 1;
+    assert(get_packet_buffer(&running, PACKET_INPUT, capacity, "buffer input") == input);
+    assert(fail_alloc_match == 1); // A warm buffer does not call the allocator.
+    assert(get_packet_buffer(&running, PACKET_INPUT, capacity + 1, "buffer input") == NULL);
+    assert(fail_alloc_match == 0 && buffers.buffer[PACKET_INPUT].data == input);
+    assert(buffers.buffer[PACKET_INPUT].capacity == capacity && input[0] == 0xA5);
+    fail_alloc_tag = NULL;
+    input = get_packet_buffer(&running, PACKET_INPUT, capacity + 1, "buffer input");
+    assert(input != NULL && input[0] == 0xA5 && allocations == 1);
+    uint8_t *output = get_packet_buffer(&running, PACKET_OUTPUT, 8, "buffer output");
+    assert(output != NULL && output != input && allocations == 2);
+    memset(output, 0x5A, 8);
+    assert(input[0] == 0xA5);
+    release_packet_buffer(&running, input);
+    release_packet_buffer(&running, output);
+    assert(allocations == 2);
+    clear_packet_buffers(&buffers);
+    clear_packet_buffers(&buffers);
+    assert(allocations == 0);
+    for (size_t i = 0; i < PACKET_BUFFER_COUNT; i++)
+        assert(buffers.buffer[i].data == NULL && buffers.buffer[i].capacity == 0);
+#endif
+}
+
 void test_lazy_logging(void) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int evaluations = 0;

@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
+    @Test public void tunnelReadsReuseInputThroughRetriesAndEof() { check("tunBufferReuse"); }
     @Test public void ipv4ChecksumIncludesHeaderOptionsAndPadding() { check("ipChecksumHeader"); }
     @Test public void ipv4UdpChecksumValidationAllowsOmission() { check("ipChecksumUdp4"); }
     @Test public void ipv6UdpChecksumValidationRejectsOmission() { check("ipChecksumUdp6"); }

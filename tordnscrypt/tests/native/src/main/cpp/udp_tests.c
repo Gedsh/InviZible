@@ -1,5 +1,83 @@
 #include "test_support.h"
 
+void test_udp_buffer_reuse(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_udp_packets = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        int upstream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        struct packet_buffers buffers = {0};
+        struct arguments running = *args;
+        running.tun = tunnel[1]; running.buffers = &buffers;
+        struct ng_session s = {.protocol = IPPROTO_UDP, .socket = upstream[0]};
+        s.udp.version = version; s.udp.source = htons(12345); s.udp.dest = htons(5000);
+        s.udp.state = UDP_ACTIVE; s.udp.mss = UDP6_MAXMSG;
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        uint8_t *data = malloc(65536), *output = malloc(65536);
+        assert(data != NULL && output != NULL);
+        const size_t lengths[] = {17, 1400, 3, 1400};
+        for (size_t i = 0; i < sizeof(lengths) / sizeof(*lengths); i++) {
+            for (size_t j = 0; j < lengths[i]; j++) data[j] = (uint8_t) (j * 17 + i);
+            ssize_t sent = send(upstream[1], data, lengths[i], 0);
+            if (sent != (ssize_t) lengths[i]) {
+                char reason[160];
+                snprintf(reason, sizeof(reason), "UDP fixture send version %d size %zu returned %zd errno %d",
+                         version, lengths[i], sent, errno);
+                native_test_fail(reason, __FILE__, __LINE__);
+            }
+            check_udp_socket(&running, &event);
+            assert(s.udp.state == UDP_ACTIVE && allocations == 2);
+            readable(tunnel[0]);
+            ssize_t length = read(tunnel[0], output, 65536);
+            size_t off = version == 4 ? 20 : 40;
+            assert(length == off + 8 + lengths[i]);
+            assert(memcmp(output + off + 8, data, lengths[i]) == 0);
+            uint16_t checksum = load16(output + off + 6);
+            packet_checksums(output, (size_t) length, off, IPPROTO_UDP);
+            assert(load16(output + off + 6) == checksum);
+        }
+        // Some device kernels return ENOBUFS for a 64 KiB Unix datagram. Verify
+        // maximum packet construction without requiring that kernel allocation.
+        int sink = open("/dev/null", O_WRONLY);
+        assert(sink >= 0);
+        struct arguments maximum = running;
+        maximum.tun = sink;
+        memset(data, 0x5A, UDP6_MAXMSG);
+        size_t off = version == 4 ? 20 : 40;
+        size_t length = off + 8 + UDP6_MAXMSG;
+        assert(write_udp(&maximum, &s.udp, data, UDP6_MAXMSG) == length);
+        memcpy(output, buffers.buffer[PACKET_OUTPUT].data, length);
+        assert(memcmp(output + off + 8, data, UDP6_MAXMSG) == 0);
+        uint16_t checksum = load16(output + off + 6);
+        packet_checksums(output, length, off, IPPROTO_UDP);
+        assert(load16(output + off + 6) == checksum);
+        close(sink);
+        assert(buffers.buffer[PACKET_INPUT].data != buffers.buffer[PACKET_OUTPUT].data);
+        assert(buffers.buffer[PACKET_INPUT].capacity == UDP6_MAXMSG);
+        assert(buffers.buffer[PACKET_OUTPUT].capacity <= 65535);
+        // A rejected DNS reply must not invalidate the shared receive buffer.
+        uint8_t dns[12] = {0};
+        s.udp.dest = htons(53);
+        store16(dns + 4, 2);
+        assert(send(upstream[1], dns, sizeof(dns), 0) == sizeof(dns));
+        check_udp_socket(&running, &event);
+        assert(s.udp.state == UDP_FINISHING && !is_readable(tunnel[0]) && allocations == 2);
+        s.udp.state = UDP_ACTIVE;
+        dns[2] = 0x80; store16(dns + 4, 0);
+        assert(send(upstream[1], dns, sizeof(dns), 0) == sizeof(dns));
+        check_udp_socket(&running, &event);
+        readable(tunnel[0]);
+        assert(read(tunnel[0], output, 65536) == off + 8 + sizeof(dns));
+        assert(memcmp(output + off + 8, dns, sizeof(dns)) == 0 && allocations == 2);
+        clear_packet_buffers(&buffers);
+        free(data); free(output);
+        close(upstream[0]); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_lazy_udp_logging(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];

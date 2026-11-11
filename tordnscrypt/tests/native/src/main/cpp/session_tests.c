@@ -6,6 +6,10 @@ static long long idle_clock;
 static int idle_polls, idle_timeout;
 static int closed_cache_test;
 static void poll_closed_cache(void);
+#ifndef INVIZIBLE_BASELINE_TESTS
+static struct arguments *buffer_loop_args;
+static int buffer_loop_kind;
+#endif
 
 long long __real_get_ms(void);
 long long __wrap_get_ms(void) {
@@ -18,6 +22,21 @@ long long __wrap_get_ms(void) {
 
 int __real_epoll_wait(int fd, struct epoll_event *events, int count, int timeout);
 int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    if (buffer_loop_args != NULL) {
+        assert(buffer_loop_args->buffers != NULL);
+        assert(get_packet_buffer(buffer_loop_args, PACKET_INPUT, 4096, "loop input") != NULL);
+        struct tcp_session tcp = {.version = 4, .recv_window = 4096};
+        assert(write_ack(buffer_loop_args, &tcp) >= 0);
+        assert(allocations == 3); // Loop arguments plus the two scratch buffers.
+        if (buffer_loop_kind == 0) {
+            buffer_loop_args->ctx->stopping = 1;
+            return 0;
+        }
+        errno = EIO;
+        return -1;
+    }
+#endif
     if (idle_context == NULL)
         return __real_epoll_wait(fd, events, count, timeout);
 
@@ -46,6 +65,28 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
         idle_context->stopping = 1;
     }
     return 0;
+}
+
+void test_event_buffer_cleanup(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int kind = 0; kind < 2; kind++) {
+        int tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        assert(pipe(args->ctx->pipefds) == 0);
+        args->ctx->stopping = 0;
+        struct arguments *owned = ng_malloc(sizeof(*owned), "test arguments");
+        *owned = *args;
+        owned->tun = tunnel[0];
+        buffer_loop_kind = kind;
+        buffer_loop_args = owned;
+        handle_events(owned);
+        buffer_loop_args = NULL;
+        assert(allocations == 0 && sockets == 0 && args->ctx->ng_session == NULL);
+        assert(exit_reports == kind);
+        close(tunnel[0]); close(tunnel[1]);
+        close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+    }
+#endif
 }
 
 static struct ng_session *lingering_session(int protocol, int state, int age) {

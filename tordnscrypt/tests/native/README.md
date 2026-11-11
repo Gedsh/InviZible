@@ -35,6 +35,16 @@ disabled logs skip their arguments and normal packet/session diagnostics, enable
 errors retain addresses and the original TCP state, and usage accounting still
 receives its destination. Address formatting is cached only within a call and
 preserves errno; no persistent session cache or allocation is added.
+The native event loop owns two lazy scratch buffers: one shared by sequential
+TUN/socket reads and one for packet construction. Capacity grows only when needed
+(at least the MTU), and both buffers are freed on stop or fatal polling failure.
+TCP queues and buffered DNS frames retain independent storage. Standalone helpers
+without a buffer scope retain their allocate/free behavior.
+Buffer-reuse cases cover failed allocation/growth, retries and EOF, IPv4/IPv6 TCP,
+UDP and ICMP replies, queued TCP data surviving input reuse, DNS filtering and
+partial frames, maximum UDP packet construction, and cleanup after loop exit.
+Large UDP construction uses a local sink because some device kernels cannot
+allocate a maximum-size Unix datagram; smaller replies exercise real socket pairs.
 Incoming IPv4 header checksums are always validated, including options and padding.
 TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
 creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.

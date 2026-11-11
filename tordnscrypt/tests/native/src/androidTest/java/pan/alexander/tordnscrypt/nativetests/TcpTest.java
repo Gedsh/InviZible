@@ -8,6 +8,8 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void reusedOutputKeepsDnsFilteringAndPartialFrameOwnership() { check("tcpDnsBufferReuse"); }
+    @Test public void socketBuffersReuseStorageWithoutOverwritingQueuedTcpData() { check("tcpBufferReuse"); }
     @Test public void normalTrafficSkipsFormattingAndErrorsKeepContext() { check("lazyTcpLogging"); }
     @Test public void coalescedDnsRepliesKeepCallbacksAndDomainAndHttpsBlocking() { check("tcpDnsCoalesced"); }
     @Test public void completeDnsReplyAndPartialTailAreBothFiltered() { check("tcpDnsPartialTail"); }

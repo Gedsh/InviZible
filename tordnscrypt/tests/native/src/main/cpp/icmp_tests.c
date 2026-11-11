@@ -1,5 +1,39 @@
 #include "test_support.h"
 
+void test_icmp_buffer_reuse(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int upstream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        struct packet_buffers buffers = {0};
+        struct arguments running = *args;
+        running.tun = tunnel[1]; running.buffers = &buffers;
+        struct ng_session s = {.protocol = IPPROTO_ICMP, .socket = upstream[0]};
+        s.icmp.version = version; s.icmp.id = htons(12345);
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        const size_t lengths[] = {19, 1400, 11};
+        for (size_t i = 0; i < 3; i++) {
+            _Alignas(8) uint8_t data[1400] = {0}, output[2048];
+            data[0] = version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY;
+            store16(data + 4, 54321); store16(data + 6, (uint16_t) i);
+            memset(data + 8, (int) i + 1, lengths[i] - 8);
+            assert(send(upstream[1], data, lengths[i], 0) == lengths[i]);
+            check_icmp_socket(&running, &event);
+            size_t length = tun_packet(tunnel[0], output, version,
+                                      version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+            size_t off = version == 4 ? 20 : 40;
+            assert(length == off + lengths[i] && !s.icmp.stop && allocations == 2);
+            assert(load16(output + off + 4) == 12345 && load16(output + off + 6) == i);
+            assert(memcmp(output + off + 8, data + 8, lengths[i] - 8) == 0);
+        }
+        clear_packet_buffers(&buffers);
+        close(upstream[0]); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_icmp_destination(const struct arguments *args) {
     for (int version = 4; version <= 6; version += 2) {
         const char *dest = version == 4 ? "198.51.100.1" : "fe80::1";

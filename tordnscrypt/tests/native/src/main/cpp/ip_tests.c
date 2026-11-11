@@ -1,5 +1,46 @@
 #include "test_support.h"
 
+void test_tun_buffer_reuse(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    real_network = 1;
+    assert(fcntl(tunnel[0], F_SETFL, O_NONBLOCK) == 0);
+    struct packet_buffers buffers = {0};
+    struct arguments running = *args;
+    running.tun = tunnel[0]; running.buffers = &buffers;
+    struct epoll_event event = {.events = EPOLLIN};
+    fail_alloc_tag = "tun read"; fail_alloc_match = 1;
+    assert(check_tun(&running, &event, -1, 0, SESSION_MAX) == -1);
+    assert(allocations == 0 && buffers.buffer[PACKET_INPUT].data == NULL);
+    fail_alloc_tag = NULL;
+    capture_packets = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[128];
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 9,
+                               version == 4 ? "203.0.113.2" : "2001:db8::2");
+        struct udphdr *udp = (void *) (packet + off);
+        udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+        packet[off + 8] = (uint8_t) version;
+        packet_checksums(packet, off + 9, off, IPPROTO_UDP);
+        int before = udp_calls;
+        assert(write(tunnel[1], packet, off + 9) == off + 9);
+        assert(check_tun(&running, &event, -1, 0, SESSION_MAX) == 0);
+        assert(udp_calls == before + 1 && allocations == 1);
+        assert(memcmp(buffers.buffer[PACKET_INPUT].data, packet, off + 9) == 0);
+    }
+    uint8_t *input = buffers.buffer[PACKET_INPUT].data;
+    assert(check_tun(&running, &event, -1, 0, SESSION_MAX) == 0); // EAGAIN.
+    close(tunnel[1]);
+    assert(check_tun(&running, &event, -1, 0, SESSION_MAX) == -1); // EOF.
+    assert(buffers.buffer[PACKET_INPUT].data == input && allocations == 1);
+    clear_packet_buffers(&buffers);
+    close(tunnel[0]);
+    assert(allocations == 0);
+    capture_packets = 0;
+#endif
+}
+
 #ifndef INVIZIBLE_BASELINE_TESTS
 static int protocol_calls(int protocol) {
     return protocol == IPPROTO_UDP ? udp_calls : protocol == IPPROTO_TCP ? tcp_calls : icmp_calls;

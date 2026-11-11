@@ -115,6 +115,38 @@ int sdk_int(JNIEnv *env) {
     return (*env)->GetStaticIntField(env, clsVersion, fid);
 }
 
+uint8_t *get_packet_buffer(const struct arguments *args, enum packet_buffer_kind kind,
+                           size_t length, const char *tag) {
+    if (args->buffers == NULL)
+        return ng_malloc(length, tag);
+
+    struct packet_buffer *buffer = &args->buffers->buffer[kind];
+    if (buffer->data == NULL || buffer->capacity < length) {
+        // Small ACKs should not make the output buffer grow for every larger packet.
+        size_t capacity = length < get_mtu() ? get_mtu() : length;
+        uint8_t *data = (buffer->data == NULL ? ng_malloc(capacity, tag)
+                                             : ng_realloc(buffer->data, capacity, tag));
+        if (data == NULL)
+            return NULL; // A failed resize leaves the old allocation owned by this scope.
+        buffer->data = data;
+        buffer->capacity = capacity;
+    }
+    return buffer->data;
+}
+
+void release_packet_buffer(const struct arguments *args, uint8_t *buffer) {
+    if (args->buffers == NULL)
+        ng_free(buffer, __FILE__, __LINE__);
+}
+
+void clear_packet_buffers(struct packet_buffers *buffers) {
+    for (size_t i = 0; i < PACKET_BUFFER_COUNT; i++) {
+        ng_free(buffers->buffer[i].data, __FILE__, __LINE__);
+        buffers->buffer[i].data = NULL;
+        buffers->buffer[i].capacity = 0;
+    }
+}
+
 const char *format_log_address(struct log_address *address) {
     int saved_errno = errno;
     if (address->text[0] == 0 &&

@@ -38,6 +38,10 @@ void clear(struct context *ctx) {
 
 void *handle_events(void *a) {
     struct arguments *args = (struct arguments *) a;
+    // Reads finish processing before the next event. Keep output separate from
+    // borrowed input, and never use either scratch buffer for retained session data.
+    struct packet_buffers buffers = {0};
+    args->buffers = &buffers;
     log_android(ANDROID_LOG_WARN, "Start events tun=%d", args->tun);
 
     // Get max number of sessions
@@ -302,6 +306,8 @@ void *handle_events(void *a) {
                     "epoll close error %d: %s", errno, strerror(errno));
 
     // Cleanup
+    clear_packet_buffers(&buffers);
+    args->buffers = NULL;
     log_android(ANDROID_LOG_WARN, "Stopped events tun=%d", args->tun);
     ng_free(args, __FILE__, __LINE__);
     return NULL;
