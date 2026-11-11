@@ -123,6 +123,32 @@ int is_upper_layer(int protocol) {
             protocol == IPPROTO_ICMPV6);
 }
 
+static bool valid_transport_checksum(uint8_t version, uint8_t protocol,
+                                      const void *source, const void *dest,
+                                      const uint8_t *payload, size_t length) {
+    _Alignas(8) uint8_t pseudo[40] = {0};
+    size_t pseudo_length = 0;
+    if (protocol != IPPROTO_ICMP) {
+        if (version == 4) {
+            memcpy(pseudo, source, 4);
+            memcpy(pseudo + 4, dest, 4);
+            pseudo[9] = protocol;
+            uint16_t size = htons((uint16_t) length);
+            memcpy(pseudo + 10, &size, sizeof(size));
+            pseudo_length = 12;
+        } else {
+            memcpy(pseudo, source, 16);
+            memcpy(pseudo + 16, dest, 16);
+            uint32_t size = htonl((uint32_t) length);
+            memcpy(pseudo + 32, &size, sizeof(size));
+            pseudo[39] = protocol;
+            pseudo_length = 40;
+        }
+    }
+    uint16_t sum = calc_checksum(0, pseudo, pseudo_length);
+    return calc_checksum(sum, payload, length) == UINT16_MAX;
+}
+
 void handle_ip(const struct arguments *args,
                const uint8_t *pkt, const size_t length,
                const int epoll_fd,
@@ -136,6 +162,8 @@ void handle_ip(const struct arguments *args,
     char data[16];
     int flen = 0;
     uint8_t *payload;
+    const void *checksum_source;
+    const void *checksum_dest;
 
     if (length == 0)
         return;
@@ -153,6 +181,8 @@ void handle_ip(const struct arguments *args,
         protocol = ip4hdr->protocol;
         saddr = &ip4hdr->saddr;
         daddr = &ip4hdr->daddr;
+        checksum_source = saddr;
+        checksum_dest = daddr;
 
         if (ntohs(ip4hdr->frag_off) & (IP_MF | IP_OFFMASK)) {
             // Fragment reassembly is not supported.
@@ -173,11 +203,26 @@ void handle_ip(const struct arguments *args,
             return;
         }
 
-        if (LOG_LEVEL < ANDROID_LOG_WARN) {
-            if (!calc_checksum(0, (uint8_t *) ip4hdr, sizeof(struct iphdr))) {
-                log_android(ANDROID_LOG_ERROR, "Invalid IP checksum");
+        if (calc_checksum(0, pkt, header_length) != UINT16_MAX) {
+            log_android(ANDROID_LOG_WARN, "Invalid IP4 header checksum");
+            return;
+        }
+        // Source routing uses the final destination in the transport pseudo-header.
+        for (size_t off = sizeof(struct iphdr); off < header_length;) {
+            uint8_t kind = pkt[off];
+            if (kind == 0) break;
+            if (kind == 1) { off++; continue; }
+            if (header_length - off < 2 || pkt[off + 1] < 2 || pkt[off + 1] > header_length - off)
                 return;
+            size_t size = pkt[off + 1];
+            if (kind == 131 || kind == 137) { // Loose/strict source route.
+                if (size < 7 || (size - 3) % 4 || pkt[off + 2] < 4 ||
+                    pkt[off + 2] > size + 1 || (pkt[off + 2] - 4) % 4)
+                    return;
+                if (pkt[off + 2] <= size)
+                    checksum_dest = pkt + off + size - 4;
             }
+            off += size;
         }
     } else if (version == 6) {
         if (length < sizeof(struct ip6_hdr)) {
@@ -186,6 +231,8 @@ void handle_ip(const struct arguments *args,
         }
 
         struct ip6_hdr *ip6hdr = (struct ip6_hdr *) pkt;
+        checksum_source = &ip6hdr->ip6_src;
+        checksum_dest = &ip6hdr->ip6_dst;
 
         if (ntohs(ip6hdr->ip6_plen) != length - sizeof(struct ip6_hdr)) {
             log_android(ANDROID_LOG_WARN, "IP6 invalid payload length");
@@ -222,6 +269,35 @@ void handle_ip(const struct arguments *args,
                 log_android(ANDROID_LOG_WARN, "IP6 fragmented packet");
                 return;
             }
+            if (protocol == IPPROTO_ROUTING && ext[3] != 0) {
+                // Only routing formats whose final destination is known can be checked.
+                if (ext[2] == 0 || ext[2] == 2) {
+                    if (ext_length < 24 || (ext_length - 8) % 16 ||
+                        ext[3] > (ext_length - 8) / 16 || (ext[2] == 2 && ext_length != 24))
+                        return;
+                    checksum_dest = ext + ext_length - 16;
+                } else if (ext[2] == 4) { // Segment Routing: Segment List[0] is the final destination.
+                    if (ext_length < 24 || (size_t) ext[4] + 1 > (ext_length - 8) / 16 ||
+                        ext[3] > (unsigned int) ext[4] + 1)
+                        return;
+                    checksum_dest = ext + 8;
+                } else {
+                    log_android(ANDROID_LOG_WARN, "IP6 unsupported routing type %u", ext[2]);
+                    return;
+                }
+            }
+            if (protocol == IPPROTO_DSTOPTS) {
+                for (size_t pos = 2; pos < ext_length;) {
+                    if (ext[pos] == 0) { pos++; continue; } // Pad1.
+                    if (ext_length - pos < 2 || ext[pos + 1] > ext_length - pos - 2)
+                        return;
+                    if (ext[pos] == 201) { // Mobile IPv6 Home Address option.
+                        if (ext[pos + 1] != 16) return;
+                        checksum_source = ext + pos + 2;
+                    }
+                    pos += (size_t) ext[pos + 1] + 2;
+                }
+            }
             protocol = ext[0];
             off += ext_length;
         }
@@ -231,7 +307,7 @@ void handle_ip(const struct arguments *args,
 
         payload = (uint8_t *) (pkt + off);
 
-        // TODO checksum
+        // IPv6 has no header checksum; validate the upper layer after extension headers.
     } else {
         log_android(ANDROID_LOG_ERROR, "Unknown version %d", version);
         return;
@@ -252,6 +328,11 @@ void handle_ip(const struct arguments *args,
         }
 
         struct icmp *icmp = (struct icmp *) payload;
+        if (!valid_transport_checksum(version, protocol, checksum_source, checksum_dest,
+                                       payload, length - (payload - pkt))) {
+            log_android(ANDROID_LOG_WARN, "Invalid ICMP%d checksum", version);
+            return;
+        }
 
         sprintf(data, "type %d/%d", icmp->icmp_type, icmp->icmp_code);
 
@@ -275,7 +356,13 @@ void handle_ip(const struct arguments *args,
         sport = ntohs(udp->source);
         dport = ntohs(udp->dest);
 
-        // TODO checksum (IPv6)
+        // IPv4 permits an omitted UDP checksum; IPv6 requires a nonzero checksum.
+        if ((udp->check == 0 && version == 6) ||
+            (udp->check != 0 && !valid_transport_checksum(version, protocol, checksum_source,
+                                                         checksum_dest, payload, ntohs(udp->len)))) {
+            log_android(ANDROID_LOG_WARN, "Invalid UDP%d checksum", version);
+            return;
+        }
     } else if (protocol == IPPROTO_TCP) {
         if (length - (payload - pkt) < sizeof(struct tcphdr)) {
             log_android(ANDROID_LOG_WARN, "TCP packet too short");
@@ -300,7 +387,11 @@ void handle_ip(const struct arguments *args,
         if (tcp->rst)
             flags[flen++] = 'R';
 
-        // TODO checksum
+        if (!valid_transport_checksum(version, protocol, checksum_source, checksum_dest,
+                                       payload, length - (payload - pkt))) {
+            log_android(ANDROID_LOG_WARN, "Invalid TCP%d checksum", version);
+            return;
+        }
     } else if (protocol != IPPROTO_HOPOPTS && protocol != IPPROTO_IGMP && protocol != IPPROTO_ESP)
         log_android(ANDROID_LOG_WARN, "Unknown protocol %d", protocol);
 

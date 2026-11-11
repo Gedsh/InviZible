@@ -1,6 +1,7 @@
 #include "test_support.h"
 
 int allocations, sockets, last_socket = -1, udp_calls, resolved_calls;
+int tcp_calls, icmp_calls;
 int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 int capture_packets, capture_dhcp, fake_proc;
 const char *proc_contents;
@@ -219,6 +220,21 @@ jint __wrap_get_uid_q(const struct arguments *args, jint version, jint protocol,
     return own_uid;
 }
 
+jboolean __real_handle_tcp(const struct arguments *, const uint8_t *, size_t,
+                           const uint8_t *, int, int, struct allowed *, int);
+jboolean __wrap_handle_tcp(const struct arguments *args, const uint8_t *pkt, size_t len,
+                           const uint8_t *payload, int uid, int allowed, struct allowed *r, int epoll_fd) {
+    if (capture_packets) { tcp_calls++; return 1; }
+    return __real_handle_tcp(args, pkt, len, payload, uid, allowed, r, epoll_fd);
+}
+
+jboolean __real_handle_icmp(const struct arguments *, const uint8_t *, size_t, const uint8_t *, int, int);
+jboolean __wrap_handle_icmp(const struct arguments *args, const uint8_t *pkt, size_t len,
+                            const uint8_t *payload, int uid, int epoll_fd) {
+    if (capture_packets) { icmp_calls++; return 1; }
+    return __real_handle_icmp(args, pkt, len, payload, uid, epoll_fd);
+}
+
 jobject __wrap_create_packet(const struct arguments *args, jint version, jint protocol,
                              const char *flags, const char *source, jint sport,
                              const char *dest, jint dport, const char *data, jint uid,
@@ -369,6 +385,39 @@ size_t tun_packet(int fd, uint8_t *packet, int version, int protocol) {
     return (size_t) len;
 }
 
+// Independent, byte-oriented network-order reference; do not reuse production SIMD code.
+static uint32_t reference_sum(uint32_t sum, const uint8_t *data, size_t length) {
+    while (length >= 2) {
+        sum += (uint32_t) data[0] << 8 | data[1];
+        data += 2; length -= 2;
+    }
+    if (length) sum += (uint32_t) data[0] << 8;
+    while (sum >> 16) sum = (sum & 0xFFFF) + (sum >> 16);
+    return sum;
+}
+
+void packet_checksums(uint8_t *packet, size_t length, size_t payload, int protocol) {
+    int version = packet[0] >> 4;
+    size_t offset = protocol == IPPROTO_UDP ? 6 : protocol == IPPROTO_TCP ? 16 : 2;
+    assert(payload <= length && length - payload >= offset + 2);
+    store16(packet + payload + offset, 0);
+    uint32_t sum = 0;
+    size_t len = length - payload;
+    if (protocol != IPPROTO_ICMP) {
+        sum = reference_sum(0, packet + (version == 4 ? 12 : 8), version == 4 ? 8 : 32);
+        sum += (uint32_t) (len >> 16) + (len & 0xFFFF) + protocol;
+    }
+    uint16_t checksum = (uint16_t) ~reference_sum(sum, packet + payload, len);
+    if (protocol == IPPROTO_UDP && checksum == 0) checksum = UINT16_MAX;
+    store16(packet + payload + offset, checksum);
+    if (version == 4) {
+        size_t header = (size_t) (packet[0] & 15) * 4;
+        assert(header >= 20 && header <= length);
+        store16(packet + 10, 0);
+        store16(packet + 10, (uint16_t) ~reference_sum(0, packet, header));
+    }
+}
+
 size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
                          const char *destination) {
     size_t off = (version == 4 ? 20 : 40);
@@ -394,6 +443,7 @@ void reset_test_state(void) {
     connect_errno = 0;
     connect_fd = -1;
     allocations = sockets = udp_calls = resolved_calls = 0;
+    tcp_calls = icmp_calls = 0;
     string_refs = string_calls = fail_string_call = exceptions = file_closes = 0;
     capture_packets = capture_dhcp = fake_proc = 0;
     proc_contents = NULL;

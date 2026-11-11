@@ -27,6 +27,26 @@ static const char *run_case(const char *id) {
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
     if (strcmp(id, "jniLoadFailures") == 0)
         test_jni_load_failures();
+    else if (strcmp(id, "ipChecksumHeader") == 0)
+        test_ip_checksums(&args, 0);
+    else if (strcmp(id, "ipChecksumUdp4") == 0)
+        test_ip_checksums(&args, 1);
+    else if (strcmp(id, "ipChecksumUdp6") == 0)
+        test_ip_checksums(&args, 2);
+    else if (strcmp(id, "ipChecksumTcp4") == 0)
+        test_ip_checksums(&args, 3);
+    else if (strcmp(id, "ipChecksumTcp6") == 0)
+        test_ip_checksums(&args, 4);
+    else if (strcmp(id, "ipChecksumIcmp4") == 0)
+        test_ip_checksums(&args, 5);
+    else if (strcmp(id, "ipChecksumIcmp6") == 0)
+        test_ip_checksums(&args, 6);
+    else if (strcmp(id, "ipChecksumExtensions") == 0)
+        test_ip_checksums(&args, 7);
+    else if (strcmp(id, "ipChecksumRouting") == 0)
+        test_ip_checksums(&args, 8);
+    else if (strcmp(id, "ipChecksumZero") == 0)
+        test_ip_checksums(&args, 9);
     else if (strcmp(id, "dnsQuestionCounts") == 0)
         test_dns_question_counts();
     else if (strcmp(id, "dnsTcpFraming") == 0)

@@ -295,6 +295,7 @@ void udp_flow(int version, int redirect, int extension) {
         }
         off += extra; len += extra;
     }
+    packet_checksums(packet, len, off, IPPROTO_UDP);
     struct allowed target = {.rport = port};
     strcpy(target.raddr, "127.0.0.1"); // IPv6 sessions must map this to ::1.
     struct ng_session *session = NULL;

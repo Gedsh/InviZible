@@ -30,6 +30,15 @@ Ten TCP shutdown cases use real local socket pairs to verify IPv4/IPv6 data
 after upstream EOF, app-first and simultaneous close, FIN behind a sequence gap,
 repeated FIN, data queued before EOF, timeout/reset cleanup, failed write shutdown,
 and stored UID logging.
+Incoming IPv4 header checksums are always validated, including options and padding.
+TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
+creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.
+Ten IP cases use an independent byte-oriented checksum reference and cover odd/even
+payload lengths, scalar/SIMD boundaries, corrupted payloads and pseudo-header addresses,
+IPv6 extension lengths, source/segment routing destinations, Mobile IPv6 home addresses,
+malformed options, and UDP's all-ones encoding for a calculated zero checksum.
+Active IPv6 routing formats whose final destination is unknown are rejected explicitly.
+The valid-input UDP/IPv4-options/IPv6-extension fixtures now carry complete checksums.
 Eight DNS question-count cases cover RFC 9619 handling for standard QUERY messages:
 UDP requests with more than one question receive a header-only FORMERR before any
 upstream socket is opened; UDP replies with multiple questions are dropped, and TCP

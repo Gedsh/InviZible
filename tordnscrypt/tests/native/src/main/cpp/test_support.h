@@ -13,6 +13,7 @@ void native_test_fail(const char *condition, const char *file, int line)
 enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT, PIPE, MUTEX, SHUTDOWN };
 extern enum failure failure;
 extern int allocations, sockets, last_socket, udp_calls, resolved_calls;
+extern int tcp_calls, icmp_calls;
 extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 extern int capture_packets, capture_dhcp, fake_proc;
 extern const char *proc_contents;
@@ -68,6 +69,8 @@ void readable_at(int fd, int line);
 size_t tun_packet(int fd, uint8_t *packet, int version, int protocol);
 size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
                  const char *destination);
+void packet_checksums(uint8_t *packet, size_t length, size_t payload, int protocol);
+void test_ip_checksums(const struct arguments *args, int kind);
 
 // Entry points grouped by the production source they exercise.
 void test_socks5(void); // invizible.c
