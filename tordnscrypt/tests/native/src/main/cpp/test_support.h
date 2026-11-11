@@ -10,7 +10,7 @@ void native_test_fail(const char *condition, const char *file, int line)
 #undef assert
 #define assert(condition) ((condition) ? (void) 0 : native_test_fail(#condition, __FILE__, __LINE__))
 
-enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT, PIPE, MUTEX };
+enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT, PIPE, MUTEX, SHUTDOWN };
 extern enum failure failure;
 extern int allocations, sockets, last_socket, udp_calls, resolved_calls;
 extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
@@ -106,6 +106,7 @@ void test_tcp(const struct arguments *args); // tcp.c
 void test_tcp_socket_cleanup(const struct arguments *args);
 void test_tcp_data_cleanup(void);
 void test_tcp_closed_data_cleanup(const struct arguments *args);
+void test_tcp_half_close(int kind);
 void tcp_flow(int version);
 void socks_flow(int version, int authentication, int max_credentials);
 void test_icmp_socket_cleanup(const struct arguments *args); // icmp.c

@@ -349,6 +349,188 @@ static void tcp_input(const struct arguments *args, uint8_t *packet, size_t len,
                       own_uid, 1, NULL, -1) == 1);
 }
 
+#ifndef INVIZIBLE_BASELINE_TESTS
+int __real_fcntl(int fd, int cmd, ...);
+
+static const struct tcphdr *half_close_reply(int fd, uint8_t *output, int version) {
+    tun_packet(fd, output, version, IPPROTO_TCP);
+    return (const void *) (output + (version == 4 ? 20 : 40));
+}
+#endif
+
+void test_tcp_half_close(int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int version = kind == 1 ? 6 : 4;
+    int stream[2], tunnel[2];
+    assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+    assert(pipe(tunnel) == 0);
+    real_network = 1;
+    struct context ctx = {.sdk = 29};
+    struct arguments args = {.ctx = &ctx, .tun = tunnel[1]};
+    struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+    s.tcp.version = version;
+    s.tcp.uid = 12345;
+    s.tcp.state = TCP_ESTABLISHED;
+    s.tcp.mss = 1200;
+    s.tcp.local_seq = s.tcp.acked = 2000;
+    s.tcp.remote_seq = 1000;
+    s.tcp.recv_window = s.tcp.send_window = 16000;
+    s.tcp.time = time(NULL);
+    s.tcp.source = htons(12345); s.tcp.dest = htons(443);
+    assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+            version == 4 ? "10.0.0.2" : "2001:db8::1", &s.tcp.saddr) == 1);
+    assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+            version == 4 ? "203.0.113.2" : "2001:db8::2", &s.tcp.daddr) == 1);
+    ctx.ng_session = &s;
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+    assert(epoll_fd >= 0);
+    s.ev.events = EPOLLIN | EPOLLERR;
+    s.ev.data.ptr = &s;
+    assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+    struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+    _Alignas(8) uint8_t packet[2048], output[2048], received[64];
+    const uint8_t request[] = {'a', 0, 'b', 255, 'c', 'd'};
+    size_t off = version == 4 ? 20 : 40;
+    size_t len;
+    const struct tcphdr *reply;
+
+    if (kind == 9) {
+        len = tcp_packet(packet, version, 1000, 2000, 0, 0, request, sizeof(request));
+        tcp_input(&args, packet, len, version);
+        assert(s.tcp.forward != NULL && allocations == 2);
+    }
+    if (kind != 3) {
+        assert(shutdown(stream[1], SHUT_WR) == 0);
+        readable(s.socket);
+        check_tcp_socket(&args, &event, epoll_fd);
+        reply = half_close_reply(tunnel[0], output, version);
+        assert(reply->fin && reply->ack && !reply->rst);
+        assert(s.tcp.upstream_eof && s.tcp.state == TCP_FIN_WAIT1 && s.socket == stream[0]);
+        assert(__real_fcntl(stream[0], F_GETFD) >= 0);
+        assert(s.tcp.local_seq == 2001 && allocations == (kind == 9 ? 2 : 0));
+        check_tcp_socket(&args, &event, epoll_fd); // Stale readable events must not resend FIN.
+        assert(s.tcp.local_seq == 2001 && !is_readable(tunnel[0]));
+        assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
+        assert(!(s.ev.events & EPOLLIN));
+        struct epoll_event ready;
+        int count = epoll_wait(epoll_fd, &ready, 1, 0);
+        assert(count == (kind == 9 ? 1 : 0));
+        if (count) assert(ready.events & EPOLLOUT);
+    }
+
+    if (kind == 6) {
+        failure = SHUTDOWN;
+        len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 1, NULL, 0);
+        assert(handle_tcp(&args, packet, len, packet + off, -1, 1, NULL, epoll_fd) == 0);
+        failure = NONE;
+        reply = half_close_reply(tunnel[0], output, version);
+        assert(reply->rst && s.tcp.state == TCP_CLOSING && !s.tcp.fin_acked);
+    } else if (kind == 8) {
+        close(s.socket); s.socket = -1;
+        len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 0, request, sizeof(request));
+        assert(handle_tcp(&args, packet, len, packet + off, -1, 1, NULL, epoll_fd) == 0);
+        assert(strstr(last_log, "data while local closed") != NULL);
+        assert(strstr(last_log, "uid 12345") != NULL && strstr(last_log, "uid -1") == NULL);
+        reply = half_close_reply(tunnel[0], output, version);
+        assert(reply->rst);
+    } else {
+        if (kind == 9) {
+            // EOF must preserve data that was already waiting to be forwarded.
+            len = tcp_packet(packet, version, 1006, s.tcp.local_seq, 0, 1, NULL, 0);
+        } else if (kind == 2) {
+            // FIN and the tail arrive before the missing head, and are retransmitted.
+            len = tcp_packet(packet, version, 1003, 2000, 0, 1, request + 3, 3);
+            tcp_input(&args, packet, len, version);
+            tcp_input(&args, packet, len, version);
+            assert(s.tcp.fin_received && !s.tcp.fin_acked && s.tcp.fin_seq == 1006);
+            assert(s.tcp.remote_seq == 1000 && allocations == 2 && !is_readable(tunnel[0]));
+            len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 0, request, 3);
+        } else {
+            int fin = kind == 3 || kind == 4;
+            len = tcp_packet(packet, version, 1000,
+                    kind == 4 ? 2000 : s.tcp.local_seq, 0, fin, request, sizeof(request));
+        }
+        tcp_input(&args, packet, len, version);
+        if (kind == 5 || kind == 7) {
+            if (kind == 5)
+                s.tcp.time = time(NULL) - TCP_CLOSE_TIMEOUT - 1;
+            else {
+                len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 0, NULL, 0);
+                ((struct tcphdr *) (packet + off))->rst = 1;
+                assert(handle_tcp(&args, packet, len, packet + off, -1, 1, NULL, epoll_fd) == 0);
+            }
+        } else {
+            assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
+            assert(s.ev.events & EPOLLOUT);
+            if (s.tcp.upstream_eof) assert(!(s.ev.events & EPOLLIN));
+            event.events = EPOLLOUT;
+            check_tcp_socket(&args, &event, epoll_fd);
+            readable(stream[1]);
+            assert(recv(stream[1], received, sizeof(received), 0) == sizeof(request));
+            assert(memcmp(received, request, sizeof(request)) == 0);
+            assert(s.tcp.forward == NULL && allocations == 0);
+            reply = half_close_reply(tunnel[0], output, version);
+            assert(reply->ack && !reply->rst);
+            assert(ntohl(reply->ack_seq) == (s.tcp.fin_received ? 1007 : 1006));
+            if (kind == 0 || kind == 1) {
+                assert(s.tcp.state == TCP_FIN_WAIT2);
+                len = tcp_packet(packet, version, 1006, s.tcp.local_seq, 0, 1, NULL, 0);
+                tcp_input(&args, packet, len, version);
+                reply = half_close_reply(tunnel[0], output, version);
+                assert(reply->ack && !reply->rst && ntohl(reply->ack_seq) == 1007);
+            }
+            readable(stream[1]);
+            assert(recv(stream[1], received, sizeof(received), 0) == 0);
+            assert(s.tcp.fin_acked && s.tcp.remote_seq == 1007);
+
+            if (kind == 3) {
+                assert(s.tcp.state == TCP_CLOSE_WAIT && s.socket >= 0);
+                const uint8_t response[] = {1, 2, 3, 4};
+                assert(send(stream[1], response, sizeof(response), 0) == sizeof(response));
+                event.events = EPOLLIN;
+                readable(s.socket);
+                check_tcp_socket(&args, &event, epoll_fd);
+                reply = half_close_reply(tunnel[0], output, version);
+                assert(!reply->fin && !reply->rst);
+                assert(memcmp(output + off + 20, response, sizeof(response)) == 0);
+                assert(shutdown(stream[1], SHUT_WR) == 0);
+                check_tcp_socket(&args, &event, epoll_fd);
+                reply = half_close_reply(tunnel[0], output, version);
+                assert(reply->fin && reply->ack && s.tcp.state == TCP_LAST_ACK);
+            }
+            if (kind == 4) {
+                assert(s.tcp.state == TCP_LAST_ACK);
+                len = tcp_packet(packet, version, 1000, 2000, 0, 1, request, sizeof(request));
+                tcp_input(&args, packet, len, version);
+                reply = half_close_reply(tunnel[0], output, version);
+                assert(reply->ack && !reply->rst && ntohl(reply->ack_seq) == 1007);
+                assert(s.tcp.remote_seq == 1007); // Repeated FIN consumes no extra sequence byte.
+            }
+            if (kind == 3 || kind == 4) {
+                len = tcp_packet(packet, version, 1007, s.tcp.local_seq, 0, 0, NULL, 0);
+                tcp_input(&args, packet, len, version);
+                assert(s.tcp.state == TCP_CLOSING);
+            } else
+                assert(s.tcp.state == TCP_CLOSE);
+            assert(s.socket == -1);
+            assert(__real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);
+        }
+    }
+    assert(check_tcp_session(&args, &s, 0, SESSION_MAX) == 0);
+    if (kind == 5) {
+        reply = half_close_reply(tunnel[0], output, version);
+        assert(reply->rst);
+    }
+    assert(s.tcp.state == TCP_CLOSE && s.socket == -1 && s.tcp.forward == NULL);
+    // socketpair descriptors bypass the socket counter: verify kernel ownership
+    // before closing the other fixtures, with no intervening descriptor reuse.
+    assert(__real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);
+    assert(allocations == 0 && sockets == 0);
+    ctx.ng_session = NULL;
+    close(epoll_fd); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void tcp_flow(int version) {
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx};

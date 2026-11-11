@@ -8,6 +8,16 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void ipv4AppDataContinuesAfterUpstreamEof() { check("tcpHalfClose4"); }
+    @Test public void ipv6AppDataContinuesAfterUpstreamEof() { check("tcpHalfClose6"); }
+    @Test public void finWaitsForMissingAndQueuedBytes() { check("tcpFinGap"); }
+    @Test public void appFinStillAllowsUpstreamResponse() { check("tcpAppFinFirst"); }
+    @Test public void simultaneousAndRepeatedFinDoNotLoseData() { check("tcpSimultaneousFin"); }
+    @Test public void halfClosedSocketAndQueueExpire() { check("tcpHalfCloseTimeout"); }
+    @Test public void failedWriteShutdownReleasesSocket() { check("tcpShutdownFailure"); }
+    @Test public void resetReleasesHalfClosedSocketAndQueue() { check("tcpHalfCloseReset"); }
+    @Test public void existingFlowErrorsLogStoredUid() { check("tcpSessionUid"); }
+    @Test public void upstreamEofPreservesAlreadyQueuedData() { check("tcpEofQueued"); }
     @Test public void destinationAddressesAreFullyInitialized() { check("tcpDestination"); }
     @Test public void fullPayloadQueueAcceptsMissingHeadAndRecovers() { check("tcpGapBytes"); }
     @Test public void fullSegmentQueueAcceptsMissingHeadAndRecovers() { check("tcpGapSegments"); }

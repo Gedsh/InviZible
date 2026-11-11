@@ -26,6 +26,15 @@ or longer retransmissions after partial sends, including forwarding through a re
 Missing-head packets can displace the furthest unacknowledged data at either queue
 limit, including with a zero window. Regressions verify allocation-failure recovery,
 overlapping bytes, bounded queues, and delivery of evicted tails after retransmission.
+Ten TCP shutdown cases use real local socket pairs to verify IPv4/IPv6 data
+after upstream EOF, app-first and simultaneous close, FIN behind a sequence gap,
+repeated FIN, data queued before EOF, timeout/reset cleanup, failed write shutdown,
+and stored UID logging.
+These cases use real `fcntl(F_GETFD)` checks to verify that the retained socket
+stays open after EOF and is actually closed after completion or error cleanup.
+EOF disables upstream reads while app data continues to drain. App FIN shuts
+down the write direction only after preceding bytes are forwarded; both closed
+directions release the socket, with existing close timeouts covering incomplete shutdown.
 JNI callback tests inject each class, object, string, UTF, and field-lookup failure,
 verify reference cleanup and no calls with pending exceptions, and retry successfully.
 Library-load tests fail each class lookup and global-reference allocation, check

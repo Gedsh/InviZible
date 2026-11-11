@@ -225,6 +225,10 @@ struct tcp_session {
 
     uint8_t state;
     uint8_t socks5;
+    bool upstream_eof;
+    bool fin_received;
+    bool fin_acked;
+    uint32_t fin_seq; // App FIN position, excluding the FIN byte.
     struct segment *forward;
 };
 

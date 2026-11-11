@@ -154,6 +154,15 @@ int __wrap_protect_socket(const struct arguments *args, int fd, int uid) {
     return (failure == PROTECT ? -1 : 0);
 }
 
+int __real_shutdown(int fd, int how);
+int __wrap_shutdown(int fd, int how) {
+    if (failure == SHUTDOWN) {
+        errno = EIO;
+        return -1;
+    }
+    return __real_shutdown(fd, how);
+}
+
 ssize_t __real_write_udp(const struct arguments *, const struct udp_session *, uint8_t *, size_t);
 ssize_t __wrap_write_udp(const struct arguments *args, const struct udp_session *s,
                          uint8_t *data, size_t len) {

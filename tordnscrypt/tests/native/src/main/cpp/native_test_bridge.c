@@ -103,6 +103,26 @@ static const char *run_case(const char *id) {
         test_dhcp_response_bounds(&args);
     else if (strcmp(id, "tcpDataCleanup") == 0)
         test_tcp_data_cleanup();
+    else if (strcmp(id, "tcpHalfClose4") == 0)
+        test_tcp_half_close(0);
+    else if (strcmp(id, "tcpHalfClose6") == 0)
+        test_tcp_half_close(1);
+    else if (strcmp(id, "tcpFinGap") == 0)
+        test_tcp_half_close(2);
+    else if (strcmp(id, "tcpAppFinFirst") == 0)
+        test_tcp_half_close(3);
+    else if (strcmp(id, "tcpSimultaneousFin") == 0)
+        test_tcp_half_close(4);
+    else if (strcmp(id, "tcpHalfCloseTimeout") == 0)
+        test_tcp_half_close(5);
+    else if (strcmp(id, "tcpShutdownFailure") == 0)
+        test_tcp_half_close(6);
+    else if (strcmp(id, "tcpHalfCloseReset") == 0)
+        test_tcp_half_close(7);
+    else if (strcmp(id, "tcpSessionUid") == 0)
+        test_tcp_half_close(8);
+    else if (strcmp(id, "tcpEofQueued") == 0)
+        test_tcp_half_close(9);
     else if (strcmp(id, "tcpClosedDataCleanup") == 0)
         test_tcp_closed_data_cleanup(&args);
     else if (strcmp(id, "closedUdpLimit") == 0)

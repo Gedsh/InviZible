@@ -278,6 +278,7 @@ void *handle_events(void *a) {
                             count++;
                             check_tcp_socket(args, &ev[i], epoll_fd);
                         } while (count < TCP_YIELD && !args->ctx->stopping &&
+                                 !session->tcp.upstream_eof &&
                                  !(ev[i].events & EPOLLERR) && (ev[i].events & EPOLLIN) &&
                                  is_readable(session->socket));
                     }
