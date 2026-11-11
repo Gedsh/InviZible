@@ -15,6 +15,7 @@ enum failure failure;
 static struct sockaddr_storage expected_destination;
 static socklen_t destination_length;
 int destination_calls;
+int connect_errno, connect_fd = -1;
 
 void expect_destination(int version, const char *address, uint16_t port) {
     memset(&expected_destination, 0, sizeof(expected_destination));
@@ -132,10 +133,15 @@ int __wrap_pthread_mutex_init(pthread_mutex_t *mutex, const pthread_mutexattr_t 
 
 int __real_connect(int fd, const struct sockaddr *addr, socklen_t len);
 int __wrap_connect(int fd, const struct sockaddr *addr, socklen_t len) {
+    connect_fd = fd;
     if (destination_length)
         check_destination(addr, len);
     if (real_network)
         return __real_connect(fd, addr, len);
+    if (connect_errno) {
+        errno = connect_errno;
+        return -1;
+    }
     errno = (failure == CONNECT ? ECONNREFUSED : EINPROGRESS);
     return -1;
 }
@@ -383,6 +389,8 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 
 void reset_test_state(void) {
     destination_length = destination_calls = 0;
+    connect_errno = 0;
+    connect_fd = -1;
     allocations = sockets = udp_calls = resolved_calls = 0;
     string_refs = string_calls = fail_string_call = exceptions = file_closes = 0;
     capture_packets = capture_dhcp = fake_proc = 0;

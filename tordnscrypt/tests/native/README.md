@@ -42,6 +42,11 @@ local/global reference cleanup, preserve the pending exception, and retry succes
 TCP, UDP, and ICMP destination tests inspect complete IPv4/IPv6 socket addresses,
 including redirects. The test build poisons uninitialized automatic variables so
 missing initialization is detected reliably.
+Six TCP connection-failure cases verify IPv4/IPv6 resets for immediate network-unreachable,
+host-unreachable, and connection-refused errors, including SYN sequence wraparound.
+They check reset flags, addresses, ports, acknowledgment numbers, descriptor closure,
+and release of SYN payloads and session records. Temporary connect errors and local
+setup failures remain retryable without a reset, including when errno is stale.
 The test build disables function inlining and preserves symbol interposition so allocation failure injection also
 intercepts calls within the source that defines the allocation helpers.
 The C fixtures live in `src/main/cpp`; JUnit entry points live in

@@ -37,6 +37,10 @@ extern char proxy_socks5_password[127 + 1];
 
 extern int own_uid;
 
+static int open_tcp_socket_with_error(const struct arguments *args,
+                                     const struct tcp_session *cur,
+                                     struct allowed *redirect, int *connect_error_out);
+
 void clear_tcp_data(struct tcp_session *cur) {
     struct segment *s = cur->forward;
     cur->forward = NULL;
@@ -68,7 +72,27 @@ static int finish_tcp_input(const struct arguments *args, struct ng_session *s) 
         result = shutdown(s->socket, SHUT_WR);
     } while (result < 0 && errno == EINTR);
     if (result < 0) {
-        log_android(ANDROID_LOG_ERROR, "TCP shutdown write error %d: %s", errno, strerror(errno));
+        int shutdown_error = errno;
+        char source[INET6_ADDRSTRLEN + 1] = "?";
+        char dest[INET6_ADDRSTRLEN + 1] = "?";
+        inet_ntop(s->tcp.version == 4 ? AF_INET : AF_INET6,
+                  s->tcp.version == 4 ? (const void *) &s->tcp.saddr.ip4
+                                      : (const void *) &s->tcp.saddr.ip6,
+                  source, sizeof(source));
+        inet_ntop(s->tcp.version == 4 ? AF_INET : AF_INET6,
+                  s->tcp.version == 4 ? (const void *) &s->tcp.daddr.ip4
+                                      : (const void *) &s->tcp.daddr.ip6,
+                  dest, sizeof(dest));
+        log_android(ANDROID_LOG_ERROR,
+                    "TCP%d socket from %s/%u to %s/%u %s loc %u rem %u "
+                    "uid %d socket %d socks5 %d upstream_eof %d "
+                    "fin_received %d fin_acked %d fin %u acked %u shutdown write error %d: %s",
+                    s->tcp.version, source, ntohs(s->tcp.source), dest, ntohs(s->tcp.dest),
+                    strstate(s->tcp.state), s->tcp.local_seq - s->tcp.local_start,
+                    s->tcp.remote_seq - s->tcp.remote_start, s->tcp.uid, s->socket,
+                    s->tcp.socks5, s->tcp.upstream_eof, s->tcp.fin_received, s->tcp.fin_acked,
+                    s->tcp.fin_seq - s->tcp.remote_start, s->tcp.acked - s->tcp.local_start,
+                    shutdown_error, strerror(shutdown_error));
         write_rst(args, &s->tcp);
         return -1;
     }
@@ -350,8 +374,8 @@ void check_tcp_socket(const struct arguments *args,
             log_android(ANDROID_LOG_ERROR, "%s getsockopt error %d: %s",
                         session, errno, strerror(errno));
         else if (serr)
-            log_android(ANDROID_LOG_ERROR, "%s SO_ERROR %d: %s",
-                        session, serr, strerror(serr));
+            log_android(ANDROID_LOG_ERROR, "%s uid %d socket %d socks5 %d SO_ERROR %d: %s",
+                        session, s->tcp.uid, s->socket, s->tcp.socks5, serr, strerror(serr));
 
         write_rst(args, &s->tcp);
 
@@ -872,6 +896,7 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.recv_scale = ws;
             s->tcp.send_scale = ws;
             s->tcp.send_window = ((uint32_t) ntohs(tcphdr->window)) << s->tcp.send_scale;
+            s->tcp.recv_window = 0; // Setup failures can send a reset before opening the socket.
             s->tcp.unconfirmed = 0;
             s->tcp.remote_seq = ntohl(tcphdr->seq); // ISN remote
             s->tcp.local_seq = (uint32_t) rand(); // ISN local
@@ -934,9 +959,14 @@ jboolean handle_tcp(const struct arguments *args,
             }
 
             // Open socket
-            s->socket = open_tcp_socket(args, &s->tcp, redirect);
+            int connect_error;
+            s->socket = open_tcp_socket_with_error(args, &s->tcp, redirect, &connect_error);
             if (s->socket < 0) {
-                // Remote might retry
+                // Report definitive connect failures instead of dropping every SYN retry.
+                // Local setup and transient resource failures can still be retried.
+                if (connect_error == ENETUNREACH || connect_error == EHOSTUNREACH ||
+                    connect_error == ECONNREFUSED)
+                    write_rst(args, &s->tcp);
                 clear_tcp_data(&s->tcp);
                 ng_free(s, __FILE__, __LINE__);
                 return 0;
@@ -1258,8 +1288,10 @@ int queue_tcp(const struct arguments *args,
     return 1;
 }
 
-int open_tcp_socket(const struct arguments *args,
-                    const struct tcp_session *cur, struct allowed *redirect) {
+static int open_tcp_socket_with_error(const struct arguments *args,
+                                     const struct tcp_session *cur,
+                                     struct allowed *redirect, int *connect_error_out) {
+    *connect_error_out = 0;
     int sock;
     int version;
     if (redirect == NULL) {
@@ -1299,7 +1331,7 @@ int open_tcp_socket(const struct arguments *args,
     }
 
     char dest[INET6_ADDRSTRLEN + 1];
-    if (version == 4) {
+    if (cur->version == 4) {
         inet_ntop(AF_INET, &cur->daddr.ip4, dest, sizeof(dest));
     } else {
         inet_ntop(AF_INET6, &cur->daddr.ip6, dest, sizeof(dest));
@@ -1308,6 +1340,7 @@ int open_tcp_socket(const struct arguments *args,
     // Build target address
     struct sockaddr_in addr4 = {0};
     struct sockaddr_in6 addr6 = {0};
+    const char *route = (redirect == NULL ? "direct" : "redirect");
     if (redirect == NULL) {
 
         bool not_own_uid = cur->uid != own_uid;
@@ -1329,6 +1362,7 @@ int open_tcp_socket(const struct arguments *args,
         }
 
         if (redirect_to_tor) {
+            route = "tor";
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, tor_socks5_addr, tor_socks5_port);
 
@@ -1346,6 +1380,7 @@ int open_tcp_socket(const struct arguments *args,
                 addr6.sin6_port = htons(tor_socks5_port);
             }
         } else if (redirect_to_proxy) {
+            route = "proxy";
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, proxy_socks5_addr, proxy_socks5_port);
 
@@ -1396,12 +1431,36 @@ int open_tcp_socket(const struct arguments *args,
                                    ? sizeof(struct sockaddr_in)
                                    : sizeof(struct sockaddr_in6)));
     if (err < 0 && errno != EINPROGRESS) {
-        log_android(ANDROID_LOG_ERROR, "TCP connect error %d: %s", errno, strerror(errno));
+        int connect_error = errno;
+        *connect_error_out = connect_error;
+        char source[INET6_ADDRSTRLEN + 1] = "?";
+        char target[INET6_ADDRSTRLEN + 1] = "?";
+        inet_ntop(cur->version == 4 ? AF_INET : AF_INET6,
+                  cur->version == 4 ? (const void *) &cur->saddr.ip4
+                                    : (const void *) &cur->saddr.ip6,
+                  source, sizeof(source));
+        inet_ntop(version == 4 ? AF_INET : AF_INET6,
+                  version == 4 ? (const void *) &addr4.sin_addr
+                               : (const void *) &addr6.sin6_addr,
+                  target, sizeof(target));
+        log_android(ANDROID_LOG_ERROR,
+                    "TCP%d connect from %s/%u to %s/%u uid %d socket %d "
+                    "route %s target IPv%d %s/%u error %d: %s",
+                    cur->version, source, ntohs(cur->source), dest, ntohs(cur->dest),
+                    cur->uid, sock, route, version, target,
+                    ntohs(version == 4 ? addr4.sin_port : addr6.sin6_port),
+                    connect_error, strerror(connect_error));
         close(sock);
         return -1;
     }
 
     return sock;
+}
+
+int open_tcp_socket(const struct arguments *args,
+                    const struct tcp_session *cur, struct allowed *redirect) {
+    int connect_error;
+    return open_tcp_socket_with_error(args, cur, redirect, &connect_error);
 }
 
 int write_syn_ack(const struct arguments *args, struct tcp_session *cur) {

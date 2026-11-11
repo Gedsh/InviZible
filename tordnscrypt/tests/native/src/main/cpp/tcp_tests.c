@@ -358,6 +358,61 @@ static const struct tcphdr *half_close_reply(int fd, uint8_t *output, int versio
 }
 #endif
 
+void test_tcp_connect_failure(int version, int transient) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    struct context ctx = {.sdk = 29};
+    struct arguments args = {.ctx = &ctx, .tun = tunnel[1]};
+    const int errors[] = {ENETUNREACH, EHOSTUNREACH, ECONNREFUSED};
+    const int temporary[] = {EAGAIN, ENOBUFS, EINTR};
+    const enum failure setup[] = {PROTECT, GETFL, SETFL};
+    for (size_t i = 0; i < sizeof(errors) / sizeof(*errors); i++) {
+        connect_errno = (transient == 1 ? temporary[i] : errors[i]);
+        failure = (transient == 2 ? setup[i] : NONE);
+        connect_fd = -1;
+        // A stale errno from a local setup failure must not cause a reset.
+        errno = ENETUNREACH;
+        _Alignas(8) uint8_t packet[2048], output[2048];
+        const uint8_t data[] = {1, 2, 3, 4};
+        uint32_t seq = (i == 0 ? UINT32_MAX : 1000);
+        size_t len = tcp_packet(packet, version, seq, 0, 1, 0, data, sizeof(data));
+        size_t off = (version == 4 ? 20 : 40);
+        assert(handle_tcp(&args, packet, len, packet + off, own_uid, 1, NULL, -1) == 0);
+        assert(ctx.ng_session == NULL && allocations == 0 && sockets == 0);
+        if (transient == 2) {
+            assert(connect_fd == -1);
+        } else {
+            assert(connect_fd >= 0);
+            assert(__real_fcntl(connect_fd, F_GETFD) == -1 && errno == EBADF);
+        }
+        if (transient == 0) {
+            size_t reply_len = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+            const struct tcphdr *reply = (const void *) (output + off);
+            assert(reply_len == off + sizeof(*reply));
+            assert(reply->rst && reply->ack && !reply->syn && !reply->fin);
+            assert(reply->window == 0);
+            assert(ntohl(reply->ack_seq) == seq + 1);
+            assert(reply->source == htons(443) && reply->dest == htons(12345));
+            if (version == 4) {
+                const struct iphdr *request = (const void *) packet;
+                const struct iphdr *response = (const void *) output;
+                assert(response->saddr == request->daddr && response->daddr == request->saddr);
+            } else {
+                const struct ip6_hdr *request = (const void *) packet;
+                const struct ip6_hdr *response = (const void *) output;
+                assert(memcmp(&response->ip6_src, &request->ip6_dst, 16) == 0);
+                assert(memcmp(&response->ip6_dst, &request->ip6_src, 16) == 0);
+            }
+        }
+        assert(!is_readable(tunnel[0])); // Exactly one reset, or no response for retryable failures.
+    }
+    failure = NONE;
+    connect_errno = 0;
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_tcp_half_close(int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int version = kind == 1 ? 6 : 4;

@@ -85,6 +85,18 @@ static const char *run_case(const char *id) {
         test_tcp(&args);
     else if (strcmp(id, "tcpSocketCleanup") == 0)
         test_tcp_socket_cleanup(&args);
+    else if (strcmp(id, "tcpConnectFailure4") == 0)
+        test_tcp_connect_failure(4, 0);
+    else if (strcmp(id, "tcpConnectFailure6") == 0)
+        test_tcp_connect_failure(6, 0);
+    else if (strcmp(id, "tcpConnectTransient4") == 0)
+        test_tcp_connect_failure(4, 1);
+    else if (strcmp(id, "tcpConnectTransient6") == 0)
+        test_tcp_connect_failure(6, 1);
+    else if (strcmp(id, "tcpSetupRetry4") == 0)
+        test_tcp_connect_failure(4, 2);
+    else if (strcmp(id, "tcpSetupRetry6") == 0)
+        test_tcp_connect_failure(6, 2);
     else if (strcmp(id, "udpSocketCleanup") == 0)
         test_udp_socket_cleanup(&args);
     else if (strcmp(id, "icmpSocketCleanup") == 0)

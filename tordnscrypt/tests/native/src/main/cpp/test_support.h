@@ -34,6 +34,7 @@ extern int real_network, real_udp_packets, block_domain, trace_dns;
 extern uint64_t accounted_sent, accounted_received;
 extern unsigned int cases;
 extern int destination_calls;
+extern int connect_errno, connect_fd;
 void expect_destination(int version, const char *address, uint16_t port);
 extern const struct JNINativeInterface jni;
 
@@ -104,6 +105,7 @@ void test_udp_blocked_duplicates(struct arguments *args);
 void udp_flow(int version, int redirect, int extension);
 void test_tcp(const struct arguments *args); // tcp.c
 void test_tcp_socket_cleanup(const struct arguments *args);
+void test_tcp_connect_failure(int version, int transient);
 void test_tcp_data_cleanup(void);
 void test_tcp_closed_data_cleanup(const struct arguments *args);
 void test_tcp_half_close(int kind);

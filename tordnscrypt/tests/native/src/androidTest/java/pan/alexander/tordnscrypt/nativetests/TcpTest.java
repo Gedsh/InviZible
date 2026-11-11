@@ -8,6 +8,12 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void ipv4DefinitiveConnectFailuresResetAndReleaseResources() { check("tcpConnectFailure4"); }
+    @Test public void ipv6DefinitiveConnectFailuresResetAndReleaseResources() { check("tcpConnectFailure6"); }
+    @Test public void ipv4TemporaryConnectFailuresRemainRetryable() { check("tcpConnectTransient4"); }
+    @Test public void ipv6TemporaryConnectFailuresRemainRetryable() { check("tcpConnectTransient6"); }
+    @Test public void ipv4LocalSetupFailuresDoNotResetUsingStaleErrno() { check("tcpSetupRetry4"); }
+    @Test public void ipv6LocalSetupFailuresDoNotResetUsingStaleErrno() { check("tcpSetupRetry6"); }
     @Test public void ipv4AppDataContinuesAfterUpstreamEof() { check("tcpHalfClose4"); }
     @Test public void ipv6AppDataContinuesAfterUpstreamEof() { check("tcpHalfClose6"); }
     @Test public void finWaitsForMissingAndQueuedBytes() { check("tcpFinGap"); }
