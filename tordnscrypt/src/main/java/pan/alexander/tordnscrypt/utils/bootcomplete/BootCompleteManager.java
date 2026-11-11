@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.bootcomplete;
@@ -69,6 +69,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener;
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys;
 import pan.alexander.tordnscrypt.utils.workers.UpdateIPsManager;
+import pan.alexander.tordnscrypt.vpn.service.ServiceVPN;
 import pan.alexander.tordnscrypt.vpn.service.ServiceVPNHelper;
 
 public class BootCompleteManager {
@@ -421,11 +422,11 @@ public class BootCompleteManager {
         ModulesKiller.stopITPD(context);
     }
 
-    private void stopServicesForeground(Context context, OperationMode mode, boolean fixTTL) {
+    void stopServicesForeground(Context context, OperationMode mode, boolean fixTTL) {
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (mode == VPN_MODE || mode == ROOT_MODE && fixTTL) {
-                Intent stopVPNServiceForeground = new Intent(context, VpnService.class);
+                Intent stopVPNServiceForeground = new Intent(context, ServiceVPN.class);
                 stopVPNServiceForeground.setAction(ACTION_STOP_SERVICE_FOREGROUND);
                 stopVPNServiceForeground.putExtra("showNotification", true);
                 if (App.getInstance().isAppForeground()) {
