@@ -212,6 +212,8 @@ void *handle_events(void *a) {
         int tcp_wait = 0;
         int timeout = EPOLL_TIMEOUT;
         uint64_t memory_generation = args->ctx->tcp_memory.generation;
+        uint64_t dns_memory_generation = args->ctx->tcp_memory.dns_generation;
+        bool memory_waiting = false, dns_waiting = false;
 
         // Count sessions
         int isessions = 0;
@@ -232,6 +234,19 @@ void *handle_events(void *a) {
                     int wait = monitor_tcp_session(args, s, epoll_fd);
                     if (wait > 0 && (tcp_wait == 0 || wait < tcp_wait))
                         tcp_wait = wait;
+                    if (s->tcp.state != TCP_LISTEN && s->tcp.state != TCP_CLOSING &&
+                        s->tcp.state != TCP_CLOSE) {
+                        if (s->tcp.memory_waiting && !s->tcp.fin_acked && s->tcp.recv_window == 0) {
+                            if (!memory_waiting)
+                                memory_generation = args->ctx->tcp_memory.generation;
+                            memory_waiting = true;
+                        }
+                        if (s->tcp.dns_waiting) {
+                            if (!dns_waiting)
+                                dns_memory_generation = args->ctx->tcp_memory.dns_generation;
+                            dns_waiting = true;
+                        }
+                    }
                 }
             }
             s = s->next;
@@ -317,9 +332,10 @@ void *handle_events(void *a) {
                     isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
 
         // Poll
-        // Monitoring or timeout cleanup may release memory after an earlier
-        // blocked flow was visited. Rescan once; never poll continuously for it.
-        if (memory_generation != args->ctx->tcp_memory.generation)
+        // A later flow or cleanup may release memory after a waiter was visited.
+        // Only rescan for a release in a pool that still has waiting flows.
+        if ((memory_waiting && memory_generation != args->ctx->tcp_memory.generation) ||
+            (dns_waiting && dns_memory_generation != args->ctx->tcp_memory.dns_generation))
             recheck = 1;
         struct epoll_event ev[EPOLL_EVENTS];
         int wait = recheck ? EPOLL_MIN_CHECK : timeout * 1000;

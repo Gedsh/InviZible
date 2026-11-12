@@ -123,7 +123,8 @@ struct tcp_memory {
     size_t queued;
     size_t dns;
     unsigned int nodes;
-    uint64_t generation; // Memory releases; mutated only by the context's owner.
+    uint64_t generation; // Queue releases; mutated only by the context's owner.
+    uint64_t dns_generation; // DNS response releases do not unblock app input.
 };
 
 struct context {
@@ -262,6 +263,7 @@ struct tcp_session {
     bool upstream_eof;
     bool fin_received;
     bool fin_acked;
+    bool memory_waiting; // App input paused by the shared queue budget.
     uint32_t fin_seq; // App FIN position, excluding the FIN byte.
     uint8_t dns_header[14]; // TCP length prefix and DNS header for incremental validation.
     uint8_t dns_header_used;
@@ -472,7 +474,7 @@ uint32_t get_send_window(const struct tcp_session *cur);
 
 uint32_t get_receive_buffer(const struct ng_session *cur);
 
-uint32_t get_receive_window(const struct ng_session *cur);
+uint32_t get_receive_window(struct ng_session *cur);
 
 void check_tcp_socket(const struct arguments *args,
                       const struct epoll_event *ev,

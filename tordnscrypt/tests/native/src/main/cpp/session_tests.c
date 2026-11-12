@@ -202,6 +202,7 @@ static int probe_polls;
 static struct context *memory_context;
 static struct ng_session *memory_sessions;
 static int memory_polls;
+static int memory_kind;
 #endif
 
 long long __real_get_ms(void);
@@ -226,15 +227,17 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
             assert(epoll_ctl(fd, EPOLL_CTL_ADD, memory_sessions->socket, &memory_sessions->ev) == 0);
             tcp_test_clock += EPOLL_MIN_CHECK + 1;
         } else if (memory_polls == 2) {
-            // Cleanup ran after the blocked flow's monitor pass. It must cause
-            // one short rescan, even without TUN or socket readiness events.
-            assert(timeout == EPOLL_MIN_CHECK && memory_sessions->tcp.recv_window == 0);
-            assert(memory_context->tcp_memory.queued < TCP_MEMORY_QUEUE_LIMIT);
+            bool rescan = memory_kind == 0 || memory_kind == 4;
+            assert(rescan ? timeout == EPOLL_MIN_CHECK : timeout > EPOLL_MIN_CHECK);
             memory_context->tcp_memory.queued = 0; // Remove simulated unrelated occupancy.
+            memory_context->tcp_memory.dns = 0;
+            if (!rescan)
+                memory_context->stopping = 1;
             tcp_test_clock += timeout + 1;
         } else {
             assert(memory_polls == 3 && timeout > EPOLL_MIN_CHECK);
-            assert(memory_sessions->tcp.recv_window > 0);
+            assert(memory_kind == 0 ? memory_sessions->tcp.recv_window > 0
+                                     : !memory_sessions->tcp.dns_waiting);
             memory_context->stopping = 1;
         }
         return 0;
@@ -309,7 +312,7 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
     return 0;
 }
 
-void test_tcp_memory_rescan(struct arguments *args) {
+void test_tcp_memory_rescan(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     real_network = 1;
     int tunnel[2], stream[2];
@@ -329,20 +332,47 @@ void test_tcp_memory_rescan(struct arguments *args) {
     struct tcphdr header = {.seq = htonl(0)};
     assert(queue_tcp(args, &header, "cleanup releases budget", &closing->tcp, (void *) "a", 1) == 1);
     closing->tcp.state = TCP_CLOSING;
-    blocked->tcp.memory_generation = args->ctx->tcp_memory.generation;
+    blocked->tcp.memory_waiting = true;
     args->ctx->tcp_memory.queued = TCP_MEMORY_QUEUE_LIMIT;
+    if (kind == 1 || kind == 3 || kind == 4 || kind == 5) {
+        blocked->tcp.memory_waiting = false;
+        blocked->tcp.recv_window = kind == 5 ? 0 : 16000;
+        args->ctx->tcp_memory.queued = closing->tcp.queue_bytes + sizeof(struct segment);
+    }
+    if (kind == 2 || kind == 4) {
+        clear_tcp_data(&closing->tcp);
+        closing->tcp.dns_response = ng_malloc(1, "cleanup DNS release");
+        assert(closing->tcp.dns_response != NULL);
+        closing->tcp.dns_response_capacity = 1;
+    }
+    if (kind == 3 || kind == 4) {
+        blocked->tcp.dns_waiting = true;
+        blocked->tcp.dns_memory_generation = args->ctx->tcp_memory.dns_generation;
+        args->ctx->tcp_memory.dns = TCP_MEMORY_DNS_LIMIT;
+    }
+    if (kind == 2) {
+        args->ctx->tcp_memory.dns = 1;
+        args->ctx->tcp_memory.queued = TCP_MEMORY_QUEUE_LIMIT;
+    }
+    blocked->tcp.memory_generation = args->ctx->tcp_memory.generation;
+    if (kind == 5) {
+        tcp_capacity_fd = blocked->socket;
+        tcp_capacity_available = 0;
+    }
     blocked->next = closing;
     blocked->ev.events = EPOLLERR | EPOLLIN; blocked->ev.data.ptr = blocked;
-    memory_sessions = blocked; memory_context = args->ctx; memory_polls = 0;
+    memory_sessions = blocked; memory_context = args->ctx; memory_polls = 0; memory_kind = kind;
     tcp_test_clock = 100000;
     struct arguments *owned = ng_malloc(sizeof(*owned), "memory loop arguments");
     assert(owned != NULL);
     *owned = *args; owned->tun = tunnel[0];
     handle_events(owned);
-    assert(memory_polls == 3);
+    assert(memory_polls == (kind == 0 || kind == 4 ? 3 : 2));
     memory_context = NULL; memory_sessions = NULL; tcp_test_clock = 0;
+    tcp_capacity_fd = -1;
     uint8_t packet[128];
-    tun_packet(tunnel[1], packet, 4, IPPROTO_TCP);
+    if (kind == 0)
+        tun_packet(tunnel[1], packet, 4, IPPROTO_TCP);
     assert(!is_readable(tunnel[1]));
     clear(args->ctx);
     assert(args->ctx->tcp_memory.queued == 0 && args->ctx->tcp_memory.nodes == 0);

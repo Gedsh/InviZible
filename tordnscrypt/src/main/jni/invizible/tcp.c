@@ -66,13 +66,14 @@ static void release_tcp_memory(struct tcp_session *cur, size_t bytes,
                               unsigned int nodes, bool dns) {
     if (cur->memory == NULL || (bytes == 0 && nodes == 0))
         return;
-    if (dns)
+    if (dns) {
         cur->memory->dns -= bytes;
-    else {
+        cur->memory->dns_generation++;
+    } else {
         cur->memory->queued -= bytes;
         cur->memory->nodes -= nodes;
+        cur->memory->generation++;
     }
-    cur->memory->generation++;
 }
 
 static size_t tcp_memory_window(const struct tcp_session *cur) {
@@ -220,7 +221,7 @@ static bool prepare_dns_response(const struct arguments *args, struct tcp_sessio
     if (cur->dns_response == NULL) {
         if (!reserve_tcp_memory(cur, 2, 0, true, false)) {
             cur->dns_waiting = true;
-            cur->dns_memory_generation = cur->memory->generation;
+            cur->dns_memory_generation = cur->memory->dns_generation;
             return false;
         }
         cur->dns_response = ng_malloc(2, "tcp dns frame");
@@ -237,7 +238,7 @@ static bool prepare_dns_response(const struct arguments *args, struct tcp_sessio
             // Reserve the entire replacement while the old allocation is live.
             if (!reserve_tcp_memory(cur, size, 0, true, false)) {
                 cur->dns_waiting = true;
-                cur->dns_memory_generation = cur->memory->generation;
+                cur->dns_memory_generation = cur->memory->dns_generation;
                 return false;
             }
             uint8_t *resized = ng_realloc(cur->dns_response, size, "tcp dns frame");
@@ -490,12 +491,15 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
 
     if (s->tcp.memory != NULL && s->tcp.state != TCP_LISTEN &&
         s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE) {
-        if (s->tcp.dns_waiting && s->tcp.dns_memory_generation != s->tcp.memory->generation)
+        if (s->tcp.dns_waiting && s->tcp.dns_memory_generation != s->tcp.memory->dns_generation)
             prepare_dns_response(args, &s->tcp);
-        if (!s->tcp.fin_acked && s->tcp.recv_window == 0 &&
+        if (s->tcp.memory_waiting && !s->tcp.fin_acked && s->tcp.recv_window == 0 &&
             s->tcp.memory_generation != s->tcp.memory->generation) {
             s->tcp.memory_generation = s->tcp.memory->generation;
             if (tcp_memory_window(&s->tcp) > 0) {
+                // Once shared memory is available, socket readiness and this
+                // flow's own queue control recovery if its window stays shut.
+                s->tcp.memory_waiting = false;
                 uint32_t window = get_receive_window(s);
                 if (window > 0) {
                     s->tcp.recv_window = window;
@@ -638,7 +642,7 @@ uint32_t get_receive_buffer(const struct ng_session *cur) {
     return total;
 }
 
-static uint32_t receive_window_for_buffer(const struct ng_session *cur, uint32_t window) {
+static uint32_t receive_window_for_buffer(struct ng_session *cur, uint32_t window) {
     uint32_t max = ((uint32_t) 0xFFFF) << cur->tcp.recv_scale;
     if (window > max) {
         log_android(ANDROID_LOG_DEBUG, "Receive window %u > max %u", window, max);
@@ -659,6 +663,10 @@ static uint32_t receive_window_for_buffer(const struct ng_session *cur, uint32_t
     if (cur->tcp.queue_segments >= TCP_QUEUE_SEGMENTS)
         total = 0;
     size_t shared = tcp_memory_window(&cur->tcp);
+    cur->tcp.memory_waiting = capacity >= unit &&
+                             cur->tcp.queue_segments < TCP_QUEUE_SEGMENTS && shared < unit;
+    if (cur->tcp.memory_waiting)
+        cur->tcp.memory_generation = cur->tcp.memory->generation;
     if (total > shared)
         total = (uint32_t) shared;
     // Keep recovery, admission and readiness decisions consistent with the
@@ -671,7 +679,7 @@ static uint32_t receive_window_for_buffer(const struct ng_session *cur, uint32_t
     return total;
 }
 
-uint32_t get_receive_window(const struct ng_session *cur) {
+uint32_t get_receive_window(struct ng_session *cur) {
     return receive_window_for_buffer(cur, get_receive_buffer(cur));
 }
 
@@ -1238,6 +1246,7 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.dns_memory_generation = 0;
             s->tcp.memory = &args->ctx->tcp_memory;
             s->tcp.memory_generation = s->tcp.memory->generation;
+            s->tcp.memory_waiting = false;
             s->tcp.forward = NULL;
             s->tcp.queue_bytes = s->tcp.queue_unsent = s->tcp.queue_segments = 0;
             s->next = NULL;
@@ -1564,6 +1573,7 @@ int queue_tcp(const struct arguments *args,
                 if (cur->memory != NULL && tcp_memory_window(cur) < datalen) {
                     cur->recv_window = 0;
                     cur->memory_generation = cur->memory->generation;
+                    cur->memory_waiting = true;
                     write_ack(args, cur);
                 }
                 return 0;
@@ -1591,6 +1601,7 @@ int queue_tcp(const struct arguments *args,
             if (!reserve_tcp_memory(cur, datalen, 0, false, progress)) {
                 cur->recv_window = 0;
                 cur->memory_generation = cur->memory->generation;
+                cur->memory_waiting = true;
                 write_ack(args, cur);
                 return 0;
             }

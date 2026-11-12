@@ -272,6 +272,26 @@ void test_tcp_memory_wakeup(const struct arguments *args) {
         assert(read(stream[1], packet, sizeof(packet)) == 5 && memcmp(packet, "hello", 5) == 0);
         tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
         assert(s.tcp.remote_seq == 1005 && memory->queued == 0 && memory->nodes == 0);
+        // A zero caused by socket capacity belongs to epoll, not shared-memory
+        // recovery. Other flows' releases must not repeat capacity syscalls.
+        tcp_capacity_fd = s.socket;
+        tcp_capacity_available = 0;
+        s.tcp.recv_window = get_receive_window(&s);
+        assert(s.tcp.recv_window == 0 && !s.tcp.memory_waiting);
+        assert(queue_tcp(&running, &header, "unrelated release", &other, (void *) "x", 1) == 1);
+        uint64_t dns_generation = memory->dns_generation;
+        clear_tcp_data(&other);
+        assert(memory->dns_generation == dns_generation);
+        int queries = tcp_sendbuf_queries, outq = tcp_outq_queries;
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        assert(tcp_sendbuf_queries == queries && tcp_outq_queries == outq);
+        assert((s.ev.events & EPOLLOUT) && !is_readable(tunnel[0]));
+        // The socket event, rather than a memory release, reopens this flow.
+        tcp_capacity_available = 65535;
+        check_tcp_socket(&running, &ready, epoll_fd);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        assert(s.tcp.recv_window > 0);
+        tcp_capacity_fd = -1;
         close(epoll_fd); close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
     }

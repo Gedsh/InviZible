@@ -42,8 +42,14 @@ DNS frames. Allocator overhead, session records, scratch buffers and kernel sock
 buffers are outside this limit. Existing per-session caps still apply.
 Pressure tests saturate the byte and node pools across connections, check rollback
 on allocation failure, pause DNS without bypassing filtering, and verify that
-memory releases reopen idle flows. Event-loop regressions check a single rescan
-after cleanup and no writable or hangup spin during a DNS memory wait.
+memory releases reopen idle flows. Queue and DNS-response release generations
+are independent. Only flows blocked by shared queue memory retry their receive
+capacity on a queue release; socket-blocked flows recover through epoll without
+extra capacity queries. Event-loop regressions check a single rescan after cleanup
+for waiters in the released pool, no memory-driven rescan without waiters or for
+the other pool, and no writable or hangup spin during a DNS memory wait.
+Recovery adds one 8-byte generation counter per context; the wait flag fits
+existing session padding on ARMv7 and ARM64. It adds no allocations or timers.
 IPv4/IPv6 recovery tests cover window scales 0, 7 and 14, including a partial
 memory release too small to advertise a nonzero window and a later release that
 resumes delivery. Shared capacity below one scaled window unit stays blocked.
@@ -205,7 +211,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 185 tests plus the optional comparison test.
+The full run contains 190 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts
