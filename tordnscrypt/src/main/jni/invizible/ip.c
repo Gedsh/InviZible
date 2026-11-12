@@ -547,24 +547,133 @@ int uid_cache_size = 0;
 int uid_cache_capacity = 0;
 struct uid_cache_entry *uid_cache = NULL;
 
+#define UID_UPDATE_BUCKETS 1024
+#define UID_UPDATE_NONE UINT16_MAX
+#define UID_UPDATE_THRESHOLD 64
+_Static_assert(UID_CACHE_MAX < UID_UPDATE_NONE, "UID update indices must fit in uint16_t");
+
+// Scan-local indices survive cache reallocations and require no retained memory.
+// The heap orders replacement by (time, slot); expired slots still win in slot order.
+struct uid_cache_update {
+    uint16_t bucket[UID_UPDATE_BUCKETS];
+    uint16_t next[UID_CACHE_MAX];
+    uint16_t heap[UID_CACHE_MAX];
+    uint16_t position[UID_CACHE_MAX];
+    int size;
+    int expired;
+};
+
+static unsigned int uid_update_bucket(int version, int protocol, const uint8_t *saddr,
+                                       uint16_t sport, const uint8_t *daddr, uint16_t dport) {
+    uint32_t hash = 2166136261u ^ (uint32_t) protocol ^ ((uint32_t) version << 8);
+    for (size_t off = 0; off < (version == 4 ? 4 : 16); off++) {
+        hash = (hash ^ saddr[off]) * 16777619u;
+        hash = (hash ^ daddr[off]) * 16777619u;
+    }
+    hash = (hash ^ (((uint32_t) sport << 16) | dport)) * 16777619u;
+    hash ^= hash >> 16;
+    hash *= 0x85ebca6bu;
+    hash ^= hash >> 13;
+    return hash & (UID_UPDATE_BUCKETS - 1);
+}
+
+static unsigned int uid_entry_bucket(int slot) {
+    const struct uid_cache_entry *entry = &uid_cache[slot];
+    return uid_update_bucket(entry->version, entry->protocol, entry->saddr,
+                              entry->sport, entry->daddr, entry->dport);
+}
+
+static bool uid_older(uint16_t a, uint16_t b) {
+    return uid_cache[a].time < uid_cache[b].time ||
+           (uid_cache[a].time == uid_cache[b].time && a < b);
+}
+
+static void uid_heap_swap(struct uid_cache_update *update, int a, int b) {
+    uint16_t slot = update->heap[a];
+    update->heap[a] = update->heap[b];
+    update->heap[b] = slot;
+    update->position[update->heap[a]] = (uint16_t) a;
+    update->position[slot] = (uint16_t) b;
+}
+
+static void uid_heap_fix(struct uid_cache_update *update, int pos) {
+    while (pos > 0 && uid_older(update->heap[pos], update->heap[(pos - 1) / 2])) {
+        int parent = (pos - 1) / 2;
+        uid_heap_swap(update, pos, parent);
+        pos = parent;
+    }
+    while (pos * 2 + 1 < update->size) {
+        int child = pos * 2 + 1;
+        if (child + 1 < update->size && uid_older(update->heap[child + 1], update->heap[child]))
+            child++;
+        if (!uid_older(update->heap[child], update->heap[pos]))
+            break;
+        uid_heap_swap(update, pos, child);
+        pos = child;
+    }
+}
+
+static struct uid_cache_update *new_uid_update(void) {
+    struct uid_cache_update *update = ng_malloc(sizeof(*update), "uid update scratch");
+    if (update == NULL)
+        return NULL;
+    memset(update->bucket, 0xff, sizeof(update->bucket));
+    update->size = 0;
+    update->expired = 0;
+    for (int i = 0; i < uid_cache_size; i++) {
+        unsigned int bucket = uid_entry_bucket(i);
+        update->next[i] = update->bucket[bucket];
+        update->bucket[bucket] = (uint16_t) i;
+        update->heap[i] = update->position[i] = (uint16_t) i;
+        update->size++;
+        uid_heap_fix(update, i);
+    }
+    return update;
+}
+
 static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t sport,
-                      const uint8_t *daddr, uint16_t dport, jint uid, long now) {
+                      const uint8_t *daddr, uint16_t dport, jint uid, long now,
+                      struct uid_cache_update *update) {
     size_t address_size = (version == 4 ? 4 : 16);
     int slot = -1;
     int oldest = 0;
-    for (int i = 0; i < uid_cache_size; i++) {
-        struct uid_cache_entry *entry = &uid_cache[i];
-        if (entry->version == version && entry->protocol == protocol &&
-            entry->sport == sport && entry->dport == dport &&
-            memcmp(entry->saddr, saddr, address_size) == 0 &&
-            memcmp(entry->daddr, daddr, address_size) == 0) {
-            slot = i;
-            break;
+    unsigned int bucket = 0;
+    if (update != NULL) {
+        bucket = uid_update_bucket(version, protocol, saddr, sport, daddr, dport);
+        for (uint16_t i = update->bucket[bucket]; i != UID_UPDATE_NONE; i = update->next[i]) {
+            const struct uid_cache_entry *entry = &uid_cache[i];
+            if (entry->version == version && entry->protocol == protocol &&
+                entry->sport == sport && entry->dport == dport &&
+                memcmp(entry->saddr, saddr, address_size) == 0 &&
+                memcmp(entry->daddr, daddr, address_size) == 0) {
+                slot = i;
+                break;
+            }
         }
-        if (slot < 0 && now - entry->time > UID_MAX_AGE)
-            slot = i;
-        if (entry->time < uid_cache[oldest].time)
-            oldest = i;
+        if (slot < 0) {
+            while (update->expired < uid_cache_size &&
+                   now - uid_cache[update->expired].time <= UID_MAX_AGE)
+                update->expired++;
+            if (update->expired < uid_cache_size)
+                slot = update->expired;
+        }
+        if (update->size > 0)
+            oldest = update->heap[0];
+    } else {
+        for (int i = 0; i < uid_cache_size; i++) {
+            struct uid_cache_entry *entry = &uid_cache[i];
+            if (entry->version == version && entry->protocol == protocol &&
+                entry->sport == sport && entry->dport == dport &&
+                memcmp(entry->saddr, saddr, address_size) == 0 &&
+                memcmp(entry->daddr, daddr, address_size) == 0) {
+                slot = i;
+                break;
+            }
+            if (slot < 0 && now - entry->time > UID_MAX_AGE)
+                slot = i;
+            if (entry->time < uid_cache[oldest].time)
+                oldest = i;
+        }
     }
 
     if (slot < 0 && uid_cache_size < UID_CACHE_MAX) {
@@ -589,6 +698,13 @@ static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t 
     if (slot < 0)
         slot = oldest;
 
+    if (update != NULL && slot < update->size) {
+        uint16_t *link = &update->bucket[uid_entry_bucket(slot)];
+        while (*link != UID_UPDATE_NONE && *link != slot)
+            link = &update->next[*link];
+        if (*link != UID_UPDATE_NONE)
+            *link = update->next[slot];
+    }
     struct uid_cache_entry *entry = &uid_cache[slot];
     entry->version = (uint8_t) version;
     entry->protocol = (uint8_t) protocol;
@@ -598,6 +714,15 @@ static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t 
     entry->dport = dport;
     entry->uid = uid;
     entry->time = now;
+    if (update != NULL) {
+        update->next[slot] = update->bucket[bucket];
+        update->bucket[bucket] = (uint16_t) slot;
+        if (slot == update->size) {
+            update->heap[slot] = update->position[slot] = (uint16_t) slot;
+            update->size++;
+        }
+        uid_heap_fix(update, update->position[slot]);
+    }
 }
 
 static const char *proc_space(const char *p) {
@@ -754,6 +879,9 @@ jint get_uid_sub(const int version, const int protocol,
     jint _uid;
 
     // Scan proc file
+    struct uid_cache_update *update = NULL;
+    bool update_attempted = false;
+    unsigned int updates = 0;
     int l = 0;
     *line = 0;
     while (fgets(line, sizeof(line), fd) != NULL) {
@@ -769,15 +897,26 @@ jint get_uid_sub(const int version, const int protocol,
                  memcmp(_daddr, zero, (size_t) (ws * 4)) == 0))
                 uid = _uid;
 
+            // A large accumulated cache can still have a one-row proc table.
+            // Amortize scratch setup over a substantial scan, not just its cache size.
+            if (updates < UID_UPDATE_THRESHOLD)
+                updates++;
+            if (!update_attempted && updates >= UID_UPDATE_THRESHOLD &&
+                uid_cache_size >= UID_UPDATE_THRESHOLD) {
+                update_attempted = true;
+                update = new_uid_update();
+            }
             cache_uid(version, protocol, _saddr, (uint16_t) _sport,
-                      _daddr, (uint16_t) _dport, _uid, now);
+                      _daddr, (uint16_t) _dport, _uid, now, update);
         } else {
             log_android(ANDROID_LOG_ERROR, "Invalid proc UID row: %s", line);
+            ng_free(update, __FILE__, __LINE__);
             fclose(fd);
             return -2;
         }
     }
 
+    ng_free(update, __FILE__, __LINE__);
     if (fclose(fd))
         log_android(ANDROID_LOG_ERROR, "fclose %s error %d: %s", fn, errno, strerror(errno));
 

@@ -43,6 +43,8 @@ extern int uid_cache_capacity;
 #endif
 extern int uid_cache_allocations;
 void test_uid_proc_parser(int kind);
+void test_uid_indexed_updates(int kind);
+void test_uid_indexed_growth_failure(void);
 extern struct uid_cache_entry *uid_cache;
 // Older baseline exports do not define the cache cap; only current code runs these cases.
 #ifndef UID_CACHE_MAX

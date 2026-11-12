@@ -484,6 +484,148 @@ void test_uid_cache_keys(void) {
     release_uid_cache();
 }
 
+#ifndef INVIZIBLE_BASELINE_TESTS
+// Preserve the previous linear policy as an independent oracle for indexed updates.
+static void reference_uid_update(struct uid_cache_entry *entries, int *count,
+                                  const struct uid_cache_entry *value, long now) {
+    int slot = -1, oldest = 0;
+    size_t length = value->version == 4 ? 4 : 16;
+    for (int i = 0; i < *count; i++) {
+        struct uid_cache_entry *entry = &entries[i];
+        if (entry->version == value->version && entry->protocol == value->protocol &&
+            entry->sport == value->sport && entry->dport == value->dport &&
+            memcmp(entry->saddr, value->saddr, length) == 0 &&
+            memcmp(entry->daddr, value->daddr, length) == 0) {
+            slot = i;
+            break;
+        }
+        if (slot < 0 && now - entry->time > UID_MAX_AGE) slot = i;
+        if (entry->time < entries[oldest].time) oldest = i;
+    }
+    if (slot < 0) slot = *count < UID_CACHE_MAX ? (*count)++ : oldest;
+    entries[slot] = *value;
+    entries[slot].time = now;
+}
+
+static void assert_uid_cache_matches(const struct uid_cache_entry *entries, int count) {
+    assert(uid_cache_size == count && allocations == 1);
+    for (int i = 0; i < count; i++) {
+        const struct uid_cache_entry *actual = &uid_cache[i], *expected = &entries[i];
+        size_t length = expected->version == 4 ? 4 : 16;
+        assert(actual->version == expected->version && actual->protocol == expected->protocol);
+        assert(actual->sport == expected->sport && actual->dport == expected->dport);
+        assert(actual->uid == expected->uid && actual->time == expected->time);
+        assert(memcmp(actual->saddr, expected->saddr, length) == 0);
+        assert(memcmp(actual->daddr, expected->daddr, length) == 0);
+    }
+}
+#endif
+
+void test_uid_indexed_updates(int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int version = kind == 1 ? 6 : 4;
+    int rows = kind == 2 ? 256 : UID_CACHE_MAX + 128;
+    size_t capacity = (size_t) rows * 180 + 64;
+    char *table = malloc(capacity);
+    struct uid_cache_entry *reference = calloc(UID_CACHE_MAX, sizeof(*reference));
+    assert(table != NULL && reference != NULL);
+    int count = 0;
+    const long times[] = {0, 100, UID_MAX_AGE + 200, 50};
+    fake_proc = 1; proc_contents = proc_one;
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+    reference[count++] = uid_cache[0]; // Keep another protocol/family in the snapshot.
+    for (int phase = 0; phase < 4; phase++) {
+        size_t used = (size_t) snprintf(table, capacity, "header\n");
+        for (int i = 0; i < rows; i++) {
+            int id = phase == 1 ? rows - i - 1 : i;
+            int port = phase < 2 ? 1000 + (id % 97 == 0 ? id / 97 : id)
+                     : phase == 2 ? (i % 2 == 0 ? 1000 + i / 2 : 12000 + i) : 25000 + i;
+            struct uid_cache_entry value = {.version = version, .protocol = IPPROTO_TCP,
+                    .sport = (uint16_t) port, .dport = port % 13 == 0 ? 53 : 0,
+                    .uid = 10000 + phase * 100000 + i};
+            const char *loopback = version == 4 ? "127.0.0.1" : "::1";
+            if (port % 11 != 0)
+                assert(inet_pton(version == 4 ? AF_INET : AF_INET6, loopback, value.saddr) == 1);
+            if (port % 7 == 0)
+                assert(inet_pton(version == 4 ? AF_INET : AF_INET6, loopback, value.daddr) == 1);
+            const char *zero = version == 4 ? "00000000" : "00000000000000000000000000000000";
+            const char *local = version == 4 ? "0100007F" : "00000000000000000000000001000000";
+            int length = snprintf(table + used, capacity - used,
+                    "%d: %s:%04X %s:%04X 07 0:0 0:0 0 %d 0 0\n", i,
+                    port % 11 == 0 ? zero : local, port,
+                    port % 7 == 0 ? local : zero, value.dport, value.uid);
+            assert(length > 0 && (size_t) length < capacity - used);
+            used += (size_t) length;
+            reference_uid_update(reference, &count, &value, times[phase]);
+        }
+        if (kind == 2 && phase == 0) {
+            fail_alloc_tag = "uid update scratch";
+            fail_alloc_match = 1;
+        }
+        if (kind == 2 && phase == 2) {
+            int length = snprintf(table + used, capacity - used, "malformed\n");
+            assert(length > 0 && (size_t) length < capacity - used);
+        }
+        proc_contents = table;
+        assert(lookup_uid(version, IPPROTO_TCP, 65535, times[phase]) ==
+               (kind == 2 && phase == 2 ? -2 : -1));
+        if (kind == 2 && phase == 0) assert(fail_alloc_match == 0);
+        fail_alloc_tag = NULL;
+        assert_uid_cache_matches(reference, count);
+    }
+    free(reference); free(table);
+    release_uid_cache();
+#endif
+}
+
+void test_uid_indexed_growth_failure(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    char table[64 * 100];
+    size_t used = (size_t) snprintf(table, sizeof(table), "header\n");
+    for (int i = 0; i < 64; i++) {
+        int length = snprintf(table + used, sizeof(table) - used,
+                "%d: 0100007F:%04X 00000000:0000 07 0:0 0:0 0 %d 0 0\n",
+                i, 1000 + i, 10000 + i);
+        assert(length > 0 && (size_t) length < sizeof(table) - used);
+        used += (size_t) length;
+    }
+    fake_proc = 1; proc_contents = table;
+    assert(lookup_uid(4, IPPROTO_UDP, 65535, 0) == -1);
+    assert(uid_cache_size == 64 && uid_cache_capacity == 64);
+    proc_contents = "header\n0: 0100007F:03E8 00000000:0000 07 0:0 0:0 0 10000 0 0\n";
+    fail_alloc_tag = "uid update scratch"; fail_alloc_match = 1;
+    assert(lookup_uid(4, IPPROTO_UDP, 65535, 0) == -1);
+    assert(fail_alloc_match == 1); // Short scans need no workspace even with a larger cache.
+    fail_alloc_tag = NULL;
+    used = (size_t) snprintf(table, sizeof(table), "header\n");
+    for (int i = 1; i < 64; i++) {
+        int length = snprintf(table + used, sizeof(table) - used,
+                "%d: 0100007F:%04X 00000000:0000 07 0:0 0:0 0 %d 0 0\n",
+                i, 1000 + i, 10000 + i);
+        assert(length > 0 && (size_t) length < sizeof(table) - used);
+        used += (size_t) length;
+    }
+    int length = snprintf(table + used, sizeof(table) - used,
+        "0: 0100007F:07D0 00000000:0000 07 0:0 0:0 0 20000 0 0\n"
+        "1: 0100007F:03E8 00000000:0000 07 0:0 0:0 0 7777 0 0\n"
+        "2: 0100007F:07D1 00000000:0000 07 0:0 0:0 0 20001 0 0\n");
+    assert(length > 0 && (size_t) length < sizeof(table) - used);
+    proc_contents = table;
+    fail_alloc_tag = "uid_cache extend"; fail_alloc_match = 1;
+    assert(lookup_uid(4, IPPROTO_UDP, 65535, 1) == -1);
+    fail_alloc_tag = NULL;
+    assert(fail_alloc_match == -1 && uid_cache_size == 65 && allocations == 1);
+    assert(uid_cache[0].sport == 1000 && uid_cache[0].uid == 7777);
+    for (int i = 0; i < uid_cache_size; i++) assert(uid_cache[i].sport != 2000);
+    assert(uid_cache[64].sport == 2001 && uid_cache[64].uid == 20001);
+    int before = file_closes;
+    assert(lookup_uid(4, IPPROTO_UDP, 1000, 1) == 7777);
+    assert(lookup_uid(4, IPPROTO_UDP, 2001, 1) == 20001);
+    assert(file_closes == before);
+    release_uid_cache();
+#endif
+}
+
 void test_uid_proc_parser(int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     if (kind == 1) {

@@ -109,8 +109,19 @@ mixed-case hex, malformed and truncated fields, wildcard/duplicate match order,
 cache growth failures, expiry and bounded replacement. The dedicated row parser
 avoids `sscanf` and address byte-swapping. Cache allocation grows geometrically
 up to 64 entries and then in blocks of 64, retaining at most 63 unused slots.
+After 64 valid proc rows, caches with at least 64 entries use a temporary
+1,024-bucket exact-key index, an oldest-entry heap ordered by timestamp and slot,
+and a forward cursor for expired slots. This replaces repeated full-cache update
+searches with expected constant-time key lookup and logarithmic heap updates.
+The 26,632-byte workspace is allocated once per larger scan and freed on normal
+or malformed-row exits. Failed workspace allocation uses the linear fallback
+for that scan. Small caches, short scans and cache-hit lookups allocate no workspace.
+Differential tests compare IPv4/IPv6 updates against the prior linear policy,
+including duplicate keys, expiry, timestamp ties, backward time, mixed protocols,
+full-cache churn, growth failures and workspace cleanup. Wildcard lookup order
+and proc-scan last-match behavior remain unchanged; cache matching remains linear.
 The full-cache case checks that population needs at most 80 allocations for
-4,096 entries rather than one allocation per entry. Cache matching remains linear.
+4,096 entries rather than one allocation per entry.
 Incoming IPv4 header checksums are always validated, including options and padding.
 TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
 creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.
@@ -219,7 +230,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 192 tests plus the optional comparison test.
+The full run contains 196 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

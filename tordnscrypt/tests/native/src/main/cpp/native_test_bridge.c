@@ -73,6 +73,14 @@ static const char *run_case(const char *id) {
         test_uid_proc_parser(1);
     else if (strcmp(id, "uidProcMatchOrder") == 0)
         test_uid_proc_parser(2);
+    else if (strcmp(id, "uidUpdate4") == 0)
+        test_uid_indexed_updates(0);
+    else if (strcmp(id, "uidUpdate6") == 0)
+        test_uid_indexed_updates(1);
+    else if (strcmp(id, "uidUpdateFallback") == 0)
+        test_uid_indexed_updates(2);
+    else if (strcmp(id, "uidUpdateGrowthFailure") == 0)
+        test_uid_indexed_growth_failure();
     else if (strcmp(id, "tcpCapacityReuse") == 0)
         test_tcp_capacity_reuse(&args);
     else if (strcmp(id, "tcpWindowReopen4") == 0)
