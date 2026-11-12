@@ -587,9 +587,7 @@ static struct ng_session *closed_record(int closing) {
         s->tcp.uid = ++cache_uid;
         s->tcp.sent = 1;
         s->tcp.received = 2;
-        s->tcp.forward = ng_calloc(1, sizeof(struct segment), "test closed segment");
-        s->tcp.forward->len = 1;
-        s->tcp.forward->data = ng_malloc(1, "test closed data");
+        s->tcp.forward = new_test_segment(1);
     } else {
         s->udp.uid = ++cache_uid;
         s->udp.sent = 1;

@@ -93,23 +93,17 @@ static size_t tcp_memory_window(const struct tcp_session *cur) {
 
 static void free_tcp_segment(struct tcp_session *cur, struct segment *segment) {
     release_tcp_memory(cur, sizeof(*segment) + segment->len, 1, false);
-    ng_free(segment->data, __FILE__, __LINE__);
     ng_free(segment, __FILE__, __LINE__);
 }
 
 static struct segment *allocate_tcp_segment(struct tcp_session *cur, uint16_t length,
-                                            bool progress, const char *node_tag,
-                                            const char *data_tag) {
+                                            bool progress, const char *tag) {
     size_t bytes = sizeof(struct segment) + length;
     if (!reserve_tcp_memory(cur, bytes, 1, false, progress))
         return NULL;
-    struct segment *segment = ng_malloc(sizeof(*segment), node_tag);
-    if (segment != NULL) {
-        segment->data = ng_malloc(length, data_tag);
-        if (segment->data != NULL)
-            return segment;
-        ng_free(segment, __FILE__, __LINE__);
-    }
+    struct segment *segment = ng_malloc(bytes, tag);
+    if (segment != NULL)
+        return segment;
     release_tcp_memory(cur, bytes, 1, false);
     return NULL;
 }
@@ -131,6 +125,7 @@ void clear_tcp_data(struct tcp_session *cur) {
     clear_dns_response(cur);
     struct segment *s = cur->forward;
     cur->forward = NULL;
+    cur->forward_tail = NULL;
     cur->queue_bytes = cur->queue_unsent = cur->queue_segments = 0;
     while (s != NULL) {
         struct segment *p = s;
@@ -1000,6 +995,8 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
 
                             struct segment *p = s->tcp.forward;
                             s->tcp.forward = s->tcp.forward->next;
+                            if (s->tcp.forward == NULL)
+                                s->tcp.forward_tail = NULL;
                             s->tcp.queue_bytes -= p->len;
                             s->tcp.queue_segments--;
                             free_tcp_segment(&s->tcp, p);
@@ -1251,13 +1248,14 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.memory_generation = s->tcp.memory->generation;
             s->tcp.memory_waiting = false;
             s->tcp.forward = NULL;
+            s->tcp.forward_tail = NULL;
             s->tcp.queue_bytes = s->tcp.queue_unsent = s->tcp.queue_segments = 0;
             s->next = NULL;
 
             if (datalen) {
                 log_android(ANDROID_LOG_INFO, "%s SYN data", tcp_packet_text(&diagnostic));
                 s->tcp.forward = allocate_tcp_segment(&s->tcp, datalen,
-                        ntohs(s->tcp.dest) == 53, "syn segment", "syn segment data");
+                        ntohs(s->tcp.dest) == 53, "syn segment");
                 if (s->tcp.forward == NULL) {
                     ng_free(s, __FILE__, __LINE__);
                     return 0;
@@ -1268,6 +1266,7 @@ jboolean handle_tcp(const struct arguments *args,
                 s->tcp.forward->psh = tcphdr->psh;
                 memcpy(s->tcp.forward->data, data, datalen);
                 s->tcp.forward->next = NULL;
+                s->tcp.forward_tail = s->tcp.forward;
                 s->tcp.queue_bytes = s->tcp.queue_unsent = datalen;
                 s->tcp.queue_segments = 1;
             }
@@ -1496,6 +1495,7 @@ static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
     unsigned int segments = 1;
     size_t copied = 0;
     struct segment **link = &cur->forward;
+    struct segment *tail = head;
     while (*link != NULL) {
         struct segment *q = *link;
         uint32_t offset = q->seq - head->seq;
@@ -1522,11 +1522,13 @@ static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
             retained += q->len;
             unsent += q->len - q->sent;
             segments++;
+            tail = q;
             link = &q->next;
         }
     }
     head->next = cur->forward;
     cur->forward = head;
+    cur->forward_tail = tail;
     cur->queue_bytes = retained;
     cur->queue_unsent = unsent;
     cur->queue_segments = segments;
@@ -1546,6 +1548,11 @@ int queue_tcp(const struct arguments *args,
     else {
         struct segment *p = NULL;
         struct segment *s = cur->forward;
+        // New in-order data normally follows the tail; avoid walking retained data.
+        if (cur->forward_tail != NULL && compare_u32(cur->forward_tail->seq, seq) < 0) {
+            p = cur->forward_tail;
+            s = NULL;
+        }
         while (s != NULL && compare_u32(s->seq, seq) < 0) {
             p = s;
             s = s->next;
@@ -1570,8 +1577,7 @@ int queue_tcp(const struct arguments *args,
                         session,
                         seq - cur->remote_start, seq + datalen - cur->remote_start);
             bool progress = fills_gap || ntohs(cur->dest) == 53;
-            struct segment *n = allocate_tcp_segment(cur, datalen, progress,
-                                                      "tcp segment", "tcp segment");
+            struct segment *n = allocate_tcp_segment(cur, datalen, progress, "tcp segment");
             if (n == NULL) {
                 if (cur->memory != NULL && tcp_memory_window(cur) < datalen) {
                     cur->recv_window = 0;
@@ -1594,6 +1600,8 @@ int queue_tcp(const struct arguments *args,
                     cur->forward = n;
                 else
                     p->next = n;
+                if (s == NULL)
+                    cur->forward_tail = n;
                 cur->queue_bytes += datalen;
                 cur->queue_unsent += datalen;
                 cur->queue_segments++;
@@ -1601,26 +1609,32 @@ int queue_tcp(const struct arguments *args,
         } else {
             // Extend a retransmission without rewriting bytes already accepted.
             bool progress = seq == cur->remote_seq || ntohs(cur->dest) == 53;
-            if (!reserve_tcp_memory(cur, datalen, 0, false, progress)) {
+            size_t bytes = sizeof(*s) + datalen;
+            if (!reserve_tcp_memory(cur, bytes, 1, false, progress)) {
                 cur->recv_window = 0;
                 cur->memory_generation = cur->memory->generation;
                 cur->memory_waiting = true;
                 write_ack(args, cur);
                 return 0;
             }
-            uint8_t *replacement = ng_malloc(datalen, "tcp segment smaller");
+            struct segment *replacement = ng_malloc(bytes, "tcp segment smaller");
             if (replacement == NULL) {
-                release_tcp_memory(cur, datalen, 0, false);
+                release_tcp_memory(cur, bytes, 1, false);
                 return 0;
             }
-            memcpy(replacement, s->data, s->len);
-            memcpy(replacement + s->len, data + s->len, datalen - s->len);
-            ng_free(s->data, __FILE__, __LINE__);
-            release_tcp_memory(cur, s->len, 0, false);
-            s->data = replacement;
+            *replacement = *s; // Copy metadata; the flexible payload is copied below.
+            memcpy(replacement->data, s->data, s->len);
+            memcpy(replacement->data + s->len, data + s->len, datalen - s->len);
+            replacement->len = datalen;
+            if (p == NULL)
+                cur->forward = replacement;
+            else
+                p->next = replacement;
+            if (cur->forward_tail == s)
+                cur->forward_tail = replacement;
             cur->queue_bytes += datalen - s->len;
             cur->queue_unsent += datalen - s->len;
-            s->len = datalen;
+            free_tcp_segment(cur, s);
         }
     }
     return 1;

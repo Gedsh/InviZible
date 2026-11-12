@@ -4,6 +4,15 @@
 #include "invizible.h"
 #include <assert.h>
 
+#ifdef INVIZIBLE_COMBINED_TCP_SEGMENTS
+#define TCP_SEGMENT_ALLOCS 1
+#else
+#define TCP_SEGMENT_ALLOCS 2
+#endif
+struct segment *new_test_segment(uint16_t length);
+extern unsigned int tcp_sequence_compares;
+void test_tcp_queue_storage(const struct arguments *args, int kind);
+
 // Turn native assertions into JUnit failures through the shared JNI checkpoint.
 void native_test_fail(const char *condition, const char *file, int line)
         __attribute__((noreturn));

@@ -551,6 +551,27 @@ void assert_test_session_index(const struct context *ctx) {
 #endif
 }
 
+unsigned int tcp_sequence_compares;
+#ifndef INVIZIBLE_BASELINE_TESTS
+int __real_compare_u32(uint32_t a, uint32_t b);
+int __wrap_compare_u32(uint32_t a, uint32_t b) {
+    tcp_sequence_compares++;
+    return __real_compare_u32(a, b);
+}
+#endif
+
+struct segment *new_test_segment(uint16_t length) {
+#ifdef INVIZIBLE_COMBINED_TCP_SEGMENTS
+    struct segment *segment = ng_calloc(1, sizeof(*segment) + length, "test segment");
+#else
+    struct segment *segment = ng_calloc(1, sizeof(*segment), "test segment");
+    segment->data = ng_malloc(length, "test payload");
+#endif
+    assert(segment != NULL);
+    segment->len = length;
+    return segment;
+}
+
 void reset_test_state(void) {
     tcp_sendbuf_queries = tcp_outq_queries = 0;
     tcp_capacity_fd = -1;

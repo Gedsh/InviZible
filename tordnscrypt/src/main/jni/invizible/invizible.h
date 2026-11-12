@@ -165,13 +165,14 @@ struct allowed {
     uint16_t rport; // host notation
 };
 
+#define INVIZIBLE_COMBINED_TCP_SEGMENTS 1
 struct segment {
     uint32_t seq;
     uint16_t len;
     uint16_t sent;
     int psh;
-    uint8_t *data;
     struct segment *next;
+    uint8_t data[]; // Owned by the same allocation as the metadata.
 };
 
 struct icmp_session {
@@ -279,6 +280,7 @@ struct tcp_session {
     bool dns_waiting;
     uint64_t dns_memory_generation;
     struct segment *forward;
+    struct segment *forward_tail; // Last queued segment; NULL when the queue is empty.
     uint32_t queue_bytes; // Retained payload, including partially sent segments.
     uint32_t queue_unsent;
     unsigned int queue_segments;

@@ -30,6 +30,16 @@ restoration matching and oldest-blocked-flow selection still use the cleanup lis
 TCP queues enforce a 256 KiB payload budget and a 1024-segment metadata limit per
 session. Tests cover receive-window boundaries, sequence wraparound, and shorter
 or longer retransmissions after partial sends, including forwarding through a real socket.
+Each segment and its payload share one allocation. A tail pointer allows sorted
+appends without walking the queue; out-of-order insertion still follows sequence
+order. Growing a retransmission replaces its whole allocation, preserving accepted
+bytes, partial-send offsets, PSH and links. Both allocations and the temporary
+node are charged until replacement completes. Tests count one allocation per
+segment and linear total sequence comparisons for 1,024 appends across wraparound,
+and check tail updates after growth, gap overlap/eviction, drain, cleanup and reuse.
+Segment metadata shrinks from 20 to 16 bytes on ARMv7 and from 32 to 24 bytes on
+ARM64, in addition to avoiding a second allocator header. The tail pointer fits
+existing ARMv7 session padding and adds 8 bytes per session record on ARM64.
 Missing-head packets can displace the furthest unacknowledged data at either queue
 limit, including with a zero window. Regressions verify allocation-failure recovery,
 overlapping bytes, bounded queues, and delivery of evicted tails after retransmission.
@@ -100,8 +110,9 @@ restart or postpone probe backoff.
 TCP cases exercise both families with full socket buffers, partial writes, probe
 timing and ACK-driven recovery. A session case checks the earliest probe deadline
 across flows and stop-pipe readiness using a controlled monotonic clock.
-IPv4/IPv6 loopback TCP cases fill the upstream buffer exactly, empty the native
-queue and advertise a zero receive window. They verify that writability remains
+IPv4/IPv6 loopback TCP cases transfer a full send buffer, empty the native
+queue and model zero send capacity independently of kernel ACK timing. Recovery
+uses real socket capacity after draining the peer. They verify that writability remains
 monitored until a window-update ACK is sent, further app data resumes, and writable
 monitoring stops once the window reopens or app input has shut down.
 Legacy UID proc-table cases cover native-word address decoding for IPv4/IPv6,
@@ -230,7 +241,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 196 tests plus the optional comparison test.
+The full run contains 198 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

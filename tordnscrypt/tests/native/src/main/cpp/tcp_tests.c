@@ -166,21 +166,29 @@ void test_tcp_memory_budget(const struct arguments *args, int kind) {
         header.seq = htonl(1000);
         assert(queue_tcp(args, &header, "original", &flows[0], data, 10) == 1);
         size_t retained = memory->queued;
-        memory->queued = TCP_MEMORY_PROGRESS_LIMIT - 19;
+        size_t replacement = sizeof(struct segment) + 20;
+        memory->queued = TCP_MEMORY_PROGRESS_LIMIT - replacement + 1;
         assert(queue_tcp(args, &header, "peak denied", &flows[0], data, 20) == 0);
-        assert(flows[0].forward->len == 10 && memory->queued == TCP_MEMORY_PROGRESS_LIMIT - 19);
+        assert(flows[0].forward->len == 10 && memory->queued == TCP_MEMORY_PROGRESS_LIMIT - replacement + 1);
         flows[0].recv_window = 1000;
-        memory->queued = TCP_MEMORY_PROGRESS_LIMIT - 20;
+        memory->queued = TCP_MEMORY_PROGRESS_LIMIT - replacement;
         fail_alloc_tag = "tcp segment smaller"; fail_alloc_match = 1;
         assert(queue_tcp(args, &header, "replacement failure", &flows[0], data, 20) == 0);
-        assert(memory->queued == TCP_MEMORY_PROGRESS_LIMIT - 20);
+        assert(memory->queued == TCP_MEMORY_PROGRESS_LIMIT - replacement);
         fail_alloc_tag = NULL;
         assert(queue_tcp(args, &header, "replacement fits", &flows[0], data, 20) == 1);
-        assert(memory->queued == TCP_MEMORY_PROGRESS_LIMIT - 10);
+        assert(memory->queued == TCP_MEMORY_PROGRESS_LIMIT - sizeof(struct segment) - 10);
         assert(flows[0].forward->len == 20);
         memory->queued = retained + 10;
+        memory->nodes = TCP_MEMORY_PROGRESS_NODES;
+        flows[0].recv_window = 1000;
+        assert(queue_tcp(args, &header, "replacement node peak denied", &flows[0], data, 30) == 0);
+        assert(flows[0].forward->len == 20 && memory->nodes == TCP_MEMORY_PROGRESS_NODES);
+        assert(memory->queued == retained + 10);
+        memory->nodes = 1;
+        flows[0].recv_window = 1000;
         header.seq = htonl(1020);
-        for (int failure_at = 1; failure_at <= 2; failure_at++) {
+        for (int failure_at = 1; failure_at <= TCP_SEGMENT_ALLOCS; failure_at++) {
             fail_alloc_tag = "tcp segment"; fail_alloc_match = failure_at;
             assert(queue_tcp(args, &header, "node or data failure", &flows[0], data, 5) == 0);
             assert(memory->queued == retained + 10 && memory->nodes == 1);
@@ -302,14 +310,94 @@ static void assert_tcp_queue_totals(const struct tcp_session *tcp) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     uint32_t bytes = 0, unsent = 0;
     unsigned int segments = 0;
+    const struct segment *tail = NULL;
     for (const struct segment *q = tcp->forward; q != NULL; q = q->next) {
         assert(q->sent <= q->len);
         bytes += q->len;
         unsent += q->len - q->sent;
         segments++;
+        tail = q;
     }
     assert(tcp->queue_bytes == bytes && tcp->queue_unsent == unsent);
     assert(tcp->queue_segments == segments);
+#ifdef INVIZIBLE_COMBINED_TCP_SEGMENTS
+    assert(tcp->forward_tail == tail);
+#endif
+#endif
+}
+
+void test_tcp_queue_storage(const struct arguments *args, int kind) {
+#ifdef INVIZIBLE_COMBINED_TCP_SEGMENTS
+    struct tcp_session tcp = {.remote_seq = kind == 0 ? UINT32_MAX - 1024 : 100,
+                              .recv_window = 4096};
+    struct tcphdr header = {0};
+    uint8_t data[] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21};
+    if (kind == 0) {
+        tcp_sequence_compares = 0;
+        for (unsigned int i = 0; i < TCP_QUEUE_SEGMENTS; i++) {
+            header.seq = htonl(tcp.remote_seq + i * 2);
+            assert(queue_tcp(args, &header, "append", &tcp, data, 1) == 1);
+        }
+        assert(allocations == TCP_QUEUE_SEGMENTS);
+        assert(tcp_sequence_compares <= 3 * TCP_QUEUE_SEGMENTS);
+        assert(tcp.forward_tail->seq == tcp.remote_seq + (TCP_QUEUE_SEGMENTS - 1) * 2);
+    } else {
+        header.psh = 1;
+        for (int seq = 110; seq <= 150; seq += 20) {
+            header.seq = htonl(seq);
+            assert(queue_tcp(args, &header, "initial", &tcp, data, 2) == 1);
+        }
+        struct segment *tail = tcp.forward_tail;
+        header.seq = htonl(120);
+        assert(queue_tcp(args, &header, "middle", &tcp, data, 2) == 1);
+        assert(tcp.forward_tail == tail);
+        tail->sent = 1; tcp.queue_unsent--;
+        header.seq = htonl(150); header.psh = 0;
+        uint8_t grown[] = {90, 91, 92, 93, 94, 95};
+        fail_alloc_tag = "tcp segment smaller"; fail_alloc_match = 1;
+        size_t retained = args->ctx->tcp_memory.queued;
+        assert(queue_tcp(args, &header, "failed tail growth", &tcp, grown, sizeof(grown)) == 0);
+        assert(tcp.forward_tail == tail && tcp.forward_tail->len == 2);
+        assert(args->ctx->tcp_memory.queued == retained && allocations == 4);
+        fail_alloc_tag = NULL;
+        assert(queue_tcp(args, &header, "tail growth", &tcp, grown, sizeof(grown)) == 1);
+        assert(tcp.forward_tail->len == sizeof(grown) && tcp.forward_tail->sent == 1 && tcp.forward_tail->psh);
+        assert(memcmp(tcp.forward_tail->data, data, 2) == 0);
+        assert(memcmp(tcp.forward_tail->data + 2, grown + 2, sizeof(grown) - 2) == 0);
+        for (int seq = 110; seq <= 120; seq += 10) {
+            header.seq = htonl(seq);
+            assert(queue_tcp(args, &header, "head/middle growth", &tcp, data, 4) == 1);
+            assert_tcp_queue_totals(&tcp);
+        }
+        header.seq = htonl(170);
+        assert(queue_tcp(args, &header, "append after growth", &tcp, data, 2) == 1);
+        assert(tcp.forward_tail->seq == 170);
+        header.seq = htonl(100);
+        assert(queue_tcp(args, &header, "gap overlap", &tcp, data, sizeof(data)) == 1);
+        assert(tcp.forward->seq == 100 && tcp.forward_tail->seq == 170);
+    }
+    assert_tcp_queue_totals(&tcp);
+    clear_tcp_data(&tcp);
+    assert_tcp_queue_totals(&tcp);
+    header.seq = htonl(tcp.remote_seq);
+    assert(queue_tcp(args, &header, "reuse", &tcp, data, 1) == 1);
+    assert(tcp.forward == tcp.forward_tail);
+    clear_tcp_data(&tcp);
+    assert_tcp_queue_totals(&tcp);
+    if (kind == 1) {
+        uint8_t *maximum = malloc(UINT16_MAX);
+        assert(maximum != NULL);
+        memset(maximum, 0xa5, UINT16_MAX);
+        tcp.recv_window = UINT16_MAX;
+        assert(queue_tcp(args, &header, "maximum payload", &tcp, maximum, UINT16_MAX) == 1);
+        assert(allocations == 1 && tcp.forward == tcp.forward_tail);
+        assert(memcmp(tcp.forward->data, maximum, UINT16_MAX) == 0);
+        assert(args->ctx->tcp_memory.queued == sizeof(struct segment) + UINT16_MAX);
+        free(maximum);
+        clear_tcp_data(&tcp);
+        assert_tcp_queue_totals(&tcp);
+    }
+    assert(allocations == 0 && args->ctx->tcp_memory.queued == 0 && args->ctx->tcp_memory.nodes == 0);
 #endif
 }
 
@@ -561,11 +649,11 @@ void test_tcp_gap_recovery(const struct arguments *args, int kind) {
     struct segment *original = s.tcp.forward;
     header.seq = htonl(start);
     memset(data, 0xA5, sizeof(data));
-    for (int match = 1; match <= 2; match++) {
+    for (int match = 1; match <= TCP_SEGMENT_ALLOCS; match++) {
         fail_alloc_tag = "tcp segment";
         fail_alloc_match = match;
         assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 0);
-        assert(fail_alloc_match == 0 && s.tcp.forward == original && allocations == count * 2);
+        assert(fail_alloc_match == 0 && s.tcp.forward == original && allocations == count * TCP_SEGMENT_ALLOCS);
         assert_tcp_queue_totals(&s.tcp);
     }
     fail_alloc_tag = NULL;
@@ -607,7 +695,11 @@ void test_tcp_allocation_failure(const struct arguments *args) {
     struct tcphdr *header = (void *) (packet + 20);
     header->syn = 1;
     header->doff = 5;
-    const char *tags[] = {"tcp session", "syn segment", "syn segment data"};
+    const char *tags[] = {"tcp session", "syn segment"
+#ifndef INVIZIBLE_COMBINED_TCP_SEGMENTS
+                         , "syn segment data"
+#endif
+    };
     for (size_t i = 0; i < sizeof(tags) / sizeof(*tags); i++) {
         fail_alloc_tag = tags[i];
         fail_alloc_match = 1;
@@ -632,10 +724,10 @@ void test_tcp_allocation_failure(const struct arguments *args) {
         assert(write_tcp(args, &s.tcp, packet, 1, 0, 1, 0, 0) == -1);
         assert(fail_alloc_match == 0 && allocations == 0);
     }
-    // Both a new segment and its payload may fail before it is linked.
+    // Segment storage can fail before it is linked.
     struct tcp_session tcp = {.recv_window = UINT16_MAX};
     const uint8_t data[] = {1, 2, 3, 4};
-    for (int match = 1; match <= 2; match++) {
+    for (int match = 1; match <= TCP_SEGMENT_ALLOCS; match++) {
         fail_alloc_tag = "tcp segment";
         fail_alloc_match = match;
         assert(queue_tcp(args, header, "test", &tcp, data, sizeof(data)) == 0);
@@ -653,7 +745,7 @@ void test_tcp_allocation_failure(const struct arguments *args) {
     fail_alloc_tag = NULL;
     assert(queue_tcp(args, header, "test", &tcp, data, 1) == 1);
     assert(tcp.forward->data == original && tcp.forward->len == 2);
-    assert(memcmp(original, data, 2) == 0 && allocations == 2);
+    assert(memcmp(original, data, 2) == 0 && allocations == TCP_SEGMENT_ALLOCS);
     clear_tcp_data(&tcp);
 #endif
     fail_alloc_tag = NULL;
@@ -675,7 +767,7 @@ void test_tcp_queue_limits(const struct arguments *args, int kind) {
         assert(queue_tcp(args, &header, "test", &s.tcp, data, 8) == 1);
         header.seq = htonl(s.tcp.remote_seq + 8);
         assert(queue_tcp(args, &header, "test", &s.tcp, data, 1) == 0);
-        assert(allocations == 2);
+        assert(allocations == TCP_SEGMENT_ALLOCS);
     } else {
         size_t len = kind == 0 ? sizeof(data) : 1;
         unsigned int count = kind == 0 ? TCP_QUEUE_BYTES / len : TCP_QUEUE_SEGMENTS;
@@ -686,7 +778,7 @@ void test_tcp_queue_limits(const struct arguments *args, int kind) {
         }
         header.seq = htonl(s.tcp.remote_seq + count * len);
         assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 0);
-        assert(allocations == count * 2 && get_receive_window(&s) == 0);
+        assert(allocations == count * TCP_SEGMENT_ALLOCS && get_receive_window(&s) == 0);
         if (kind == 0) {
             uint8_t larger[2048] = {0};
             header.seq = htonl(s.tcp.remote_seq);
@@ -760,7 +852,7 @@ void test_tcp(const struct arguments *args) {
     pkt[0] = 0x45;
     struct tcphdr *tcp = (void *) (pkt + 20);
     tcp->syn = 1; tcp->doff = 5;
-    // Payload on a rejected SYN must release both segment allocations.
+    // Payload on a rejected SYN must release all segment storage.
     handle_tcp(args, pkt, 44, pkt + 20, own_uid, 0, NULL, -1);
     assert(allocations == 0);
     failure = PROTECT;
@@ -795,8 +887,7 @@ void test_tcp_socket_cleanup(const struct arguments *args) {
 
 void test_tcp_data_cleanup(void) {
     struct tcp_session tcp = {0};
-    tcp.forward = ng_calloc(1, sizeof(*tcp.forward), "test segment");
-    tcp.forward->data = ng_malloc(4, "test payload");
+    tcp.forward = new_test_segment(4);
     clear_tcp_data(&tcp);
     clear_tcp_data(&tcp);
     assert(tcp.forward == NULL && allocations == 0);
@@ -813,8 +904,7 @@ void test_tcp_closed_data_cleanup(const struct arguments *args) {
         s.tcp.received = 20;
         if (closing)
             s.socket = socket(PF_INET, SOCK_STREAM, 0);
-        s.tcp.forward = ng_calloc(1, sizeof(*s.tcp.forward), "test segment");
-        s.tcp.forward->data = ng_malloc(65535, "test queued payload");
+        s.tcp.forward = new_test_segment(65535);
         s.tcp.forward->len = 65535;
         assert(check_tcp_session(args, &s, 1, 100) == 0);
         assert(s.tcp.state == TCP_CLOSE && s.socket == -1);
@@ -943,7 +1033,7 @@ void test_tcp_backpressure(const struct arguments *args, int kind) {
             assert((s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
             ready.events = EPOLLOUT; ready.data.ptr = &s;
             check_tcp_socket(&running, &ready, epoll_fd); // Stale readiness / EAGAIN.
-            assert(s.tcp.forward != NULL && s.tcp.forward->sent == 0 && allocations == 2);
+            assert(s.tcp.forward != NULL && s.tcp.forward->sent == 0 && allocations == TCP_SEGMENT_ALLOCS);
             while (read(stream[1], output, sizeof(output)) > 0) {}
             assert(errno == EAGAIN);
             size_t received = 0;
@@ -1035,6 +1125,11 @@ void test_tcp_window_reopen(const struct arguments *args, int version) {
     struct epoll_event ready;
     assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
     assert(epoll_wait(epoll_fd, &ready, 1, 1000) == 1 && (ready.events & EPOLLOUT));
+    // TCP_CORK can still transmit full packets on low-MTU loopback interfaces.
+    // Hold the capacity observation at zero for this phase, independently of
+    // kernel ACK timing; recovery below uses the real drained socket capacity.
+    tcp_capacity_fd = client;
+    tcp_capacity_available = 0;
     check_tcp_socket(&running, &ready, epoll_fd);
     size_t off = version == 4 ? 20 : 40;
     tun_packet(tunnel[0], output, version, IPPROTO_TCP);
@@ -1056,6 +1151,7 @@ void test_tcp_window_reopen(const struct arguments *args, int version) {
         used += count;
     }
     assert(memcmp(received, data, sizeof(data)) == 0);
+    tcp_capacity_fd = -1;
     assert(epoll_wait(epoll_fd, &ready, 1, 5000) == 1 && (ready.events & EPOLLOUT));
     check_tcp_socket(&running, &ready, epoll_fd);
     tun_packet(tunnel[0], output, version, IPPROTO_TCP);
@@ -1544,7 +1640,7 @@ void test_tcp_half_close(int kind) {
     if (kind == 9) {
         len = tcp_packet(packet, version, 1000, 2000, 0, 0, request, sizeof(request));
         tcp_input(&args, packet, len, version);
-        assert(s.tcp.forward != NULL && allocations == 2);
+        assert(s.tcp.forward != NULL && allocations == TCP_SEGMENT_ALLOCS);
     }
     if (kind != 3) {
         assert(shutdown(stream[1], SHUT_WR) == 0);
@@ -1554,7 +1650,7 @@ void test_tcp_half_close(int kind) {
         assert(reply->fin && reply->ack && !reply->rst);
         assert(s.tcp.upstream_eof && s.tcp.state == TCP_FIN_WAIT1 && s.socket == stream[0]);
         assert(__real_fcntl(stream[0], F_GETFD) >= 0);
-        assert(s.tcp.local_seq == 2001 && allocations == (kind == 9 ? 2 : 0));
+        assert(s.tcp.local_seq == 2001 && allocations == (kind == 9 ? TCP_SEGMENT_ALLOCS : 0));
         check_tcp_socket(&args, &event, epoll_fd); // Stale readable events must not resend FIN.
         assert(s.tcp.local_seq == 2001 && !is_readable(tunnel[0]));
         assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
@@ -1590,7 +1686,7 @@ void test_tcp_half_close(int kind) {
             tcp_input(&args, packet, len, version);
             tcp_input(&args, packet, len, version);
             assert(s.tcp.fin_received && !s.tcp.fin_acked && s.tcp.fin_seq == 1006);
-            assert(s.tcp.remote_seq == 1000 && allocations == 2 && !is_readable(tunnel[0]));
+            assert(s.tcp.remote_seq == 1000 && allocations == TCP_SEGMENT_ALLOCS && !is_readable(tunnel[0]));
             len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 0, request, 3);
         } else {
             int fin = kind == 3 || kind == 4;

@@ -25,7 +25,11 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "sessionIndex4") == 0)
+    if (strcmp(id, "tcpQueueAppend") == 0)
+        test_tcp_queue_storage(&args, 0);
+    else if (strcmp(id, "tcpQueueTailChurn") == 0)
+        test_tcp_queue_storage(&args, 1);
+    else if (strcmp(id, "sessionIndex4") == 0)
         test_session_index_keys(&args, 4);
     else if (strcmp(id, "sessionIndex6") == 0)
         test_session_index_keys(&args, 6);

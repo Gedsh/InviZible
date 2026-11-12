@@ -427,7 +427,14 @@ void udp_flow(int version, int redirect, int extension) {
     for (int attempt = 0; attempt < 120 && !probe_ready; attempt++) {
         if (attempt == 0)
             fprintf(stderr, "Waiting up to 120 seconds for firewall allowance: UDP%d probe\n", version);
-        assert(sendto(server, probe, sizeof(probe), 0, (void *) &loopback, loopback_len) == sizeof(probe));
+        ssize_t sent = sendto(server, probe, sizeof(probe), 0, (void *) &loopback, loopback_len);
+        if (sent != sizeof(probe)) {
+            int error = errno;
+            char message[192];
+            snprintf(message, sizeof(message), "UDP%d loopback probe sent %zd bytes, errno %d: %s",
+                     version, sent, error, strerror(error));
+            native_test_fail(message, __FILE__, __LINE__);
+        }
         struct pollfd probe_fd = {.fd = server, .events = POLLIN};
         probe_ready = poll(&probe_fd, 1, 1000);
         assert(probe_ready >= 0);
