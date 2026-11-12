@@ -25,7 +25,23 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "tcpQueueAppend") == 0)
+    if (strcmp(id, "uidLiveTcp4") == 0)
+        test_uid_live_proc(4, IPPROTO_TCP, false);
+    else if (strcmp(id, "uidLiveTcp6") == 0)
+        test_uid_live_proc(6, IPPROTO_TCP, false);
+    else if (strcmp(id, "uidLiveUdp4") == 0)
+        test_uid_live_proc(4, IPPROTO_UDP, false);
+    else if (strcmp(id, "uidLiveUdp6") == 0)
+        test_uid_live_proc(6, IPPROTO_UDP, false);
+    else if (strcmp(id, "uidLiveIcmp4") == 0)
+        test_uid_live_proc(4, IPPROTO_ICMP, false);
+    else if (strcmp(id, "uidLiveIcmp6") == 0)
+        test_uid_live_proc(6, IPPROTO_ICMPV6, false);
+    else if (strcmp(id, "uidLiveMappedTcp") == 0)
+        test_uid_live_proc(6, IPPROTO_TCP, true);
+    else if (strcmp(id, "uidLiveMappedUdp") == 0)
+        test_uid_live_proc(6, IPPROTO_UDP, true);
+    else if (strcmp(id, "tcpQueueAppend") == 0)
         test_tcp_queue_storage(&args, 0);
     else if (strcmp(id, "tcpQueueTailChurn") == 0)
         test_tcp_queue_storage(&args, 1);

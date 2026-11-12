@@ -241,7 +241,17 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 198 tests plus the optional comparison test.
+Eight additional live proc tests open local TCP, UDP and ICMP ping sockets, then
+read the real `/proc/net/{tcp,tcp6,udp,udp6,icmp,icmp6}` tables under the test app's
+UID. They check socket ownership, cache reuse without reopening the table, the
+public IPv6-first UID lookup and IPv4 fallback, and IPv4-mapped TCP/UDP sockets.
+If an older kernel has no `icmp6` table, that case verifies a clean lookup miss
+without opening a file or allocating cache storage instead of binding a socket.
+ICMP sockets use connect/autobind without sending packets, supporting older app
+policies that reject explicit ping-socket bind calls.
+They send no packets and require no firewall exceptions. These cases run on
+Android 6-9; Android 10+ skips them because app access to `/proc/net` is restricted.
+The full run contains 206 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

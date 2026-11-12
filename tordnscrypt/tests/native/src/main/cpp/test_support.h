@@ -52,6 +52,7 @@ extern int uid_cache_capacity;
 #endif
 extern int uid_cache_allocations;
 void test_uid_proc_parser(int kind);
+void test_uid_live_proc(int version, int protocol, bool mapped);
 void test_uid_indexed_updates(int kind);
 void test_uid_indexed_growth_failure(void);
 extern struct uid_cache_entry *uid_cache;
@@ -88,6 +89,7 @@ void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1validate_1socks5
         JNIEnv *, jobject, jstring, jstring, jstring);
 
 int __real_socket(int domain, int type, int protocol);
+int __real_connect(int fd, const struct sockaddr *address, socklen_t length);
 int __real_close(int fd);
 FILE *__real_fopen(const char *path, const char *mode);
 int __real_fclose(FILE *file);

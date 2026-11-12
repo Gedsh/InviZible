@@ -1,13 +1,31 @@
 package pan.alexander.tordnscrypt.nativetests;
 
+import android.os.Build;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.junit.Assume.assumeTrue;
+
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
+    private static void checkLiveProc(String name) {
+        assumeTrue("Android 10+ restricts app access to /proc/net; legacy UID lookup is for older devices",
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.Q);
+        check(name);
+    }
+
+    @Test public void liveIpv4TcpProcRestoresSocketOwnerAndCachesIt() { checkLiveProc("uidLiveTcp4"); }
+    @Test public void liveIpv6TcpProcRestoresSocketOwnerAndCachesIt() { checkLiveProc("uidLiveTcp6"); }
+    @Test public void liveIpv4UdpProcRestoresSocketOwnerAndCachesIt() { checkLiveProc("uidLiveUdp4"); }
+    @Test public void liveIpv6UdpProcRestoresSocketOwnerAndCachesIt() { checkLiveProc("uidLiveUdp6"); }
+    @Test public void liveIpv4IcmpProcRestoresSocketOwnerAndCachesIt() { checkLiveProc("uidLiveIcmp4"); }
+    @Test public void liveIpv6IcmpProcRestoresOwnerOrHandlesMissingTable() { checkLiveProc("uidLiveIcmp6"); }
+    @Test public void liveMappedTcpProcRestoresIpv4SocketOwner() { checkLiveProc("uidLiveMappedTcp"); }
+    @Test public void liveMappedUdpProcRestoresIpv4SocketOwner() { checkLiveProc("uidLiveMappedUdp"); }
     @Test public void procUidAddressesDecodeNativeWordsForBothFamilies() { check("uidProcAddresses"); }
     @Test public void malformedProcUidRowsCloseWithoutCaching() { check("uidProcMalformed"); }
     @Test public void procUidWildcardAndDuplicateMatchOrderIsPreserved() { check("uidProcMatchOrder"); }

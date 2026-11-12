@@ -395,6 +395,69 @@ static void release_uid_cache(void) {
     assert(allocations == 0);
 }
 
+void test_uid_live_proc(int version, int protocol, bool mapped) {
+    // Reserve local endpoints only: no packets or firewall exceptions are needed.
+    assert(!fake_proc && uid_cache == NULL);
+    int family = version == 4 ? AF_INET : AF_INET6;
+    const char *text = mapped ? "::ffff:127.0.0.1" : version == 4 ? "127.0.0.1" : "::1";
+    uint8_t source[16];
+    assert(inet_pton(family, text, source) == 1);
+    if (version == 6 && protocol == IPPROTO_ICMPV6 && access("/proc/net/icmp6", F_OK) != 0) {
+        // Some older kernels expose no ICMPv6 ping table. This must be a clean
+        // lookup miss, with no attempted file scan or retained cache allocation.
+        assert(errno == ENOENT);
+        int before = file_closes;
+        assert(get_uid_sub(version, protocol, source, 1234, source, 53, text, text, 0) == -1);
+        assert(get_uid(version, protocol, source, 1234, source, 53) == -1);
+        assert(file_closes == before && uid_cache == NULL && uid_cache_size == 0);
+        assert(allocations == 0 && sockets == 0);
+        return;
+    }
+    int type = protocol == IPPROTO_TCP ? SOCK_STREAM : SOCK_DGRAM;
+    int fd = __real_socket(family, type | SOCK_CLOEXEC, protocol);
+    assert(fd >= 0);
+    struct sockaddr_storage local = {0};
+    socklen_t length;
+    if (version == 4) {
+        struct sockaddr_in *address = (void *) &local;
+        address->sin_family = AF_INET;
+        memcpy(&address->sin_addr, source, sizeof(address->sin_addr));
+        length = sizeof(*address);
+    } else {
+        struct sockaddr_in6 *address = (void *) &local;
+        address->sin6_family = AF_INET6;
+        memcpy(&address->sin6_addr, source, sizeof(address->sin6_addr));
+        int v6only = !mapped;
+        assert(setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &v6only, sizeof(v6only)) == 0);
+        length = sizeof(*address);
+    }
+    if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6)
+        // Some older app policies deny explicit ping bind(), but permit the
+        // kernel's connect/autobind path. Connecting sends no ICMP packet.
+        assert(__real_connect(fd, (void *) &local, length) == 0);
+    else
+        assert(bind(fd, (void *) &local, length) == 0);
+    if (protocol == IPPROTO_TCP)
+        assert(listen(fd, 1) == 0); // Bound TCP sockets appear in /proc after listen.
+    assert(getsockname(fd, (void *) &local, &length) == 0);
+    uint16_t port = ntohs(version == 4 ? ((struct sockaddr_in *) &local)->sin_port
+                                     : ((struct sockaddr_in6 *) &local)->sin6_port);
+    assert(port != 0);
+    int before = file_closes;
+    assert(get_uid_sub(version, protocol, source, port, source, 53, text, text, 0) == (jint) getuid());
+    assert(file_closes == before + 1 && uid_cache_size > 0);
+    // A second query must use the cache, without reopening a proc table.
+    assert(get_uid_sub(version, protocol, source, port, source, 53, text, text, 0) == (jint) getuid());
+    assert(file_closes == before + 1);
+    release_uid_cache();
+    // Exercise IPv4's IPv6-first search and fallback through the public entry.
+    const uint8_t *address = mapped ? source + 12 : source;
+    assert(get_uid(mapped ? 4 : version, protocol, address, port, address, 53) == (jint) getuid());
+    assert(__real_close(fd) == 0);
+    release_uid_cache();
+    assert(sockets == 0);
+}
+
 void test_uid_cache_allocation_failure(void) {
     assert(uid_cache == NULL && uid_cache_size == 0);
     fake_proc = fail_cache_alloc = 1;
