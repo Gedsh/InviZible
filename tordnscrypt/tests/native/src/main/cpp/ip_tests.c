@@ -387,6 +387,9 @@ static void release_uid_cache(void) {
     ng_free(uid_cache, __FILE__, __LINE__);
     uid_cache = NULL;
     uid_cache_size = 0;
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uid_cache_capacity = 0;
+#endif
     fake_proc = fail_cache_alloc = 0;
     proc_contents = NULL;
     assert(allocations == 0);
@@ -453,6 +456,9 @@ void test_uid_cache_limit(void) {
     proc_contents = table;
     assert(lookup_uid(4, IPPROTO_UDP, 1000 + UID_CACHE_MAX, 0) == 10000 + UID_CACHE_MAX);
     assert(uid_cache_size == UID_CACHE_MAX && allocations == 1);
+#ifndef INVIZIBLE_BASELINE_TESTS
+    assert(uid_cache_capacity == UID_CACHE_MAX && uid_cache_allocations <= 80);
+#endif
     int before = file_closes;
     assert(lookup_uid(4, IPPROTO_UDP, 1000 + UID_CACHE_MAX, 0) == 10000 + UID_CACHE_MAX);
     assert(file_closes == before); // The last row is cached even when the table exceeds the cap.
@@ -476,4 +482,75 @@ void test_uid_cache_keys(void) {
     assert(lookup_uid(6, IPPROTO_UDP, 1234, 0) == 30001);
     assert(file_closes == before);
     release_uid_cache();
+}
+
+void test_uid_proc_parser(int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    if (kind == 1) {
+        const char *rows[] = {
+            "0: 010007F:04D2 00000000:0000 07 0:0 0:0 0 10001 0 0\n",
+            "0: 0100007G:04D2 00000000:0000 07 0:0 0:0 0 10001 0 0\n",
+            "0: 0100007F:10000 00000000:0000 07 0:0 0:0 0 10001 0 0\n",
+            "0: 0100007F:04D2 00000000:0000 07 0:0 0:0\n",
+            "0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 2147483648 0 0\n",
+            "0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 10001x 0 0\n",
+            "0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0\n"
+        };
+        for (size_t i = 0; i < sizeof(rows) / sizeof(*rows); i++) {
+            char table[256];
+            snprintf(table, sizeof(table), "header\n%s", rows[i]);
+            fake_proc = 1; proc_contents = table;
+            int before = file_closes;
+            assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == -2);
+            assert(file_closes == before + 1 && uid_cache_size == 0);
+            release_uid_cache();
+        }
+        const char *ipv6_rows[] = {
+            "0: 0000000000000000000000000100000:04D2 00000000000000000000000000000000:0000 07 0:0 0:0 0 10001\n",
+            "0: 000000000000000000000000010000000:04D2 00000000000000000000000000000000:0000 07 0:0 0:0 0 10001\n",
+            "0: 0000000000000000000000000100000G:04D2 00000000000000000000000000000000:0000 07 0:0 0:0 0 10001\n",
+            "0: 00000000000000000000000001000000:04D2 0000000000000000000000000000000:0000 07 0:0 0:0 0 10001\n"
+        };
+        for (size_t i = 0; i < sizeof(ipv6_rows) / sizeof(*ipv6_rows); i++) {
+            char table[256];
+            snprintf(table, sizeof(table), "header\n%s", ipv6_rows[i]);
+            fake_proc = 1; proc_contents = table;
+            int before = file_closes;
+            assert(lookup_uid(6, IPPROTO_UDP, 1234, 0) == -2);
+            assert(file_closes == before + 1 && uid_cache_size == 0);
+            release_uid_cache();
+        }
+    } else if (kind == 2) {
+        // Preserve the historical last match on a proc scan and first match on
+        // a cache hit, including wildcard endpoints and duplicate exact rows.
+        fake_proc = 1;
+        proc_contents = "header\n"
+            "0: 00000000:04D2 00000000:0000 07 0:0 0:0 0 10001 0 0\n"
+            "1: 0100007F:04D2 0100007F:0035 07 0:0 0:0 0 10002 0 0\n"
+            "2: 0100007F:04D2 0100007F:0035 07 0:0 0:0 0 10003 0 0\n";
+        assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10003);
+        assert(uid_cache_size == 2);
+        int before = file_closes;
+        assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+        assert(file_closes == before && uid_cache[1].uid == 10003);
+        release_uid_cache();
+    } else {
+        for (int version = 4; version <= 6; version += 2) {
+            uint8_t source[16], dest[16];
+            const char *s = version == 4 ? "192.0.2.171" : "2001:db8:abcd:1234:5678:9abc:def0:1234";
+            const char *d = version == 4 ? "198.51.100.205" : "2001:db8:fedc:ba98:7654:3210:abcd:ef01";
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6, s, source) == 1);
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6, d, dest) == 1);
+            fake_proc = 1;
+            proc_contents = version == 4
+                ? "header\n 42: aB0200C0:beEf cD6433C6:01bB 01 00000001:00000002 00:00000000 00000000 12345 0 0\n"
+                : "header\n 42: B80D01203412CDABBC9A78563412F0DE:beEF B80D012098BADCFE1032547601EFCDAB:01bB 01 1:2 0:0 0 12345 0 0\n";
+            assert(get_uid_sub(version, IPPROTO_TCP, source, 48879, dest, 443, s, d, 0) == 12345);
+            int before = file_closes;
+            assert(get_uid_sub(version, IPPROTO_TCP, source, 48879, dest, 443, s, d, 0) == 12345);
+            assert(file_closes == before && uid_cache_size == 1);
+            release_uid_cache();
+        }
+    }
+#endif
 }

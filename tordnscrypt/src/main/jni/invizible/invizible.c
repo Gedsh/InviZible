@@ -47,6 +47,7 @@ atomic_bool tor_connection_available = false;
 extern int max_tun_msg;
 
 extern int uid_cache_size;
+extern int uid_cache_capacity;
 extern struct uid_cache_entry *uid_cache;
 
 // JNI
@@ -369,6 +370,7 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1done(
     if (uid_cache != NULL)
         ng_free(uid_cache, __FILE__, __LINE__);
     uid_cache_size = 0;
+    uid_cache_capacity = 0;
     uid_cache = NULL;
 
     ng_free(ctx, __FILE__, __LINE__);

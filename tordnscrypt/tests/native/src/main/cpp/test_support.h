@@ -31,6 +31,11 @@ void test_udp_packet_lookup(struct arguments *args, int kind);
 void test_udp_lookup_states(struct arguments *args);
 extern int real_exit_reports, exit_reports;
 extern int uid_cache_size;
+#ifndef INVIZIBLE_BASELINE_TESTS
+extern int uid_cache_capacity;
+#endif
+extern int uid_cache_allocations;
+void test_uid_proc_parser(int kind);
 extern struct uid_cache_entry *uid_cache;
 // Older baseline exports do not define the cache cap; only current code runs these cases.
 #ifndef UID_CACHE_MAX

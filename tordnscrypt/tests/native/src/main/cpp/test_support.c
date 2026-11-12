@@ -7,6 +7,7 @@ int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 int capture_packets, capture_dhcp, fake_proc;
 const char *proc_contents;
 int fail_cache_alloc;
+int uid_cache_allocations;
 const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
@@ -97,6 +98,8 @@ static void check_destination(const struct sockaddr *addr, socklen_t len) {
 }
 
 void *__wrap_ng_malloc(size_t n, const char *tag) {
+    if (strncmp(tag, "uid_cache", 9) == 0)
+        uid_cache_allocations++;
     if (fail_alloc_tag != NULL && strcmp(tag, fail_alloc_tag) == 0 && --fail_alloc_match == 0)
         return NULL;
     if (fail_cache_alloc && strncmp(tag, "uid_cache", 9) == 0)
@@ -109,6 +112,8 @@ void *__wrap_ng_malloc(size_t n, const char *tag) {
 
 void *__real_ng_realloc(void *p, size_t n, const char *tag);
 void *__wrap_ng_realloc(void *p, size_t n, const char *tag) {
+    if (strncmp(tag, "uid_cache", 9) == 0)
+        uid_cache_allocations++;
     if (fail_alloc_tag != NULL && strcmp(tag, fail_alloc_tag) == 0 && --fail_alloc_match == 0)
         return NULL;
     if (fail_cache_alloc && strncmp(tag, "uid_cache", 9) == 0)
@@ -509,6 +514,7 @@ void reset_test_state(void) {
     capture_packets = capture_dhcp = fake_proc = 0;
     proc_contents = NULL;
     fail_cache_alloc = 0;
+    uid_cache_allocations = 0;
     fail_alloc_tag = NULL;
     fail_alloc_match = fail_fcntl_call = fcntl_calls = 0;
     last_log[0] = 0;

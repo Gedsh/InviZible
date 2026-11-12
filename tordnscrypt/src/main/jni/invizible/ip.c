@@ -544,6 +544,7 @@ jint get_uid(const int version, const int protocol,
 }
 
 int uid_cache_size = 0;
+int uid_cache_capacity = 0;
 struct uid_cache_entry *uid_cache = NULL;
 
 static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t sport,
@@ -567,14 +568,22 @@ static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t 
     }
 
     if (slot < 0 && uid_cache_size < UID_CACHE_MAX) {
-        size_t bytes = sizeof(struct uid_cache_entry) * (uid_cache_size + 1);
-        struct uid_cache_entry *resized = (uid_cache == NULL
-                ? ng_malloc(bytes, "uid_cache init")
-                : ng_realloc(uid_cache, bytes, "uid_cache extend"));
-        // Caching is optional: keep the previous allocation and finish the proc lookup.
-        if (resized == NULL)
-            return;
-        uid_cache = resized;
+        if (uid_cache_size == uid_cache_capacity) {
+            // Double small caches, then retain fewer than 64 spare entries.
+            int capacity = (uid_cache_capacity == 0 ? 1 : uid_cache_capacity < 64
+                            ? uid_cache_capacity * 2 : uid_cache_capacity + 64);
+            if (capacity > UID_CACHE_MAX)
+                capacity = UID_CACHE_MAX;
+            size_t bytes = sizeof(struct uid_cache_entry) * capacity;
+            struct uid_cache_entry *resized = (uid_cache == NULL
+                    ? ng_malloc(bytes, "uid_cache init")
+                    : ng_realloc(uid_cache, bytes, "uid_cache extend"));
+            // Caching is optional: preserve the old allocation on failure.
+            if (resized == NULL)
+                return;
+            uid_cache = resized;
+            uid_cache_capacity = capacity;
+        }
         slot = uid_cache_size++;
     }
     if (slot < 0)
@@ -589,6 +598,98 @@ static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t 
     entry->dport = dport;
     entry->uid = uid;
     entry->time = now;
+}
+
+static const char *proc_space(const char *p) {
+    while (isspace((unsigned char) *p))
+        p++;
+    return p;
+}
+
+static int proc_digit(unsigned char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static bool proc_number(const char **cursor, unsigned int base, uint64_t limit,
+                        uint64_t *value) {
+    const char *p = *cursor;
+    uint64_t result = 0;
+    const uint64_t cutoff = limit / base;
+    const unsigned int last_digit = (unsigned int) (limit % base);
+    unsigned int count = 0;
+    int digit;
+    while ((digit = proc_digit((unsigned char) *p)) >= 0 && (unsigned int) digit < base) {
+        if (result > cutoff || (result == cutoff && (unsigned int) digit > last_digit))
+            return false;
+        result = result * base + (unsigned int) digit;
+        count++;
+        p++;
+    }
+    if (count == 0)
+        return false;
+    *cursor = p;
+    *value = result;
+    return true;
+}
+
+static bool proc_field(const char **cursor, unsigned int base, uint64_t limit, char delimiter) {
+    uint64_t ignored;
+    const char *p = proc_space(*cursor);
+    if (!proc_number(&p, base, limit, &ignored))
+        return false;
+    if (delimiter == ':' ? *p != ':' : !isspace((unsigned char) *p))
+        return false;
+    *cursor = (delimiter == ':' ? p + 1 : p);
+    return true;
+}
+
+static bool proc_endpoint(const char **cursor, int words, uint8_t *address, uint16_t *port) {
+    const char *p = proc_space(*cursor);
+    for (int w = 0; w < words; w++) {
+        uint32_t word = 0;
+        for (int n = 0; n < 8; n++) {
+            int digit = proc_digit((unsigned char) *p);
+            if (digit < 0)
+                return false;
+            word = (word << 4) | (unsigned int) digit;
+            p++;
+        }
+        // Proc addresses are printed as native-endian 32-bit words. memcpy also
+        // keeps caller byte arrays safe on ARM when they are not word-aligned.
+        memcpy(address + w * 4, &word, sizeof(word));
+    }
+    if (*p++ != ':')
+        return false;
+    uint64_t number;
+    if (!proc_number(&p, 16, UINT16_MAX, &number) || !isspace((unsigned char) *p))
+        return false;
+    *port = (uint16_t) number;
+    *cursor = p;
+    return true;
+}
+
+static bool parse_proc_uid(const char *line, int words, uint8_t *saddr, uint16_t *sport,
+                           uint8_t *daddr, uint16_t *dport, jint *uid) {
+    const char *p = line;
+    if (!proc_field(&p, 10, UINT32_MAX, ':') ||
+        !proc_endpoint(&p, words, saddr, sport) || !proc_endpoint(&p, words, daddr, dport) ||
+        !proc_field(&p, 16, UINT32_MAX, ' ') ||
+        !proc_field(&p, 16, UINT64_MAX, ':') || !proc_field(&p, 16, UINT64_MAX, ' ') ||
+        !proc_field(&p, 16, UINT32_MAX, ':') || !proc_field(&p, 16, UINT32_MAX, ' ') ||
+        !proc_field(&p, 16, UINT32_MAX, ' '))
+        return false;
+    p = proc_space(p);
+    bool negative = (*p == '-');
+    if (*p == '-' || *p == '+') p++;
+    uint64_t value;
+    if (!proc_number(&p, 10, negative ? (uint64_t) INT32_MAX + 1 : INT32_MAX, &value) ||
+        (*p != 0 && !isspace((unsigned char) *p)))
+        return false;
+    *uid = (jint) (negative ? -(int64_t) value : (int64_t) value);
+    return true;
 }
 
 jint get_uid_sub(const int version, const int protocol,
@@ -645,39 +746,21 @@ jint get_uid_sub(const int version, const int protocol,
     jint uid = -1;
 
     char line[250];
-    int fields;
-
-    char shex[16 * 2 + 1];
     uint8_t _saddr[16];
-    int _sport;
-
-    char dhex[16 * 2 + 1];
+    uint16_t _sport;
     uint8_t _daddr[16];
-    int _dport;
+    uint16_t _dport;
 
     jint _uid;
 
     // Scan proc file
     int l = 0;
     *line = 0;
-    const char *fmt = (version == 4
-                       ? "%*d: %8s:%X %8s:%X %*X %*lX:%*lX %*X:%*X %*X %d %*d %*ld"
-                       : "%*d: %32s:%X %32s:%X %*X %*lX:%*lX %*X:%*X %*X %d %*d %*ld");
     while (fgets(line, sizeof(line), fd) != NULL) {
         if (!l++)
             continue;
 
-        fields = sscanf(line, fmt, shex, &_sport, dhex, &_dport, &_uid);
-        if (fields == 5 && strlen(shex) == ws * 8 && strlen(dhex) == ws * 8) {
-            hex2bytes(shex, _saddr);
-            hex2bytes(dhex, _daddr);
-
-            for (int w = 0; w < ws; w++)
-                ((uint32_t *) _saddr)[w] = htonl(((uint32_t *) _saddr)[w]);
-
-            for (int w = 0; w < ws; w++)
-                ((uint32_t *) _daddr)[w] = htonl(((uint32_t *) _daddr)[w]);
-
+        if (parse_proc_uid(line, ws, _saddr, &_sport, _daddr, &_dport, &_uid)) {
             if (_sport == sport &&
                 (_dport == dport || _dport == 0) &&
                 (memcmp(_saddr, saddr, (size_t) (ws * 4)) == 0 ||
@@ -689,7 +772,7 @@ jint get_uid_sub(const int version, const int protocol,
             cache_uid(version, protocol, _saddr, (uint16_t) _sport,
                       _daddr, (uint16_t) _dport, _uid, now);
         } else {
-            log_android(ANDROID_LOG_ERROR, "Invalid field #%d: %s", fields, line);
+            log_android(ANDROID_LOG_ERROR, "Invalid proc UID row: %s", line);
             fclose(fd);
             return -2;
         }

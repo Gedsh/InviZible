@@ -64,6 +64,13 @@ IPv4/IPv6 loopback TCP cases fill the upstream buffer exactly, empty the native
 queue and advertise a zero receive window. They verify that writability remains
 monitored until a window-update ACK is sent, further app data resumes, and writable
 monitoring stops once the window reopens or app input has shut down.
+Legacy UID proc-table cases cover native-word address decoding for IPv4/IPv6,
+mixed-case hex, malformed and truncated fields, wildcard/duplicate match order,
+cache growth failures, expiry and bounded replacement. The dedicated row parser
+avoids `sscanf` and address byte-swapping. Cache allocation grows geometrically
+up to 64 entries and then in blocks of 64, retaining at most 63 unused slots.
+The full-cache case checks that population needs at most 80 allocations for
+4,096 entries rather than one allocation per entry. Cache matching remains linear.
 Incoming IPv4 header checksums are always validated, including options and padding.
 TCP, UDP, ICMPv4, and ICMPv6 checksums are validated before policy callbacks or session
 creation. IPv4 UDP may omit its checksum; IPv6 UDP may not. IPv6 has no header checksum.
