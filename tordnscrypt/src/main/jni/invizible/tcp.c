@@ -55,6 +55,7 @@ void clear_tcp_data(struct tcp_session *cur) {
     clear_dns_response(cur);
     struct segment *s = cur->forward;
     cur->forward = NULL;
+    cur->queue_bytes = cur->queue_unsent = cur->queue_segments = 0;
     while (s != NULL) {
         struct segment *p = s;
         s = s->next;
@@ -514,43 +515,40 @@ uint32_t get_receive_buffer(const struct ng_session *cur) {
     return total;
 }
 
-uint32_t get_receive_window(const struct ng_session *cur) {
-    // Get data to forward size
-    uint32_t toforward = 0;
-    uint32_t retained = 0;
-    unsigned int segments = 0;
-    struct segment *q = cur->tcp.forward;
-    while (q != NULL) {
-        toforward += (q->len - q->sent);
-        retained += q->len;
-        segments++;
-        q = q->next;
-    }
-
-    uint32_t window = get_receive_buffer(cur);
-
+static uint32_t receive_window_for_buffer(const struct ng_session *cur, uint32_t window) {
     uint32_t max = ((uint32_t) 0xFFFF) << cur->tcp.recv_scale;
     if (window > max) {
         log_android(ANDROID_LOG_DEBUG, "Receive window %u > max %u", window, max);
         window = max;
     }
 
-    uint32_t total = (toforward < window ? window - toforward : 0);
-    uint32_t capacity = (retained < TCP_QUEUE_BYTES ? TCP_QUEUE_BYTES - retained : 0);
+    uint32_t total = (cur->tcp.queue_unsent < window ? window - cur->tcp.queue_unsent : 0);
+    uint32_t capacity = (cur->tcp.queue_bytes < TCP_QUEUE_BYTES ? TCP_QUEUE_BYTES - cur->tcp.queue_bytes : 0);
     if (total > capacity)
         total = capacity;
-    if (segments >= TCP_QUEUE_SEGMENTS)
+    if (cur->tcp.queue_segments >= TCP_QUEUE_SEGMENTS)
         total = 0;
 
     log_android(ANDROID_LOG_DEBUG, "Receive window toforward %u window %u total %u",
-                toforward, window, total);
+                cur->tcp.queue_unsent, window, total);
 
     return total;
+}
+
+uint32_t get_receive_window(const struct ng_session *cur) {
+    return receive_window_for_buffer(cur, get_receive_buffer(cur));
 }
 
 void check_tcp_socket(const struct arguments *args,
                       const struct epoll_event *ev,
                       const int epoll_fd) {
+    struct tcp_socket_capacity capacity = {0};
+    check_tcp_socket_with_capacity(args, ev, epoll_fd, &capacity);
+}
+
+void check_tcp_socket_with_capacity(const struct arguments *args,
+                                   const struct epoll_event *ev, int epoll_fd,
+                                   struct tcp_socket_capacity *capacity) {
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
 
     int oldstate = s->tcp.state;
@@ -850,12 +848,15 @@ void check_tcp_socket(const struct arguments *args,
                         fwd = 1;
                         s->tcp.sent += sent;
                         s->tcp.forward->sent += sent;
+                        s->tcp.queue_unsent -= sent;
 
                         if (s->tcp.forward->len == s->tcp.forward->sent) {
                             s->tcp.remote_seq = s->tcp.forward->seq + s->tcp.forward->sent;
 
                             struct segment *p = s->tcp.forward;
                             s->tcp.forward = s->tcp.forward->next;
+                            s->tcp.queue_bytes -= p->len;
+                            s->tcp.queue_segments--;
                             ng_free(p->data, __FILE__, __LINE__);
                             ng_free(p, __FILE__, __LINE__);
                         } else {
@@ -880,7 +881,15 @@ void check_tcp_socket(const struct arguments *args,
             }
 
             // Get receive window
-            uint32_t window = get_receive_window(s);
+            // Reads can only free upstream send space. Reuse the conservative
+            // sample within this event, but refresh after every successful send.
+            if (fwd || s->socket < 0)
+                capacity->valid = false;
+            if (!capacity->valid) {
+                capacity->available = get_receive_buffer(s);
+                capacity->valid = true;
+            }
+            uint32_t window = receive_window_for_buffer(s, capacity->available);
             uint32_t prev = s->tcp.recv_window;
             s->tcp.recv_window = window;
             if ((prev == 0 && window > 0) || (prev > 0 && window == 0))
@@ -1097,6 +1106,7 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.dns_response_size = s->tcp.dns_response_used = s->tcp.dns_response_sent = 0;
             s->tcp.dns_response_ready = false;
             s->tcp.forward = NULL;
+            s->tcp.queue_bytes = s->tcp.queue_unsent = s->tcp.queue_segments = 0;
             s->next = NULL;
 
             if (datalen) {
@@ -1118,6 +1128,8 @@ jboolean handle_tcp(const struct arguments *args,
                 }
                 memcpy(s->tcp.forward->data, data, datalen);
                 s->tcp.forward->next = NULL;
+                s->tcp.queue_bytes = s->tcp.queue_unsent = datalen;
+                s->tcp.queue_segments = 1;
             }
 
             if (!allowed) {
@@ -1341,6 +1353,7 @@ jboolean handle_tcp(const struct arguments *args,
 
 static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
     size_t retained = head->len;
+    uint32_t unsent = head->len;
     unsigned int segments = 1;
     size_t copied = 0;
     struct segment **link = &cur->forward;
@@ -1369,12 +1382,16 @@ static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
             break;
         } else {
             retained += q->len;
+            unsent += q->len - q->sent;
             segments++;
             link = &q->next;
         }
     }
     head->next = cur->forward;
     cur->forward = head;
+    cur->queue_bytes = retained;
+    cur->queue_unsent = unsent;
+    cur->queue_segments = segments;
 }
 
 int queue_tcp(const struct arguments *args,
@@ -1389,12 +1406,6 @@ int queue_tcp(const struct arguments *args,
     else {
         struct segment *p = NULL;
         struct segment *s = cur->forward;
-        size_t retained = 0;
-        unsigned int segments = 0;
-        for (struct segment *q = cur->forward; q != NULL; q = q->next) {
-            retained += q->len;
-            segments++;
-        }
         while (s != NULL && compare_u32(s->seq, seq) < 0) {
             p = s;
             s = s->next;
@@ -1410,8 +1421,8 @@ int queue_tcp(const struct arguments *args,
         int fills_gap = (seq == cur->remote_seq && cur->forward != NULL &&
                          cur->forward->seq != seq);
         if (!fills_gap && (offset >= cur->recv_window || datalen > cur->recv_window - offset ||
-            retained - previous + datalen > TCP_QUEUE_BYTES ||
-            (previous == 0 && segments >= TCP_QUEUE_SEGMENTS)))
+            cur->queue_bytes - previous + datalen > TCP_QUEUE_BYTES ||
+            (previous == 0 && cur->queue_segments >= TCP_QUEUE_SEGMENTS)))
             return 0; // No ACK: let the peer retry after the window reopens.
 
         if (s == NULL || compare_u32(s->seq, seq) > 0) {
@@ -1439,6 +1450,9 @@ int queue_tcp(const struct arguments *args,
                     cur->forward = n;
                 else
                     p->next = n;
+                cur->queue_bytes += datalen;
+                cur->queue_unsent += datalen;
+                cur->queue_segments++;
             }
         } else {
             // Extend a retransmission without rewriting bytes already accepted.
@@ -1449,6 +1463,8 @@ int queue_tcp(const struct arguments *args,
             memcpy(replacement + s->len, data + s->len, datalen - s->len);
             ng_free(s->data, __FILE__, __LINE__);
             s->data = replacement;
+            cur->queue_bytes += datalen - s->len;
+            cur->queue_unsent += datalen - s->len;
             s->len = datalen;
         }
     }

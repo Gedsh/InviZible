@@ -89,6 +89,12 @@ maximum-size frames, window pressure, allocation/output failures, partial EOF, t
 and tunnel teardown. The backpressure case fills the upstream send buffer, reopens the
 app window through an actual TCP ACK, and verifies progress across monitor passes while
 epoll reports no upstream readiness. All release the retained frame through normal TCP cleanup.
+TCP queue accounting is checked against an independent list traversal after gap
+recovery, overlap eviction, allocation failures, partial sends, retransmission
+growth and cleanup. Capacity sampling cases count `SO_SNDBUF` and `SIOCOUTQ`
+queries: a read batch shares one sample, a successful write refreshes it, and a
+new event observes changed socket capacity. Samples live on the event-loop stack;
+queue totals add three integers per session without allocating extra buffers.
 These cases use real `fcntl(F_GETFD)` checks to verify that the retained socket
 stays open after EOF and is actually closed after completion or error cleanup.
 EOF disables upstream reads while app data continues to drain. App FIN shuts

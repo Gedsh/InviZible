@@ -27,7 +27,7 @@ function(add_native_tests target source)
     set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect sendto shutdown
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp handle_tcp handle_icmp
             get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
-            epoll_wait get_ms pipe pthread_mutex_init inet_ntop)
+            epoll_wait get_ms pipe pthread_mutex_init inet_ntop getsockopt ioctl)
     if("${source}" STREQUAL "${INVIZIBLE_SOURCE}")
         list(APPEND wraps find_udp_session handle_udp_with_lookup)
     endif()

@@ -1,5 +1,81 @@
 #include "test_support.h"
 
+static void assert_tcp_queue_totals(const struct tcp_session *tcp) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint32_t bytes = 0, unsent = 0;
+    unsigned int segments = 0;
+    for (const struct segment *q = tcp->forward; q != NULL; q = q->next) {
+        assert(q->sent <= q->len);
+        bytes += q->len;
+        unsent += q->len - q->sent;
+        segments++;
+    }
+    assert(tcp->queue_bytes == bytes && tcp->queue_unsent == unsent);
+    assert(tcp->queue_segments == segments);
+#endif
+}
+
+void test_tcp_capacity_reuse(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+        struct arguments running = *args;
+        running.tun = tunnel[1];
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.uid = own_uid; s.tcp.time = time(NULL);
+        s.tcp.state = TCP_ESTABLISHED; s.tcp.mss = 16;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+        s.tcp.recv_window = s.tcp.send_window = 65535;
+        uint8_t data[40], output[256];
+        for (size_t i = 0; i < sizeof(data); i++) data[i] = (uint8_t) i;
+        assert(send(stream[1], data, sizeof(data), 0) == sizeof(data));
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        struct tcp_socket_capacity capacity = {0};
+        tcp_sendbuf_queries = tcp_outq_queries = 0;
+        size_t offset = 0, iplen = version == 4 ? 20 : 40;
+        for (int turn = 0; turn < 3; turn++) {
+            check_tcp_socket_with_capacity(&running, &event, -1, &capacity);
+            size_t length = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+            size_t payload = length - iplen - 20;
+            assert(payload == (turn == 2 ? 8 : 16));
+            assert(memcmp(output + iplen + 20, data + offset, payload) == 0);
+            offset += payload;
+            assert(tcp_sendbuf_queries == 1 && tcp_outq_queries == 1);
+        }
+        assert(offset == sizeof(data));
+
+        // A new event must see a changed socket buffer, not the previous sample.
+        int small = 4096;
+        assert(setsockopt(stream[0], SOL_SOCKET, SO_SNDBUF, &small, sizeof(small)) == 0);
+        capacity = (struct tcp_socket_capacity) {0};
+        assert(send(stream[1], data, 1, 0) == 1);
+        check_tcp_socket_with_capacity(&running, &event, -1, &capacity);
+        tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+        assert(tcp_sendbuf_queries == 2 && tcp_outq_queries == 2);
+        assert(capacity.available == 8192 && s.tcp.recv_window == 8192);
+
+        // A successful write in that batch invalidates the sample immediately.
+        struct tcphdr queued = {.seq = htonl(1000), .psh = 1};
+        assert(queue_tcp(&running, &queued, "capacity refresh", &s.tcp, data, 5) == 1);
+        assert_tcp_queue_totals(&s.tcp);
+        assert(send(stream[1], data, 1, 0) == 1);
+        event.events |= EPOLLOUT;
+        check_tcp_socket_with_capacity(&running, &event, -1, &capacity);
+        assert(tcp_sendbuf_queries == 3 && tcp_outq_queries == 3);
+        assert(read(stream[1], output, sizeof(output)) == 5 && memcmp(output, data, 5) == 0);
+        tun_packet(tunnel[0], output, version, IPPROTO_TCP); // App-data ACK.
+        tun_packet(tunnel[0], output, version, IPPROTO_TCP); // Upstream payload.
+        assert_tcp_queue_totals(&s.tcp);
+        assert(s.tcp.forward == NULL && s.tcp.remote_seq == 1005);
+        close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_tcp_buffer_reuse(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     real_network = 1;
@@ -137,6 +213,7 @@ static void drain_gap(const struct arguments *args, struct ng_session *s, int pe
     struct epoll_event event = {.events = EPOLLOUT, .data.ptr = s};
     for (int turn = 0; turn < 4096 && s->tcp.remote_seq != target; turn++) {
         check_tcp_socket(args, &event, -1);
+        assert_tcp_queue_totals(&s->tcp);
         while (is_readable(peer)) {
             uint8_t received[4096];
             ssize_t count = read(peer, received, sizeof(received));
@@ -191,9 +268,11 @@ void test_tcp_gap_recovery(const struct arguments *args, int kind) {
         fail_alloc_match = match;
         assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 0);
         assert(fail_alloc_match == 0 && s.tcp.forward == original && allocations == count * 2);
+        assert_tcp_queue_totals(&s.tcp);
     }
     fail_alloc_tag = NULL;
     assert(queue_tcp(args, &header, "test", &s.tcp, data, len) == 1);
+    assert_tcp_queue_totals(&s.tcp);
     size_t retained = 0;
     unsigned int segments = 0;
     for (struct segment *q = s.tcp.forward; q != NULL; q = q->next) {
@@ -263,6 +342,7 @@ void test_tcp_allocation_failure(const struct arguments *args) {
         fail_alloc_match = match;
         assert(queue_tcp(args, header, "test", &tcp, data, sizeof(data)) == 0);
         assert(tcp.forward == NULL && allocations == 0);
+        assert_tcp_queue_totals(&tcp);
     }
     fail_alloc_tag = NULL;
     assert(queue_tcp(args, header, "test", &tcp, data, 2) == 1);
@@ -271,6 +351,7 @@ void test_tcp_allocation_failure(const struct arguments *args) {
     fail_alloc_match = 1;
     assert(queue_tcp(args, header, "test", &tcp, data, 4) == 0);
     assert(tcp.forward->data == original && tcp.forward->len == 2);
+    assert_tcp_queue_totals(&tcp);
     fail_alloc_tag = NULL;
     assert(queue_tcp(args, header, "test", &tcp, data, 1) == 1);
     assert(tcp.forward->data == original && tcp.forward->len == 2);
@@ -316,7 +397,9 @@ void test_tcp_queue_limits(const struct arguments *args, int kind) {
             assert(s.tcp.forward->data == original && s.tcp.forward->len == len);
         }
     }
+    assert_tcp_queue_totals(&s.tcp);
     clear_tcp_data(&s.tcp);
+    assert_tcp_queue_totals(&s.tcp);
     assert(get_receive_window(&s) > 0 && allocations == 0);
     close(s.socket);
 #endif
@@ -329,12 +412,17 @@ void test_tcp_partial_retransmission(const struct arguments *args) {
     uint8_t retransmission[12] = {0};
     assert(queue_tcp(args, &header, "test", &tcp, original, sizeof(original)) == 1);
     tcp.forward->sent = 6;
+#ifndef INVIZIBLE_BASELINE_TESTS
+    tcp.queue_unsent -= 6; // This fixture simulates the first partial send directly.
+#endif
+    assert_tcp_queue_totals(&tcp);
     uint8_t *buffer = tcp.forward->data;
     assert(queue_tcp(args, &header, "test", &tcp, retransmission, 2) == 1);
     assert(tcp.forward->data == buffer && tcp.forward->len == 8 && tcp.forward->sent == 6);
     assert(memcmp(tcp.forward->data, original, sizeof(original)) == 0);
     assert(queue_tcp(args, &header, "test", &tcp, retransmission, 12) == 1);
     assert(tcp.forward->len == 12 && tcp.forward->sent == 6);
+    assert_tcp_queue_totals(&tcp);
     assert(memcmp(tcp.forward->data, original, sizeof(original)) == 0);
     assert(memcmp(tcp.forward->data + 8, retransmission + 8, 4) == 0);
 
@@ -355,6 +443,7 @@ void test_tcp_partial_retransmission(const struct arguments *args) {
     const uint8_t expected[] = {7, 8, 0, 0, 0, 0};
     assert(memcmp(received, expected, sizeof(expected)) == 0);
     assert(s.tcp.remote_seq == 112 && s.tcp.forward == NULL && allocations == 0);
+    assert_tcp_queue_totals(&s.tcp);
     close(upstream[0]); close(upstream[1]);
     close(tunnel[0]); close(tunnel[1]);
 }

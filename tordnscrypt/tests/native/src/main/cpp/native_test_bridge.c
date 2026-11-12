@@ -25,7 +25,9 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "tcpWindowReopen4") == 0)
+    if (strcmp(id, "tcpCapacityReuse") == 0)
+        test_tcp_capacity_reuse(&args);
+    else if (strcmp(id, "tcpWindowReopen4") == 0)
         test_tcp_window_reopen(&args, 4);
     else if (strcmp(id, "tcpWindowReopen6") == 0)
         test_tcp_window_reopen(&args, 6);

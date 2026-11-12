@@ -1,4 +1,5 @@
 #include "test_support.h"
+#include <stdarg.h>
 
 int allocations, sockets, last_socket = -1, udp_calls, resolved_calls;
 int tcp_calls, icmp_calls;
@@ -10,6 +11,25 @@ const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
 int address_formats;
+int tcp_sendbuf_queries, tcp_outq_queries;
+
+int __real_getsockopt(int fd, int level, int option, void *value, socklen_t *length);
+int __wrap_getsockopt(int fd, int level, int option, void *value, socklen_t *length) {
+    if (level == SOL_SOCKET && option == SO_SNDBUF)
+        tcp_sendbuf_queries++;
+    return __real_getsockopt(fd, level, option, value, length);
+}
+
+int __real_ioctl(int fd, int request, ...);
+int __wrap_ioctl(int fd, int request, ...) {
+    va_list ap;
+    va_start(ap, request);
+    void *value = va_arg(ap, void *);
+    va_end(ap);
+    if (request == SIOCOUTQ)
+        tcp_outq_queries++;
+    return __real_ioctl(fd, request, value);
+}
 int udp_lookups, uid_lookups, policy_checks, deny_address;
 int udp_lookup_supplied;
 struct ng_session *udp_lookup_session;
@@ -475,6 +495,7 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 }
 
 void reset_test_state(void) {
+    tcp_sendbuf_queries = tcp_outq_queries = 0;
     udp_lookups = uid_lookups = policy_checks = deny_address = 0;
     udp_lookup_supplied = 0;
     udp_lookup_session = NULL;

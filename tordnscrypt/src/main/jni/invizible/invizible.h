@@ -255,6 +255,9 @@ struct tcp_session {
     size_t dns_response_sent;
     bool dns_response_ready;
     struct segment *forward;
+    uint32_t queue_bytes; // Retained payload, including partially sent segments.
+    uint32_t queue_unsent;
+    unsigned int queue_segments;
 };
 
 struct ng_session {
@@ -451,6 +454,15 @@ uint32_t get_receive_window(const struct ng_session *cur);
 void check_tcp_socket(const struct arguments *args,
                       const struct epoll_event *ev,
                       const int epoll_fd);
+
+// Stack-owned sample, shared only while draining one socket event under ctx->lock.
+struct tcp_socket_capacity {
+    uint32_t available;
+    bool valid;
+};
+void check_tcp_socket_with_capacity(const struct arguments *args,
+                                   const struct epoll_event *ev, int epoll_fd,
+                                   struct tcp_socket_capacity *capacity);
 
 int is_lower_layer(int protocol);
 

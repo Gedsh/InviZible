@@ -302,9 +302,10 @@ void *handle_events(void *a) {
                                  is_readable(session->socket));
                     } else if (session->protocol == IPPROTO_TCP) {
                         int count = 0;
+                        struct tcp_socket_capacity capacity = {0};
                         do {
                             count++;
-                            check_tcp_socket(args, &ev[i], epoll_fd);
+                            check_tcp_socket_with_capacity(args, &ev[i], epoll_fd, &capacity);
                         } while (count < TCP_YIELD && !args->ctx->stopping &&
                                  !session->tcp.upstream_eof &&
                                  !(ev[i].events & EPOLLERR) && (ev[i].events & EPOLLIN) &&

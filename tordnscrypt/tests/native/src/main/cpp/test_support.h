@@ -22,6 +22,8 @@ extern const char *fail_alloc_tag;
 extern int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 extern char last_log[2048];
 extern int address_formats;
+extern int tcp_sendbuf_queries, tcp_outq_queries;
+void test_tcp_capacity_reuse(const struct arguments *args);
 extern int udp_lookups, uid_lookups, policy_checks, deny_address;
 extern int udp_lookup_supplied;
 extern struct ng_session *udp_lookup_session;
