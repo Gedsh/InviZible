@@ -8,6 +8,15 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void ipv4ScaledWindowCombinesSocketAndRetainedCapacity() { check("tcpScaledCapacity4"); }
+    @Test public void ipv6ScaledWindowCombinesSocketAndRetainedCapacity() { check("tcpScaledCapacity6"); }
+    @Test public void aggregatePayloadLimitKeepsGapAndDnsProgressReserve() { check("tcpMemoryBytes"); }
+    @Test public void aggregateNodeLimitBoundsTinySegmentsAndAllowsRecovery() { check("tcpMemoryNodes"); }
+    @Test public void replacementPeakAndAllocationFailuresPreserveBudget() { check("tcpMemoryReplacement"); }
+    @Test public void sharedMemoryReleaseReopensScaledWindowsWithoutWritableSpin() { check("tcpMemoryWakeup"); }
+    @Test public void dnsPrefixWaitsForMemoryAndResumesFiltering() { check("tcpDnsMemoryPrefix"); }
+    @Test public void dnsGrowthWaitsForMemoryAndTracksActualFilteredCapacity() { check("tcpDnsMemoryGrowth"); }
+    @Test public void dnsMemoryWaitDoesNotSpinOnHangupOrLoseBufferedResponse() { check("tcpDnsMemoryHangup"); }
     @Test public void readBatchReusesCapacityAndWritesAndNewBatchesRefreshIt() { check("tcpCapacityReuse"); }
     @Test public void ipv4EmptyQueueReopensAdvertisedZeroWindow() { check("tcpWindowReopen4"); }
     @Test public void ipv6EmptyQueueReopensAdvertisedZeroWindow() { check("tcpWindowReopen6"); }

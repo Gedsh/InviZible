@@ -115,6 +115,7 @@ void *handle_events(void *a) {
         int recheck = 0;
         int tcp_wait = 0;
         int timeout = EPOLL_TIMEOUT;
+        uint64_t memory_generation = args->ctx->tcp_memory.generation;
 
         // Count sessions
         int isessions = 0;
@@ -219,6 +220,10 @@ void *handle_events(void *a) {
                     isessions, usessions, tsessions, sessions, maxsessions, timeout, recheck);
 
         // Poll
+        // Monitoring or timeout cleanup may release memory after an earlier
+        // blocked flow was visited. Rescan once; never poll continuously for it.
+        if (memory_generation != args->ctx->tcp_memory.generation)
+            recheck = 1;
         struct epoll_event ev[EPOLL_EVENTS];
         int wait = recheck ? EPOLL_MIN_CHECK : timeout * 1000;
         if (tcp_wait > 0 && tcp_wait < wait)
@@ -308,6 +313,7 @@ void *handle_events(void *a) {
                             check_tcp_socket_with_capacity(args, &ev[i], epoll_fd, &capacity);
                         } while (count < TCP_YIELD && !args->ctx->stopping &&
                                  !session->tcp.upstream_eof &&
+                                 !session->tcp.dns_waiting &&
                                  !(ev[i].events & EPOLLERR) && (ev[i].events & EPOLLIN) &&
                                  is_readable(session->socket));
                     }

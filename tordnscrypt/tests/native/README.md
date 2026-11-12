@@ -26,6 +26,25 @@ or longer retransmissions after partial sends, including forwarding through a re
 Missing-head packets can displace the furthest unacknowledged data at either queue
 limit, including with a zero window. Regressions verify allocation-failure recovery,
 overlapping bytes, bounded queues, and delivery of evicted tails after retransmission.
+The context also bounds requested retained TCP allocations to 16 MiB: ordinary
+queue payloads and segment structs share 14 MiB, gap recovery and DNS requests
+may use a further 1 MiB, and DNS response frames have a separate 1 MiB pool.
+Queue nodes are limited to 16,384 plus 512 for progress. These aggregate limits
+include temporary replacement allocations and the actual capacity of filtered
+DNS frames. Allocator overhead, session records, scratch buffers and kernel socket
+buffers are outside this limit. Existing per-session caps still apply.
+Pressure tests saturate the byte and node pools across connections, check rollback
+on allocation failure, pause DNS without bypassing filtering, and verify that
+memory releases reopen idle flows. Event-loop regressions check a single rescan
+after cleanup and no writable or hangup spin during a DNS memory wait.
+IPv4/IPv6 recovery tests cover window scales 0, 7 and 14, including a partial
+memory release too small to advertise a nonzero window and a later release that
+resumes delivery. Shared capacity below one scaled window unit stays blocked.
+Combined-pressure cases control the socket-capacity samples while forwarding real
+local stream data. A positive socket allowance smaller than one scaled unit can
+advertise a whole unit when retained storage can hold it. The final window is
+rounded down after the per-flow and aggregate memory limits, keeping blocked
+windows and recovery decisions consistent with the wire without polling timers.
 Ten TCP shutdown cases use real local socket pairs to verify IPv4/IPv6 data
 after upstream EOF, app-first and simultaneous close, FIN behind a sequence gap,
 repeated FIN, data queued before EOF, timeout/reset cleanup, failed write shutdown,
@@ -179,8 +198,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 96
-tests plus the optional comparison test.
+The full run contains 181 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

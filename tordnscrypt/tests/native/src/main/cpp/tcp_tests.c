@@ -1,5 +1,283 @@
 #include "test_support.h"
 
+void test_tcp_scaled_capacity(const struct arguments *args, int version) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    for (int scale = 7; scale <= 14; scale += 7) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        assert(epoll_fd >= 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        struct tcp_memory *memory = &args->ctx->tcp_memory;
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED; s.tcp.time = time(NULL);
+        s.tcp.remote_seq = 1000; s.tcp.local_seq = s.tcp.acked = 2000;
+        s.tcp.send_window = s.tcp.recv_window = 65535; s.tcp.recv_scale = scale;
+        s.tcp.memory = memory;
+        uint32_t unit = (uint32_t) 1 << scale;
+        tcp_capacity_fd = s.socket;
+        // Model socket pressure independently of real local-stream scheduling.
+        // Raw positive capacity below one scaled unit can be bridged by the
+        // retained queue, but must never bypass either retained-memory limit.
+        const uint32_t available[] = {0, 1, unit - 1, unit, unit + 1, 2 * unit - 1};
+        for (size_t i = 0; i < sizeof(available) / sizeof(*available); i++) {
+            tcp_capacity_available = available[i];
+            assert(get_receive_window(&s) == (available[i] == 0 ? 0 : unit));
+        }
+        tcp_capacity_available = unit - 1;
+        memory->queued = TCP_MEMORY_QUEUE_LIMIT - sizeof(struct segment) - unit + 1;
+        assert(get_receive_window(&s) == 0);
+        memory->queued--;
+        assert(get_receive_window(&s) == unit);
+        memory->queued = 0;
+        // Simulate retained, already-sent bytes leaving less than one unit of
+        // per-flow capacity. This calculation must remain zero after clamping.
+        s.tcp.queue_bytes = TCP_QUEUE_BYTES - unit + 1;
+        assert(get_receive_window(&s) == 0);
+        s.tcp.queue_bytes--;
+        assert(get_receive_window(&s) == unit);
+        s.tcp.queue_bytes = 0;
+
+        struct tcp_session other = {.version = version, .remote_seq = 1000, .recv_window = 16000};
+        struct tcphdr header = {.seq = htonl(1000)};
+        assert(queue_tcp(&running, &header, "other flow", &other, (void *) "x", 1) == 1);
+        size_t retained = memory->queued;
+        memory->queued = TCP_MEMORY_QUEUE_LIMIT;
+        assert(queue_tcp(&running, &header, "memory pressure", &s.tcp, (void *) "x", 1) == 0);
+        uint8_t packet[128];
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        s.ev.events = EPOLLERR; s.ev.data.ptr = &s;
+        assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        assert(!(s.ev.events & EPOLLOUT));
+        memory->queued = retained;
+        clear_tcp_data(&other);
+        // Shared memory is now free but the socket still has unit - 1 bytes.
+        // Recovery must advertise a real unit, not store a positive wire zero.
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        const struct tcphdr *ack = (const void *) (packet + (version == 4 ? 20 : 40));
+        assert(s.tcp.recv_window == unit && ack->ack && ntohs(ack->window) == 1);
+        struct epoll_event ready;
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+        assert(!is_readable(tunnel[0]));
+
+        // Socket readiness must use the same final-window calculation as the
+        // memory-release path, including a previously cached capacity sample.
+        s.tcp.recv_window = 0;
+        struct tcp_socket_capacity capacity = {.valid = true, .available = unit - 1};
+        ready.events = EPOLLOUT; ready.data.ptr = &s;
+        check_tcp_socket_with_capacity(&running, &ready, epoll_fd, &capacity);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        assert(s.tcp.recv_window == unit && ntohs(ack->window) == 1);
+
+        // A completely full socket still uses readiness rather than a timer.
+        tcp_capacity_available = 0;
+        check_tcp_socket(&running, &ready, epoll_fd);
+        assert(s.tcp.recv_window == 0 && !is_readable(tunnel[0]));
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0 && (s.ev.events & EPOLLOUT));
+        tcp_capacity_available = unit - 1;
+        check_tcp_socket(&running, &ready, epoll_fd);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        assert(s.tcp.recv_window == unit && ntohs(ack->window) == 1);
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0 && !(s.ev.events & EPOLLOUT));
+
+        // Data accepted using the reopened unit remains owned until sent.
+        uint8_t data[16384], received[16384];
+        memset(data, 0x5a, sizeof(data));
+        assert(queue_tcp(&running, &header, "resumed unit", &s.tcp, data, unit) == 1);
+        assert(memory->queued == sizeof(struct segment) + unit && memory->nodes == 1);
+        check_tcp_socket(&running, &ready, epoll_fd);
+        size_t used = 0;
+        while (used < unit) {
+            readable(stream[1]);
+            ssize_t count = read(stream[1], received + used, unit - used);
+            assert(count > 0);
+            used += count;
+        }
+        assert(memcmp(received, data, unit) == 0);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        assert(s.tcp.remote_seq == 1000 + unit && ntohs(ack->window) == 1);
+        assert(memory->queued == 0 && memory->nodes == 0 && s.tcp.forward == NULL);
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+        assert(!is_readable(tunnel[0]));
+        tcp_capacity_fd = -1;
+        close(epoll_fd); close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
+void test_tcp_memory_budget(const struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    struct tcp_memory *memory = &args->ctx->tcp_memory;
+    struct tcp_session flows[65] = {0};
+    uint8_t data[60000] = {0};
+    for (size_t i = 0; i < 65; i++) {
+        flows[i].version = 4; flows[i].dest = htons(443);
+        flows[i].remote_seq = 1000; flows[i].recv_window = 1048576;
+    }
+    struct tcphdr header = {.seq = htonl(1001)};
+    if (kind < 2) {
+        bool full = false;
+        for (int i = 0; i < 64 && !full; i++) {
+            uint32_t seq = 1001;
+            unsigned int count = kind == 0 ? 4 : TCP_QUEUE_SEGMENTS;
+            for (unsigned int j = 0; j < count; j++) {
+                size_t length = kind == 0 ? sizeof(data) : 1;
+                if (kind == 0) {
+                    size_t available = TCP_MEMORY_QUEUE_LIMIT - memory->queued;
+                    if (available > sizeof(struct segment) &&
+                        length > available - sizeof(struct segment))
+                        length = available - sizeof(struct segment);
+                }
+                header.seq = htonl(seq);
+                int result = queue_tcp(args, &header, "aggregate budget", &flows[i], data, length);
+                if (!result) { full = true; break; }
+                seq += length;
+                assert(memory->queued <= TCP_MEMORY_QUEUE_LIMIT);
+                assert(memory->nodes <= TCP_MEMORY_QUEUE_NODES);
+            }
+        }
+        assert(full);
+        assert(kind == 0 ? memory->queued == TCP_MEMORY_QUEUE_LIMIT
+                         : memory->nodes == TCP_MEMORY_QUEUE_NODES);
+        // Recovery can temporarily exceed the ordinary pool, including a full
+        // per-flow node queue. It must preserve the aggregate accounting.
+        header.seq = htonl(1000);
+        assert(queue_tcp(args, &header, "missing head", &flows[0], data, 1) == 1);
+        flows[64].dest = htons(53);
+        assert(queue_tcp(args, &header, "DNS progress", &flows[64], data, 1) == 1);
+        assert(memory->queued <= TCP_MEMORY_PROGRESS_LIMIT);
+        assert(memory->nodes <= TCP_MEMORY_PROGRESS_NODES);
+        size_t bytes = 0; unsigned int nodes = 0;
+        for (int i = 0; i < 65; i++)
+            for (struct segment *q = flows[i].forward; q != NULL; q = q->next) {
+                bytes += sizeof(*q) + q->len; nodes++;
+            }
+        assert(memory->queued == bytes && memory->nodes == nodes);
+    } else {
+        // Simulate other connections' occupancy to exercise exact transient
+        // replacement boundaries without allocating another full pool.
+        header.seq = htonl(1000);
+        assert(queue_tcp(args, &header, "original", &flows[0], data, 10) == 1);
+        size_t retained = memory->queued;
+        memory->queued = TCP_MEMORY_PROGRESS_LIMIT - 19;
+        assert(queue_tcp(args, &header, "peak denied", &flows[0], data, 20) == 0);
+        assert(flows[0].forward->len == 10 && memory->queued == TCP_MEMORY_PROGRESS_LIMIT - 19);
+        flows[0].recv_window = 1000;
+        memory->queued = TCP_MEMORY_PROGRESS_LIMIT - 20;
+        fail_alloc_tag = "tcp segment smaller"; fail_alloc_match = 1;
+        assert(queue_tcp(args, &header, "replacement failure", &flows[0], data, 20) == 0);
+        assert(memory->queued == TCP_MEMORY_PROGRESS_LIMIT - 20);
+        fail_alloc_tag = NULL;
+        assert(queue_tcp(args, &header, "replacement fits", &flows[0], data, 20) == 1);
+        assert(memory->queued == TCP_MEMORY_PROGRESS_LIMIT - 10);
+        assert(flows[0].forward->len == 20);
+        memory->queued = retained + 10;
+        header.seq = htonl(1020);
+        for (int failure_at = 1; failure_at <= 2; failure_at++) {
+            fail_alloc_tag = "tcp segment"; fail_alloc_match = failure_at;
+            assert(queue_tcp(args, &header, "node or data failure", &flows[0], data, 5) == 0);
+            assert(memory->queued == retained + 10 && memory->nodes == 1);
+        }
+        fail_alloc_tag = NULL;
+        size_t own = memory->queued;
+        flows[1].dest = htons(53);
+        header.seq = htonl(1000);
+        memory->queued = TCP_MEMORY_PROGRESS_LIMIT;
+        assert(queue_tcp(args, &header, "progress pool full", &flows[1], data, 1) == 0);
+        assert(flows[1].forward == NULL && memory->queued == TCP_MEMORY_PROGRESS_LIMIT);
+        memory->queued = own;
+        memory->nodes = TCP_MEMORY_PROGRESS_NODES;
+        flows[1].recv_window = 1000;
+        assert(queue_tcp(args, &header, "progress nodes full", &flows[1], data, 1) == 0);
+        assert(flows[1].forward == NULL && memory->queued == own);
+        memory->nodes = 1;
+    }
+    for (int i = 0; i < 65; i++) clear_tcp_data(&flows[i]);
+    assert(memory->queued == 0 && memory->nodes == 0 && memory->dns == 0);
+    assert(allocations == 0);
+#endif
+}
+
+void test_tcp_memory_wakeup(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    for (int variant = 0; variant < 6; variant++) {
+        int version = variant < 3 ? 4 : 6;
+        int scale = (variant % 3) * 7;
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        assert(epoll_fd >= 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        struct tcp_memory *memory = &args->ctx->tcp_memory;
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED; s.tcp.time = time(NULL);
+        s.tcp.remote_seq = 1000; s.tcp.local_seq = s.tcp.acked = 2000;
+        s.tcp.send_window = s.tcp.recv_window = 16000;
+        s.tcp.recv_scale = scale;
+        s.tcp.memory = memory;
+        struct tcp_session other = {.version = version, .remote_seq = 1000, .recv_window = 16000};
+        struct tcp_session tiny = {.version = version, .remote_seq = 1000, .recv_window = 16000};
+        struct tcphdr header = {.seq = htonl(1000)};
+        assert(queue_tcp(&running, &header, "other flow", &other, (void *) "12345", 5) == 1);
+        assert(queue_tcp(&running, &header, "tiny flow", &tiny, (void *) "x", 1) == 1);
+        size_t retained = memory->queued;
+        memory->queued = TCP_MEMORY_QUEUE_LIMIT;
+        assert(queue_tcp(&running, &header, "pressure", &s.tcp, (void *) "hello", 5) == 0);
+        uint8_t packet[128];
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        assert(s.tcp.recv_window == 0 && s.tcp.forward == NULL);
+        s.ev.events = EPOLLERR; s.ev.data.ptr = &s;
+        assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        struct epoll_event ready;
+        assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+        if (scale != 0) {
+            // One released byte plus its node leaves only a one-byte payload
+            // window. Keep waiting rather than advertising a scaled zero and
+            // losing the next release notification, or spinning on EPOLLOUT.
+            clear_tcp_data(&tiny);
+            assert(get_receive_window(&s) == 0);
+            for (int turn = 0; turn < 3; turn++) {
+                assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+                assert(s.tcp.recv_window == 0 && !(s.ev.events & EPOLLOUT));
+                assert(epoll_wait(epoll_fd, &ready, 1, 0) == 0 && !is_readable(tunnel[0]));
+            }
+            ready.events = EPOLLOUT; ready.data.ptr = &s;
+            check_tcp_socket(&running, &ready, epoll_fd); // Stale event must also keep it blocked.
+            assert(s.tcp.recv_window == 0 && !is_readable(tunnel[0]));
+            memory->queued = retained - sizeof(struct segment) - 1;
+        } else {
+            memory->queued = retained;
+            clear_tcp_data(&tiny);
+        }
+        clear_tcp_data(&other); // A different connection frees memory.
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        const struct tcphdr *ack = (const void *) (packet + (version == 4 ? 20 : 40));
+        assert(ack->ack && !ack->rst && ntohs(ack->window) > 0 && ntohl(ack->ack_seq) == 1000);
+        assert(s.tcp.recv_window > 0 && !(s.ev.events & EPOLLOUT));
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == 0 && !is_readable(tunnel[0]));
+        assert(queue_tcp(&running, &header, "retry", &s.tcp, (void *) "hello", 5) == 1);
+        ready.events = EPOLLOUT; ready.data.ptr = &s;
+        check_tcp_socket(&running, &ready, epoll_fd);
+        assert(read(stream[1], packet, sizeof(packet)) == 5 && memcmp(packet, "hello", 5) == 0);
+        tun_packet(tunnel[0], packet, version, IPPROTO_TCP);
+        assert(s.tcp.remote_seq == 1005 && memory->queued == 0 && memory->nodes == 0);
+        close(epoll_fd); close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 static void assert_tcp_queue_totals(const struct tcp_session *tcp) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     uint32_t bytes = 0, unsent = 0;
@@ -970,6 +1248,84 @@ static size_t drain_dns_test(const struct arguments *args, struct ng_session *s,
 }
 #endif
 
+void test_tcp_dns_memory(int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    bool hangup = kind == 2;
+    if (hangup) kind = 0;
+    real_network = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        assert(epoll_fd >= 0);
+        struct context ctx = {.sdk = 29};
+        struct arguments args = {.ctx = &ctx, .tun = tunnel[1], .rcode = 3};
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED; s.tcp.time = time(NULL);
+        s.tcp.source = htons(12345); s.tcp.dest = htons(53); s.tcp.mss = 1500;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+        s.tcp.recv_window = 16000; s.tcp.send_window = 45;
+        struct tcp_session other = {.memory = &ctx.tcp_memory};
+        other.dns_response_capacity = TCP_MEMORY_DNS_LIMIT - (kind == 0 ? 0 : 35);
+        other.dns_response = ng_malloc(other.dns_response_capacity, "other DNS response");
+        assert(other.dns_response != NULL);
+        ctx.tcp_memory.dns = other.dns_response_capacity;
+        uint8_t frame[35], output[256];
+        dns_filter_frame(frame, DNS_QTYPE_A, 1234);
+        block_domain = 1;
+        int callbacks = resolved_calls;
+        assert(send(stream[1], frame, sizeof(frame), 0) == sizeof(frame));
+        if (hangup) { close(stream[1]); stream[1] = -1; }
+        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+        check_tcp_socket(&args, &event, -1);
+        assert(s.tcp.state == TCP_ESTABLISHED && s.tcp.dns_waiting);
+        assert(s.tcp.dns_response_used == (kind == 0 ? 0 : 2));
+        assert(s.tcp.dns_response_capacity == (kind == 0 ? 0 : 2));
+        assert(ctx.tcp_memory.dns == other.dns_response_capacity + (kind == 0 ? 0 : 2));
+        assert(!is_readable(tunnel[0]) && resolved_calls == callbacks);
+        s.ev.events = EPOLLIN | EPOLLERR; s.ev.data.ptr = &s;
+        assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+        assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
+        struct epoll_event ready;
+        assert(!(s.ev.events & EPOLLIN));
+        if (hangup) {
+            assert(epoll_wait(epoll_fd, &ready, 1, 0) == 1 && (ready.events & EPOLLHUP));
+            check_tcp_socket(&args, &ready, epoll_fd);
+            assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
+        }
+        assert(epoll_wait(epoll_fd, &ready, 1, 0) == 0);
+        clear_tcp_data(&other);
+        assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
+        assert(!s.tcp.dns_waiting && (s.ev.events & EPOLLIN));
+        for (int turn = 0; turn < 16 && !s.tcp.dns_response_ready; turn++)
+            check_tcp_socket(&args, &event, epoll_fd);
+        assert(s.tcp.dns_response_ready && s.tcp.dns_response_size == 19);
+        assert(s.tcp.dns_response_capacity == 35 && ctx.tcp_memory.dns == 35);
+        assert(resolved_calls == callbacks + 1 && s.tcp.state == TCP_ESTABLISHED);
+        size_t iplen = version == 4 ? 20 : 40;
+        size_t length = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+        size_t sent = length - iplen - 20;
+        assert(sent == 5 && load16(output + iplen + 20) == 17);
+        // Filtering reduced the logical size, but all 35 allocated bytes remain
+        // charged until the app receives the last part of the filtered response.
+        s.tcp.acked = s.tcp.local_seq; s.tcp.send_window = 16000;
+        assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
+        length = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+        assert(length - iplen - 20 == 14);
+        assert((output[iplen + 20] & 15) == 3); // RCODE, offset 5 in the complete frame.
+        assert(s.tcp.dns_response == NULL && ctx.tcp_memory.dns == 0);
+        clear_tcp_data(&s.tcp);
+        assert(ctx.tcp_memory.queued == 0 && ctx.tcp_memory.nodes == 0);
+        block_domain = 0;
+        close(epoll_fd); close(stream[0]);
+        if (stream[1] >= 0) close(stream[1]);
+        close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_tcp_dns_buffer(int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     bool reuse = kind == 12;
@@ -1120,6 +1476,7 @@ void test_tcp_dns_buffer(int kind) {
         clear_packet_buffers(&buffers);
         clear(&ctx);
         assert(ctx.ng_session == NULL && allocations == 0 && sockets == 0);
+        assert(ctx.tcp_memory.queued == 0 && ctx.tcp_memory.nodes == 0 && ctx.tcp_memory.dns == 0);
         assert(__real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);
         block_domain = 0;
         free(input); free(output);

@@ -13,6 +13,9 @@ static int buffer_loop_kind;
 static struct context *probe_context;
 static struct ng_session *probe_sessions;
 static int probe_polls;
+static struct context *memory_context;
+static struct ng_session *memory_sessions;
+static int memory_polls;
 #endif
 
 long long __real_get_ms(void);
@@ -29,6 +32,27 @@ long long __wrap_get_ms(void) {
 int __real_epoll_wait(int fd, struct epoll_event *events, int count, int timeout);
 int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    if (memory_context != NULL) {
+        memory_polls++;
+        if (memory_polls == 1) {
+            assert(memory_context->ng_session == NULL);
+            memory_context->ng_session = memory_sessions;
+            assert(epoll_ctl(fd, EPOLL_CTL_ADD, memory_sessions->socket, &memory_sessions->ev) == 0);
+            tcp_test_clock += EPOLL_MIN_CHECK + 1;
+        } else if (memory_polls == 2) {
+            // Cleanup ran after the blocked flow's monitor pass. It must cause
+            // one short rescan, even without TUN or socket readiness events.
+            assert(timeout == EPOLL_MIN_CHECK && memory_sessions->tcp.recv_window == 0);
+            assert(memory_context->tcp_memory.queued < TCP_MEMORY_QUEUE_LIMIT);
+            memory_context->tcp_memory.queued = 0; // Remove simulated unrelated occupancy.
+            tcp_test_clock += timeout + 1;
+        } else {
+            assert(memory_polls == 3 && timeout > EPOLL_MIN_CHECK);
+            assert(memory_sessions->tcp.recv_window > 0);
+            memory_context->stopping = 1;
+        }
+        return 0;
+    }
     if (probe_context != NULL) {
         probe_polls++;
         if (probe_polls == 1) {
@@ -96,6 +120,49 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
         idle_context->stopping = 1;
     }
     return 0;
+}
+
+void test_tcp_memory_rescan(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    int tunnel[2], stream[2];
+    assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+    assert(pipe(args->ctx->pipefds) == 0);
+    struct ng_session *blocked = ng_calloc(1, sizeof(*blocked), "memory blocked session");
+    struct ng_session *closing = ng_calloc(1, sizeof(*closing), "memory closing session");
+    assert(blocked != NULL && closing != NULL);
+    blocked->protocol = closing->protocol = IPPROTO_TCP;
+    blocked->socket = stream[0]; closing->socket = -1;
+    blocked->tcp.version = closing->tcp.version = 4;
+    blocked->tcp.state = TCP_ESTABLISHED;
+    blocked->tcp.time = time(NULL); blocked->tcp.send_window = 16000;
+    blocked->tcp.memory = &args->ctx->tcp_memory;
+    closing->tcp.recv_window = 16000;
+    struct tcphdr header = {.seq = htonl(0)};
+    assert(queue_tcp(args, &header, "cleanup releases budget", &closing->tcp, (void *) "a", 1) == 1);
+    closing->tcp.state = TCP_CLOSING;
+    blocked->tcp.memory_generation = args->ctx->tcp_memory.generation;
+    args->ctx->tcp_memory.queued = TCP_MEMORY_QUEUE_LIMIT;
+    blocked->next = closing;
+    blocked->ev.events = EPOLLERR | EPOLLIN; blocked->ev.data.ptr = blocked;
+    memory_sessions = blocked; memory_context = args->ctx; memory_polls = 0;
+    tcp_test_clock = 100000;
+    struct arguments *owned = ng_malloc(sizeof(*owned), "memory loop arguments");
+    assert(owned != NULL);
+    *owned = *args; owned->tun = tunnel[0];
+    handle_events(owned);
+    assert(memory_polls == 3);
+    memory_context = NULL; memory_sessions = NULL; tcp_test_clock = 0;
+    uint8_t packet[128];
+    tun_packet(tunnel[1], packet, 4, IPPROTO_TCP);
+    assert(!is_readable(tunnel[1]));
+    clear(args->ctx);
+    assert(args->ctx->tcp_memory.queued == 0 && args->ctx->tcp_memory.nodes == 0);
+    close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+    close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+    assert(allocations == 0 && sockets == 0);
+#endif
 }
 
 void test_tcp_probe_deadlines(struct arguments *args) {

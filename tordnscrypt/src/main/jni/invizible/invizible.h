@@ -98,6 +98,11 @@
 #define UID_CACHE_MAX 4096 // entries; bound proc-table snapshots independently of traffic rate
 #define TCP_QUEUE_BYTES (256 * 1024) // retained payload per TCP session
 #define TCP_QUEUE_SEGMENTS 1024 // also bound metadata for small/out-of-order packets
+#define TCP_MEMORY_QUEUE_LIMIT (14 * 1024 * 1024)
+#define TCP_MEMORY_PROGRESS_LIMIT (15 * 1024 * 1024) // Includes the queue limit.
+#define TCP_MEMORY_DNS_LIMIT (1024 * 1024)
+#define TCP_MEMORY_QUEUE_NODES 16384
+#define TCP_MEMORY_PROGRESS_NODES (TCP_MEMORY_QUEUE_NODES + 512)
 
 #define SOCKS5_NONE 1
 #define SOCKS5_HELLO 2
@@ -111,12 +116,22 @@
 
 #define I2PD_REDIRECT_ADDRESS "10.191.0.1"
 
+// Requested retained allocation sizes, including temporary replacements. The
+// allocator's internal overhead, sockets, sessions and scratch buffers are separate.
+struct tcp_memory {
+    size_t queued;
+    size_t dns;
+    unsigned int nodes;
+    uint64_t generation; // Memory releases; mutated only by the context's owner.
+};
+
 struct context {
     pthread_mutex_t lock;
     int pipefds[2];
     atomic_int stopping;
     int sdk;
     struct ng_session *ng_session;
+    struct tcp_memory tcp_memory;
 };
 
 enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };
@@ -254,10 +269,15 @@ struct tcp_session {
     size_t dns_response_used;
     size_t dns_response_sent;
     bool dns_response_ready;
+    size_t dns_response_capacity; // Allocation size; filtering may shorten the frame.
+    bool dns_waiting;
+    uint64_t dns_memory_generation;
     struct segment *forward;
     uint32_t queue_bytes; // Retained payload, including partially sent segments.
     uint32_t queue_unsent;
     unsigned int queue_segments;
+    struct tcp_memory *memory; // Borrowed from the owning context, never the event stack.
+    uint64_t memory_generation;
 };
 
 struct ng_session {

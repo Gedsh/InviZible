@@ -41,10 +41,85 @@ static int open_tcp_socket_with_error(const struct arguments *args,
                                      const struct tcp_session *cur,
                                      struct allowed *redirect, int *connect_error_out);
 
+static bool reserve_tcp_memory(struct tcp_session *cur, size_t bytes,
+                              unsigned int nodes, bool dns, bool progress) {
+    if (cur->memory == NULL)
+        return true;
+    struct tcp_memory *memory = cur->memory;
+    size_t used = dns ? memory->dns : memory->queued;
+    size_t limit = dns ? TCP_MEMORY_DNS_LIMIT : progress
+                   ? TCP_MEMORY_PROGRESS_LIMIT : TCP_MEMORY_QUEUE_LIMIT;
+    unsigned int node_limit = progress ? TCP_MEMORY_PROGRESS_NODES : TCP_MEMORY_QUEUE_NODES;
+    if (used > limit || bytes > limit - used ||
+        (!dns && (memory->nodes > node_limit || nodes > node_limit - memory->nodes)))
+        return false;
+    if (dns)
+        memory->dns += bytes;
+    else {
+        memory->queued += bytes;
+        memory->nodes += nodes;
+    }
+    return true;
+}
+
+static void release_tcp_memory(struct tcp_session *cur, size_t bytes,
+                              unsigned int nodes, bool dns) {
+    if (cur->memory == NULL || (bytes == 0 && nodes == 0))
+        return;
+    if (dns)
+        cur->memory->dns -= bytes;
+    else {
+        cur->memory->queued -= bytes;
+        cur->memory->nodes -= nodes;
+    }
+    cur->memory->generation++;
+}
+
+static size_t tcp_memory_window(const struct tcp_session *cur) {
+    if (cur->memory == NULL)
+        return TCP_QUEUE_BYTES;
+    bool dns = ntohs(cur->dest) == 53;
+    size_t limit = dns ? TCP_MEMORY_PROGRESS_LIMIT : TCP_MEMORY_QUEUE_LIMIT;
+    unsigned int nodes = dns ? TCP_MEMORY_PROGRESS_NODES : TCP_MEMORY_QUEUE_NODES;
+    if (cur->memory->queued >= limit || cur->memory->nodes >= nodes)
+        return 0;
+    size_t available = limit - cur->memory->queued;
+    available = available > sizeof(struct segment) ? available - sizeof(struct segment) : 0;
+    // A positive internal window that scales to zero would stop both memory
+    // release checks and writable monitoring before the app can send again.
+    return available >= ((size_t) 1 << cur->recv_scale) ? available : 0;
+}
+
+static void free_tcp_segment(struct tcp_session *cur, struct segment *segment) {
+    release_tcp_memory(cur, sizeof(*segment) + segment->len, 1, false);
+    ng_free(segment->data, __FILE__, __LINE__);
+    ng_free(segment, __FILE__, __LINE__);
+}
+
+static struct segment *allocate_tcp_segment(struct tcp_session *cur, uint16_t length,
+                                            bool progress, const char *node_tag,
+                                            const char *data_tag) {
+    size_t bytes = sizeof(struct segment) + length;
+    if (!reserve_tcp_memory(cur, bytes, 1, false, progress))
+        return NULL;
+    struct segment *segment = ng_malloc(sizeof(*segment), node_tag);
+    if (segment != NULL) {
+        segment->data = ng_malloc(length, data_tag);
+        if (segment->data != NULL)
+            return segment;
+        ng_free(segment, __FILE__, __LINE__);
+    }
+    release_tcp_memory(cur, bytes, 1, false);
+    return NULL;
+}
+
 static void clear_dns_response(struct tcp_session *cur) {
     if (cur->dns_response != NULL)
         ng_free(cur->dns_response, __FILE__, __LINE__);
     cur->dns_response = NULL;
+    release_tcp_memory(cur, cur->dns_response_capacity, 0, true);
+    cur->dns_response_capacity = 0;
+    cur->dns_waiting = false;
     cur->dns_response_size = cur->dns_response_used = cur->dns_response_sent = 0;
     cur->dns_response_ready = false;
     cur->dns_header_used = 0;
@@ -59,8 +134,7 @@ void clear_tcp_data(struct tcp_session *cur) {
     while (s != NULL) {
         struct segment *p = s;
         s = s->next;
-        ng_free(p->data, __FILE__, __LINE__);
-        ng_free(p, __FILE__, __LINE__);
+        free_tcp_segment(cur, p);
     }
 }
 
@@ -139,6 +213,47 @@ static void flush_dns_response(const struct arguments *args, struct tcp_session 
         clear_dns_response(cur);
 }
 
+static bool prepare_dns_response(const struct arguments *args, struct tcp_session *cur) {
+    if (cur->memory == NULL)
+        cur->memory = &args->ctx->tcp_memory;
+    cur->dns_waiting = false;
+    if (cur->dns_response == NULL) {
+        if (!reserve_tcp_memory(cur, 2, 0, true, false)) {
+            cur->dns_waiting = true;
+            cur->dns_memory_generation = cur->memory->generation;
+            return false;
+        }
+        cur->dns_response = ng_malloc(2, "tcp dns frame");
+        if (cur->dns_response == NULL) {
+            release_tcp_memory(cur, 2, 0, true);
+            write_rst(args, cur);
+            return false;
+        }
+        cur->dns_response_capacity = cur->dns_response_size = 2;
+    }
+    if (cur->dns_response_used == 2 && cur->dns_response_size == 2) {
+        size_t size = (size_t) read_net16(cur->dns_response) + 2;
+        if (size > 2) {
+            // Reserve the entire replacement while the old allocation is live.
+            if (!reserve_tcp_memory(cur, size, 0, true, false)) {
+                cur->dns_waiting = true;
+                cur->dns_memory_generation = cur->memory->generation;
+                return false;
+            }
+            uint8_t *resized = ng_realloc(cur->dns_response, size, "tcp dns frame");
+            if (resized == NULL) {
+                release_tcp_memory(cur, size, 0, true);
+                write_rst(args, cur);
+                return false;
+            }
+            release_tcp_memory(cur, cur->dns_response_capacity, 0, true);
+            cur->dns_response = resized;
+            cur->dns_response_capacity = cur->dns_response_size = size;
+        }
+    }
+    return true;
+}
+
 static void read_dns_response(const struct arguments *args, struct ng_session *s,
                               uint32_t window) {
     struct tcp_session *cur = &s->tcp;
@@ -146,14 +261,8 @@ static void read_dns_response(const struct arguments *args, struct ng_session *s
         flush_dns_response(args, cur, window);
         return;
     }
-    if (cur->dns_response == NULL) {
-        cur->dns_response = ng_malloc(2, "tcp dns frame");
-        if (cur->dns_response == NULL) {
-            write_rst(args, cur);
-            return;
-        }
-        cur->dns_response_size = 2;
-    }
+    if (!prepare_dns_response(args, cur))
+        return;
     size_t count = cur->dns_response_size - cur->dns_response_used;
     if (count > cur->mss)
         count = cur->mss;
@@ -190,18 +299,8 @@ static void read_dns_response(const struct arguments *args, struct ng_session *s
         return;
     }
     cur->dns_response_used += bytes;
-    if (cur->dns_response_used == 2 && cur->dns_response_size == 2) {
-        size_t size = (size_t) read_net16(cur->dns_response) + 2;
-        if (size > 2) {
-            uint8_t *resized = ng_realloc(cur->dns_response, size, "tcp dns frame");
-            if (resized == NULL) {
-                write_rst(args, cur);
-                return;
-            }
-            cur->dns_response = resized;
-            cur->dns_response_size = size;
-        }
-    }
+    if (!prepare_dns_response(args, cur))
+        return;
     if (cur->dns_response_used == cur->dns_response_size) {
         size_t length = cur->dns_response_size - 2;
         parse_dns_response(args, s, cur->dns_response + 2, &length);
@@ -389,6 +488,23 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
     int recheck = 0;
     unsigned int events = EPOLLERR;
 
+    if (s->tcp.memory != NULL && s->tcp.state != TCP_LISTEN &&
+        s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE) {
+        if (s->tcp.dns_waiting && s->tcp.dns_memory_generation != s->tcp.memory->generation)
+            prepare_dns_response(args, &s->tcp);
+        if (!s->tcp.fin_acked && s->tcp.recv_window == 0 &&
+            s->tcp.memory_generation != s->tcp.memory->generation) {
+            s->tcp.memory_generation = s->tcp.memory->generation;
+            if (tcp_memory_window(&s->tcp) > 0) {
+                uint32_t window = get_receive_window(s);
+                if (window > 0) {
+                    s->tcp.recv_window = window;
+                    write_ack(args, &s->tcp);
+                }
+            }
+        }
+    }
+
     // DNS output is already in memory and targets TUN, not the upstream socket.
     // Make bounded progress each loop even if that socket's send buffer is full.
     if (!s->tcp.upstream_eof &&
@@ -420,7 +536,7 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
         if (!s->tcp.upstream_eof && get_send_window(&s->tcp) > 0) {
             if (s->tcp.dns_response_ready)
                 recheck = EPOLL_MIN_CHECK; // More buffered output after this loop's packet budget.
-            else
+            else if (!s->tcp.dns_waiting)
                 events |= EPOLLIN;
             s->tcp.window_probe_interval = 0;
         } else if (!s->tcp.upstream_eof) {
@@ -452,12 +568,19 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
             // a sequence gap instead waits for the missing packet from TUN.
             if (s->tcp.forward->seq == s->tcp.remote_seq)
                 events = events | EPOLLOUT;
-        } else if (!s->tcp.fin_acked && s->tcp.recv_window == 0) {
+        } else if (!s->tcp.fin_acked && s->tcp.recv_window == 0 &&
+                   tcp_memory_window(&s->tcp) > 0) {
             // The final queued write can fill the socket exactly. Wait for
             // space so check_tcp_socket can advertise the reopened app window.
             events |= EPOLLOUT;
         }
     }
+
+    // HUP is reported even when no reads were requested. While DNS waits only
+    // for shared memory, consume it once and rearm when the wait ends; otherwise
+    // a closed upstream with unread data would wake epoll continuously.
+    if (s->tcp.dns_waiting && events == EPOLLERR)
+        events |= EPOLLONESHOT;
 
     if (events != s->ev.events) {
         s->ev.events = events;
@@ -523,11 +646,24 @@ static uint32_t receive_window_for_buffer(const struct ng_session *cur, uint32_t
     }
 
     uint32_t total = (cur->tcp.queue_unsent < window ? window - cur->tcp.queue_unsent : 0);
+    uint32_t unit = (uint32_t) 1 << cur->tcp.recv_scale;
+    // A writable socket can have less than one scaled unit free. The retained
+    // queue can bridge that small gap, provided both memory limits below fit
+    // the whole unit. Otherwise a zero advertisement could leave a positive
+    // internal window, or reopening it could spin on an already writable socket.
+    if (total > 0 && total < unit)
+        total = unit;
     uint32_t capacity = (cur->tcp.queue_bytes < TCP_QUEUE_BYTES ? TCP_QUEUE_BYTES - cur->tcp.queue_bytes : 0);
     if (total > capacity)
         total = capacity;
     if (cur->tcp.queue_segments >= TCP_QUEUE_SEGMENTS)
         total = 0;
+    size_t shared = tcp_memory_window(&cur->tcp);
+    if (total > shared)
+        total = (uint32_t) shared;
+    // Keep recovery, admission and readiness decisions consistent with the
+    // window encoded on the wire, after applying every capacity limit.
+    total = (total >> cur->tcp.recv_scale) << cur->tcp.recv_scale;
 
     log_android(ANDROID_LOG_DEBUG, "Receive window toforward %u window %u total %u",
                 cur->tcp.queue_unsent, window, total);
@@ -857,8 +993,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                             s->tcp.forward = s->tcp.forward->next;
                             s->tcp.queue_bytes -= p->len;
                             s->tcp.queue_segments--;
-                            ng_free(p->data, __FILE__, __LINE__);
-                            ng_free(p, __FILE__, __LINE__);
+                            free_tcp_segment(&s->tcp, p);
                         } else {
                             log_android(ANDROID_LOG_INFO,
                                         "%s partial send %u/%u",
@@ -1105,13 +1240,19 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.dns_response = NULL;
             s->tcp.dns_response_size = s->tcp.dns_response_used = s->tcp.dns_response_sent = 0;
             s->tcp.dns_response_ready = false;
+            s->tcp.dns_response_capacity = 0;
+            s->tcp.dns_waiting = false;
+            s->tcp.dns_memory_generation = 0;
+            s->tcp.memory = &args->ctx->tcp_memory;
+            s->tcp.memory_generation = s->tcp.memory->generation;
             s->tcp.forward = NULL;
             s->tcp.queue_bytes = s->tcp.queue_unsent = s->tcp.queue_segments = 0;
             s->next = NULL;
 
             if (datalen) {
                 log_android(ANDROID_LOG_INFO, "%s SYN data", tcp_packet_text(&diagnostic));
-                s->tcp.forward = ng_malloc(sizeof(struct segment), "syn segment");
+                s->tcp.forward = allocate_tcp_segment(&s->tcp, datalen,
+                        ntohs(s->tcp.dest) == 53, "syn segment", "syn segment data");
                 if (s->tcp.forward == NULL) {
                     ng_free(s, __FILE__, __LINE__);
                     return 0;
@@ -1120,12 +1261,6 @@ jboolean handle_tcp(const struct arguments *args,
                 s->tcp.forward->len = datalen;
                 s->tcp.forward->sent = 0;
                 s->tcp.forward->psh = tcphdr->psh;
-                s->tcp.forward->data = ng_malloc(datalen, "syn segment data");
-                if (s->tcp.forward->data == NULL) {
-                    ng_free(s->tcp.forward, __FILE__, __LINE__);
-                    ng_free(s, __FILE__, __LINE__);
-                    return 0;
-                }
                 memcpy(s->tcp.forward->data, data, datalen);
                 s->tcp.forward->next = NULL;
                 s->tcp.queue_bytes = s->tcp.queue_unsent = datalen;
@@ -1372,11 +1507,10 @@ static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
             if (end > copied)
                 copied = end;
             *link = q->next;
-            ng_free(q->data, __FILE__, __LINE__);
-            ng_free(q, __FILE__, __LINE__);
+            free_tcp_segment(cur, q);
         } else if (retained + q->len > TCP_QUEUE_BYTES || segments >= TCP_QUEUE_SEGMENTS) {
             // Keep the nearest data and discard the furthest unacknowledged tail.
-            struct tcp_session discarded = {.forward = q};
+            struct tcp_session discarded = {.forward = q, .memory = cur->memory};
             *link = NULL;
             clear_tcp_data(&discarded);
             break;
@@ -1399,6 +1533,8 @@ int queue_tcp(const struct arguments *args,
                const char *session, struct tcp_session *cur,
                const uint8_t *data, uint16_t datalen) {
     uint32_t seq = ntohl(tcphdr->seq);
+    if (cur->memory == NULL && args != NULL && args->ctx != NULL)
+        cur->memory = &args->ctx->tcp_memory;
     if (compare_u32(seq, cur->remote_seq) < 0)
         log_android(ANDROID_LOG_WARN, "%s already forwarded %u..%u",
                     session,
@@ -1429,18 +1565,21 @@ int queue_tcp(const struct arguments *args,
             log_android(ANDROID_LOG_DEBUG, "%s queuing %u...%u",
                         session,
                         seq - cur->remote_start, seq + datalen - cur->remote_start);
-            struct segment *n = ng_malloc(sizeof(struct segment), "tcp segment");
-            if (n == NULL)
+            bool progress = fills_gap || ntohs(cur->dest) == 53;
+            struct segment *n = allocate_tcp_segment(cur, datalen, progress,
+                                                      "tcp segment", "tcp segment");
+            if (n == NULL) {
+                if (cur->memory != NULL && tcp_memory_window(cur) < datalen) {
+                    cur->recv_window = 0;
+                    cur->memory_generation = cur->memory->generation;
+                    write_ack(args, cur);
+                }
                 return 0;
+            }
             n->seq = seq;
             n->len = datalen;
             n->sent = 0;
             n->psh = tcphdr->psh;
-            n->data = ng_malloc(datalen, "tcp segment");
-            if (n->data == NULL) {
-                ng_free(n, __FILE__, __LINE__);
-                return 0;
-            }
             memcpy(n->data, data, datalen);
             if (fills_gap)
                 insert_tcp_gap(cur, n);
@@ -1456,12 +1595,22 @@ int queue_tcp(const struct arguments *args,
             }
         } else {
             // Extend a retransmission without rewriting bytes already accepted.
-            uint8_t *replacement = ng_malloc(datalen, "tcp segment smaller");
-            if (replacement == NULL)
+            bool progress = seq == cur->remote_seq || ntohs(cur->dest) == 53;
+            if (!reserve_tcp_memory(cur, datalen, 0, false, progress)) {
+                cur->recv_window = 0;
+                cur->memory_generation = cur->memory->generation;
+                write_ack(args, cur);
                 return 0;
+            }
+            uint8_t *replacement = ng_malloc(datalen, "tcp segment smaller");
+            if (replacement == NULL) {
+                release_tcp_memory(cur, datalen, 0, false);
+                return 0;
+            }
             memcpy(replacement, s->data, s->len);
             memcpy(replacement + s->len, data + s->len, datalen - s->len);
             ng_free(s->data, __FILE__, __LINE__);
+            release_tcp_memory(cur, s->len, 0, false);
             s->data = replacement;
             cur->queue_bytes += datalen - s->len;
             cur->queue_unsent += datalen - s->len;

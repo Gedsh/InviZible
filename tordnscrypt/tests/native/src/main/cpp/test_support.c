@@ -13,11 +13,19 @@ int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
 int address_formats;
 int tcp_sendbuf_queries, tcp_outq_queries;
+int tcp_capacity_fd = -1, tcp_capacity_available;
 
 int __real_getsockopt(int fd, int level, int option, void *value, socklen_t *length);
 int __wrap_getsockopt(int fd, int level, int option, void *value, socklen_t *length) {
-    if (level == SOL_SOCKET && option == SO_SNDBUF)
+    if (level == SOL_SOCKET && option == SO_SNDBUF) {
         tcp_sendbuf_queries++;
+        if (tcp_capacity_fd >= 0 && fd == tcp_capacity_fd) {
+            assert(*length >= sizeof(int));
+            *(int *) value = 65536;
+            *length = sizeof(int);
+            return 0;
+        }
+    }
     return __real_getsockopt(fd, level, option, value, length);
 }
 
@@ -27,8 +35,13 @@ int __wrap_ioctl(int fd, int request, ...) {
     va_start(ap, request);
     void *value = va_arg(ap, void *);
     va_end(ap);
-    if (request == SIOCOUTQ)
+    if (request == SIOCOUTQ) {
         tcp_outq_queries++;
+        if (tcp_capacity_fd >= 0 && fd == tcp_capacity_fd) {
+            *(int *) value = 65536 - tcp_capacity_available;
+            return 0;
+        }
+    }
     return __real_ioctl(fd, request, value);
 }
 int udp_lookups, uid_lookups, policy_checks, deny_address;
@@ -501,6 +514,8 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
 
 void reset_test_state(void) {
     tcp_sendbuf_queries = tcp_outq_queries = 0;
+    tcp_capacity_fd = -1;
+    tcp_capacity_available = 0;
     udp_lookups = uid_lookups = policy_checks = deny_address = 0;
     udp_lookup_supplied = 0;
     udp_lookup_session = NULL;
