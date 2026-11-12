@@ -206,6 +206,7 @@ void block_udp(const struct arguments *args,
     struct ng_session **reuse = (match != NULL ? match : blocked >= UDP_BLOCKED_MAX ? oldest : NULL);
     if (reuse != NULL) {
         s = *reuse;
+        unindex_session(args->ctx, s); // Remove the old tuple before resetting/reusing it.
         *reuse = s->next;
     } else {
         s = ng_malloc(sizeof(struct ng_session), "udp session block");
@@ -234,8 +235,7 @@ void block_udp(const struct arguments *args,
 
     write_connection_unreach(args, s, EHOSTDOWN);
 
-    s->next = args->ctx->ng_session;
-    args->ctx->ng_session = s;
+    add_session(args->ctx, s);
 }
 
 jboolean handle_udp(const struct arguments *args,
@@ -371,8 +371,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev))
             log_android(ANDROID_LOG_ERROR, "epoll add udp error %d: %s", errno, strerror(errno));
 
-        s->next = args->ctx->ng_session;
-        args->ctx->ng_session = s;
+        add_session(args->ctx, s);
 
         cur = s;
     }

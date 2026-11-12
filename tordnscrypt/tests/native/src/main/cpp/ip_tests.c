@@ -36,7 +36,7 @@ void test_udp_packet_lookup(struct arguments *args, int kind) {
                 target.udp.state = kind == 0 ? states[option] : UDP_ACTIVE;
                 running.fwd53 = kind == 0 ? 1 : option;
                 decoys[5].next = present ? &target : NULL;
-                args->ctx->ng_session = decoys;
+                set_test_sessions(args->ctx, decoys);
                 udp_lookups = uid_lookups = policy_checks = udp_calls = udp_lookup_supplied = 0;
                 udp_lookup_session = NULL;
                 handle_ip(&running, packet, off + 20, -1, full ? SESSION_MAX : 0, SESSION_MAX);
@@ -55,7 +55,7 @@ void test_udp_packet_lookup(struct arguments *args, int kind) {
             // Forwarded DNS must still consult policy for an existing active flow.
             running.fwd53 = 1; decoys[5].next = &target;
             target.udp.state = UDP_ACTIVE;
-            args->ctx->ng_session = decoys;
+            set_test_sessions(args->ctx, decoys);
             deny_address = 1;
             udp_lookups = uid_lookups = policy_checks = udp_calls = 0;
             handle_ip(&running, packet, off + 20, -1, 0, SESSION_MAX);
@@ -67,7 +67,7 @@ void test_udp_packet_lookup(struct arguments *args, int kind) {
             deny_address = 0;
             assert(allocations == 0);
         }
-        args->ctx->ng_session = NULL;
+        set_test_sessions(args->ctx, NULL);
     }
     capture_packets = 0;
     close(tunnel[0]); close(tunnel[1]);

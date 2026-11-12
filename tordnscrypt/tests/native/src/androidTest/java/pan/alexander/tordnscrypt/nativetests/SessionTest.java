@@ -8,6 +8,10 @@ import org.junit.runner.RunWith;
 /** Regressions for session.c. */
 @RunWith(AndroidJUnit4.class)
 public final class SessionTest extends NativeTestSupport {
+    @Test public void ipv4IndexPreservesExactKeysAndLingeringAndStoppedStates() { check("sessionIndex4"); }
+    @Test public void ipv6IndexPreservesExactKeysAndLingeringAndStoppedStates() { check("sessionIndex6"); }
+    @Test public void indexHandlesCollisionsRemovalChurnAndContextReuse() { check("sessionIndexChurn"); }
+    @Test public void policyReloadRemovesBlockedKeysAndKeepsClosedTcpLookup() { check("sessionIndexPolicy"); }
     @Test public void cleanupReleasesBudgetAndRescansEarlierBlockedFlowsOnce() { check("tcpMemoryRescan"); }
     @Test public void earliestTcpProbeDeadlineWinsAndStopPipeRemainsReady() { check("tcpProbeDeadlines"); }
     @Test public void eventLoopFreesScratchBuffersOnStopAndPollFailure() { check("eventBufferCleanup"); }

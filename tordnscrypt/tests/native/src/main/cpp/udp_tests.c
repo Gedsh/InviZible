@@ -22,7 +22,7 @@ void test_udp_lookup_states(struct arguments *args) {
         memcpy(&s.udp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
         memcpy(&s.udp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
         const int states[] = {UDP_ACTIVE, UDP_FINISHING, UDP_CLOSED, UDP_BLOCKED};
-        args->ctx->ng_session = &s;
+        set_test_sessions(args->ctx, &s);
         for (size_t i = 0; i < sizeof(states) / sizeof(*states); i++) {
             s.udp.state = states[i];
             s.socket = i < 2 ? active_socket : -1;
@@ -38,7 +38,7 @@ void test_udp_lookup_states(struct arguments *args) {
                 tun_packet(tunnel[0], output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
             assert(!is_readable(tunnel[0]));
         }
-        args->ctx->ng_session = NULL;
+        set_test_sessions(args->ctx, NULL);
         // A completed miss must also be reused when the real handler creates a flow.
         int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
         assert(epoll_fd >= 0);
@@ -205,7 +205,7 @@ void test_udp_dns_counts(int version, int response) {
                 assert(s != NULL && destination_calls == 1 && !is_readable(tunnel[0]));
                 close(s->socket);
                 ng_free(s, __FILE__, __LINE__);
-                ctx.ng_session = NULL;
+                set_test_sessions(&ctx, NULL);
             }
         }
     } else {
@@ -303,9 +303,9 @@ void test_udp_short_dns(struct arguments *args) {
     assert(args->ctx->ng_session == NULL && allocations == 0);
     struct ng_session s = {.protocol = IPPROTO_UDP, .socket = 0};
     s.udp.version = 4; s.udp.source = udp->source; s.udp.dest = udp->dest;
-    args->ctx->ng_session = &s;
+    set_test_sessions(args->ctx, &s);
     assert(handle_udp(args, pkt, 28, pkt + 20, own_uid, NULL, -1) == 0);
-    args->ctx->ng_session = NULL;
+    set_test_sessions(args->ctx, NULL);
     free(pkt);
 }
 
@@ -343,7 +343,7 @@ void test_udp_blocked_limit(struct arguments *args, int version) {
     closed->udp.state = UDP_CLOSED;
     closed->socket = -1;
     active->next = closed;
-    args->ctx->ng_session = active;
+    set_test_sessions(args->ctx, active);
 
     uint8_t packet[48];
     for (int i = 0; i < UDP_BLOCKED_MAX + 50; i++) {
@@ -364,6 +364,7 @@ void test_udp_blocked_limit(struct arguments *args, int version) {
         }
     }
     assert(blocked == UDP_BLOCKED_MAX && active_seen == 1 && closed_seen == 1);
+    assert_test_session_index(args->ctx);
     assert(active->udp.state == UDP_ACTIVE && active->udp.uid == 12345);
     assert(active->socket == last_socket && closed->udp.state == UDP_CLOSED);
     size_t off = blocked_packet(packet, version, 1000, 5000);
@@ -373,6 +374,7 @@ void test_udp_blocked_limit(struct arguments *args, int version) {
     int before = allocations;
     block_udp(args, packet, off + sizeof(struct udphdr), packet + off, 54321);
     assert(allocations == before && args->ctx->ng_session->udp.uid == 54321);
+    assert_test_session_index(args->ctx);
     clear(args->ctx);
     assert(allocations == 0 && sockets == 0);
 }

@@ -1129,16 +1129,9 @@ jboolean handle_tcp(const struct arguments *args,
     const uint16_t datalen = (const uint16_t) (length - (data - pkt));
 
     // Search session
-    struct ng_session *cur = args->ctx->ng_session;
-    while (cur != NULL &&
-           !(cur->protocol == IPPROTO_TCP &&
-             cur->tcp.version == version &&
-             cur->tcp.source == tcphdr->source && cur->tcp.dest == tcphdr->dest &&
-             (version == 4 ? cur->tcp.saddr.ip4 == ip4->saddr &&
-                             cur->tcp.daddr.ip4 == ip4->daddr
-                           : memcmp(&cur->tcp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
-                             memcmp(&cur->tcp.daddr.ip6, &ip6->ip6_dst, 16) == 0)))
-        cur = cur->next;
+    struct ng_session *cur = find_session(args->ctx, version, IPPROTO_TCP,
+            version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src, tcphdr->source,
+            version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst, tcphdr->dest);
 
     struct tcp_packet_log diagnostic = {.pkt = pkt, .header = tcphdr,
             .tcp = cur == NULL ? NULL : &cur->tcp, .uid = cur == NULL ? uid : cur->tcp.uid,
@@ -1305,8 +1298,7 @@ jboolean handle_tcp(const struct arguments *args,
                 log_android(ANDROID_LOG_ERROR, "epoll add tcp error %d: %s",
                             errno, strerror(errno));
 
-            s->next = args->ctx->ng_session;
-            args->ctx->ng_session = s;
+            add_session(args->ctx, s);
         } else {
             log_android(ANDROID_LOG_WARN, "%s unknown session", tcp_packet_text(&diagnostic));
 

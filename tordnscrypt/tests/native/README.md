@@ -20,6 +20,13 @@ shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
 They also inject allocation, mutex, pipe, and descriptor-configuration failures;
 check initialization retry and partial-session cleanup; preserve TCP queues on
 allocation failure; and exercise bounded logging and JNI exception-reporting failures.
+Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
+cleanup list, with one additional link per record and no index allocations.
+Tests cover both address families, ports and echo IDs, IPv4 union padding,
+unaligned query addresses, newest-duplicate ordering, stopped ICMP filtering,
+closed/blocked flow lookup, policy removal, expiry, blocked-record reuse,
+eviction, collisions, 2,560-record churn, teardown and context reuse. Broader UID
+restoration matching and oldest-blocked-flow selection still use the cleanup list.
 TCP queues enforce a 256 KiB payload budget and a 1024-segment metadata limit per
 session. Tests cover receive-window boundaries, sequence wraparound, and shorter
 or longer retransmissions after partial sends, including forwarding through a real socket.
@@ -198,7 +205,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 181 tests plus the optional comparison test.
+The full run contains 185 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

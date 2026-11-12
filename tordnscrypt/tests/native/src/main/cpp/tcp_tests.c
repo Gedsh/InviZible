@@ -381,7 +381,7 @@ void test_tcp_buffer_reuse(const struct arguments *args) {
         memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
         memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
         s.tcp.source = tcp->source; s.tcp.dest = tcp->dest;
-        args->ctx->ng_session = &s;
+        set_test_sessions(args->ctx, &s);
         assert(handle_tcp(&running, packet, off + 24, packet + off, own_uid, 1, NULL, -1) == 1);
         assert(s.tcp.forward != NULL && s.tcp.forward->data != packet + off + 20);
         packet = get_packet_buffer(&running, PACKET_INPUT, 4096, "tcp test input");
@@ -412,7 +412,7 @@ void test_tcp_buffer_reuse(const struct arguments *args) {
         }
         assert(s.tcp.local_seq == 2000 + 17 + 1200 + 3 && s.tcp.remote_seq == 1004);
         clear_packet_buffers(&buffers);
-        args->ctx->ng_session = NULL;
+        set_test_sessions(args->ctx, NULL);
         close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
     }
@@ -442,7 +442,7 @@ void test_lazy_tcp_logging(const struct arguments *args) {
         s.tcp.recv_window = s.tcp.send_window = 16000;
         memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
         memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
-        args->ctx->ng_session = &s;
+        set_test_sessions(args->ctx, &s);
         address_formats = 0;
         assert(check_tcp_session(&running, &s, 0, SESSION_MAX) == 0);
         handle_ip(&running, packet, off + 20, -1, 0, SESSION_MAX);
@@ -462,7 +462,7 @@ void test_lazy_tcp_logging(const struct arguments *args) {
         assert(strstr(last_log, "uid 12345 ESTABLISHED loc 1900 rem 500 acked 1900 future ACK") != NULL);
         assert(s.tcp.state == TCP_CLOSING);
         tun_packet(tunnel[0], output, version, IPPROTO_TCP);
-        args->ctx->ng_session = NULL;
+        set_test_sessions(args->ctx, NULL);
     }
     close(tunnel[0]); close(tunnel[1]);
 #endif
@@ -855,7 +855,7 @@ void test_tcp_backpressure(const struct arguments *args, int kind) {
         s.tcp.source = header->source; s.tcp.dest = header->dest;
         memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
         memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
-        args->ctx->ng_session = &s;
+        set_test_sessions(args->ctx, &s);
         struct epoll_event ready;
         if (kind == 0) {
             tcp_test_clock = 100000;
@@ -948,7 +948,7 @@ void test_tcp_backpressure(const struct arguments *args, int kind) {
             assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
             assert(!(s.ev.events & EPOLLOUT) && epoll_wait(epoll_fd, &ready, 1, 0) == 0);
         }
-        args->ctx->ng_session = NULL;
+        set_test_sessions(args->ctx, NULL);
         close(epoll_fd); close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
     }
@@ -1341,7 +1341,6 @@ void test_tcp_dns_buffer(int kind) {
         struct packet_buffers buffers = {0};
         args.buffers = reuse ? &buffers : NULL;
         struct ng_session *s = ng_calloc(1, sizeof(*s), "test DNS session");
-        ctx.ng_session = s;
         s->protocol = IPPROTO_TCP; s->socket = stream[0];
         s->tcp.version = version; s->tcp.state = TCP_ESTABLISHED;
         s->tcp.source = htons(12345); s->tcp.dest = htons(53);
@@ -1353,6 +1352,7 @@ void test_tcp_dns_buffer(int kind) {
         s->tcp.recv_window = s->tcp.send_window = 16000;
         s->tcp.local_seq = s->tcp.acked = 2000; s->tcp.remote_seq = 1000;
         s->tcp.time = time(NULL);
+        set_test_sessions(&ctx, s);
         struct epoll_event event = {.events = EPOLLIN, .data.ptr = s};
         uint8_t *input = calloc(1, 65537), *output = malloc(65537);
         assert(input != NULL && output != NULL);
@@ -1508,7 +1508,7 @@ void test_tcp_half_close(int kind) {
             version == 4 ? "10.0.0.2" : "2001:db8::1", &s.tcp.saddr) == 1);
     assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
             version == 4 ? "203.0.113.2" : "2001:db8::2", &s.tcp.daddr) == 1);
-    ctx.ng_session = &s;
+    set_test_sessions(&ctx, &s);
     int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
     assert(epoll_fd >= 0);
     s.ev.events = EPOLLIN | EPOLLERR;
@@ -1653,7 +1653,7 @@ void test_tcp_half_close(int kind) {
     // before closing the other fixtures, with no intervening descriptor reuse.
     assert(__real_fcntl(stream[0], F_GETFD) == -1 && errno == EBADF);
     assert(allocations == 0 && sockets == 0);
-    ctx.ng_session = NULL;
+    set_test_sessions(&ctx, NULL);
     close(epoll_fd); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
 #endif
 }

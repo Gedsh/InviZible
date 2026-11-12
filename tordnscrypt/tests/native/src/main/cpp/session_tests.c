@@ -1,5 +1,191 @@
 #include "test_support.h"
 
+#ifndef INVIZIBLE_BASELINE_TESTS
+static void index_key(struct ng_session *s, int version, int protocol, uint16_t id) {
+    s->protocol = protocol;
+    s->socket = -1;
+    uint8_t source[16], dest[16];
+    memset(source, 0xa5, sizeof(source));
+    memset(dest, 0x5a, sizeof(dest));
+    assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                     version == 4 ? "10.1.10.1" : "2001:db8::1", source) == 1);
+    assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                     version == 4 ? "192.0.2.1" : "2001:db8::2", dest) == 1);
+    if (protocol == IPPROTO_TCP) {
+        s->tcp.version = version; s->tcp.source = htons(id); s->tcp.dest = htons(443);
+        memcpy(&s->tcp.saddr, source, 16); memcpy(&s->tcp.daddr, dest, 16);
+    } else if (protocol == IPPROTO_UDP) {
+        s->udp.version = version; s->udp.source = htons(id); s->udp.dest = htons(443);
+        memcpy(&s->udp.saddr, source, 16); memcpy(&s->udp.daddr, dest, 16);
+    } else {
+        s->icmp.version = version; s->icmp.id = htons(id);
+        memcpy(&s->icmp.saddr, source, 16); memcpy(&s->icmp.daddr, dest, 16);
+    }
+}
+
+static struct ng_session *index_lookup(const struct context *ctx, const struct ng_session *s) {
+    if (s->protocol == IPPROTO_TCP)
+        return find_session(ctx, s->tcp.version, s->protocol, &s->tcp.saddr,
+                            s->tcp.source, &s->tcp.daddr, s->tcp.dest);
+    if (s->protocol == IPPROTO_UDP)
+        return find_session(ctx, s->udp.version, s->protocol, &s->udp.saddr,
+                            s->udp.source, &s->udp.daddr, s->udp.dest);
+    return find_session(ctx, s->icmp.version, s->protocol, &s->icmp.saddr,
+                        s->icmp.id, &s->icmp.daddr, 0);
+}
+
+static void index_delete(struct context *ctx, struct ng_session *s) {
+    struct ng_session **link = &ctx->ng_session;
+    while (*link != NULL && *link != s) link = &(*link)->next;
+    assert(*link == s);
+    unindex_session(ctx, s);
+    *link = s->next;
+    ng_free(s, __FILE__, __LINE__);
+}
+
+static void assert_index_empty(const struct context *ctx) {
+    assert(ctx->ng_session == NULL);
+    for (size_t i = 0; i < SESSION_BUCKETS; i++) assert(ctx->session_bucket[i] == NULL);
+}
+#endif
+
+void test_session_index_keys(struct arguments *args, int version) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    struct ng_session tcp = {0}, udp = {0}, icmp = {0};
+    int icmp_protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+    index_key(&tcp, version, IPPROTO_TCP, 12345);
+    index_key(&udp, version, IPPROTO_UDP, 12345);
+    index_key(&icmp, version, icmp_protocol, 12345);
+    add_session(args->ctx, &tcp); add_session(args->ctx, &udp); add_session(args->ctx, &icmp);
+    assert(index_lookup(args->ctx, &tcp) == &tcp && index_lookup(args->ctx, &udp) == &udp);
+    assert(index_lookup(args->ctx, &icmp) == &icmp);
+    uint8_t unaligned_source[17], unaligned_dest[17];
+    memcpy(unaligned_source + 1, &tcp.tcp.saddr, 16);
+    memcpy(unaligned_dest + 1, &tcp.tcp.daddr, 16);
+    assert(find_session(args->ctx, version, IPPROTO_TCP, unaligned_source + 1, tcp.tcp.source,
+                         unaligned_dest + 1, tcp.tcp.dest) == &tcp);
+    struct ng_session miss = tcp;
+    miss.tcp.source ^= htons(1); assert(index_lookup(args->ctx, &miss) == NULL);
+    miss = tcp; miss.tcp.dest ^= htons(1); assert(index_lookup(args->ctx, &miss) == NULL);
+    miss = tcp; ((uint8_t *) &miss.tcp.saddr)[version == 4 ? 3 : 15] ^= 1;
+    assert(index_lookup(args->ctx, &miss) == NULL);
+    miss = tcp; ((uint8_t *) &miss.tcp.daddr)[version == 4 ? 3 : 15] ^= 1;
+    assert(index_lookup(args->ctx, &miss) == NULL);
+    miss = tcp; miss.tcp.version = version == 4 ? 6 : 4;
+    assert(index_lookup(args->ctx, &miss) == NULL);
+    if (version == 4) {
+        miss = tcp;
+        memset((uint8_t *) &miss.tcp.saddr + 4, 0, 12);
+        memset((uint8_t *) &miss.tcp.daddr + 4, 0, 12);
+        assert(index_lookup(args->ctx, &miss) == &tcp); // IPv4 union padding is not part of the key.
+    }
+    const int tcp_states[] = {TCP_LISTEN, TCP_ESTABLISHED, TCP_CLOSING, TCP_CLOSE};
+    for (size_t i = 0; i < sizeof(tcp_states) / sizeof(*tcp_states); i++) {
+        tcp.tcp.state = tcp_states[i]; assert(index_lookup(args->ctx, &tcp) == &tcp);
+    }
+    const int udp_states[] = {UDP_ACTIVE, UDP_FINISHING, UDP_CLOSED, UDP_BLOCKED};
+    for (size_t i = 0; i < sizeof(udp_states) / sizeof(*udp_states); i++) {
+        udp.udp.state = udp_states[i]; assert(index_lookup(args->ctx, &udp) == &udp);
+    }
+    struct ng_session duplicate = tcp;
+    add_session(args->ctx, &duplicate);
+    assert(index_lookup(args->ctx, &tcp) == &duplicate);
+    unindex_session(args->ctx, &duplicate); args->ctx->ng_session = duplicate.next;
+    assert(index_lookup(args->ctx, &tcp) == &tcp);
+    struct ng_session stopped = icmp;
+    stopped.icmp.stop = 1; add_session(args->ctx, &stopped);
+    assert(index_lookup(args->ctx, &icmp) == &icmp); // Skip a newer stopped echo session.
+    icmp.icmp.stop = 1; assert(index_lookup(args->ctx, &icmp) == NULL);
+    miss = icmp; miss.icmp.id ^= htons(1); assert(index_lookup(args->ctx, &miss) == NULL);
+    icmp.icmp.stop = 0;
+    // Reuse a blocked record for another tuple only after unlinking its old key.
+    struct ng_session old = udp;
+    unindex_session(args->ctx, &udp);
+    icmp.next = udp.next; // Remove UDP from the cleanup chain before reinserting.
+    udp.udp.source = htons(54321);
+    add_session(args->ctx, &udp);
+    assert(index_lookup(args->ctx, &old) == NULL && index_lookup(args->ctx, &udp) == &udp);
+    set_test_sessions(args->ctx, NULL); // Stack records have no owned payload/socket.
+    assert_index_empty(args->ctx);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
+void test_session_index_policy(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    struct ng_session *closed = ng_calloc(1, sizeof(*closed), "closed index anchor");
+    assert(closed != NULL); index_key(closed, 4, IPPROTO_TCP, 1234);
+    closed->tcp.state = TCP_CLOSE; add_session(args->ctx, closed);
+    struct ng_session key[2] = {0};
+    for (int i = 0; i < 2; i++) {
+        struct ng_session *blocked = ng_calloc(1, sizeof(*blocked), "blocked index policy");
+        assert(blocked != NULL); index_key(blocked, i == 0 ? 4 : 6, IPPROTO_UDP, 1235 + i);
+        blocked->udp.state = UDP_BLOCKED; key[i] = *blocked;
+        add_session(args->ctx, blocked);
+    }
+    check_allowed(args);
+    assert(args->ctx->ng_session == closed && closed->next == NULL);
+    for (int i = 0; i < 2; i++) assert(index_lookup(args->ctx, &key[i]) == NULL);
+    assert(index_lookup(args->ctx, closed) == closed);
+    assert_test_session_index(args->ctx);
+    clear(args->ctx); assert_index_empty(args->ctx);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
+void test_session_index_churn(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    const int count = 2560;
+    struct ng_session **records = calloc(count, sizeof(*records));
+    assert(records != NULL);
+    for (int i = 0; i < count; i++) {
+        records[i] = ng_calloc(1, sizeof(**records), "indexed session");
+        assert(records[i] != NULL);
+        int version = i % 2 == 0 ? 4 : 6;
+        int protocol = i % 3 == 0 ? IPPROTO_TCP : i % 3 == 1 ? IPPROTO_UDP
+                                        : version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        index_key(records[i], version, protocol, 1000 + i);
+        add_session(args->ctx, records[i]);
+    }
+    unsigned int total = 0, max_bucket = 0;
+    for (size_t bucket = 0; bucket < SESSION_BUCKETS; bucket++) {
+        unsigned int length = 0;
+        for (struct ng_session *s = args->ctx->session_bucket[bucket]; s; s = s->hash_next) {
+            assert(++length <= count); total++;
+        }
+        if (length > max_bucket) max_bucket = length;
+    }
+    assert(total == count && max_bucket > 1 && max_bucket <= 32);
+    for (int i = 0; i < count; i++) assert(index_lookup(args->ctx, records[i]) == records[i]);
+    // Remove every other key, checking collision-chain unlinking and reuse of
+    // reclaimed allocations. Surviving keys must keep their original records.
+    for (int i = 0; i < count; i += 2) {
+        struct ng_session key = *records[i];
+        index_delete(args->ctx, records[i]); records[i] = NULL;
+        assert(index_lookup(args->ctx, &key) == NULL);
+    }
+    for (int i = 1; i < count; i += 2) assert(index_lookup(args->ctx, records[i]) == records[i]);
+    for (int i = 0; i < count; i += 2) {
+        records[i] = ng_calloc(1, sizeof(**records), "reused indexed session");
+        assert(records[i] != NULL);
+        int protocol = i % 3 == 0 ? IPPROTO_TCP : i % 3 == 1 ? IPPROTO_UDP : IPPROTO_ICMP;
+        index_key(records[i], 4, protocol, 1000 + i);
+        add_session(args->ctx, records[i]);
+    }
+    for (int i = 0; i < count; i++) assert(index_lookup(args->ctx, records[i]) == records[i]);
+    clear(args->ctx); assert_index_empty(args->ctx);
+    assert(allocations == 0);
+    struct ng_session key = {0}; index_key(&key, 4, IPPROTO_TCP, 1000);
+    assert(index_lookup(args->ctx, &key) == NULL);
+    struct ng_session *fresh = ng_calloc(1, sizeof(*fresh), "restarted index");
+    assert(fresh != NULL); index_key(fresh, 4, IPPROTO_TCP, 1000);
+    add_session(args->ctx, fresh); assert(index_lookup(args->ctx, &key) == fresh);
+    clear(args->ctx); clear(args->ctx); assert_index_empty(args->ctx);
+    free(records);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
 static struct context *idle_context;
 static struct ng_session *idle_sessions;
 static long long idle_clock;
@@ -36,7 +222,7 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
         memory_polls++;
         if (memory_polls == 1) {
             assert(memory_context->ng_session == NULL);
-            memory_context->ng_session = memory_sessions;
+            set_test_sessions(memory_context, memory_sessions);
             assert(epoll_ctl(fd, EPOLL_CTL_ADD, memory_sessions->socket, &memory_sessions->ev) == 0);
             tcp_test_clock += EPOLL_MIN_CHECK + 1;
         } else if (memory_polls == 2) {
@@ -57,7 +243,7 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
         probe_polls++;
         if (probe_polls == 1) {
             assert(probe_context->ng_session == NULL);
-            probe_context->ng_session = probe_sessions;
+            set_test_sessions(probe_context, probe_sessions);
             tcp_test_clock += EPOLL_MIN_CHECK + 1;
             for (struct ng_session *s = probe_sessions; s != NULL; s = s->next)
                 s->tcp.last_keep_alive = tcp_test_clock;
@@ -103,7 +289,7 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
     if (idle_polls == 1) {
         // Introduce sessions after startup's policy check, as traffic would.
         assert(idle_context->ng_session == NULL);
-        idle_context->ng_session = idle_sessions;
+        set_test_sessions(idle_context, idle_sessions);
         idle_sessions = NULL;
     } else if (idle_polls == 2) {
         idle_timeout = timeout;
@@ -117,6 +303,7 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
         }
     } else {
         assert(idle_polls == 3 && idle_context->ng_session == NULL);
+        assert_test_session_index(idle_context);
         idle_context->stopping = 1;
     }
     return 0;
@@ -270,7 +457,7 @@ static struct ng_session *closed_record(int closing) {
 static void poll_closed_cache(void) {
     if (idle_polls == 1) {
         assert(idle_context->ng_session == NULL);
-        idle_context->ng_session = idle_sessions;
+        set_test_sessions(idle_context, idle_sessions);
         idle_sessions = NULL;
         return;
     }
@@ -299,6 +486,7 @@ static void poll_closed_cache(void) {
         }
     }
     assert(closed == SESSION_CLOSED_MAX && active == 1 && blocked == 1);
+    assert_test_session_index(idle_context);
     assert(allocations == SESSION_CLOSED_MAX + 3); // Records plus loop arguments.
     assert(accounted_sent == cache_uid && accounted_received == 2 * cache_uid);
     assert(sockets == 0);
@@ -308,7 +496,7 @@ static void poll_closed_cache(void) {
         for (int i = 0; i < 64; i++) {
             struct ng_session *s = closed_record(0);
             s->next = idle_context->ng_session;
-            idle_context->ng_session = s;
+            set_test_sessions(idle_context, s);
         }
     } else
         idle_context->stopping = 1;

@@ -206,16 +206,9 @@ jboolean handle_icmp(const struct arguments *args,
     struct log_address dest = {.version = version, .address = version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst};
 
     // Search session
-    struct ng_session *cur = args->ctx->ng_session;
-    while (cur != NULL &&
-           !((cur->protocol == IPPROTO_ICMP || cur->protocol == IPPROTO_ICMPV6) &&
-             !cur->icmp.stop && cur->icmp.version == version &&
-             cur->icmp.id == icmp->icmp_id &&
-             (version == 4 ? cur->icmp.saddr.ip4 == ip4->saddr &&
-                             cur->icmp.daddr.ip4 == ip4->daddr
-                           : memcmp(&cur->icmp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
-                             memcmp(&cur->icmp.daddr.ip6, &ip6->ip6_dst, 16) == 0)))
-        cur = cur->next;
+    struct ng_session *cur = find_session(args->ctx, version, IPPROTO_ICMP,
+            version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src, icmp->icmp_id,
+            version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst, 0);
 
     // Create new session if needed
     if (cur == NULL) {
@@ -260,8 +253,7 @@ jboolean handle_icmp(const struct arguments *args,
         if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev))
             log_android(ANDROID_LOG_ERROR, "epoll add icmp error %d: %s", errno, strerror(errno));
 
-        s->next = args->ctx->ng_session;
-        args->ctx->ng_session = s;
+        add_session(args->ctx, s);
 
         cur = s;
     }

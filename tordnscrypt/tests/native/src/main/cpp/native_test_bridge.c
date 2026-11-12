@@ -25,7 +25,15 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "tcpScaledCapacity4") == 0)
+    if (strcmp(id, "sessionIndex4") == 0)
+        test_session_index_keys(&args, 4);
+    else if (strcmp(id, "sessionIndex6") == 0)
+        test_session_index_keys(&args, 6);
+    else if (strcmp(id, "sessionIndexChurn") == 0)
+        test_session_index_churn(&args);
+    else if (strcmp(id, "sessionIndexPolicy") == 0)
+        test_session_index_policy(&args);
+    else if (strcmp(id, "tcpScaledCapacity4") == 0)
         test_tcp_scaled_capacity(&args, 4);
     else if (strcmp(id, "tcpScaledCapacity6") == 0)
         test_tcp_scaled_capacity(&args, 6);
@@ -329,6 +337,7 @@ static const char *run_case(const char *id) {
     assert(allocations == 0 && sockets == 0 && string_refs == 0);
 #ifndef INVIZIBLE_BASELINE_TESTS
     assert(ctx.tcp_memory.queued == 0 && ctx.tcp_memory.nodes == 0 && ctx.tcp_memory.dns == 0);
+    for (size_t i = 0; i < SESSION_BUCKETS; i++) assert(ctx.session_bucket[i] == NULL);
 #endif
     return NULL;
 }

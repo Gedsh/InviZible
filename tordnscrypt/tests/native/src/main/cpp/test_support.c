@@ -512,6 +512,45 @@ size_t ip_header(uint8_t *packet, int version, int protocol, size_t data_len,
     return off;
 }
 
+// Fixtures may supply stack records or a prebuilt list. Publish fully initialized
+// keys through the same insertion path as production, in the original list order.
+void set_test_sessions(struct context *ctx, struct ng_session *head) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    memset(ctx->session_bucket, 0, sizeof(ctx->session_bucket));
+    ctx->ng_session = NULL;
+    struct ng_session *reversed = NULL;
+    while (head != NULL) {
+        struct ng_session *next = head->next;
+        head->next = reversed;
+        reversed = head;
+        head = next;
+    }
+    while (reversed != NULL) {
+        struct ng_session *next = reversed->next;
+        add_session(ctx, reversed);
+        reversed = next;
+    }
+#else
+    ctx->ng_session = head;
+#endif
+}
+
+void assert_test_session_index(const struct context *ctx) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    size_t listed = 0, indexed = 0;
+    for (const struct ng_session *s = ctx->ng_session; s; s = s->next) listed++;
+    for (size_t i = 0; i < SESSION_BUCKETS; i++) {
+        for (const struct ng_session *s = ctx->session_bucket[i]; s; s = s->hash_next) {
+            assert(++indexed <= listed); // Also detect cycles.
+            const struct ng_session *live = ctx->ng_session;
+            while (live != NULL && live != s) live = live->next;
+            assert(live != NULL); // Check membership before dereferencing a possibly freed record.
+        }
+    }
+    assert(indexed == listed);
+#endif
+}
+
 void reset_test_state(void) {
     tcp_sendbuf_queries = tcp_outq_queries = 0;
     tcp_capacity_fd = -1;

@@ -21,21 +21,116 @@
 
 #include "invizible.h"
 
+struct session_key {
+    const void *source;
+    const void *dest;
+    uint16_t sport;
+    uint16_t dport;
+    uint8_t version;
+    uint8_t protocol;
+};
+
+static bool session_key(const struct ng_session *s, struct session_key *key) {
+    key->protocol = s->protocol;
+    if (s->protocol == IPPROTO_TCP) {
+        key->version = s->tcp.version;
+        key->source = &s->tcp.saddr;
+        key->dest = &s->tcp.daddr;
+        key->sport = s->tcp.source;
+        key->dport = s->tcp.dest;
+    } else if (s->protocol == IPPROTO_UDP) {
+        key->version = s->udp.version;
+        key->source = &s->udp.saddr;
+        key->dest = &s->udp.daddr;
+        key->sport = s->udp.source;
+        key->dport = s->udp.dest;
+    } else if (s->protocol == IPPROTO_ICMP || s->protocol == IPPROTO_ICMPV6) {
+        // Historical ICMP matching uses the family, addresses and original ID.
+        key->protocol = IPPROTO_ICMP;
+        key->version = s->icmp.version;
+        key->source = &s->icmp.saddr;
+        key->dest = &s->icmp.daddr;
+        key->sport = s->icmp.id;
+        key->dport = 0;
+    } else
+        return false;
+    return true;
+}
+
+static unsigned int session_bucket(const struct session_key *key) {
+    uint32_t hash = 2166136261u ^ key->protocol ^ ((uint32_t) key->version << 8);
+    for (size_t off = 0; off < (key->version == 4 ? 4 : 16); off += 4) {
+        uint32_t source, dest;
+        // Packet headers need not be aligned; never load them through uint32_t*.
+        memcpy(&source, (const uint8_t *) key->source + off, sizeof(source));
+        memcpy(&dest, (const uint8_t *) key->dest + off, sizeof(dest));
+        hash = (hash ^ source) * 16777619u;
+        hash = (hash ^ dest) * 16777619u;
+    }
+    hash = (hash ^ (((uint32_t) key->sport << 16) | key->dport)) * 16777619u;
+    hash ^= hash >> 16;
+    hash *= 0x85ebca6bu;
+    hash ^= hash >> 13;
+    return hash & (SESSION_BUCKETS - 1);
+}
+
+struct ng_session *find_session(const struct context *ctx, uint8_t version, uint8_t protocol,
+                                const void *source, uint16_t sport,
+                                const void *dest, uint16_t dport) {
+    if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) {
+        protocol = IPPROTO_ICMP;
+        dport = 0;
+    }
+    struct session_key key = {.source = source, .dest = dest, .sport = sport, .dport = dport,
+                               .version = version, .protocol = protocol};
+    size_t length = version == 4 ? 4 : 16;
+    for (struct ng_session *s = ctx->session_bucket[session_bucket(&key)]; s != NULL;
+         s = s->hash_next) {
+        struct session_key candidate;
+        if (session_key(s, &candidate) && candidate.protocol == protocol &&
+            candidate.version == version && candidate.sport == sport && candidate.dport == dport &&
+            (protocol != IPPROTO_ICMP || !s->icmp.stop) &&
+            memcmp(candidate.source, source, length) == 0 &&
+            memcmp(candidate.dest, dest, length) == 0)
+            return s;
+    }
+    return NULL;
+}
+
+void add_session(struct context *ctx, struct ng_session *s) {
+    struct session_key key;
+    s->hash_next = NULL;
+    if (session_key(s, &key)) {
+        unsigned int bucket = session_bucket(&key);
+        s->hash_next = ctx->session_bucket[bucket];
+        ctx->session_bucket[bucket] = s;
+    }
+    // Both chains put newer duplicates first, preserving list lookup behavior.
+    s->next = ctx->ng_session;
+    ctx->ng_session = s;
+}
+
+void unindex_session(struct context *ctx, struct ng_session *s) {
+    struct session_key key;
+    if (!session_key(s, &key))
+        return;
+    struct ng_session **link = &ctx->session_bucket[session_bucket(&key)];
+    while (*link != NULL && *link != s)
+        link = &(*link)->hash_next;
+    if (*link != NULL)
+        *link = s->hash_next;
+    s->hash_next = NULL;
+}
+
 struct ng_session *find_udp_session(const struct arguments *args, const uint8_t *pkt,
                                     const uint8_t *payload) {
     const uint8_t version = pkt[0] >> 4;
     const struct iphdr *ip4 = (const struct iphdr *) pkt;
     const struct ip6_hdr *ip6 = (const struct ip6_hdr *) pkt;
     const struct udphdr *udp = (const struct udphdr *) payload;
-    struct ng_session *cur = args->ctx->ng_session;
-    while (cur != NULL &&
-           !(cur->protocol == IPPROTO_UDP && cur->udp.version == version &&
-             cur->udp.source == udp->source && cur->udp.dest == udp->dest &&
-             (version == 4 ? cur->udp.saddr.ip4 == ip4->saddr && cur->udp.daddr.ip4 == ip4->daddr
-                           : memcmp(&cur->udp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
-                             memcmp(&cur->udp.daddr.ip6, &ip6->ip6_dst, 16) == 0)))
-        cur = cur->next;
-    return cur;
+    return find_session(args->ctx, version, IPPROTO_UDP,
+                        version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src, udp->source,
+                        version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst, udp->dest);
 }
 
 void clear(struct context *ctx) {
@@ -51,6 +146,7 @@ void clear(struct context *ctx) {
         ng_free(p, __FILE__, __LINE__);
     }
     ctx->ng_session = NULL;
+    memset(ctx->session_bucket, 0, sizeof(ctx->session_bucket));
 }
 
 void *handle_events(void *a) {
@@ -195,6 +291,7 @@ void *handle_events(void *a) {
                 }
 
                 if (del) {
+                    unindex_session(args->ctx, s);
                     if (sl == NULL)
                         args->ctx->ng_session = s->next;
                     else
@@ -392,6 +489,7 @@ void check_allowed(const struct arguments *args) {
             } else if (s->udp.state == UDP_BLOCKED) {
                 log_android(ANDROID_LOG_WARN, "UDP remove blocked session uid %d", s->udp.uid);
 
+                unindex_session(args->ctx, s);
                 if (l == NULL)
                     args->ctx->ng_session = s->next;
                 else

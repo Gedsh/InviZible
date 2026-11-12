@@ -91,6 +91,7 @@
 #define SESSION_LIMIT 40 // percent
 #define SESSION_MAX (1024 * SESSION_LIMIT / 100) // number
 #define SESSION_CLOSED_MAX 1024 // retained closed TCP/UDP records, independent of active/blocked limits
+#define SESSION_BUCKETS 1024 // fixed exact-flow index; no per-entry allocation
 
 #define SEND_BUF_DEFAULT 163840 // bytes
 
@@ -131,6 +132,7 @@ struct context {
     atomic_int stopping;
     int sdk;
     struct ng_session *ng_session;
+    struct ng_session *session_bucket[SESSION_BUCKETS];
     struct tcp_memory tcp_memory;
 };
 
@@ -290,6 +292,7 @@ struct ng_session {
     jint socket;
     struct epoll_event ev;
     struct ng_session *next;
+    struct ng_session *hash_next; // Exact-flow bucket; independent of cleanup order.
 };
 
 struct uid_cache_entry {
@@ -506,6 +509,13 @@ int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint
 
 struct ng_session *find_udp_session(const struct arguments *args, const uint8_t *pkt,
                                     const uint8_t *payload);
+struct ng_session *find_session(const struct context *ctx, uint8_t version, uint8_t protocol,
+                                const void *source, uint16_t sport,
+                                const void *dest, uint16_t dport);
+// Publish initialized keys once; unindex before changing a tuple or freeing a
+// record. Callers retain the cleanup-list unlinking and context ownership rules.
+void add_session(struct context *ctx, struct ng_session *session);
+void unindex_session(struct context *ctx, struct ng_session *session);
 
 // A non-NULL lookup records a completed search, including a NULL (missing) session.
 // Valid only while processing this packet on the event thread under ctx->lock.
