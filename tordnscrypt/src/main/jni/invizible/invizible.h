@@ -242,6 +242,8 @@ struct tcp_session {
     uint32_t acked; // host notation
     long long last_keep_alive;
     int window_probe_interval; // milliseconds; zero when the app window is open
+    bool monitor_dirty; // Packet/socket processing changed this flow.
+    bool monitor_initialized;
 
     uint64_t sent;
     uint64_t received;

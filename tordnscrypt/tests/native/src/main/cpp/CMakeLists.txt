@@ -29,7 +29,7 @@ function(add_native_tests target source)
             get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
             epoll_wait get_ms pipe pthread_mutex_init inet_ntop getsockopt ioctl)
     if("${source}" STREQUAL "${INVIZIBLE_SOURCE}")
-        list(APPEND wraps find_udp_session handle_udp_with_lookup)
+        list(APPEND wraps find_udp_session handle_udp_with_lookup monitor_tcp_session)
     endif()
     if(ANDROID_ABI STREQUAL "x86_64")
         list(APPEND wraps calc_checksum)

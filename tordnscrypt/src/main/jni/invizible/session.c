@@ -99,6 +99,8 @@ struct ng_session *find_session(const struct context *ctx, uint8_t version, uint
 
 void add_session(struct context *ctx, struct ng_session *s) {
     struct session_key key;
+    if (s->protocol == IPPROTO_TCP)
+        s->tcp.monitor_initialized = false;
     s->hash_next = NULL;
     if (session_key(s, &key)) {
         unsigned int bucket = session_bucket(&key);
@@ -147,6 +149,34 @@ void clear(struct context *ctx) {
     }
     ctx->ng_session = NULL;
     memset(ctx->session_bucket, 0, sizeof(ctx->session_bucket));
+}
+
+static long long refresh_tcp_monitor(const struct arguments *args, struct ng_session *s,
+                                     int epoll_fd, long long now) {
+    struct tcp_session *tcp = &s->tcp;
+    bool memory_changed = tcp->memory != NULL &&
+            ((tcp->memory_waiting && tcp->memory_generation != tcp->memory->generation) ||
+             (tcp->dns_waiting && tcp->dns_memory_generation != tcp->memory->dns_generation));
+    // Buffered DNS output can make progress on every event batch, even when
+    // unrelated traffic wakes the loop before its fallback deadline.
+    bool dns_output = tcp->dns_response_ready && !tcp->upstream_eof &&
+            (tcp->state == TCP_ESTABLISHED || tcp->state == TCP_CLOSE_WAIT) &&
+            get_send_window(tcp) > 0;
+    // Reuse the probe's existing absolute deadline instead of storing another
+    // timestamp in every TCP/UDP/ICMP record (which share the same union).
+    long long deadline = 0;
+    if (tcp->window_probe_interval > 0 && !tcp->upstream_eof &&
+        (tcp->state == TCP_ESTABLISHED || tcp->state == TCP_CLOSE_WAIT ||
+         tcp->state == TCP_FIN_WAIT1 || tcp->state == TCP_FIN_WAIT2))
+        deadline = tcp->last_keep_alive + tcp->window_probe_interval;
+    if (!tcp->monitor_initialized || tcp->monitor_dirty || memory_changed || dns_output ||
+        (deadline != 0 && deadline <= now)) {
+        tcp->monitor_dirty = false;
+        tcp->monitor_initialized = true;
+        int wait = monitor_tcp_session(args, s, epoll_fd);
+        return wait > 0 ? now + wait : 0;
+    }
+    return deadline;
 }
 
 void *handle_events(void *a) {
@@ -209,8 +239,9 @@ void *handle_events(void *a) {
         log_android(ANDROID_LOG_DEBUG, "Loop");
 
         int recheck = 0;
-        int tcp_wait = 0;
+        long long tcp_deadline = 0;
         int timeout = EPOLL_TIMEOUT;
+        long long ms = get_ms();
         uint64_t memory_generation = args->ctx->tcp_memory.generation;
         uint64_t dns_memory_generation = args->ctx->tcp_memory.dns_generation;
         bool memory_waiting = false, dns_waiting = false;
@@ -231,9 +262,9 @@ void *handle_events(void *a) {
                 if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE)
                     tsessions++;
                 if (s->socket >= 0) {
-                    int wait = monitor_tcp_session(args, s, epoll_fd);
-                    if (wait > 0 && (tcp_wait == 0 || wait < tcp_wait))
-                        tcp_wait = wait;
+                    long long deadline = refresh_tcp_monitor(args, s, epoll_fd, ms);
+                    if (deadline > 0 && (tcp_deadline == 0 || deadline < tcp_deadline))
+                        tcp_deadline = deadline;
                     if (s->tcp.state != TCP_LISTEN && s->tcp.state != TCP_CLOSING &&
                         s->tcp.state != TCP_CLOSE) {
                         if (s->tcp.memory_waiting && !s->tcp.fin_acked && s->tcp.recv_window == 0) {
@@ -254,7 +285,6 @@ void *handle_events(void *a) {
         int sessions = isessions + usessions + tsessions;
 
         // Check sessions
-        long long ms = get_ms();
         if (ms - last_check > EPOLL_MIN_CHECK) {
             last_check = ms;
 
@@ -339,8 +369,14 @@ void *handle_events(void *a) {
             recheck = 1;
         struct epoll_event ev[EPOLL_EVENTS];
         int wait = recheck ? EPOLL_MIN_CHECK : timeout * 1000;
-        if (tcp_wait > 0 && tcp_wait < wait)
-            wait = tcp_wait;
+        if (tcp_deadline > 0) {
+            // Monitoring/cleanup time must not extend an existing deadline.
+            long long remaining = tcp_deadline - get_ms();
+            if (remaining <= 0)
+                wait = 0;
+            else if (remaining < wait)
+                wait = (int) remaining;
+        }
         int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS,
                                wait);
 
@@ -518,6 +554,8 @@ void check_allowed(const struct arguments *args) {
             }
 
         } else if (s->protocol == IPPROTO_TCP) {
+            // A restarted event loop must rebuild monitoring decisions.
+            s->tcp.monitor_initialized = false;
             if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE) {
                 if (s->tcp.version == 4) {
                     inet_ntop(AF_INET, &s->tcp.saddr.ip4, source, sizeof(source));

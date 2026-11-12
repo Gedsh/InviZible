@@ -13,6 +13,8 @@ public final class SessionTest extends NativeTestSupport {
     @Test public void indexHandlesCollisionsRemovalChurnAndContextReuse() { check("sessionIndexChurn"); }
     @Test public void policyReloadRemovesBlockedKeysAndKeepsClosedTcpLookup() { check("sessionIndexPolicy"); }
     @Test public void cleanupReleasesBudgetAndRescansEarlierBlockedFlowsOnce() { check("tcpMemoryRescan"); }
+    @Test public void unchangedFlowsSkipMonitoringAndPacketAndSocketEventsRefreshOneFlow() { check("tcpMonitorCache"); }
+    @Test public void bufferedDnsKeepsDrainingBeforeFallbackDeadline() { check("tcpMonitorDnsOutput"); }
     @Test public void cleanupWithoutMemoryWaitersDoesNotRescan() { check("tcpMemoryNoWaiters"); }
     @Test public void dnsReleaseDoesNotRescanQueueWaiters() { check("tcpMemoryQueueWaitDnsRelease"); }
     @Test public void queueReleaseDoesNotRescanDnsWaiters() { check("tcpMemoryDnsWaitQueueRelease"); }

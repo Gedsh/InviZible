@@ -29,6 +29,7 @@ void test_tcp_capacity_reuse(const struct arguments *args);
 void test_tcp_memory_budget(const struct arguments *args, int kind);
 void test_tcp_memory_wakeup(const struct arguments *args);
 void test_tcp_memory_rescan(struct arguments *args, int kind);
+void test_tcp_monitor_cache(struct arguments *args, int kind);
 void test_tcp_dns_memory(int kind);
 extern int udp_lookups, uid_lookups, policy_checks, deny_address;
 extern int udp_lookup_supplied;

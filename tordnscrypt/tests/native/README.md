@@ -89,6 +89,14 @@ TCP backpressure uses socket writability for queued, contiguous app data and TUN
 readiness for sequence gaps. Nonblocking sends retain partial writes and retry on
 EAGAIN without a periodic buffer-space poll. Closed app windows schedule probes
 after 1 second, doubling to a 60-second cap; app ACKs can reopen reads immediately.
+The event loop reuses unchanged TCP monitoring decisions until a packet/socket
+event, a relevant memory release or a probe deadline requires reevaluation.
+Buffered DNS output continues to drain on each event batch. Probe timestamps
+already stored in the flow supply deadlines; two flags fit existing ARM session
+padding, adding no per-session allocation or timer. The count and cleanup list
+traversals remain. A 64-flow regression counts one monitor call per changed flow
+after the initial pass, and deadline tests check that unrelated loops do not
+restart or postpone probe backoff.
 TCP cases exercise both families with full socket buffers, partial writes, probe
 timing and ACK-driven recovery. A session case checks the earliest probe deadline
 across flows and stop-pipe readiness using a controlled monotonic clock.
@@ -211,7 +219,7 @@ there is no separately maintained copy of the owner. Five real-JNI exception and
 exit-reason tests supplement the lifecycle and settings tests. The allocation-failure
 case runs on a Java worker with the production Exception catch, checks that no
 Error escapes, and verifies that the native exit callback receives the failure reason.
-The full run contains 190 tests plus the optional comparison test.
+The full run contains 192 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

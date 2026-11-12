@@ -39,6 +39,10 @@ static const char *run_case(const char *id) {
         test_tcp_scaled_capacity(&args, 6);
     else if (strcmp(id, "tcpMemoryRescan") == 0)
         test_tcp_memory_rescan(&args, 0);
+    else if (strcmp(id, "tcpMonitorCache") == 0)
+        test_tcp_monitor_cache(&args, 0);
+    else if (strcmp(id, "tcpMonitorDnsOutput") == 0)
+        test_tcp_monitor_cache(&args, 1);
     else if (strcmp(id, "tcpMemoryNoWaiters") == 0)
         test_tcp_memory_rescan(&args, 1);
     else if (strcmp(id, "tcpMemoryQueueWaitDnsRelease") == 0)

@@ -1,6 +1,13 @@
 #include "test_support.h"
 
 #ifndef INVIZIBLE_BASELINE_TESTS
+static unsigned int monitor_calls;
+int __real_monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd);
+int __wrap_monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd) {
+    monitor_calls++;
+    return __real_monitor_tcp_session(args, s, epoll_fd);
+}
+
 static void index_key(struct ng_session *s, int version, int protocol, uint16_t id) {
     s->protocol = protocol;
     s->socket = -1;
@@ -203,6 +210,10 @@ static struct context *memory_context;
 static struct ng_session *memory_sessions;
 static int memory_polls;
 static int memory_kind;
+static struct arguments *monitor_args;
+static struct ng_session *monitor_sessions;
+static int monitor_polls, monitor_peer, monitor_tunnel, monitor_kind;
+#define MONITOR_FLOWS 64
 #endif
 
 long long __real_get_ms(void);
@@ -219,6 +230,55 @@ long long __wrap_get_ms(void) {
 int __real_epoll_wait(int fd, struct epoll_event *events, int count, int timeout);
 int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    if (monitor_args != NULL) {
+        monitor_polls++;
+        if (monitor_polls == 1) {
+            set_test_sessions(monitor_args->ctx, monitor_sessions);
+            for (struct ng_session *s = monitor_sessions; s; s = s->next)
+                assert(epoll_ctl(fd, EPOLL_CTL_ADD, s->socket, &s->ev) == 0);
+        } else if (monitor_kind == 1) {
+            // Each monitor sends at most TCP_YIELD one-byte DNS chunks. Busy
+            // event batches must continue draining before the 100 ms fallback.
+            assert(monitor_calls == (unsigned int) (monitor_polls - 1));
+            uint8_t packet[128];
+            int chunks = monitor_polls == 5 ? 2 : TCP_YIELD;
+            for (int i = 0; i < chunks; i++)
+                assert(tun_packet(monitor_tunnel, packet, 4, IPPROTO_TCP) == 41);
+            assert(!is_readable(monitor_tunnel));
+            if (monitor_polls == 5) {
+                assert(!monitor_sessions->tcp.dns_response_ready);
+                monitor_args->ctx->stopping = 1;
+            }
+        } else if (monitor_polls == 2) {
+            assert(monitor_calls == MONITOR_FLOWS);
+            uint8_t packet[40] = {0};
+            size_t off = ip_header(packet, 4, IPPROTO_TCP, 20, "192.0.2.1");
+            struct iphdr *ip = (void *) packet;
+            ip->saddr = monitor_sessions->tcp.saddr.ip4;
+            struct tcphdr *tcp = (void *) (packet + off);
+            tcp->doff = 5; tcp->ack = 1;
+            tcp->source = monitor_sessions->tcp.source; tcp->dest = monitor_sessions->tcp.dest;
+            tcp->seq = htonl(1000); tcp->ack_seq = htonl(2000); tcp->window = htons(8000);
+            assert(handle_tcp(monitor_args, packet, sizeof(packet), packet + off,
+                              own_uid, 1, NULL, fd) == 1);
+        } else if (monitor_polls == 3) {
+            assert(monitor_calls == MONITOR_FLOWS + 1);
+            assert(send(monitor_peer, "x", 1, 0) == 1);
+            events[0].events = EPOLLIN; events[0].data.ptr = monitor_sessions;
+            tcp_test_clock += EPOLL_MIN_CHECK + 1;
+            return 1;
+        } else if (monitor_polls == 4) {
+            assert(monitor_calls == MONITOR_FLOWS + 2);
+            uint8_t packet[128];
+            assert(tun_packet(monitor_tunnel, packet, 4, IPPROTO_TCP) == 41);
+            assert(!is_readable(monitor_tunnel));
+        } else {
+            assert(monitor_polls == 5 && monitor_calls == MONITOR_FLOWS + 2);
+            monitor_args->ctx->stopping = 1;
+        }
+        tcp_test_clock += monitor_kind == 1 ? 1 : EPOLL_MIN_CHECK + 1;
+        return 0;
+    }
     if (memory_context != NULL) {
         memory_polls++;
         if (memory_polls == 1) {
@@ -251,13 +311,19 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
             for (struct ng_session *s = probe_sessions; s != NULL; s = s->next)
                 s->tcp.last_keep_alive = tcp_test_clock;
         } else if (probe_polls == 2) {
+            assert(monitor_calls == 2);
             assert(timeout == 1000);
-            tcp_test_clock += timeout;
+            tcp_test_clock += 250; // Unrelated traffic wakes before either probe.
         } else if (probe_polls == 3) {
+            assert(monitor_calls == 2 && timeout == 750);
+            tcp_test_clock += timeout;
+        } else if (probe_polls == 4) {
+            assert(monitor_calls == 3);
             assert(timeout == 2000);
             tcp_test_clock += timeout;
         } else {
-            assert(probe_polls == 4 && timeout == 1000);
+            assert(probe_polls == 5 && timeout == 1000);
+            assert(monitor_calls == 4);
             // The stop pipe still interrupts a long probe wait immediately.
             assert(write(probe_context->pipefds[1], "w", 1) == 1);
             probe_context->stopping = 1;
@@ -382,6 +448,54 @@ void test_tcp_memory_rescan(struct arguments *args, int kind) {
 #endif
 }
 
+void test_tcp_monitor_cache(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1;
+    int tunnel[2], streams[MONITOR_FLOWS][2];
+    assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+    assert(pipe(args->ctx->pipefds) == 0);
+    monitor_sessions = NULL;
+    int flows = kind == 1 ? 1 : MONITOR_FLOWS;
+    for (int i = 0; i < flows; i++) {
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, streams[i]) == 0);
+        struct ng_session *s = ng_calloc(1, sizeof(*s), "monitor cache flow");
+        assert(s != NULL);
+        index_key(s, 4, IPPROTO_TCP, 10000 + i);
+        s->socket = streams[i][0];
+        s->tcp.state = TCP_ESTABLISHED; s->tcp.time = time(NULL);
+        s->tcp.local_seq = s->tcp.acked = 2000; s->tcp.remote_seq = 1000;
+        s->tcp.recv_window = s->tcp.send_window = 16000;
+        s->tcp.mss = 1500;
+        s->tcp.memory = &args->ctx->tcp_memory;
+        s->ev.events = EPOLLIN | EPOLLERR; s->ev.data.ptr = s;
+        if (kind == 1) {
+            s->tcp.dest = htons(53); s->tcp.mss = 1;
+            s->tcp.dns_response = ng_malloc(32, "buffered monitor output");
+            assert(s->tcp.dns_response != NULL);
+            memset(s->tcp.dns_response, 'x', 32);
+            s->tcp.dns_response_size = s->tcp.dns_response_capacity = 32;
+            s->tcp.dns_response_ready = true;
+            args->ctx->tcp_memory.dns = 32;
+        }
+        s->next = monitor_sessions; monitor_sessions = s;
+    }
+    struct arguments *owned = ng_malloc(sizeof(*owned), "monitor loop arguments");
+    assert(owned != NULL);
+    *owned = *args; owned->tun = tunnel[0];
+    monitor_args = owned; monitor_kind = kind; monitor_polls = 0; monitor_calls = 0;
+    monitor_tunnel = tunnel[1]; monitor_peer = streams[flows - 1][1];
+    tcp_test_clock = 100000;
+    handle_events(owned);
+    assert(monitor_polls == 5);
+    monitor_args = NULL; monitor_sessions = NULL; tcp_test_clock = 0;
+    clear(args->ctx);
+    for (int i = 0; i < flows; i++) close(streams[i][1]);
+    close(tunnel[0]); close(tunnel[1]);
+    close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
 void test_tcp_probe_deadlines(struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2], streams[2][2];
@@ -405,9 +519,9 @@ void test_tcp_probe_deadlines(struct arguments *args) {
     struct arguments *owned = ng_malloc(sizeof(*owned), "probe loop arguments");
     assert(owned != NULL);
     *owned = *args; owned->tun = tunnel[0];
-    probe_context = args->ctx; probe_polls = 0;
+    probe_context = args->ctx; probe_polls = 0; monitor_calls = 0;
     handle_events(owned);
-    assert(probe_polls == 4);
+    assert(probe_polls == 5);
     probe_context = NULL; probe_sessions = NULL; tcp_test_clock = 0;
     clear(args->ctx);
     close(streams[0][1]); close(streams[1][1]);

@@ -694,6 +694,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                                    const struct epoll_event *ev, int epoll_fd,
                                    struct tcp_socket_capacity *capacity) {
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
+    s->tcp.monitor_dirty = true;
 
     int oldstate = s->tcp.state;
     uint32_t oldlocal = s->tcp.local_seq;
@@ -1140,6 +1141,8 @@ jboolean handle_tcp(const struct arguments *args,
     struct ng_session *cur = find_session(args->ctx, version, IPPROTO_TCP,
             version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src, tcphdr->source,
             version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst, tcphdr->dest);
+    if (cur != NULL)
+        cur->tcp.monitor_dirty = true;
 
     struct tcp_packet_log diagnostic = {.pkt = pkt, .header = tcphdr,
             .tcp = cur == NULL ? NULL : &cur->tcp, .uid = cur == NULL ? uid : cur->tcp.uid,
