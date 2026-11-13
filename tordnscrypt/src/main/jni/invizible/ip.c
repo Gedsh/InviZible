@@ -104,7 +104,7 @@ int check_tun(const struct arguments *args,
 
 // https://en.wikipedia.org/wiki/IPv6_packet#Extension_headers
 // http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-int is_lower_layer(int protocol) {
+static int is_lower_layer(int protocol) {
     // No next header = 59
     return (protocol == 0 || // Hop-by-Hop Options
             protocol == 60 || // Destination Options (before routing header)

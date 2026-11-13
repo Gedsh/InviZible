@@ -221,7 +221,7 @@ int32_t get_local_port(const int sock) {
         return ntohs(sin.sin_port);
 }
 
-int is_event(int fd, short event) {
+static int is_event(int fd, short event) {
     struct pollfd p;
     p.fd = fd;
     p.events = event;

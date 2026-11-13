@@ -495,8 +495,6 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                                    const struct epoll_event *ev, int epoll_fd,
                                    struct tcp_socket_capacity *capacity);
 
-int is_lower_layer(int protocol);
-
 void handle_ip(const struct arguments *args,
                const uint8_t *buffer, size_t length,
                const int epoll_fd,
