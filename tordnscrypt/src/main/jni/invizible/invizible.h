@@ -16,6 +16,9 @@
 
     Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
 */
+#ifndef INVIZIBLE_H
+#define INVIZIBLE_H
+
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -718,3 +721,5 @@ void *ng_calloc(size_t __item_count, size_t __item_size, const char *tag);
 void *ng_realloc(void *__ptr, size_t __byte_count, const char *tag);
 
 void ng_free(void *__ptr, const char *file, int line);
+
+#endif // INVIZIBLE_H

@@ -44,7 +44,7 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
         struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
         log_android(ANDROID_LOG_WARN, "ICMP idle %jd/%d sec stop %d from %s to %s",
                     (intmax_t) (now - s->icmp.time), timeout, s->icmp.stop,
-                    format_log_address(&dest), format_log_address(&source));
+                    format_log_address(&source), format_log_address(&dest));
 
         if (close(s->socket))
             log_android(ANDROID_LOG_ERROR, "ICMP close %d error %d: %s",
@@ -237,7 +237,7 @@ jboolean handle_icmp(const struct arguments *args,
         s->icmp.stop = 0;
         s->next = NULL;
 
-        // Open UDP socket
+        // Open ICMP ping socket
         s->socket = open_icmp_socket(args, &s->icmp);
         if (s->socket < 0) {
             ng_free(s, __FILE__, __LINE__);
@@ -312,7 +312,7 @@ jboolean handle_icmp(const struct arguments *args,
 int open_icmp_socket(const struct arguments *args, const struct icmp_session *cur) {
     int sock;
 
-    // Get UDP socket
+    // Get ICMP ping socket
     sock = socket(cur->version == 4 ? PF_INET : PF_INET6,
                   SOCK_DGRAM | SOCK_CLOEXEC,
                   cur->version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);

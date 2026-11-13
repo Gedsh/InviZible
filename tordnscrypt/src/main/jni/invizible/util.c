@@ -52,7 +52,7 @@ uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length) {
         return (uint16_t) sum;
     }
 
-    // Align buffer to 16 bytes for NEON
+    // Consume an odd leading byte before reading 16-bit words.
     const uint8_t *byte_buf = buffer;
     while (((uintptr_t) byte_buf & 1) && length > 0) {
         sum += *byte_buf++;
@@ -61,7 +61,7 @@ uint16_t calc_checksum(uint16_t start, const uint8_t *buffer, size_t length) {
 
     // Process with NEON
     const uint16_t *buf = (const uint16_t *) byte_buf;
-    size_t vec_len = length / 8; // Number of 128-bit chunks
+    size_t vec_len = length / 8; // Number of 64-bit chunks (four 16-bit words).
     size_t remainder = length % 8;
 
     uint32x4_t acc = vdupq_n_u32(0); // NEON accumulator

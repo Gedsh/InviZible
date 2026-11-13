@@ -189,7 +189,7 @@ void handle_ip(const struct arguments *args,
         payload = (uint8_t *) (pkt + header_length);
 
         if (ntohs(ip4hdr->tot_len) != length) {
-            log_android(ANDROID_LOG_ERROR, "Invalid length %zu header length %u",
+            log_android(ANDROID_LOG_ERROR, "IP4 packet length %zu differs from total length %u",
                         length, ntohs(ip4hdr->tot_len));
             return;
         }

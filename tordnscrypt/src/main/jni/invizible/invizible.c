@@ -846,7 +846,7 @@ jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const
     mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
                 (end.tv_usec - start.tv_usec) / 1000.0;
     if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "is_redirect_to_tor %f", mselapsed);
+        log_android(ANDROID_LOG_WARN, "is_redirect_to_proxy %f", mselapsed);
 #endif
 
     return jredirect_to_proxy;

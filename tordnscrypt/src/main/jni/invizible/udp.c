@@ -536,7 +536,7 @@ int open_udp_socket(const struct arguments *args,
     } else {
         // http://man7.org/linux/man-pages/man7/ipv6.7.html
         if (*((uint8_t *) &cur->daddr.ip6) == 0xFF) {
-            log_android(ANDROID_LOG_WARN, "UDP6 broadcast");
+            log_android(ANDROID_LOG_WARN, "UDP6 multicast");
 
             int loop = 1; // true
             if (setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &loop, sizeof(loop)))
