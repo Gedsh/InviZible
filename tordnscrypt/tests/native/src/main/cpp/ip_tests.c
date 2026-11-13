@@ -414,7 +414,7 @@ static const char *proc_two =
         "header\n0: 0100007F:04D2 00000000:0000 07 0:0 0:0 0 10001 0 0\n"
         "1: 0100007F:04D3 00000000:0000 07 0:0 0:0 0 10002 0 0\n";
 
-static jint lookup_uid(int version, int protocol, uint16_t sport, long now) {
+static jint lookup_uid(int version, int protocol, uint16_t sport, int64_t now) {
     uint8_t address[16];
     const char *text = (version == 4 ? "127.0.0.1" : "::1");
     assert(inet_pton(version == 4 ? AF_INET : AF_INET6, text, address) == 1);
@@ -494,6 +494,95 @@ void test_uid_live_proc(int version, int protocol, bool mapped) {
     assert(__real_close(fd) == 0);
     release_uid_cache();
     assert(sockets == 0);
+}
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+static bool uid_clock_enabled, uid_clock_failure;
+static int64_t uid_test_clock;
+
+int __real_clock_gettime(clockid_t clock, struct timespec *ts);
+int __wrap_clock_gettime(clockid_t clock, struct timespec *ts) {
+    if (clock == CLOCK_BOOTTIME && uid_clock_enabled) {
+        if (uid_clock_failure) {
+            errno = EIO;
+            return -1;
+        }
+        ts->tv_sec = (time_t) (uid_test_clock / 1000);
+        ts->tv_nsec = (long) (uid_test_clock % 1000) * 1000000;
+        return 0;
+    }
+    return __real_clock_gettime(clock, ts);
+}
+
+static const char *uid_clock_first =
+        "header\n0: 00000000000000000000000001000000:04D2 "
+        "00000000000000000000000000000000:0000 07 0:0 0:0 0 10001 0 0\n";
+static const char *uid_clock_second =
+        "header\n0: 00000000000000000000000001000000:04D2 "
+        "00000000000000000000000000000000:0000 07 0:0 0:0 0 20001 0 0\n";
+
+static jint public_uid_clock_lookup(void) {
+    uint8_t address[16];
+    assert(inet_pton(AF_INET6, "::1", address) == 1);
+    return get_uid(6, IPPROTO_UDP, address, 1234, address, 53);
+}
+#endif
+
+void test_uid_cache_clock(int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    if (kind == 0) {
+        // Check the real device clock as well as the injected boundary cases.
+        struct timespec before, after;
+        assert(__real_clock_gettime(CLOCK_BOOTTIME, &before) == 0);
+        fake_proc = 1;
+        proc_contents = uid_clock_first;
+        assert(public_uid_clock_lookup() == 10001);
+        assert(__real_clock_gettime(CLOCK_BOOTTIME, &after) == 0);
+        assert(uid_cache_size == 1 && uid_cache[0].time / 1000 >= before.tv_sec &&
+               uid_cache[0].time / 1000 <= after.tv_sec);
+        release_uid_cache();
+    }
+    uid_clock_enabled = true;
+    uid_clock_failure = false;
+    const int64_t starts[] = {INT64_C(2147483647) - 10000,
+                              INT64_C(4294967295) - 10000, INT64_C(1) << 40};
+    for (size_t i = 0; i < sizeof(starts) / sizeof(*starts); i++) {
+        fake_proc = 1;
+        proc_contents = uid_clock_first;
+        uid_test_clock = starts[i];
+        int before = file_closes;
+        if (kind == 1) {
+            uid_clock_failure = true;
+            assert(public_uid_clock_lookup() == 10001 && file_closes == before + 1);
+            assert(uid_cache == NULL && uid_cache_size == 0 && allocations == 0);
+            uid_clock_failure = false;
+            before = file_closes;
+        }
+        assert(public_uid_clock_lookup() == 10001);
+        assert(uid_cache_size == 1 && uid_cache[0].time == starts[i] && file_closes == before + 1);
+        proc_contents = uid_clock_second;
+        if (kind == 0) {
+            uid_test_clock += UID_MAX_AGE;
+            assert(public_uid_clock_lookup() == 10001 && file_closes == before + 1);
+            // One further millisecond, including time asleep, expires the entry.
+            uid_test_clock++;
+        } else {
+            uid_clock_failure = true;
+            assert(public_uid_clock_lookup() == 20001 && file_closes == before + 2);
+            assert(uid_cache[0].uid == 10001 && uid_cache[0].time == starts[i]);
+            assert(public_uid_clock_lookup() == 20001 && file_closes == before + 3);
+            assert(uid_cache_size == 1 && allocations == 1);
+            uid_clock_failure = false;
+            uid_test_clock += UID_MAX_AGE + 1;
+        }
+        assert(public_uid_clock_lookup() == 20001);
+        assert(uid_cache_size == 1 && uid_cache[0].time == uid_test_clock);
+        int scanned = file_closes;
+        assert(public_uid_clock_lookup() == 20001 && file_closes == scanned);
+        release_uid_cache();
+    }
+    uid_clock_enabled = false;
+#endif
 }
 
 void test_uid_cache_allocation_failure(void) {
@@ -588,7 +677,7 @@ void test_uid_cache_keys(void) {
 #ifndef INVIZIBLE_BASELINE_TESTS
 // Preserve the previous linear policy as an independent oracle for indexed updates.
 static void reference_uid_update(struct uid_cache_entry *entries, int *count,
-                                  const struct uid_cache_entry *value, long now) {
+                                  const struct uid_cache_entry *value, int64_t now) {
     int slot = -1, oldest = 0;
     size_t length = value->version == 4 ? 4 : 16;
     for (int i = 0; i < *count; i++) {
@@ -631,9 +720,10 @@ void test_uid_indexed_updates(int kind) {
     struct uid_cache_entry *reference = calloc(UID_CACHE_MAX, sizeof(*reference));
     assert(table != NULL && reference != NULL);
     int count = 0;
-    const long times[] = {0, 100, UID_MAX_AGE + 200, 50};
+    const int64_t base = INT64_C(1) << 40;
+    const int64_t times[] = {base, base + 100, base + UID_MAX_AGE + 200, base + 50};
     fake_proc = 1; proc_contents = proc_one;
-    assert(lookup_uid(4, IPPROTO_UDP, 1234, 0) == 10001);
+    assert(lookup_uid(4, IPPROTO_UDP, 1234, times[0]) == 10001);
     reference[count++] = uid_cache[0]; // Keep another protocol/family in the snapshot.
     for (int phase = 0; phase < 4; phase++) {
         size_t used = (size_t) snprintf(table, capacity, "header\n");

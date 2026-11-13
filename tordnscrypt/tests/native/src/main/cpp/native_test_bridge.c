@@ -285,6 +285,10 @@ static const char *run_case(const char *id) {
         test_uid_cache_refresh();
     else if (strcmp(id, "uidCacheLimit") == 0)
         test_uid_cache_limit();
+    else if (strcmp(id, "uidCacheClock") == 0)
+        test_uid_cache_clock(0);
+    else if (strcmp(id, "uidCacheClockFailure") == 0)
+        test_uid_cache_clock(1);
     else if (strcmp(id, "uidCacheKeys") == 0)
         test_uid_cache_keys();
     else if (strcmp(id, "dhcpResponseBounds") == 0)

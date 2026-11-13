@@ -54,6 +54,8 @@ public final class IpTest extends NativeTestSupport {
     @Test public void uidCacheRefreshDoesNotDuplicateEntries() { check("uidCacheRefresh"); }
     @Test public void uidCacheRemainsBounded() { check("uidCacheLimit"); }
     @Test public void uidCacheSeparatesProtocolsAndAddressFamilies() { check("uidCacheKeys"); }
+    @Test public void uidCacheExpiresUsingWideMonotonicBootTime() { check("uidCacheClock"); }
+    @Test public void uidCacheClockFailureBypassesCacheAndRecovers() { check("uidCacheClockFailure"); }
     @Test public void ipv4HeaderOptions() { check("udp4Options"); }
     @Test public void ipv6ExtensionHeaders() { check("udp6Extensions"); }
 }

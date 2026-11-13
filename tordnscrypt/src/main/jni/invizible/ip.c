@@ -22,7 +22,6 @@
 */
 
 #include "invizible.h"
-#include <sys/time.h>
 
 int max_tun_msg = 0;
 extern int own_uid;
@@ -486,6 +485,15 @@ void handle_ip(const struct arguments *args,
     }
 }
 
+static int64_t uid_cache_now(void) {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_BOOTTIME, &ts) != 0) {
+        log_android(ANDROID_LOG_ERROR, "UID clock_gettime error %d: %s", errno, strerror(errno));
+        return -1; // Resolve from proc without mixing clock domains or caching a bogus time.
+    }
+    return (int64_t) ts.tv_sec * INT64_C(1000) + ts.tv_nsec / INT64_C(1000000);
+}
+
 jint get_uid(const int version, const int protocol,
              const void *saddr, const uint16_t sport,
              const void *daddr, const uint16_t dport) {
@@ -496,9 +504,7 @@ jint get_uid(const int version, const int protocol,
     inet_ntop(version == 4 ? AF_INET : AF_INET6, saddr, source, sizeof(source));
     inet_ntop(version == 4 ? AF_INET : AF_INET6, daddr, dest, sizeof(dest));
 
-    struct timeval time;
-    gettimeofday(&time, NULL);
-    long now = (time.tv_sec * 1000) + (time.tv_usec / 1000);
+    int64_t now = uid_cache_now();
 
     // Check IPv6 table first
     if (version == 4) {
@@ -624,7 +630,7 @@ static struct uid_cache_update *new_uid_update(void) {
 }
 
 static void cache_uid(int version, int protocol, const uint8_t *saddr, uint16_t sport,
-                      const uint8_t *daddr, uint16_t dport, jint uid, long now,
+                      const uint8_t *daddr, uint16_t dport, jint uid, int64_t now,
                       struct uid_cache_update *update) {
     size_t address_size = (version == 4 ? 4 : 16);
     int slot = -1;
@@ -813,7 +819,7 @@ jint get_uid_sub(const int version, const int protocol,
                  const void *saddr, const uint16_t sport,
                  const void *daddr, const uint16_t dport,
                  const char *source, const char *dest,
-                 long now) {
+                 int64_t now) {
     // NETLINK is not available on Android due to SELinux policies :-(
     // http://stackoverflow.com/questions/27148536/netlink-implementation-for-the-android-ndk
     // https://android.googlesource.com/platform/system/sepolicy/+/master/private/app.te (netlink_tcpdiag_socket)
@@ -823,7 +829,7 @@ jint get_uid_sub(const int version, const int protocol,
     int ws = (version == 4 ? 1 : 4);
 
     // Check cache
-    for (int i = 0; i < uid_cache_size; i++)
+    for (int i = 0; now >= 0 && i < uid_cache_size; i++)
         if (now - uid_cache[i].time <= UID_MAX_AGE &&
             uid_cache[i].version == version &&
             uid_cache[i].protocol == protocol &&
@@ -891,15 +897,17 @@ jint get_uid_sub(const int version, const int protocol,
 
             // A large accumulated cache can still have a one-row proc table.
             // Amortize scratch setup over a substantial scan, not just its cache size.
-            if (updates < UID_UPDATE_THRESHOLD)
-                updates++;
-            if (!update_attempted && updates >= UID_UPDATE_THRESHOLD &&
-                uid_cache_size >= UID_UPDATE_THRESHOLD) {
-                update_attempted = true;
-                update = new_uid_update();
+            if (now >= 0) {
+                if (updates < UID_UPDATE_THRESHOLD)
+                    updates++;
+                if (!update_attempted && updates >= UID_UPDATE_THRESHOLD &&
+                    uid_cache_size >= UID_UPDATE_THRESHOLD) {
+                    update_attempted = true;
+                    update = new_uid_update();
+                }
+                cache_uid(version, protocol, _saddr, (uint16_t) _sport,
+                          _daddr, (uint16_t) _dport, _uid, now, update);
             }
-            cache_uid(version, protocol, _saddr, (uint16_t) _sport,
-                      _daddr, (uint16_t) _dport, _uid, now, update);
         } else {
             log_android(ANDROID_LOG_ERROR, "Invalid proc UID row: %s", line);
             ng_free(update, __FILE__, __LINE__);

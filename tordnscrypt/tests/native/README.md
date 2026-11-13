@@ -117,7 +117,12 @@ monitored until a window-update ACK is sent, further app data resumes, and writa
 monitoring stops once the window reopens or app input has shut down.
 Legacy UID proc-table cases cover native-word address decoding for IPv4/IPv6,
 mixed-case hex, malformed and truncated fields, wildcard/duplicate match order,
-cache growth failures, expiry and bounded replacement. The dedicated row parser
+cache growth failures, expiry and bounded replacement. Cache timestamps use
+64-bit `CLOCK_BOOTTIME` milliseconds for the cache's 30-second lifetime,
+including device sleep. Clock-read failures bypass cache reads and updates while
+retaining proc lookup. Tests check the real device clock, cross signed/unsigned
+32-bit millisecond boundaries, verify exact expiry and clock-failure recovery,
+and compare linear and indexed replacement using timestamps above 32 bits. The dedicated row parser
 avoids `sscanf` and address byte-swapping. Cache allocation grows geometrically
 up to 64 entries and then in blocks of 64, retaining at most 63 unused slots.
 After 64 valid proc rows, caches with at least 64 entries use a temporary
@@ -261,7 +266,7 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
-The full run contains 213 tests plus the optional comparison test.
+The full run contains 215 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

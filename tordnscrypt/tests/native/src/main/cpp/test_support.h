@@ -158,6 +158,7 @@ void test_uid_cache_allocation_failure(void);
 void test_uid_cache_refresh(void);
 void test_uid_cache_limit(void);
 void test_uid_cache_keys(void);
+void test_uid_cache_clock(int kind);
 void test_udp_short_dns(struct arguments *args); // udp.c
 void test_udp_socket_cleanup(const struct arguments *args);
 void test_udp_blocked_limit(struct arguments *args, int version);

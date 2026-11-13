@@ -308,7 +308,7 @@ struct uid_cache_entry {
     uint8_t daddr[16];
     uint16_t dport;
     jint uid;
-    long time;
+    int64_t time; // CLOCK_BOOTTIME milliseconds.
 };
 
 // IPv6
@@ -598,7 +598,7 @@ jint get_uid_sub(const int version, const int protocol,
                  const void *saddr, const uint16_t sport,
                  const void *daddr, const uint16_t dport,
                  const char *source, const char *dest,
-                 long now);
+                 int64_t now);
 
 jint restore_uid(const struct arguments *args,
                  const int version,
