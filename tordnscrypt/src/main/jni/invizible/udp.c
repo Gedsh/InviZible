@@ -396,26 +396,17 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
             char qname[DNS_QNAME_MAX + 1];
             int32_t off = sizeof(struct dns_header);
 
-            uint16_t qtype;
-            uint16_t qclass;
-
-            for (int q = 0; q < 1; q++) {
-                off = get_qname(data, datalen, (uint16_t) off, qname);
-                if (off > 0 && (size_t) off + 4 <= datalen) {
-                    if (q == 0) {
-                        qtype = read_net16(data + off);
-                        qclass = read_net16(data + off + 2);
-                        log_android(ANDROID_LOG_INFO,
-                                    "DNS question %d qtype %d qclass %d qname %s",
-                                    q, qtype, qclass, qname);
-                    }
-                    off += 4;
-                } else {
-                    log_android(ANDROID_LOG_WARN,
-                                "DNS request Q invalid off %d datalen %zu", off, datalen);
-                    return 0;
-                }
+            off = get_qname(data, datalen, (uint16_t) off, qname);
+            if (off <= 0 || (size_t) off + 4 > datalen) {
+                log_android(ANDROID_LOG_WARN,
+                            "DNS request Q invalid off %d datalen %zu", off, datalen);
+                return 0;
             }
+            uint16_t qtype = read_net16(data + off);
+            uint16_t qclass = read_net16(data + off + 2);
+            log_android(ANDROID_LOG_INFO,
+                        "DNS question %d qtype %d qclass %d qname %s",
+                        0, qtype, qclass, qname);
 
             //handle onion websites
             if (tor_dns_port > 0) {

@@ -131,24 +131,19 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         char cname[DNS_QNAME_MAX + 1];
         const char* SPACE_SYMBOL = (const char *) &" ";
 
-        for (int q = 0; q < 1; q++) {
-            off = get_qname(data, *datalen, (uint16_t) off, name);
-            if (off > 0 && (size_t) off + 4 <= *datalen) {
-                if (q == 0) {
-                    strcpy(qname, name);
-                    question_type = read_net16(data + off);
-                    question_class = read_net16(data + off + 2);
-                    log_android(ANDROID_LOG_DEBUG,
-                                "DNS question %d qtype %d qclass %d qname %s",
-                                q, question_type, question_class, qname);
-                }
-                off += 4;
-            } else {
-                log_android(ANDROID_LOG_WARN,
-                            "DNS response Q invalid off %d datalen %zu", off, *datalen);
-                return;
-            }
+        off = get_qname(data, *datalen, (uint16_t) off, name);
+        if (off <= 0 || (size_t) off + 4 > *datalen) {
+            log_android(ANDROID_LOG_WARN,
+                        "DNS response Q invalid off %d datalen %zu", off, *datalen);
+            return;
         }
+        strcpy(qname, name);
+        question_type = read_net16(data + off);
+        question_class = read_net16(data + off + 2);
+        log_android(ANDROID_LOG_DEBUG,
+                    "DNS question %d qtype %d qclass %d qname %s",
+                    0, question_type, question_class, qname);
+        off += 4;
 
         if (acount == 0 || rcode != 0) {
             dns_resolved(args, qname, name, SPACE_SYMBOL, SPACE_SYMBOL,
