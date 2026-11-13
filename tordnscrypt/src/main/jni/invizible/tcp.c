@@ -41,6 +41,13 @@ static int open_tcp_socket_with_error(const struct arguments *args,
                                      const struct tcp_session *cur,
                                      struct allowed *redirect, int *connect_error_out);
 
+static bool tcp_socks_eligible(const struct tcp_session *cur, const char *dest) {
+    return cur->uid != own_uid && ntohs(cur->dest) != 53 &&
+           !str_equal(I2PD_REDIRECT_ADDRESS, dest) &&
+           !str_equal(LOOPBACK_ADDRESS, dest) &&
+           !str_equal(LOOPBACK_ADDRESS_IPv6, dest);
+}
+
 static bool reserve_tcp_memory(struct tcp_session *cur, size_t bytes,
                               unsigned int nodes, bool dns, bool progress) {
     if (cur->memory == NULL)
@@ -427,13 +434,9 @@ int check_tcp_session(const struct arguments *args, struct ng_session *s,
         else
             write_rst(args, &s->tcp);
 
-        bool not_own_uid = s->tcp.uid != own_uid;
-        bool not_dns_request = ntohs(s->tcp.dest) != 53;
-        bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, format_log_address(&dest));
-        bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, format_log_address(&dest)) ||
-                                  str_equal(LOOPBACK_ADDRESS_IPv6, format_log_address(&dest)));
+        bool socks_eligible = tcp_socks_eligible(&s->tcp, format_log_address(&dest));
         if (tor_connection_available && s->tcp.socks5 > SOCKS5_NONE && s->tcp.socks5 < SOCKS5_CONNECTED
-            && s->socket >= 0 && not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
+            && s->socket >= 0 && socks_eligible
             && *tor_socks5_addr && tor_socks5_port) {
 
             if (check_tor_connection(args)) {
@@ -730,15 +733,10 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                     // https://tools.ietf.org/html/rfc1929
                     // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
 
-                    bool not_own_uid = s->tcp.uid != own_uid;
-                    bool not_dns_request = ntohs(s->tcp.dest) != 53;
-                    bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, format_log_address(&dest));
-                    bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, format_log_address(&dest)) ||
-                                              str_equal(LOOPBACK_ADDRESS_IPv6, format_log_address(&dest)));
+                    bool socks_eligible = tcp_socks_eligible(&s->tcp, format_log_address(&dest));
 
                     bool redirect_to_tor = false;
-                    if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
-                        && *tor_socks5_addr && tor_socks5_port) {
+                    if (socks_eligible && *tor_socks5_addr && tor_socks5_port) {
                         redirect_to_tor = is_redirect_to_tor(
                                 args,
                                 s->tcp.uid,
@@ -748,8 +746,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                     }
 
                     bool redirect_to_proxy = false;
-                    if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
-                        && *proxy_socks5_addr && proxy_socks5_port) {
+                    if (socks_eligible && *proxy_socks5_addr && proxy_socks5_port) {
                         redirect_to_proxy = is_redirect_to_proxy(
                                 args,
                                 s->tcp.uid,
@@ -860,15 +857,10 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                 char socks5_username[127 + 1];
                 char socks5_password[127 + 1];
 
-                bool not_own_uid = s->tcp.uid != own_uid;
-                bool not_dns_request = ntohs(s->tcp.dest) != 53;
-                bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, format_log_address(&dest));
-                bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, format_log_address(&dest)) ||
-                                          str_equal(LOOPBACK_ADDRESS_IPv6, format_log_address(&dest)));
+                bool socks_eligible = tcp_socks_eligible(&s->tcp, format_log_address(&dest));
 
                 bool redirect_to_tor = false;
-                if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
-                    && *tor_socks5_addr && tor_socks5_port) {
+                if (socks_eligible && *tor_socks5_addr && tor_socks5_port) {
                     redirect_to_tor = is_redirect_to_tor(
                             args,
                             s->tcp.uid,
@@ -1695,21 +1687,15 @@ static int open_tcp_socket_with_error(const struct arguments *args,
     const char *route = (redirect == NULL ? "direct" : "redirect");
     if (redirect == NULL) {
 
-        bool not_own_uid = cur->uid != own_uid;
-        bool not_dns_request = ntohs(cur->dest) != 53;
-        bool not_to_i2pd = !str_equal(I2PD_REDIRECT_ADDRESS, dest);
-        bool not_to_localhost = !(str_equal(LOOPBACK_ADDRESS, dest) ||
-                                  str_equal(LOOPBACK_ADDRESS_IPv6, dest));
+        bool socks_eligible = tcp_socks_eligible(cur, dest);
 
         bool redirect_to_tor = false;
-        if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
-            && *tor_socks5_addr && tor_socks5_port) {
+        if (socks_eligible && *tor_socks5_addr && tor_socks5_port) {
             redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest, ntohs(cur->dest));
         }
 
         bool redirect_to_proxy = false;
-        if (not_own_uid && not_dns_request && not_to_i2pd && not_to_localhost
-            && *proxy_socks5_addr && proxy_socks5_port) {
+        if (socks_eligible && *proxy_socks5_addr && proxy_socks5_port) {
             redirect_to_proxy = is_redirect_to_proxy(args, cur->uid, dest, ntohs(cur->dest));
         }
 
