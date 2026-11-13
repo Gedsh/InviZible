@@ -191,7 +191,8 @@ void block_udp(const struct arguments *args,
         blocked++;
         if (cur->udp.version == version && cur->udp.source == udphdr->source &&
             cur->udp.dest == udphdr->dest &&
-            (version == 4 ? cur->udp.saddr.ip4 == ip4->saddr && cur->udp.daddr.ip4 == ip4->daddr
+            (version == 4 ? cur->udp.saddr.ip4 == (uint32_t) ip4->saddr &&
+                           cur->udp.daddr.ip4 == (uint32_t) ip4->daddr
                           : memcmp(&cur->udp.saddr.ip6, &ip6->ip6_src, 16) == 0 &&
                             memcmp(&cur->udp.daddr.ip6, &ip6->ip6_dst, 16) == 0)) {
             match = link;
@@ -400,7 +401,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
             for (int q = 0; q < 1; q++) {
                 off = get_qname(data, datalen, (uint16_t) off, qname);
-                if (off > 0 && off + 4 <= datalen) {
+                if (off > 0 && (size_t) off + 4 <= datalen) {
                     if (q == 0) {
                         qtype = read_net16(data + off);
                         qclass = read_net16(data + off + 2);
@@ -484,10 +485,11 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         }
     }
 
-    if (sendto(cur->socket, data, (socklen_t) datalen, MSG_NOSIGNAL,
-               (rversion == 4 ? (const struct sockaddr *) &addr4
-                              : (const struct sockaddr *) &addr6),
-               (socklen_t) (rversion == 4 ? sizeof(addr4) : sizeof(addr6))) != datalen) {
+    ssize_t sent = sendto(cur->socket, data, (socklen_t) datalen, MSG_NOSIGNAL,
+                          (rversion == 4 ? (const struct sockaddr *) &addr4
+                                       : (const struct sockaddr *) &addr6),
+                          (socklen_t) (rversion == 4 ? sizeof(addr4) : sizeof(addr6)));
+    if (sent < 0 || (size_t) sent != datalen) {
         log_android(ANDROID_LOG_ERROR, "UDP sendto error %d: %s", errno, strerror(errno));
         if (errno != EINTR && errno != EAGAIN) {
             cur->udp.state = UDP_FINISHING;
@@ -671,7 +673,7 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
 
     release_packet_buffer(args, buffer);
 
-    if (res != len) {
+    if (res < 0 || (size_t) res != len) {
         log_android(ANDROID_LOG_ERROR, "write %zd/%zu", res, len);
         return -1;
     }

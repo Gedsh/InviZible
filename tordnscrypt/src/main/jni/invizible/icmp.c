@@ -295,10 +295,11 @@ jboolean handle_icmp(const struct arguments *args,
     }
 
     // Send raw ICMP message
-    if (sendto(cur->socket, icmp, (socklen_t) icmplen, MSG_NOSIGNAL,
-               (version == 4 ? (const struct sockaddr *) &server4
-                             : (const struct sockaddr *) &server6),
-               (socklen_t) (version == 4 ? sizeof(server4) : sizeof(server6))) != icmplen) {
+    ssize_t sent = sendto(cur->socket, icmp, (socklen_t) icmplen, MSG_NOSIGNAL,
+                          (version == 4 ? (const struct sockaddr *) &server4
+                                        : (const struct sockaddr *) &server6),
+                          (socklen_t) (version == 4 ? sizeof(server4) : sizeof(server6)));
+    if (sent < 0 || (size_t) sent != icmplen) {
         log_android(ANDROID_LOG_ERROR, "ICMP sendto error %d: %s", errno, strerror(errno));
         if (errno != EINTR && errno != EAGAIN) {
             cur->icmp.stop = 1;
@@ -400,7 +401,7 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
 
     release_packet_buffer(args, buffer);
 
-    if (res != len) {
+    if (res < 0 || (size_t) res != len) {
         log_android(ANDROID_LOG_ERROR, "write %zd/%zu", res, len);
         return -1;
     }

@@ -805,7 +805,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                         } else if (s->tcp.socks5 == SOCKS5_CONNECT &&
                                    (bytes == 6 + (s->tcp.version == 4 ? 4 : 16) ||
                                     //for IPv4-mapped IPv6 address proxy
-                                    s->tcp.version == 6 && bytes == 6 + 4) &&
+                                    (s->tcp.version == 6 && bytes == 6 + 4)) &&
                                    buffer[0] == 5) {
                             if (buffer[1] == 0) {
                                 s->tcp.socks5 = SOCKS5_CONNECTED;
@@ -1987,7 +1987,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
 
     release_packet_buffer(args, buffer);
 
-    if (res != len) {
+    if (res < 0 || (size_t) res != len) {
         log_android(ANDROID_LOG_ERROR, "TCP write %zd/%zu", res, len);
         return -1;
     }

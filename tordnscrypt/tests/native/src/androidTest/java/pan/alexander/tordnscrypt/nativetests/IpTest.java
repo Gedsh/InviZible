@@ -26,6 +26,7 @@ public final class IpTest extends NativeTestSupport {
     @Test public void liveIpv6IcmpProcRestoresOwnerOrHandlesMissingTable() { checkLiveProc("uidLiveIcmp6"); }
     @Test public void liveMappedTcpProcRestoresIpv4SocketOwner() { checkLiveProc("uidLiveMappedTcp"); }
     @Test public void liveMappedUdpProcRestoresIpv4SocketOwner() { checkLiveProc("uidLiveMappedUdp"); }
+    @Test public void uidRestorationMatchesUnalignedIpv4AddressBits() { check("restoreUidAddresses"); }
     @Test public void procUidAddressesDecodeNativeWordsForBothFamilies() { check("uidProcAddresses"); }
     @Test public void malformedProcUidRowsCloseWithoutCaching() { check("uidProcMalformed"); }
     @Test public void procUidWildcardAndDuplicateMatchOrderIsPreserved() { check("uidProcMatchOrder"); }

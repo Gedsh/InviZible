@@ -259,7 +259,9 @@ concurrent first use and churn. Tracker storage failure frees the record table
 and disables tracking until the library is unloaded; application allocations
 continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
-The full run contains 212 tests plus the optional comparison test.
+UID restoration also checks unaligned IPv4 addresses with their high bits set
+for TCP, UDP and ICMP, including source and destination mismatches.
+The full run contains 213 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

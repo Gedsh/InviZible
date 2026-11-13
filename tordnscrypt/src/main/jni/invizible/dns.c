@@ -133,7 +133,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
 
         for (int q = 0; q < 1; q++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
-            if (off > 0 && off + 4 <= *datalen) {
+            if (off > 0 && (size_t) off + 4 <= *datalen) {
                 if (q == 0) {
                     strcpy(qname, name);
                     question_type = read_net16(data + off);
@@ -160,14 +160,14 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         int32_t aoff = off;
         for (int a = 0; a < acount; a++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
-            if (off > 0 && off + 10 <= *datalen) {
+            if (off > 0 && (size_t) off + 10 <= *datalen) {
                 uint16_t qtype = read_net16(data + off);
                 uint16_t qclass = read_net16(data + off + 2);
                 //uint32_t ttl = ntohl(*((uint32_t *) (data + off + 4)));
                 uint16_t rdlength = read_net16(data + off + 8);
                 off += 10;
 
-                if (off + rdlength <= *datalen) {
+                if ((size_t) off + rdlength <= *datalen) {
                     if (qclass == DNS_QCLASS_IN &&
                         (qtype == DNS_QTYPE_A || qtype == DNS_QTYPE_AAAA)) {
 

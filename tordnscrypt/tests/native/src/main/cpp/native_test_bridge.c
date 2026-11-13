@@ -87,6 +87,8 @@ static const char *run_case(const char *id) {
         test_tcp_dns_memory(1);
     else if (strcmp(id, "tcpDnsMemoryHangup") == 0)
         test_tcp_dns_memory(2);
+    else if (strcmp(id, "restoreUidAddresses") == 0)
+        test_restore_uid_addresses(&args);
     else if (strcmp(id, "uidProcAddresses") == 0)
         test_uid_proc_parser(0);
     else if (strcmp(id, "uidProcMalformed") == 0)

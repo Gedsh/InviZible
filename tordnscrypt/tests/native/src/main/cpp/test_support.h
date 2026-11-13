@@ -52,6 +52,7 @@ extern int uid_cache_capacity;
 #endif
 extern int uid_cache_allocations;
 void test_uid_proc_parser(int kind);
+void test_restore_uid_addresses(const struct arguments *args);
 void test_uid_live_proc(int version, int protocol, bool mapped);
 void test_uid_indexed_updates(int kind);
 void test_uid_indexed_growth_failure(void);

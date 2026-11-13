@@ -937,8 +937,8 @@ jint restore_uid(const struct arguments *args,
                  cur->tcp.uid >= 0 &&
                  cur->tcp.version == version &&
                  cur->tcp.dest == htons(dport) &&
-                 (version == 4 ? cur->tcp.saddr.ip4 == *((int32_t *) saddr) &&
-                                 cur->tcp.daddr.ip4 == *((int32_t *) daddr)
+                 (version == 4 ? memcmp(&cur->tcp.saddr.ip4, saddr, 4) == 0 &&
+                                 memcmp(&cur->tcp.daddr.ip4, daddr, 4) == 0
                                : memcmp(&cur->tcp.saddr.ip6, saddr, 16) == 0 &&
                                  memcmp(&cur->tcp.daddr.ip6, daddr, 16) == 0)))
             cur = cur->next;
@@ -951,8 +951,8 @@ jint restore_uid(const struct arguments *args,
                  cur->udp.uid >= 0 &&
                  cur->udp.version == version &&
                  cur->udp.dest == htons(dport) &&
-                 (version == 4 ? cur->udp.saddr.ip4 == *((int32_t *) saddr) &&
-                                 cur->udp.daddr.ip4 == *((int32_t *) daddr)
+                 (version == 4 ? memcmp(&cur->udp.saddr.ip4, saddr, 4) == 0 &&
+                                 memcmp(&cur->udp.daddr.ip4, daddr, 4) == 0
                                : memcmp(&cur->udp.saddr.ip6, saddr, 16) == 0 &&
                                  memcmp(&cur->udp.daddr.ip6, daddr, 16) == 0)))
             cur = cur->next;
@@ -974,8 +974,8 @@ jint restore_uid(const struct arguments *args,
                  cur->icmp.uid >= 0 &&
                  !cur->icmp.stop && cur->icmp.version == version &&
                  cur->icmp.id == icmp->icmp_id &&
-                 (version == 4 ? cur->icmp.saddr.ip4 == *((int32_t *) saddr) &&
-                                 cur->icmp.daddr.ip4 == *((int32_t *) daddr)
+                 (version == 4 ? memcmp(&cur->icmp.saddr.ip4, saddr, 4) == 0 &&
+                                 memcmp(&cur->icmp.daddr.ip4, daddr, 4) == 0
                                : memcmp(&cur->icmp.saddr.ip6, saddr, 16) == 0 &&
                                  memcmp(&cur->icmp.daddr.ip6, daddr, 16) == 0)))
             cur = cur->next;

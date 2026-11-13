@@ -1,5 +1,43 @@
 #include "test_support.h"
 
+void test_restore_uid_addresses(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    _Alignas(4) uint8_t source[5], dest[5];
+    assert(inet_pton(AF_INET, "198.51.100.201", source + 1) == 1);
+    assert(inet_pton(AF_INET, "203.0.113.202", dest + 1) == 1);
+    const int protocols[] = {IPPROTO_TCP, IPPROTO_UDP, IPPROTO_ICMP};
+    struct icmp echo = {.icmp_type = ICMP_ECHO, .icmp_id = htons(1234)};
+    for (size_t i = 0; i < sizeof(protocols) / sizeof(*protocols); i++) {
+        struct ng_session session = {.protocol = protocols[i]};
+        if (protocols[i] == IPPROTO_TCP) {
+            session.tcp.version = 4; session.tcp.uid = 12345; session.tcp.dest = htons(443);
+            memcpy(&session.tcp.saddr.ip4, source + 1, 4);
+            memcpy(&session.tcp.daddr.ip4, dest + 1, 4);
+        } else if (protocols[i] == IPPROTO_UDP) {
+            session.udp.version = 4; session.udp.uid = 12345; session.udp.dest = htons(443);
+            memcpy(&session.udp.saddr.ip4, source + 1, 4);
+            memcpy(&session.udp.daddr.ip4, dest + 1, 4);
+        } else {
+            session.icmp.version = 4; session.icmp.uid = 12345; session.icmp.id = echo.icmp_id;
+            memcpy(&session.icmp.saddr.ip4, source + 1, 4);
+            memcpy(&session.icmp.daddr.ip4, dest + 1, 4);
+        }
+        args->ctx->ng_session = &session;
+        // Unaligned addresses with the high bit set must compare as raw IPv4 bits.
+        assert(restore_uid(args, 4, protocols[i], source + 1, 4321, dest + 1, 443,
+                           "198.51.100.201", "203.0.113.202", "", (const uint8_t *) &echo) == 12345);
+        for (int address = 0; address < 2; address++) {
+            uint8_t *changed = address == 0 ? source + 1 : dest + 1;
+            *changed ^= 1;
+            assert(restore_uid(args, 4, protocols[i], source + 1, 4321, dest + 1, 443,
+                               "source", "dest", "", (const uint8_t *) &echo) == -1);
+            *changed ^= 1;
+        }
+        args->ctx->ng_session = NULL;
+    }
+#endif
+}
+
 void test_udp_packet_lookup(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];
