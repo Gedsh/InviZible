@@ -454,7 +454,7 @@ int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions);
 
 int get_tcp_timeout(const struct tcp_session *t, int sessions, int maxsessions);
 
-uint16_t get_mtu();
+uint16_t get_mtu(void);
 
 uint16_t get_default_mss(int version);
 
@@ -704,7 +704,7 @@ char *hex(const u_int8_t *data, const size_t len);
 
 int is_readable(int fd);
 
-long long get_ms();
+long long get_ms(void);
 
 int str_equal(const char *s, const char *f);
 

@@ -240,7 +240,7 @@ int is_readable(int fd) {
     return is_event(fd, POLLIN);
 }
 
-long long get_ms() {
+long long get_ms(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ts.tv_sec * 1000LL + ts.tv_nsec / 1e6;

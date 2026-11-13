@@ -28,7 +28,7 @@ extern int own_uid;
 extern bool compatibility_mode;
 extern bool can_filter;
 
-uint16_t get_mtu() {
+uint16_t get_mtu(void) {
     //return 10000;
     return 1500;
 }
