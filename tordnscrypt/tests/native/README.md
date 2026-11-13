@@ -251,7 +251,15 @@ ICMP sockets use connect/autobind without sending packets, supporting older app
 policies that reject explicit ping-socket bind calls.
 They send no packets and require no firewall exceptions. These cases run on
 Android 6-9; Android 10+ skips them because app access to `/proc/net` is restricted.
-The full run contains 206 tests plus the optional comparison test.
+Six `MemoryProfileTest` cases exercise the production `PROFILE_MEMORY` tracker in
+a separate native library, with raw allocator and mutex fault injection. They
+cover first-record and table-growth failures, payload allocation and resize
+failures, release before first use, errno preservation, lock failure/retry, and
+concurrent first use and churn. Tracker storage failure frees the record table
+and disables tracking until the library is unloaded; application allocations
+continue normally. An empty tracker releases its record table. The test library
+exports only its test entry point to avoid replacing the ordinary suite's JNI.
+The full run contains 212 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

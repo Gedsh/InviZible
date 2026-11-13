@@ -1,0 +1,4 @@
+{
+    global: Java_pan_alexander_tordnscrypt_nativetests_MemoryProfileTest_runProfileCase;
+    local: *;
+};

@@ -50,3 +50,33 @@ if(INVIZIBLE_BASELINE_SOURCE)
     add_native_tests(invizible_native_baseline_tests "${INVIZIBLE_BASELINE_SOURCE}")
     target_compile_definitions(invizible_native_baseline_tests PRIVATE INVIZIBLE_BASELINE_TESTS=1)
 endif()
+
+# Exercise the optional tracker independently of the ordinary allocation wrappers.
+add_library(invizible_memory_profile_tests SHARED memory_profile_tests.c
+        "${INVIZIBLE_SOURCE}/session.c" "${INVIZIBLE_SOURCE}/ip.c"
+        "${INVIZIBLE_SOURCE}/tcp.c" "${INVIZIBLE_SOURCE}/udp.c"
+        "${INVIZIBLE_SOURCE}/icmp.c" "${INVIZIBLE_SOURCE}/dns.c"
+        "${INVIZIBLE_SOURCE}/dhcp.c" "${INVIZIBLE_SOURCE}/util.c")
+target_include_directories(invizible_memory_profile_tests PRIVATE "${INVIZIBLE_SOURCE}")
+target_compile_features(invizible_memory_profile_tests PRIVATE c_std_11)
+target_compile_definitions(invizible_memory_profile_tests PRIVATE PROFILE_MEMORY
+        JNI_OnLoad=invizible_profile_JNI_OnLoad JNI_OnUnload=invizible_profile_JNI_OnUnload)
+target_compile_options(invizible_memory_profile_tests PRIVATE -UNDEBUG -O1 -g
+        -Wformat -Werror=format -Wno-unknown-pragmas -fno-inline-functions
+        -fsemantic-interposition -fno-builtin)
+target_link_options(invizible_memory_profile_tests PRIVATE -Wl,-Bsymbolic
+        "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/memory_profile_exports.map")
+set_property(TARGET invizible_memory_profile_tests APPEND PROPERTY LINK_DEPENDS
+        "${CMAKE_CURRENT_LIST_DIR}/memory_profile_exports.map")
+foreach(symbol malloc calloc realloc free pthread_mutex_lock)
+    target_link_options(invizible_memory_profile_tests PRIVATE "-Wl,--wrap=${symbol}")
+endforeach()
+if(ANDROID_ABI STREQUAL "x86_64")
+    target_compile_options(invizible_memory_profile_tests PRIVATE
+            -mssse3 -DNEON2SSE_DISABLE_PERFORMANCE_WARNING)
+endif()
+if(INVIZIBLE_SANITIZERS)
+    target_compile_options(invizible_memory_profile_tests PRIVATE -fsanitize=address,undefined
+            -fno-omit-frame-pointer -fno-sanitize-recover=all)
+    target_link_options(invizible_memory_profile_tests PRIVATE -fsanitize=address,undefined)
+endif()

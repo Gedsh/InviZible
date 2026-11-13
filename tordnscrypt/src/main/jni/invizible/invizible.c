@@ -1225,42 +1225,48 @@ void account_usage(const struct arguments *args, jint version, jint protocol,
 #endif
 }
 
+#ifdef PROFILE_MEMORY
 struct alloc_record {
     const char *tag;
     time_t time;
-    void *ptr;
+    const void *ptr;
 };
 
-int allocs = 0;
-int balance = 0;
-struct alloc_record *alloc = NULL;
-pthread_mutex_t *alock = NULL;
+static size_t allocs = 0;
+static size_t balance = 0;
+static struct alloc_record *alloc = NULL;
+static pthread_mutex_t alock = PTHREAD_MUTEX_INITIALIZER;
+static bool tracking_disabled = false;
 
-void ng_add_alloc(const char *ptr, const char *tag) {
-#ifdef PROFILE_MEMORY
-    if (ptr == NULL)
+// Called with alock held. Partial records cannot describe a reliable balance.
+static void disable_memory_tracking(void) {
+    tracking_disabled = true;
+    free(alloc);
+    alloc = NULL;
+    allocs = balance = 0;
+    log_android(ANDROID_LOG_ERROR, "PROFILE_MEMORY disabled: cannot grow allocation records");
+}
+
+static void record_allocation(const void *ptr, const char *tag) {
+    if (tracking_disabled)
         return;
 
-    if (alock == NULL) {
-        alock = malloc(sizeof(pthread_mutex_t));
-        if (pthread_mutex_init(alock, NULL))
-            log_android(ANDROID_LOG_ERROR, "pthread_mutex_init failed");
-    }
-
-    if (pthread_mutex_lock(alock))
-        log_android(ANDROID_LOG_ERROR, "pthread_mutex_lock failed");
-
-    int c = 0;
+    size_t c = 0;
     for (; c < allocs; c++)
         if (alloc[c].ptr == NULL)
             break;
 
-    if (c >= allocs) {
-        if (allocs == 0)
-            alloc = malloc(sizeof(struct alloc_record));
-        else
-            alloc = realloc(alloc, sizeof(struct alloc_record) * (allocs + 1));
-        c = allocs;
+    if (c == allocs) {
+        if (allocs >= SIZE_MAX / sizeof(*alloc)) {
+            disable_memory_tracking();
+            return;
+        }
+        struct alloc_record *records = realloc(alloc, sizeof(*alloc) * (allocs + 1));
+        if (records == NULL) {
+            disable_memory_tracking();
+            return;
+        }
+        alloc = records;
         allocs++;
     }
 
@@ -1268,9 +1274,28 @@ void ng_add_alloc(const char *ptr, const char *tag) {
     alloc[c].time = time(NULL);
     alloc[c].ptr = ptr;
     balance++;
+}
+#endif
 
-    if (pthread_mutex_unlock(alock))
-        log_android(ANDROID_LOG_ERROR, "pthread_mutex_unlock failed");
+void ng_add_alloc(const char *ptr, const char *tag) {
+#ifdef PROFILE_MEMORY
+    if (ptr == NULL)
+        return;
+
+    int saved_errno = errno;
+    int error = pthread_mutex_lock(&alock);
+    if (error != 0) {
+        log_android(ANDROID_LOG_ERROR, "PROFILE_MEMORY pthread_mutex_lock error %d", error);
+        errno = saved_errno;
+        return;
+    }
+
+    record_allocation(ptr, tag);
+
+    error = pthread_mutex_unlock(&alock);
+    if (error != 0)
+        log_android(ANDROID_LOG_ERROR, "PROFILE_MEMORY pthread_mutex_unlock error %d", error);
+    errno = saved_errno;
 #endif
 }
 
@@ -1279,28 +1304,43 @@ void ng_delete_alloc(const char *ptr, const char *file, int line) {
     if (ptr == NULL)
         return;
 
-    if (pthread_mutex_lock(alock))
-        log_android(ANDROID_LOG_ERROR, "pthread_mutex_lock failed");
+    int saved_errno = errno;
+    int error = pthread_mutex_lock(&alock);
+    if (error != 0) {
+        log_android(ANDROID_LOG_ERROR, "PROFILE_MEMORY pthread_mutex_lock error %d", error);
+        errno = saved_errno;
+        return;
+    }
 
-    int found = 0;
-    for (int c = 0; c < allocs; c++)
-        if (alloc[c].ptr == ptr) {
-            found = 1;
-            alloc[c].tag = "[free]";
-            alloc[c].ptr = NULL;
-            break;
+    if (!tracking_disabled) {
+        bool found = false;
+        for (size_t c = 0; c < allocs; c++)
+            if (alloc[c].ptr == ptr) {
+                found = true;
+                alloc[c].tag = "[free]";
+                alloc[c].ptr = NULL;
+                break;
+            }
+
+        if (found)
+            balance--;
+
+        log_android(found ? ANDROID_LOG_DEBUG : ANDROID_LOG_ERROR,
+                    "alloc/free balance %zu records %zu found %d", balance, allocs, found);
+        if (!found)
+            log_android(ANDROID_LOG_ERROR, "Not found at %s:%d", file == NULL ? "unknown" : file, line);
+
+        if (balance == 0) {
+            free(alloc);
+            alloc = NULL;
+            allocs = 0;
         }
+    }
 
-    if (found == 1)
-        balance--;
-
-    log_android(found ? ANDROID_LOG_DEBUG : ANDROID_LOG_ERROR,
-                "alloc/free balance %d records %d found %d", balance, allocs, found);
-    if (found == 0)
-        log_android(ANDROID_LOG_ERROR, "Not found at %s:%d", file, line);
-
-    if (pthread_mutex_unlock(alock))
-        log_android(ANDROID_LOG_ERROR, "pthread_mutex_unlock failed");
+    error = pthread_mutex_unlock(&alock);
+    if (error != 0)
+        log_android(ANDROID_LOG_ERROR, "PROFILE_MEMORY pthread_mutex_unlock error %d", error);
+    errno = saved_errno;
 #endif
 }
 
