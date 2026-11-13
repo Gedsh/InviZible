@@ -109,7 +109,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         if (setrlimit(RLIMIT_NOFILE, &rlim))
             log_android(ANDROID_LOG_WARN, "setrlimit error %d: %s", errno, strerror(errno));
         else
-            log_android(ANDROID_LOG_WARN, "raised file limit from %d to %d", soft, rlim.rlim_cur);
+            log_android(ANDROID_LOG_WARN, "raised file limit from %ju to %ju",
+                        (uintmax_t) soft, (uintmax_t) rlim.rlim_cur);
     }
 
     return JNI_VERSION_1_6;

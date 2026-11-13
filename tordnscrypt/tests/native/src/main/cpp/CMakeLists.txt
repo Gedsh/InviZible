@@ -14,7 +14,7 @@ function(add_native_tests target source)
             "${source}/dns.c" "${source}/dhcp.c" "${source}/util.c")
     target_include_directories(${target} PRIVATE "${source}")
     target_compile_features(${target} PRIVATE c_std_11)
-    target_compile_options(${target} PRIVATE -UNDEBUG -O1 -g
+    target_compile_options(${target} PRIVATE -UNDEBUG -O1 -g -Wformat -Werror=format
             -ffunction-sections -fdata-sections -Wno-unknown-pragmas
             # Calls within invizible.c must reach the wrapped allocation helpers.
             -fno-inline-functions -fsemantic-interposition

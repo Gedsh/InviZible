@@ -42,8 +42,8 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
     if (s->icmp.stop || s->icmp.time + timeout < now) {
         struct log_address source = {.version = s->icmp.version, .address = &s->icmp.saddr};
         struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
-        log_android(ANDROID_LOG_WARN, "ICMP idle %d/%d sec stop %d from %s to %s",
-                    now - s->icmp.time, timeout, s->icmp.stop,
+        log_android(ANDROID_LOG_WARN, "ICMP idle %jd/%d sec stop %d from %s to %s",
+                    (intmax_t) (now - s->icmp.time), timeout, s->icmp.stop,
                     format_log_address(&dest), format_log_address(&source));
 
         if (close(s->socket))
@@ -148,7 +148,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 struct icmp *icmp = (struct icmp *) buffer;
                 log_android(
                         s->icmp.id == icmp->icmp_id ? ANDROID_LOG_INFO : ANDROID_LOG_WARN,
-                        "ICMP recv bytes %d from %s for tun type %d code %d id %x/%x seq %d",
+                        "ICMP recv bytes %zd from %s for tun type %d code %d id %x/%x seq %d",
                         bytes, format_log_address(&dest),
                         icmp->icmp_type, icmp->icmp_code,
                         s->icmp.id, icmp->icmp_id, icmp->icmp_seq);
@@ -276,7 +276,7 @@ jboolean handle_icmp(const struct arguments *args,
     icmp->icmp_cksum = ~calc_checksum(csum, (uint8_t *) icmp, icmplen);
 
     log_android(ANDROID_LOG_WARN,
-                "ICMP forward from tun %s to %s type %d code %d id %x seq %d data %d",
+                "ICMP forward from tun %s to %s type %d code %d id %x seq %d data %zu",
                 format_log_address(&source), format_log_address(&dest),
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq, icmplen);
 
@@ -392,7 +392,7 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
 
     // Send raw ICMP message
     log_android(ANDROID_LOG_WARN,
-                "ICMP sending to tun %d from %s to %s data %u type %d code %d id %x seq %d",
+                "ICMP sending to tun %d from %s to %s data %zu type %d code %d id %x seq %d",
                 args->tun, format_log_address(&dest), format_log_address(&source), datalen,
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);
 
@@ -401,7 +401,7 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
     release_packet_buffer(args, buffer);
 
     if (res != len) {
-        log_android(ANDROID_LOG_ERROR, "write %d/%d", res, len);
+        log_android(ANDROID_LOG_ERROR, "write %zd/%zu", res, len);
         return -1;
     }
 

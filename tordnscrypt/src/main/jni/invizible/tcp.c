@@ -420,8 +420,8 @@ int check_tcp_session(const struct arguments *args, struct ng_session *s,
     // Check session timeout
     if (s->tcp.state != TCP_CLOSING && s->tcp.state != TCP_CLOSE &&
         s->tcp.time + timeout < now) {
-        log_android(ANDROID_LOG_INFO, "%s idle %d/%d sec ", tcp_socket_text(&diagnostic), now - s->tcp.time,
-                    timeout);
+        log_android(ANDROID_LOG_INFO, "%s idle %jd/%d sec ",
+                    tcp_socket_text(&diagnostic), (intmax_t) (now - s->tcp.time), timeout);
         if (s->tcp.state == TCP_LISTEN)
             s->tcp.state = TCP_CLOSING;
         else
@@ -440,8 +440,8 @@ int check_tcp_session(const struct arguments *args, struct ng_session *s,
                 tor_connection_available = false;
             }
             log_android(ANDROID_LOG_WARN,
-                        "Suspect Tor connection is unavailable %s idle %d/%d sec socks5 state %d",
-                        tcp_socket_text(&diagnostic), now - s->tcp.time, timeout, s->tcp.socks5);
+                        "Suspect Tor connection is unavailable %s idle %jd/%d sec socks5 state %d",
+                        tcp_socket_text(&diagnostic), (intmax_t) (now - s->tcp.time), timeout, s->tcp.socks5);
         }
     }
 
@@ -1088,7 +1088,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
 
                     } else {
                         // Socket read data
-                        log_android(ANDROID_LOG_DEBUG, "%s recv bytes %d", tcp_socket_text(&diagnostic), bytes);
+                        log_android(ANDROID_LOG_DEBUG, "%s recv bytes %zd", tcp_socket_text(&diagnostic), bytes);
                         s->tcp.received += bytes;
 
                         // Forward to tun
@@ -1976,7 +1976,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
 
     // Send packet
     log_android(ANDROID_LOG_DEBUG,
-                "TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %u",
+                "TCP sending%s%s%s%s to tun %s/%u seq %u ack %u data %zu",
                 (tcp->syn ? " SYN" : ""),
                 (tcp->ack ? " ACK" : ""),
                 (tcp->fin ? " FIN" : ""),
@@ -1989,7 +1989,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     ssize_t res = write(args->tun, buffer, len);
 
     if (res < 0) {
-        log_android(ANDROID_LOG_ERROR, "TCP write%s%s%s%s data %d error %d: %s",
+        log_android(ANDROID_LOG_ERROR, "TCP write%s%s%s%s data %zu error %d: %s",
                     (tcp->syn ? " SYN" : ""),
                     (tcp->ack ? " ACK" : ""),
                     (tcp->fin ? " FIN" : ""),
@@ -2002,7 +2002,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     release_packet_buffer(args, buffer);
 
     if (res != len) {
-        log_android(ANDROID_LOG_ERROR, "TCP write %d/%d", res, len);
+        log_android(ANDROID_LOG_ERROR, "TCP write %zd/%zu", res, len);
         return -1;
     }
 

@@ -31,7 +31,7 @@ int check_dhcp(const struct arguments *args, const struct udp_session *u,
     log_android(ANDROID_LOG_WARN, "DHCP check");
 
     if (datalen < sizeof(struct dhcp_packet)) {
-        log_android(ANDROID_LOG_WARN, "DHCP packet size %d", datalen);
+        log_android(ANDROID_LOG_WARN, "DHCP packet size %zu", datalen);
         return -1;
     }
 
@@ -48,7 +48,7 @@ int check_dhcp(const struct arguments *args, const struct udp_session *u,
         return -1;
     }
 
-    log_android(ANDROID_LOG_WARN, "DHCP opcode", request->opcode);
+    log_android(ANDROID_LOG_WARN, "DHCP opcode %d", request->opcode);
 
     // Discover: source 0.0.0.0:68 destination 255.255.255.255:67
     // Offer: source 10.1.10.1:67 destination 255.255.255.255:68

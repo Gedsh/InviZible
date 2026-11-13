@@ -196,8 +196,8 @@ void *handle_events(void *a) {
         maxsessions = (int) (rlim.rlim_cur * SESSION_LIMIT / 100);
         if (maxsessions > SESSION_MAX)
             maxsessions = SESSION_MAX;
-        log_android(ANDROID_LOG_WARN, "getrlimit soft %d hard %d max sessions %d",
-                    rlim.rlim_cur, rlim.rlim_max, maxsessions);
+        log_android(ANDROID_LOG_WARN, "getrlimit soft %ju hard %ju max sessions %d",
+                    (uintmax_t) rlim.rlim_cur, (uintmax_t) rlim.rlim_max, maxsessions);
     }
 
     // Terminate existing sessions not allowed anymore

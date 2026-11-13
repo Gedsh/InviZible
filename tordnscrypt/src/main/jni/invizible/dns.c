@@ -109,7 +109,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         return;
     }
     if (*datalen < sizeof(struct dns_header)) {
-        log_android(ANDROID_LOG_WARN, "DNS response length %d", *datalen);
+        log_android(ANDROID_LOG_WARN, "DNS response length %zu", *datalen);
         return;
     }
 
@@ -145,7 +145,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                 off += 4;
             } else {
                 log_android(ANDROID_LOG_WARN,
-                            "DNS response Q invalid off %d datalen %d", off, *datalen);
+                            "DNS response Q invalid off %d datalen %zu", off, *datalen);
                 return;
             }
         }
@@ -228,13 +228,13 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                     off += rdlength;
                 } else {
                     log_android(ANDROID_LOG_WARN,
-                                "DNS response A invalid off %d rdlength %d datalen %d",
+                                "DNS response A invalid off %d rdlength %d datalen %zu",
                                 off, rdlength, *datalen);
                     return;
                 }
             } else {
                 log_android(ANDROID_LOG_WARN,
-                            "DNS response A invalid off %d datalen %d", off, *datalen);
+                            "DNS response A invalid off %d datalen %zu", off, *datalen);
                 return;
             }
         }

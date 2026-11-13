@@ -170,7 +170,7 @@ void handle_ip(const struct arguments *args,
     uint8_t version = (*pkt) >> 4;
     if (version == 4) {
         if (length < sizeof(struct iphdr)) {
-            log_android(ANDROID_LOG_WARN, "IP4 packet too short length %d", length);
+            log_android(ANDROID_LOG_WARN, "IP4 packet too short length %zu", length);
             return;
         }
 
@@ -196,7 +196,7 @@ void handle_ip(const struct arguments *args,
         payload = (uint8_t *) (pkt + header_length);
 
         if (ntohs(ip4hdr->tot_len) != length) {
-            log_android(ANDROID_LOG_ERROR, "Invalid length %u header length %u",
+            log_android(ANDROID_LOG_ERROR, "Invalid length %zu header length %u",
                         length, ntohs(ip4hdr->tot_len));
             return;
         }
@@ -224,7 +224,7 @@ void handle_ip(const struct arguments *args,
         }
     } else if (version == 6) {
         if (length < sizeof(struct ip6_hdr)) {
-            log_android(ANDROID_LOG_WARN, "IP6 packet too short length %d", length);
+            log_android(ANDROID_LOG_WARN, "IP6 packet too short length %zu", length);
             return;
         }
 

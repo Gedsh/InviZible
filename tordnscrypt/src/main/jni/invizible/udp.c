@@ -46,8 +46,8 @@ int check_udp_session(const struct arguments *args, struct ng_session *s,
     // Check session timeout
     int timeout = get_udp_timeout(&s->udp, sessions, maxsessions);
     if (s->udp.state == UDP_ACTIVE && s->udp.time + timeout < now) {
-        log_android(ANDROID_LOG_WARN, "UDP idle %d/%d sec state %d from %s/%u to %s/%u",
-                    now - s->udp.time, timeout, s->udp.state,
+        log_android(ANDROID_LOG_WARN, "UDP idle %jd/%d sec state %d from %s/%u to %s/%u",
+                    (intmax_t) (now - s->udp.time), timeout, s->udp.state,
                     format_log_address(&source), ntohs(s->udp.source), format_log_address(&dest), ntohs(s->udp.dest));
         s->udp.state = UDP_FINISHING;
     }
@@ -127,7 +127,7 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
             } else {
                 // Socket read data
                 struct log_address dest = {.version = s->udp.version, .address = &s->udp.daddr};
-                log_android(ANDROID_LOG_INFO, "UDP recv bytes %d from %s/%u for tun",
+                log_android(ANDROID_LOG_INFO, "UDP recv bytes %zd from %s/%u for tun",
                             bytes, format_log_address(&dest), ntohs(s->udp.dest));
 
                 s->udp.received += bytes;
@@ -382,7 +382,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
             return 1;
     }
 
-    log_android(ANDROID_LOG_INFO, "UDP forward from tun %s/%u to %s/%u data %d",
+    log_android(ANDROID_LOG_INFO, "UDP forward from tun %s/%u to %s/%u data %zu",
                 format_log_address(&source), ntohs(udphdr->source), format_log_address(&dest), ntohs(udphdr->dest), datalen);
 
     cur->udp.time = time(NULL);
@@ -411,7 +411,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
                     off += 4;
                 } else {
                     log_android(ANDROID_LOG_WARN,
-                                "DNS request Q invalid off %d datalen %d", off, datalen);
+                                "DNS request Q invalid off %d datalen %zu", off, datalen);
                     return 0;
                 }
             }
@@ -659,7 +659,7 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
 
     // Send packet
     log_android(ANDROID_LOG_DEBUG,
-                "UDP sending to tun %d from %s/%u to %s/%u data %u",
+                "UDP sending to tun %d from %s/%u to %s/%u data %zu",
                 args->tun, format_log_address(&dest), ntohs(cur->dest), format_log_address(&source), ntohs(cur->source), len);
 
     ssize_t res = write(args->tun, buffer, len);
@@ -672,7 +672,7 @@ ssize_t write_udp(const struct arguments *args, const struct udp_session *cur,
     release_packet_buffer(args, buffer);
 
     if (res != len) {
-        log_android(ANDROID_LOG_ERROR, "write %d/%d", res, len);
+        log_android(ANDROID_LOG_ERROR, "write %zd/%zu", res, len);
         return -1;
     }
 

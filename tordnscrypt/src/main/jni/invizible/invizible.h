@@ -423,9 +423,11 @@ void handle_signal(int sig, siginfo_t *info, void *context);
 
 void *handle_events(void *a);
 
-void report_exit(const struct arguments *args, const char *fmt, ...);
+void report_exit(const struct arguments *args, const char *fmt, ...)
+        __attribute__((format(printf, 2, 3)));
 
-void report_error(const struct arguments *args, jint error, const char *fmt, ...);
+void report_error(const struct arguments *args, jint error, const char *fmt, ...)
+        __attribute__((format(printf, 3, 4)));
 
 void check_allowed(const struct arguments *args);
 
@@ -654,7 +656,8 @@ void clear_packet_buffers(struct packet_buffers *buffers);
         log_android_write(log_priority, __VA_ARGS__); \
 } while (0)
 
-void log_android_write(int prio, const char *fmt, ...);
+void log_android_write(int prio, const char *fmt, ...)
+        __attribute__((format(printf, 2, 3)));
 
 struct log_address {
     int version;

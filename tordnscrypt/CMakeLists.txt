@@ -17,6 +17,8 @@ add_library( invizible
 
 include_directories( src/main/jni/invizible/ )
 
+target_compile_options(invizible PRIVATE -Wformat -Werror=format)
+
 find_library( log-lib
               log )
 
