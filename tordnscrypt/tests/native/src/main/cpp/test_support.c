@@ -1,5 +1,6 @@
 #include "test_support.h"
 #include <stdarg.h>
+#include <sys/system_properties.h>
 
 int allocations, sockets, last_socket = -1, udp_calls, resolved_calls;
 int tcp_calls, icmp_calls;

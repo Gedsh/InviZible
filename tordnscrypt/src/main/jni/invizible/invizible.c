@@ -21,6 +21,10 @@
 */
 
 #include "invizible.h"
+#include <netdb.h>
+#include <stdarg.h>
+#include <sys/system_properties.h>
+#include <sys/time.h>
 
 // TCP sequence gaps and retransmissions are handled in tcp.c.
 // https://android.googlesource.com/platform/frameworks/base.git/+/master/services/core/jni/com_android_server_connectivity_Vpn.cpp

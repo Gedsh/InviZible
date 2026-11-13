@@ -1,4 +1,5 @@
 #include "test_support.h"
+#include <dirent.h>
 #include <sched.h>
 
 jlong Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1init(JNIEnv *, jobject, jint);

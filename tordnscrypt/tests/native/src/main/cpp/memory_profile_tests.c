@@ -1,6 +1,7 @@
 // Include the production tracker to inspect its private state without test APIs.
 #include "invizible.c"
 #include <sched.h>
+#include <stdarg.h>
 
 static atomic_int live_allocations;
 static atomic_int fail_malloc, fail_calloc, fail_realloc, fail_lock;

@@ -29,6 +29,7 @@
 #include <arm_neon.h>
 #endif
 #include "invizible.h"
+#include <stdarg.h>
 
 #define CSUM_NEON_THRESHOLD 16
 

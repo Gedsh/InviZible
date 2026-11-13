@@ -22,6 +22,8 @@
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdatomic.h>
 #define INVIZIBLE_ATOMIC_FLAGS 1
@@ -30,20 +32,15 @@
 #include <time.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <setjmp.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <poll.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
-#include <dlfcn.h>
-#include <sys/stat.h>
 #include <sys/resource.h>
 
-#include <netdb.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/in6.h>
@@ -55,7 +52,6 @@
 #include <netinet/icmp6.h>
 
 #include <android/log.h>
-#include <sys/system_properties.h>
 
 #define TAG "pan.alexander.tordnscrypt.TPDCLogs"
 #define LOG_LEVEL ANDROID_LOG_ERROR

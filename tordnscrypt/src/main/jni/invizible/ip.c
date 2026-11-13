@@ -22,6 +22,7 @@
 */
 
 #include "invizible.h"
+#include <sys/time.h>
 
 int max_tun_msg = 0;
 extern int own_uid;
