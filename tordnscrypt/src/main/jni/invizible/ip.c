@@ -116,13 +116,6 @@ int is_lower_layer(int protocol) {
             protocol == 135); // Mobility
 }
 
-int is_upper_layer(int protocol) {
-    return (protocol == IPPROTO_TCP ||
-            protocol == IPPROTO_UDP ||
-            protocol == IPPROTO_ICMP ||
-            protocol == IPPROTO_ICMPV6);
-}
-
 static bool valid_transport_checksum(uint8_t version, uint8_t protocol,
                                       const void *source, const void *dest,
                                       const uint8_t *payload, size_t length) {

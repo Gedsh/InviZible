@@ -426,9 +426,6 @@ void *handle_events(void *a);
 void report_exit(const struct arguments *args, const char *fmt, ...)
         __attribute__((format(printf, 2, 3)));
 
-void report_error(const struct arguments *args, jint error, const char *fmt, ...)
-        __attribute__((format(printf, 3, 4)));
-
 void check_allowed(const struct arguments *args);
 
 void clear(struct context *ctx);
@@ -496,8 +493,6 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                                    struct tcp_socket_capacity *capacity);
 
 int is_lower_layer(int protocol);
-
-int is_upper_layer(int protocol);
 
 void handle_ip(const struct arguments *args,
                const uint8_t *buffer, size_t length,
@@ -584,8 +579,6 @@ int write_fin_ack(const struct arguments *args, struct tcp_session *cur);
 
 void write_rst(const struct arguments *args, struct tcp_session *cur);
 
-void write_rst_ack(const struct arguments *args, struct tcp_session *cur);
-
 ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
                    uint8_t *data, size_t datalen);
 
@@ -599,10 +592,6 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
 void write_connection_unreach(const struct arguments *args,
                               const struct ng_session *s,
                               const int serr);
-
-uint8_t char2nible(const char c);
-
-void hex2bytes(const char *hex, uint8_t *buffer);
 
 jint get_uid(const int version, const int protocol,
              const void *saddr, const uint16_t sport,
@@ -641,8 +630,6 @@ jfieldID jniGetFieldID(JNIEnv *env, jclass cls, const char *name, const char *ty
 jobject jniNewObject(JNIEnv *env, jclass cls, jmethodID constructor, const char *name);
 
 int jniCheckException(JNIEnv *env);
-
-int sdk_int(JNIEnv *env);
 
 uint8_t *get_packet_buffer(const struct arguments *args, enum packet_buffer_kind kind,
                            size_t length, const char *tag);
@@ -714,8 +701,6 @@ char *hex(const u_int8_t *data, const size_t len);
 
 int is_readable(int fd);
 
-int is_writable(int fd);
-
 long long get_ms();
 
 int str_equal(const char *s, const char *f);
@@ -733,5 +718,3 @@ void *ng_calloc(size_t __item_count, size_t __item_size, const char *tag);
 void *ng_realloc(void *__ptr, size_t __byte_count, const char *tag);
 
 void ng_free(void *__ptr, const char *file, int line);
-
-void ng_dump();

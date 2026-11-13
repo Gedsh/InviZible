@@ -109,12 +109,6 @@ int compare_u32(uint32_t s1, uint32_t s2) {
         return 1;
 }
 
-int sdk_int(JNIEnv *env) {
-    jclass clsVersion = jniFindClass(env, "android/os/Build$VERSION");
-    jfieldID fid = (*env)->GetStaticFieldID(env, clsVersion, "SDK_INT", "I");
-    return (*env)->GetStaticIntField(env, clsVersion, fid);
-}
-
 uint8_t *get_packet_buffer(const struct arguments *args, enum packet_buffer_kind kind,
                            size_t length, const char *tag) {
     if (args->buffers == NULL)
@@ -166,32 +160,6 @@ void log_android_write(int prio, const char *fmt, ...) {
         __android_log_print(prio, TAG, "%s", line);
         va_end(argptr);
     }
-}
-
-uint8_t char2nible(const char c) {
-    if (c >= '0' && c <= '9') return (uint8_t) (c - '0');
-    if (c >= 'a' && c <= 'f') return (uint8_t) ((c - 'a') + 10);
-    if (c >= 'A' && c <= 'F') return (uint8_t) ((c - 'A') + 10);
-    return 255;
-}
-
-void hex2bytes(const char *hex, uint8_t *buffer) {
-    size_t len = strlen(hex);
-    for (int i = 0; i < len; i += 2)
-        buffer[i / 2] = (char2nible(hex[i]) << 4) | char2nible(hex[i + 1]);
-}
-
-char *trim(char *str) {
-    while (isspace(*str))
-        str++;
-    if (*str == 0)
-        return str;
-
-    char *end = str + strlen(str) - 1;
-    while (end > str && isspace(*end))
-        end--;
-    *(end + 1) = 0;
-    return str;
 }
 
 const char *strstate(const int state) {
@@ -270,10 +238,6 @@ int is_event(int fd, short event) {
 
 int is_readable(int fd) {
     return is_event(fd, POLLIN);
-}
-
-int is_writable(int fd) {
-    return is_event(fd, POLLOUT);
 }
 
 long long get_ms() {
