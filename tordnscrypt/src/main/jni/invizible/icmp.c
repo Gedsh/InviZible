@@ -142,9 +142,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 // Socket read data
                 struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
 
-                // cur->id should be equal to icmp->icmp_id
-                // but for some unexplained reason this is not the case
-                // some bits seems to be set extra
+                // The ping socket's echo ID may differ from the original session ID.
                 struct icmp *icmp = (struct icmp *) buffer;
                 log_android(
                         s->icmp.id == icmp->icmp_id ? ANDROID_LOG_INFO : ANDROID_LOG_WARN,
@@ -157,7 +155,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 icmp->icmp_id = s->icmp.id;
                 uint16_t csum = 0;
                 if (s->icmp.version == 6) {
-                    // Untested
+                    // Include the IPv6 pseudo-header when restoring the echo ID.
                     struct ip6_hdr_pseudo pseudo;
                     memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
                     memcpy(&pseudo.ip6ph_src, &s->icmp.daddr.ip6, 16);
@@ -263,7 +261,7 @@ jboolean handle_icmp(const struct arguments *args,
     icmp->icmp_id = ~icmp->icmp_id;
     uint16_t csum = 0;
     if (version == 6) {
-        // Untested
+        // Include the IPv6 pseudo-header when modifying the echo ID.
         struct ip6_hdr_pseudo pseudo;
         memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
         memcpy(&pseudo.ip6ph_src, &ip6->ip6_dst, 16);

@@ -29,7 +29,6 @@ extern bool compatibility_mode;
 extern bool can_filter;
 
 uint16_t get_mtu(void) {
-    //return 10000;
     return 1500;
 }
 
@@ -105,14 +104,13 @@ int check_tun(const struct arguments *args,
 // https://en.wikipedia.org/wiki/IPv6_packet#Extension_headers
 // http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 static int is_lower_layer(int protocol) {
-    // No next header = 59
+    // No Next Header (59) is intentionally excluded.
     return (protocol == 0 || // Hop-by-Hop Options
-            protocol == 60 || // Destination Options (before routing header)
+            protocol == 60 || // Destination Options (before or after routing)
             protocol == 43 || // Routing
             protocol == 44 || // Fragment
             protocol == 51 || // Authentication Header (AH)
             protocol == 50 || // Encapsulating Security Payload (ESP)
-            protocol == 60 || // Destination Options (before upper-layer header)
             protocol == 135); // Mobility
 }
 
