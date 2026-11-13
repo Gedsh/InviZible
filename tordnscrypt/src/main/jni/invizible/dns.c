@@ -129,7 +129,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         uint16_t question_class;
         char qname[DNS_QNAME_MAX + 1];
         char cname[DNS_QNAME_MAX + 1];
-        const char* SPACE_SYMBOL = (const char *) &" ";
+        const char *SPACE_SYMBOL = " ";
 
         off = get_qname(data, *datalen, (uint16_t) off, name);
         if (off <= 0 || (size_t) off + 4 > *datalen) {
