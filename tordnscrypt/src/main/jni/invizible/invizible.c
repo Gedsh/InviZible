@@ -727,7 +727,7 @@ void dns_resolved(const struct arguments *args,
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    profile_jni_end(&start, started, "log_packet");
+    profile_jni_end(&start, started, "dns_resolved");
 #endif
 }
 
@@ -1201,7 +1201,7 @@ void account_usage(const struct arguments *args, jint version, jint protocol,
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    profile_jni_end(&start, started, "log_packet");
+    profile_jni_end(&start, started, "account_usage");
 #endif
 }
 
