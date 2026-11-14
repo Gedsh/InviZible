@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.os.HandlerThread;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import pan.alexander.tordnscrypt.utils.enums.VPNCommand;
 
-/** Exercises the production queue, timeout catch, retry dispatch and reload sequencing on a real Looper. */
+/** Exercises descriptor ownership, the production queue, cleanup retries and reload sequencing. */
 @RunWith(AndroidJUnit4.class)
 public final class ServiceVPNHandlerTest {
     private static void await(CountDownLatch latch) throws InterruptedException {
@@ -182,6 +183,84 @@ public final class ServiceVPNHandlerTest {
             assertFalse("Handler leaked", thread.isAlive());
             service.owner.close();
             assertTrue(preferences.edit().clear().commit());
+        }
+    }
+
+    private static final class DescriptorHandler extends ServiceVPNHandler {
+        RuntimeException networkFailure;
+
+        DescriptorHandler(Fixture fixture) {
+            super(fixture.thread.getLooper(), fixture.service);
+        }
+
+        @Override void setUnderlyingNetwork() {
+            if (networkFailure != null) {
+                throw networkFailure;
+            }
+        }
+    }
+
+    private static ServiceVPN.Builder descriptorBuilder(ServiceVPN service,
+                                                        ParcelFileDescriptor descriptor) {
+        return service.new Builder() {
+            @Override public ParcelFileDescriptor establish() { return descriptor; }
+        };
+    }
+
+    private static void assertClosed(ParcelFileDescriptor descriptor) {
+        try {
+            descriptor.getFd();
+            fail("Startup failure left the VPN descriptor open");
+        } catch (IllegalStateException expected) {
+            // ParcelFileDescriptor rejects access after close.
+        }
+    }
+
+    @Test public void networkSetupFailureClosesEstablishedDescriptor() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            try (ParcelFileDescriptor read = pipe[0]; ParcelFileDescriptor write = pipe[1]) {
+                DescriptorHandler handler = new DescriptorHandler(fixture);
+                handler.networkFailure = new IllegalStateException("Network setup failed");
+                assertNull(handler.startVPN(descriptorBuilder(fixture.service, read)));
+                assertClosed(read);
+            }
+        }
+    }
+
+    @Test public void networkSecurityFailureClosesDescriptorAndPropagates() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            try (ParcelFileDescriptor read = pipe[0]; ParcelFileDescriptor write = pipe[1]) {
+                DescriptorHandler handler = new DescriptorHandler(fixture);
+                SecurityException failure = new SecurityException("VPN permission revoked");
+                handler.networkFailure = failure;
+                try {
+                    handler.startVPN(descriptorBuilder(fixture.service, read));
+                    fail("SecurityException was swallowed");
+                } catch (SecurityException expected) {
+                    assertSame(failure, expected);
+                }
+                assertClosed(read);
+            }
+        }
+    }
+
+    @Test public void successfulSetupTransfersOpenDescriptorToCaller() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
+            try (ParcelFileDescriptor read = pipe[0]; ParcelFileDescriptor write = pipe[1]) {
+                DescriptorHandler handler = new DescriptorHandler(fixture);
+                assertSame(read, handler.startVPN(descriptorBuilder(fixture.service, read)));
+                assertTrue("Successful startup closed the VPN descriptor", read.getFd() >= 0);
+            }
+        }
+    }
+
+    @Test public void failedEstablishmentReturnsNull() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            DescriptorHandler handler = new DescriptorHandler(fixture);
+            assertNull(handler.startVPN(descriptorBuilder(fixture.service, null)));
         }
     }
 

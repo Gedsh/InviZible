@@ -451,23 +451,30 @@ public class ServiceVPNHandler extends Handler {
         return listAllowed;
     }
 
-    private ParcelFileDescriptor startVPN(ServiceVPN.Builder builder) throws SecurityException {
+    ParcelFileDescriptor startVPN(ServiceVPN.Builder builder) throws SecurityException {
+        ParcelFileDescriptor pfd = null;
+        boolean transferred = false;
         try {
-            ParcelFileDescriptor pfd = builder.establish();
+            pfd = builder.establish();
 
             // Set underlying network
             setUnderlyingNetwork();
 
+            transferred = true;
             return pfd;
         } catch (SecurityException ex) {
             throw ex;
         } catch (Throwable ex) {
             loge("ServiceVPNHandler startVPN", ex, true);
             return null;
+        } finally {
+            if (pfd != null && !transferred) {
+                stopVPN(pfd);
+            }
         }
     }
 
-    private void setUnderlyingNetwork() {
+    void setUnderlyingNetwork() {
 
         ConnectivityManager cm = (ConnectivityManager) serviceVPN.getSystemService(CONNECTIVITY_SERVICE);
         Network[] networks = NetworkChecker.getAvailableNetworksSorted(serviceVPN);
