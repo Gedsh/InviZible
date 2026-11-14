@@ -3,6 +3,34 @@
 #ifndef INVIZIBLE_BASELINE_TESTS
 static unsigned int monitor_calls;
 static bool timeout_range_test;
+static struct context *session_limit_context;
+static rlim_t session_limit_value;
+static bool session_limit_failure;
+static int session_limit_expected, session_limit_checks, session_limit_reads;
+
+int __real_getrlimit(int resource, struct rlimit *limit);
+int __wrap_getrlimit(int resource, struct rlimit *limit) {
+    if (session_limit_context == NULL)
+        return __real_getrlimit(resource, limit);
+    assert(resource == RLIMIT_NOFILE);
+    session_limit_reads++;
+    if (session_limit_failure) {
+        errno = EIO;
+        return -1;
+    }
+    limit->rlim_cur = limit->rlim_max = session_limit_value;
+    return 0;
+}
+
+int __real_get_icmp_timeout(const struct icmp_session *session, int sessions, int maxsessions);
+int __wrap_get_icmp_timeout(const struct icmp_session *session, int sessions, int maxsessions) {
+    if (session_limit_context != NULL) {
+        assert(maxsessions == session_limit_expected);
+        session_limit_checks++;
+    }
+    return __real_get_icmp_timeout(session, sessions, maxsessions);
+}
+
 int __real_monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd);
 int __wrap_monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd) {
     monitor_calls++;
@@ -231,6 +259,11 @@ long long __wrap_get_ms(void) {
 int __real_epoll_wait(int fd, struct epoll_event *events, int count, int timeout);
 int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    if (session_limit_context != NULL) {
+        assert(session_limit_reads == 1 && session_limit_checks >= 2);
+        session_limit_context->stopping = 1;
+        return 0;
+    }
     if (monitor_args != NULL) {
         monitor_polls++;
         if (monitor_polls == 1) {
@@ -771,6 +804,53 @@ void test_session_timeout_range(struct arguments *args, int protocol) {
         idle_context = NULL;
         assert(idle_polls == 2 && idle_timeout == EPOLL_TIMEOUT * 1000);
         assert(args->ctx->ng_session == s);
+        clear(args->ctx);
+        close(tun[0]); close(tun[1]);
+        close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
+void test_session_limit(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    const struct {
+        rlim_t files;
+        int expected;
+        int kind;
+    } cases[] = {
+            {3, 1, 0}, {10, 4, 0}, {256, 102, 0},
+            {1022, 408, 0}, {1023, SESSION_MAX, 0}, {1024, SESSION_MAX, 0},
+            {0, 1, 1}, {1, 1, 1}, {2, 1, 1},
+            {INT32_MAX, SESSION_MAX, 1}, {UINT32_MAX, SESSION_MAX, 1},
+            {RLIM_INFINITY, SESSION_MAX, 1},
+            {RLIM_INFINITY / SESSION_LIMIT + 1, SESSION_MAX, 1},
+            {1024, SESSION_MAX, 2}
+    };
+    for (size_t i = 0; i < sizeof(cases) / sizeof(*cases); i++) {
+        if (cases[i].kind != kind)
+            continue;
+        args->ctx->stopping = 0;
+        struct ng_session *s = ng_calloc(1, sizeof(*s), "test session limit");
+        assert(s != NULL);
+        index_key(s, 4, IPPROTO_ICMP, 1234);
+        s->icmp.time = time(NULL) + 60;
+        add_session(args->ctx, s);
+        int tun[2];
+        assert(pipe(tun) == 0 && pipe(args->ctx->pipefds) == 0);
+        struct arguments *owned = ng_malloc(sizeof(*owned), "test arguments");
+        assert(owned != NULL);
+        *owned = *args;
+        owned->tun = tun[0];
+        session_limit_context = args->ctx;
+        session_limit_value = cases[i].files;
+        session_limit_expected = cases[i].expected;
+        session_limit_failure = kind == 2;
+        session_limit_checks = session_limit_reads = 0;
+        tcp_test_clock = 1000; // Run maintenance on the first loop.
+        handle_events(owned);
+        session_limit_context = NULL;
+        tcp_test_clock = 0;
         clear(args->ctx);
         close(tun[0]); close(tun[1]);
         close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);

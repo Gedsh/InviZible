@@ -30,7 +30,7 @@ function(add_native_tests target source)
             epoll_wait get_ms pipe pthread_mutex_init inet_ntop getsockopt ioctl)
     if("${source}" STREQUAL "${INVIZIBLE_SOURCE}")
         list(APPEND wraps find_udp_session handle_udp_with_lookup monitor_tcp_session compare_u32
-                clock_gettime)
+                clock_gettime getrlimit get_icmp_timeout)
     endif()
     if(ANDROID_ABI STREQUAL "x86_64")
         list(APPEND wraps calc_checksum)

@@ -180,6 +180,7 @@ void test_event_loop_shutdown(struct arguments *args); // session.c
 void test_closed_session_limit(struct arguments *args, int kind);
 void test_event_loop_idle_cleanup(struct arguments *args, int kind);
 void test_session_timeout_range(struct arguments *args, int protocol);
+void test_session_limit(struct arguments *args, int kind);
 void compatibility_suite(void); // Multiple sources; valid-input comparison only.
 
 #endif

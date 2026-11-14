@@ -35,4 +35,7 @@ public final class SessionTest extends NativeTestSupport {
     @Test public void futureIcmpTimestampKeepsPollWithinLimit() { check("icmpTimeoutRange"); }
     @Test public void futureUdpTimestampKeepsPollWithinLimit() { check("udpTimeoutRange"); }
     @Test public void futureTcpTimestampKeepsPollWithinLimit() { check("tcpTimeoutRange"); }
+    @Test public void descriptorLimitsPreserveNormalSessionScaling() { check("sessionLimitNormal"); }
+    @Test public void extremeDescriptorLimitsKeepSessionCapPositiveAndBounded() { check("sessionLimitExtreme"); }
+    @Test public void descriptorLimitReadFailureKeepsDefaultSessionCap() { check("sessionLimitFailure"); }
 }

@@ -193,9 +193,14 @@ void *handle_events(void *a) {
     if (getrlimit(RLIMIT_NOFILE, &rlim))
         log_android(ANDROID_LOG_WARN, "getrlimit error %d: %s", errno, strerror(errno));
     else {
-        maxsessions = (int) (rlim.rlim_cur * SESSION_LIMIT / 100);
-        if (maxsessions > SESSION_MAX)
-            maxsessions = SESSION_MAX;
+        // Larger limits, including RLIM_INFINITY, already reach the session cap.
+        // Bound the input before multiplying or narrowing to int.
+        const rlim_t maxfiles = (rlim_t) SESSION_MAX * 100 / SESSION_LIMIT;
+        if (rlim.rlim_cur <= maxfiles) {
+            maxsessions = (int) (rlim.rlim_cur * SESSION_LIMIT / 100);
+            if (maxsessions < 1)
+                maxsessions = 1; // Timeout scaling divides by maxsessions.
+        }
         log_android(ANDROID_LOG_WARN, "getrlimit soft %ju hard %ju max sessions %d",
                     (uintmax_t) rlim.rlim_cur, (uintmax_t) rlim.rlim_max, maxsessions);
     }

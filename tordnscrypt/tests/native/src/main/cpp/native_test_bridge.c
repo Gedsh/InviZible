@@ -343,6 +343,12 @@ static const char *run_case(const char *id) {
         test_session_timeout_range(&args, IPPROTO_UDP);
     else if (strcmp(id, "tcpTimeoutRange") == 0)
         test_session_timeout_range(&args, IPPROTO_TCP);
+    else if (strcmp(id, "sessionLimitNormal") == 0)
+        test_session_limit(&args, 0);
+    else if (strcmp(id, "sessionLimitExtreme") == 0)
+        test_session_limit(&args, 1);
+    else if (strcmp(id, "sessionLimitFailure") == 0)
+        test_session_limit(&args, 2);
     else if (strcmp(id, "udpBlocked4Limit") == 0)
         test_udp_blocked_limit(&args, 4);
     else if (strcmp(id, "udpBlocked6Limit") == 0)
