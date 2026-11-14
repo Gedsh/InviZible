@@ -594,6 +594,42 @@ void test_tcp_destination(const struct arguments *args) {
     }
 }
 
+void test_tcp_connect_logging(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        const char *source = version == 4 ? "10.0.0.2" : "fd00::1";
+        const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+        struct tcp_session session = {.version = version, .uid = 10215,
+                .source = htons(40096), .dest = htons(443)};
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6, source, &session.saddr) == 1);
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6, dest, &session.daddr) == 1);
+        for (int kind = 0; kind < 3; kind++) {
+            int target_version = kind == 2 ? (version == 4 ? 6 : 4) : version;
+            const char *target = target_version == 4 ? "198.51.100.7" : "2001:db8::7";
+            struct allowed redirect = {.rport = 8443};
+            strcpy(redirect.raddr, target);
+            expect_destination(kind == 0 ? version : target_version,
+                               kind == 0 ? dest : target, kind == 0 ? 443 : 8443);
+            address_formats = 0;
+            connect_errno = ENETUNREACH;
+            assert(open_tcp_socket(args, &session, kind == 0 ? NULL : &redirect) == -1);
+            assert(destination_calls == 1 && sockets == 0 && allocations == 0);
+            assert(address_formats == (kind == 0 ? 2 : 3));
+            char detail[80] = "", expected[512];
+            if (kind != 0)
+                snprintf(detail, sizeof(detail), " target %s/8443", target);
+            snprintf(expected, sizeof(expected),
+                     "TCP%d connect from %s/40096 to %s/443 uid 10215 socket %d "
+                     "route %s%s error %d: %s",
+                     version, source, dest, connect_fd, kind == 0 ? "direct" : "redirect",
+                     detail, ENETUNREACH, strerror(ENETUNREACH));
+            assert(strcmp(last_log, expected) == 0);
+        }
+    }
+    connect_errno = 0;
+#endif
+}
+
 static void drain_gap(const struct arguments *args, struct ng_session *s, int peer,
                       uint32_t target, size_t head_length, size_t *delivered) {
     struct epoll_event event = {.events = EPOLLOUT, .data.ptr = s};

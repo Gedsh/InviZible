@@ -219,6 +219,8 @@ static const char *run_case(const char *id) {
         test_tcp_dns_buffer(11);
     else if (strcmp(id, "tcpDestination") == 0)
         test_tcp_destination(&args);
+    else if (strcmp(id, "tcpConnectLogging") == 0)
+        test_tcp_connect_logging(&args);
     else if (strcmp(id, "udpDestination") == 0)
         test_udp_destination(&args);
     else if (strcmp(id, "icmpDestination") == 0)

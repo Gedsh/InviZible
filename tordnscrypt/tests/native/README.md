@@ -299,7 +299,11 @@ Run with `-PnativeJniProfiling=true` to also compile the optional `PROFILE_JNI`
 paths and inject failures in profiling's start/end samples. Invalid timing
 samples are skipped without changing packet creation. This option can be combined
 with `nativeSanitizers` and `nativeBaseline`.
-The full run contains 231 tests plus the optional comparison test.
+TCP connect-error logs omit the repeated target for direct connections and retain
+the actual target for other routes. An IPv4/IPv6 regression checks direct and
+same-family/cross-family redirect errors, preserved error details, socket cleanup,
+and skipped target-address formatting for direct failures.
+The full run contains 232 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

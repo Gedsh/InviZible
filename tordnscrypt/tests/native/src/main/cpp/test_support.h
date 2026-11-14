@@ -123,6 +123,7 @@ void test_socks5(void); // invizible.c
 void test_native_initialization(void);
 void test_jni_load_failures(void);
 void test_tcp_destination(const struct arguments *args);
+void test_tcp_connect_logging(const struct arguments *args);
 void test_udp_destination(const struct arguments *args);
 void test_icmp_destination(const struct arguments *args);
 void test_bounded_logging(void);

@@ -59,6 +59,7 @@ public final class TcpTest extends NativeTestSupport {
     @Test public void existingFlowErrorsLogStoredUid() { check("tcpSessionUid"); }
     @Test public void upstreamEofPreservesAlreadyQueuedData() { check("tcpEofQueued"); }
     @Test public void destinationAddressesAreFullyInitialized() { check("tcpDestination"); }
+    @Test public void connectErrorsOmitDuplicateDirectTargetAndKeepRedirectTargets() { check("tcpConnectLogging"); }
     @Test public void fullPayloadQueueAcceptsMissingHeadAndRecovers() { check("tcpGapBytes"); }
     @Test public void fullSegmentQueueAcceptsMissingHeadAndRecovers() { check("tcpGapSegments"); }
     @Test public void gapRecoveryPreservesOverlappingBytesAndReplaysTail() { check("tcpGapOverlap"); }

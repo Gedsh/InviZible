@@ -1786,21 +1786,25 @@ static int open_tcp_socket_with_error(const struct arguments *args,
         int connect_error = errno;
         *connect_error_out = connect_error;
         char source[INET6_ADDRSTRLEN + 1] = "?";
-        char target[INET6_ADDRSTRLEN + 1] = "?";
+        char target_detail[INET6_ADDRSTRLEN + 16] = "";
         inet_ntop(cur->version == 4 ? AF_INET : AF_INET6,
                   cur->version == 4 ? (const void *) &cur->saddr.ip4
                                     : (const void *) &cur->saddr.ip6,
                   source, sizeof(source));
-        inet_ntop(version == 4 ? AF_INET : AF_INET6,
-                  version == 4 ? (const void *) &addr4.sin_addr
-                               : (const void *) &addr6.sin6_addr,
-                  target, sizeof(target));
+        if (strcmp(route, "direct") != 0) {
+            char target[INET6_ADDRSTRLEN + 1] = "?";
+            inet_ntop(version == 4 ? AF_INET : AF_INET6,
+                      version == 4 ? (const void *) &addr4.sin_addr
+                                   : (const void *) &addr6.sin6_addr,
+                      target, sizeof(target));
+            snprintf(target_detail, sizeof(target_detail), " target %s/%u", target,
+                     ntohs(version == 4 ? addr4.sin_port : addr6.sin6_port));
+        }
         log_android(ANDROID_LOG_ERROR,
                     "TCP%d connect from %s/%u to %s/%u uid %d socket %d "
-                    "route %s target IPv%d %s/%u error %d: %s",
+                    "route %s%s error %d: %s",
                     cur->version, source, ntohs(cur->source), dest, ntohs(cur->dest),
-                    cur->uid, sock, route, version, target,
-                    ntohs(version == 4 ? addr4.sin_port : addr6.sin6_port),
+                    cur->uid, sock, route, target_detail,
                     connect_error, strerror(connect_error));
         close(sock);
         return -1;
