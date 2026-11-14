@@ -1046,7 +1046,7 @@ jobject create_packet(const struct arguments *args,
                       jint dport,
                       const char *data,
                       jint uid,
-                      jboolean allowed) {
+                      jboolean is_allowed) {
     JNIEnv *env = args->env;
 
 #ifdef PROFILE_JNI
@@ -1113,7 +1113,7 @@ jobject create_packet(const struct arguments *args,
         (*env)->SetIntField(env, jpacket, fidDport, dport);
         (*env)->SetObjectField(env, jpacket, fidData, jdata);
         (*env)->SetIntField(env, jpacket, fidUid, uid);
-        (*env)->SetBooleanField(env, jpacket, fidAllowed, allowed);
+        (*env)->SetBooleanField(env, jpacket, fidAllowed, is_allowed);
     }
     complete = !jniCheckException(env) && complete;
 

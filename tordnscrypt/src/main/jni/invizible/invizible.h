@@ -685,7 +685,7 @@ jobject create_packet(const struct arguments *args,
                       jint dport,
                       const char *data,
                       jint uid,
-                      jboolean allowed);
+                      jboolean is_allowed);
 
 void account_usage(const struct arguments *args, jint version, jint protocol,
                    const char *daddr, jint dport, jint uid, jlong sent, jlong received);
