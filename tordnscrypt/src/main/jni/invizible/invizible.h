@@ -539,7 +539,7 @@ jboolean handle_udp(const struct arguments *args,
                     int uid, struct allowed *redirect,
                     const int epoll_fd);
 
-int check_dhcp(const struct arguments *args, const struct udp_session *u,
+int check_dhcp(const struct arguments *args, struct udp_session *u,
                const uint8_t *data, const size_t datalen);
 
 void clear_tcp_data(struct tcp_session *cur);

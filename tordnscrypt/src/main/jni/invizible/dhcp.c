@@ -22,7 +22,7 @@
 
 #include "invizible.h"
 
-int check_dhcp(const struct arguments *args, const struct udp_session *u,
+int check_dhcp(const struct arguments *args, struct udp_session *u,
                const uint8_t *data, const size_t datalen) {
 
     // This is untested
@@ -61,7 +61,7 @@ int check_dhcp(const struct arguments *args, const struct udp_session *u,
             return -1;
 
         // Hack
-        inet_pton(AF_INET, "10.1.10.1", (void *) &u->saddr);
+        inet_pton(AF_INET, "10.1.10.1", &u->saddr.ip4);
 
         /*
         Discover:
