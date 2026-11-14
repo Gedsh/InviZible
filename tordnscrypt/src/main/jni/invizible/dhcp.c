@@ -25,8 +25,8 @@
 int check_dhcp(const struct arguments *args, struct udp_session *u,
                const uint8_t *data, const size_t datalen) {
 
-    // This is untested
-    // Android routing of DHCP is erroneous
+    // Native regression tests cover response construction and allocation failure.
+    // DHCP routing through real Android tethering remains unverified.
 
     log_android(ANDROID_LOG_WARN, "DHCP check");
 
@@ -60,20 +60,20 @@ int check_dhcp(const struct arguments *args, struct udp_session *u,
         if (response == NULL)
             return -1;
 
-        // Hack
+        // Override the session's source address before constructing the reply.
         inet_pton(AF_INET, "10.1.10.1", &u->saddr.ip4);
 
         /*
         Discover:
             DHCP option 53: DHCP Discover
-            DHCP option 50: 192.168.1.100 requested
+            DHCP option 50: 10.1.10.2 requested
             DHCP option 55: Parameter Request List:
             Request Subnet Mask (1), Router (3), Domain Name (15), Domain Name Server (6)
 
         Request
             DHCP option 53: DHCP Request
-            DHCP option 50: 192.168.1.100 requested
-            DHCP option 54: 192.168.1.1 DHCP server.
+            DHCP option 50: 10.1.10.2 requested
+            DHCP option 54: 10.1.10.1 DHCP server.
         */
 
         memcpy(response, request, sizeof(struct dhcp_packet));
@@ -114,12 +114,12 @@ int check_dhcp(const struct arguments *args, struct udp_session *u,
         idx += 4;
 
         *(options + idx++) = 51; // lease time
-        *(options + idx++) = 4; // quad
+        *(options + idx++) = 4; // 4-byte duration in seconds
         uint32_t lease_time = htonl(3600);
         memcpy(options + idx, &lease_time, sizeof(lease_time));
         idx += 4;
 
-        *(options + idx++) = 54; // DHCP
+        *(options + idx++) = 54; // Server identifier
         *(options + idx++) = 4; // IP4 length
         inet_pton(AF_INET, "10.1.10.1", options + idx);
         idx += 4;
@@ -132,12 +132,12 @@ int check_dhcp(const struct arguments *args, struct udp_session *u,
         *(options + idx++) = 255; // End
 
         /*
-            DHCP option 53: DHCP Offer
+            DHCP option 53: DHCP Offer or DHCP Ack
             DHCP option 1: 255.255.255.0 subnet mask
-            DHCP option 3: 192.168.1.1 router
-            DHCP option 51: 86400s (1 day) IP address lease time
-            DHCP option 54: 192.168.1.1 DHCP server
-            DHCP option 6: DNS servers 9.7.10.15
+            DHCP option 3: 10.1.10.1 router
+            DHCP option 51: 3600s (1 hour) IP address lease time
+            DHCP option 54: 10.1.10.1 DHCP server
+            DHCP option 6: DNS server 8.8.8.8
          */
 
         write_udp(args, u, (uint8_t *) response, 500);
