@@ -138,6 +138,8 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 log_android(ANDROID_LOG_WARN, "ICMP recv eof");
                 s->icmp.stop = 1;
 
+            } else if (bytes < ICMP_MINLEN) {
+                log_android(ANDROID_LOG_WARN, "ICMP recv packet too short length %zd", bytes);
             } else {
                 // Socket read data
                 struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
@@ -160,7 +162,9 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                     memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
                     memcpy(&pseudo.ip6ph_src, &s->icmp.daddr.ip6, 16);
                     memcpy(&pseudo.ip6ph_dst, &s->icmp.saddr.ip6, 16);
-                    pseudo.ip6ph_len = bytes - sizeof(struct ip6_hdr);
+                    // Ping sockets return the ICMP message without an IPv6 header.
+                    // recv is bounded by the uint16_t buffer length above.
+                    pseudo.ip6ph_len = htonl((uint32_t) bytes);
                     pseudo.ip6ph_nxt = IPPROTO_ICMPV6;
                     csum = calc_checksum(
                             0, (uint8_t *) &pseudo, sizeof(struct ip6_hdr_pseudo));
@@ -270,8 +274,9 @@ jboolean handle_icmp(const struct arguments *args,
         memset(&pseudo, 0, sizeof(struct ip6_hdr_pseudo));
         memcpy(&pseudo.ip6ph_src, &ip6->ip6_dst, 16);
         memcpy(&pseudo.ip6ph_dst, &ip6->ip6_src, 16);
-        pseudo.ip6ph_len = ip6->ip6_ctlun.ip6_un1.ip6_un1_plen;
-        pseudo.ip6ph_nxt = ip6->ip6_ctlun.ip6_un1.ip6_un1_nxt;
+        // Exclude extension headers and encode the full 32-bit pseudo-header field.
+        pseudo.ip6ph_len = htonl((uint32_t) icmplen);
+        pseudo.ip6ph_nxt = IPPROTO_ICMPV6;
         csum = calc_checksum(0, (uint8_t *) &pseudo, sizeof(struct ip6_hdr_pseudo));
     }
     icmp->icmp_cksum = 0;

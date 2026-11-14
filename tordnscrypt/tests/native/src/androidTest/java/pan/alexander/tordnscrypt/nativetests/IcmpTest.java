@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 public final class IcmpTest extends NativeTestSupport {
     @Test public void truncatedHeadersAndOffsetsPastPacketEndAreRejected() { check("icmpPacketBounds"); }
     @Test public void repliesReuseBuffersAndRestoreIdentifiers() { check("icmpBufferReuse"); }
+    @Test public void shortRepliesAreDroppedAndLaterRepliesStillWork() { check("icmpShortReplies"); }
+    @Test public void ipv6ForwardChecksumsExcludeExtensionHeaders() { check("icmp6ForwardChecksums"); }
     @Test public void destinationAddressesAreFullyInitialized() { check("icmpDestination"); }
     @Test public void allocationFailuresReleaseResources() { check("icmpAllocationFailure"); }
     @Test public void socketSetupFailureCleanup() { check("icmpSocketCleanup"); }

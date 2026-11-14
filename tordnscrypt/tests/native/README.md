@@ -22,6 +22,13 @@ check initialization retry and partial-session cleanup; preserve TCP queues on
 allocation failure; and exercise bounded logging and JNI exception-reporting failures.
 UDP and ICMP handler cases reject truncated headers and offsets past the packet
 end for both IP versions without creating sessions or opening sockets.
+ICMP receive cases drop one-to-seven-byte datagrams before accessing echo fields,
+then forward valid replies with restored identifiers. Both temporary allocations
+and reused scratch buffers are covered, along with the existing zero-length stop
+behavior. An independent byte-oriented checksum reference checks IPv4/IPv6 replies
+at minimum, odd/even and larger lengths, and IPv6 forwarding with and without a
+Hop-by-Hop header. ICMPv6 pseudo-headers use the ICMP message length in network byte
+order and protocol 58, excluding any IPv6 extension headers.
 Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
 cleanup list, with one additional link per record and no index allocations.
 Tests cover both address families, ports and echo IDs, IPv4 union padding,
@@ -276,7 +283,7 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
-The full run contains 223 tests plus the optional comparison test.
+The full run contains 225 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

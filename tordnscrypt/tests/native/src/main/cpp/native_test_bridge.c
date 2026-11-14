@@ -135,6 +135,10 @@ static const char *run_case(const char *id) {
         test_udp_buffer_reuse(&args);
     else if (strcmp(id, "icmpBufferReuse") == 0)
         test_icmp_buffer_reuse(&args);
+    else if (strcmp(id, "icmpShortReplies") == 0)
+        test_icmp_short_replies(&args);
+    else if (strcmp(id, "icmp6ForwardChecksums") == 0)
+        test_icmp6_forward_checksums(&args);
     else if (strcmp(id, "lazyLogging") == 0)
         test_lazy_logging();
     else if (strcmp(id, "lazyTcpLogging") == 0)

@@ -131,6 +131,8 @@ void test_tcp_window_reopen(const struct arguments *args, int version);
 void test_tcp_probe_deadlines(struct arguments *args);
 void test_udp_buffer_reuse(const struct arguments *args);
 void test_icmp_buffer_reuse(const struct arguments *args);
+void test_icmp_short_replies(const struct arguments *args);
+void test_icmp6_forward_checksums(const struct arguments *args);
 void test_event_buffer_cleanup(struct arguments *args);
 void test_exception_failures(void);
 void test_atomic_flags(void);
