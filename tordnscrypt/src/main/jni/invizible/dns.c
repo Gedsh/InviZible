@@ -197,12 +197,12 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                                     "DNS answer %d qname %s cname %s qclass %d qtype %d rcode %d length %d",
                                     a, name, cname, qclass, qtype, rcode, rdlength);
                     } else if (qclass == DNS_QCLASS_IN && qtype == DNS_QTYPE_HINFO) {
-                        char *hinfo = (char *) ng_malloc(rdlength, "hinfo");
+                        char *hinfo = ng_malloc(rdlength, "hinfo");
                         if (hinfo == NULL)
                             return;
                         memset(hinfo, '\0', rdlength);
                         if (rdlength > 1) {
-                            hinfo = memcpy(hinfo, data + off + 1, (size_t) (rdlength - 1));
+                            memcpy(hinfo, data + off + 1, (size_t) (rdlength - 1));
                             dns_resolved(args, qname, name, SPACE_SYMBOL, hinfo,
                                          SPACE_SYMBOL, rcode);
                             log_android(ANDROID_LOG_DEBUG,

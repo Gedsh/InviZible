@@ -195,12 +195,12 @@ const char *strstate(const int state) {
 }
 
 char *hex(const uint8_t *data, const size_t len) {
-    char hex_str[] = "0123456789ABCDEF";
+    static const char hex_str[] = "0123456789ABCDEF";
 
     char *hexout;
     if (len > (SIZE_MAX - 1) / 3)
         return NULL;
-    hexout = (char *) ng_malloc(len * 3 + 1, "hex");
+    hexout = ng_malloc(len * 3 + 1, "hex");
     if (hexout == NULL)
         return NULL;
 
