@@ -880,13 +880,18 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                     strcpy(socks5_password, tor_socks5_password);
                 }
 
-                uint8_t ulen = strlen(socks5_username);
-                uint8_t plen = strlen(socks5_password);
+                _Static_assert(sizeof(socks5_username) - 1 <= UINT8_MAX &&
+                               sizeof(socks5_password) - 1 <= UINT8_MAX,
+                               "SOCKS5 credential lengths must fit in one byte");
+                const size_t ulen = strlen(socks5_username);
+                const size_t plen = strlen(socks5_password);
                 uint8_t buffer[512];
+                _Static_assert(sizeof(socks5_username) + sizeof(socks5_password) + 1 <= sizeof(buffer),
+                               "SOCKS5 authentication must fit in the send buffer");
                 *(buffer + 0) = 1; // Version
-                *(buffer + 1) = ulen;
+                *(buffer + 1) = (uint8_t) ulen;
                 memcpy(buffer + 2, socks5_username, ulen);
-                *(buffer + 2 + ulen) = plen;
+                *(buffer + 2 + ulen) = (uint8_t) plen;
                 memcpy(buffer + 2 + ulen + 1, socks5_password, plen);
 
                 size_t len = 2 + ulen + 1 + plen;
@@ -1154,7 +1159,7 @@ jboolean handle_tcp(const struct arguments *args,
             // http://www.iana.org/assignments/tcp-parameters/tcp-parameters.xhtml#tcp-parameters-1
             uint16_t mss = get_default_mss(version);
             uint8_t ws = 0;
-            int optlen = tcpoptlen;
+            size_t optlen = tcpoptlen;
             const uint8_t *options = tcpoptions;
             while (optlen > 0) {
                 uint8_t kind = *options;
@@ -1484,7 +1489,10 @@ jboolean handle_tcp(const struct arguments *args,
 }
 
 static void insert_tcp_gap(struct tcp_session *cur, struct segment *head) {
-    size_t retained = head->len;
+    // A queue total plus one uint16_t segment must fit before the cap check.
+    _Static_assert(TCP_QUEUE_BYTES <= UINT32_MAX - UINT16_MAX,
+                   "TCP queue capacity checks must fit in uint32_t");
+    uint32_t retained = head->len;
     uint32_t unsent = head->len;
     unsigned int segments = 1;
     size_t copied = 0;

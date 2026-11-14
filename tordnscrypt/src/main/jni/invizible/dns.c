@@ -77,7 +77,7 @@ bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t
         } else {
             size_t target = 2;
             if (cur->dns_header_used >= 2) {
-                size_t length = read_net16(cur->dns_header);
+                const uint16_t length = read_net16(cur->dns_header);
                 target += (length < sizeof(struct dns_header) ? length : sizeof(struct dns_header));
             }
             size_t take = target - cur->dns_header_used;
@@ -88,12 +88,13 @@ bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t
             data += take;
             datalen -= take;
             if (cur->dns_header_used >= 2) {
-                size_t length = read_net16(cur->dns_header);
+                const uint16_t length = read_net16(cur->dns_header);
                 size_t header = (length < sizeof(struct dns_header) ? length : sizeof(struct dns_header));
                 if (cur->dns_header_used == header + 2) {
                     if (dns_has_multiple_questions(cur->dns_header + 2, header))
                         return false;
-                    cur->dns_body_remaining = length - header;
+                    // The wire length is 16-bit and header never exceeds it.
+                    cur->dns_body_remaining = (uint16_t) (length - header);
                     cur->dns_header_used = 0;
                 }
             }
@@ -153,7 +154,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
         }
 
         short svcb = 0;
-        int32_t aoff = off;
+        const size_t aoff = (size_t) off; // The complete question was validated above.
         for (int a = 0; a < acount; a++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
             if (off > 0 && (size_t) off + 10 <= *datalen) {
