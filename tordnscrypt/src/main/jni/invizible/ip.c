@@ -80,7 +80,8 @@ int check_tun(const struct arguments *args,
         } else if (length > 0) {
 
             if (length > max_tun_msg) {
-                max_tun_msg = length;
+                // Positive read length is bounded by get_mtu() (1500), so it fits in int.
+                max_tun_msg = (int) length;
                 log_android(ANDROID_LOG_WARN, "Maximum tun msg length %d", max_tun_msg);
             }
 

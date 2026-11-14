@@ -700,7 +700,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
     s->tcp.monitor_dirty = true;
 
-    int oldstate = s->tcp.state;
+    uint8_t oldstate = s->tcp.state;
     uint32_t oldlocal = s->tcp.local_seq;
     uint32_t oldremote = s->tcp.remote_seq;
 
@@ -1348,7 +1348,7 @@ jboolean handle_tcp(const struct arguments *args,
             write_rst(args, &cur->tcp);
             return 0;
         } else {
-            int oldstate = cur->tcp.state;
+            uint8_t oldstate = cur->tcp.state;
             uint32_t oldlocal = cur->tcp.local_seq;
             uint32_t oldremote = cur->tcp.remote_seq;
 
@@ -1871,7 +1871,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     uint16_t csum;
 
     // Build packet
-    int optlen = (syn ? 4 + 3 + 1 : 0);
+    const size_t optlen = (syn ? 4 + 3 + 1 : 0);
     uint8_t *options;
     if (cur->version == 4) {
         len = sizeof(struct iphdr) + sizeof(struct tcphdr) + optlen + datalen;
@@ -1969,7 +1969,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
 
     // Continue checksum
     csum = calc_checksum(csum, (uint8_t *) tcp, sizeof(struct tcphdr));
-    csum = calc_checksum(csum, options, (size_t) optlen);
+    csum = calc_checksum(csum, options, optlen);
     // Buffered DNS output can start at an odd offset; checksum the aligned packet copy.
     csum = calc_checksum(csum, options + optlen, datalen);
     tcp->check = ~csum;
