@@ -971,9 +971,7 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                     ssize_t sent = send(s->socket,
                                         s->tcp.forward->data + s->tcp.forward->sent,
                                         s->tcp.forward->len - s->tcp.forward->sent,
-                                        (unsigned int) (MSG_NOSIGNAL | (s->tcp.forward->psh
-                                                                        ? 0
-                                                                        : MSG_MORE)));
+                                        MSG_NOSIGNAL | (s->tcp.forward->psh ? 0 : MSG_MORE));
                     if (sent < 0) {
                         log_android(errno == EINTR || errno == EAGAIN ? ANDROID_LOG_DEBUG : ANDROID_LOG_ERROR,
                                     "%s send error %d: %s",
@@ -1652,7 +1650,6 @@ static int open_tcp_socket_with_error(const struct arguments *args,
                                      const struct tcp_session *cur,
                                      struct allowed *redirect, int *connect_error_out) {
     *connect_error_out = 0;
-    int sock;
     int version;
     if (redirect == NULL) {
         version = cur->version;
@@ -1664,7 +1661,8 @@ static int open_tcp_socket_with_error(const struct arguments *args,
     }
 
     // Get TCP socket
-    if ((sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
+    int sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    if (sock < 0) {
         log_android(ANDROID_LOG_ERROR, "socket error %d: %s", errno, strerror(errno));
         return -1;
     }
