@@ -1,5 +1,23 @@
 #include "test_support.h"
 
+void test_icmp_packet_bounds(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[64] = {0};
+        size_t off = ip_header(packet, version,
+                version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6, ICMP_MINLEN,
+                version == 4 ? "127.0.0.1" : "::1");
+        for (size_t length = 0; length < ICMP_MINLEN; length++) {
+            assert(handle_icmp(args, packet, off + length, packet + off, own_uid, -1) == 0);
+            assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+        }
+        assert(handle_icmp(args, packet, off, packet + off + ICMP_MINLEN, own_uid, -1) == 0);
+        assert(handle_icmp(args, packet, 0, packet, own_uid, -1) == 0);
+        assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_icmp_buffer_reuse(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     for (int version = 4; version <= 6; version += 2) {

@@ -252,13 +252,17 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
                     const uint8_t *payload,
                     int uid, struct allowed *redirect,
                     const int epoll_fd, const struct udp_session_lookup *lookup) {
+    const size_t payload_offset = (size_t) (payload - pkt);
+    if (payload_offset > length || length - payload_offset < sizeof(struct udphdr))
+        return 0;
+
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
     const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
     const struct udphdr *udphdr = (struct udphdr *) payload;
     const uint8_t *data = payload + sizeof(struct udphdr);
-    const size_t datalen = length - (data - pkt);
+    const size_t datalen = length - payload_offset - sizeof(struct udphdr);
 
     if (ntohs(udphdr->dest) == 53 && datalen < sizeof(struct dns_header)) {
         log_android(ANDROID_LOG_WARN, "DNS request too short");

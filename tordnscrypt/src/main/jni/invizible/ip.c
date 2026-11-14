@@ -150,7 +150,7 @@ void handle_ip(const struct arguments *args,
     char flags[10];
     char data[16];
     int flen = 0;
-    uint8_t *payload;
+    size_t payload_offset;
     const void *checksum_source;
     const void *checksum_dest;
 
@@ -184,7 +184,7 @@ void handle_ip(const struct arguments *args,
             log_android(ANDROID_LOG_WARN, "IP4 invalid header length %zu", header_length);
             return;
         }
-        payload = (uint8_t *) (pkt + header_length);
+        payload_offset = header_length;
 
         if (ntohs(ip4hdr->tot_len) != length) {
             log_android(ANDROID_LOG_ERROR, "IP4 packet length %zu differs from total length %u",
@@ -294,7 +294,7 @@ void handle_ip(const struct arguments *args,
         saddr = &ip6hdr->ip6_src;
         daddr = &ip6hdr->ip6_dst;
 
-        payload = (uint8_t *) (pkt + off);
+        payload_offset = off;
 
         // IPv6 has no header checksum; validate the upper layer after extension headers.
     } else {
@@ -302,6 +302,9 @@ void handle_ip(const struct arguments *args,
         return;
     }
 
+    // Both IP parsers have validated the offset against the packet length.
+    const uint8_t *payload = pkt + payload_offset;
+    const size_t payload_length = length - payload_offset;
     struct log_address source = {.version = version, .address = saddr};
     struct log_address dest = {.version = version, .address = daddr};
 
@@ -311,14 +314,14 @@ void handle_ip(const struct arguments *args,
     uint16_t dport = 0;
     *data = 0;
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) {
-        if (length - (payload - pkt) < ICMP_MINLEN) {
+        if (payload_length < ICMP_MINLEN) {
             log_android(ANDROID_LOG_WARN, "ICMP packet too short");
             return;
         }
 
         struct icmp *icmp = (struct icmp *) payload;
         if (!valid_transport_checksum(version, protocol, checksum_source, checksum_dest,
-                                       payload, length - (payload - pkt))) {
+                                       payload, payload_length)) {
             log_android(ANDROID_LOG_WARN, "Invalid ICMP%d checksum", version);
             return;
         }
@@ -330,14 +333,14 @@ void handle_ip(const struct arguments *args,
         dport = ntohs(icmp->icmp_id);
 
     } else if (protocol == IPPROTO_UDP) {
-        if (length - (payload - pkt) < sizeof(struct udphdr)) {
+        if (payload_length < sizeof(struct udphdr)) {
             log_android(ANDROID_LOG_WARN, "UDP packet too short");
             return;
         }
 
         struct udphdr *udp = (struct udphdr *) payload;
 
-        if (ntohs(udp->len) != length - (payload - pkt)) {
+        if (ntohs(udp->len) != payload_length) {
             log_android(ANDROID_LOG_WARN, "UDP invalid length");
             return;
         }
@@ -353,7 +356,7 @@ void handle_ip(const struct arguments *args,
             return;
         }
     } else if (protocol == IPPROTO_TCP) {
-        if (length - (payload - pkt) < sizeof(struct tcphdr)) {
+        if (payload_length < sizeof(struct tcphdr)) {
             log_android(ANDROID_LOG_WARN, "TCP packet too short");
             return;
         }
@@ -377,7 +380,7 @@ void handle_ip(const struct arguments *args,
             flags[flen++] = 'R';
 
         if (!valid_transport_checksum(version, protocol, checksum_source, checksum_dest,
-                                       payload, length - (payload - pkt))) {
+                                       payload, payload_length)) {
             log_android(ANDROID_LOG_WARN, "Invalid TCP%d checksum", version);
             return;
         }

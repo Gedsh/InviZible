@@ -173,6 +173,8 @@ void test_tcp_half_close(int kind);
 void tcp_flow(int version);
 void socks_flow(int version, int authentication, int max_credentials);
 void test_icmp_socket_cleanup(const struct arguments *args); // icmp.c
+void test_icmp_packet_bounds(const struct arguments *args);
+void test_udp_packet_bounds(const struct arguments *args);
 void icmp_packets(int version);
 void test_dhcp_response_bounds(const struct arguments *args); // dhcp.c
 void dhcp_offer(void);

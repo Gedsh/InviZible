@@ -357,6 +357,10 @@ static const char *run_case(const char *id) {
         test_udp_blocked_duplicates(&args);
     else if (strcmp(id, "udpShortDns") == 0)
         test_udp_short_dns(&args);
+    else if (strcmp(id, "udpPacketBounds") == 0)
+        test_udp_packet_bounds(&args);
+    else if (strcmp(id, "icmpPacketBounds") == 0)
+        test_icmp_packet_bounds(&args);
     else if (strcmp(id, "memorySocks5") == 0)
         test_socks5();
     else if (strcmp(id, "udp4Direct") == 0)

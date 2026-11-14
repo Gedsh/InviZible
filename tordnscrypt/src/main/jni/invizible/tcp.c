@@ -1105,9 +1105,10 @@ jboolean handle_tcp(const struct arguments *args,
                     const uint8_t *payload,
                     int uid, int allowed, struct allowed *redirect,
                     const int epoll_fd) {
-    size_t payload_offset = (size_t) (payload - pkt);
+    const size_t payload_offset = (size_t) (payload - pkt);
     if (payload_offset > length || length - payload_offset < sizeof(struct tcphdr))
         return 0;
+    const size_t payload_length = length - payload_offset;
 
     // Get headers
     const uint8_t version = (*pkt) >> 4;
@@ -1115,16 +1116,17 @@ jboolean handle_tcp(const struct arguments *args,
     const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
     const struct tcphdr *tcphdr = (struct tcphdr *) payload;
     const size_t header_length = (size_t) tcphdr->doff * 4;
-    if (header_length < sizeof(struct tcphdr) || header_length > length - payload_offset) {
+    if (header_length < sizeof(struct tcphdr) || header_length > payload_length) {
         log_android(ANDROID_LOG_WARN, "TCP invalid header length %zu", header_length);
         return 0;
     }
     const size_t tcpoptlen = header_length - sizeof(struct tcphdr);
     const uint8_t *tcpoptions = payload + sizeof(struct tcphdr);
     const uint8_t *data = payload + header_length;
-    if (length - (data - pkt) > UINT16_MAX)
+    const size_t data_length = payload_length - header_length;
+    if (data_length > UINT16_MAX)
         return 0;
-    const uint16_t datalen = (const uint16_t) (length - (data - pkt));
+    const uint16_t datalen = (uint16_t) data_length;
 
     // Search session
     struct ng_session *cur = find_session(args->ctx, version, IPPROTO_TCP,

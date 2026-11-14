@@ -193,12 +193,16 @@ jboolean handle_icmp(const struct arguments *args,
                      const uint8_t *payload,
                      int uid,
                      const int epoll_fd) {
+    const size_t payload_offset = (size_t) (payload - pkt);
+    if (payload_offset > length || length - payload_offset < ICMP_MINLEN)
+        return 0;
+
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
     const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
     struct icmp *icmp = (struct icmp *) payload;
-    size_t icmplen = length - (payload - pkt);
+    const size_t icmplen = length - payload_offset;
 
     struct log_address source = {.version = version, .address = version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src};
     struct log_address dest = {.version = version, .address = version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst};

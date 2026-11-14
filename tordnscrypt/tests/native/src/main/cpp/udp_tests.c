@@ -1,5 +1,23 @@
 #include "test_support.h"
 
+void test_udp_packet_bounds(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[64] = {0};
+        size_t off = ip_header(packet, version, IPPROTO_UDP, sizeof(struct udphdr),
+                               version == 4 ? "127.0.0.1" : "::1");
+        for (size_t length = 0; length < sizeof(struct udphdr); length++) {
+            assert(handle_udp(args, packet, off + length, packet + off, own_uid, NULL, -1) == 0);
+            assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+        }
+        assert(handle_udp(args, packet, off, packet + off + sizeof(struct udphdr),
+                          own_uid, NULL, -1) == 0);
+        assert(handle_udp(args, packet, 0, packet, own_uid, NULL, -1) == 0);
+        assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_udp_lookup_states(struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];

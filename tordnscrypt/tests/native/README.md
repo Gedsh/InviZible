@@ -20,6 +20,8 @@ shutdown, SOCKS5 negotiation, DNS answers/blocking, ICMP, and DHCP offers.
 They also inject allocation, mutex, pipe, and descriptor-configuration failures;
 check initialization retry and partial-session cleanup; preserve TCP queues on
 allocation failure; and exercise bounded logging and JNI exception-reporting failures.
+UDP and ICMP handler cases reject truncated headers and offsets past the packet
+end for both IP versions without creating sessions or opening sockets.
 Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
 cleanup list, with one additional link per record and no index allocations.
 Tests cover both address families, ports and echo IDs, IPv4 union padding,
@@ -274,7 +276,7 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
-The full run contains 221 tests plus the optional comparison test.
+The full run contains 223 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts
