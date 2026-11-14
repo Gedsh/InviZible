@@ -104,6 +104,7 @@ bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t
 
 void parse_dns_response(const struct arguments *args, const struct ng_session *s,
                         const uint8_t *data, size_t *datalen) {
+    (void) s; // Used only by the disabled qname logging below.
     if (dns_has_multiple_questions(data, *datalen)) {
         log_android(ANDROID_LOG_WARN, "DNS response has multiple questions");
         return;
@@ -249,7 +250,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
             dns->add_count = 0;
             *datalen = aoff;
 
-            int version;
+            // Disabled qname logging, including address preparation.
+            /*int version;
             char source[INET6_ADDRSTRLEN + 1];
             char dest[INET6_ADDRSTRLEN + 1];
             uint16_t sport;
@@ -279,8 +281,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                 }
             }
 
-            // Log qname. Currently is not used.
-            /*char name[DNS_QNAME_MAX + 40 + 1];
+            char name[DNS_QNAME_MAX + 40 + 1];
             sprintf(name, "qtype %d qname %s rcode %d", question_type, qname, dns->rcode);
             jobject objPacket = create_packet(
                     args, version, s->protocol, "",
