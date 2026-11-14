@@ -508,16 +508,16 @@ jint get_uid(const int version, const int protocol,
 
     // Check IPv6 table first
     if (version == 4) {
-        int8_t saddr128[16];
+        uint8_t saddr128[16];
         memset(saddr128, 0, 10);
-        saddr128[10] = (uint8_t) 0xFF;
-        saddr128[11] = (uint8_t) 0xFF;
+        saddr128[10] = 0xFF;
+        saddr128[11] = 0xFF;
         memcpy(saddr128 + 12, saddr, 4);
 
-        int8_t daddr128[16];
+        uint8_t daddr128[16];
         memset(daddr128, 0, 10);
-        daddr128[10] = (uint8_t) 0xFF;
-        daddr128[11] = (uint8_t) 0xFF;
+        daddr128[10] = 0xFF;
+        daddr128[11] = 0xFF;
         memcpy(daddr128 + 12, daddr, 4);
 
         uid = get_uid_sub(6, protocol, saddr128, sport, daddr128, dport, source, dest, now);
