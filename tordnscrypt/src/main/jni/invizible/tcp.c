@@ -1866,7 +1866,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
                   const uint8_t *data, size_t datalen,
                   int syn, int ack, int fin, int rst) {
     size_t len;
-    u_int8_t *buffer;
+    uint8_t *buffer;
     struct tcphdr *tcp;
     uint16_t csum;
 

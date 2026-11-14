@@ -316,9 +316,9 @@ struct uid_cache_entry {
 struct ip6_hdr_pseudo {
     struct in6_addr ip6ph_src;
     struct in6_addr ip6ph_dst;
-    u_int32_t ip6ph_len;
-    u_int8_t ip6ph_zero[3];
-    u_int8_t ip6ph_nxt;
+    uint32_t ip6ph_len;
+    uint8_t ip6ph_zero[3];
+    uint8_t ip6ph_nxt;
 } __packed;
 
 // PCAP
@@ -694,7 +694,7 @@ int compare_u32(uint32_t seq1, uint32_t seq2);
 
 const char *strstate(const int state);
 
-char *hex(const u_int8_t *data, const size_t len);
+char *hex(const uint8_t *data, const size_t len);
 
 int is_readable(int fd);
 

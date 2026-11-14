@@ -350,7 +350,7 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
 ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
                    uint8_t *data, size_t datalen) {
     size_t len;
-    u_int8_t *buffer;
+    uint8_t *buffer;
     struct icmp *icmp = (struct icmp *) data;
 
     // Build packet
