@@ -104,7 +104,7 @@ bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t
 }
 
 void parse_dns_response(const struct arguments *args, const struct ng_session *s,
-                        const uint8_t *data, size_t *datalen) {
+                        uint8_t *data, size_t *datalen) {
     (void) s; // Used only by the disabled qname logging below.
     if (dns_has_multiple_questions(data, *datalen)) {
         log_android(ANDROID_LOG_WARN, "DNS response has multiple questions");

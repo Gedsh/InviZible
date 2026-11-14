@@ -470,7 +470,7 @@ bool dns_has_multiple_questions(const uint8_t *data, size_t datalen);
 bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t datalen);
 
 void parse_dns_response(const struct arguments *args, const struct ng_session *session,
-                        const uint8_t *data, size_t *datalen);
+                        uint8_t *data, size_t *datalen);
 
 uint32_t get_send_window(const struct tcp_session *cur);
 

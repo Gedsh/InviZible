@@ -131,8 +131,9 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
                             bytes, format_log_address(&dest), ntohs(s->udp.dest));
 
                 s->udp.received += bytes;
+                size_t length = (size_t) bytes;
 
-                if (ntohs(s->udp.dest) == 53 && dns_has_multiple_questions(buffer, (size_t) bytes)) {
+                if (ntohs(s->udp.dest) == 53 && dns_has_multiple_questions(buffer, length)) {
                     log_android(ANDROID_LOG_WARN, "Dropping DNS response with multiple questions");
                     s->udp.state = UDP_FINISHING;
                     release_packet_buffer(args, buffer);
@@ -141,10 +142,10 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
 
                 // Process DNS response
                 if (ntohs(s->udp.dest) == 53)
-                    parse_dns_response(args, s, buffer, (size_t *) &bytes);
+                    parse_dns_response(args, s, buffer, &length);
 
                 // Forward to tun
-                if (write_udp(args, &s->udp, buffer, (size_t) bytes) < 0)
+                if (write_udp(args, &s->udp, buffer, length) < 0)
                     s->udp.state = UDP_FINISHING;
                 else {
                     // Prevent too many open files
