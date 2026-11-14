@@ -224,67 +224,68 @@ struct udp_session {
 };
 
 struct tcp_session {
-    jint uid;
+    // Group naturally aligned fields to limit padding on ARM32 and ARM64.
+    long long last_keep_alive;
+    uint64_t sent;
+    uint64_t received;
+    uint64_t dns_memory_generation;
+    uint64_t memory_generation;
     time_t time;
+
+    uint8_t *dns_response; // At most one length-prefixed frame (65537 bytes).
+    size_t dns_response_size;
+    size_t dns_response_used;
+    size_t dns_response_sent;
+    size_t dns_response_capacity; // Allocation size; filtering may shorten the frame.
+    struct segment *forward;
+    struct segment *forward_tail; // Last queued segment; NULL when the queue is empty.
+    struct tcp_memory *memory; // Borrowed from the owning context, never the event stack.
+
+    jint uid;
     int version;
-    uint16_t mss;
-    uint8_t recv_scale;
-    uint8_t send_scale;
     uint32_t recv_window; // host notation, scaled
     uint32_t send_window; // host notation, scaled
-    uint16_t unconfirmed; // packets
-
     uint32_t remote_seq; // confirmed bytes received, host notation
     uint32_t local_seq; // confirmed bytes sent, host notation
     uint32_t remote_start;
     uint32_t local_start;
 
     uint32_t acked; // host notation
-    long long last_keep_alive;
     int window_probe_interval; // milliseconds; zero when the app window is open
-    bool monitor_dirty; // Packet/socket processing changed this flow.
-    bool monitor_initialized;
-
-    uint64_t sent;
-    uint64_t received;
+    uint32_t fin_seq; // App FIN position, excluding the FIN byte.
+    uint32_t queue_bytes; // Retained payload, including partially sent segments.
+    uint32_t queue_unsent;
+    unsigned int queue_segments;
 
     union {
         __be32 ip4; // network notation
         struct in6_addr ip6;
     } saddr;
-    __be16 source; // network notation
-
     union {
         __be32 ip4; // network notation
         struct in6_addr ip6;
     } daddr;
-    __be16 dest; // network notation
 
+    uint16_t mss;
+    uint16_t unconfirmed; // packets
+    __be16 source; // network notation
+    __be16 dest; // network notation
+    uint16_t dns_body_remaining;
+
+    uint8_t recv_scale;
+    uint8_t send_scale;
+    bool monitor_dirty; // Packet/socket processing changed this flow.
+    bool monitor_initialized;
     uint8_t state;
     uint8_t socks5;
     bool upstream_eof;
     bool fin_received;
     bool fin_acked;
     bool memory_waiting; // App input paused by the shared queue budget.
-    uint32_t fin_seq; // App FIN position, excluding the FIN byte.
-    uint8_t dns_header[14]; // TCP length prefix and DNS header for incremental validation.
     uint8_t dns_header_used;
-    uint16_t dns_body_remaining;
-    uint8_t *dns_response; // At most one length-prefixed frame (65537 bytes).
-    size_t dns_response_size;
-    size_t dns_response_used;
-    size_t dns_response_sent;
     bool dns_response_ready;
-    size_t dns_response_capacity; // Allocation size; filtering may shorten the frame.
     bool dns_waiting;
-    uint64_t dns_memory_generation;
-    struct segment *forward;
-    struct segment *forward_tail; // Last queued segment; NULL when the queue is empty.
-    uint32_t queue_bytes; // Retained payload, including partially sent segments.
-    uint32_t queue_unsent;
-    unsigned int queue_segments;
-    struct tcp_memory *memory; // Borrowed from the owning context, never the event stack.
-    uint64_t memory_generation;
+    uint8_t dns_header[14]; // TCP length prefix and DNS header for incremental validation.
 };
 
 struct ng_session {
@@ -456,14 +457,14 @@ uint16_t get_default_mss(int version);
 
 int check_tun(const struct arguments *args,
               const struct epoll_event *ev,
-              const int epoll_fd,
+              int epoll_fd,
               int sessions, int maxsessions);
 
 void check_icmp_socket(const struct arguments *args, const struct epoll_event *ev);
 
 void check_udp_socket(const struct arguments *args, const struct epoll_event *ev);
 
-int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char *qname);
+int32_t get_qname(const uint8_t *data, size_t datalen, uint16_t off, char *qname);
 
 bool dns_has_multiple_questions(const uint8_t *data, size_t datalen);
 
@@ -480,7 +481,7 @@ uint32_t get_receive_window(struct ng_session *cur);
 
 void check_tcp_socket(const struct arguments *args,
                       const struct epoll_event *ev,
-                      const int epoll_fd);
+                      int epoll_fd);
 
 // Stack-owned sample, shared only while draining one socket event under ctx->lock.
 struct tcp_socket_capacity {
@@ -492,15 +493,15 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                                    struct tcp_socket_capacity *capacity);
 
 void handle_ip(const struct arguments *args,
-               const uint8_t *buffer, size_t length,
-               const int epoll_fd,
+               const uint8_t *pkt, size_t length,
+               int epoll_fd,
                int sessions, int maxsessions);
 
 jboolean handle_icmp(const struct arguments *args,
                      const uint8_t *pkt, size_t length,
                      const uint8_t *payload,
                      int uid,
-                     const int epoll_fd);
+                     int epoll_fd);
 
 jboolean is_icmp_supported(const uint8_t *pkt,
                            const uint8_t *payload);
@@ -537,10 +538,10 @@ jboolean handle_udp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
                     int uid, struct allowed *redirect,
-                    const int epoll_fd);
+                    int epoll_fd);
 
 int check_dhcp(const struct arguments *args, struct udp_session *u,
-               const uint8_t *data, const size_t datalen);
+               const uint8_t *data, size_t datalen);
 
 void clear_tcp_data(struct tcp_session *cur);
 
@@ -548,7 +549,7 @@ jboolean handle_tcp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
                     int uid, int allowed, struct allowed *redirect,
-                    const int epoll_fd);
+                    int epoll_fd);
 
 int queue_tcp(const struct arguments *args,
                const struct tcphdr *tcphdr,
@@ -563,7 +564,7 @@ int open_udp_socket(const struct arguments *args,
 int open_tcp_socket(const struct arguments *args,
                     const struct tcp_session *cur, struct allowed *redirect);
 
-int32_t get_local_port(const int sock);
+int32_t get_local_port(int sock);
 
 int write_syn_ack(const struct arguments *args, struct tcp_session *cur);
 
@@ -588,25 +589,25 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
 
 void write_connection_unreach(const struct arguments *args,
                               const struct ng_session *s,
-                              const int serr);
+                              int serr);
 
-jint get_uid(const int version, const int protocol,
-             const void *saddr, const uint16_t sport,
-             const void *daddr, const uint16_t dport);
+jint get_uid(int version, int protocol,
+             const void *saddr, uint16_t sport,
+             const void *daddr, uint16_t dport);
 
-jint get_uid_sub(const int version, const int protocol,
-                 const void *saddr, const uint16_t sport,
-                 const void *daddr, const uint16_t dport,
+jint get_uid_sub(int version, int protocol,
+                 const void *saddr, uint16_t sport,
+                 const void *daddr, uint16_t dport,
                  const char *source, const char *dest,
                  int64_t now);
 
 jint restore_uid(const struct arguments *args,
-                 const int version,
-                 const int protocol,
+                 int version,
+                 int protocol,
                  const void *saddr,
-                 const uint16_t sport,
+                 uint16_t sport,
                  const void *daddr,
-                 const uint16_t dport,
+                 uint16_t dport,
                  const char *source,
                  const char *dest,
                  const char *flags,
@@ -659,9 +660,9 @@ void dns_resolved(const struct arguments *args, const char *qname, const char *a
 
 jboolean is_domain_blocked(const struct arguments *args, const char *name);
 
-jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr, const int port);
+jboolean is_redirect_to_tor(const struct arguments *args, int uid, const char *daddr, int port);
 
-jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr, const int port);
+jboolean is_redirect_to_proxy(const struct arguments *args, int uid, const char *daddr, int port);
 
 jint get_uid_q(const struct arguments *args,
                jint version,
@@ -692,9 +693,9 @@ void account_usage(const struct arguments *args, jint version, jint protocol,
 
 int compare_u32(uint32_t seq1, uint32_t seq2);
 
-const char *strstate(const int state);
+const char *strstate(int state);
 
-char *hex(const uint8_t *data, const size_t len);
+char *hex(const uint8_t *data, size_t len);
 
 int is_readable(int fd);
 

@@ -786,7 +786,7 @@ static bool proc_endpoint(const char **cursor, int words, uint8_t *address, uint
         }
         // Proc addresses are printed as native-endian 32-bit words. memcpy also
         // keeps caller byte arrays safe on ARM when they are not word-aligned.
-        memcpy(address + w * 4, &word, sizeof(word));
+        memcpy(address + (size_t) w * sizeof(word), &word, sizeof(word));
     }
     if (*p++ != ':')
         return false;
@@ -831,6 +831,7 @@ jint get_uid_sub(const int version, const int protocol,
     static uint8_t zero[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     int ws = (version == 4 ? 1 : 4);
+    const size_t address_length = (size_t) ws * sizeof(uint32_t);
 
     // Check cache
     for (int i = 0; now >= 0 && i < uid_cache_size; i++)
@@ -839,10 +840,10 @@ jint get_uid_sub(const int version, const int protocol,
             uid_cache[i].protocol == protocol &&
             uid_cache[i].sport == sport &&
             (uid_cache[i].dport == dport || uid_cache[i].dport == 0) &&
-            (memcmp(uid_cache[i].saddr, saddr, (size_t) (ws * 4)) == 0 ||
-             memcmp(uid_cache[i].saddr, zero, (size_t) (ws * 4)) == 0) &&
-            (memcmp(uid_cache[i].daddr, daddr, (size_t) (ws * 4)) == 0 ||
-             memcmp(uid_cache[i].daddr, zero, (size_t) (ws * 4)) == 0)) {
+            (memcmp(uid_cache[i].saddr, saddr, address_length) == 0 ||
+             memcmp(uid_cache[i].saddr, zero, address_length) == 0) &&
+            (memcmp(uid_cache[i].daddr, daddr, address_length) == 0 ||
+             memcmp(uid_cache[i].daddr, zero, address_length) == 0)) {
 
             log_android(ANDROID_LOG_INFO, "uid v%d p%d %s/%u > %s/%u => %d (from cache)",
                         version, protocol, source, sport, dest, dport, uid_cache[i].uid);
@@ -893,10 +894,10 @@ jint get_uid_sub(const int version, const int protocol,
         if (parse_proc_uid(line, ws, _saddr, &_sport, _daddr, &_dport, &_uid)) {
             if (_sport == sport &&
                 (_dport == dport || _dport == 0) &&
-                (memcmp(_saddr, saddr, (size_t) (ws * 4)) == 0 ||
-                 memcmp(_saddr, zero, (size_t) (ws * 4)) == 0) &&
-                (memcmp(_daddr, daddr, (size_t) (ws * 4)) == 0 ||
-                 memcmp(_daddr, zero, (size_t) (ws * 4)) == 0))
+                (memcmp(_saddr, saddr, address_length) == 0 ||
+                 memcmp(_saddr, zero, address_length) == 0) &&
+                (memcmp(_daddr, daddr, address_length) == 0 ||
+                 memcmp(_daddr, zero, address_length) == 0))
                 uid = _uid;
 
             // A large accumulated cache can still have a one-row proc table.
