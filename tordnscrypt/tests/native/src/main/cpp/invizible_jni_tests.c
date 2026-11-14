@@ -1,4 +1,39 @@
 #include "test_support.h"
+#include <sys/time.h>
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+static bool wall_clock_enabled, wall_time_failure;
+static unsigned int wall_clock_fail_mask;
+static int wall_clock_calls, wall_time_calls;
+int __real_gettimeofday(struct timeval *, void *);
+int __wrap_gettimeofday(struct timeval *tv, void *tz) {
+    if (!wall_clock_enabled)
+        return __real_gettimeofday(tv, tz);
+    wall_clock_calls++;
+    tv->tv_sec = 1700000000;
+    tv->tv_usec = 987654;
+    if (wall_clock_fail_mask & (1U << (wall_clock_calls - 1))) {
+        // Failed reads must not contribute partially written output to timestamps.
+        tv->tv_sec = 123;
+        tv->tv_usec = 456;
+        errno = EIO;
+        return -1;
+    }
+    return 0;
+}
+time_t __real_time(time_t *);
+time_t __wrap_time(time_t *result) {
+    if (!wall_clock_enabled)
+        return __real_time(result);
+    wall_time_calls++;
+    time_t value = wall_time_failure ? (time_t) -1 : (time_t) 1700000123;
+    if (result != NULL)
+        *result = value;
+    if (wall_time_failure)
+        errno = EFAULT;
+    return value;
+}
+#endif
 
 // These callbacks are mocked throughout the native test library; their cached
 // method/field IDs belong to this JNI table, never to the real device VM.
@@ -17,6 +52,7 @@ static enum fault fault;
 static int nth, seen, hit, pending, ref_count, ref_index, callbacks, writes;
 static int live[64];
 static char address[128];
+static jlong last_long;
 
 static jobject new_ref(void) {
     assert(++ref_index < 64);
@@ -102,7 +138,10 @@ static void set_field(jobject object, jfieldID field) {
     assert(!pending && object != NULL && field != NULL);
     writes++;
 }
-static void JNICALL set_long(JNIEnv *env, jobject object, jfieldID field, jlong value) { set_field(object, field); }
+static void JNICALL set_long(JNIEnv *env, jobject object, jfieldID field, jlong value) {
+    set_field(object, field);
+    last_long = value;
+}
 static void JNICALL set_int(JNIEnv *env, jobject object, jfieldID field, jint value) { set_field(object, field); }
 static void JNICALL set_bool(JNIEnv *env, jobject object, jfieldID field, jboolean value) { set_field(object, field); }
 static void JNICALL set_object(JNIEnv *env, jobject object, jfieldID field, jobject value) {
@@ -153,6 +192,48 @@ static void exercise(int kind, enum fault operation, int occurrence) {
     }
     assert(!pending && ref_count == 0 && string_refs == 0);
     assert(operation == NO_FAULT || hit);
+}
+
+void test_jni_wall_clock(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    jclass saved = clsPacket;
+    clsPacket = (jclass) 1;
+    wall_clock_enabled = true;
+#ifdef PROFILE_JNI
+    const int packet_call = 2, normal_calls = 3, scenarios = 5;
+#else
+    const int packet_call = 1, normal_calls = 1, scenarios = 3;
+#endif
+    for (int scenario = 0; scenario < scenarios; scenario++) {
+        wall_clock_fail_mask = 0;
+        if (scenario == 1 || scenario == 2)
+            wall_clock_fail_mask = 1U << (packet_call - 1);
+        else if (scenario == 3)
+            wall_clock_fail_mask = 1U;
+        else if (scenario == 4)
+            wall_clock_fail_mask = 4U;
+        wall_time_failure = scenario == 2;
+        wall_clock_calls = wall_time_calls = 0;
+        exercise(0, NO_FAULT, 0); // A valid packet, all fields written, no leaked refs.
+        assert(wall_clock_calls == (scenario == 3 ? 2 : normal_calls));
+        assert(wall_time_calls == (scenario == 1 || scenario == 2 ? 1 : 0));
+        assert(last_long == (scenario == 1 ? INT64_C(1700000123000) :
+                            scenario == 2 ? 0 : INT64_C(1700000000987)));
+        if (scenario == 1 || scenario == 2) {
+            char expected[80];
+            snprintf(expected, sizeof(expected), "gettimeofday packet error %d:", EIO);
+            assert(strstr(last_log, expected) != NULL);
+        }
+        wall_clock_fail_mask = 0;
+        wall_time_failure = false;
+        wall_clock_calls = wall_time_calls = 0;
+        exercise(0, NO_FAULT, 0);
+        assert(last_long == INT64_C(1700000000987));
+        assert(wall_clock_calls == normal_calls && wall_time_calls == 0);
+    }
+    wall_clock_enabled = false;
+    clsPacket = saved;
+#endif
 }
 
 void test_jni_allocation_failures(int kind) {

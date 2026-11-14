@@ -595,11 +595,22 @@ int jniCheckException(JNIEnv *env) {
 
 static jmethodID midLogPacket = NULL;
 
+#ifdef PROFILE_JNI
+static void profile_jni_end(const struct timeval *start, bool started, const char *name) {
+    struct timeval end;
+    if (!started || gettimeofday(&end, NULL) != 0)
+        return;
+    float elapsed = ((double) end.tv_sec - (double) start->tv_sec) * 1000.0 +
+                    ((double) end.tv_usec - (double) start->tv_usec) / 1000.0;
+    if (elapsed > PROFILE_JNI)
+        log_android(ANDROID_LOG_WARN, "%s %f", name, elapsed);
+}
+#endif
+
 void log_packet(const struct arguments *args, jobject jpacket) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -620,11 +631,7 @@ void log_packet(const struct arguments *args, jobject jpacket) {
     ng_delete_alloc(jpacket, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "log_packet %f", mselapsed);
+    profile_jni_end(&start, started, "log_packet");
 #endif
 }
 
@@ -642,9 +649,8 @@ void dns_resolved(const struct arguments *args,
                   const char *qname, const char *aname, const char *cname,
                   const char *hinfo, const char *resource, int rcode) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -721,11 +727,7 @@ void dns_resolved(const struct arguments *args,
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "log_packet %f", mselapsed);
+    profile_jni_end(&start, started, "log_packet");
 #endif
 }
 
@@ -733,9 +735,8 @@ static jmethodID midIsDomainBlocked = NULL;
 
 jboolean is_domain_blocked(const struct arguments *args, const char *name) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -761,11 +762,7 @@ jboolean is_domain_blocked(const struct arguments *args, const char *name) {
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "is_domain_blocked %f", mselapsed);
+    profile_jni_end(&start, started, "is_domain_blocked");
 #endif
 
     return jallowed;
@@ -776,9 +773,8 @@ static jmethodID midIsRedirectToTor = NULL;
 jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const char *daddr,
                             const int dport) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -803,11 +799,7 @@ jboolean is_redirect_to_tor(const struct arguments *args, const int uid, const c
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "is_redirect_to_tor %f", mselapsed);
+    profile_jni_end(&start, started, "is_redirect_to_tor");
 #endif
 
     return jredirect_to_tor;
@@ -818,9 +810,8 @@ static jmethodID midIsRedirectToProxy = NULL;
 jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const char *daddr,
                               const int dport) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -846,11 +837,7 @@ jboolean is_redirect_to_proxy(const struct arguments *args, const int uid, const
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "is_redirect_to_proxy %f", mselapsed);
+    profile_jni_end(&start, started, "is_redirect_to_proxy");
 #endif
 
     return jredirect_to_proxy;
@@ -863,9 +850,8 @@ jint get_uid_q(const struct arguments *args,
                const char *source, jint sport,
                const char *dest, jint dport) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -895,11 +881,7 @@ jint get_uid_q(const struct arguments *args,
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "get_uid_q %f", mselapsed);
+    profile_jni_end(&start, started, "get_uid_q");
 #endif
 
     return juid;
@@ -912,9 +894,8 @@ struct allowed allowed;
 
 struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     if (jpacket == NULL) {
@@ -988,11 +969,7 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
     ng_delete_alloc(jallowed, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "is_address_allowed %f", mselapsed);
+    profile_jni_end(&start, started, "is_address_allowed");
 #endif
 
     return (jallowed == NULL || exceptionOccurred > 0 ? NULL : &allowed);
@@ -1050,9 +1027,8 @@ jobject create_packet(const struct arguments *args,
     JNIEnv *env = args->env;
 
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     /*
@@ -1087,8 +1063,17 @@ jobject create_packet(const struct arguments *args,
     }
 
     struct timeval tv;
-    gettimeofday(&tv, NULL);
-    jlong t = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
+    jlong t;
+    if (gettimeofday(&tv, NULL) == 0)
+        t = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
+    else {
+        int saved_errno = errno;
+        time_t seconds = time(NULL);
+        // Keep policy evaluation available even when both wall-clock reads fail.
+        t = (seconds == (time_t) -1 ? 0 : seconds * 1000LL);
+        log_android(ANDROID_LOG_ERROR, "gettimeofday packet error %d: %s",
+                    saved_errno, strerror(saved_errno));
+    }
     jstring jflags = jniNewString(env, flags);
     jstring jsource = jniNewString(env, source);
     jstring jdest = jniNewString(env, dest);
@@ -1132,11 +1117,7 @@ jobject create_packet(const struct arguments *args,
     // Caller needs to delete reference to packet
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "create_packet %f", mselapsed);
+    profile_jni_end(&start, started, "create_packet");
 #endif
 
     return jpacket;
@@ -1156,9 +1137,8 @@ jfieldID fidUsageReceived = NULL;
 void account_usage(const struct arguments *args, jint version, jint protocol,
                    const char *daddr, jint dport, jint uid, jlong sent, jlong received) {
 #ifdef PROFILE_JNI
-    float mselapsed;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    struct timeval start;
+    bool started = gettimeofday(&start, NULL) == 0;
 #endif
 
     jclass clsService = (*args->env)->GetObjectClass(args->env, args->instance);
@@ -1221,11 +1201,7 @@ void account_usage(const struct arguments *args, jint version, jint protocol,
     ng_delete_alloc(clsService, __FILE__, __LINE__);
 
 #ifdef PROFILE_JNI
-    gettimeofday(&end, NULL);
-    mselapsed = (end.tv_sec - start.tv_sec) * 1000.0 +
-                (end.tv_usec - start.tv_usec) / 1000.0;
-    if (mselapsed > PROFILE_JNI)
-        log_android(ANDROID_LOG_WARN, "log_packet %f", mselapsed);
+    profile_jni_end(&start, started, "log_packet");
 #endif
 }
 

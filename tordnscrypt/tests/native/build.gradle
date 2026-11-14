@@ -45,6 +45,7 @@ if (!pinnedNdk.find()) {
 }
 def ndkPin = pinnedNdk.group(1)
 def sanitized = providers.gradleProperty('nativeSanitizers').map { it.toBoolean() }.getOrElse(false)
+def jniProfiling = providers.gradleProperty('nativeJniProfiling').map { it.toBoolean() }.getOrElse(false)
 def baselineRef = providers.gradleProperty('nativeBaseline')
 layout.buildDirectory.set(rootProject.layout.buildDirectory.dir('native-tests'))
 def baselineDirectory = layout.buildDirectory.dir('generated/native-baseline')
@@ -79,6 +80,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments '-DANDROID_ARM_NEON=ON', "-DINVIZIBLE_SANITIZERS=${sanitized ? 'ON' : 'OFF'}",
+                        "-DINVIZIBLE_PROFILE_JNI=${jniProfiling ? 'ON' : 'OFF'}",
                         "-DINVIZIBLE_BASELINE_SOURCE=${baselineRef.isPresent() ? baselineDirectory.get().asFile.absolutePath : ''}"
             }
         }

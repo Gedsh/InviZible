@@ -292,7 +292,14 @@ for TCP, UDP and ICMP, including source and destination mismatches.
 Logging preserves the caller's `errno` even when the log backend changes it or
 returns an error. The utility regression also checks disabled logging and direct
 logger calls, with unchanged formatted output.
-The full run contains 230 tests plus the optional comparison test.
+A packet timestamp regression injects `gettimeofday()` failure, checks the
+whole-second `time()` fallback and zero timestamp if both reads fail, and verifies
+that packet fields, JNI reference cleanup and subsequent recovery remain intact.
+Run with `-PnativeJniProfiling=true` to also compile the optional `PROFILE_JNI`
+paths and inject failures in profiling's start/end samples. Invalid timing
+samples are skipped without changing packet creation. This option can be combined
+with `nativeSanitizers` and `nativeBaseline`.
+The full run contains 231 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

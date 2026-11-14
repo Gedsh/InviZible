@@ -249,6 +249,8 @@ static const char *run_case(const char *id) {
         test_tcp_partial_retransmission(&args);
     else if (strcmp(id, "jniPacketFailures") == 0)
         test_jni_allocation_failures(0);
+    else if (strcmp(id, "jniWallClock") == 0)
+        test_jni_wall_clock();
     else if (strcmp(id, "jniAllowedFailures") == 0)
         test_jni_allocation_failures(1);
     else if (strcmp(id, "jniDnsFailures") == 0)

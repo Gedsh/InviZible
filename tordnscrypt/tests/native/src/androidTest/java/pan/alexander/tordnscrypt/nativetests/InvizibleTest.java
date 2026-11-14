@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class InvizibleTest extends NativeTestSupport {
     @Test public void libraryLoadFailuresReleaseReferencesAndCanRetry() { check("jniLoadFailures"); }
     @Test public void packetAllocationFailuresCleanUpAndCanRetry() { check("jniPacketFailures"); }
+    @Test public void wallClockFailuresPreservePacketsAndRecover() { check("jniWallClock"); }
     @Test public void forwardingAllocationFailuresDenyAndCleanUp() { check("jniAllowedFailures"); }
     @Test public void dnsRecordAllocationFailuresCleanUpAndCanRetry() { check("jniDnsFailures"); }
     @Test public void usageAllocationFailuresCleanUpAndCanRetry() { check("jniUsageFailures"); }
