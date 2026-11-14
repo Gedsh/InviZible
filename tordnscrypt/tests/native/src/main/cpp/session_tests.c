@@ -2,6 +2,7 @@
 
 #ifndef INVIZIBLE_BASELINE_TESTS
 static unsigned int monitor_calls;
+static bool timeout_range_test;
 int __real_monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd);
 int __wrap_monitor_tcp_session(const struct arguments *args, struct ng_session *s, int epoll_fd) {
     monitor_calls++;
@@ -363,6 +364,12 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
     } else if (idle_polls == 2) {
         idle_timeout = timeout;
         assert(idle_context->ng_session != NULL);
+#ifndef INVIZIBLE_BASELINE_TESTS
+        if (timeout_range_test) {
+            idle_context->stopping = 1;
+            return 0;
+        }
+#endif
         // Simulate expiry without waiting minutes on the device.
         for (struct ng_session *s = idle_context->ng_session; s != NULL; s = s->next) {
             if (s->protocol == IPPROTO_TCP)
@@ -720,6 +727,56 @@ void test_event_loop_idle_cleanup(struct arguments *args, int kind) {
     assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
     close(tun[0]); close(tun[1]);
     close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+}
+
+void test_session_timeout_range(struct arguments *args, int protocol) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    // A backward wall-clock adjustment can put a session far in the future.
+    // Exercise both positive and negative int truncation on 64-bit time_t.
+    // On ARMv7, keep the timestamp and protocol expiry addition representable.
+    const int64_t offsets[] = {INT64_C(4294967296), INT64_C(2147483648)};
+    for (size_t i = 0; i < sizeof(offsets) / sizeof(*offsets); i++) {
+        args->ctx->stopping = 0;
+        time_t future = sizeof(time_t) > 4
+                ? (time_t) ((int64_t) time(NULL) + offsets[i])
+                : (time_t) (INT32_MAX - 600);
+        struct ng_session *s = ng_calloc(1, sizeof(*s), "test future session");
+        assert(s != NULL);
+        s->protocol = protocol;
+        s->socket = -1;
+        if (protocol == IPPROTO_ICMP) {
+            s->icmp.version = 4;
+            s->icmp.time = future;
+        } else if (protocol == IPPROTO_UDP) {
+            s->udp.version = 4;
+            s->udp.state = UDP_CLOSED;
+            s->udp.time = future;
+        } else {
+            s->tcp.version = 4;
+            s->tcp.state = TCP_CLOSE;
+            s->tcp.time = future;
+        }
+        idle_sessions = s;
+        int tun[2];
+        assert(pipe(tun) == 0 && pipe(args->ctx->pipefds) == 0);
+        struct arguments *owned = ng_malloc(sizeof(*owned), "test arguments");
+        *owned = *args;
+        owned->tun = tun[0];
+        idle_context = args->ctx;
+        idle_clock = idle_polls = 0;
+        idle_timeout = -1;
+        timeout_range_test = true;
+        handle_events(owned);
+        timeout_range_test = false;
+        idle_context = NULL;
+        assert(idle_polls == 2 && idle_timeout == EPOLL_TIMEOUT * 1000);
+        assert(args->ctx->ng_session == s);
+        clear(args->ctx);
+        close(tun[0]); close(tun[1]);
+        close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
 }
 
 void test_event_loop_shutdown(struct arguments *args) {

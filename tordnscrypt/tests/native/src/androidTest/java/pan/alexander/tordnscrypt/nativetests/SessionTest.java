@@ -32,4 +32,7 @@ public final class SessionTest extends NativeTestSupport {
     @Test public void finishingUdpSchedulesCleanup() { check("idleUdpFinishing"); }
     @Test public void closingTcpSchedulesCleanup() { check("idleTcpClosing"); }
     @Test public void earliestCleanupDeadlineWins() { check("idleMixed"); }
+    @Test public void futureIcmpTimestampKeepsPollWithinLimit() { check("icmpTimeoutRange"); }
+    @Test public void futureUdpTimestampKeepsPollWithinLimit() { check("udpTimeoutRange"); }
+    @Test public void futureTcpTimestampKeepsPollWithinLimit() { check("tcpTimeoutRange"); }
 }

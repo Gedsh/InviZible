@@ -337,6 +337,12 @@ static const char *run_case(const char *id) {
         test_event_loop_idle_cleanup(&args, 4);
     else if (strcmp(id, "idleMixed") == 0)
         test_event_loop_idle_cleanup(&args, 5);
+    else if (strcmp(id, "icmpTimeoutRange") == 0)
+        test_session_timeout_range(&args, IPPROTO_ICMP);
+    else if (strcmp(id, "udpTimeoutRange") == 0)
+        test_session_timeout_range(&args, IPPROTO_UDP);
+    else if (strcmp(id, "tcpTimeoutRange") == 0)
+        test_session_timeout_range(&args, IPPROTO_TCP);
     else if (strcmp(id, "udpBlocked4Limit") == 0)
         test_udp_blocked_limit(&args, 4);
     else if (strcmp(id, "udpBlocked6Limit") == 0)

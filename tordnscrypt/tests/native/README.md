@@ -217,6 +217,10 @@ immediately while retaining the metadata needed for late packets and usage accou
 Six event-loop cases intercept polling and advance a test clock to verify idle
 UDP/TCP cleanup deadlines, closing-state transitions, earliest-deadline selection,
 and eventual release of session records without waiting minutes on the phone.
+Three timeout-range cases check ICMP, UDP and TCP sessions with future timestamps:
+polling stays capped at one hour, including values that would wrap when narrowed
+to a 32-bit int on devices with 64-bit time_t. ARMv7 exercises representable
+timestamps near the 32-bit time_t limit.
 Three churn cases verify the shared 1,024-record closed TCP/UDP cache limit across
 repeated bursts, preserving active and blocked flows, closing sockets, freeing
 queued TCP data, and accounting usage before eviction. Cleanup keeps the most
@@ -266,7 +270,7 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
-The full run contains 215 tests plus the optional comparison test.
+The full run contains 218 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts
