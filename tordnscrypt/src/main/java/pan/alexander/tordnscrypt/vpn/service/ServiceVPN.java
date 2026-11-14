@@ -43,9 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import dagger.Lazy;
@@ -199,7 +197,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
 
     private volatile boolean blockCheckingTorConnection;
 
-    private final Set<Integer> dnsRebindHosts = new ConcurrentSkipListSet<>();
+    private final DnsRebindBlocklist dnsRebindHosts = new DnsRebindBlocklist();
 
     private final VPNBinder binder = new VPNBinder();
 
