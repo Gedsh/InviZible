@@ -149,6 +149,8 @@ static const char *run_case(const char *id) {
         test_icmp6_forward_checksums(&args);
     else if (strcmp(id, "lazyLogging") == 0)
         test_lazy_logging();
+    else if (strcmp(id, "loggingErrno") == 0)
+        test_logging_errno();
     else if (strcmp(id, "lazyTcpLogging") == 0)
         test_lazy_tcp_logging(&args);
     else if (strcmp(id, "lazyUdpLogging") == 0)

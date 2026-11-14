@@ -11,5 +11,6 @@ public final class UtilTest extends NativeTestSupport {
     @Test public void monotonicClockFailuresReturnSentinelAndRecover() { check("monotonicClock"); }
     @Test public void packetBuffersReuseCapacityAndKeepOwnershipAfterFailedGrowth() { check("packetBuffers"); }
     @Test public void disabledLogsSkipFormattingAndEnabledLogsKeepAddresses() { check("lazyLogging"); }
+    @Test public void loggingPreservesErrnoWhenBackendChangesItOrFails() { check("loggingErrno"); }
     @Test public void longLogsAreBoundedAndHexAllocationCanFail() { check("boundedLogging"); }
 }

@@ -87,6 +87,38 @@ void test_lazy_logging(void) {
 #endif
 }
 
+void test_logging_errno(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    const int errors[] = {0, EINTR, EAGAIN, EPIPE};
+    log_errno = EIO;
+    for (int result = 0; result >= -1; result--) {
+        log_result = result;
+        for (size_t i = 0; i < sizeof(errors) / sizeof(errors[0]); i++) {
+            errno = errors[i];
+            log_android(ANDROID_LOG_ERROR, "errno test %d %s", errors[i], "enabled");
+            assert(errno == errors[i]);
+            char expected[80];
+            snprintf(expected, sizeof(expected), "errno test %d enabled", errors[i]);
+            assert(strcmp(last_log, expected) == 0);
+
+            errno = errors[i];
+            log_android_write(ANDROID_LOG_ERROR, "direct errno test %d", errors[i]);
+            assert(errno == errors[i]);
+            snprintf(expected, sizeof(expected), "direct errno test %d", errors[i]);
+            assert(strcmp(last_log, expected) == 0);
+
+            errno = errors[i];
+            int evaluations = 0;
+            log_android(ANDROID_LOG_DEBUG, "%d", ++evaluations);
+            log_android_write(ANDROID_LOG_DEBUG, "disabled");
+            assert(errno == errors[i] && evaluations == 0);
+            assert(strcmp(last_log, expected) == 0);
+        }
+    }
+    log_errno = log_result = 0;
+#endif
+}
+
 void test_bounded_logging(void) {
     char message[16384];
     memset(message, 'x', sizeof(message) - 1);

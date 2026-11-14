@@ -289,7 +289,10 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
-The full run contains 229 tests plus the optional comparison test.
+Logging preserves the caller's `errno` even when the log backend changes it or
+returns an error. The utility regression also checks disabled logging and direct
+logger calls, with unchanged formatted output.
+The full run contains 230 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

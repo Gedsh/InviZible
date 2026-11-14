@@ -153,6 +153,7 @@ const char *format_log_address(struct log_address *address) {
 }
 
 void log_android_write(int prio, const char *fmt, ...) {
+    int saved_errno = errno;
     if (prio >= LOG_LEVEL) {
         char line[1024];
         va_list argptr;
@@ -161,6 +162,7 @@ void log_android_write(int prio, const char *fmt, ...) {
         __android_log_print(prio, TAG, "%s", line);
         va_end(argptr);
     }
+    errno = saved_errno;
 }
 
 const char *strstate(const int state) {

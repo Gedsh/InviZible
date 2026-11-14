@@ -12,6 +12,7 @@ int uid_cache_allocations;
 const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
+int log_errno, log_result;
 int address_formats;
 int tcp_sendbuf_queries, tcp_outq_queries;
 int tcp_capacity_fd = -1, tcp_capacity_available;
@@ -367,7 +368,9 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
         va_end(ap);
         fputc('\n', stderr);
     }
-    return 0;
+    if (log_errno != 0)
+        errno = log_errno;
+    return log_result;
 }
 int __system_property_get(const char *key, char *value) { *value = 0; return 0; }
 
@@ -597,6 +600,7 @@ void reset_test_state(void) {
     fail_alloc_tag = NULL;
     fail_alloc_match = fail_fcntl_call = fcntl_calls = 0;
     last_log[0] = 0;
+    log_errno = log_result = 0;
     real_exit_reports = exit_reports = 0;
     real_network = real_udp_packets = block_domain = trace_dns = 0;
     accounted_sent = accounted_received = 0;
