@@ -135,6 +135,14 @@ static const char *run_case(const char *id) {
         test_udp_buffer_reuse(&args);
     else if (strcmp(id, "icmpBufferReuse") == 0)
         test_icmp_buffer_reuse(&args);
+    else if (strcmp(id, "monotonicClock") == 0)
+        test_monotonic_clock();
+    else if (strcmp(id, "tcpProbeClockFailure") == 0)
+        test_tcp_probe_clock_failure(&args);
+    else if (strcmp(id, "eventClockFailure") == 0)
+        test_event_clock_failure(&args, 0);
+    else if (strcmp(id, "eventPollClockFailure") == 0)
+        test_event_clock_failure(&args, 1);
     else if (strcmp(id, "icmpShortReplies") == 0)
         test_icmp_short_replies(&args);
     else if (strcmp(id, "icmp6ForwardChecksums") == 0)

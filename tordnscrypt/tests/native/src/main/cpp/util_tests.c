@@ -1,5 +1,33 @@
 #include "test_support.h"
 
+bool test_monotonic_enabled;
+long long test_monotonic_ms;
+int test_monotonic_failures, test_monotonic_fail_at, test_monotonic_calls;
+
+void test_monotonic_clock(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    long long __real_get_ms(void);
+    test_monotonic_enabled = true;
+    test_monotonic_ms = INT64_C(1) << 40;
+    test_monotonic_failures = 1;
+    assert(__real_get_ms() == -1);
+    assert(strstr(last_log, "clock_gettime monotonic error") != NULL);
+    assert(__real_get_ms() == test_monotonic_ms);
+    test_monotonic_ms += 999;
+    test_monotonic_failures = 2;
+    assert(__real_get_ms() == -1 && __real_get_ms() == -1);
+    assert(__real_get_ms() == test_monotonic_ms);
+    test_monotonic_ms = 0; // Zero is a valid timestamp, distinct from failure.
+    assert(__real_get_ms() == 0);
+    test_monotonic_enabled = false;
+    struct timespec before, after;
+    assert(clock_gettime(CLOCK_MONOTONIC, &before) == 0);
+    long long ms = __real_get_ms();
+    assert(clock_gettime(CLOCK_MONOTONIC, &after) == 0);
+    assert(ms / 1000 >= before.tv_sec && ms / 1000 <= after.tv_sec);
+#endif
+}
+
 void test_packet_buffers(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     struct packet_buffers buffers = {0};

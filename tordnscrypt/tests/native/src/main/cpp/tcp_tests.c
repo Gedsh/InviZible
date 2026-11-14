@@ -940,6 +940,58 @@ static void tcp_input(const struct arguments *args, uint8_t *packet, size_t len,
                       own_uid, 1, NULL, -1) == 1);
 }
 
+void test_tcp_probe_clock_failure(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int stream[2], tunnel[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        assert(epoll_fd >= 0);
+        struct arguments running = *args;
+        running.tun = tunnel[1];
+        struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+        s.tcp.version = version; s.tcp.state = TCP_ESTABLISHED;
+        s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 1000;
+        s.tcp.recv_window = 65535;
+        s.ev.events = EPOLLERR; s.ev.data.ptr = &s;
+        assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+        test_monotonic_enabled = true;
+        test_monotonic_ms = 100000;
+        test_monotonic_failures = 1;
+        tcp_test_clock = 0;
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == EPOLL_MIN_CHECK);
+        assert(s.tcp.monitor_dirty && s.tcp.window_probe_interval == 0 && s.tcp.last_keep_alive == 0);
+        assert(!is_readable(tunnel[0]));
+        s.tcp.monitor_dirty = false; // refresh_tcp_monitor clears this before retrying.
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == TCP_WINDOW_PROBE_MIN);
+        assert(s.tcp.last_keep_alive == 100000 && !is_readable(tunnel[0]));
+        s.tcp.window_probe_interval = 32000;
+        test_monotonic_ms = 132000;
+        test_monotonic_failures = 2;
+        for (int i = 0; i < 2; i++) {
+            s.tcp.monitor_dirty = false;
+            assert(monitor_tcp_session(&running, &s, epoll_fd) == EPOLL_MIN_CHECK);
+            assert(s.tcp.monitor_dirty && s.tcp.window_probe_interval == 32000);
+            assert(s.tcp.last_keep_alive == 100000 && !is_readable(tunnel[0]));
+        }
+        s.tcp.monitor_dirty = false;
+        assert(monitor_tcp_session(&running, &s, epoll_fd) == TCP_WINDOW_PROBE_MAX);
+        assert(s.tcp.last_keep_alive == 132000 && !s.tcp.monitor_dirty);
+        _Alignas(8) uint8_t output[2048];
+        size_t length = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+        assert(length == (version == 4 ? 40 : 60));
+        size_t off = version == 4 ? 20 : 40;
+        const struct tcphdr *probe = (const void *) (output + off);
+        assert(probe->ack && ntohl(probe->ack_seq) == 999 && !is_readable(tunnel[0]));
+        test_monotonic_enabled = false;
+        close(epoll_fd); close(stream[0]); close(stream[1]);
+        close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_tcp_backpressure(const struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     real_network = 1;

@@ -169,11 +169,15 @@ static long long refresh_tcp_monitor(const struct arguments *args, struct ng_ses
         (tcp->state == TCP_ESTABLISHED || tcp->state == TCP_CLOSE_WAIT ||
          tcp->state == TCP_FIN_WAIT1 || tcp->state == TCP_FIN_WAIT2))
         deadline = tcp->last_keep_alive + tcp->window_probe_interval;
-    if (!tcp->monitor_initialized || tcp->monitor_dirty || memory_changed || dns_output ||
+    if (now < 0 || !tcp->monitor_initialized || tcp->monitor_dirty || memory_changed || dns_output ||
         (deadline != 0 && deadline <= now)) {
         tcp->monitor_dirty = false;
         tcp->monitor_initialized = true;
         int wait = monitor_tcp_session(args, s, epoll_fd);
+        if (now < 0) {
+            tcp->monitor_dirty = true;
+            return 0; // The event loop schedules a bounded retry without a timestamp.
+        }
         return wait > 0 ? now + wait : 0;
     }
     return deadline;
@@ -247,6 +251,8 @@ void *handle_events(void *a) {
         long long tcp_deadline = 0;
         int timeout = EPOLL_TIMEOUT;
         long long ms = get_ms();
+        if (ms < 0)
+            recheck = 1;
         uint64_t memory_generation = args->ctx->tcp_memory.generation;
         uint64_t dns_memory_generation = args->ctx->tcp_memory.dns_generation;
         bool memory_waiting = false, dns_waiting = false;
@@ -290,8 +296,9 @@ void *handle_events(void *a) {
         int sessions = isessions + usessions + tsessions;
 
         // Check sessions
-        if (ms - last_check > EPOLL_MIN_CHECK) {
-            last_check = ms;
+        if (ms < 0 || ms - last_check > EPOLL_MIN_CHECK) {
+            if (ms >= 0)
+                last_check = ms;
 
             time_t now = time(NULL);
             struct ng_session *sl = NULL;
@@ -377,11 +384,17 @@ void *handle_events(void *a) {
         int wait = recheck ? EPOLL_MIN_CHECK : timeout * 1000;
         if (tcp_deadline > 0) {
             // Monitoring/cleanup time must not extend an existing deadline.
-            long long remaining = tcp_deadline - get_ms();
-            if (remaining <= 0)
-                wait = 0;
-            else if (remaining < wait)
-                wait = (int) remaining;
+            long long now = get_ms();
+            if (now < 0) {
+                if (wait > EPOLL_MIN_CHECK)
+                    wait = EPOLL_MIN_CHECK;
+            } else {
+                long long remaining = tcp_deadline - now;
+                if (remaining <= 0)
+                    wait = 0;
+                else if (remaining < wait)
+                    wait = (int) remaining;
+            }
         }
         int ready = epoll_wait(epoll_fd, ev, EPOLL_EVENTS,
                                wait);

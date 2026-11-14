@@ -574,6 +574,9 @@ struct segment *new_test_segment(uint16_t length) {
 }
 
 void reset_test_state(void) {
+    test_monotonic_enabled = false;
+    test_monotonic_ms = 0;
+    test_monotonic_failures = test_monotonic_fail_at = test_monotonic_calls = 0;
     tcp_sendbuf_queries = tcp_outq_queries = 0;
     tcp_capacity_fd = -1;
     tcp_capacity_available = 0;

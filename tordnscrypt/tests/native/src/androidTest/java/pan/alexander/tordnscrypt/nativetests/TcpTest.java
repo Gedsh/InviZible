@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void clockFailuresPreserveProbeBackoffAndRetryAfterRecovery() { check("tcpProbeClockFailure"); }
     @Test public void queueAppendUsesOneAllocationAndLinearTotalComparisonsAcrossWrap() { check("tcpQueueAppend"); }
     @Test public void queueTailSurvivesRetransmissionGrowthGapsAndReuse() { check("tcpQueueTailChurn"); }
     @Test public void ipv4ScaledWindowCombinesSocketAndRetainedCapacity() { check("tcpScaledCapacity4"); }

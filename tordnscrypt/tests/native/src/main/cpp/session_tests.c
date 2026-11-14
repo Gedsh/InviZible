@@ -242,6 +242,58 @@ static int memory_kind;
 static struct arguments *monitor_args;
 static struct ng_session *monitor_sessions;
 static int monitor_polls, monitor_peer, monitor_tunnel, monitor_kind;
+static struct context *clock_loop_context;
+static struct ng_session *clock_loop_session;
+static int clock_loop_kind, clock_loop_polls, clock_loop_tunnel;
+
+static void poll_event_clock_failure(int timeout) {
+    clock_loop_polls++;
+    struct tcp_session *tcp = &clock_loop_session->tcp;
+    // Maintenance must remove the expired UDP record even during persistent failure.
+    assert(clock_loop_context->ng_session == clock_loop_session && clock_loop_session->next == NULL);
+    if (clock_loop_kind == 1) {
+        assert(monitor_calls == 1 && tcp->last_keep_alive == 100000 &&
+               tcp->window_probe_interval == 4000 && !tcp->monitor_dirty);
+        assert(!is_readable(clock_loop_tunnel));
+        if (clock_loop_polls == 1) {
+            assert(test_monotonic_calls == 3 && timeout == EPOLL_MIN_CHECK);
+            test_monotonic_ms += EPOLL_MIN_CHECK + 1;
+        } else {
+            assert(clock_loop_polls == 2 && test_monotonic_calls == 5 && timeout == 3899);
+            clock_loop_context->stopping = 1;
+        }
+    } else if (clock_loop_polls <= 2) {
+        assert(monitor_calls == (unsigned int) clock_loop_polls && timeout == EPOLL_MIN_CHECK);
+        assert(tcp->last_keep_alive == 90000 && tcp->window_probe_interval == 4000 && tcp->monitor_dirty);
+        assert(!is_readable(clock_loop_tunnel));
+        if (clock_loop_polls == 2)
+            test_monotonic_failures = 0;
+    } else if (clock_loop_polls == 3) {
+        assert(monitor_calls == 3 && timeout == 8000 && tcp->last_keep_alive == 100000);
+        assert(tcp->window_probe_interval == 8000 && !tcp->monitor_dirty);
+        _Alignas(8) uint8_t packet[2048];
+        assert(tun_packet(clock_loop_tunnel, packet, 4, IPPROTO_TCP) == 40);
+        assert(!is_readable(clock_loop_tunnel));
+        test_monotonic_failures = -1;
+    } else if (clock_loop_polls == 4) {
+        assert(monitor_calls == 4 && timeout == EPOLL_MIN_CHECK && tcp->monitor_dirty);
+        assert(tcp->last_keep_alive == 100000 && tcp->window_probe_interval == 8000);
+        assert(!is_readable(clock_loop_tunnel));
+        test_monotonic_failures = 0;
+        test_monotonic_ms += EPOLL_MIN_CHECK + 1;
+    } else {
+        assert(monitor_calls == 5 && !tcp->monitor_dirty && !is_readable(clock_loop_tunnel));
+        assert(tcp->last_keep_alive == 100000 && tcp->window_probe_interval == 8000);
+        if (clock_loop_polls == 5) {
+            assert(timeout == 7899);
+            test_monotonic_ms += EPOLL_MIN_CHECK + 1;
+        } else {
+            assert(clock_loop_polls == 6 && timeout == 7798);
+            clock_loop_context->stopping = 1;
+        }
+    }
+}
+
 #define MONITOR_FLOWS 64
 #endif
 
@@ -259,6 +311,10 @@ long long __wrap_get_ms(void) {
 int __real_epoll_wait(int fd, struct epoll_event *events, int count, int timeout);
 int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    if (clock_loop_context != NULL) {
+        poll_event_clock_failure(timeout);
+        return 0;
+    }
     if (session_limit_context != NULL) {
         assert(session_limit_reads == 1 && session_limit_checks >= 2);
         session_limit_context->stopping = 1;
@@ -856,6 +912,47 @@ void test_session_limit(struct arguments *args, int kind) {
         close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
         assert(allocations == 0 && sockets == 0);
     }
+#endif
+}
+
+void test_event_clock_failure(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2], stream[2];
+    assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+    assert(pipe(args->ctx->pipefds) == 0);
+    int64_t last_probe = kind == 0 ? 90000 : 100000;
+    struct ng_session *s = ng_calloc(1, sizeof(*s), "clock recovery session");
+    assert(s != NULL);
+    index_key(s, 4, IPPROTO_TCP, 1234);
+    s->socket = stream[0];
+    s->tcp.state = TCP_ESTABLISHED; s->tcp.time = time(NULL);
+    s->tcp.local_seq = s->tcp.acked = 2000; s->tcp.remote_seq = 1000;
+    s->tcp.recv_window = 16000;
+    s->tcp.last_keep_alive = last_probe; s->tcp.window_probe_interval = 4000;
+    s->ev.events = EPOLLERR; s->ev.data.ptr = s;
+    add_session(args->ctx, s);
+    add_session(args->ctx, lingering_session(IPPROTO_UDP, UDP_CLOSED, UDP_KEEP_TIMEOUT + 1));
+    struct arguments *owned = ng_malloc(sizeof(*owned), "clock recovery arguments");
+    assert(owned != NULL);
+    *owned = *args;
+    owned->tun = tunnel[1];
+    args->ctx->stopping = 0;
+    clock_loop_context = args->ctx; clock_loop_session = s;
+    clock_loop_kind = kind; clock_loop_polls = monitor_calls = 0;
+    clock_loop_tunnel = tunnel[0];
+    test_monotonic_enabled = true; test_monotonic_ms = 100000;
+    test_monotonic_failures = kind == 0 ? -1 : 0;
+    test_monotonic_fail_at = kind == 1 ? 3 : 0;
+    test_monotonic_calls = 0; tcp_test_clock = 0;
+    handle_events(owned);
+    assert(clock_loop_polls == (kind == 0 ? 6 : 2));
+    clock_loop_context = NULL; clock_loop_session = NULL;
+    test_monotonic_enabled = false;
+    clear(args->ctx);
+    close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+    close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
+    assert(allocations == 0 && sockets == 0);
 #endif
 }
 

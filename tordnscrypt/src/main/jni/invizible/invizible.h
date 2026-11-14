@@ -698,6 +698,7 @@ char *hex(const u_int8_t *data, const size_t len);
 
 int is_readable(int fd);
 
+// CLOCK_MONOTONIC milliseconds, or -1 if the clock cannot be read.
 long long get_ms(void);
 
 int str_equal(const char *s, const char *f);

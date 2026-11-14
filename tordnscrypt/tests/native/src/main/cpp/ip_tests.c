@@ -502,6 +502,20 @@ static int64_t uid_test_clock;
 
 int __real_clock_gettime(clockid_t clock, struct timespec *ts);
 int __wrap_clock_gettime(clockid_t clock, struct timespec *ts) {
+    if (clock == CLOCK_MONOTONIC && test_monotonic_enabled) {
+        test_monotonic_calls++;
+        if (test_monotonic_failures != 0 || test_monotonic_calls == test_monotonic_fail_at) {
+            if (test_monotonic_failures > 0)
+                test_monotonic_failures--;
+            // Failure must discard the timespec even if the API left data in it.
+            ts->tv_sec = 1234; ts->tv_nsec = 999999999;
+            errno = EIO;
+            return -1;
+        }
+        ts->tv_sec = (time_t) (test_monotonic_ms / 1000);
+        ts->tv_nsec = (long) (test_monotonic_ms % 1000) * 1000000;
+        return 0;
+    }
     if (clock == CLOCK_BOOTTIME && uid_clock_enabled) {
         if (uid_clock_failure) {
             errno = EIO;

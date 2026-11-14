@@ -543,25 +543,31 @@ int monitor_tcp_session(const struct arguments *args, struct ng_session *s, int 
             s->tcp.window_probe_interval = 0;
         } else if (!s->tcp.upstream_eof) {
             long long ms = get_ms();
-            if (s->tcp.window_probe_interval == 0) {
-                s->tcp.window_probe_interval = TCP_WINDOW_PROBE_MIN;
-                s->tcp.last_keep_alive = ms;
-            }
-            long long remaining = s->tcp.window_probe_interval - (ms - s->tcp.last_keep_alive);
-            if (remaining <= 0) {
-                s->tcp.last_keep_alive = ms;
-                if (s->tcp.window_probe_interval < TCP_WINDOW_PROBE_MAX) {
-                    s->tcp.window_probe_interval *= 2;
-                    if (s->tcp.window_probe_interval > TCP_WINDOW_PROBE_MAX)
-                        s->tcp.window_probe_interval = TCP_WINDOW_PROBE_MAX;
+            if (ms < 0) {
+                // Preserve the probe's clock domain and backoff until a valid sample.
+                s->tcp.monitor_dirty = true;
+                recheck = EPOLL_MIN_CHECK;
+            } else {
+                if (s->tcp.window_probe_interval == 0) {
+                    s->tcp.window_probe_interval = TCP_WINDOW_PROBE_MIN;
+                    s->tcp.last_keep_alive = ms;
                 }
-                log_android(ANDROID_LOG_INFO, "Sending keep alive to update send window");
-                s->tcp.remote_seq--;
-                write_ack(args, &s->tcp);
-                s->tcp.remote_seq++;
-                remaining = s->tcp.window_probe_interval;
+                long long remaining = s->tcp.window_probe_interval - (ms - s->tcp.last_keep_alive);
+                if (remaining <= 0) {
+                    s->tcp.last_keep_alive = ms;
+                    if (s->tcp.window_probe_interval < TCP_WINDOW_PROBE_MAX) {
+                        s->tcp.window_probe_interval *= 2;
+                        if (s->tcp.window_probe_interval > TCP_WINDOW_PROBE_MAX)
+                            s->tcp.window_probe_interval = TCP_WINDOW_PROBE_MAX;
+                    }
+                    log_android(ANDROID_LOG_INFO, "Sending keep alive to update send window");
+                    s->tcp.remote_seq--;
+                    write_ack(args, &s->tcp);
+                    s->tcp.remote_seq++;
+                    remaining = s->tcp.window_probe_interval;
+                }
+                recheck = (int) remaining;
             }
-            recheck = (int) remaining;
         }
 
         // Check for outgoing data

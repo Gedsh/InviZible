@@ -234,6 +234,12 @@ Three descriptor-limit cases inject ordinary, tiny, very large and unlimited
 `RLIMIT_NOFILE` values and a failed `getrlimit()` call. They verify that the event
 loop passes the expected positive, capped session limit to timeout scaling
 without changing the device's real resource limits.
+Four monotonic-clock cases inject failures before the first sample, during TCP
+probe monitoring, throughout event-loop maintenance and just before polling.
+`get_ms()` returns -1 on failure. Callers retain probe timestamps/backoff, retry
+within 100 ms and keep wall-clock session cleanup running; recovery resumes the
+original deadlines and monitor caching. A utility case also checks wide integer
+millisecond conversion, a valid zero timestamp and the real device clock.
 Three churn cases verify the shared 1,024-record closed TCP/UDP cache limit across
 repeated bursts, preserving active and blocked flows, closing sockets, freeing
 queued TCP data, and accounting usage before eviction. Cleanup keeps the most
@@ -283,7 +289,7 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
-The full run contains 225 tests plus the optional comparison test.
+The full run contains 229 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts
