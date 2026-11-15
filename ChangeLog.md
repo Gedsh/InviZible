@@ -1546,3 +1546,10 @@
 * Changed the naming convention for backup files.
 * Updated translations.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.7.7**
+* Updated minimum Android version to 6.
+* Updated Tor to version 4.9.17.
+* Updated Tor lyrebird obfuscating proxy to version 0.10.0.
+* Multiple fixes and optimizations for VPN mode.
+* Fixes and optimizations.
