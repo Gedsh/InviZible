@@ -83,6 +83,8 @@ int check_udp_session(const struct arguments *args, struct ng_session *s,
 
 void check_udp_socket(const struct arguments *args, const struct epoll_event *ev) {
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
+    if (s->socket < 0 || s->udp.state != UDP_ACTIVE)
+        return;
 
     // Check socket error
     if (ev->events & EPOLLERR) {
@@ -347,6 +349,20 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.sent = 0;
         s->udp.received = 0;
+        s->udp.uid_retries = 0;
+        s->udp.uid_retry_at = -1;
+        s->udp.redirect_version = 0;
+        if (redirect != NULL && ntohs(udphdr->dest) != 53) {
+            s->udp.redirect_version = (uint8_t) rversion;
+            s->udp.redirect_port = htons(redirect->rport);
+            memset(&s->udp.redirect_addr, 0, sizeof(s->udp.redirect_addr));
+            inet_pton(rversion == 4 ? AF_INET : AF_INET6, redirect->raddr, &s->udp.redirect_addr);
+        }
+        if (uid < 0 && ntohs(udphdr->dest) != 53) {
+            long long now = get_ms();
+            if (now >= 0)
+                s->udp.uid_retry_at = now + UDP_UID_RETRY_INTERVAL;
+        }
 
         if (version == 4) {
             s->udp.saddr.ip4 = (__be32) ip4->saddr;
@@ -451,7 +467,19 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
     int rversion;
     struct sockaddr_in addr4 = {0};
     struct sockaddr_in6 addr6 = {0};
-    if (redirect == NULL) {
+    if (cur->udp.redirect_version != 0) {
+        // Existing non-DNS flows skip policy lookup; retain their chosen target.
+        rversion = cur->udp.redirect_version;
+        if (rversion == 4) {
+            addr4.sin_family = AF_INET;
+            addr4.sin_addr.s_addr = cur->udp.redirect_addr.ip4;
+            addr4.sin_port = cur->udp.redirect_port;
+        } else {
+            addr6.sin6_family = AF_INET6;
+            memcpy(&addr6.sin6_addr, &cur->udp.redirect_addr.ip6, 16);
+            addr6.sin6_port = cur->udp.redirect_port;
+        }
+    } else if (redirect == NULL) {
         rversion = cur->udp.version;
         if (cur->udp.version == 4) {
             addr4.sin_family = AF_INET;

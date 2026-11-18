@@ -964,6 +964,168 @@ void test_uid_indexed_growth_failure(void) {
 #endif
 }
 
+void test_udp_uid_retry(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+    assert(epoll_fd >= 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    real_network = 1; // Real local sockets, with sendto captured below.
+    test_monotonic_enabled = true;
+    for (int version = 4; version <= 6; version += 2) {
+        int scenarios = kind == 1 ? 64 : 2;
+        for (int scenario = 0; scenario < scenarios; scenario++) {
+            bool legacy = kind == 1 ? (scenario & 8) != 0 : kind == 0 && scenario == 1;
+            args->ctx->sdk = legacy ? 28 : 29;
+            _Alignas(8) uint8_t packet[128], output[2048];
+            const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+            size_t off = ip_header(packet, version, IPPROTO_UDP, 9, dest);
+            struct udphdr *udp = (void *) (packet + off);
+            udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+            packet[off + 8] = 42;
+            packet_checksums(packet, off + 9, off, IPPROTO_UDP);
+            test_monotonic_ms = 10000;
+            test_monotonic_failures = kind == 2 && scenario == 0 ? 1 : 0;
+            uid_lookup_result = -1;
+            fake_proc = legacy;
+            proc_contents = "header\n";
+            proc6_contents = NULL;
+            uid_lookups = policy_checks = 0;
+            deny_address = 0;
+            memset(&policy_redirect, 0, sizeof(policy_redirect));
+            bool had_redirect = kind == 1 && (scenario & 16) != 0;
+            if (had_redirect) {
+                strcpy(policy_redirect.raddr, dest);
+                policy_redirect.rport = 5000;
+            }
+            expect_destination(version, dest, 5000);
+            handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+            struct ng_session *old = args->ctx->ng_session;
+            int original_socket = old == NULL ? -1 : old->socket;
+            assert(old != NULL && old->udp.uid < 0 && old->udp.state == UDP_ACTIVE);
+            assert(old->udp.uid_retries == 0 && allocations == 1 && sockets == 1);
+            assert(policy_checks == 1 && destination_calls == 1);
+            assert(old->udp.uid_retry_at == (kind == 2 && scenario == 0 ? -1 : 11000));
+
+            if (kind == 0) {
+                // A burst before the deadline must not query the owner or policy.
+                int closes = file_closes;
+                int queries = uid_lookups;
+                for (int i = 0; i < 64; i++)
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                assert(uid_lookups == queries && file_closes == closes && policy_checks == 1);
+                const long long deadlines[] = {11000, 13000, 17000};
+                for (int i = 0; i < UDP_UID_RETRY_MAX; i++) {
+                    test_monotonic_ms = deadlines[i];
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                    assert(old->udp.uid_retries == i + 1 && old->udp.uid < 0);
+                    assert(uid_lookups == queries + (legacy ? 0 : i + 1));
+                    assert(file_closes == closes + (legacy ? (version == 4 ? 2 : 1) * (i + 1) : 0));
+                }
+                int clock_reads = test_monotonic_calls;
+                queries = uid_lookups; closes = file_closes;
+                test_monotonic_ms = 1000000;
+                for (int i = 0; i < 64; i++)
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                assert(test_monotonic_calls == clock_reads && uid_lookups == queries);
+                assert(file_closes == closes && policy_checks == 1 && allocations == 1 && sockets == 1);
+                old->udp.uid_retries = 0; old->udp.uid_retry_at = 0;
+                old->udp.uid = 0; // A known owner must never be queried or replaced.
+                handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                assert(old->udp.uid == 0 && uid_lookups == queries && file_closes == closes);
+                old->udp.uid = -1; old->udp.state = UDP_FINISHING;
+                handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                assert(uid_lookups == queries && file_closes == closes);
+            } else if (kind == 1) {
+                jint owner = scenario & 1 ? 12345 : 0;
+                bool deny = (scenario & 2) != 0;
+                bool redirect = (scenario & 4) != 0;
+                bool retire = deny || redirect || had_redirect;
+                memset(&policy_redirect, 0, sizeof(policy_redirect));
+                uid_lookup_result = owner;
+                char table[256];
+                snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 07 0:0 0:0 0 %d 0 0\n",
+                         version == 4 ? "0200000A" : "B80D0120000000000000000001000000",
+                         version == 4 ? "00000000" : "00000000000000000000000000000000", owner);
+                proc_contents = table;
+                if (legacy && version == 4) proc6_contents = "header\n";
+                deny_address = deny;
+                int target_version = redirect && !(scenario & 32) ? (version == 4 ? 6 : 4) : version;
+                const char *target = redirect ? (target_version == 4 ? "192.0.2.10" : "2001:db8::10") : dest;
+                if (redirect) {
+                    strcpy(policy_redirect.raddr, target);
+                    policy_redirect.rport = 5354;
+                }
+                expect_destination(target_version, target, redirect ? 5354 : 5000);
+                test_monotonic_ms = 11000;
+                handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                struct ng_session *current = find_udp_session(&running, packet, packet + off);
+                assert(current != NULL && current->udp.uid == owner);
+                assert((current != old) == retire);
+                assert(current->udp.state == (deny ? UDP_BLOCKED : UDP_ACTIVE));
+                assert(old->udp.uid == owner && old->udp.state == (retire ? UDP_FINISHING : UDP_ACTIVE));
+                assert(policy_checks == 2 && policy_uid == owner);
+                assert(allocations == 1 + retire + (uid_cache != NULL));
+                assert(destination_calls == !deny && sockets == (retire && !deny ? 2 : 1));
+                assert(args->ctx->ng_session == current && current->next == (retire ? old : NULL));
+                if (deny)
+                    tun_packet(tunnel[0], output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+                else {
+                    struct sockaddr_storage local;
+                    socklen_t length = sizeof(local);
+                    assert(getsockname(current->socket, (struct sockaddr *) &local, &length) == 0);
+                    assert(local.ss_family == (target_version == 4 ? AF_INET : AF_INET6));
+                    assert(current->udp.redirect_version == (redirect ? target_version : 0));
+                }
+                if (retire) {
+                    // A queued event for the retired socket must not read or forward data.
+                    struct epoll_event event = {.events = EPOLLIN | EPOLLERR, .data.ptr = old};
+                    assert(epoll_ctl(epoll_fd, EPOLL_CTL_MOD, old->socket, &event) == -1 && errno == ENOENT);
+                    check_udp_socket(&running, &event);
+                    assert(old->udp.state == UDP_FINISHING && destination_calls == !deny);
+                    check_udp_session(&running, old, 1, SESSION_MAX);
+                    assert(old->socket == -1 && old->udp.state == UDP_CLOSED);
+                }
+                if (!deny) {
+                    int queries = uid_lookups, closes = file_closes;
+                    int current_socket = current->socket;
+                    uid_lookup_result = 23456;
+                    // The session must own its target, not retain this mutable policy result.
+                    memset(&policy_redirect, 0, sizeof(policy_redirect));
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                    assert(current->socket == current_socket && current->udp.uid == owner);
+                    if (!retire) assert(current->socket == original_socket);
+                    assert(destination_calls == 3 && policy_checks == 2);
+                    assert(uid_lookups == queries && file_closes == closes);
+                }
+                assert(find_udp_session(&running, packet, packet + off) == current);
+            } else {
+                test_monotonic_ms = 11000;
+                if (scenario == 1) test_monotonic_failures = 1;
+                int queries = uid_lookups;
+                handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                int clock_reads = test_monotonic_calls;
+                test_monotonic_ms = 1000000;
+                for (int i = 0; i < 64; i++)
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                assert(uid_lookups == queries && policy_checks == 1 && old->udp.uid < 0);
+                assert(test_monotonic_calls == clock_reads);
+            }
+            clear(args->ctx);
+            release_uid_cache();
+            assert(allocations == 0 && sockets == 0 && !is_readable(tunnel[0]));
+        }
+    }
+    test_monotonic_enabled = false;
+    real_network = 0;
+    args->ctx->sdk = 29;
+    close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_uid_ipv4_fallback(void) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     uint32_t address;

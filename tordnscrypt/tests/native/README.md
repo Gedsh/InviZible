@@ -318,7 +318,21 @@ regressions cover these cases, an empty IPv6 table, and failure of both tables.
 JNI UID lookup exceptions discard the callback result and return an unknown UID.
 Regression cases cover apparent UID zero, a positive UID, and an unknown UID,
 checking reference cleanup and a successful retry after each exception.
-The full run contains 247 tests plus the optional comparison test.
+Active non-DNS UDP flows with unknown owners retry UID lookup on outgoing packets,
+at most three times, with one-, two-, and four-second delays. Idle flows schedule
+no wake-ups; known, inactive, and disconnected flows do not retry. Clock failures
+disable further retries for that flow. A recovered owner triggers policy checking.
+Unchanged direct routes keep their socket and source port; denied or redirected
+flows retire the old socket, using a new socket when allowed. Retired records stay
+alive for normal cleanup, and queued socket events for them are ignored.
+IPv4/IPv6 regressions exercise proc and JNI lookup paths, retry spacing and budget,
+UID zero, allow/deny policy, same-family and cross-family redirects, stale events,
+clock failures, and allocation/socket balance.
+Non-DNS sessions retain their binary forwarding endpoint separately from the
+original flow key. Second and third packets keep using it without more UID or
+policy lookups, even after the temporary policy result changes. DNS retains its
+per-request routing behavior.
+The full run contains 250 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

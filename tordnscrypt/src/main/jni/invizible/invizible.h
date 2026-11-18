@@ -198,6 +198,8 @@ struct icmp_session {
 #define UDP_FINISHING 1
 #define UDP_CLOSED 2
 #define UDP_BLOCKED 3
+#define UDP_UID_RETRY_MAX 3
+#define UDP_UID_RETRY_INTERVAL 1000
 
 struct udp_session {
     time_t time;
@@ -207,6 +209,8 @@ struct udp_session {
 
     uint64_t sent;
     uint64_t received;
+
+    int64_t uid_retry_at; // Monotonic milliseconds; negative disables retries.
 
     union {
         __be32 ip4; // network notation
@@ -220,7 +224,16 @@ struct udp_session {
     } daddr;
     __be16 dest; // network notation
 
+    // Non-DNS forwarding target, independent of the original session key.
+    union {
+        __be32 ip4;
+        struct in6_addr ip6;
+    } redirect_addr;
+    __be16 redirect_port;
+    uint8_t redirect_version; // Zero for direct traffic and per-request DNS routing.
+
     uint8_t state;
+    uint8_t uid_retries;
 };
 
 struct tcp_session {

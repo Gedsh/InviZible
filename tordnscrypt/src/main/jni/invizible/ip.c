@@ -141,6 +141,24 @@ static bool valid_transport_checksum(uint8_t version, uint8_t protocol,
     return calc_checksum(sum, payload, length) == UINT16_MAX;
 }
 
+static bool retry_udp_uid(struct ng_session *s) {
+    if (s == NULL || s->socket < 0 || s->udp.state != UDP_ACTIVE || s->udp.uid >= 0 ||
+        s->udp.uid_retries >= UDP_UID_RETRY_MAX || s->udp.uid_retry_at < 0)
+        return false;
+
+    long long now = get_ms();
+    if (now < 0) {
+        s->udp.uid_retries = UDP_UID_RETRY_MAX;
+        return false; // A broken clock must not turn every packet into a proc/JNI query.
+    }
+    if (now < s->udp.uid_retry_at)
+        return false;
+
+    s->udp.uid_retries++;
+    s->udp.uid_retry_at = now + (UDP_UID_RETRY_INTERVAL << s->udp.uid_retries);
+    return true;
+}
+
 void handle_ip(const struct arguments *args,
                const uint8_t *pkt, const size_t length,
                const int epoll_fd,
@@ -392,12 +410,14 @@ void handle_ip(const struct arguments *args,
 
     struct udp_session_lookup udp_lookup = {0};
     bool udp_existing = false;
+    bool udp_uid_retry = false;
     if (protocol == IPPROTO_UDP) {
         if (dport == 53)
             udp_existing = !args->fwd53; // DNS policy shortcut, not a flow lookup.
         else {
             udp_lookup.session = find_udp_session(args, pkt, payload);
             udp_existing = udp_lookup.session != NULL;
+            udp_uid_retry = retry_udp_uid(udp_lookup.session);
         }
     }
 
@@ -416,7 +436,7 @@ void handle_ip(const struct arguments *args,
     // Get uid
     jint uid = -1;
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
-        (protocol == IPPROTO_UDP && !udp_existing) ||
+        (protocol == IPPROTO_UDP && (!udp_existing || udp_uid_retry)) ||
         (protocol == IPPROTO_TCP && syn)) {
         if (args->ctx->sdk <= 28 || (compatibility_mode && can_filter)) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
@@ -424,7 +444,7 @@ void handle_ip(const struct arguments *args,
             uid = get_uid_q(args, version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport);
         }
 
-        if (uid < 0 && dport != 53) {
+        if (uid < 0 && dport != 53 && !udp_uid_retry) {
             uid = restore_uid(args,
                               version,
                               protocol,
@@ -439,6 +459,10 @@ void handle_ip(const struct arguments *args,
         }
     }
 
+    bool udp_uid_resolved = udp_uid_retry && uid >= 0;
+    if (udp_uid_resolved)
+        udp_lookup.session->udp.uid = uid;
+
     log_android(ANDROID_LOG_DEBUG,
                 "Packet v%d %s/%u > %s/%u proto %d flags %s uid %d",
                 version, format_log_address(&source), sport, format_log_address(&dest), dport, protocol, flags, uid);
@@ -446,7 +470,7 @@ void handle_ip(const struct arguments *args,
     // Check if allowed
     int allowed = 0;
     struct allowed *redirect = NULL;
-    if (protocol == IPPROTO_UDP && udp_existing) {
+    if (protocol == IPPROTO_UDP && udp_existing && !udp_uid_resolved) {
         allowed = 1; // could be a lingering/blocked session
     } else if (protocol == IPPROTO_TCP
                && (!syn || (!args->fwd53 && uid == 0 && dport == 53))) {
@@ -467,6 +491,18 @@ void handle_ip(const struct arguments *args,
         allowed = (redirect != NULL);
         if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
             redirect = NULL;
+    }
+
+    if (udp_uid_resolved &&
+        (!allowed || redirect != NULL || udp_lookup.session->udp.redirect_version != 0)) {
+        // Preserve direct sockets (and their source ports) when policy is unchanged.
+        // Retired records stay alive until cleanup for queued epoll event pointers.
+        if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, udp_lookup.session->socket, NULL))
+            log_android(ANDROID_LOG_ERROR, "epoll del udp UID recovery error %d: %s",
+                        errno, strerror(errno));
+        udp_lookup.session->udp.state = UDP_FINISHING;
+        unindex_session(args->ctx, udp_lookup.session);
+        udp_lookup.session = NULL;
     }
 
     // Handle allowed traffic

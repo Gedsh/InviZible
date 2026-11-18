@@ -3,6 +3,7 @@
 #include <sys/system_properties.h>
 
 int allocations, sockets, last_socket = -1, udp_calls, resolved_calls;
+static int tracked_sockets[64], tracked_socket_count;
 int tcp_calls, icmp_calls;
 int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 int capture_packets, capture_dhcp, fake_proc;
@@ -49,6 +50,8 @@ int __wrap_ioctl(int fd, int request, ...) {
     return __real_ioctl(fd, request, value);
 }
 int udp_lookups, uid_lookups, policy_checks, deny_address;
+jint uid_lookup_result, policy_uid;
+struct allowed policy_redirect;
 int udp_lookup_supplied;
 struct ng_session *udp_lookup_session;
 
@@ -159,18 +162,23 @@ void __wrap_ng_free(void *p, const char *file, int line) {
 
 int __real_socket(int domain, int type, int protocol);
 int __wrap_socket(int domain, int type, int protocol) {
-    assert(last_socket == -1);
+    assert(tracked_socket_count < (int) (sizeof(tracked_sockets) / sizeof(*tracked_sockets)));
     last_socket = (real_network ? __real_socket(domain, type, protocol) : open("/dev/null", O_RDWR));
     assert(last_socket >= 0);
+    tracked_sockets[tracked_socket_count++] = last_socket;
     sockets++;
     return last_socket;
 }
 
 int __real_close(int fd);
 int __wrap_close(int fd) {
-    if (fd == last_socket) {
-        last_socket = -1;
-        sockets--;
+    for (int i = 0; i < tracked_socket_count; i++) {
+        if (fd == tracked_sockets[i]) {
+            tracked_sockets[i] = tracked_sockets[--tracked_socket_count];
+            last_socket = tracked_socket_count == 0 ? -1 : tracked_sockets[tracked_socket_count - 1];
+            sockets--;
+            break;
+        }
     }
     return __real_close(fd);
 }
@@ -294,7 +302,7 @@ jboolean __wrap_handle_udp(const struct arguments *args, const uint8_t *pkt, siz
 jint __wrap_get_uid_q(const struct arguments *args, jint version, jint protocol,
                       const char *source, jint sport, const char *dest, jint dport) {
     uid_lookups++;
-    return own_uid;
+    return uid_lookup_result;
 }
 
 jboolean __real_handle_tcp(const struct arguments *, const uint8_t *, size_t,
@@ -316,13 +324,13 @@ jobject __wrap_create_packet(const struct arguments *args, jint version, jint pr
                              const char *flags, const char *source, jint sport,
                              const char *dest, jint dport, const char *data, jint uid,
                              jboolean allowed) {
+    policy_uid = uid;
     return NULL;
 }
 
 struct allowed *__wrap_is_address_allowed(const struct arguments *args, jobject packet) {
-    static struct allowed allowed = {0};
     policy_checks++;
-    return deny_address ? NULL : &allowed;
+    return deny_address ? NULL : &policy_redirect;
 }
 
 void __real_report_exit(const struct arguments *args, const char *fmt, ...);
@@ -619,6 +627,7 @@ void reset_test_state(void) {
     accounted_sent = accounted_received = 0;
     failure = NONE;
     last_socket = -1;
+    tracked_socket_count = 0;
     cases = 0;
     tor_socks5_addr[0] = tor_socks5_username[0] = tor_socks5_password[0] = 0;
     proxy_socks5_addr[0] = proxy_socks5_username[0] = proxy_socks5_password[0] = 0;
@@ -626,5 +635,8 @@ void reset_test_state(void) {
     tor_isolate_uid = tor_connection_available = false;
     bypass_lan = true;
     own_uid = getuid();
+    uid_lookup_result = own_uid;
+    policy_uid = -1;
+    memset(&policy_redirect, 0, sizeof(policy_redirect));
     srand(1);
 }

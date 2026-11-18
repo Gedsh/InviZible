@@ -145,6 +145,12 @@ static const char *run_case(const char *id) {
         test_tcp_backpressure(&args, 1);
     else if (strcmp(id, "udpPacketLookup") == 0)
         test_udp_packet_lookup(&args, 0);
+    else if (strcmp(id, "udpUidRetryBudget") == 0)
+        test_udp_uid_retry(&args, 0);
+    else if (strcmp(id, "udpUidRetryRecovery") == 0)
+        test_udp_uid_retry(&args, 1);
+    else if (strcmp(id, "udpUidRetryClock") == 0)
+        test_udp_uid_retry(&args, 2);
     else if (strcmp(id, "udpDnsLookupPolicy") == 0)
         test_udp_packet_lookup(&args, 1);
     else if (strcmp(id, "udpLookupStates") == 0)

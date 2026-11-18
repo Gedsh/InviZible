@@ -271,6 +271,11 @@ void test_udp_destination(const struct arguments *args) {
             assert(handle_udp(args, packet, off + 9, packet + off, own_uid,
                                redirected ? &redirect : NULL, -1) == 1);
             assert(destination_calls == 1 && args->ctx->ng_session->udp.sent == 1);
+#ifndef INVIZIBLE_BASELINE_TESTS
+            memset(&redirect, 0, sizeof(redirect));
+            assert(handle_udp(args, packet, off + 9, packet + off, own_uid, NULL, -1) == 1);
+            assert(destination_calls == 2 && args->ctx->ng_session->udp.sent == 2);
+#endif
             clear(args->ctx);
             assert(allocations == 0 && sockets == 0);
         }
@@ -291,7 +296,8 @@ void test_udp_allocation_failure(const struct arguments *args) {
         assert(handle_udp(args, packet, off + sizeof(*header), packet + off, own_uid, NULL, -1) == 0);
         assert(fail_alloc_match == 0);
         assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
-        struct ng_session s = {.protocol = IPPROTO_UDP, .socket = -1};
+        // Allocation fails before recv; use a live-session descriptor sentinel.
+        struct ng_session s = {.protocol = IPPROTO_UDP, .socket = 42};
         s.udp.version = version;
         s.udp.state = UDP_ACTIVE;
         s.udp.mss = 1500;
