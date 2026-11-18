@@ -545,6 +545,10 @@ void unindex_session(struct context *ctx, struct ng_session *session);
 // Valid only while processing this packet on the event thread under ctx->lock.
 struct udp_session_lookup {
     struct ng_session *session;
+    // Packet-local snapshot, retained when recovery replaces the flow's record.
+    int64_t uid_retry_at;
+    uint8_t uid_retries;
+    bool preserve_uid_retry;
 };
 
 jboolean handle_udp_with_lookup(const struct arguments *args,
@@ -556,6 +560,10 @@ void block_udp(const struct arguments *args,
                const uint8_t *pkt, size_t length,
                const uint8_t *payload,
                int uid);
+
+void block_udp_with_lookup(const struct arguments *args,
+                           const uint8_t *pkt, size_t length, const uint8_t *payload,
+                           int uid, const struct udp_session_lookup *lookup);
 
 jboolean handle_udp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,

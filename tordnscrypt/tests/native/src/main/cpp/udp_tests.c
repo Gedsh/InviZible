@@ -398,6 +398,17 @@ void test_udp_blocked_limit(struct arguments *args, int version) {
     int before = allocations;
     block_udp(args, packet, off + sizeof(struct udphdr), packet + off, 54321);
     assert(allocations == before && args->ctx->ng_session->udp.uid == 54321);
+#ifndef INVIZIBLE_BASELINE_TESTS
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, -1);
+    assert(allocations == before && args->ctx->ng_session->udp.uid == 54321);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, 0);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, -1);
+    assert(allocations == before && args->ctx->ng_session->udp.uid == 0);
+    off = blocked_packet(packet, version, 1000 + UDP_BLOCKED_MAX + 50, 5000);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, -1);
+    // Eviction reuses storage, but a different tuple must start with its own owner.
+    assert(allocations == before && args->ctx->ng_session->udp.uid == -1);
+#endif
     assert_test_session_index(args->ctx);
     clear(args->ctx);
     assert(allocations == 0 && sockets == 0);

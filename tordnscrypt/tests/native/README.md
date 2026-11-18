@@ -100,9 +100,9 @@ UDP lookup cases count exact flow searches, UID lookups and policy callbacks.
 Non-DNS packets reuse one packet-local result for capacity, UID, policy and
 forwarding checks, including a completed lookup that found no session. IPv4/IPv6
 cases distinguish protocol, family, ports and addresses, and preserve active,
-finishing, closed and blocked flows. Unforwarded DNS shares its actual flow lookup
-with forwarding while retaining the policy shortcut. An existing DNS flow must not
-bypass UID/policy checks when DNS forwarding is enabled. The lookup is never
+finishing, closed and blocked flows. DNS shares its actual flow lookup with
+forwarding and resolves ownership/checks policy on every request in both modes.
+An existing DNS flow must not bypass policy checks. The lookup is never
 stored beyond the packet or reused across event-loop iterations.
 TCP backpressure uses socket writability for queued, contiguous app data and TUN
 readiness for sequence gaps. Nonblocking sends retain partial writes and retry on
@@ -321,9 +321,13 @@ checking reference cleanup and a successful retry after each exception.
 Active non-DNS UDP flows with unknown owners retry UID lookup on outgoing packets,
 at most three times, with one-, two-, and four-second delays. Idle flows schedule
 no wake-ups; known, inactive, and disconnected flows do not retry. Clock failures
-disable further retries for that flow. A recovered owner triggers policy checking.
-Unchanged direct routes keep their socket and source port; denied or redirected
-flows retire the old socket, using a new socket when allowed. Retired records stay
+disable further retries for that flow. Each lookup retry triggers policy checking,
+including a failed lookup that leaves the owner unknown.
+Unchanged direct or redirected routes keep their socket and source port; denied
+flows and changed routes retire the old socket, using a new socket when allowed.
+Unknown-owner replacements and active/blocked transitions retain their retry count
+and absolute deadline, so socket replacement cannot restart the three-attempt budget.
+Retired records stay
 alive for normal cleanup, and queued socket events for them are ignored.
 IPv4/IPv6 regressions exercise proc and JNI lookup paths, retry spacing and budget,
 UID zero, allow/deny policy, same-family and cross-family redirects, stale events,
@@ -335,10 +339,10 @@ per-request routing behavior.
 DNS lookup failures can restore the UID from an exact live session before policy
 and forwarding. IPv4/IPv6 UDP and TCP regressions cover proc and JNI lookup paths,
 UID zero, fresh lookup precedence, denied policy, missing/mismatched/unknown or
-disconnected/closed records, and TCP SYN sequence reuse. Existing DNS forwarding
-shortcuts and session limits remain covered.
+disconnected/closed records, and TCP SYN sequence reuse. DNS policy and session
+limits remain covered with forwarding enabled and disabled.
 Unknown-owner blocked non-DNS UDP records use the same bounded, packet-driven
-UID retries as active flows. A resolved UID triggers policy reevaluation; denied
+UID retries as active flows. Each retry triggers policy reevaluation; denied
 owners remain cached as blocked, while allowed owners can create a socket using
 the current route. A full active-session table defers recovery without consuming
 the retry budget. Known-owner blocks never use this recovery path.
@@ -352,13 +356,32 @@ match. Denied flows, changed routes, and Tor UID isolation reset the connection,
 release queued data, and ignore stale socket events. IPv4/IPv6 cases cover JNI and
 legacy proc lookup, UID zero, retry initialization and clock failure, finite
 budgets, packet validation, route changes, and data forwarding after recovery.
-Unforwarded UDP DNS resolves the owner when opening a flow and retries unknown
-live owners using the existing three-attempt backoff. Known owners, inactive
-records, and failed clocks do not cause repeated lookups. Recovery preserves the
-DNS policy shortcut, socket, and destination. IPv4/IPv6 cases exercise both JNI
-and legacy proc lookup, UID zero, failed lookups, retry spacing and budgets, and
-unchanged forwarding even when the policy mock would deny or redirect traffic.
-The full run contains 260 tests plus the optional comparison test.
+UDP DNS checks ownership and policy on every request, independently of forwarding.
+DNS lookups continue to use the legacy proc cache; failed lookups can restore an
+exact live owner. Denying an active flow retires its socket registration and ignores
+queued events, preventing pending replies from bypassing policy. Allowed blocked
+flows can reopen only when an active session slot is available. IPv4/IPv6 cases
+exercise JNI/proc lookup, root and unknown owners, immediate repeated requests,
+allow/deny policy, direct/redirected destinations, full tables, and blocked recovery.
+TCP DNS SYNs also check policy for root-owned flows when forwarding is disabled.
+Blocked DNS flows follow policy for unknown owners when lookup fails: an allowed
+flow can reopen with an unknown UID when capacity is available. Continued denial
+preserves the stored owner of an exact blocked tuple; eviction for a different
+tuple does not inherit that owner. Recovery cases cover repeated failed lookups,
+allow/deny decisions for unknown owners, capacity limits, UID zero, and subsequent
+resolved-owner denial/recovery in both modes and lookup paths.
+Unknown-owner policy regressions cover TCP, UDP, DNS and ICMP in both IP families,
+including failed JNI lookups, empty proc tables and proc access errors. UDP owner
+retries reevaluate policy even when lookup fails; an allowed blocked flow can
+reopen with an unknown owner, while continued denial preserves its retry budget.
+Policy may explicitly allow direct DNS even when forwarding rules are configured;
+the native UDP handler honors that result instead of applying a second UID-based
+restriction. Malformed packets, unsupported protocols and resource limits retain
+their independent checks.
+UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
+IPv6 loopback normalization, port/family changes, active/blocked transitions, and
+no further owner/policy/clock queries after the shared retry budget is exhausted.
+The full run contains 264 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

@@ -27,10 +27,15 @@ extern int own_uid;
 extern int tor_dns_port;
 extern bool bypass_lan;
 
-static void init_udp_uid_retry(struct udp_session *session, bool forwarding_dns) {
+static void init_udp_uid_retry(struct udp_session *session, const struct udp_session_lookup *lookup) {
     session->uid_retries = 0;
     session->uid_retry_at = -1;
-    if (session->uid < 0 && (ntohs(session->dest) != 53 || !forwarding_dns)) {
+    if (session->uid < 0 && ntohs(session->dest) != 53) {
+        if (lookup != NULL && lookup->preserve_uid_retry) {
+            session->uid_retry_at = lookup->uid_retry_at;
+            session->uid_retries = lookup->uid_retries;
+            return;
+        }
         long long now = get_ms();
         if (now >= 0)
             session->uid_retry_at = now + UDP_UID_RETRY_INTERVAL;
@@ -171,9 +176,6 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
 }
 
 int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint8_t *payload) {
-    const struct udphdr *udp = (const struct udphdr *) payload;
-    if (ntohs(udp->dest) == 53)
-        return !args->fwd53;
     return find_udp_session(args, pkt, payload) != NULL;
 }
 
@@ -181,6 +183,12 @@ void block_udp(const struct arguments *args,
                const uint8_t *pkt, size_t length,
                const uint8_t *payload,
                int uid) {
+    block_udp_with_lookup(args, pkt, length, payload, uid, NULL);
+}
+
+void block_udp_with_lookup(const struct arguments *args,
+                           const uint8_t *pkt, size_t length, const uint8_t *payload,
+                           int uid, const struct udp_session_lookup *lookup) {
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
@@ -217,6 +225,10 @@ void block_udp(const struct arguments *args,
     }
 
     struct ng_session *s;
+    // A failed lookup must not erase the known owner of this exact blocked flow.
+    // Reusing an evicted record for a different tuple must not inherit its owner.
+    if (match != NULL && uid < 0 && (*match)->udp.uid >= 0)
+        uid = (*match)->udp.uid;
     struct ng_session **reuse = (match != NULL ? match : blocked >= UDP_BLOCKED_MAX ? oldest : NULL);
     if (reuse != NULL) {
         s = *reuse;
@@ -246,7 +258,7 @@ void block_udp(const struct arguments *args,
     s->udp.dest = udphdr->dest;
     s->udp.state = UDP_BLOCKED;
     s->socket = -1;
-    init_udp_uid_retry(&s->udp, args->fwd53);
+    init_udp_uid_retry(&s->udp, lookup);
 
     write_connection_unreach(args, s, EHOSTDOWN);
 
@@ -323,14 +335,6 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         return 0;
     }
 
-    if (ntohs(udphdr->dest) == 53 && redirect == NULL && uid != own_uid && args->fwd53) {
-        log_android(
-                ANDROID_LOG_ERROR, "Direct DNS connection for %s/%u to %s/%u uid %uid not allowed",
-                format_log_address(&source), ntohs(udphdr->source), format_log_address(&dest), ntohs(udphdr->dest), uid
-        );
-        return 0;
-    }
-
     // Create new session if needed
     if (cur == NULL) {
         log_android(ANDROID_LOG_INFO, "UDP new session from %s/%u to %s/%u",
@@ -378,7 +382,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.source = udphdr->source;
         s->udp.dest = udphdr->dest;
-        init_udp_uid_retry(&s->udp, args->fwd53);
+        init_udp_uid_retry(&s->udp, lookup);
         s->udp.state = UDP_ACTIVE;
         s->next = NULL;
 

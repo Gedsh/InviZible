@@ -109,10 +109,18 @@ static const char *run_case(const char *id) {
         test_restore_uid_icmp(&args, 4);
     else if (strcmp(id, "restoreUidIcmp6") == 0)
         test_restore_uid_icmp(&args, 6);
-    else if (strcmp(id, "dnsPassthroughUid") == 0)
-        test_dns_passthrough_uid(&args, 0);
-    else if (strcmp(id, "dnsPassthroughUidRetry") == 0)
-        test_dns_passthrough_uid(&args, 1);
+    else if (strcmp(id, "dnsPolicy") == 0)
+        test_dns_policy(&args, 0);
+    else if (strcmp(id, "dnsPolicyLifecycle") == 0)
+        test_dns_policy(&args, 1);
+    else if (strcmp(id, "dnsBlockedOwnerRecovery") == 0)
+        test_dns_policy(&args, 2);
+    else if (strcmp(id, "unknownUidPolicy") == 0)
+        test_unknown_uid_policy(&args);
+    else if (strcmp(id, "udpRetryRoutes") == 0)
+        test_udp_retry_routes(&args);
+    else if (strcmp(id, "blockedUdpUnknownPolicy") == 0)
+        test_blocked_udp_uid_retry(&args, 3);
     else if (strcmp(id, "tcpUidUpdate") == 0)
         test_tcp_uid_update(&args);
     else if (strcmp(id, "tcpUidRetryBudget") == 0)

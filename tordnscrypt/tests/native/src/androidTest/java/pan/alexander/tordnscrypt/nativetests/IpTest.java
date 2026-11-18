@@ -12,8 +12,12 @@ import static org.junit.Assume.assumeTrue;
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
-    @Test public void unforwardedDnsResolvesOwnersWithoutChangingPolicyOrDestination() { check("dnsPassthroughUid"); }
-    @Test public void unforwardedDnsRetriesUnknownOwnersWithBoundedTrafficDrivenBackoff() { check("dnsPassthroughUidRetry"); }
+    @Test public void dnsChecksOwnershipAndPolicyWithAndWithoutForwarding() { check("dnsPolicy"); }
+    @Test public void dnsEnforcesCapacityAndRetiresDeniedFlowsInBothModes() { check("dnsPolicyLifecycle"); }
+    @Test public void blockedDnsFollowsUnknownOwnerPolicyAndPreservesStoredOwnersOnDenial() { check("dnsBlockedOwnerRecovery"); }
+    @Test public void failedUidLookupsFollowPolicyForTcpUdpDnsAndIcmpInBothFamilies() { check("unknownUidPolicy"); }
+    @Test public void blockedUdpCanReopenAfterFailedLookupWhenUnknownTrafficIsAllowed() { check("blockedUdpUnknownPolicy"); }
+    @Test public void unknownUdpOwnersKeepUnchangedRoutesAndRetryBudgetAcrossReplacements() { check("udpRetryRoutes"); }
     private static void checkLiveProc(String name) {
         assumeTrue("Android 10+ restricts app access to /proc/net; legacy UID lookup is for older devices",
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.Q);
