@@ -1880,6 +1880,8 @@ void tcp_flow(int version) {
     tcp_input(&args, packet, len, version);
     struct ng_session *s = ctx.ng_session;
     assert(s != NULL && s->tcp.state == TCP_LISTEN && s->tcp.mss == 1200);
+    // Packet comparisons must not depend on other users of process-global rand().
+    s->tcp.local_seq = s->tcp.local_start = 2000;
     assert(s->tcp.send_scale == 2 && s->tcp.send_window == 64000);
     tcp_input(&args, packet, len, version); // Repeated SYN must reuse the session.
     assert(ctx.ng_session == s && s->next == NULL);
@@ -2045,6 +2047,137 @@ void test_tcp_uid_update(const struct arguments *args) {
 #endif
 }
 
+void test_tcp_fin_uid_recovery(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    enum { ROOT, OWNER, DENIED, ROUTE_CHANGED, ISOLATED, FAILED, EARLY, EXHAUSTED, KNOWN, WRAP, SCENARIOS };
+    const uint8_t states[] = {TCP_ESTABLISHED, TCP_FIN_WAIT1, TCP_FIN_WAIT2};
+    const uint8_t data[] = {11, 22, 33};
+    for (int version = 4; version <= 6; version += 2) {
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            for (size_t state = 0; state < sizeof(states) / sizeof(*states); state++) {
+                for (int scenario = ROOT; scenario < SCENARIOS; scenario++) {
+                    int stream[2], tunnel[2];
+                    assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+                    assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+                    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+                    assert(epoll_fd >= 0);
+                    struct context ctx = {.sdk = legacy ? 28 : 29};
+                    struct arguments running = *args;
+                    running.ctx = &ctx; running.tun = tunnel[1];
+                    struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+                    s.tcp.version = version; s.tcp.state = states[state];
+                    s.tcp.uid = scenario == KNOWN ? 23456 : -1;
+                    s.tcp.local_seq = s.tcp.acked = 2000;
+                    uint32_t seq = scenario == WRAP ? UINT32_MAX - 1 : 101;
+                    s.tcp.remote_seq = seq; s.tcp.remote_start = 100;
+                    s.tcp.local_start = 1999;
+                    s.tcp.recv_window = s.tcp.send_window = 65535; s.tcp.mss = 1200;
+                    s.tcp.uid_retry_at = 11000;
+                    s.tcp.uid_retries = scenario == EXHAUSTED ? TCP_UID_RETRY_MAX : 0;
+                    s.tcp.memory = &ctx.tcp_memory;
+                    s.tcp.upstream_eof = state != 0;
+                    s.tcp.socks5 = SOCKS5_CONNECTED;
+                    s.ev.events = EPOLLIN | EPOLLERR; s.ev.data.ptr = &s;
+                    assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+                    size_t datalen = scenario % 2 ? sizeof(data) : 0;
+                    uint32_t fin_seq = seq + (uint32_t) datalen;
+                    _Alignas(8) uint8_t packet[128], output[2048];
+                    size_t length = tcp_packet(packet, version, seq, 2000, 0, 1, data, datalen);
+                    size_t off = version == 4 ? 20 : 40;
+                    struct tcphdr *header = (void *) (packet + off);
+                    s.tcp.source = header->source; s.tcp.dest = header->dest;
+                    memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+                    memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+                    set_test_sessions(&ctx, &s);
+                    test_monotonic_enabled = true;
+                    test_monotonic_ms = scenario == EARLY ? 10999 : 11000;
+                    mock_uid_routes = true;
+                    uid_route_tor = scenario == ROUTE_CHANGED || scenario == ISOLATED;
+                    uid_route_proxy = false; tor_isolate_uid = scenario == ISOLATED;
+                    if (scenario == ISOLATED) s.tcp.route = TCP_ROUTE_TOR;
+                    strcpy(tor_socks5_addr, "127.0.0.1"); tor_socks5_port = 9050;
+                    memset(&policy_redirect, 0, sizeof(policy_redirect));
+                    deny_address = scenario == DENIED;
+                    uid_lookup_result = scenario == FAILED ? -1 : scenario == ROOT ? 0 : 12345;
+                    char table[256];
+                    fake_proc = legacy;
+                    proc_contents = "header\n"; proc6_contents = version == 4 ? "header\n" : NULL;
+                    if (legacy && uid_lookup_result >= 0) {
+                        snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 %d 0 0\n",
+                                 version == 4 ? "0200000A" : "B80D0120000000000000000001000000",
+                                 version == 4 ? "00000000" : "00000000000000000000000000000000", uid_lookup_result);
+                        proc_contents = table;
+                    }
+                    bool reset = scenario == DENIED || scenario == ROUTE_CHANGED || scenario == ISOLATED;
+                    if (reset) {
+                        struct tcphdr queued = *header;
+                        queued.fin = 0;
+                        assert(queue_tcp(&running, &queued, "fin uid", &s.tcp, data, sizeof(data)) == 1);
+                    }
+                    int queries = uid_lookups, checks = policy_checks, files = file_closes;
+                    bool retry = scenario != EARLY && scenario != EXHAUSTED && scenario != KNOWN;
+                    bool recovered = retry && scenario != FAILED;
+                    packet_checksums(packet, length, off, IPPROTO_TCP);
+                    handle_ip(&running, packet, length, epoll_fd, SESSION_MAX, SESSION_MAX);
+                    assert(uid_lookups == queries + (retry && !legacy));
+                    assert(policy_checks == checks + recovered);
+                    assert(file_closes == files + (retry && legacy ? (version == 4 ? 2 : 1) : 0));
+                    assert(s.tcp.uid == (scenario == KNOWN ? 23456 : recovered ? uid_lookup_result : -1));
+                    assert(s.tcp.uid_retries == (scenario == EXHAUSTED ? TCP_UID_RETRY_MAX : retry));
+                    if (recovered) {
+                        assert(policy_uid == uid_lookup_result);
+                        assert(strcmp(policy_flags, datalen ? "APF" : "AF") == 0);
+                    }
+                    if (reset) {
+                        assert(s.socket == -1 && s.tcp.state == TCP_CLOSING && !s.tcp.fin_received);
+                        assert(s.tcp.forward == NULL && ctx.tcp_memory.queued == 0 && ctx.tcp_memory.nodes == 0);
+                        const struct tcphdr *reply = half_close_reply(tunnel[0], output, version);
+                        assert(reply->rst);
+                        s.ev.events = EPOLLIN | EPOLLOUT;
+                        check_tcp_socket(&running, &s.ev, epoll_fd);
+                        uint8_t byte;
+                        assert(recv(stream[1], &byte, 1, 0) == 0 && !is_readable(tunnel[0]));
+                    } else {
+                        assert(s.tcp.fin_received && s.tcp.fin_seq == fin_seq);
+                        s.ev.events = EPOLLOUT;
+                        check_tcp_socket(&running, &s.ev, epoll_fd);
+                        uint8_t received[sizeof(data) + 1];
+                        assert(recv(stream[1], received, sizeof(received), 0) == (ssize_t) datalen);
+                        if (datalen) {
+                            assert(memcmp(received, data, datalen) == 0);
+                            assert(recv(stream[1], received, sizeof(received), 0) == 0);
+                        }
+                        assert(s.tcp.fin_acked && s.tcp.remote_seq == fin_seq + 1);
+                        assert(s.tcp.state == (state == 0 ? TCP_CLOSE_WAIT : TCP_CLOSE));
+                        assert((s.socket >= 0) == (state == 0));
+                        const struct tcphdr *reply = half_close_reply(tunnel[0], output, version);
+                        assert(reply->ack && !reply->rst && ntohl(reply->ack_seq) == s.tcp.remote_seq);
+                        if (state == 0) {
+                            assert(send(stream[1], data, sizeof(data), 0) == sizeof(data));
+                            s.ev.events = EPOLLIN;
+                            check_tcp_socket(&running, &s.ev, epoll_fd);
+                            reply = half_close_reply(tunnel[0], output, version);
+                            assert(!reply->rst && memcmp(output + off + 20, data, sizeof(data)) == 0);
+                        }
+                    }
+                    assert(ctx.ng_session == &s && s.next == NULL);
+                    set_test_sessions(&ctx, NULL);
+                    clear_tcp_data(&s.tcp);
+                    if (s.socket >= 0) close(s.socket);
+                    close(stream[1]); close(tunnel[0]); close(tunnel[1]); close(epoll_fd);
+                    ng_free(uid_cache, __FILE__, __LINE__);
+                    uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
+                    assert(allocations == 0 && sockets == 0);
+                }
+            }
+        }
+    }
+    fake_proc = 0; proc_contents = proc6_contents = NULL;
+    test_monotonic_enabled = mock_uid_routes = tor_isolate_uid = uid_route_tor = false;
+    deny_address = 0;
+#endif
+}
+
 void test_tcp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     for (int version = 4; version <= 6; version += 2) {
@@ -2071,7 +2204,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 assert(allocations == 0 && sockets == 0);
             }
         }
-        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : kind == 3 ? 19 : kind == 4 ? 6 : 84;
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 24 : kind == 3 ? 19 : kind == 4 ? 6 : 84;
         for (int case_index = 0; case_index < scenarios; case_index++) {
             int scenario = kind == 5 ? case_index % 14 : case_index;
             int stream[2], tunnel[2];
@@ -2233,7 +2366,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 if (scenario == 1) header->ack_seq = htonl(1999);
                 if (scenario == 2) header->ack = 0;
                 if (scenario == 3) header->syn = 1;
-                if (scenario == 4) header->fin = 1;
+                if (scenario == 4) { header->fin = 1; header->seq = htonl(100); }
                 if (scenario == 5) header->rst = 1;
                 if (scenario == 6) header->urg = 1;
                 if (scenario == 7) {
@@ -2260,9 +2393,19 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     s.tcp.fin_received = true; s.tcp.fin_seq = 101;
                     length = tcp_packet(packet, version, 101, 2000, 0, 0, (const uint8_t *) "x", 1);
                 }
-                if (scenario >= 16) {
+                if (scenario >= 16 && scenario <= 20) {
                     const uint8_t states[] = {TCP_LISTEN, TCP_SYN_RECV, TCP_LAST_ACK, TCP_CLOSING, TCP_CLOSE};
                     s.tcp.state = states[scenario - 16];
+                }
+                if (scenario >= 21) {
+                    header->fin = 1;
+                    if (scenario == 21) header->ack = 0;
+                    if (scenario == 22) { s.tcp.fin_received = true; s.tcp.fin_seq = 102; }
+                    if (scenario == 23) {
+                        s.tcp.state = TCP_CLOSE_WAIT;
+                        s.tcp.fin_received = s.tcp.fin_acked = true;
+                        s.tcp.fin_seq = 101;
+                    }
                 }
                 handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups && policy_checks == policies && s.tcp.uid_retries == 0);

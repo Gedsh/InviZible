@@ -1196,11 +1196,13 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
          tcp->state != TCP_FIN_WAIT1 && tcp->state != TCP_FIN_WAIT2) ||
         s->socket < 0 ||
         tcp->uid_retries >= TCP_UID_RETRY_MAX || tcp->uid_retry_at < 0 ||
-        header->syn || header->rst || header->fin || header->urg || !header->ack ||
+        header->syn || header->rst || header->urg || !header->ack ||
         ntohl(header->seq) != tcp->remote_seq ||
         compare_u32(ack, tcp->acked) < 0 || compare_u32(ack, tcp->local_seq) > 0 ||
         datalen > tcp->recv_window ||
-        (datalen && tcp->fin_received && compare_u32(tcp->remote_seq + datalen, tcp->fin_seq) > 0))
+        (datalen && tcp->fin_received && compare_u32(tcp->remote_seq + datalen, tcp->fin_seq) > 0) ||
+        (header->fin && tcp->fin_received &&
+         (tcp->fin_acked || tcp->remote_seq + datalen != tcp->fin_seq)))
         return true;
     long long now = get_ms();
     if (now < 0) {
@@ -1223,7 +1225,8 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
     if (uid < 0)
         return true;
     tcp->uid = uid;
-    jobject packet = create_packet(args, tcp->version, IPPROTO_TCP, header->psh ? "AP" : "A",
+    const char *flags = header->fin ? (header->psh ? "APF" : "AF") : (header->psh ? "AP" : "A");
+    jobject packet = create_packet(args, tcp->version, IPPROTO_TCP, flags,
                                    source, ntohs(tcp->source), dest, ntohs(tcp->dest), "", uid, 0);
     struct allowed *redirect = is_address_allowed(args, packet);
     return apply_tcp_uid_policy(args, s, dest, redirect != NULL, redirect, epoll_fd);

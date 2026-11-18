@@ -385,7 +385,7 @@ the retry budget. Known-owner blocks never use this recovery path.
 Regressions cover both address families and lookup paths, UID zero, retry and
 clock limits, policy and routing decisions, capacity, and socket/allocation failure
 cleanup followed by successful retry.
-TCP flows with unknown owners retry lookup on valid in-order ACK/data packets in
+TCP flows with unknown owners retry lookup on valid in-order ACK/data and FIN/ACK packets in
 ESTABLISHED, CLOSE_WAIT, FIN_WAIT1 and FIN_WAIT2, with the same three-attempt backoff
 and no idle wake-ups. ACKs may range from the last accepted acknowledgement through the latest
 transmitted sequence, using wrap-safe comparisons. Recovery rechecks
@@ -401,6 +401,14 @@ App-first half-close cases reach CLOSE_WAIT through an actual FIN and local sock
 write shutdown, receive upstream data, and recover ownership on a pure partial ACK.
 They check both IP families, JNI/proc lookups, UID zero, continued upstream delivery,
 policy denial, route changes, stale events, and the finite failed-lookup budget.
+FIN/ACK recovery occurs before queuing the final payload or processing shutdown,
+and passes the FIN flag to policy. Cases cover pure FIN and FIN with final data in
+ESTABLISHED and both FIN_WAIT states, sequence wraparound, known/root owners,
+failed lookups, the retry deadline/budget, policy denial, route changes and Tor
+isolation. Allowed flows deliver the final bytes and half-close or finish normally;
+rejected routes release queued data and ignore stale events. A FIN without ACK,
+stale sequence, conflicting FIN position, or an already acknowledged app FIN
+cannot trigger recovery. Tests use real local sockets and verify resource balance.
 UDP DNS checks ownership and policy on every request, independently of forwarding.
 DNS lookups continue to use the legacy proc cache; failed lookups can restore an
 exact live owner. Denying an active flow retires its socket registration and ignores
@@ -433,7 +441,9 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 272 tests plus the optional comparison test.
+The full run contains 273 tests plus the optional comparison test.
+TCP packet fingerprint fixtures pin the initial sequence before the handshake;
+other process-wide random-generator users cannot change comparison results.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

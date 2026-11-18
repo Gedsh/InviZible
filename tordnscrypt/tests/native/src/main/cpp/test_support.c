@@ -51,6 +51,7 @@ int __wrap_ioctl(int fd, int request, ...) {
 }
 int udp_lookups, uid_lookups, policy_checks, deny_address;
 jint uid_lookup_result, policy_uid;
+char policy_flags[10];
 bool policy_requires_known_uid;
 int tcp_last_allowed;
 struct allowed policy_redirect;
@@ -361,6 +362,7 @@ jobject __wrap_create_packet(const struct arguments *args, jint version, jint pr
                              const char *dest, jint dport, const char *data, jint uid,
                              jboolean allowed) {
     policy_uid = uid;
+    snprintf(policy_flags, sizeof(policy_flags), "%s", flags);
     return NULL;
 }
 
@@ -681,6 +683,7 @@ void reset_test_state(void) {
     own_uid = getuid();
     uid_lookup_result = own_uid;
     policy_uid = -1;
+    policy_flags[0] = 0;
     policy_requires_known_uid = false;
     mock_uid_routes = uid_route_tor = uid_route_proxy = false;
     uid_peer_address = NULL;
