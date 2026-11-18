@@ -382,6 +382,9 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         cur = s;
     }
 
+    if (cur->udp.uid < 0 && uid >= 0)
+        cur->udp.uid = uid;
+
     // Check for DHCP (tethering)
     if (ntohs(udphdr->source) == 68 || ntohs(udphdr->dest) == 67) {
         if (check_dhcp(args, &cur->udp, data, datalen) >= 0)

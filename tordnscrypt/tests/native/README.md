@@ -289,6 +289,15 @@ continue normally. An empty tracker releases its record table. The test library
 exports only its test entry point to avoid replacing the ordinary suite's JNI.
 UID restoration also checks unaligned IPv4 addresses with their high bits set
 for TCP, UDP and ICMP, including source and destination mismatches.
+IPv4/IPv6 TCP and UDP cases require exact source/destination ports and addresses,
+reject closed/disconnected flows and unknown owners, and do not fall back past
+the newest exact record. TCP SYN restoration also requires the original sequence
+number, preventing UID reuse across successive connections with the same tuple.
+ICMP restoration uses the newest eligible indexed record rather than skipping an
+unknown owner for an older UID. TCP/UDP/ICMP handler cases check that a resolved
+UID, including UID zero, fills only an unknown live owner and that failed lookups
+or conflicting UIDs do not replace a known owner. TCP updates require the same SYN
+sequence number; stale/disconnected records do not acquire a new owner.
 Logging preserves the caller's `errno` even when the log backend changes it or
 returns an error. The utility regression also checks disabled logging and direct
 logger calls, with unchanged formatted output.
@@ -303,7 +312,7 @@ TCP connect-error logs omit the repeated target for direct connections and retai
 the actual target for other routes. An IPv4/IPv6 regression checks direct and
 same-family/cross-family redirect errors, preserved error details, socket cleanup,
 and skipped target-address formatting for direct failures.
-The full run contains 232 tests plus the optional comparison test.
+The full run contains 245 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

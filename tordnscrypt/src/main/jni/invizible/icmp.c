@@ -264,6 +264,9 @@ jboolean handle_icmp(const struct arguments *args,
         cur = s;
     }
 
+    if (cur->icmp.uid < 0 && uid >= 0 && cur->socket >= 0)
+        cur->icmp.uid = uid;
+
     // Modify ID
     // http://lwn.net/Articles/443051/
     icmp->icmp_id = ~icmp->icmp_id;

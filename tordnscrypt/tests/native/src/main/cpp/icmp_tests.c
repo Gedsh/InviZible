@@ -223,3 +223,33 @@ void icmp_packets(int version) {
     assert(allocations == 0);
     cases++;
 }
+
+void test_icmp_uid_update(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 7; kind++) {
+            _Alignas(8) uint8_t packet[128];
+            const char *destination = version == 4 ? "203.0.113.2" : "2001:db8::2";
+            int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+            size_t off = ip_header(packet, version, protocol, ICMP_MINLEN, destination);
+            packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+            store16(packet + off + 4, 12345);
+            struct ng_session session = {.protocol = (uint8_t) protocol, .socket = 42};
+            session.icmp.version = version;
+            session.icmp.uid = kind == 2 || kind == 3 ? 12345 : kind == 5 ? 0 : -1;
+            session.icmp.id = htons(12345);
+            memcpy(&session.icmp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+            memcpy(&session.icmp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+            if (kind == 4) session.socket = -1;
+            int uid = kind == 1 || kind == 2 || kind == 5 ? -1 : kind == 3 ? 23456 : kind == 6 ? 0 : 12345;
+            set_test_sessions(args->ctx, &session);
+            expect_destination(version, destination, 0);
+            assert(handle_icmp(args, packet, off + ICMP_MINLEN, packet + off, uid, -1) == 1);
+            int expected = kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 5 ? 0 : -1;
+            assert(session.icmp.uid == expected);
+            set_test_sessions(args->ctx, NULL);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+#endif
+}

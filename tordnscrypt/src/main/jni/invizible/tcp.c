@@ -1141,8 +1141,14 @@ jboolean handle_tcp(const struct arguments *args,
     struct ng_session *cur = find_session(args->ctx, version, IPPROTO_TCP,
             version == 4 ? (const void *) &ip4->saddr : &ip6->ip6_src, tcphdr->source,
             version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst, tcphdr->dest);
-    if (cur != NULL)
+    if (cur != NULL) {
         cur->tcp.monitor_dirty = true;
+        // Only a resolved retransmission of this live connection may fill an unknown owner.
+        if (cur->tcp.uid < 0 && uid >= 0 && cur->socket >= 0 &&
+            cur->tcp.state != TCP_CLOSING && cur->tcp.state != TCP_CLOSE &&
+            tcphdr->syn && ntohl(tcphdr->seq) == cur->tcp.remote_start)
+            cur->tcp.uid = uid;
+    }
 
     struct tcp_packet_log diagnostic = {.pkt = pkt, .header = tcphdr,
             .tcp = cur == NULL ? NULL : &cur->tcp, .uid = cur == NULL ? uid : cur->tcp.uid,

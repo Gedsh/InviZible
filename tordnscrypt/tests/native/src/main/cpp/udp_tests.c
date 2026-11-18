@@ -545,3 +545,34 @@ void udp_flow(int version, int redirect, int extension) {
     assert(allocations == 0 && sockets == 0);
     cases++;
 }
+
+void test_udp_uid_update(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 8; kind++) {
+            _Alignas(8) uint8_t packet[128];
+            const char *destination = version == 4 ? "203.0.113.2" : "2001:db8::2";
+            size_t off = ip_header(packet, version, IPPROTO_UDP, 9, destination);
+            struct udphdr *udp = (void *) (packet + off);
+            udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+            packet[off + 8] = 42;
+            struct ng_session session = {.protocol = IPPROTO_UDP, .socket = 42};
+            session.udp.version = version;
+            session.udp.uid = kind == 2 || kind == 3 ? 12345 : kind == 6 ? 0 : -1;
+            session.udp.state = kind == 4 ? UDP_CLOSED : UDP_ACTIVE;
+            session.udp.source = udp->source; session.udp.dest = udp->dest;
+            memcpy(&session.udp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+            memcpy(&session.udp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+            if (kind == 5) session.socket = -1;
+            int uid = kind == 1 || kind == 2 || kind == 6 ? -1 : kind == 3 ? 23456 : kind == 7 ? 0 : 12345;
+            set_test_sessions(args->ctx, &session);
+            expect_destination(version, destination, 5000);
+            handle_udp(args, packet, off + 9, packet + off, uid, NULL, -1);
+            int expected = kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 6 ? 0 : -1;
+            assert(session.udp.uid == expected);
+            set_test_sessions(args->ctx, NULL);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+#endif
+}

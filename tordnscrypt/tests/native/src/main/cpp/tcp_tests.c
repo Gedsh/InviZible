@@ -2000,3 +2000,37 @@ void socks_flow(int version, int authentication, int max_credentials) {
     assert(string_refs == 0 && exceptions == 0 && allocations == 0);
     cases++;
 }
+
+void test_tcp_uid_update(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 10; kind++) {
+            _Alignas(8) uint8_t packet[128];
+            size_t length = tcp_packet(packet, version, 100, 2000, 1, 0, NULL, 0);
+            size_t off = version == 4 ? 20 : 40;
+            struct tcphdr *tcp = (void *) (packet + off);
+            tcp->ack = 0;
+            struct ng_session session = {.protocol = IPPROTO_TCP, .socket = 42};
+            session.tcp.version = version;
+            session.tcp.uid = kind == 2 || kind == 3 ? 12345 : kind == 8 ? 0 : -1;
+            session.tcp.state = kind == 5 ? TCP_CLOSE : TCP_ESTABLISHED;
+            session.tcp.source = tcp->source; session.tcp.dest = tcp->dest;
+            session.tcp.remote_start = 100;
+            session.tcp.local_seq = 2000;
+            memcpy(&session.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+            memcpy(&session.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+            if (kind == 4) tcp->seq = htonl(101); // Same tuple, different connection.
+            if (kind == 6) session.socket = -1;
+            if (kind == 7) { tcp->syn = 0; tcp->ack = 1; }
+            int uid = kind == 1 || kind == 2 || kind == 8 ? -1 : kind == 3 ? 23456 : kind == 9 ? 0 : 12345;
+            set_test_sessions(args->ctx, &session);
+            handle_tcp(args, packet, length, packet + off, uid, 1, NULL, -1);
+            int expected = kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 8 ? 0 : -1;
+            assert(session.tcp.uid == expected);
+            set_test_sessions(args->ctx, NULL);
+            clear_tcp_data(&session.tcp);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+#endif
+}
