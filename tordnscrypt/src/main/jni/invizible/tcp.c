@@ -1168,15 +1168,20 @@ static bool tcp_uid_route_matches(const struct arguments *args, const struct ng_
 }
 
 // Traffic drives three attempts after 1, 2 and 4 seconds; idle streams add no wake-ups.
-// Only a current, in-order ACK may associate an owner with this established stream.
+// Require an in-order packet and an ACK within this live stream's outstanding range.
 static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
                              const struct tcphdr *header, uint16_t datalen, int epoll_fd) {
     struct tcp_session *tcp = &s->tcp;
-    if (tcp->uid >= 0 || tcp->state != TCP_ESTABLISHED || s->socket < 0 ||
+    uint32_t ack = ntohl(header->ack_seq);
+    if (tcp->uid >= 0 ||
+        (tcp->state != TCP_ESTABLISHED && tcp->state != TCP_FIN_WAIT1 && tcp->state != TCP_FIN_WAIT2) ||
+        s->socket < 0 ||
         tcp->uid_retries >= TCP_UID_RETRY_MAX || tcp->uid_retry_at < 0 ||
         header->syn || header->rst || header->fin || header->urg || !header->ack ||
-        ntohl(header->seq) != tcp->remote_seq || ntohl(header->ack_seq) != tcp->local_seq ||
-        datalen > tcp->recv_window)
+        ntohl(header->seq) != tcp->remote_seq ||
+        compare_u32(ack, tcp->acked) < 0 || compare_u32(ack, tcp->local_seq) > 0 ||
+        datalen > tcp->recv_window ||
+        (datalen && tcp->fin_received && compare_u32(tcp->remote_seq + datalen, tcp->fin_seq) > 0))
         return true;
     long long now = get_ms();
     if (now < 0) {

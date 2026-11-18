@@ -2066,7 +2066,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 assert(allocations == 0 && sockets == 0);
             }
         }
-        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : 11;
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : 19;
         for (int scenario = 0; scenario < scenarios; scenario++) {
             int stream[2], tunnel[2];
             assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
@@ -2106,7 +2106,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             int lookups = uid_lookups, policies = policy_checks;
             int files = file_closes;
             char table[256];
-            bool legacy = kind == 1 && scenario == 13;
+            bool legacy = (kind == 1 && scenario == 13) || (kind == 3 && scenario >= 16);
             if (legacy) {
                 ctx.sdk = 28; fake_proc = 1;
                 snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 12345 0 0\n",
@@ -2192,7 +2192,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     assert(memcmp(received, data, sizeof(data)) == 0);
                     assert(uid_lookups == lookups + !legacy && policy_checks == policies + 1);
                 }
-            } else {
+            } else if (kind == 2) {
                 if (scenario == 0) header->seq = htonl(100);
                 if (scenario == 1) header->ack_seq = htonl(1999);
                 if (scenario == 2) header->ack = 0;
@@ -2207,9 +2207,91 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     length = tcp_packet(packet, version, 101, 2000, 0, 0, (const uint8_t *) "x", 1);
                     s.tcp.recv_window = 0;
                 }
+                if (scenario == 11) header->ack_seq = htonl(2001); // Future ACK.
+                if (scenario == 12 || scenario == 13) {
+                    s.tcp.acked = UINT32_MAX - 15; s.tcp.local_seq = 32;
+                    header->ack_seq = htonl(scenario == 12 ? UINT32_MAX - 16 : 33);
+                }
+                if (scenario == 14) {
+                    s.tcp.state = TCP_FIN_WAIT1;
+                    header->seq = htonl(100); // Stale packet in a half-closed stream.
+                }
+                if (scenario == 15) {
+                    s.tcp.state = TCP_FIN_WAIT2;
+                    s.tcp.fin_received = true; s.tcp.fin_seq = 101;
+                    length = tcp_packet(packet, version, 101, 2000, 0, 0, (const uint8_t *) "x", 1);
+                }
+                if (scenario >= 16) {
+                    const uint8_t states[] = {TCP_LISTEN, TCP_SYN_RECV, TCP_LAST_ACK, TCP_CLOSING, TCP_CLOSE};
+                    s.tcp.state = states[scenario - 16];
+                }
                 handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups && policy_checks == policies && s.tcp.uid_retries == 0);
                 assert(s.tcp.uid == -1);
+            } else {
+                // ACK range endpoints/interior, wraparound, half-close policy/route changes,
+                // bounded failed lookups, and legacy proc lookup on the expanded paths.
+                s.tcp.state = scenario >= 3 && scenario <= 5 ? TCP_FIN_WAIT1 :
+                              scenario == 6 || scenario == 10 || scenario == 12 ||
+                              scenario == 15 || scenario == 18 ? TCP_FIN_WAIT2 :
+                              scenario == 8 || scenario == 9 || scenario == 11 ||
+                              scenario == 14 || scenario == 17 ? TCP_FIN_WAIT1 : TCP_ESTABLISHED;
+                s.tcp.upstream_eof = s.tcp.state != TCP_ESTABLISHED;
+                s.tcp.acked = s.tcp.state == TCP_FIN_WAIT2 ? 2000 : 1900;
+                uint32_t ack = scenario == 0 || scenario == 3 ? 1900 :
+                               scenario == 2 || scenario == 5 || s.tcp.state == TCP_FIN_WAIT2 ? 2000 : 1950;
+                if (scenario >= 7 && scenario <= 10) {
+                    s.tcp.local_seq = 32;
+                    s.tcp.acked = scenario == 10 ? 32 : UINT32_MAX - 15;
+                    ack = scenario == 7 ? 0 : scenario == 8 ? UINT32_MAX - 15 : 32;
+                }
+                uint8_t state = s.tcp.state;
+                bool failed = scenario == 14 || scenario == 15;
+                reset = scenario == 11 || scenario == 12 || scenario == 13;
+                deny_address = scenario == 11 || scenario == 12;
+                uid_route_tor = scenario == 13;
+                if (failed) uid_lookup_result = -1;
+                const uint8_t data[] = {11, 22, 33};
+                length = tcp_packet(packet, version, 101, ack, 0, 0, data, sizeof(data));
+                int tries = failed ? TCP_UID_RETRY_MAX : 1;
+                for (int attempt = 0; attempt < tries; attempt++) {
+                    header->seq = htonl(s.tcp.remote_seq);
+                    test_monotonic_ms = s.tcp.uid_retry_at;
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    assert(uid_lookups == lookups + (legacy ? 0 : attempt + 1));
+                    assert(s.tcp.uid_retries == attempt + 1);
+                    assert(policy_checks == policies + !failed);
+                    assert(s.tcp.uid == (failed ? -1 : uid_lookup_result));
+                    if (reset) {
+                        assert(s.socket == -1 && s.tcp.state == TCP_CLOSING && s.tcp.forward == NULL);
+                        _Alignas(8) uint8_t output[2048];
+                        tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+                        assert(((struct tcphdr *) (output + off))->rst);
+                        s.ev.events = EPOLLOUT | EPOLLIN;
+                        check_tcp_socket(&running, &s.ev, epoll_fd);
+                        uint8_t byte;
+                        assert(recv(stream[1], &byte, 1, 0) == 0);
+                    } else {
+                        assert(s.socket == stream[0]);
+                        assert(s.tcp.state == (state == TCP_FIN_WAIT1 && ack == s.tcp.local_seq
+                                              ? TCP_FIN_WAIT2 : state));
+                        s.ev.events = EPOLLOUT;
+                        check_tcp_socket(&running, &s.ev, epoll_fd);
+                        uint8_t received[sizeof(data)];
+                        assert(recv(stream[1], received, sizeof(received), 0) == sizeof(data));
+                        assert(memcmp(received, data, sizeof(data)) == 0);
+                        assert(s.tcp.remote_seq == 101 + sizeof(data) * (attempt + 1));
+                    }
+                }
+                if (failed) {
+                    int clocks = test_monotonic_calls;
+                    test_monotonic_ms = 1000000;
+                    header->seq = htonl(s.tcp.remote_seq);
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    assert(s.tcp.uid_retries == TCP_UID_RETRY_MAX && uid_lookups == lookups + tries);
+                    assert(test_monotonic_calls == clocks && policy_checks == policies);
+                }
+                if (legacy) assert(file_closes == files + (version == 4 ? 2 : 1));
             }
             set_test_sessions(&ctx, NULL);
             clear_tcp_data(&s.tcp);
