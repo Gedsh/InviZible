@@ -151,6 +151,12 @@ static const char *run_case(const char *id) {
         test_udp_uid_retry(&args, 1);
     else if (strcmp(id, "udpUidRetryClock") == 0)
         test_udp_uid_retry(&args, 2);
+    else if (strcmp(id, "blockedUdpUidBudget") == 0)
+        test_blocked_udp_uid_retry(&args, 0);
+    else if (strcmp(id, "blockedUdpUidRecovery") == 0)
+        test_blocked_udp_uid_retry(&args, 1);
+    else if (strcmp(id, "blockedUdpUidSocketFailure") == 0)
+        test_blocked_udp_uid_retry(&args, 2);
     else if (strcmp(id, "udpDnsLookupPolicy") == 0)
         test_udp_packet_lookup(&args, 1);
     else if (strcmp(id, "udpDnsUidRestore") == 0)

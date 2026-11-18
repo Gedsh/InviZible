@@ -56,6 +56,7 @@ extern int tcp_last_allowed;
 extern struct allowed policy_redirect;
 void test_dns_uid_restore(struct arguments *args, int protocol);
 void test_udp_uid_retry(struct arguments *args, int kind);
+void test_blocked_udp_uid_retry(struct arguments *args, int kind);
 extern int udp_lookup_supplied;
 extern struct ng_session *udp_lookup_session;
 void test_udp_packet_lookup(struct arguments *args, int kind);

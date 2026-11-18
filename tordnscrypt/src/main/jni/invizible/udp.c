@@ -27,6 +27,16 @@ extern int own_uid;
 extern int tor_dns_port;
 extern bool bypass_lan;
 
+static void init_udp_uid_retry(struct udp_session *session) {
+    session->uid_retries = 0;
+    session->uid_retry_at = -1;
+    if (session->uid < 0 && ntohs(session->dest) != 53) {
+        long long now = get_ms();
+        if (now >= 0)
+            session->uid_retry_at = now + UDP_UID_RETRY_INTERVAL;
+    }
+}
+
 int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions) {
     int timeout = (ntohs(u->dest) == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
 
@@ -236,6 +246,7 @@ void block_udp(const struct arguments *args,
     s->udp.dest = udphdr->dest;
     s->udp.state = UDP_BLOCKED;
     s->socket = -1;
+    init_udp_uid_retry(&s->udp);
 
     write_connection_unreach(args, s, EHOSTDOWN);
 
@@ -349,19 +360,12 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.sent = 0;
         s->udp.received = 0;
-        s->udp.uid_retries = 0;
-        s->udp.uid_retry_at = -1;
         s->udp.redirect_version = 0;
         if (redirect != NULL && ntohs(udphdr->dest) != 53) {
             s->udp.redirect_version = (uint8_t) rversion;
             s->udp.redirect_port = htons(redirect->rport);
             memset(&s->udp.redirect_addr, 0, sizeof(s->udp.redirect_addr));
             inet_pton(rversion == 4 ? AF_INET : AF_INET6, redirect->raddr, &s->udp.redirect_addr);
-        }
-        if (uid < 0 && ntohs(udphdr->dest) != 53) {
-            long long now = get_ms();
-            if (now >= 0)
-                s->udp.uid_retry_at = now + UDP_UID_RETRY_INTERVAL;
         }
 
         if (version == 4) {
@@ -374,6 +378,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.source = udphdr->source;
         s->udp.dest = udphdr->dest;
+        init_udp_uid_retry(&s->udp);
         s->udp.state = UDP_ACTIVE;
         s->next = NULL;
 

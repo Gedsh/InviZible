@@ -1079,6 +1079,173 @@ void test_dns_uid_restore(struct arguments *args, int protocol) {
 #endif
 }
 
+#ifndef INVIZIBLE_BASELINE_TESTS
+static void blocked_uid_lookup(int version, bool legacy, jint uid, char *table, size_t size) {
+    uid_lookup_result = uid;
+    fake_proc = legacy;
+    proc_contents = "header\n";
+    proc6_contents = version == 4 ? "header\n" : NULL;
+    if (uid >= 0) {
+        int length = snprintf(table, size, "header\n0: %s:3039 %s:0000 07 0:0 0:0 0 %d 0 0\n",
+                version == 4 ? "0200000A" : "B80D0120000000000000000001000000",
+                version == 4 ? "00000000" : "00000000000000000000000000000000", uid);
+        assert(length > 0 && (size_t) length < size);
+        proc_contents = table;
+    }
+}
+
+static void blocked_uid_unreachable(int tunnel, int version) {
+    uint8_t output[2048];
+    tun_packet(tunnel, output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+}
+#endif
+
+void test_blocked_udp_uid_retry(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    enum { BUDGET, INITIAL_CLOCK, RETRY_CLOCK, KNOWN_ROOT, KNOWN_OWNER, BUDGET_SCENARIOS };
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+    assert(epoll_fd >= 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    real_network = 1; // Socket creation is real; sendto is captured locally.
+    test_monotonic_enabled = true;
+    for (int version = 4; version <= 6; version += 2) {
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            args->ctx->sdk = legacy ? 28 : 29;
+            int scenarios = kind == 0 ? BUDGET_SCENARIOS : kind == 1 ? 16 : 2;
+            for (int scenario = 0; scenario < scenarios; scenario++) {
+                _Alignas(8) uint8_t packet[128];
+                char table[256];
+                const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+                size_t off = ip_header(packet, version, IPPROTO_UDP, 9, dest);
+                struct udphdr *udp = (void *) (packet + off);
+                udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+                packet[off + 8] = 42;
+                packet_checksums(packet, off + 9, off, IPPROTO_UDP);
+                bool known = kind == 0 && scenario >= KNOWN_ROOT;
+                jint owner = known ? (scenario == KNOWN_ROOT ? 0 : 12345) : -1;
+                blocked_uid_lookup(version, legacy, owner, table, sizeof(table));
+                test_monotonic_ms = 10000;
+                test_monotonic_failures = kind == 0 && scenario == INITIAL_CLOCK ? 1 : 0;
+                uid_lookups = policy_checks = 0;
+                deny_address = 1;
+                memset(&policy_redirect, 0, sizeof(policy_redirect));
+                expect_destination(version, dest, 5000);
+                handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                blocked_uid_unreachable(tunnel[0], version);
+                struct ng_session *old = args->ctx->ng_session;
+                assert(old != NULL && old->udp.state == UDP_BLOCKED && old->socket == -1);
+                assert(old->udp.uid == owner && old->udp.uid_retries == 0);
+                assert(old->udp.uid_retry_at == (known || (kind == 0 && scenario == INITIAL_CLOCK) ? -1 : 11000));
+                assert(sockets == 0 && destination_calls == 0 && policy_checks == 1);
+                int queries = uid_lookups, closes = file_closes;
+                if (kind == 0) {
+                    // Bursts before the deadline must retain the same cached block.
+                    for (int i = 0; i < 16; i++) {
+                        handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                        blocked_uid_unreachable(tunnel[0], version);
+                    }
+                    assert(uid_lookups == queries && file_closes == closes && policy_checks == 1);
+                    if (scenario == BUDGET) {
+                        const long long deadlines[] = {11000, 13000, 17000};
+                        for (int i = 0; i < UDP_UID_RETRY_MAX; i++) {
+                            test_monotonic_ms = deadlines[i];
+                            handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                            blocked_uid_unreachable(tunnel[0], version);
+                            assert(old->udp.uid_retries == i + 1 && old->udp.uid < 0);
+                            assert(uid_lookups == queries + (legacy ? 0 : i + 1));
+                            assert(file_closes == closes + (legacy ? (version == 4 ? 2 : 1) * (i + 1) : 0));
+                        }
+                    }
+                    if (scenario == RETRY_CLOCK) test_monotonic_failures = 1;
+                    blocked_uid_lookup(version, legacy, 23456, table, sizeof(table));
+                    queries = uid_lookups; closes = file_closes;
+                    test_monotonic_ms = 1000000;
+                    deny_address = 0; // Known blocks must survive even if policy would now allow.
+                    handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                    blocked_uid_unreachable(tunnel[0], version);
+                    int clock_reads = test_monotonic_calls;
+                    for (int i = 0; i < 16; i++) {
+                        handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                        blocked_uid_unreachable(tunnel[0], version);
+                    }
+                    assert(uid_lookups == queries && file_closes == closes && policy_checks == 1);
+                    assert(test_monotonic_calls == clock_reads && old->udp.uid == owner);
+                    assert(args->ctx->ng_session == old && old->next == NULL && sockets == 0);
+                } else {
+                    owner = kind == 1 && !(scenario & 1) ? 0 : 12345;
+                    bool deny = kind == 1 && (scenario & 2) != 0;
+                    bool redirect = kind == 1 && (scenario & 4) != 0;
+                    int target_version = redirect && !(scenario & 8) ? (version == 4 ? 6 : 4) : version;
+                    const char *target = redirect ? (target_version == 4 ? "192.0.2.10" : "2001:db8::10") : dest;
+                    blocked_uid_lookup(version, legacy, owner, table, sizeof(table));
+                    deny_address = deny;
+                    if (redirect) {
+                        strcpy(policy_redirect.raddr, target);
+                        policy_redirect.rport = 5354;
+                    }
+                    expect_destination(target_version, target, redirect ? 5354 : 5000);
+                    test_monotonic_ms = 11000;
+                    // A full active-session table must not consume this record's retry.
+                    handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
+                    blocked_uid_unreachable(tunnel[0], version);
+                    assert(uid_lookups == queries && file_closes == closes && policy_checks == 1);
+                    assert(old->udp.uid < 0 && old->udp.uid_retries == 0 && sockets == 0);
+                    if (kind == 2) {
+                        if (scenario == 0) { fail_alloc_tag = "udp session"; fail_alloc_match = 1; }
+                        else failure = PROTECT;
+                    }
+                    handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                    assert(policy_checks == 2 && policy_uid == owner && old->udp.uid == owner);
+                    if (kind == 2) {
+                        assert(old->udp.state == UDP_CLOSED && old->socket == -1);
+                        assert(find_udp_session(&running, packet, packet + off) == NULL);
+                        assert(destination_calls == 0 && sockets == 0 && allocations == 1 + (uid_cache != NULL));
+                        if (scenario == 0) assert(fail_alloc_match == 0);
+                        fail_alloc_tag = NULL; failure = NONE;
+                        handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                    }
+                    struct ng_session *current = find_udp_session(&running, packet, packet + off);
+                    assert(current != NULL && current->udp.uid == owner);
+                    if (deny) {
+                        blocked_uid_unreachable(tunnel[0], version);
+                        assert(current == old && old->udp.state == UDP_BLOCKED && sockets == 0);
+                        queries = uid_lookups; closes = file_closes;
+                        deny_address = 0; test_monotonic_ms = 1000000;
+                        handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+                        blocked_uid_unreachable(tunnel[0], version);
+                        assert(uid_lookups == queries && file_closes == closes && policy_checks == 2);
+                    } else {
+                        assert(current != old && current->udp.state == UDP_ACTIVE && current->socket >= 0);
+                        assert(old->udp.state == UDP_CLOSED && old->socket == -1);
+                        assert(destination_calls == 1 && sockets == 1);
+                        assert(allocations == 2 + (uid_cache != NULL));
+                        unindex_session(args->ctx, old); // Cleanup of the retired record must leave the new index intact.
+                        assert(find_udp_session(&running, packet, packet + off) == current);
+                        queries = uid_lookups; closes = file_closes;
+                        int checks = policy_checks, socket = current->socket;
+                        memset(&policy_redirect, 0, sizeof(policy_redirect));
+                        handle_ip(&running, packet, off + 9, epoll_fd, 1, SESSION_MAX);
+                        assert(destination_calls == 2 && current->socket == socket);
+                        assert(uid_lookups == queries && file_closes == closes && policy_checks == checks);
+                    }
+                }
+                clear(args->ctx);
+                release_uid_cache();
+                assert(allocations == 0 && sockets == 0 && !is_readable(tunnel[0]));
+            }
+        }
+    }
+    real_network = 0;
+    test_monotonic_enabled = false;
+    args->ctx->sdk = 29;
+    deny_address = 0;
+    close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];

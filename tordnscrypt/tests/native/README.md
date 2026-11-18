@@ -337,7 +337,15 @@ and forwarding. IPv4/IPv6 UDP and TCP regressions cover proc and JNI lookup path
 UID zero, fresh lookup precedence, denied policy, missing/mismatched/unknown or
 disconnected/closed records, and TCP SYN sequence reuse. Existing DNS forwarding
 shortcuts and session limits remain covered.
-The full run contains 252 tests plus the optional comparison test.
+Unknown-owner blocked non-DNS UDP records use the same bounded, packet-driven
+UID retries as active flows. A resolved UID triggers policy reevaluation; denied
+owners remain cached as blocked, while allowed owners can create a socket using
+the current route. A full active-session table defers recovery without consuming
+the retry budget. Known-owner blocks never use this recovery path.
+Regressions cover both address families and lookup paths, UID zero, retry and
+clock limits, policy and routing decisions, capacity, and socket/allocation failure
+cleanup followed by successful retry.
+The full run contains 255 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

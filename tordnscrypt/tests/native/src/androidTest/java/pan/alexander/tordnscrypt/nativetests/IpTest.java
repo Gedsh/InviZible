@@ -49,6 +49,9 @@ public final class IpTest extends NativeTestSupport {
     @Test public void unknownUdpOwnersRetryWithBackoffAndAFiniteBudget() { check("udpUidRetryBudget"); }
     @Test public void recoveredUdpOwnersReapplyPolicyRoutingAndSafelyRetireOldSockets() { check("udpUidRetryRecovery"); }
     @Test public void udpUidRetryClockFailuresCannotCauseLookupStorms() { check("udpUidRetryClock"); }
+    @Test public void blockedUdpUidRetriesAreBoundedAndPreserveKnownBlocks() { check("blockedUdpUidBudget"); }
+    @Test public void blockedUdpUidRecoveryRechecksPolicyRoutingAndCapacity() { check("blockedUdpUidRecovery"); }
+    @Test public void blockedUdpRecoverySocketFailuresCleanUpAndCanRetry() { check("blockedUdpUidSocketFailure"); }
     @Test public void dnsKeepsForwardingPolicyAndSessionLimitRules() { check("udpDnsLookupPolicy"); }
     @Test public void udpDnsRestoresOnlyLiveExactOwnersBeforePolicyAndRedirect() { check("udpDnsUidRestore"); }
     @Test public void tcpDnsRestoresOnlySameConnectionBeforePolicy() { check("tcpDnsUidRestore"); }

@@ -142,7 +142,9 @@ static bool valid_transport_checksum(uint8_t version, uint8_t protocol,
 }
 
 static bool retry_udp_uid(struct ng_session *s) {
-    if (s == NULL || s->socket < 0 || s->udp.state != UDP_ACTIVE || s->udp.uid >= 0 ||
+    if (s == NULL ||
+        !((s->udp.state == UDP_ACTIVE && s->socket >= 0) ||
+          (s->udp.state == UDP_BLOCKED && s->socket < 0)) || s->udp.uid >= 0 ||
         s->udp.uid_retries >= UDP_UID_RETRY_MAX || s->udp.uid_retry_at < 0)
         return false;
 
@@ -417,7 +419,9 @@ void handle_ip(const struct arguments *args,
         else {
             udp_lookup.session = find_udp_session(args, pkt, payload);
             udp_existing = udp_lookup.session != NULL;
-            udp_uid_retry = retry_udp_uid(udp_lookup.session);
+            // Promoting a blocked record opens a socket, unlike updating a live flow.
+            if (udp_existing && (udp_lookup.session->udp.state != UDP_BLOCKED || sessions < maxsessions))
+                udp_uid_retry = retry_udp_uid(udp_lookup.session);
         }
     }
 
@@ -493,7 +497,16 @@ void handle_ip(const struct arguments *args,
             redirect = NULL;
     }
 
-    if (udp_uid_resolved &&
+    if (udp_uid_resolved && udp_lookup.session->udp.state == UDP_BLOCKED) {
+        if (allowed) {
+            // This record has no epoll registration. Retain its resolved owner for
+            // accounting/cleanup while forwarding creates a fresh active record.
+            udp_lookup.session->udp.state = UDP_CLOSED;
+            udp_lookup.session->udp.time = time(NULL);
+            unindex_session(args->ctx, udp_lookup.session);
+            udp_lookup.session = NULL;
+        }
+    } else if (udp_uid_resolved &&
         (!allowed || redirect != NULL || udp_lookup.session->udp.redirect_version != 0)) {
         // Preserve direct sockets (and their source ports) when policy is unchanged.
         // Retired records stay alive until cleanup for queued epoll event pointers.
