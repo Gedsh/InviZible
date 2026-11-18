@@ -143,6 +143,8 @@ static const char *run_case(const char *id) {
         test_uid_ipv4_fallback();
     else if (strcmp(id, "uidProcMalformed") == 0)
         test_uid_proc_parser(1);
+    else if (strcmp(id, "uidProcRecovery") == 0)
+        test_uid_proc_recovery();
     else if (strcmp(id, "uidProcMatchOrder") == 0)
         test_uid_proc_parser(2);
     else if (strcmp(id, "uidUpdate4") == 0)

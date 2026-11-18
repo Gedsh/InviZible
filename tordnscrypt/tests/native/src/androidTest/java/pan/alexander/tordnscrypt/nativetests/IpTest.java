@@ -47,6 +47,7 @@ public final class IpTest extends NativeTestSupport {
     @Test public void procUidAddressesDecodeNativeWordsForBothFamilies() { check("uidProcAddresses"); }
     @Test public void ipv4UidLookupSurvivesIpv6ProcErrorsAndPreservesMappedOwners() { check("uidIpv4Fallback"); }
     @Test public void malformedProcUidRowsCloseWithoutCaching() { check("uidProcMalformed"); }
+    @Test public void procUidScanRetainsValidMatchesAcrossMalformedAndOverlongRows() { check("uidProcRecovery"); }
     @Test public void procUidWildcardAndDuplicateMatchOrderIsPreserved() { check("uidProcMatchOrder"); }
     @Test public void ipv4LargeUidUpdatesMatchPreviousReplacementPolicy() { check("uidUpdate4"); }
     @Test public void ipv6LargeUidUpdatesMatchPreviousReplacementPolicy() { check("uidUpdate6"); }

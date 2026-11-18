@@ -77,6 +77,7 @@ extern int uid_cache_capacity;
 #endif
 extern int uid_cache_allocations;
 void test_uid_proc_parser(int kind);
+void test_uid_proc_recovery(void);
 void test_uid_ipv4_fallback(void);
 void test_restore_uid_addresses(const struct arguments *args);
 void test_restore_uid_flow(const struct arguments *args, int version, int protocol);

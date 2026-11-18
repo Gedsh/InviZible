@@ -974,13 +974,25 @@ jint get_uid_sub(const int version, const int protocol,
     struct uid_cache_update *update = NULL;
     bool update_attempted = false;
     unsigned int updates = 0;
-    int l = 0;
+    bool header = true;
+    bool malformed = false;
     *line = 0;
     while (fgets(line, sizeof(line), fd) != NULL) {
-        if (!l++)
+        // Discard an overlong physical row as a whole. Its continuation must not
+        // become another socket record, nor may a truncated UID be accepted.
+        bool truncated = false;
+        if (strchr(line, '\n') == NULL) {
+            int ch = fgetc(fd);
+            truncated = ch != EOF;
+            while (ch != '\n' && ch != EOF)
+                ch = fgetc(fd);
+        }
+        if (header) {
+            header = false;
             continue;
+        }
 
-        if (parse_proc_uid(line, ws, _saddr, &_sport, _daddr, &_dport, &_uid)) {
+        if (!truncated && parse_proc_uid(line, ws, _saddr, &_sport, _daddr, &_dport, &_uid)) {
             if (_sport == sport &&
                 (_dport == dport || _dport == 0) &&
                 (memcmp(_saddr, saddr, address_length) == 0 ||
@@ -1004,9 +1016,7 @@ jint get_uid_sub(const int version, const int protocol,
             }
         } else {
             log_android(ANDROID_LOG_ERROR, "Invalid proc UID row: %s", line);
-            ng_free(update, __FILE__, __LINE__);
-            fclose(fd);
-            return -2;
+            malformed = true;
         }
     }
 
@@ -1014,7 +1024,7 @@ jint get_uid_sub(const int version, const int protocol,
     if (fclose(fd))
         log_android(ANDROID_LOG_ERROR, "fclose %s error %d: %s", fn, errno, strerror(errno));
 
-    return uid;
+    return uid >= 0 || !malformed ? uid : -2;
 }
 
 jint restore_uid(const struct arguments *args,

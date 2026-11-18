@@ -1864,6 +1864,67 @@ void test_uid_proc_parser(int kind) {
 #endif
 }
 
+void test_uid_proc_recovery(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        const char *local = version == 4 ? "0100007F" : "00000000000000000000000001000000";
+        const char *zero = version == 4 ? "00000000" : "00000000000000000000000000000000";
+        const int protocols[] = {IPPROTO_TCP, IPPROTO_UDP};
+        for (size_t protocol = 0; protocol < sizeof(protocols) / sizeof(*protocols); protocol++) {
+            for (int mode = 0; mode < 3; mode++) {
+                for (int scenario = 0; scenario < 9; scenario++) {
+                    char row[200], second[200], table[1400];
+                    jint owner = scenario & 1 ? 0 : 12345;
+                    snprintf(row, sizeof(row), "0: %s:04D2 %s:0000 07 0:0 0:0 0 %d 0 0\n", local, zero, owner);
+                    snprintf(second, sizeof(second), "1: %s:04D2 %s:0000 07 0:0 0:0 0 23456 0 0\n", local, zero);
+                    strcpy(table, "header\n");
+                    if (scenario == 0 || scenario == 2) strcat(table, "malformed\n");
+                    if (scenario <= 3) {
+                        strcat(table, row);
+                        if (scenario != 0) strcat(table, "malformed\n");
+                        if (scenario == 3) strcat(table, second); // Last valid match still wins.
+                    } else if (scenario == 4 || scenario == 5 || scenario == 8) {
+                        // A valid-looking continuation belongs to the same overlong row.
+                        size_t start = scenario == 8 ? 0 : strlen(table);
+                        memset(table + start, '!', 249);
+                        strcpy(table + start + 249, second);
+                        if (scenario != 5) strcat(table, row);
+                    } else if (scenario == 6) {
+                        strcat(table, row);
+                        table[strlen(table) - 1] = 0; // Complete final row without a newline.
+                    } else {
+                        // The first chunk ends inside the UID: never cache its partial value.
+                        size_t start = strlen(table);
+                        int prefix = snprintf(table + start, sizeof(table) - start,
+                                "0: %s:04D2 %s:0000 07 0:0 0:0 0 ", local, zero);
+                        assert(prefix > 0 && prefix < 248);
+                        memset(table + start + prefix, ' ', 248 - prefix);
+                        strcpy(table + start + 248, "12345 0 0\n");
+                    }
+                    fake_proc = 1; proc_contents = table;
+                    fail_cache_alloc = mode == 2;
+                    int before = file_closes;
+                    int64_t now = mode == 1 ? -1 : 0;
+                    jint expected = scenario == 5 || scenario == 7 ? -2 : scenario == 3 ? 23456 : owner;
+                    assert(lookup_uid(version, protocols[protocol], 1234, now) == expected);
+                    assert(file_closes == before + 1);
+                    bool cached = mode == 0 && expected >= 0;
+                    assert(uid_cache_size == cached && allocations == cached);
+                    if (cached) {
+                        assert(uid_cache[0].uid == expected);
+                        proc_contents = "header\nmalformed\n";
+                        assert(lookup_uid(version, protocols[protocol], 1234, now) == expected);
+                        assert(file_closes == before + 1);
+                    }
+                    release_uid_cache();
+                    assert(sockets == 0);
+                }
+            }
+        }
+    }
+#endif
+}
+
 void test_restore_uid_icmp(const struct arguments *args, int version) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     uint8_t source[16] = {1}, dest[16] = {2};

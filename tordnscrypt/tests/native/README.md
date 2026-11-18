@@ -34,8 +34,8 @@ cleanup list, with one additional link per record and no index allocations.
 Tests cover both address families, ports and echo IDs, IPv4 union padding,
 unaligned query addresses, newest-duplicate ordering, stopped ICMP filtering,
 closed/blocked flow lookup, policy removal, expiry, blocked-record reuse,
-eviction, collisions, 2,560-record churn, teardown and context reuse. Broader UID
-restoration matching and oldest-blocked-flow selection still use the cleanup list.
+eviction, collisions, 2,560-record churn, teardown and context reuse. Exact UID
+restoration uses the same index; oldest-blocked-flow selection still uses the cleanup list.
 TCP queues enforce a 256 KiB payload budget and a 1024-segment metadata limit per
 session. Tests cover receive-window boundaries, sequence wraparound, and shorter
 or longer retransmissions after partial sends, including forwarding through a real socket.
@@ -126,7 +126,13 @@ monitored until a window-update ACK is sent, further app data resumes, and writa
 monitoring stops once the window reopens or app input has shut down.
 Legacy UID proc-table cases cover native-word address decoding for IPv4/IPv6,
 mixed-case hex, malformed and truncated fields, wildcard/duplicate match order,
-cache growth failures, expiry and bounded replacement. Cache timestamps use
+cache growth failures, expiry and bounded replacement. Scans continue past malformed
+rows and retain valid owner matches before or after them, including UID zero.
+Malformed scans without a resolved match still report an error. Overlong physical
+rows are discarded whole so continuations and partial UID fields cannot become
+socket records. Cases cover both families and TCP/UDP, duplicate ordering, final
+rows without a newline, overlong headers, disabled caching and cache allocation failure.
+Cache timestamps use
 64-bit `CLOCK_BOOTTIME` milliseconds for the cache's 30-second lifetime,
 including device sleep. Clock-read failures bypass cache reads and updates while
 retaining proc lookup. Tests check the real device clock, cross signed/unsigned
@@ -138,8 +144,8 @@ After 64 valid proc rows, caches with at least 64 entries use a temporary
 1,024-bucket exact-key index, an oldest-entry heap ordered by timestamp and slot,
 and a forward cursor for expired slots. This replaces repeated full-cache update
 searches with expected constant-time key lookup and logarithmic heap updates.
-The 26,632-byte workspace is allocated once per larger scan and freed on normal
-or malformed-row exits. Failed workspace allocation uses the linear fallback
+The 26,632-byte workspace is allocated once per larger scan and freed at scan
+completion, including scans containing malformed rows. Failed workspace allocation uses the linear fallback
 for that scan. Small caches, short scans and cache-hit lookups allocate no workspace.
 Differential tests compare IPv4/IPv6 updates against the prior linear policy,
 including duplicate keys, expiry, timestamp ties, backward time, mixed protocols,
@@ -298,6 +304,13 @@ unknown owner for an older UID. TCP/UDP/ICMP handler cases check that a resolved
 UID, including UID zero, fills only an unknown live owner and that failed lookups
 or conflicting UIDs do not replace a known owner. TCP updates require the same SYN
 sequence number; stale/disconnected records do not acquire a new owner.
+Successful lookups also fill unknown live ICMP and UDP DNS owners before policy
+handling, even when the current packet is denied. Retired DNS records retain the
+newly learned owner for their earlier traffic. ICMP cases cover both families and
+lookup paths, UID zero, known-owner preservation, failed subsequent lookups, and
+stopped, disconnected or mismatched sessions. Synthetic ICMPv6 proc tables do not
+depend on the device kernel exposing `/proc/net/icmp6`; live proc tests still use
+the real device's table availability.
 Logging preserves the caller's `errno` even when the log backend changes it or
 returns an error. The utility regression also checks disabled logging and direct
 logger calls, with unchanged formatted output.
@@ -349,13 +362,18 @@ the retry budget. Known-owner blocks never use this recovery path.
 Regressions cover both address families and lookup paths, UID zero, retry and
 clock limits, policy and routing decisions, capacity, and socket/allocation failure
 cleanup followed by successful retry.
-Established TCP flows with unknown owners retry lookup on valid in-order ACK/data
-packets, with the same three-attempt backoff and no idle wake-ups. Recovery rechecks
+TCP flows with unknown owners retry lookup on valid in-order ACK/data packets in
+ESTABLISHED, FIN_WAIT1 and FIN_WAIT2, with the same three-attempt backoff and no idle
+wake-ups. ACKs may range from the last accepted acknowledgement through the latest
+transmitted sequence, using wrap-safe comparisons. Recovery rechecks
 policy and retains an allowed socket only when its route and redirect endpoint
 match. Denied flows, changed routes, and Tor UID isolation reset the connection,
 release queued data, and ignore stale socket events. IPv4/IPv6 cases cover JNI and
 legacy proc lookup, UID zero, retry initialization and clock failure, finite
 budgets, packet validation, route changes, and data forwarding after recovery.
+Additional cases cover partial ACKs at the range endpoints and interior,
+wraparound, half-closed data forwarding, policy denial and route changes, bounded
+failed retries, stale/future ACKs, invalid states, and data beyond an app FIN.
 UDP DNS checks ownership and policy on every request, independently of forwarding.
 DNS lookups continue to use the legacy proc cache; failed lookups can restore an
 exact live owner. Denying an active flow retires its socket registration and ignores
@@ -381,7 +399,7 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 264 tests plus the optional comparison test.
+The full run contains 267 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts
