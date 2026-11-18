@@ -539,6 +539,9 @@ void handle_ip(const struct arguments *args,
     if (protocol == IPPROTO_UDP && udp_existing &&
         udp_lookup.session->udp.state == UDP_BLOCKED && (udp_uid_retry || dport == 53)) {
         if (allowed) {
+            // Retain a resolved owner as metadata even if reopening must wait.
+            if (uid >= 0 && udp_lookup.session->udp.uid < 0)
+                udp_lookup.session->udp.uid = uid;
             if (sessions >= maxsessions)
                 return; // Replacing a socketless block requires a new active slot.
             // This record has no epoll registration. Retain its resolved owner for

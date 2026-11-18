@@ -398,6 +398,13 @@ preserves the stored owner of an exact blocked tuple; eviction for a different
 tuple does not inherit that owner. Recovery cases cover repeated failed lookups,
 allow/deny decisions for unknown owners, capacity limits, UID zero, and subsequent
 resolved-owner denial/recovery in both modes and lookup paths.
+When an allowed blocked DNS flow cannot reopen because the active-session table
+is full, a successful lookup fills its unknown stored owner before returning.
+Known metadata is preserved while reopening waits. Capacity regressions cover
+UID zero and ordinary owners, both IP families, lookup paths and forwarding modes,
+and full/overfull tables without opening a socket. Subsequent failed lookups still
+reach policy as unknown, preserve metadata on denial, and can reopen an unknown
+active flow when policy permits it and capacity becomes available.
 Unknown-owner policy regressions cover TCP, UDP, DNS and ICMP in both IP families,
 including failed JNI lookups, empty proc tables and proc access errors. UDP owner
 retries reevaluate policy even when lookup fails; an allowed blocked flow can
@@ -409,7 +416,7 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 269 tests plus the optional comparison test.
+The full run contains 270 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

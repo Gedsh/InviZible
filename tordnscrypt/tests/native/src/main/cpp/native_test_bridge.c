@@ -115,6 +115,8 @@ static const char *run_case(const char *id) {
         test_dns_policy(&args, 1);
     else if (strcmp(id, "dnsBlockedOwnerRecovery") == 0)
         test_dns_policy(&args, 2);
+    else if (strcmp(id, "dnsBlockedOwnerCapacity") == 0)
+        test_dns_policy(&args, 3);
     else if (strcmp(id, "unknownUidPolicy") == 0)
         test_unknown_uid_policy(&args);
     else if (strcmp(id, "deniedIcmpUid") == 0)

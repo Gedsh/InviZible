@@ -1122,9 +1122,10 @@ void test_dns_policy(struct arguments *args, int kind) {
                 char table[256];
                 jint initial = kind == 0 ? (action == 0 ? 0 : action == 2 || action >= 4 ? -1 : 12345)
                                         : kind == 2 ? (action == 0 ? 0 : action == 2 ? -1 : 12345)
+                                        : kind == 3 ? (action == 2 ? 12345 : action == 3 ? 0 : -1)
                                                     : action >= 2 ? -1 : 12345;
                 blocked_uid_lookup(version, legacy, initial, table, sizeof(table));
-                deny_address = kind == 0 ? action == 3 || action == 4 : kind == 2 || action >= 2;
+                deny_address = kind == 0 ? action == 3 || action == 4 : kind == 2 || kind == 3 || action >= 2;
                 memset(&policy_redirect, 0, sizeof(policy_redirect));
                 const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
                 bool redirected = running.fwd53 && !(kind == 0 && action == 5);
@@ -1167,6 +1168,39 @@ void test_dns_policy(struct arguments *args, int kind) {
                         assert(destination_calls == (denied ? 0 : 2));
                         assert(s->udp.uid == initial);
                         if (denied) blocked_uid_unreachable(tunnel[0], version);
+                    } else if (kind == 3) {
+                        // Retain a successful lookup while capacity postpones reopening.
+                        ng_free(uid_cache, __FILE__, __LINE__);
+                        uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
+                        jint resolved = action == 0 || action == 2 ? 0 : 23456;
+                        jint retained = initial >= 0 ? initial : resolved;
+                        blocked_uid_lookup(version, legacy, resolved, table, sizeof(table));
+                        deny_address = 0;
+                        handle_ip(&running, packet, off + 20, epoll_fd, SESSION_MAX + (action & 1), SESSION_MAX);
+                        assert(policy_checks == 2 && policy_uid == resolved);
+                        assert(args->ctx->ng_session == s && s->udp.state == UDP_BLOCKED && s->udp.uid == retained);
+                        assert(s->socket == -1 && sockets == 0 && destination_calls == 0);
+                        assert(!is_readable(tunnel[0]));
+                        ng_free(uid_cache, __FILE__, __LINE__);
+                        uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
+                        blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
+                        for (int deny = 0; deny <= 1; deny++) {
+                            deny_address = deny;
+                            handle_ip(&running, packet, off + 20, epoll_fd, SESSION_MAX, SESSION_MAX);
+                            // Stored blocked ownership is metadata, never a fallback for policy.
+                            assert(policy_checks == 3 + deny && policy_uid == -1);
+                            assert(args->ctx->ng_session == s && s->udp.state == UDP_BLOCKED && s->udp.uid == retained);
+                            assert(s->socket == -1 && sockets == 0 && destination_calls == 0);
+                            if (deny) blocked_uid_unreachable(tunnel[0], version);
+                            assert(!is_readable(tunnel[0]));
+                        }
+                        deny_address = 0;
+                        handle_ip(&running, packet, off + 20, epoll_fd, 0, SESSION_MAX);
+                        struct ng_session *active = args->ctx->ng_session;
+                        assert(policy_checks == 5 && policy_uid == -1);
+                        assert(active != s && active->udp.state == UDP_ACTIVE && active->udp.uid == -1);
+                        assert(s->udp.state == UDP_CLOSED && s->udp.uid == retained && destination_calls == 1);
+                        assert(find_udp_session(&running, packet, packet + off) == active);
                     } else if (kind == 2) {
                         ng_free(uid_cache, __FILE__, __LINE__);
                         uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
