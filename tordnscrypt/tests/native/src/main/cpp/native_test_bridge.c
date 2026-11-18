@@ -117,6 +117,8 @@ static const char *run_case(const char *id) {
         test_icmp_uid_update(&args);
     else if (strcmp(id, "uidProcAddresses") == 0)
         test_uid_proc_parser(0);
+    else if (strcmp(id, "uidIpv4Fallback") == 0)
+        test_uid_ipv4_fallback();
     else if (strcmp(id, "uidProcMalformed") == 0)
         test_uid_proc_parser(1);
     else if (strcmp(id, "uidProcMatchOrder") == 0)

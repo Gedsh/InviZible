@@ -26,6 +26,8 @@ extern int tcp_calls, icmp_calls;
 extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 extern int capture_packets, capture_dhcp, fake_proc;
 extern const char *proc_contents;
+extern const char *proc6_contents;
+extern int proc6_open_error;
 extern int fail_cache_alloc;
 extern const char *fail_alloc_tag;
 extern int fail_alloc_match, fail_fcntl_call, fcntl_calls;
@@ -59,6 +61,7 @@ extern int uid_cache_capacity;
 #endif
 extern int uid_cache_allocations;
 void test_uid_proc_parser(int kind);
+void test_uid_ipv4_fallback(void);
 void test_restore_uid_addresses(const struct arguments *args);
 void test_restore_uid_flow(const struct arguments *args, int version, int protocol);
 void test_restore_uid_states(const struct arguments *args, int version, int protocol);

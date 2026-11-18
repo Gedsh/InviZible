@@ -7,6 +7,8 @@ int tcp_calls, icmp_calls;
 int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 int capture_packets, capture_dhcp, fake_proc;
 const char *proc_contents;
+const char *proc6_contents;
+int proc6_open_error;
 int fail_cache_alloc;
 int uid_cache_allocations;
 const char *fail_alloc_tag;
@@ -347,6 +349,15 @@ FILE *__real_fopen(const char *, const char *);
 FILE *__wrap_fopen(const char *path, const char *mode) {
     static char proc[] = "header\ninvalid entry\n";
     const char *contents = (proc_contents == NULL ? proc : proc_contents);
+    if (fake_proc && (strcmp(path, "/proc/net/tcp6") == 0 ||
+                      strcmp(path, "/proc/net/udp6") == 0)) {
+        if (proc6_open_error != 0) {
+            errno = proc6_open_error;
+            return NULL;
+        }
+        if (proc6_contents != NULL)
+            contents = proc6_contents;
+    }
     return (fake_proc ? fmemopen((void *) contents, strlen(contents), "r") : __real_fopen(path, mode));
 }
 
@@ -595,6 +606,8 @@ void reset_test_state(void) {
     string_refs = string_calls = fail_string_call = exceptions = file_closes = 0;
     capture_packets = capture_dhcp = fake_proc = 0;
     proc_contents = NULL;
+    proc6_contents = NULL;
+    proc6_open_error = 0;
     fail_cache_alloc = 0;
     uid_cache_allocations = 0;
     fail_alloc_tag = NULL;

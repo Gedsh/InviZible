@@ -312,7 +312,10 @@ TCP connect-error logs omit the repeated target for direct connections and retai
 the actual target for other routes. An IPv4/IPv6 regression checks direct and
 same-family/cross-family redirect errors, preserved error details, socket cleanup,
 and skipped target-address formatting for direct failures.
-The full run contains 245 tests plus the optional comparison test.
+Legacy IPv4 UID lookup falls back after IPv6 proc open or parse errors, while
+successful mapped IPv6 lookups (including UID zero) retain priority. TCP and UDP
+regressions cover these cases, an empty IPv6 table, and failure of both tables.
+The full run contains 246 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

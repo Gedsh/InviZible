@@ -529,7 +529,8 @@ jint get_uid(const int version, const int protocol,
                     version, protocol, source, sport, dest, dport, uid);
     }
 
-    if (uid == -1) {
+    // A missing or unreadable IPv6 table must not prevent an IPv4 lookup.
+    if (uid < 0) {
         uid = get_uid_sub(version, protocol, saddr, sport, daddr, dport, source, dest, now);
         log_android(ANDROID_LOG_DEBUG, "uid v%d p%d %s/%u > %s/%u => %d fallback",
                     version, protocol, source, sport, dest, dport, uid);

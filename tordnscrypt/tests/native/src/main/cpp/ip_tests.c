@@ -561,6 +561,8 @@ static void release_uid_cache(void) {
 #endif
     fake_proc = fail_cache_alloc = 0;
     proc_contents = NULL;
+    proc6_contents = NULL;
+    proc6_open_error = 0;
     assert(allocations == 0);
 }
 
@@ -959,6 +961,31 @@ void test_uid_indexed_growth_failure(void) {
     assert(lookup_uid(4, IPPROTO_UDP, 2001, 1) == 20001);
     assert(file_closes == before);
     release_uid_cache();
+#endif
+}
+
+void test_uid_ipv4_fallback(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint32_t address;
+    assert(inet_pton(AF_INET, "127.0.0.1", &address) == 1);
+    const int protocols[] = {IPPROTO_TCP, IPPROTO_UDP};
+    for (size_t i = 0; i < sizeof(protocols) / sizeof(*protocols); i++) {
+        for (int kind = 0; kind < 7; kind++) {
+            fake_proc = 1;
+            proc_contents = kind == 6 ? "header\ninvalid entry\n" : proc_one;
+            proc6_open_error = kind == 0 || kind == 6 ? ENOENT : kind == 1 ? EACCES : 0;
+            proc6_contents = kind == 2 ? "header\ninvalid entry\n" : kind == 3 ? "header\n" :
+                kind == 5 ? "header\n0: 0000000000000000FFFF00000100007F:04D2 00000000000000000000000000000000:0000 07 0:0 0:0 0 0 0 0\n" :
+                            "header\n0: 0000000000000000FFFF00000100007F:04D2 00000000000000000000000000000000:0000 07 0:0 0:0 0 23456 0 0\n";
+            int before = file_closes;
+            jint expected = kind == 6 ? -2 : kind == 5 ? 0 : kind == 4 ? 23456 : 10001;
+            assert(get_uid(4, protocols[i], &address, 1234, &address, 53) == expected);
+            // Successful mapped lookups, including UID zero, must not read IPv4.
+            int closes = kind == 2 || kind == 3 ? 2 : 1;
+            assert(file_closes == before + closes);
+            release_uid_cache();
+        }
+    }
 #endif
 }
 
