@@ -940,40 +940,26 @@ jint restore_uid(const struct arguments *args,
                  const char *flags,
                  const uint8_t *payload) {
 
-    struct ng_session *cur = args->ctx->ng_session;
+    struct ng_session *cur;
     jint uid = -1;
 
     if (protocol == IPPROTO_TCP) {
-        while (cur != NULL &&
-               !(cur->protocol == IPPROTO_TCP &&
-                 cur->tcp.uid >= 0 &&
-                 cur->tcp.version == version &&
-                 cur->tcp.dest == htons(dport) &&
-                 (version == 4 ? memcmp(&cur->tcp.saddr.ip4, saddr, 4) == 0 &&
-                                 memcmp(&cur->tcp.daddr.ip4, daddr, 4) == 0
-                               : memcmp(&cur->tcp.saddr.ip6, saddr, 16) == 0 &&
-                                 memcmp(&cur->tcp.daddr.ip6, daddr, 16) == 0)))
-            cur = cur->next;
-        if (cur != NULL) {
+        cur = find_session(args->ctx, version, protocol, saddr, htons(sport), daddr, htons(dport));
+        const struct tcphdr *tcp = (const struct tcphdr *) payload;
+        // A new SYN must not inherit the owner of a previous use of this tuple.
+        if (cur != NULL && cur->tcp.uid >= 0 && cur->socket >= 0 &&
+            cur->tcp.state != TCP_CLOSING && cur->tcp.state != TCP_CLOSE &&
+            (!tcp->syn || ntohl(tcp->seq) == cur->tcp.remote_start)) {
             uid = cur->tcp.uid;
         }
     } else if (protocol == IPPROTO_UDP) {
-        while (cur != NULL &&
-               !(cur->protocol == IPPROTO_UDP &&
-                 cur->udp.uid >= 0 &&
-                 cur->udp.version == version &&
-                 cur->udp.dest == htons(dport) &&
-                 (version == 4 ? memcmp(&cur->udp.saddr.ip4, saddr, 4) == 0 &&
-                                 memcmp(&cur->udp.daddr.ip4, daddr, 4) == 0
-                               : memcmp(&cur->udp.saddr.ip6, saddr, 16) == 0 &&
-                                 memcmp(&cur->udp.daddr.ip6, daddr, 16) == 0)))
-            cur = cur->next;
-        if (cur != NULL) {
+        cur = find_session(args->ctx, version, protocol, saddr, htons(sport), daddr, htons(dport));
+        if (cur != NULL && cur->udp.uid >= 0 && cur->socket >= 0 && cur->udp.state == UDP_ACTIVE) {
             uid = cur->udp.uid;
         }
     } else if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) {
 
-        struct icmp *icmp = (struct icmp *) payload;
+        const struct icmp *icmp = (const struct icmp *) payload;
 
         if (icmp->icmp_type != ICMP_ECHO && icmp->icmp_type != 128 /* ICMP_ECHOV6 */) {
             log_android(ANDROID_LOG_WARN, "ICMP type %d code %d from %s to %s not supported",
@@ -981,17 +967,8 @@ jint restore_uid(const struct arguments *args,
             return uid;
         }
 
-        while (cur != NULL &&
-               !((cur->protocol == IPPROTO_ICMP || cur->protocol == IPPROTO_ICMPV6) &&
-                 cur->icmp.uid >= 0 &&
-                 !cur->icmp.stop && cur->icmp.version == version &&
-                 cur->icmp.id == icmp->icmp_id &&
-                 (version == 4 ? memcmp(&cur->icmp.saddr.ip4, saddr, 4) == 0 &&
-                                 memcmp(&cur->icmp.daddr.ip4, daddr, 4) == 0
-                               : memcmp(&cur->icmp.saddr.ip6, saddr, 16) == 0 &&
-                                 memcmp(&cur->icmp.daddr.ip6, daddr, 16) == 0)))
-            cur = cur->next;
-        if (cur != NULL) {
+        cur = find_session(args->ctx, version, protocol, saddr, icmp->icmp_id, daddr, 0);
+        if (cur != NULL && cur->icmp.uid >= 0 && cur->socket >= 0) {
             uid = cur->icmp.uid;
         }
     } else {

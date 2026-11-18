@@ -89,6 +89,32 @@ static const char *run_case(const char *id) {
         test_tcp_dns_memory(2);
     else if (strcmp(id, "restoreUidAddresses") == 0)
         test_restore_uid_addresses(&args);
+    else if (strcmp(id, "restoreUidTcp4") == 0)
+        test_restore_uid_flow(&args, 4, IPPROTO_TCP);
+    else if (strcmp(id, "restoreUidTcp6") == 0)
+        test_restore_uid_flow(&args, 6, IPPROTO_TCP);
+    else if (strcmp(id, "restoreUidUdp4") == 0)
+        test_restore_uid_flow(&args, 4, IPPROTO_UDP);
+    else if (strcmp(id, "restoreUidUdp6") == 0)
+        test_restore_uid_flow(&args, 6, IPPROTO_UDP);
+    else if (strcmp(id, "restoreUidTcpStates4") == 0)
+        test_restore_uid_states(&args, 4, IPPROTO_TCP);
+    else if (strcmp(id, "restoreUidTcpStates6") == 0)
+        test_restore_uid_states(&args, 6, IPPROTO_TCP);
+    else if (strcmp(id, "restoreUidUdpStates4") == 0)
+        test_restore_uid_states(&args, 4, IPPROTO_UDP);
+    else if (strcmp(id, "restoreUidUdpStates6") == 0)
+        test_restore_uid_states(&args, 6, IPPROTO_UDP);
+    else if (strcmp(id, "restoreUidIcmp4") == 0)
+        test_restore_uid_icmp(&args, 4);
+    else if (strcmp(id, "restoreUidIcmp6") == 0)
+        test_restore_uid_icmp(&args, 6);
+    else if (strcmp(id, "tcpUidUpdate") == 0)
+        test_tcp_uid_update(&args);
+    else if (strcmp(id, "udpUidUpdate") == 0)
+        test_udp_uid_update(&args);
+    else if (strcmp(id, "icmpUidUpdate") == 0)
+        test_icmp_uid_update(&args);
     else if (strcmp(id, "uidProcAddresses") == 0)
         test_uid_proc_parser(0);
     else if (strcmp(id, "uidProcMalformed") == 0)

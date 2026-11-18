@@ -8,13 +8,15 @@ void test_restore_uid_addresses(const struct arguments *args) {
     const int protocols[] = {IPPROTO_TCP, IPPROTO_UDP, IPPROTO_ICMP};
     struct icmp echo = {.icmp_type = ICMP_ECHO, .icmp_id = htons(1234)};
     for (size_t i = 0; i < sizeof(protocols) / sizeof(*protocols); i++) {
-        struct ng_session session = {.protocol = protocols[i]};
+        struct ng_session session = {.protocol = protocols[i], .socket = 42};
         if (protocols[i] == IPPROTO_TCP) {
             session.tcp.version = 4; session.tcp.uid = 12345; session.tcp.dest = htons(443);
+            session.tcp.source = htons(4321); session.tcp.state = TCP_ESTABLISHED;
             memcpy(&session.tcp.saddr.ip4, source + 1, 4);
             memcpy(&session.tcp.daddr.ip4, dest + 1, 4);
         } else if (protocols[i] == IPPROTO_UDP) {
             session.udp.version = 4; session.udp.uid = 12345; session.udp.dest = htons(443);
+            session.udp.source = htons(4321); session.udp.state = UDP_ACTIVE;
             memcpy(&session.udp.saddr.ip4, source + 1, 4);
             memcpy(&session.udp.daddr.ip4, dest + 1, 4);
         } else {
@@ -22,19 +24,148 @@ void test_restore_uid_addresses(const struct arguments *args) {
             memcpy(&session.icmp.saddr.ip4, source + 1, 4);
             memcpy(&session.icmp.daddr.ip4, dest + 1, 4);
         }
-        args->ctx->ng_session = &session;
+        set_test_sessions(args->ctx, &session);
+        struct tcphdr tcp = {0};
+        const uint8_t *payload = protocols[i] == IPPROTO_TCP
+                                 ? (const uint8_t *) &tcp : (const uint8_t *) &echo;
         // Unaligned addresses with the high bit set must compare as raw IPv4 bits.
         assert(restore_uid(args, 4, protocols[i], source + 1, 4321, dest + 1, 443,
-                           "198.51.100.201", "203.0.113.202", "", (const uint8_t *) &echo) == 12345);
+                           "198.51.100.201", "203.0.113.202", "", payload) == 12345);
         for (int address = 0; address < 2; address++) {
             uint8_t *changed = address == 0 ? source + 1 : dest + 1;
             *changed ^= 1;
             assert(restore_uid(args, 4, protocols[i], source + 1, 4321, dest + 1, 443,
-                               "source", "dest", "", (const uint8_t *) &echo) == -1);
+                               "source", "dest", "", payload) == -1);
             *changed ^= 1;
         }
-        args->ctx->ng_session = NULL;
+        set_test_sessions(args->ctx, NULL);
     }
+#endif
+}
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+static struct ng_session uid_session(int version, int protocol,
+                                      const uint8_t *source, const uint8_t *dest) {
+    struct ng_session session = {.protocol = (uint8_t) protocol, .socket = 42};
+    size_t size = version == 4 ? 4 : 16;
+    if (protocol == IPPROTO_TCP) {
+        session.tcp.version = version;
+        session.tcp.uid = 12345;
+        session.tcp.source = htons(4321);
+        session.tcp.dest = htons(443);
+        session.tcp.state = TCP_ESTABLISHED;
+        session.tcp.remote_start = 99;
+        memcpy(&session.tcp.saddr, source, size);
+        memcpy(&session.tcp.daddr, dest, size);
+    } else {
+        session.udp.version = version;
+        session.udp.uid = 12345;
+        session.udp.source = htons(4321);
+        session.udp.dest = htons(443);
+        session.udp.state = UDP_ACTIVE;
+        memcpy(&session.udp.saddr, source, size);
+        memcpy(&session.udp.daddr, dest, size);
+    }
+    return session;
+}
+
+static jint restore_flow_uid(const struct arguments *args, int version, int protocol,
+                             const uint8_t *source, const uint8_t *dest) {
+    struct tcphdr syn = {.syn = 1, .seq = htonl(99)};
+    return restore_uid(args, version, protocol, source, 4321, dest, 443,
+                       "source", "dest", "S", (const uint8_t *) &syn);
+}
+#endif
+
+void test_restore_uid_flow(const struct arguments *args, int version, int protocol) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint8_t source[16] = {0}, dest[16] = {0};
+    int family = version == 4 ? AF_INET : AF_INET6;
+    assert(inet_pton(family, version == 4 ? "198.51.100.201" : "2001:db8::1", source) == 1);
+    assert(inet_pton(family, version == 4 ? "203.0.113.202" : "2001:db8::2", dest) == 1);
+    struct ng_session target = uid_session(version, protocol, source, dest);
+    for (int mismatch = 0; mismatch < 6; mismatch++) {
+        struct ng_session decoy = target;
+        if (protocol == IPPROTO_TCP) {
+            decoy.tcp.uid = 23456;
+            if (mismatch == 0) decoy.tcp.source = htons(4322);
+            if (mismatch == 1) decoy.tcp.dest = htons(444);
+            if (mismatch == 2) ((uint8_t *) &decoy.tcp.saddr)[0] ^= 1;
+            if (mismatch == 3) ((uint8_t *) &decoy.tcp.daddr)[0] ^= 1;
+            if (mismatch == 4) decoy.tcp.version = version == 4 ? 6 : 4;
+        } else {
+            decoy.udp.uid = 23456;
+            if (mismatch == 0) decoy.udp.source = htons(4322);
+            if (mismatch == 1) decoy.udp.dest = htons(444);
+            if (mismatch == 2) ((uint8_t *) &decoy.udp.saddr)[0] ^= 1;
+            if (mismatch == 3) ((uint8_t *) &decoy.udp.daddr)[0] ^= 1;
+            if (mismatch == 4) decoy.udp.version = version == 4 ? 6 : 4;
+        }
+        if (mismatch == 5) decoy.protocol = 255;
+        set_test_sessions(args->ctx, &decoy);
+        assert(restore_flow_uid(args, version, protocol, source, dest) == -1);
+
+        // A newer connection belonging to another app must not hide the exact flow.
+        target.next = NULL;
+        decoy.next = &target;
+        set_test_sessions(args->ctx, &decoy);
+        assert(restore_flow_uid(args, version, protocol, source, dest) == 12345);
+        set_test_sessions(args->ctx, NULL);
+    }
+    assert(restore_flow_uid(args, version, protocol, source, dest) == -1);
+#endif
+}
+
+void test_restore_uid_states(const struct arguments *args, int version, int protocol) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint8_t source[16] = {1}, dest[16] = {2};
+    struct ng_session target = uid_session(version, protocol, source, dest);
+    const int tcp_states[] = {TCP_LISTEN, TCP_SYN_RECV, TCP_ESTABLISHED, TCP_CLOSE_WAIT,
+                              TCP_FIN_WAIT1, TCP_FIN_WAIT2, TCP_LAST_ACK, TCP_CLOSING, TCP_CLOSE};
+    const int udp_states[] = {UDP_ACTIVE, UDP_FINISHING, UDP_CLOSED, UDP_BLOCKED};
+    size_t count = protocol == IPPROTO_TCP ? sizeof(tcp_states) / sizeof(*tcp_states)
+                                         : sizeof(udp_states) / sizeof(*udp_states);
+    for (size_t i = 0; i < count; i++) {
+        bool live;
+        if (protocol == IPPROTO_TCP) {
+            target.tcp.state = (uint8_t) tcp_states[i];
+            live = tcp_states[i] != TCP_CLOSING && tcp_states[i] != TCP_CLOSE;
+        } else {
+            target.udp.state = (uint8_t) udp_states[i];
+            live = udp_states[i] == UDP_ACTIVE;
+        }
+        set_test_sessions(args->ctx, &target);
+        assert(restore_flow_uid(args, version, protocol, source, dest) == (live ? 12345 : -1));
+    }
+    target = uid_session(version, protocol, source, dest);
+    target.socket = -1;
+    set_test_sessions(args->ctx, &target);
+    assert(restore_flow_uid(args, version, protocol, source, dest) == -1);
+
+    // Never fall back past the newest exact record to an old owner of the same tuple.
+    struct ng_session newest = uid_session(version, protocol, source, dest);
+    target = newest;
+    if (protocol == IPPROTO_TCP) newest.tcp.uid = -1;
+    else newest.udp.uid = -1;
+    newest.next = &target;
+    set_test_sessions(args->ctx, &newest);
+    assert(restore_flow_uid(args, version, protocol, source, dest) == -1);
+    if (protocol == IPPROTO_TCP) {
+        newest.tcp.uid = 23456;
+        newest.tcp.state = TCP_CLOSE;
+    } else {
+        newest.udp.uid = 23456;
+        newest.udp.state = UDP_CLOSED;
+    }
+    assert(restore_flow_uid(args, version, protocol, source, dest) == -1);
+    if (protocol == IPPROTO_TCP) {
+        newest.tcp.state = TCP_ESTABLISHED;
+        newest.tcp.remote_start++;
+        assert(restore_flow_uid(args, version, protocol, source, dest) == -1);
+        newest.tcp.remote_start--;
+    } else newest.udp.state = UDP_ACTIVE;
+    assert(restore_flow_uid(args, version, protocol, source, dest) == 23456);
+    set_test_sessions(args->ctx, NULL);
 #endif
 }
 
@@ -899,5 +1030,50 @@ void test_uid_proc_parser(int kind) {
             release_uid_cache();
         }
     }
+#endif
+}
+
+void test_restore_uid_icmp(const struct arguments *args, int version) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    uint8_t source[16] = {1}, dest[16] = {2};
+    int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+    struct icmp echo = {.icmp_type = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                         .icmp_id = htons(1234)};
+    struct ng_session older = {.protocol = (uint8_t) protocol, .socket = 42};
+    older.icmp.version = version;
+    older.icmp.uid = 12345;
+    older.icmp.id = echo.icmp_id;
+    memcpy(&older.icmp.saddr, source, version == 4 ? 4 : 16);
+    memcpy(&older.icmp.daddr, dest, version == 4 ? 4 : 16);
+    struct ng_session newest = older;
+    newest.icmp.uid = -1;
+    newest.next = &older;
+    set_test_sessions(args->ctx, &newest);
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    newest.icmp.uid = 23456;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == 23456);
+    newest.socket = -1;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    newest.socket = 42;
+    newest.icmp.stop = 1;
+    older.icmp.stop = 1;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    newest.icmp.stop = 0;
+    echo.icmp_id = htons(1235);
+    assert(restore_uid(args, version, protocol, source, 1235, dest, 1235,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    echo.icmp_id = htons(1234);
+    dest[version == 4 ? 3 : 15] ^= 1;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    dest[version == 4 ? 3 : 15] ^= 1;
+    echo.icmp_type = ICMP_UNREACH;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    set_test_sessions(args->ctx, NULL);
 #endif
 }

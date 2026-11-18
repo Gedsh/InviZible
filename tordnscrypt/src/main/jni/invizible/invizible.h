@@ -601,6 +601,7 @@ jint get_uid_sub(int version, int protocol,
                  const char *source, const char *dest,
                  int64_t now);
 
+// Ports are host order; payload points to the protocol header validated by handle_ip.
 jint restore_uid(const struct arguments *args,
                  int version,
                  int protocol,

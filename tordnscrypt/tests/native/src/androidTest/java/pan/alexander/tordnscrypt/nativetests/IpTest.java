@@ -27,6 +27,16 @@ public final class IpTest extends NativeTestSupport {
     @Test public void liveMappedTcpProcRestoresIpv4SocketOwner() { checkLiveProc("uidLiveMappedTcp"); }
     @Test public void liveMappedUdpProcRestoresIpv4SocketOwner() { checkLiveProc("uidLiveMappedUdp"); }
     @Test public void uidRestorationMatchesUnalignedIpv4AddressBits() { check("restoreUidAddresses"); }
+    @Test public void uidRestorationMatchesExactIpv4TcpFlow() { check("restoreUidTcp4"); }
+    @Test public void uidRestorationMatchesExactIpv6TcpFlow() { check("restoreUidTcp6"); }
+    @Test public void uidRestorationMatchesExactIpv4UdpFlow() { check("restoreUidUdp4"); }
+    @Test public void uidRestorationMatchesExactIpv6UdpFlow() { check("restoreUidUdp6"); }
+    @Test public void uidRestorationRejectsStaleIpv4TcpOwners() { check("restoreUidTcpStates4"); }
+    @Test public void uidRestorationRejectsStaleIpv6TcpOwners() { check("restoreUidTcpStates6"); }
+    @Test public void uidRestorationRejectsStaleIpv4UdpOwners() { check("restoreUidUdpStates4"); }
+    @Test public void uidRestorationRejectsStaleIpv6UdpOwners() { check("restoreUidUdpStates6"); }
+    @Test public void ipv4IcmpRestorationUsesNewestIndexedOwner() { check("restoreUidIcmp4"); }
+    @Test public void ipv6IcmpRestorationUsesNewestIndexedOwner() { check("restoreUidIcmp6"); }
     @Test public void procUidAddressesDecodeNativeWordsForBothFamilies() { check("uidProcAddresses"); }
     @Test public void malformedProcUidRowsCloseWithoutCaching() { check("uidProcMalformed"); }
     @Test public void procUidWildcardAndDuplicateMatchOrderIsPreserved() { check("uidProcMatchOrder"); }
