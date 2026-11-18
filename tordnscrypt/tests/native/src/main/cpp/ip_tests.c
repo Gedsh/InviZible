@@ -1561,6 +1561,81 @@ void test_icmp_capacity(struct arguments *args) {
 #endif
 }
 
+void test_tcp_syn_capacity(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    enum { UNKNOWN, KNOWN, ROOT, CLOSING, CLOSED, SOCKETLESS, OTHER_SEQUENCE, OTHER_PORT,
+           OTHER_DPORT, OTHER_SOURCE, OTHER_DEST, OTHER_FAMILY, SHORT_HEADER, LONG_HEADER,
+           SYN_ACK, SYN_FIN, SYN_RST, SYN_URG, NEW_FLOW };
+    int upstream[2], tunnel[2];
+    assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, upstream) == 0);
+    assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    for (int version = 4; version <= 6; version += 2) {
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            args->ctx->sdk = legacy ? 28 : 29;
+            for (int extra = 0; extra <= 1; extra++) {
+                for (int scenario = UNKNOWN; scenario <= NEW_FLOW; scenario++) {
+                    _Alignas(8) uint8_t packet[128];
+                    size_t off = ip_header(packet, version, IPPROTO_TCP, 20,
+                                           version == 4 ? "203.0.113.2" : "2001:db8::2");
+                    struct tcphdr *tcp = (void *) (packet + off);
+                    tcp->source = htons(12345); tcp->dest = htons(443);
+                    tcp->doff = 5; tcp->syn = 1; tcp->seq = htonl(100);
+                    struct ng_session session = {.protocol = IPPROTO_TCP, .socket = upstream[0]};
+                    session.tcp.version = version; session.tcp.state = TCP_ESTABLISHED;
+                    session.tcp.uid = scenario == ROOT ? 0 : scenario == KNOWN ? 23456 : -1;
+                    session.tcp.source = tcp->source; session.tcp.dest = tcp->dest;
+                    session.tcp.remote_start = 100; session.tcp.remote_seq = 101;
+                    session.tcp.local_seq = session.tcp.acked = 2000;
+                    memcpy(&session.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+                    memcpy(&session.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+                    if (scenario == CLOSING) session.tcp.state = TCP_CLOSING;
+                    if (scenario == CLOSED) session.tcp.state = TCP_CLOSE;
+                    if (scenario == SOCKETLESS) session.socket = -1;
+                    if (scenario == OTHER_SEQUENCE) session.tcp.remote_start++;
+                    if (scenario == OTHER_PORT) session.tcp.source++;
+                    if (scenario == OTHER_DPORT) session.tcp.dest++;
+                    if (scenario == OTHER_SOURCE) ((uint8_t *) &session.tcp.saddr)[0] ^= 1;
+                    if (scenario == OTHER_DEST) ((uint8_t *) &session.tcp.daddr)[0] ^= 1;
+                    if (scenario == OTHER_FAMILY) session.tcp.version = version == 4 ? 6 : 4;
+                    if (scenario == SHORT_HEADER) tcp->doff = 4;
+                    if (scenario == LONG_HEADER) tcp->doff = 6;
+                    if (scenario == SYN_ACK) tcp->ack = 1;
+                    if (scenario == SYN_FIN) tcp->fin = 1;
+                    if (scenario == SYN_RST) tcp->rst = 1;
+                    if (scenario == SYN_URG) tcp->urg = 1;
+                    packet_checksums(packet, off + 20, off, IPPROTO_TCP);
+                    struct ng_session *head = scenario == NEW_FLOW ? NULL : &session;
+                    set_test_sessions(args->ctx, head);
+                    char table[256];
+                    blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
+                    deny_address = 0;
+                    int queries = uid_lookups, checks = policy_checks, files = file_closes;
+                    bool existing = scenario <= ROOT;
+                    handle_ip(&running, packet, off + 20, -1, SESSION_MAX + extra, SESSION_MAX);
+                    assert(args->ctx->ng_session == head && session.next == NULL);
+                    assert(uid_lookups == queries + (existing && !legacy));
+                    assert(policy_checks == checks + existing);
+                    if (!existing) assert(file_closes == files);
+                    assert(session.tcp.uid == (scenario == ROOT ? 0 : scenario == KNOWN ? 23456 : -1));
+                    if (existing) assert(policy_uid == session.tcp.uid);
+                    assert(session.socket == (scenario == SOCKETLESS ? -1 : upstream[0]));
+                    assert(session.tcp.state == (scenario == CLOSING ? TCP_CLOSING :
+                                               scenario == CLOSED ? TCP_CLOSE : TCP_ESTABLISHED));
+                    assert(!is_readable(tunnel[0]) && !is_readable(upstream[1]));
+                    set_test_sessions(args->ctx, NULL);
+                    release_uid_cache();
+                    assert(allocations == 0 && sockets == 0);
+                }
+            }
+        }
+    }
+    args->ctx->sdk = 29;
+    close(upstream[0]); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_blocked_udp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     enum { BUDGET, INITIAL_CLOCK, RETRY_CLOCK, KNOWN_ROOT, KNOWN_OWNER, BUDGET_SCENARIOS };

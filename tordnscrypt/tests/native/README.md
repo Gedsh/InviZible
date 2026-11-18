@@ -313,6 +313,14 @@ integration cases cover LISTEN, SYN_RECV and ESTABLISHED, JNI/proc lookups, UID 
 direct/Tor/proxy/redirect routes, stale events, handshake completion and data delivery.
 Malformed SYN combinations, changed initial sequences, and disconnected/closed
 sessions cannot fill an unknown owner.
+At or above session capacity, valid SYN retransmissions for an exact live socket
+with the original sequence still resolve ownership and enforce policy without
+creating a session or socket. The route/isolation matrix runs below, at and above
+the limit for both families and JNI/proc lookups, including reset cleanup and
+continued data delivery. Capacity boundary cases preserve known/root owners and
+allow unknown owners when policy permits; new flows, changed tuples/sequences,
+closed/socketless records and malformed SYN flags/header lengths remain dropped
+before lookup and policy callbacks.
 Successful lookups also fill unknown live ICMP and UDP DNS owners before policy
 handling, even when the current packet is denied. Retired DNS records retain the
 newly learned owner for their earlier traffic. ICMP cases cover both families and
@@ -425,7 +433,7 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 271 tests plus the optional comparison test.
+The full run contains 272 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

@@ -2071,7 +2071,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 assert(allocations == 0 && sockets == 0);
             }
         }
-        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : kind == 3 ? 19 : kind == 4 ? 6 : 28;
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : kind == 3 ? 19 : kind == 4 ? 6 : 84;
         for (int case_index = 0; case_index < scenarios; case_index++) {
             int scenario = kind == 5 ? case_index % 14 : case_index;
             int stream[2], tunnel[2];
@@ -2119,7 +2119,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             int files = file_closes;
             char table[256];
             bool legacy = (kind == 1 && scenario == 13) || (kind == 3 && scenario >= 16) ||
-                          (kind == 4 && scenario >= 4) || (kind == 5 && case_index >= 14);
+                          (kind == 4 && scenario >= 4) || (kind == 5 && case_index % 28 >= 14);
             if (legacy) {
                 ctx.sdk = 28; fake_proc = 1;
                 snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 %d 0 0\n",
@@ -2183,7 +2183,10 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 uint8_t state = s.tcp.state;
                 if (kind == 5) {
                     packet_checksums(packet, length, off, IPPROTO_TCP);
-                    handle_ip(&running, packet, length, epoll_fd, 1, SESSION_MAX);
+                    // Repeat each route/lookup case below, at, and above the limit.
+                    int sessions = case_index < 28 ? 1 : SESSION_MAX + case_index / 28 - 1;
+                    handle_ip(&running, packet, length, epoll_fd, sessions, SESSION_MAX);
+                    assert(ctx.ng_session == &s && s.next == NULL);
                 } else
                     handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups + !legacy && policy_checks == policies + 1);

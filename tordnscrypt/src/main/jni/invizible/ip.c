@@ -443,6 +443,20 @@ void handle_ip(const struct arguments *args,
 
     // Limit number of sessions
     if (sessions >= maxsessions) {
+        // A valid retransmitted SYN can recover ownership without opening another socket.
+        bool tcp_existing = false;
+        if (protocol == IPPROTO_TCP && syn) {
+            const struct tcphdr *tcp = (const struct tcphdr *) payload;
+            size_t header_length = (size_t) tcp->doff * 4;
+            if (!tcp->ack && !tcp->rst && !tcp->fin && !tcp->urg &&
+                header_length >= sizeof(*tcp) && header_length <= payload_length) {
+                struct ng_session *session = find_session(args->ctx, version, protocol,
+                                                          saddr, tcp->source, daddr, tcp->dest);
+                tcp_existing = session != NULL && session->socket >= 0 &&
+                               session->tcp.state != TCP_CLOSING && session->tcp.state != TCP_CLOSE &&
+                               session->tcp.remote_start == ntohl(tcp->seq);
+            }
+        }
         // Existing live ping flows need no additional session or socket.
         bool icmp_existing = false;
         if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) &&
@@ -454,7 +468,7 @@ void handle_ip(const struct arguments *args,
         }
         if (((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) && !icmp_existing) ||
             (protocol == IPPROTO_UDP && !udp_existing) ||
-            (protocol == IPPROTO_TCP && syn)) {
+            (protocol == IPPROTO_TCP && syn && !tcp_existing)) {
             log_android(ANDROID_LOG_ERROR,
                         "%d of max %d sessions, dropping version %d protocol %d",
                         sessions, maxsessions, protocol, version);
