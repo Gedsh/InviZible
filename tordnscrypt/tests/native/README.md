@@ -311,6 +311,12 @@ lookup paths, UID zero, known-owner preservation, failed subsequent lookups, and
 stopped, disconnected or mismatched sessions. Synthetic ICMPv6 proc tables do not
 depend on the device kernel exposing `/proc/net/icmp6`; live proc tests still use
 the real device's table availability.
+At session capacity, exact live ICMP flows still resolve ownership, check policy,
+and forward without creating a session or socket. IPv4/IPv6 cases exercise both
+lookup paths at and above the limit, UID zero, known/unknown owners and denial.
+New, stopped, disconnected, and mismatched flows remain blocked by the limit.
+Outgoing sends are captured; replies traverse real local sockets with restored IDs,
+and allocation/socket balances are checked after each case.
 Logging preserves the caller's `errno` even when the log backend changes it or
 returns an error. The utility regression also checks disabled logging and direct
 logger calls, with unchanged formatted output.
@@ -403,7 +409,7 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 268 tests plus the optional comparison test.
+The full run contains 269 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

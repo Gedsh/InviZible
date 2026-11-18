@@ -17,6 +17,7 @@ public final class IpTest extends NativeTestSupport {
     @Test public void blockedDnsFollowsUnknownOwnerPolicyAndPreservesStoredOwnersOnDenial() { check("dnsBlockedOwnerRecovery"); }
     @Test public void failedUidLookupsFollowPolicyForTcpUdpDnsAndIcmpInBothFamilies() { check("unknownUidPolicy"); }
     @Test public void deniedIcmpRetainsResolvedOwnersOnlyOnLiveExactUnknownSessions() { check("deniedIcmpUid"); }
+    @Test public void existingIcmpFlowsRecoverOwnersAndForwardAtSessionCapacity() { check("icmpCapacity"); }
     @Test public void blockedUdpCanReopenAfterFailedLookupWhenUnknownTrafficIsAllowed() { check("blockedUdpUnknownPolicy"); }
     @Test public void unknownUdpOwnersKeepUnchangedRoutesAndRetryBudgetAcrossReplacements() { check("udpRetryRoutes"); }
     private static void checkLiveProc(String name) {

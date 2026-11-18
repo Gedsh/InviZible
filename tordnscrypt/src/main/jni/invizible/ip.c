@@ -443,7 +443,16 @@ void handle_ip(const struct arguments *args,
 
     // Limit number of sessions
     if (sessions >= maxsessions) {
-        if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) ||
+        // Existing live ping flows need no additional session or socket.
+        bool icmp_existing = false;
+        if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) &&
+            is_icmp_supported(pkt, payload)) {
+            const struct icmp *icmp = (const struct icmp *) payload;
+            struct ng_session *session = find_session(args->ctx, version, protocol,
+                                                      saddr, icmp->icmp_id, daddr, 0);
+            icmp_existing = session != NULL && session->socket >= 0;
+        }
+        if (((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) && !icmp_existing) ||
             (protocol == IPPROTO_UDP && !udp_existing) ||
             (protocol == IPPROTO_TCP && syn)) {
             log_android(ANDROID_LOG_ERROR,

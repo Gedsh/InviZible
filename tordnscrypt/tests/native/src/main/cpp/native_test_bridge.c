@@ -119,6 +119,8 @@ static const char *run_case(const char *id) {
         test_unknown_uid_policy(&args);
     else if (strcmp(id, "deniedIcmpUid") == 0)
         test_denied_icmp_uid(&args);
+    else if (strcmp(id, "icmpCapacity") == 0)
+        test_icmp_capacity(&args);
     else if (strcmp(id, "udpRetryRoutes") == 0)
         test_udp_retry_routes(&args);
     else if (strcmp(id, "blockedUdpUnknownPolicy") == 0)

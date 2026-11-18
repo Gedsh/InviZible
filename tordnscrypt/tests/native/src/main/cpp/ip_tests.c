@@ -1458,6 +1458,75 @@ void test_denied_icmp_uid(struct arguments *args) {
 #endif
 }
 
+void test_icmp_capacity(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    enum { ROOT, OWNER, UNKNOWN, KNOWN, DENIED, STOPPED, SOCKETLESS, OTHER_ID, OTHER_ADDRESS, NEW_FLOW };
+    int upstream[2], tunnel[2];
+    assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+    assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    for (int version = 4; version <= 6; version += 2) {
+        int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            args->ctx->sdk = legacy ? 28 : 29;
+            for (int extra = 0; extra <= 1; extra++) {
+                for (int scenario = ROOT; scenario <= NEW_FLOW; scenario++) {
+                    _Alignas(8) uint8_t packet[128];
+                    size_t length = checksum_packet(packet, version, protocol, 0);
+                    size_t off = version == 4 ? 20 : 40;
+                    struct icmp *echo = (void *) (packet + off);
+                    echo->icmp_id = htons(12345);
+                    packet_checksums(packet, length, off, protocol);
+                    struct ng_session session = {.protocol = (uint8_t) protocol, .socket = upstream[0]};
+                    session.icmp.version = version; session.icmp.id = echo->icmp_id;
+                    session.icmp.uid = scenario == KNOWN ? 23456 : -1;
+                    memcpy(&session.icmp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+                    memcpy(&session.icmp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+                    if (scenario == STOPPED) session.icmp.stop = 1;
+                    if (scenario == SOCKETLESS) session.socket = -1;
+                    if (scenario == OTHER_ID) session.icmp.id++;
+                    if (scenario == OTHER_ADDRESS) ((uint8_t *) &session.icmp.daddr)[0] ^= 1;
+                    struct ng_session *head = scenario == NEW_FLOW ? NULL : &session;
+                    set_test_sessions(args->ctx, head);
+                    char table[256];
+                    jint resolved = scenario == ROOT ? 0 : scenario == UNKNOWN || scenario == KNOWN ? -1 : 12345;
+                    blocked_uid_lookup(version, legacy, resolved, table, sizeof(table));
+                    deny_address = scenario == DENIED;
+                    expect_destination(version, version == 4 ? "203.0.113.2" : "2001:db8::2", 0);
+                    int queries = uid_lookups, checks = policy_checks;
+                    bool existing = scenario <= DENIED;
+                    handle_ip(&running, packet, length, -1, SESSION_MAX + extra, SESSION_MAX);
+                    assert(args->ctx->ng_session == head && session.socket == (scenario == SOCKETLESS ? -1 : upstream[0]));
+                    assert(uid_lookups == queries + (existing && !legacy));
+                    assert(policy_checks == checks + existing && destination_calls == (scenario < DENIED));
+                    jint retained = scenario == KNOWN ? 23456 : existing ? resolved : -1;
+                    assert(session.icmp.uid == retained);
+                    if (existing) assert(policy_uid == retained);
+                    if (scenario < DENIED) {
+                        assert(!session.icmp.stop && echo->icmp_id == (uint16_t) ~session.icmp.id);
+                        uint8_t reply[ICMP_MINLEN] = {0};
+                        reply[0] = version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY;
+                        assert(write(upstream[1], reply, sizeof(reply)) == sizeof(reply));
+                        struct epoll_event event = {.events = EPOLLIN, .data.ptr = &session};
+                        check_icmp_socket(&running, &event);
+                        _Alignas(8) uint8_t output[2048];
+                        assert(tun_packet(tunnel[0], output, version, protocol) == off + ICMP_MINLEN);
+                        assert(output[off] == reply[0] && load16(output + off + 4) == 12345);
+                    }
+                    assert(!is_readable(tunnel[0]) && session.icmp.stop == (scenario == STOPPED));
+                    set_test_sessions(args->ctx, NULL);
+                    release_uid_cache();
+                    assert(allocations == 0 && sockets == 0);
+                }
+            }
+        }
+    }
+    args->ctx->sdk = 29; deny_address = 0;
+    close(upstream[0]); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_blocked_udp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     enum { BUDGET, INITIAL_CLOCK, RETRY_CLOCK, KNOWN_ROOT, KNOWN_OWNER, BUDGET_SCENARIOS };

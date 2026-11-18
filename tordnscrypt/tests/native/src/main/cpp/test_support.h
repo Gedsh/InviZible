@@ -63,6 +63,7 @@ void test_dns_uid_restore(struct arguments *args, int protocol);
 void test_dns_policy(struct arguments *args, int kind);
 void test_unknown_uid_policy(struct arguments *args);
 void test_denied_icmp_uid(struct arguments *args);
+void test_icmp_capacity(struct arguments *args);
 void test_udp_retry_routes(struct arguments *args);
 void test_udp_uid_retry(struct arguments *args, int kind);
 void test_blocked_udp_uid_retry(struct arguments *args, int kind);
