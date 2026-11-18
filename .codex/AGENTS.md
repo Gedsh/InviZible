@@ -7,6 +7,7 @@
 - Keep patches focused and reviewable. When working through findings, implement the requested finding without folding in unrelated cleanup.
 - Preserve unrelated working-tree changes and machine-local configuration, including `settings.gradle`.
 - Do not run `git add` or create commits. Leave changes for manual review; suggest a concise commit title when asked.
+- Format commit title suggestions as lowercase Conventional Commit titles: `fix: tcp uid recovery in close_wait sessions`. Use an appropriate lowercase prefix such as `fix:`, `perf:`, `refactor:`, `test:`, or `docs:` and keep the description lowercase.
 - Ask before adding production dependencies. Continue routine implementation and validation within the already authorized scope without repeatedly asking for confirmation.
 - When asked to discuss or analyze without changes, keep that work read-only.
 
