@@ -54,6 +54,40 @@ jint uid_lookup_result, policy_uid;
 bool policy_requires_known_uid;
 int tcp_last_allowed;
 struct allowed policy_redirect;
+bool mock_uid_routes, uid_route_tor, uid_route_proxy;
+const char *uid_peer_address;
+uint16_t uid_peer_port;
+int uid_peer_error, uid_peer_queries;
+
+jboolean __real_is_redirect_to_tor(const struct arguments *, int, const char *, int);
+jboolean __wrap_is_redirect_to_tor(const struct arguments *args, int uid, const char *dest, int port) {
+    return mock_uid_routes ? uid_route_tor : __real_is_redirect_to_tor(args, uid, dest, port);
+}
+jboolean __real_is_redirect_to_proxy(const struct arguments *, int, const char *, int);
+jboolean __wrap_is_redirect_to_proxy(const struct arguments *args, int uid, const char *dest, int port) {
+    return mock_uid_routes ? uid_route_proxy : __real_is_redirect_to_proxy(args, uid, dest, port);
+}
+int __real_getpeername(int, struct sockaddr *, socklen_t *);
+int __wrap_getpeername(int socket, struct sockaddr *peer, socklen_t *length) {
+    if (uid_peer_address == NULL && uid_peer_error == 0)
+        return __real_getpeername(socket, peer, length);
+    uid_peer_queries++;
+    if (uid_peer_error) { errno = uid_peer_error; return -1; }
+    if (strchr(uid_peer_address, ':') == NULL) {
+        struct sockaddr_in address = {.sin_family = AF_INET, .sin_port = htons(uid_peer_port)};
+        assert(*length >= sizeof(address));
+        assert(inet_pton(AF_INET, uid_peer_address, &address.sin_addr) == 1);
+        memcpy(peer, &address, sizeof(address));
+        *length = sizeof(address);
+    } else {
+        struct sockaddr_in6 address = {.sin6_family = AF_INET6, .sin6_port = htons(uid_peer_port)};
+        assert(*length >= sizeof(address));
+        assert(inet_pton(AF_INET6, uid_peer_address, &address.sin6_addr) == 1);
+        memcpy(peer, &address, sizeof(address));
+        *length = sizeof(address);
+    }
+    return 0;
+}
 int udp_lookup_supplied;
 struct ng_session *udp_lookup_session;
 
@@ -640,6 +674,10 @@ void reset_test_state(void) {
     uid_lookup_result = own_uid;
     policy_uid = -1;
     policy_requires_known_uid = false;
+    mock_uid_routes = uid_route_tor = uid_route_proxy = false;
+    uid_peer_address = NULL;
+    uid_peer_port = 0;
+    uid_peer_error = uid_peer_queries = 0;
     tcp_last_allowed = -1;
     memset(&policy_redirect, 0, sizeof(policy_redirect));
     srand(1);

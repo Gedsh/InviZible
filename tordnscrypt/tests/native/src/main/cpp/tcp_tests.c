@@ -745,20 +745,25 @@ void test_tcp_allocation_failure(const struct arguments *args) {
     }
 #ifndef INVIZIBLE_BASELINE_TESTS
     for (int version = 4; version <= 6; version += 2) {
-        struct ng_session s = {.socket = -1};
+        int stream[2];
+        assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+        struct ng_session s = {.socket = stream[0]};
         s.tcp.version = version;
         s.tcp.state = TCP_ESTABLISHED;
         s.tcp.send_window = 4096;
+        s.tcp.recv_window = 65535;
         s.tcp.mss = 1500;
         struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
         fail_alloc_tag = "tcp socket";
         fail_alloc_match = 1;
         check_tcp_socket(args, &event, -1);
-        assert(s.tcp.state == TCP_CLOSING && fail_alloc_match == 0);
+        assert(s.tcp.state == TCP_CLOSING);
+        assert(fail_alloc_match == 0);
         fail_alloc_tag = version == 4 ? "tcp write4" : "tcp write 6";
         fail_alloc_match = 1;
         assert(write_tcp(args, &s.tcp, packet, 1, 0, 1, 0, 0) == -1);
         assert(fail_alloc_match == 0 && allocations == 0);
+        close(stream[0]); close(stream[1]);
     }
     // Segment storage can fail before it is linked.
     struct tcp_session tcp = {.recv_window = UINT16_MAX};
@@ -2029,6 +2034,193 @@ void test_tcp_uid_update(const struct arguments *args) {
             assert(session.tcp.uid == expected);
             set_test_sessions(args->ctx, NULL);
             clear_tcp_data(&session.tcp);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+#endif
+}
+
+void test_tcp_uid_retry(struct arguments *args, int kind) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        if (kind == 0) {
+            for (int route = 0; route < 6; route++) {
+                struct context ctx = {.sdk = 29};
+                struct arguments running = *args;
+                running.ctx = &ctx;
+                mock_uid_routes = true;
+                uid_route_tor = route == 1; uid_route_proxy = route == 2;
+                strcpy(tor_socks5_addr, "127.0.0.1"); tor_socks5_port = 9050;
+                strcpy(proxy_socks5_addr, "127.0.0.1"); proxy_socks5_port = 1080;
+                struct allowed redirect = {.raddr = "127.0.0.1", .rport = 5354};
+                test_monotonic_enabled = true; test_monotonic_ms = 10000;
+                test_monotonic_failures = route == 4;
+                _Alignas(8) uint8_t packet[128];
+                size_t length = tcp_packet(packet, version, 100, 0, 1, 0, NULL, 0);
+                handle_tcp(&running, packet, length, packet + (version == 4 ? 20 : 40),
+                           route == 5 ? 0 : -1, 1, route == 3 ? &redirect : NULL, -1);
+                assert(ctx.ng_session != NULL && ctx.ng_session->tcp.uid_retries == 0);
+                assert(ctx.ng_session->tcp.uid_retry_at == (route >= 4 ? -1 : 11000));
+                assert(ctx.ng_session->tcp.route == (route < 4 ? route : TCP_ROUTE_DIRECT));
+                clear(&ctx);
+                assert(allocations == 0 && sockets == 0);
+            }
+        }
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : 11;
+        for (int scenario = 0; scenario < scenarios; scenario++) {
+            int stream[2], tunnel[2];
+            assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+            assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+            int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+            assert(epoll_fd >= 0);
+            struct context ctx = {.sdk = 29};
+            struct arguments running = *args;
+            running.ctx = &ctx; running.tun = tunnel[1];
+            struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+            s.tcp.version = version; s.tcp.uid = -1; s.tcp.state = TCP_ESTABLISHED;
+            s.tcp.socks5 = SOCKS5_CONNECTED;
+            s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 101;
+            s.tcp.local_start = 1999; s.tcp.remote_start = 100;
+            s.tcp.recv_window = s.tcp.send_window = 65535; s.tcp.mss = 1200;
+            s.tcp.uid_retry_at = 11000;
+            s.tcp.memory = &ctx.tcp_memory;
+            s.ev.events = EPOLLIN | EPOLLERR; s.ev.data.ptr = &s;
+            assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
+            _Alignas(8) uint8_t packet[128];
+            size_t length = tcp_packet(packet, version, 101, 2000, 0, 0, NULL, 0);
+            size_t off = version == 4 ? 20 : 40;
+            struct tcphdr *header = (void *) (packet + off);
+            s.tcp.source = header->source; s.tcp.dest = header->dest;
+            memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+            memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+            set_test_sessions(&ctx, &s);
+            test_monotonic_enabled = true; test_monotonic_ms = 11000;
+            mock_uid_routes = true;
+            uid_route_tor = uid_route_proxy = tor_isolate_uid = false;
+            uid_peer_address = NULL; uid_peer_error = uid_peer_queries = 0;
+            strcpy(tor_socks5_addr, "127.0.0.1"); tor_socks5_port = 9050;
+            strcpy(proxy_socks5_addr, "127.0.0.1"); proxy_socks5_port = 1080;
+            memset(&policy_redirect, 0, sizeof(policy_redirect));
+            deny_address = 0;
+            uid_lookup_result = kind == 0 ? -1 : scenario == 0 ? 0 : 12345;
+            int lookups = uid_lookups, policies = policy_checks;
+            int files = file_closes;
+            char table[256];
+            bool legacy = kind == 1 && scenario == 13;
+            if (legacy) {
+                ctx.sdk = 28; fake_proc = 1;
+                snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 12345 0 0\n",
+                         version == 4 ? "0200000A" : "B80D0120000000000000000001000000",
+                         version == 4 ? "00000000" : "00000000000000000000000000000000");
+                proc_contents = table;
+                proc6_contents = version == 4 ? "header\n" : NULL;
+            }
+            bool reset = false;
+            if (kind == 0) {
+                if (scenario == 1) test_monotonic_failures = 1;
+                if (scenario == 2) s.tcp.uid = 0;
+                if (scenario == 3) s.tcp.uid_retry_at = -1;
+                test_monotonic_ms = 10999;
+                handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                assert(uid_lookups == lookups);
+                const long long times[] = {11000, 11000, 12999, 13000, 16999, 17000, 100000};
+                const int attempts[] = {1, 1, 1, 2, 2, 3, 3};
+                for (size_t i = 0; i < sizeof(times) / sizeof(*times); i++) {
+                    test_monotonic_ms = times[i];
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    assert(uid_lookups == lookups + (scenario == 0 ? attempts[i] : 0));
+                }
+                assert(s.tcp.uid == (scenario == 2 ? 0 : -1) && policy_checks == policies);
+            } else if (kind == 1) {
+                // Direct, denied, new Tor/proxy route, retained Tor/proxy, isolation,
+                // route-kind change, retained/changed redirect, and peer-query failure.
+                reset = scenario == 2 || scenario == 3 || scenario == 4 ||
+                        scenario == 6 || scenario == 7 || scenario == 10 || scenario == 11;
+                deny_address = scenario == 2;
+                uid_route_tor = scenario == 3 || scenario == 5 || scenario == 6;
+                uid_route_proxy = scenario == 4 || scenario == 7 || scenario == 8;
+                if (scenario == 5 || scenario == 6 || scenario == 7)
+                    s.tcp.route = TCP_ROUTE_TOR;
+                if (scenario == 8) s.tcp.route = TCP_ROUTE_PROXY;
+                tor_isolate_uid = scenario == 6;
+                if (scenario >= 9 && scenario <= 12) {
+                    s.tcp.route = TCP_ROUTE_REDIRECT;
+                    strcpy(policy_redirect.raddr, "127.0.0.1");
+                    policy_redirect.rport = 5354;
+                }
+                if (scenario >= 5 && scenario <= 12) {
+                    uid_peer_address = version == 4 ? "127.0.0.1" :
+                            scenario == 8 ? "::ffff:127.0.0.1" : "::1";
+                    uid_peer_port = scenario >= 9 ? 5354 : scenario == 8 ? 1080 : 9050;
+                    if (scenario == 10) uid_peer_port++;
+                    if (scenario == 11) uid_peer_error = ENOTCONN;
+                    if (scenario == 12) {
+                        strcpy(policy_redirect.raddr, "::1");
+                        uid_peer_address = "::1"; // Explicit IPv4 flow redirected to IPv6.
+                    }
+                }
+                if (reset) {
+                    const uint8_t queued[] = {1, 2, 3};
+                    assert(queue_tcp(&running, header, "uid retry", &s.tcp, queued, sizeof(queued)) == 1);
+                    assert(s.tcp.forward != NULL);
+                }
+                handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                assert(uid_lookups == lookups + !legacy && policy_checks == policies + 1);
+                if (legacy) assert(file_closes == files + (version == 4 ? 2 : 1));
+                assert(s.tcp.uid == uid_lookup_result && policy_uid == uid_lookup_result);
+                assert(s.tcp.uid_retries == 1);
+                if (reset) {
+                    assert(s.socket == -1 && s.tcp.state == TCP_CLOSING);
+                    assert(s.tcp.forward == NULL && ctx.tcp_memory.queued == 0 && ctx.tcp_memory.nodes == 0);
+                    _Alignas(8) uint8_t output[2048];
+                    tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+                    assert(((struct tcphdr *) (output + off))->rst);
+                    s.ev.events = EPOLLOUT | EPOLLIN;
+                    check_tcp_socket(&running, &s.ev, epoll_fd); // Stale event must not forward data.
+                    uint8_t byte;
+                    assert(recv(stream[1], &byte, 1, 0) == 0);
+                } else {
+                    assert(s.socket == stream[0] && s.tcp.state == TCP_ESTABLISHED);
+                    assert(s.tcp.local_seq == 2000 && s.tcp.remote_seq == 101);
+                    const uint8_t data[] = {11, 22, 33};
+                    length = tcp_packet(packet, version, 101, 2000, 0, 0, data, sizeof(data));
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    s.ev.events = EPOLLOUT;
+                    check_tcp_socket(&running, &s.ev, epoll_fd);
+                    uint8_t received[sizeof(data)];
+                    assert(recv(stream[1], received, sizeof(received), 0) == sizeof(data));
+                    assert(memcmp(received, data, sizeof(data)) == 0);
+                    assert(uid_lookups == lookups + !legacy && policy_checks == policies + 1);
+                }
+            } else {
+                if (scenario == 0) header->seq = htonl(100);
+                if (scenario == 1) header->ack_seq = htonl(1999);
+                if (scenario == 2) header->ack = 0;
+                if (scenario == 3) header->syn = 1;
+                if (scenario == 4) header->fin = 1;
+                if (scenario == 5) header->rst = 1;
+                if (scenario == 6) header->urg = 1;
+                if (scenario == 7) s.tcp.state = TCP_CLOSE_WAIT;
+                if (scenario == 8) { close(s.socket); s.socket = -1; }
+                if (scenario == 9) header->doff = 4;
+                if (scenario == 10) {
+                    length = tcp_packet(packet, version, 101, 2000, 0, 0, (const uint8_t *) "x", 1);
+                    s.tcp.recv_window = 0;
+                }
+                handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                assert(uid_lookups == lookups && policy_checks == policies && s.tcp.uid_retries == 0);
+                assert(s.tcp.uid == -1);
+            }
+            set_test_sessions(&ctx, NULL);
+            clear_tcp_data(&s.tcp);
+            if (s.socket >= 0) close(s.socket);
+            close(stream[1]); close(tunnel[0]); close(tunnel[1]); close(epoll_fd);
+            if (legacy) {
+                ng_free(uid_cache, __FILE__, __LINE__);
+                uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
+                fake_proc = 0; proc_contents = proc6_contents = NULL;
+            }
+            test_monotonic_enabled = false;
             assert(allocations == 0 && sockets == 0);
         }
     }

@@ -27,6 +27,7 @@ function(add_native_tests target source)
             COMPILE_DEFINITIONS "JNI_OnLoad=invizible_app_JNI_OnLoad;JNI_OnUnload=invizible_app_JNI_OnUnload")
     set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect sendto shutdown
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp handle_tcp handle_icmp
+            getpeername is_redirect_to_tor is_redirect_to_proxy
             get_uid_q create_packet is_address_allowed report_exit fopen fclose account_usage
             epoll_wait get_ms pipe pthread_mutex_init inet_ntop getsockopt ioctl)
     if("${source}" STREQUAL "${INVIZIBLE_SOURCE}")

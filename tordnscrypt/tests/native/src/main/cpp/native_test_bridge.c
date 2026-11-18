@@ -111,6 +111,12 @@ static const char *run_case(const char *id) {
         test_restore_uid_icmp(&args, 6);
     else if (strcmp(id, "tcpUidUpdate") == 0)
         test_tcp_uid_update(&args);
+    else if (strcmp(id, "tcpUidRetryBudget") == 0)
+        test_tcp_uid_retry(&args, 0);
+    else if (strcmp(id, "tcpUidRetryRecovery") == 0)
+        test_tcp_uid_retry(&args, 1);
+    else if (strcmp(id, "tcpUidRetryValidation") == 0)
+        test_tcp_uid_retry(&args, 2);
     else if (strcmp(id, "udpUidUpdate") == 0)
         test_udp_uid_update(&args);
     else if (strcmp(id, "icmpUidUpdate") == 0)

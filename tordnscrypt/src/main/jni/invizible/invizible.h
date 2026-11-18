@@ -236,9 +236,17 @@ struct udp_session {
     uint8_t uid_retries;
 };
 
+#define TCP_UID_RETRY_MAX 3
+#define TCP_UID_RETRY_INTERVAL 1000
+#define TCP_ROUTE_DIRECT 0
+#define TCP_ROUTE_TOR 1
+#define TCP_ROUTE_PROXY 2
+#define TCP_ROUTE_REDIRECT 3
+
 struct tcp_session {
     // Group naturally aligned fields to limit padding on ARM32 and ARM64.
     long long last_keep_alive;
+    int64_t uid_retry_at; // Monotonic milliseconds; negative disables retries.
     uint64_t sent;
     uint64_t received;
     uint64_t dns_memory_generation;
@@ -291,6 +299,8 @@ struct tcp_session {
     bool monitor_initialized;
     uint8_t state;
     uint8_t socks5;
+    uint8_t route;
+    uint8_t uid_retries;
     bool upstream_eof;
     bool fin_received;
     bool fin_acked;

@@ -345,7 +345,14 @@ the retry budget. Known-owner blocks never use this recovery path.
 Regressions cover both address families and lookup paths, UID zero, retry and
 clock limits, policy and routing decisions, capacity, and socket/allocation failure
 cleanup followed by successful retry.
-The full run contains 255 tests plus the optional comparison test.
+Established TCP flows with unknown owners retry lookup on valid in-order ACK/data
+packets, with the same three-attempt backoff and no idle wake-ups. Recovery rechecks
+policy and retains an allowed socket only when its route and redirect endpoint
+match. Denied flows, changed routes, and Tor UID isolation reset the connection,
+release queued data, and ignore stale socket events. IPv4/IPv6 cases cover JNI and
+legacy proc lookup, UID zero, retry initialization and clock failure, finite
+budgets, packet validation, route changes, and data forwarding after recovery.
+The full run contains 258 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

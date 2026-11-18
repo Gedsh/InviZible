@@ -36,10 +36,13 @@ extern char proxy_socks5_username[127 + 1];
 extern char proxy_socks5_password[127 + 1];
 
 extern int own_uid;
+extern bool compatibility_mode;
+extern bool can_filter;
 
 static int open_tcp_socket_with_error(const struct arguments *args,
                                      const struct tcp_session *cur,
-                                     struct allowed *redirect, int *connect_error_out);
+                                     struct allowed *redirect, int *connect_error_out,
+                                     uint8_t *route_out);
 
 static bool tcp_socks_eligible(const struct tcp_session *cur, const char *dest) {
     return cur->uid != own_uid && ntohs(cur->dest) != 53 &&
@@ -698,6 +701,8 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                                    const struct epoll_event *ev, int epoll_fd,
                                    struct tcp_socket_capacity *capacity) {
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
+    if (s->socket < 0 || s->tcp.state == TCP_CLOSING || s->tcp.state == TCP_CLOSE)
+        return;
     s->tcp.monitor_dirty = true;
 
     uint8_t oldstate = s->tcp.state;
@@ -1109,6 +1114,110 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
         log_android(ANDROID_LOG_DEBUG, "%s new state", tcp_socket_text(&diagnostic));
 }
 
+static bool tcp_uid_route_matches(const struct arguments *args, const struct ng_session *s,
+                                  const char *dest, const struct allowed *redirect) {
+    const struct tcp_session *tcp = &s->tcp;
+    uint8_t route = TCP_ROUTE_DIRECT;
+    const char *target = NULL;
+    uint16_t port = 0;
+    int version = tcp->version;
+    if (redirect != NULL) {
+        route = TCP_ROUTE_REDIRECT;
+        target = redirect->raddr;
+        port = redirect->rport;
+        if (version == 6 && strcmp(target, LOOPBACK_ADDRESS) == 0)
+            target = LOOPBACK_ADDRESS_IPv6;
+        version = strchr(target, ':') == NULL ? 4 : 6;
+    } else if (tcp_socks_eligible(tcp, dest)) {
+        if (*tor_socks5_addr && tor_socks5_port &&
+            is_redirect_to_tor(args, tcp->uid, dest, ntohs(tcp->dest))) {
+            route = TCP_ROUTE_TOR;
+            target = tor_socks5_addr;
+            port = (uint16_t) tor_socks5_port;
+        } else if (*proxy_socks5_addr && proxy_socks5_port &&
+                   is_redirect_to_proxy(args, tcp->uid, dest, ntohs(tcp->dest))) {
+            route = TCP_ROUTE_PROXY;
+            target = proxy_socks5_addr;
+            port = (uint16_t) proxy_socks5_port;
+        }
+        if (target != NULL && version == 6 && strcmp(target, LOOPBACK_ADDRESS) == 0)
+            target = route == TCP_ROUTE_TOR ? LOOPBACK_ADDRESS_IPv6 : LOOPBACK_ADDRESS_MAPPED_IPv6;
+    }
+    if (route != tcp->route || (route == TCP_ROUTE_TOR && tor_isolate_uid))
+        return false; // An established stream cannot change transport or isolation credentials.
+    if (route == TCP_ROUTE_DIRECT)
+        return true;
+
+    struct sockaddr_storage peer = {0};
+    socklen_t length = sizeof(peer);
+    if (getpeername(s->socket, (struct sockaddr *) &peer, &length) != 0)
+        return false;
+    if (version == 4 && peer.ss_family == AF_INET && length >= sizeof(struct sockaddr_in)) {
+        struct in_addr address;
+        const struct sockaddr_in *remote = (const void *) &peer;
+        return inet_pton(AF_INET, target, &address) == 1 && remote->sin_port == htons(port) &&
+               memcmp(&remote->sin_addr, &address, sizeof(address)) == 0;
+    }
+    if (version == 6 && peer.ss_family == AF_INET6 && length >= sizeof(struct sockaddr_in6)) {
+        struct in6_addr address;
+        const struct sockaddr_in6 *remote = (const void *) &peer;
+        return inet_pton(AF_INET6, target, &address) == 1 && remote->sin6_port == htons(port) &&
+               memcmp(&remote->sin6_addr, &address, sizeof(address)) == 0;
+    }
+    return false;
+}
+
+// Traffic drives three attempts after 1, 2 and 4 seconds; idle streams add no wake-ups.
+// Only a current, in-order ACK may associate an owner with this established stream.
+static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
+                             const struct tcphdr *header, uint16_t datalen, int epoll_fd) {
+    struct tcp_session *tcp = &s->tcp;
+    if (tcp->uid >= 0 || tcp->state != TCP_ESTABLISHED || s->socket < 0 ||
+        tcp->uid_retries >= TCP_UID_RETRY_MAX || tcp->uid_retry_at < 0 ||
+        header->syn || header->rst || header->fin || header->urg || !header->ack ||
+        ntohl(header->seq) != tcp->remote_seq || ntohl(header->ack_seq) != tcp->local_seq ||
+        datalen > tcp->recv_window)
+        return true;
+    long long now = get_ms();
+    if (now < 0) {
+        tcp->uid_retries = TCP_UID_RETRY_MAX;
+        return true;
+    }
+    if (now < tcp->uid_retry_at)
+        return true;
+    tcp->uid_retries++;
+    tcp->uid_retry_at = now + (TCP_UID_RETRY_INTERVAL << tcp->uid_retries);
+
+    char source[INET6_ADDRSTRLEN + 1], dest[INET6_ADDRSTRLEN + 1];
+    if (inet_ntop(tcp->version == 4 ? AF_INET : AF_INET6, &tcp->saddr, source, sizeof(source)) == NULL ||
+        inet_ntop(tcp->version == 4 ? AF_INET : AF_INET6, &tcp->daddr, dest, sizeof(dest)) == NULL)
+        return true;
+    jint uid = args->ctx->sdk <= 28 || (compatibility_mode && can_filter)
+               ? get_uid(tcp->version, IPPROTO_TCP, &tcp->saddr, ntohs(tcp->source),
+                         &tcp->daddr, ntohs(tcp->dest))
+               : get_uid_q(args, tcp->version, IPPROTO_TCP, source, ntohs(tcp->source), dest, ntohs(tcp->dest));
+    if (uid < 0)
+        return true;
+    tcp->uid = uid;
+    jobject packet = create_packet(args, tcp->version, IPPROTO_TCP, header->psh ? "AP" : "A",
+                                   source, ntohs(tcp->source), dest, ntohs(tcp->dest), "", uid, 0);
+    struct allowed *redirect = is_address_allowed(args, packet);
+    bool allowed = redirect != NULL;
+    if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
+        redirect = NULL;
+    if (allowed && tcp_uid_route_matches(args, s, dest, redirect))
+        return true;
+
+    log_android(ANDROID_LOG_WARN, "TCP recovered uid %d requires reconnect: %s",
+                uid, allowed ? "route changed" : "policy denied");
+    write_rst(args, tcp);
+    // Stop queued payload and later events in this batch from using the rejected route.
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, s->socket, NULL);
+    clear_tcp_data(tcp);
+    close_tcp_socket(s);
+    return false;
+}
+
 jboolean handle_tcp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
@@ -1161,6 +1270,9 @@ jboolean handle_tcp(const struct arguments *args,
     // Drop URG data
     if (tcphdr->urg)
         return 1;
+
+    if (cur != NULL && !recover_tcp_uid(args, cur, tcphdr, datalen, epoll_fd))
+        return 0;
 
     // Check session
     if (cur == NULL) {
@@ -1241,6 +1353,14 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.dest = tcphdr->dest;
             s->tcp.state = TCP_LISTEN;
             s->tcp.socks5 = SOCKS5_NONE;
+            s->tcp.route = TCP_ROUTE_DIRECT;
+            s->tcp.uid_retries = 0;
+            s->tcp.uid_retry_at = -1;
+            if (uid < 0) {
+                long long now = get_ms();
+                if (now >= 0)
+                    s->tcp.uid_retry_at = now + TCP_UID_RETRY_INTERVAL;
+            }
             s->tcp.upstream_eof = false;
             s->tcp.fin_received = false;
             s->tcp.fin_acked = false;
@@ -1293,7 +1413,7 @@ jboolean handle_tcp(const struct arguments *args,
 
             // Open socket
             int connect_error;
-            s->socket = open_tcp_socket_with_error(args, &s->tcp, redirect, &connect_error);
+            s->socket = open_tcp_socket_with_error(args, &s->tcp, redirect, &connect_error, &s->tcp.route);
             if (s->socket < 0) {
                 // Report definitive connect failures instead of dropping every SYN retry.
                 // Local setup and transient resource failures can still be retried.
@@ -1654,7 +1774,8 @@ int queue_tcp(const struct arguments *args,
 
 static int open_tcp_socket_with_error(const struct arguments *args,
                                      const struct tcp_session *cur,
-                                     struct allowed *redirect, int *connect_error_out) {
+                                     struct allowed *redirect, int *connect_error_out,
+                                     uint8_t *route_out) {
     *connect_error_out = 0;
     int version;
     if (redirect == NULL) {
@@ -1705,6 +1826,7 @@ static int open_tcp_socket_with_error(const struct arguments *args,
     struct sockaddr_in addr4 = {0};
     struct sockaddr_in6 addr6 = {0};
     const char *route = (redirect == NULL ? "direct" : "redirect");
+    uint8_t selected_route = redirect == NULL ? TCP_ROUTE_DIRECT : TCP_ROUTE_REDIRECT;
     if (redirect == NULL) {
 
         bool socks_eligible = tcp_socks_eligible(cur, dest);
@@ -1721,6 +1843,7 @@ static int open_tcp_socket_with_error(const struct arguments *args,
 
         if (redirect_to_tor) {
             route = "tor";
+            selected_route = TCP_ROUTE_TOR;
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, tor_socks5_addr, tor_socks5_port);
 
@@ -1739,6 +1862,7 @@ static int open_tcp_socket_with_error(const struct arguments *args,
             }
         } else if (redirect_to_proxy) {
             route = "proxy";
+            selected_route = TCP_ROUTE_PROXY;
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, proxy_socks5_addr, proxy_socks5_port);
 
@@ -1781,6 +1905,9 @@ static int open_tcp_socket_with_error(const struct arguments *args,
         }
     }
 
+    if (route_out != NULL)
+        *route_out = selected_route;
+
     // Initiate connect
     int err = connect(sock,
                       (version == 4 ? (const struct sockaddr *) &addr4
@@ -1822,7 +1949,7 @@ static int open_tcp_socket_with_error(const struct arguments *args,
 int open_tcp_socket(const struct arguments *args,
                     const struct tcp_session *cur, struct allowed *redirect) {
     int connect_error;
-    return open_tcp_socket_with_error(args, cur, redirect, &connect_error);
+    return open_tcp_socket_with_error(args, cur, redirect, &connect_error, NULL);
 }
 
 int write_syn_ack(const struct arguments *args, struct tcp_session *cur) {
