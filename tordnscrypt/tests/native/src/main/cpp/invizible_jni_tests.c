@@ -47,12 +47,14 @@ void __real_dns_resolved(const struct arguments *, const char *, const char *, c
 void __real_account_usage(const struct arguments *, jint, jint, const char *, jint, jint,
         jlong, jlong);
 
-enum fault { NO_FAULT, CLASS_REF, OBJECT_REF, STRING_REF, UTF_CHARS, FIELD_ID };
+enum fault { NO_FAULT, CLASS_REF, OBJECT_REF, STRING_REF, UTF_CHARS, FIELD_ID, INT_CALL };
 static enum fault fault;
 static int nth, seen, hit, pending, ref_count, ref_index, callbacks, writes;
 static int live[64];
 static char address[128];
 static jlong last_long;
+static jint returned_uid;
+jint __real_get_uid_q(const struct arguments *, jint, jint, const char *, jint, const char *, jint);
 
 static jobject new_ref(void) {
     assert(++ref_index < 64);
@@ -129,6 +131,13 @@ static void JNICALL call_void(JNIEnv *env, jobject object, jmethodID method, ...
     assert(!pending && object != NULL && method != NULL);
     callbacks++;
 }
+static jint JNICALL call_int(JNIEnv *env, jobject object, jmethodID method, ...) {
+    assert(!pending && object != NULL && method != NULL);
+    callbacks++;
+    fails(INT_CALL);
+    // A throwing JNI call's result is untrusted, even if it resembles a valid UID.
+    return returned_uid;
+}
 static jthrowable JNICALL exception(JNIEnv *env) {
     return pending ? (jthrowable) new_ref() : NULL;
 }
@@ -154,6 +163,7 @@ static const struct JNINativeInterface mock_jni = {
     .NewStringUTF = new_string, .GetObjectField = object_field, .GetIntField = int_field,
     .GetStringUTFChars = utf_chars, .ReleaseStringUTFChars = release_utf,
     .CallObjectMethod = call_object, .CallVoidMethod = call_void,
+    .CallIntMethod = call_int,
     .ExceptionOccurred = exception, .ExceptionCheck = exception_check,
     .ExceptionClear = exception_clear, .DeleteLocalRef = release_ref,
     .SetLongField = set_long, .SetIntField = set_int,
@@ -192,6 +202,27 @@ static void exercise(int kind, enum fault operation, int occurrence) {
     }
     assert(!pending && ref_count == 0 && string_refs == 0);
     assert(operation == NO_FAULT || hit);
+}
+
+void test_jni_uid_exceptions(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    JNIEnv env = &mock_jni;
+    struct arguments args = {.env = &env, .instance = (jobject) 1};
+    const jint results[] = {0, 12345, -1};
+    for (size_t i = 0; i < sizeof(results) / sizeof(*results); i++) {
+        returned_uid = results[i];
+        for (int throwing = 1; throwing >= 0; throwing--) {
+            fault = throwing ? INT_CALL : NO_FAULT;
+            nth = 1;
+            seen = hit = pending = ref_count = ref_index = callbacks = 0;
+            memset(live, 0, sizeof(live));
+            assert(__real_get_uid_q(&args, 4, IPPROTO_TCP, "10.0.0.2", 1234,
+                                   "203.0.113.2", 443) == (throwing ? -1 : returned_uid));
+            assert(callbacks == 1 && hit == throwing);
+            assert(!pending && ref_count == 0 && string_refs == 0 && allocations == 0);
+        }
+    }
+#endif
 }
 
 void test_jni_wall_clock(void) {

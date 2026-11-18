@@ -160,6 +160,7 @@ void test_tcp_gap_recovery(const struct arguments *args, int kind);
 void test_tcp_partial_retransmission(const struct arguments *args);
 void test_jni_allocation_failures(int kind);
 void test_jni_wall_clock(void);
+void test_jni_uid_exceptions(void);
 void test_udp_allocation_failure(const struct arguments *args);
 void test_icmp_allocation_failure(const struct arguments *args);
 void test_dns_allocation_failure(const struct arguments *args);

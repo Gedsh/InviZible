@@ -871,7 +871,8 @@ jint get_uid_q(const struct arguments *args,
         juid = (*args->env)->CallIntMethod(
                 args->env, args->instance, midGetUidQ,
                 version, protocol, jsource, sport, jdest, dport);
-    jniCheckException(args->env);
+    if (jniCheckException(args->env))
+        juid = -1;
 
     (*args->env)->DeleteLocalRef(args->env, jdest);
     (*args->env)->DeleteLocalRef(args->env, jsource);

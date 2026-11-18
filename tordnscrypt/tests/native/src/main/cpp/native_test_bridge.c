@@ -185,6 +185,8 @@ static const char *run_case(const char *id) {
         test_lazy_udp_logging(&args);
     else if (strcmp(id, "jniLoadFailures") == 0)
         test_jni_load_failures();
+    else if (strcmp(id, "jniUidExceptions") == 0)
+        test_jni_uid_exceptions();
     else if (strcmp(id, "ipChecksumHeader") == 0)
         test_ip_checksums(&args, 0);
     else if (strcmp(id, "ipChecksumUdp4") == 0)
