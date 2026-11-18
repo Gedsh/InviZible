@@ -1167,6 +1167,24 @@ static bool tcp_uid_route_matches(const struct arguments *args, const struct ng_
     return false;
 }
 
+static bool apply_tcp_uid_policy(const struct arguments *args, struct ng_session *s,
+                                  const char *dest, bool allowed, struct allowed *redirect,
+                                  int epoll_fd) {
+    if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
+        redirect = NULL;
+    if (allowed && tcp_uid_route_matches(args, s, dest, redirect))
+        return true;
+
+    log_android(ANDROID_LOG_WARN, "TCP recovered uid %d requires reconnect: %s",
+                s->tcp.uid, allowed ? "route changed" : "policy denied");
+    write_rst(args, &s->tcp);
+    // Stop queued payload and later events in this batch from using the rejected route.
+    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, s->socket, NULL);
+    clear_tcp_data(&s->tcp);
+    close_tcp_socket(s);
+    return false;
+}
+
 // Traffic drives three attempts after 1, 2 and 4 seconds; idle streams add no wake-ups.
 // Require an in-order packet and an ACK within this live stream's outstanding range.
 static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
@@ -1208,20 +1226,7 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
     jobject packet = create_packet(args, tcp->version, IPPROTO_TCP, header->psh ? "AP" : "A",
                                    source, ntohs(tcp->source), dest, ntohs(tcp->dest), "", uid, 0);
     struct allowed *redirect = is_address_allowed(args, packet);
-    bool allowed = redirect != NULL;
-    if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
-        redirect = NULL;
-    if (allowed && tcp_uid_route_matches(args, s, dest, redirect))
-        return true;
-
-    log_android(ANDROID_LOG_WARN, "TCP recovered uid %d requires reconnect: %s",
-                uid, allowed ? "route changed" : "policy denied");
-    write_rst(args, tcp);
-    // Stop queued payload and later events in this batch from using the rejected route.
-    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, s->socket, NULL);
-    clear_tcp_data(tcp);
-    close_tcp_socket(s);
-    return false;
+    return apply_tcp_uid_policy(args, s, dest, redirect != NULL, redirect, epoll_fd);
 }
 
 jboolean handle_tcp(const struct arguments *args,
@@ -1261,8 +1266,15 @@ jboolean handle_tcp(const struct arguments *args,
         // Only a resolved retransmission of this live connection may fill an unknown owner.
         if (cur->tcp.uid < 0 && uid >= 0 && cur->socket >= 0 &&
             cur->tcp.state != TCP_CLOSING && cur->tcp.state != TCP_CLOSE &&
-            tcphdr->syn && ntohl(tcphdr->seq) == cur->tcp.remote_start)
+            tcphdr->syn && !tcphdr->ack && !tcphdr->rst && !tcphdr->fin && !tcphdr->urg &&
+            ntohl(tcphdr->seq) == cur->tcp.remote_start) {
             cur->tcp.uid = uid;
+            struct log_address dest = {.version = version, .address = &cur->tcp.daddr};
+            // handle_ip already looked up this SYN's owner and checked its policy.
+            if (!apply_tcp_uid_policy(args, cur, allowed ? format_log_address(&dest) : NULL,
+                                      allowed != 0, redirect, epoll_fd))
+                return 0;
+        }
     }
 
     struct tcp_packet_log diagnostic = {.pkt = pkt, .header = tcphdr,

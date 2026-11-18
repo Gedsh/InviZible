@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 public final class TcpTest extends NativeTestSupport {
     @Test public void establishedUnknownOwnersRetryWithBackoffAndFiniteBudget() { check("tcpUidRetryBudget"); }
     @Test public void recoveredOwnersRecheckPolicyRoutesAndTorIsolation() { check("tcpUidRetryRecovery"); }
+    @Test public void retransmittedSynOwnerRecoveryEnforcesPolicyRoutesAndIsolation() { check("tcpSynUidRecovery"); }
     @Test public void uidRecoveryRequiresCurrentSequenceAckAndLiveConnection() { check("tcpUidRetryValidation"); }
     @Test public void unknownOwnersRecoverOnPartialAcksAndHalfClosedStreams() { check("tcpUidRetryLiveTraffic"); }
     @Test public void unknownOwnersRecoverAfterAppFinWhileUpstreamDataContinues() { check("tcpUidRetryCloseWait"); }

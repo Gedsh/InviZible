@@ -304,6 +304,15 @@ unknown owner for an older UID. TCP/UDP/ICMP handler cases check that a resolved
 UID, including UID zero, fills only an unknown live owner and that failed lookups
 or conflicting UIDs do not replace a known owner. TCP updates require the same SYN
 sequence number; stale/disconnected records do not acquire a new owner.
+When a retransmitted SYN resolves an unknown TCP owner, the existing connection
+also applies the packet's policy decision and verifies its route and Tor isolation.
+Denied owners, changed routes/endpoints, isolation changes and unavailable peer
+information reset the old socket and release queued data. Matching allowed routes
+keep the socket without repeating the UID lookup or policy callback. IPv4/IPv6
+integration cases cover LISTEN, SYN_RECV and ESTABLISHED, JNI/proc lookups, UID zero,
+direct/Tor/proxy/redirect routes, stale events, handshake completion and data delivery.
+Malformed SYN combinations, changed initial sequences, and disconnected/closed
+sessions cannot fill an unknown owner.
 Successful lookups also fill unknown live ICMP and UDP DNS owners before policy
 handling, even when the current packet is denied. Retired DNS records retain the
 newly learned owner for their earlier traffic. ICMP cases cover both families and
@@ -416,7 +425,7 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 270 tests plus the optional comparison test.
+The full run contains 271 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

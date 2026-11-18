@@ -2009,7 +2009,7 @@ void socks_flow(int version, int authentication, int max_credentials) {
 void test_tcp_uid_update(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     for (int version = 4; version <= 6; version += 2) {
-        for (int kind = 0; kind < 10; kind++) {
+        for (int kind = 0; kind < 15; kind++) {
             _Alignas(8) uint8_t packet[128];
             size_t length = tcp_packet(packet, version, 100, 2000, 1, 0, NULL, 0);
             size_t off = version == 4 ? 20 : 40;
@@ -2027,10 +2027,15 @@ void test_tcp_uid_update(const struct arguments *args) {
             if (kind == 4) tcp->seq = htonl(101); // Same tuple, different connection.
             if (kind == 6) session.socket = -1;
             if (kind == 7) { tcp->syn = 0; tcp->ack = 1; }
+            if (kind == 10) tcp->urg = 1;
+            if (kind == 11) tcp->rst = 1;
+            if (kind == 12) tcp->fin = 1;
+            if (kind == 13) tcp->ack = 1;
+            if (kind == 14) tcp->doff = 4;
             int uid = kind == 1 || kind == 2 || kind == 8 ? -1 : kind == 3 ? 23456 : kind == 9 ? 0 : 12345;
             set_test_sessions(args->ctx, &session);
             handle_tcp(args, packet, length, packet + off, uid, 1, NULL, -1);
-            int expected = kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 8 ? 0 : -1;
+            int expected = kind >= 10 ? -1 : kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 8 ? 0 : -1;
             assert(session.tcp.uid == expected);
             set_test_sessions(args->ctx, NULL);
             clear_tcp_data(&session.tcp);
@@ -2066,8 +2071,9 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 assert(allocations == 0 && sockets == 0);
             }
         }
-        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : kind == 3 ? 19 : 6;
-        for (int scenario = 0; scenario < scenarios; scenario++) {
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : kind == 3 ? 19 : kind == 4 ? 6 : 28;
+        for (int case_index = 0; case_index < scenarios; case_index++) {
+            int scenario = kind == 5 ? case_index % 14 : case_index;
             int stream[2], tunnel[2];
             assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
             assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
@@ -2078,8 +2084,13 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             running.ctx = &ctx; running.tun = tunnel[1];
             struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
             s.tcp.version = version; s.tcp.uid = -1; s.tcp.state = TCP_ESTABLISHED;
+            if (kind == 5) {
+                const uint8_t states[] = {TCP_LISTEN, TCP_SYN_RECV, TCP_ESTABLISHED};
+                s.tcp.state = states[case_index % 3];
+            }
             s.tcp.socks5 = SOCKS5_CONNECTED;
             s.tcp.local_seq = s.tcp.acked = 2000; s.tcp.remote_seq = 101;
+            if (kind == 5 && s.tcp.state == TCP_LISTEN) s.tcp.remote_seq = 100;
             s.tcp.local_start = 1999; s.tcp.remote_start = 100;
             s.tcp.recv_window = s.tcp.send_window = 65535; s.tcp.mss = 1200;
             s.tcp.uid_retry_at = 11000;
@@ -2087,7 +2098,8 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             s.ev.events = EPOLLIN | EPOLLERR; s.ev.data.ptr = &s;
             assert(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s.socket, &s.ev) == 0);
             _Alignas(8) uint8_t packet[128];
-            size_t length = tcp_packet(packet, version, 101, 2000, 0, 0, NULL, 0);
+            size_t length = tcp_packet(packet, version, kind == 5 ? 100 : 101,
+                                       kind == 5 ? 0 : 2000, kind == 5, 0, NULL, 0);
             size_t off = version == 4 ? 20 : 40;
             struct tcphdr *header = (void *) (packet + off);
             s.tcp.source = header->source; s.tcp.dest = header->dest;
@@ -2107,12 +2119,12 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             int files = file_closes;
             char table[256];
             bool legacy = (kind == 1 && scenario == 13) || (kind == 3 && scenario >= 16) ||
-                          (kind == 4 && scenario >= 4);
+                          (kind == 4 && scenario >= 4) || (kind == 5 && case_index >= 14);
             if (legacy) {
                 ctx.sdk = 28; fake_proc = 1;
-                snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 12345 0 0\n",
+                snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 %d 0 0\n",
                          version == 4 ? "0200000A" : "B80D0120000000000000000001000000",
-                         version == 4 ? "00000000" : "00000000000000000000000000000000");
+                         version == 4 ? "00000000" : "00000000000000000000000000000000", uid_lookup_result);
                 proc_contents = table;
                 proc6_contents = version == 4 ? "header\n" : NULL;
             }
@@ -2132,7 +2144,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     assert(uid_lookups == lookups + (scenario == 0 ? attempts[i] : 0));
                 }
                 assert(s.tcp.uid == (scenario == 2 ? 0 : -1) && policy_checks == policies);
-            } else if (kind == 1) {
+            } else if (kind == 1 || kind == 5) {
                 // Direct, denied, new Tor/proxy route, retained Tor/proxy, isolation,
                 // route-kind change, retained/changed redirect, and peer-query failure.
                 reset = scenario == 2 || scenario == 3 || scenario == 4 ||
@@ -2162,14 +2174,22 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 }
                 if (reset) {
                     const uint8_t queued[] = {1, 2, 3};
-                    assert(queue_tcp(&running, header, "uid retry", &s.tcp, queued, sizeof(queued)) == 1);
+                    struct tcphdr queued_header = *header;
+                    queued_header.seq = htonl(s.tcp.remote_seq);
+                    queued_header.syn = 0;
+                    assert(queue_tcp(&running, &queued_header, "uid retry", &s.tcp, queued, sizeof(queued)) == 1);
                     assert(s.tcp.forward != NULL);
                 }
-                handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                uint8_t state = s.tcp.state;
+                if (kind == 5) {
+                    packet_checksums(packet, length, off, IPPROTO_TCP);
+                    handle_ip(&running, packet, length, epoll_fd, 1, SESSION_MAX);
+                } else
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups + !legacy && policy_checks == policies + 1);
                 if (legacy) assert(file_closes == files + (version == 4 ? 2 : 1));
                 assert(s.tcp.uid == uid_lookup_result && policy_uid == uid_lookup_result);
-                assert(s.tcp.uid_retries == 1);
+                assert(s.tcp.uid_retries == (kind == 5 ? 0 : 1));
                 if (reset) {
                     assert(s.socket == -1 && s.tcp.state == TCP_CLOSING);
                     assert(s.tcp.forward == NULL && ctx.tcp_memory.queued == 0 && ctx.tcp_memory.nodes == 0);
@@ -2181,10 +2201,22 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     uint8_t byte;
                     assert(recv(stream[1], &byte, 1, 0) == 0);
                 } else {
-                    assert(s.socket == stream[0] && s.tcp.state == TCP_ESTABLISHED);
-                    assert(s.tcp.local_seq == 2000 && s.tcp.remote_seq == 101);
+                    assert(s.socket == stream[0] && s.tcp.state == state);
+                    assert(s.tcp.local_seq == 2000 && s.tcp.remote_seq == (state == TCP_LISTEN ? 100 : 101));
+                    if (s.tcp.state == TCP_LISTEN) {
+                        s.ev.events = EPOLLOUT;
+                        check_tcp_socket(&running, &s.ev, epoll_fd);
+                        _Alignas(8) uint8_t output[2048];
+                        tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+                        assert(((struct tcphdr *) (output + off))->syn && s.tcp.state == TCP_SYN_RECV);
+                    }
+                    if (s.tcp.state == TCP_SYN_RECV) {
+                        length = tcp_packet(packet, version, 101, s.tcp.local_seq, 0, 0, NULL, 0);
+                        handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                        assert(s.tcp.state == TCP_ESTABLISHED);
+                    }
                     const uint8_t data[] = {11, 22, 33};
-                    length = tcp_packet(packet, version, 101, 2000, 0, 0, data, sizeof(data));
+                    length = tcp_packet(packet, version, 101, s.tcp.local_seq, 0, 0, data, sizeof(data));
                     handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
                     s.ev.events = EPOLLOUT;
                     check_tcp_socket(&running, &s.ev, epoll_fd);
