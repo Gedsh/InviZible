@@ -109,6 +109,10 @@ static const char *run_case(const char *id) {
         test_restore_uid_icmp(&args, 4);
     else if (strcmp(id, "restoreUidIcmp6") == 0)
         test_restore_uid_icmp(&args, 6);
+    else if (strcmp(id, "dnsPassthroughUid") == 0)
+        test_dns_passthrough_uid(&args, 0);
+    else if (strcmp(id, "dnsPassthroughUidRetry") == 0)
+        test_dns_passthrough_uid(&args, 1);
     else if (strcmp(id, "tcpUidUpdate") == 0)
         test_tcp_uid_update(&args);
     else if (strcmp(id, "tcpUidRetryBudget") == 0)

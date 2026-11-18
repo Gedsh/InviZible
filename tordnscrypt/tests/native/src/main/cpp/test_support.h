@@ -60,6 +60,7 @@ extern uint16_t uid_peer_port;
 extern int uid_peer_error, uid_peer_queries;
 void test_tcp_uid_retry(struct arguments *args, int kind);
 void test_dns_uid_restore(struct arguments *args, int protocol);
+void test_dns_passthrough_uid(struct arguments *args, int kind);
 void test_udp_uid_retry(struct arguments *args, int kind);
 void test_blocked_udp_uid_retry(struct arguments *args, int kind);
 extern int udp_lookup_supplied;

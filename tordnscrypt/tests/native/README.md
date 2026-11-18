@@ -100,8 +100,8 @@ UDP lookup cases count exact flow searches, UID lookups and policy callbacks.
 Non-DNS packets reuse one packet-local result for capacity, UID, policy and
 forwarding checks, including a completed lookup that found no session. IPv4/IPv6
 cases distinguish protocol, family, ports and addresses, and preserve active,
-finishing, closed and blocked flows. DNS keeps its forwarding-policy shortcut
-separate from the handler's actual flow lookup; an existing DNS flow must not
+finishing, closed and blocked flows. Unforwarded DNS shares its actual flow lookup
+with forwarding while retaining the policy shortcut. An existing DNS flow must not
 bypass UID/policy checks when DNS forwarding is enabled. The lookup is never
 stored beyond the packet or reused across event-loop iterations.
 TCP backpressure uses socket writability for queued, contiguous app data and TUN
@@ -352,7 +352,13 @@ match. Denied flows, changed routes, and Tor UID isolation reset the connection,
 release queued data, and ignore stale socket events. IPv4/IPv6 cases cover JNI and
 legacy proc lookup, UID zero, retry initialization and clock failure, finite
 budgets, packet validation, route changes, and data forwarding after recovery.
-The full run contains 258 tests plus the optional comparison test.
+Unforwarded UDP DNS resolves the owner when opening a flow and retries unknown
+live owners using the existing three-attempt backoff. Known owners, inactive
+records, and failed clocks do not cause repeated lookups. Recovery preserves the
+DNS policy shortcut, socket, and destination. IPv4/IPv6 cases exercise both JNI
+and legacy proc lookup, UID zero, failed lookups, retry spacing and budgets, and
+unchanged forwarding even when the policy mock would deny or redirect traffic.
+The full run contains 260 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

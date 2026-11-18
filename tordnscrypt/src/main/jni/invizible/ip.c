@@ -411,16 +411,17 @@ void handle_ip(const struct arguments *args,
     flags[flen] = 0;
 
     struct udp_session_lookup udp_lookup = {0};
+    const bool udp_dns_passthrough = protocol == IPPROTO_UDP && dport == 53 && !args->fwd53;
     bool udp_existing = false;
     bool udp_uid_retry = false;
     if (protocol == IPPROTO_UDP) {
-        if (dport == 53)
-            udp_existing = !args->fwd53; // DNS policy shortcut, not a flow lookup.
-        else {
+        if (dport != 53 || udp_dns_passthrough) {
             udp_lookup.session = find_udp_session(args, pkt, payload);
-            udp_existing = udp_lookup.session != NULL;
+            // Retain the DNS forwarding shortcut independently of the actual flow.
+            udp_existing = udp_dns_passthrough || udp_lookup.session != NULL;
             // Promoting a blocked record opens a socket, unlike updating a live flow.
-            if (udp_existing && (udp_lookup.session->udp.state != UDP_BLOCKED || sessions < maxsessions))
+            if (udp_lookup.session != NULL &&
+                (udp_lookup.session->udp.state != UDP_BLOCKED || sessions < maxsessions))
                 udp_uid_retry = retry_udp_uid(udp_lookup.session);
         }
     }
@@ -440,7 +441,8 @@ void handle_ip(const struct arguments *args,
     // Get uid
     jint uid = -1;
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
-        (protocol == IPPROTO_UDP && (!udp_existing || udp_uid_retry)) ||
+        (protocol == IPPROTO_UDP && (!udp_existing || udp_uid_retry ||
+                                    (udp_dns_passthrough && udp_lookup.session == NULL))) ||
         (protocol == IPPROTO_TCP && syn)) {
         if (args->ctx->sdk <= 28 || (compatibility_mode && can_filter)) { // Android 9 Pie
             uid = get_uid(version, protocol, saddr, sport, daddr, dport);
@@ -448,7 +450,7 @@ void handle_ip(const struct arguments *args,
             uid = get_uid_q(args, version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport);
         }
 
-        if (uid < 0 && !udp_uid_retry) {
+        if (uid < 0 && !udp_uid_retry && !udp_dns_passthrough) {
             uid = restore_uid(args,
                               version,
                               protocol,
@@ -474,7 +476,7 @@ void handle_ip(const struct arguments *args,
     // Check if allowed
     int allowed = 0;
     struct allowed *redirect = NULL;
-    if (protocol == IPPROTO_UDP && udp_existing && !udp_uid_resolved) {
+    if (udp_dns_passthrough || (protocol == IPPROTO_UDP && udp_existing && !udp_uid_resolved)) {
         allowed = 1; // could be a lingering/blocked session
     } else if (protocol == IPPROTO_TCP
                && (!syn || (!args->fwd53 && uid == 0 && dport == 53))) {
@@ -497,7 +499,7 @@ void handle_ip(const struct arguments *args,
             redirect = NULL;
     }
 
-    if (udp_uid_resolved && udp_lookup.session->udp.state == UDP_BLOCKED) {
+    if (udp_uid_resolved && !udp_dns_passthrough && udp_lookup.session->udp.state == UDP_BLOCKED) {
         if (allowed) {
             // This record has no epoll registration. Retain its resolved owner for
             // accounting/cleanup while forwarding creates a fresh active record.
@@ -506,7 +508,7 @@ void handle_ip(const struct arguments *args,
             unindex_session(args->ctx, udp_lookup.session);
             udp_lookup.session = NULL;
         }
-    } else if (udp_uid_resolved &&
+    } else if (udp_uid_resolved && !udp_dns_passthrough &&
         (!allowed || redirect != NULL || udp_lookup.session->udp.redirect_version != 0)) {
         // Preserve direct sockets (and their source ports) when policy is unchanged.
         // Retired records stay alive until cleanup for queued epoll event pointers.
@@ -524,7 +526,7 @@ void handle_ip(const struct arguments *args,
             handle_icmp(args, pkt, length, payload, uid, epoll_fd);
         else if (protocol == IPPROTO_UDP)
             handle_udp_with_lookup(args, pkt, length, payload, uid, redirect, epoll_fd,
-                                   dport == 53 ? NULL : &udp_lookup);
+                                   dport == 53 && !udp_dns_passthrough ? NULL : &udp_lookup);
         else if (protocol == IPPROTO_TCP)
             handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
     } else {

@@ -27,10 +27,10 @@ extern int own_uid;
 extern int tor_dns_port;
 extern bool bypass_lan;
 
-static void init_udp_uid_retry(struct udp_session *session) {
+static void init_udp_uid_retry(struct udp_session *session, bool forwarding_dns) {
     session->uid_retries = 0;
     session->uid_retry_at = -1;
-    if (session->uid < 0 && ntohs(session->dest) != 53) {
+    if (session->uid < 0 && (ntohs(session->dest) != 53 || !forwarding_dns)) {
         long long now = get_ms();
         if (now >= 0)
             session->uid_retry_at = now + UDP_UID_RETRY_INTERVAL;
@@ -246,7 +246,7 @@ void block_udp(const struct arguments *args,
     s->udp.dest = udphdr->dest;
     s->udp.state = UDP_BLOCKED;
     s->socket = -1;
-    init_udp_uid_retry(&s->udp);
+    init_udp_uid_retry(&s->udp, args->fwd53);
 
     write_connection_unreach(args, s, EHOSTDOWN);
 
@@ -378,7 +378,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.source = udphdr->source;
         s->udp.dest = udphdr->dest;
-        init_udp_uid_retry(&s->udp);
+        init_udp_uid_retry(&s->udp, args->fwd53);
         s->udp.state = UDP_ACTIVE;
         s->next = NULL;
 
