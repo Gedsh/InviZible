@@ -389,6 +389,14 @@ void __wrap_account_usage(const struct arguments *args, jint version, jint proto
     accounted_received += received;
 }
 
+int __real_access(const char *, int);
+int __wrap_access(const char *path, int mode) {
+    // A synthetic ICMPv6 table must not depend on the device kernel exposing it.
+    if (fake_proc && mode == F_OK && strcmp(path, "/proc/net/icmp6") == 0)
+        return 0;
+    return __real_access(path, mode);
+}
+
 FILE *__real_fopen(const char *, const char *);
 FILE *__wrap_fopen(const char *path, const char *mode) {
     static char proc[] = "header\ninvalid entry\n";

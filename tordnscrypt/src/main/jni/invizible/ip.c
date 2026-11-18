@@ -479,9 +479,19 @@ void handle_ip(const struct arguments *args,
         }
     }
 
-    bool udp_uid_resolved = udp_uid_retry && uid >= 0;
-    if (udp_uid_resolved)
+    // Retain a newly learned owner even if policy denies this packet or retires the flow.
+    if (uid >= 0 && udp_existing && udp_lookup.session->udp.uid < 0 &&
+        (udp_uid_retry || (dport == 53 && udp_lookup.session->udp.state == UDP_ACTIVE &&
+                          udp_lookup.session->socket >= 0)))
         udp_lookup.session->udp.uid = uid;
+    if (uid >= 0 && (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) &&
+        is_icmp_supported(pkt, payload)) {
+        const struct icmp *icmp = (const struct icmp *) payload;
+        struct ng_session *session = find_session(args->ctx, version, protocol,
+                                                  saddr, icmp->icmp_id, daddr, 0);
+        if (session != NULL && session->icmp.uid < 0 && session->socket >= 0)
+            session->icmp.uid = uid;
+    }
     if (udp_uid_retry && uid < 0) {
         udp_lookup.preserve_uid_retry = true;
         udp_lookup.uid_retry_at = udp_lookup.session->udp.uid_retry_at;

@@ -1204,6 +1204,8 @@ void test_dns_policy(struct arguments *args, int kind) {
                         assert(blocked != unknown && blocked->udp.uid == recovered);
                         assert(blocked->udp.state == UDP_BLOCKED && destination_calls == 1);
                         assert(unknown->udp.state == UDP_FINISHING);
+                        // The retired flow's earlier traffic must retain the owner just learned.
+                        assert(unknown->udp.uid == recovered && unknown->udp.sent > 0);
                         blocked_uid_unreachable(tunnel[0], version);
                         deny_address = 0;
                         handle_ip(&running, packet, off + 20, epoll_fd, 0, SESSION_MAX);
@@ -1400,6 +1402,59 @@ void test_unknown_uid_policy(struct arguments *args) {
     args->ctx->sdk = 29;
     capture_packets = deny_address = 0;
     close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
+void test_denied_icmp_uid(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    capture_packets = 1; // Exercise IP policy/metadata without opening ping sockets.
+    deny_address = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            args->ctx->sdk = legacy ? 28 : 29;
+            for (int scenario = 0; scenario < 7; scenario++) {
+                _Alignas(8) uint8_t packet[128];
+                size_t length = checksum_packet(packet, version, protocol, 0);
+                size_t off = version == 4 ? 20 : 40;
+                struct icmp *echo = (void *) (packet + off);
+                echo->icmp_id = htons(12345);
+                packet_checksums(packet, length, off, protocol);
+                struct ng_session session = {.protocol = (uint8_t) protocol, .socket = 42};
+                session.icmp.version = version;
+                session.icmp.uid = scenario == 2 ? 23456 : -1;
+                session.icmp.id = echo->icmp_id;
+                memcpy(&session.icmp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+                memcpy(&session.icmp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+                if (scenario == 3) session.socket = -1;
+                if (scenario == 4) session.icmp.stop = 1;
+                if (scenario == 5) session.icmp.id++;
+                if (scenario == 6) ((uint8_t *) &session.icmp.daddr)[0] ^= 1;
+                set_test_sessions(args->ctx, &session);
+                char table[256];
+                jint resolved = scenario == 0 ? 0 : 12345;
+                blocked_uid_lookup(version, legacy, resolved, table, sizeof(table));
+                int checks = policy_checks, calls = icmp_calls;
+                handle_ip(args, packet, length, -1, 0, SESSION_MAX);
+                jint expected = scenario == 2 ? 23456 : scenario >= 3 ? -1 : resolved;
+                assert(policy_checks == checks + 1 && policy_uid == resolved);
+                assert(icmp_calls == calls && args->ctx->ng_session == &session);
+                assert(session.icmp.uid == expected);
+                // A subsequent failed lookup may restore only a retained live exact owner.
+                ng_free(uid_cache, __FILE__, __LINE__);
+                uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
+                blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
+                handle_ip(args, packet, length, -1, 0, SESSION_MAX);
+                assert(policy_checks == checks + 2 && policy_uid == expected);
+                assert(session.icmp.uid == expected && icmp_calls == calls);
+                set_test_sessions(args->ctx, NULL);
+                release_uid_cache();
+                assert(allocations == 0 && sockets == 0);
+            }
+        }
+    }
+    args->ctx->sdk = 29;
+    capture_packets = deny_address = 0;
 #endif
 }
 
