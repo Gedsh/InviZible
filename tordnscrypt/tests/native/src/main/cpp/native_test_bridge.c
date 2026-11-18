@@ -153,6 +153,10 @@ static const char *run_case(const char *id) {
         test_udp_uid_retry(&args, 2);
     else if (strcmp(id, "udpDnsLookupPolicy") == 0)
         test_udp_packet_lookup(&args, 1);
+    else if (strcmp(id, "udpDnsUidRestore") == 0)
+        test_dns_uid_restore(&args, IPPROTO_UDP);
+    else if (strcmp(id, "tcpDnsUidRestore") == 0)
+        test_dns_uid_restore(&args, IPPROTO_TCP);
     else if (strcmp(id, "udpLookupStates") == 0)
         test_udp_lookup_states(&args);
     else if (strcmp(id, "tcpDnsBufferReuse") == 0)

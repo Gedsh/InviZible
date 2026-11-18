@@ -332,7 +332,12 @@ Non-DNS sessions retain their binary forwarding endpoint separately from the
 original flow key. Second and third packets keep using it without more UID or
 policy lookups, even after the temporary policy result changes. DNS retains its
 per-request routing behavior.
-The full run contains 250 tests plus the optional comparison test.
+DNS lookup failures can restore the UID from an exact live session before policy
+and forwarding. IPv4/IPv6 UDP and TCP regressions cover proc and JNI lookup paths,
+UID zero, fresh lookup precedence, denied policy, missing/mismatched/unknown or
+disconnected/closed records, and TCP SYN sequence reuse. Existing DNS forwarding
+shortcuts and session limits remain covered.
+The full run contains 252 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

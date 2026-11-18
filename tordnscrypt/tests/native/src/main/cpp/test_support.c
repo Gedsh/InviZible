@@ -51,6 +51,8 @@ int __wrap_ioctl(int fd, int request, ...) {
 }
 int udp_lookups, uid_lookups, policy_checks, deny_address;
 jint uid_lookup_result, policy_uid;
+bool policy_requires_known_uid;
+int tcp_last_allowed;
 struct allowed policy_redirect;
 int udp_lookup_supplied;
 struct ng_session *udp_lookup_session;
@@ -309,7 +311,7 @@ jboolean __real_handle_tcp(const struct arguments *, const uint8_t *, size_t,
                            const uint8_t *, int, int, struct allowed *, int);
 jboolean __wrap_handle_tcp(const struct arguments *args, const uint8_t *pkt, size_t len,
                            const uint8_t *payload, int uid, int allowed, struct allowed *r, int epoll_fd) {
-    if (capture_packets) { tcp_calls++; return 1; }
+    if (capture_packets) { tcp_calls++; tcp_last_allowed = allowed; return 1; }
     return __real_handle_tcp(args, pkt, len, payload, uid, allowed, r, epoll_fd);
 }
 
@@ -330,7 +332,7 @@ jobject __wrap_create_packet(const struct arguments *args, jint version, jint pr
 
 struct allowed *__wrap_is_address_allowed(const struct arguments *args, jobject packet) {
     policy_checks++;
-    return deny_address ? NULL : &policy_redirect;
+    return deny_address || (policy_requires_known_uid && policy_uid < 0) ? NULL : &policy_redirect;
 }
 
 void __real_report_exit(const struct arguments *args, const char *fmt, ...);
@@ -637,6 +639,8 @@ void reset_test_state(void) {
     own_uid = getuid();
     uid_lookup_result = own_uid;
     policy_uid = -1;
+    policy_requires_known_uid = false;
+    tcp_last_allowed = -1;
     memset(&policy_redirect, 0, sizeof(policy_redirect));
     srand(1);
 }

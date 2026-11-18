@@ -444,7 +444,7 @@ void handle_ip(const struct arguments *args,
             uid = get_uid_q(args, version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport);
         }
 
-        if (uid < 0 && dport != 53 && !udp_uid_retry) {
+        if (uid < 0 && !udp_uid_retry) {
             uid = restore_uid(args,
                               version,
                               protocol,

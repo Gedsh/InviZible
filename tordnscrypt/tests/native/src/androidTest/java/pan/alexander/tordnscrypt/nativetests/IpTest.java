@@ -50,6 +50,8 @@ public final class IpTest extends NativeTestSupport {
     @Test public void recoveredUdpOwnersReapplyPolicyRoutingAndSafelyRetireOldSockets() { check("udpUidRetryRecovery"); }
     @Test public void udpUidRetryClockFailuresCannotCauseLookupStorms() { check("udpUidRetryClock"); }
     @Test public void dnsKeepsForwardingPolicyAndSessionLimitRules() { check("udpDnsLookupPolicy"); }
+    @Test public void udpDnsRestoresOnlyLiveExactOwnersBeforePolicyAndRedirect() { check("udpDnsUidRestore"); }
+    @Test public void tcpDnsRestoresOnlySameConnectionBeforePolicy() { check("tcpDnsUidRestore"); }
     @Test public void tunnelReadsReuseInputThroughRetriesAndEof() { check("tunBufferReuse"); }
     @Test public void ipv4ChecksumIncludesHeaderOptionsAndPadding() { check("ipChecksumHeader"); }
     @Test public void ipv4UdpChecksumValidationAllowsOmission() { check("ipChecksumUdp4"); }

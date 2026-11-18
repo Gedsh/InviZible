@@ -964,6 +964,121 @@ void test_uid_indexed_growth_failure(void) {
 #endif
 }
 
+void test_dns_uid_restore(struct arguments *args, int protocol) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    enum { LIVE, ROOT, MISSING, WRONG_PORT, CLOSED, DISCONNECTED, UNKNOWN,
+           DIFFERENT_CONNECTION, FRESH, DENIED, WRONG_SOURCE, WRONG_DEST,
+           WRONG_FAMILY, WRONG_DPORT, SCENARIOS };
+    int tunnel[2];
+    assert(pipe(tunnel) == 0);
+    struct arguments running = *args;
+    running.tun = tunnel[1];
+    running.fwd53 = 1;
+    capture_packets = protocol == IPPROTO_TCP;
+    policy_requires_known_uid = true;
+    for (int version = 4; version <= 6; version += 2) {
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            args->ctx->sdk = legacy ? 28 : 29;
+            for (int scenario = 0; scenario < SCENARIOS; scenario++) {
+                _Alignas(8) uint8_t packet[128], output[2048];
+                const char *dest = version == 4 ? "9.9.9.9" : "2620:fe::fe";
+                size_t off = ip_header(packet, version, protocol, 20, dest);
+                if (protocol == IPPROTO_UDP) {
+                    struct udphdr *udp = (void *) (packet + off);
+                    udp->source = htons(4321); udp->dest = htons(53); udp->len = htons(20);
+                } else {
+                    struct tcphdr *tcp = (void *) (packet + off);
+                    tcp->source = htons(4321); tcp->dest = htons(53);
+                    tcp->doff = 5; tcp->syn = 1; tcp->seq = htonl(99);
+                }
+                packet_checksums(packet, off + 20, off, protocol);
+                struct ng_session target = uid_session(version, protocol,
+                        packet + (version == 4 ? 12 : 8), packet + (version == 4 ? 16 : 24));
+                jint stored_uid = scenario == ROOT ? 0 : scenario == UNKNOWN ? -1 : 12345;
+                if (protocol == IPPROTO_UDP) {
+                    target.udp.uid = stored_uid; target.udp.dest = htons(53);
+                    if (scenario == WRONG_PORT) target.udp.source++;
+                    if (scenario == CLOSED) target.udp.state = UDP_CLOSED;
+                    if (scenario == DIFFERENT_CONNECTION) target.udp.state = UDP_FINISHING;
+                    if (scenario == WRONG_SOURCE) target.udp.saddr.ip6.s6_addr[0] ^= 1;
+                    if (scenario == WRONG_DEST) target.udp.daddr.ip6.s6_addr[0] ^= 1;
+                    if (scenario == WRONG_FAMILY) target.udp.version = version == 4 ? 6 : 4;
+                    if (scenario == WRONG_DPORT) target.udp.dest = htons(5353);
+                } else {
+                    target.tcp.uid = stored_uid; target.tcp.dest = htons(53);
+                    if (scenario == WRONG_PORT) target.tcp.source++;
+                    if (scenario == CLOSED) target.tcp.state = TCP_CLOSE;
+                    if (scenario == DIFFERENT_CONNECTION) target.tcp.remote_start++;
+                    if (scenario == WRONG_SOURCE) target.tcp.saddr.ip6.s6_addr[0] ^= 1;
+                    if (scenario == WRONG_DEST) target.tcp.daddr.ip6.s6_addr[0] ^= 1;
+                    if (scenario == WRONG_FAMILY) target.tcp.version = version == 4 ? 6 : 4;
+                    if (scenario == WRONG_DPORT) target.tcp.dest = htons(5353);
+                }
+                if (scenario == DISCONNECTED) target.socket = -1;
+                set_test_sessions(args->ctx, scenario == MISSING ? NULL : &target);
+                uid_lookup_result = scenario == FRESH ? 23456 : -1;
+                fake_proc = legacy;
+                proc_contents = "header\n";
+                proc6_contents = NULL;
+                char table[256];
+                if (scenario == FRESH) {
+                    snprintf(table, sizeof(table), "header\n0: %s:10E1 %s:0000 07 0:0 0:0 0 23456 0 0\n",
+                             version == 4 ? "0200000A" : "B80D0120000000000000000001000000",
+                             version == 4 ? "00000000" : "00000000000000000000000000000000");
+                    proc_contents = table;
+                    if (version == 4) proc6_contents = "header\n";
+                }
+                uid_lookups = policy_checks = udp_calls = tcp_calls = 0;
+                deny_address = scenario == DENIED;
+                const char *redirect = version == 4 ? "127.0.0.1" : "::1";
+                strcpy(policy_redirect.raddr, redirect);
+                policy_redirect.rport = 5354;
+                expect_destination(version, redirect, 5354);
+                handle_ip(&running, packet, off + 20, -1, 0, SESSION_MAX);
+                jint expected = scenario == FRESH ? 23456 :
+                                scenario == ROOT ? 0 :
+                                scenario == LIVE || scenario == DENIED ? 12345 : -1;
+                bool allowed = expected >= 0 && scenario != DENIED;
+                assert(policy_checks == 1 && policy_uid == expected);
+                assert(uid_lookups == !legacy);
+                assert((protocol == IPPROTO_TCP ? target.tcp.uid : target.udp.uid) == stored_uid);
+                if (protocol == IPPROTO_UDP) {
+                    if (allowed) {
+                        assert(destination_calls == 1 && args->ctx->ng_session == &target);
+                    } else {
+                        struct ng_session *blocked = args->ctx->ng_session;
+                        assert(blocked != NULL && blocked != &target && blocked->udp.state == UDP_BLOCKED);
+                        assert(blocked->udp.uid == expected && destination_calls == 0);
+                        tun_packet(tunnel[0], output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+                        set_test_sessions(args->ctx, NULL);
+                        ng_free(blocked, __FILE__, __LINE__);
+                    }
+                } else {
+                    assert(tcp_calls == 1 && tcp_last_allowed == allowed);
+                    if (scenario == ROOT) {
+                        // Restored root-owned TCP DNS retains the no-forwarding shortcut.
+                        running.fwd53 = 0;
+                        uid_lookups = policy_checks = tcp_calls = 0;
+                        handle_ip(&running, packet, off + 20, -1, 0, SESSION_MAX);
+                        assert(uid_lookups == !legacy && policy_checks == 0);
+                        assert(tcp_calls == 1 && tcp_last_allowed == 1);
+                        running.fwd53 = 1;
+                    }
+                }
+                set_test_sessions(args->ctx, NULL);
+                release_uid_cache();
+                assert(allocations == 0 && sockets == 0 && !is_readable(tunnel[0]));
+            }
+        }
+    }
+    args->ctx->sdk = 29;
+    capture_packets = deny_address = 0;
+    policy_requires_known_uid = false;
+    memset(&policy_redirect, 0, sizeof(policy_redirect));
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];
