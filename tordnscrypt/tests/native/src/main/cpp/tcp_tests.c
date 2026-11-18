@@ -2066,7 +2066,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 assert(allocations == 0 && sockets == 0);
             }
         }
-        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : 19;
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 21 : kind == 3 ? 19 : 6;
         for (int scenario = 0; scenario < scenarios; scenario++) {
             int stream[2], tunnel[2];
             assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
@@ -2106,7 +2106,8 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             int lookups = uid_lookups, policies = policy_checks;
             int files = file_closes;
             char table[256];
-            bool legacy = (kind == 1 && scenario == 13) || (kind == 3 && scenario >= 16);
+            bool legacy = (kind == 1 && scenario == 13) || (kind == 3 && scenario >= 16) ||
+                          (kind == 4 && scenario >= 4);
             if (legacy) {
                 ctx.sdk = 28; fake_proc = 1;
                 snprintf(table, sizeof(table), "header\n0: %s:3039 %s:0000 01 0:0 0:0 0 12345 0 0\n",
@@ -2200,7 +2201,10 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 if (scenario == 4) header->fin = 1;
                 if (scenario == 5) header->rst = 1;
                 if (scenario == 6) header->urg = 1;
-                if (scenario == 7) s.tcp.state = TCP_CLOSE_WAIT;
+                if (scenario == 7) {
+                    s.tcp.state = TCP_CLOSE_WAIT;
+                    header->ack_seq = htonl(1999); // Stale ACK in an app-first half-close.
+                }
                 if (scenario == 8) { close(s.socket); s.socket = -1; }
                 if (scenario == 9) header->doff = 4;
                 if (scenario == 10) {
@@ -2228,6 +2232,66 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups && policy_checks == policies && s.tcp.uid_retries == 0);
                 assert(s.tcp.uid == -1);
+            } else if (kind == 4) {
+                // Reach CLOSE_WAIT through a real app FIN/write shutdown before the first retry.
+                test_monotonic_ms = 10000;
+                length = tcp_packet(packet, version, 101, 2000, 0, 1, NULL, 0);
+                assert(handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd) == 1);
+                assert(s.tcp.state == TCP_CLOSE_WAIT && s.tcp.fin_received && s.tcp.fin_acked);
+                assert(s.tcp.remote_seq == 102 && s.socket == stream[0] && !s.tcp.upstream_eof);
+                assert(uid_lookups == lookups && file_closes == files);
+                _Alignas(8) uint8_t output[2048];
+                const struct tcphdr *reply = half_close_reply(tunnel[0], output, version);
+                assert(reply->ack && !reply->rst && ntohl(reply->ack_seq) == 102);
+                uint8_t byte;
+                assert(recv(stream[1], &byte, 1, 0) == 0); // Native SHUT_WR reached the peer.
+                const uint8_t response[] = {11, 22, 33, 44};
+                assert(send(stream[1], response, sizeof(response), 0) == sizeof(response));
+                s.ev.events = EPOLLIN;
+                check_tcp_socket(&running, &s.ev, epoll_fd);
+                reply = half_close_reply(tunnel[0], output, version);
+                assert(!reply->fin && !reply->rst && s.tcp.local_seq == 2004);
+                assert(memcmp(output + off + 20, response, sizeof(response)) == 0);
+                // Pure partial ACKs remain eligible after the app has finished sending.
+                length = tcp_packet(packet, version, 102, 2002, 0, 0, NULL, 0);
+                bool failed = scenario == 3;
+                reset = scenario == 1 || scenario == 2 || scenario == 5;
+                deny_address = scenario == 1 || scenario == 5;
+                uid_route_tor = scenario == 2;
+                if (failed) uid_lookup_result = -1;
+                int tries = failed ? TCP_UID_RETRY_MAX : 1;
+                for (int attempt = 0; attempt < tries; attempt++) {
+                    test_monotonic_ms = s.tcp.uid_retry_at;
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    assert(uid_lookups == lookups + (legacy ? 0 : attempt + 1));
+                    assert(s.tcp.uid_retries == attempt + 1 && policy_checks == policies + !failed);
+                    assert(s.tcp.uid == (failed ? -1 : uid_lookup_result));
+                }
+                if (legacy) assert(file_closes == files + (version == 4 ? 2 : 1));
+                if (reset) {
+                    assert(s.socket == -1 && s.tcp.state == TCP_CLOSING && s.tcp.forward == NULL);
+                    reply = half_close_reply(tunnel[0], output, version);
+                    assert(reply->rst);
+                    s.ev.events = EPOLLIN | EPOLLOUT;
+                    check_tcp_socket(&running, &s.ev, epoll_fd);
+                    assert(!is_readable(tunnel[0]));
+                } else {
+                    assert(s.tcp.state == TCP_CLOSE_WAIT && s.socket == stream[0]);
+                    assert(send(stream[1], response, sizeof(response), 0) == sizeof(response));
+                    s.ev.events = EPOLLIN;
+                    check_tcp_socket(&running, &s.ev, epoll_fd);
+                    reply = half_close_reply(tunnel[0], output, version);
+                    assert(!reply->fin && !reply->rst && s.tcp.local_seq == 2008);
+                    assert(memcmp(output + off + 20, response, sizeof(response)) == 0);
+                    length = tcp_packet(packet, version, 102, 2008, 0, 0, NULL, 0);
+                    test_monotonic_ms = 1000000;
+                    int clocks = test_monotonic_calls;
+                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    assert(s.tcp.state == TCP_CLOSE_WAIT && s.tcp.remote_seq == 102);
+                    assert(test_monotonic_calls == clocks && s.tcp.uid_retries == tries);
+                    assert(uid_lookups == lookups + (legacy ? 0 : tries));
+                    assert(policy_checks == policies + !failed && !is_readable(tunnel[0]));
+                }
             } else {
                 // ACK range endpoints/interior, wraparound, half-close policy/route changes,
                 // bounded failed lookups, and legacy proc lookup on the expanded paths.

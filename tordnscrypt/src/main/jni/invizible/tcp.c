@@ -1174,7 +1174,8 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
     struct tcp_session *tcp = &s->tcp;
     uint32_t ack = ntohl(header->ack_seq);
     if (tcp->uid >= 0 ||
-        (tcp->state != TCP_ESTABLISHED && tcp->state != TCP_FIN_WAIT1 && tcp->state != TCP_FIN_WAIT2) ||
+        (tcp->state != TCP_ESTABLISHED && tcp->state != TCP_CLOSE_WAIT &&
+         tcp->state != TCP_FIN_WAIT1 && tcp->state != TCP_FIN_WAIT2) ||
         s->socket < 0 ||
         tcp->uid_retries >= TCP_UID_RETRY_MAX || tcp->uid_retry_at < 0 ||
         header->syn || header->rst || header->fin || header->urg || !header->ack ||

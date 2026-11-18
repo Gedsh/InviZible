@@ -363,8 +363,8 @@ Regressions cover both address families and lookup paths, UID zero, retry and
 clock limits, policy and routing decisions, capacity, and socket/allocation failure
 cleanup followed by successful retry.
 TCP flows with unknown owners retry lookup on valid in-order ACK/data packets in
-ESTABLISHED, FIN_WAIT1 and FIN_WAIT2, with the same three-attempt backoff and no idle
-wake-ups. ACKs may range from the last accepted acknowledgement through the latest
+ESTABLISHED, CLOSE_WAIT, FIN_WAIT1 and FIN_WAIT2, with the same three-attempt backoff
+and no idle wake-ups. ACKs may range from the last accepted acknowledgement through the latest
 transmitted sequence, using wrap-safe comparisons. Recovery rechecks
 policy and retains an allowed socket only when its route and redirect endpoint
 match. Denied flows, changed routes, and Tor UID isolation reset the connection,
@@ -374,6 +374,10 @@ budgets, packet validation, route changes, and data forwarding after recovery.
 Additional cases cover partial ACKs at the range endpoints and interior,
 wraparound, half-closed data forwarding, policy denial and route changes, bounded
 failed retries, stale/future ACKs, invalid states, and data beyond an app FIN.
+App-first half-close cases reach CLOSE_WAIT through an actual FIN and local socket
+write shutdown, receive upstream data, and recover ownership on a pure partial ACK.
+They check both IP families, JNI/proc lookups, UID zero, continued upstream delivery,
+policy denial, route changes, stale events, and the finite failed-lookup budget.
 UDP DNS checks ownership and policy on every request, independently of forwarding.
 DNS lookups continue to use the legacy proc cache; failed lookups can restore an
 exact live owner. Denying an active flow retires its socket registration and ignores
@@ -399,7 +403,7 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 267 tests plus the optional comparison test.
+The full run contains 268 tests plus the optional comparison test.
 
 A START or RELOAD that times out waiting for the previous worker registers one
 retry. It waits for that worker to exit and native cleanup to finish, then posts

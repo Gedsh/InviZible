@@ -12,6 +12,7 @@ public final class TcpTest extends NativeTestSupport {
     @Test public void recoveredOwnersRecheckPolicyRoutesAndTorIsolation() { check("tcpUidRetryRecovery"); }
     @Test public void uidRecoveryRequiresCurrentSequenceAckAndLiveConnection() { check("tcpUidRetryValidation"); }
     @Test public void unknownOwnersRecoverOnPartialAcksAndHalfClosedStreams() { check("tcpUidRetryLiveTraffic"); }
+    @Test public void unknownOwnersRecoverAfterAppFinWhileUpstreamDataContinues() { check("tcpUidRetryCloseWait"); }
     @Test public void resolvedUidFillsOnlyUnknownOwnerOfSameLiveConnection() { check("tcpUidUpdate"); }
     @Test public void clockFailuresPreserveProbeBackoffAndRetryAfterRecovery() { check("tcpProbeClockFailure"); }
     @Test public void queueAppendUsesOneAllocationAndLinearTotalComparisonsAcrossWrap() { check("tcpQueueAppend"); }
