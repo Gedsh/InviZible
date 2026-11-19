@@ -17,6 +17,16 @@ int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
 int log_errno, log_result;
 int address_formats;
+bool count_memory_comparisons;
+int memory_comparisons;
+#ifndef INVIZIBLE_BASELINE_TESTS
+int __real_memcmp(const void *left, const void *right, size_t length);
+int __wrap_memcmp(const void *left, const void *right, size_t length) {
+    if (count_memory_comparisons)
+        memory_comparisons++;
+    return __real_memcmp(left, right, length);
+}
+#endif
 int tcp_sendbuf_queries, tcp_outq_queries;
 int tcp_capacity_fd = -1, tcp_capacity_available;
 
@@ -90,6 +100,7 @@ int __wrap_getpeername(int socket, struct sockaddr *peer, socklen_t *length) {
     return 0;
 }
 int udp_lookup_supplied;
+test_packet_owner captured_owner;
 struct ng_session *udp_lookup_session;
 
 #ifndef INVIZIBLE_BASELINE_TESTS
@@ -101,11 +112,12 @@ struct ng_session *__wrap_find_udp_session(const struct arguments *args, const u
 }
 
 jboolean __real_handle_udp_with_lookup(const struct arguments *, const uint8_t *, size_t,
-        const uint8_t *, int, struct allowed *, int, const struct udp_session_lookup *);
+        const uint8_t *, test_packet_owner, struct allowed *, int, const struct udp_session_lookup *);
 jboolean __wrap_handle_udp_with_lookup(const struct arguments *args, const uint8_t *pkt,
-        size_t length, const uint8_t *payload, int uid, struct allowed *redirect, int epoll_fd,
+        size_t length, const uint8_t *payload, test_packet_owner uid, struct allowed *redirect, int epoll_fd,
         const struct udp_session_lookup *lookup) {
     udp_lookup_supplied = lookup != NULL;
+    captured_owner = uid;
     udp_lookup_session = lookup == NULL ? NULL : lookup->session;
     if (capture_packets) {
         assert(payload + sizeof(struct udphdr) <= pkt + length);
@@ -325,9 +337,9 @@ jboolean __wrap_is_domain_blocked(const struct arguments *args, const char *name
 }
 
 jboolean __real_handle_udp(const struct arguments *, const uint8_t *, size_t,
-                           const uint8_t *, int, struct allowed *, int);
+                           const uint8_t *, test_packet_owner, struct allowed *, int);
 jboolean __wrap_handle_udp(const struct arguments *args, const uint8_t *pkt, size_t len,
-                           const uint8_t *payload, int uid, struct allowed *r, int epoll_fd) {
+                           const uint8_t *payload, test_packet_owner uid, struct allowed *r, int epoll_fd) {
     if (capture_packets) {
         assert(payload + sizeof(struct udphdr) <= pkt + len);
         udp_calls++;
@@ -343,9 +355,10 @@ jint __wrap_get_uid_q(const struct arguments *args, jint version, jint protocol,
 }
 
 jboolean __real_handle_tcp(const struct arguments *, const uint8_t *, size_t,
-                           const uint8_t *, int, int, struct allowed *, int);
+                           const uint8_t *, test_packet_owner, int, struct allowed *, int);
 jboolean __wrap_handle_tcp(const struct arguments *args, const uint8_t *pkt, size_t len,
-                           const uint8_t *payload, int uid, int allowed, struct allowed *r, int epoll_fd) {
+                           const uint8_t *payload, test_packet_owner uid, int allowed, struct allowed *r, int epoll_fd) {
+    captured_owner = uid;
     if (capture_packets) { tcp_calls++; tcp_last_allowed = allowed; return 1; }
     return __real_handle_tcp(args, pkt, len, payload, uid, allowed, r, epoll_fd);
 }
@@ -642,6 +655,8 @@ struct segment *new_test_segment(uint16_t length) {
 }
 
 void reset_test_state(void) {
+    count_memory_comparisons = false;
+    memory_comparisons = 0;
     test_monotonic_enabled = false;
     test_monotonic_ms = 0;
     test_monotonic_failures = test_monotonic_fail_at = test_monotonic_calls = 0;

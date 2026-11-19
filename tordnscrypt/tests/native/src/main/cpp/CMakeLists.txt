@@ -31,8 +31,9 @@ function(add_native_tests target source)
             get_uid_q create_packet is_address_allowed report_exit fopen fclose access account_usage
             epoll_wait get_ms pipe pthread_mutex_init inet_ntop getsockopt ioctl)
     if("${source}" STREQUAL "${INVIZIBLE_SOURCE}")
+        target_compile_options(${target} PRIVATE -fno-builtin-memcmp)
         list(APPEND wraps find_udp_session handle_udp_with_lookup monitor_tcp_session compare_u32
-                clock_gettime getrlimit get_icmp_timeout gettimeofday time)
+                clock_gettime getrlimit get_icmp_timeout gettimeofday time memcmp)
         if(INVIZIBLE_PROFILE_JNI)
             target_compile_definitions(${target} PRIVATE PROFILE_JNI=5)
         endif()

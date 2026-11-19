@@ -2,6 +2,15 @@
 #define INVIZIBLE_TEST_SUPPORT_H
 
 #include "invizible.h"
+#ifdef INVIZIBLE_PACKET_OWNER
+typedef struct packet_owner test_packet_owner;
+static inline test_packet_owner test_owner(jint uid) {
+    return (test_packet_owner) {.uid = uid};
+}
+#else
+typedef jint test_packet_owner;
+static inline test_packet_owner test_owner(jint uid) { return uid; }
+#endif
 #include <assert.h>
 
 #ifdef INVIZIBLE_COMBINED_TCP_SEGMENTS
@@ -23,6 +32,10 @@ enum failure { NONE, PROTECT, GETFL, SETFL, CONNECT, PIPE, MUTEX, SHUTDOWN };
 extern enum failure failure;
 extern int allocations, sockets, last_socket, udp_calls, resolved_calls;
 extern int tcp_calls, icmp_calls;
+extern test_packet_owner captured_owner;
+void test_uid_destination(struct arguments *args, int kind);
+void test_uid_lazy_logging(void);
+void test_udp_inferred_owner(struct arguments *args);
 extern int string_refs, string_calls, fail_string_call, exceptions, file_closes;
 extern int capture_packets, capture_dhcp, fake_proc;
 extern const char *proc_contents;
@@ -40,6 +53,8 @@ void test_monotonic_clock(void);
 void test_tcp_probe_clock_failure(const struct arguments *args);
 void test_event_clock_failure(struct arguments *args, int kind);
 extern int address_formats;
+extern bool count_memory_comparisons;
+extern int memory_comparisons;
 extern int tcp_sendbuf_queries, tcp_outq_queries;
 extern int tcp_capacity_fd, tcp_capacity_available;
 void test_tcp_scaled_capacity(const struct arguments *args, int version);
@@ -69,6 +84,7 @@ void test_tcp_syn_capacity(struct arguments *args);
 void test_tcp_fin_uid_recovery(struct arguments *args);
 void test_udp_retry_routes(struct arguments *args);
 void test_udp_uid_retry(struct arguments *args, int kind);
+void test_udp_inferred_uid_failure(struct arguments *args);
 void test_blocked_udp_uid_retry(struct arguments *args, int kind);
 extern int udp_lookup_supplied;
 extern struct ng_session *udp_lookup_session;

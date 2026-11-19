@@ -126,6 +126,30 @@ struct tcp_memory {
     uint64_t dns_generation; // DNS response releases do not unblock app input.
 };
 
+#define INVIZIBLE_PACKET_OWNER 1
+#define UID_OBSERVATIONS 256
+#define UID_OBSERVATION_MS 2000
+
+struct packet_owner {
+    jint uid;
+    bool inferred;
+};
+
+struct uid_observation {
+    int64_t expires;
+    uint8_t source[16], dest[16];
+    jint uid;
+    uint16_t port; // Host byte order; source ports intentionally do not participate.
+    uint8_t version, protocol;
+};
+
+struct uid_observations {
+    struct uid_observation entry[UID_OBSERVATIONS];
+    int64_t time, incomplete_until;
+    size_t count;
+    size_t last; // Last authoritative write; has the latest expiry when count > 0.
+};
+
 struct context {
     pthread_mutex_t lock;
     int pipefds[2];
@@ -134,6 +158,7 @@ struct context {
     struct ng_session *ng_session;
     struct ng_session *session_bucket[SESSION_BUCKETS];
     struct tcp_memory tcp_memory;
+    struct uid_observations uid_observations; // Owned by this context's event thread.
 };
 
 enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };
@@ -234,6 +259,7 @@ struct udp_session {
 
     uint8_t state;
     uint8_t uid_retries;
+    bool uid_inferred;
 };
 
 #define TCP_UID_RETRY_MAX 3
@@ -301,6 +327,7 @@ struct tcp_session {
     uint8_t socks5;
     uint8_t route;
     uint8_t uid_retries;
+    bool uid_inferred;
     bool upstream_eof;
     bool fin_received;
     bool fin_acked;
@@ -553,22 +580,22 @@ struct udp_session_lookup {
 
 jboolean handle_udp_with_lookup(const struct arguments *args,
                                 const uint8_t *pkt, size_t length, const uint8_t *payload,
-                                int uid, struct allowed *redirect, int epoll_fd,
+                                struct packet_owner owner, struct allowed *redirect, int epoll_fd,
                                 const struct udp_session_lookup *lookup);
 
 void block_udp(const struct arguments *args,
                const uint8_t *pkt, size_t length,
                const uint8_t *payload,
-               int uid);
+               struct packet_owner owner);
 
 void block_udp_with_lookup(const struct arguments *args,
                            const uint8_t *pkt, size_t length, const uint8_t *payload,
-                           int uid, const struct udp_session_lookup *lookup);
+                           struct packet_owner owner, const struct udp_session_lookup *lookup);
 
 jboolean handle_udp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
-                    int uid, struct allowed *redirect,
+                    struct packet_owner owner, struct allowed *redirect,
                     int epoll_fd);
 
 int check_dhcp(const struct arguments *args, struct udp_session *u,
@@ -579,7 +606,7 @@ void clear_tcp_data(struct tcp_session *cur);
 jboolean handle_tcp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
-                    int uid, int allowed, struct allowed *redirect,
+                    struct packet_owner owner, int allowed, struct allowed *redirect,
                     int epoll_fd);
 
 int queue_tcp(const struct arguments *args,
@@ -633,6 +660,11 @@ jint get_uid_sub(int version, int protocol,
                  int64_t now);
 
 // Ports are host order; payload points to the protocol header validated by handle_ip.
+void record_uid_observation(struct context *ctx, int version, int protocol,
+                             const void *source, const void *dest, uint16_t port, jint uid);
+jint infer_uid_destination(struct context *ctx, int version, int protocol,
+                            const void *source, const void *dest, uint16_t port);
+
 jint restore_uid(const struct arguments *args,
                  int version,
                  int protocol,

@@ -30,7 +30,7 @@ extern bool bypass_lan;
 static void init_udp_uid_retry(struct udp_session *session, const struct udp_session_lookup *lookup) {
     session->uid_retries = 0;
     session->uid_retry_at = -1;
-    if (session->uid < 0 && ntohs(session->dest) != 53) {
+    if ((session->uid < 0 || session->uid_inferred) && ntohs(session->dest) != 53) {
         if (lookup != NULL && lookup->preserve_uid_retry) {
             session->uid_retry_at = lookup->uid_retry_at;
             session->uid_retries = lookup->uid_retries;
@@ -182,13 +182,14 @@ int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint
 void block_udp(const struct arguments *args,
                const uint8_t *pkt, size_t length,
                const uint8_t *payload,
-               int uid) {
-    block_udp_with_lookup(args, pkt, length, payload, uid, NULL);
+               struct packet_owner owner) {
+    block_udp_with_lookup(args, pkt, length, payload, owner, NULL);
 }
 
 void block_udp_with_lookup(const struct arguments *args,
                            const uint8_t *pkt, size_t length, const uint8_t *payload,
-                           int uid, const struct udp_session_lookup *lookup) {
+                           struct packet_owner owner, const struct udp_session_lookup *lookup) {
+    int uid = owner.uid;
     // Get headers
     const uint8_t version = (*pkt) >> 4;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
@@ -227,8 +228,11 @@ void block_udp_with_lookup(const struct arguments *args,
     struct ng_session *s;
     // A failed lookup must not erase the known owner of this exact blocked flow.
     // Reusing an evicted record for a different tuple must not inherit its owner.
-    if (match != NULL && uid < 0 && (*match)->udp.uid >= 0)
+    if (match != NULL && (*match)->udp.uid >= 0 &&
+        (uid < 0 || (owner.inferred && !(*match)->udp.uid_inferred))) {
         uid = (*match)->udp.uid;
+        owner.inferred = (*match)->udp.uid_inferred;
+    }
     struct ng_session **reuse = (match != NULL ? match : blocked >= UDP_BLOCKED_MAX ? oldest : NULL);
     if (reuse != NULL) {
         s = *reuse;
@@ -244,6 +248,7 @@ void block_udp_with_lookup(const struct arguments *args,
 
     s->udp.time = time(NULL);
     s->udp.uid = uid;
+    s->udp.uid_inferred = owner.inferred;
     s->udp.version = version;
 
     if (version == 4) {
@@ -268,16 +273,17 @@ void block_udp_with_lookup(const struct arguments *args,
 jboolean handle_udp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
-                    int uid, struct allowed *redirect,
+                    struct packet_owner owner, struct allowed *redirect,
                     const int epoll_fd) {
-    return handle_udp_with_lookup(args, pkt, length, payload, uid, redirect, epoll_fd, NULL);
+    return handle_udp_with_lookup(args, pkt, length, payload, owner, redirect, epoll_fd, NULL);
 }
 
 jboolean handle_udp_with_lookup(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
-                    int uid, struct allowed *redirect,
+                    struct packet_owner owner, struct allowed *redirect,
                     const int epoll_fd, const struct udp_session_lookup *lookup) {
+    const int uid = owner.uid;
     const size_t payload_offset = (size_t) (payload - pkt);
     if (payload_offset > length || length - payload_offset < sizeof(struct udphdr))
         return 0;
@@ -348,6 +354,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.time = time(NULL);
         s->udp.uid = uid;
+        s->udp.uid_inferred = owner.inferred;
         s->udp.version = version;
 
         int rversion;
@@ -407,8 +414,10 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         cur = s;
     }
 
-    if (cur->udp.uid < 0 && uid >= 0)
+    if ((cur->udp.uid < 0 || cur->udp.uid_inferred) && uid >= 0) {
         cur->udp.uid = uid;
+        cur->udp.uid_inferred = owner.inferred;
+    }
 
     // Check for DHCP (tethering)
     if (ntohs(udphdr->source) == 68 || ntohs(udphdr->dest) == 67) {

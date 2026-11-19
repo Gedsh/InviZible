@@ -1191,7 +1191,7 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
                              const struct tcphdr *header, uint16_t datalen, int epoll_fd) {
     struct tcp_session *tcp = &s->tcp;
     uint32_t ack = ntohl(header->ack_seq);
-    if (tcp->uid >= 0 ||
+    if ((tcp->uid >= 0 && !tcp->uid_inferred) ||
         (tcp->state != TCP_ESTABLISHED && tcp->state != TCP_CLOSE_WAIT &&
          tcp->state != TCP_FIN_WAIT1 && tcp->state != TCP_FIN_WAIT2) ||
         s->socket < 0 ||
@@ -1224,7 +1224,9 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
                : get_uid_q(args, tcp->version, IPPROTO_TCP, source, ntohs(tcp->source), dest, ntohs(tcp->dest));
     if (uid < 0)
         return true;
+    record_uid_observation(args->ctx, tcp->version, IPPROTO_TCP, &tcp->saddr, &tcp->daddr, ntohs(tcp->dest), uid);
     tcp->uid = uid;
+    tcp->uid_inferred = false;
     const char *flags = header->fin ? (header->psh ? "APF" : "AF") : (header->psh ? "AP" : "A");
     jobject packet = create_packet(args, tcp->version, IPPROTO_TCP, flags,
                                    source, ntohs(tcp->source), dest, ntohs(tcp->dest), "", uid, 0);
@@ -1235,8 +1237,9 @@ static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
 jboolean handle_tcp(const struct arguments *args,
                     const uint8_t *pkt, size_t length,
                     const uint8_t *payload,
-                    int uid, int allowed, struct allowed *redirect,
+                    struct packet_owner owner, int allowed, struct allowed *redirect,
                     const int epoll_fd) {
+    const int uid = owner.uid;
     const size_t payload_offset = (size_t) (payload - pkt);
     if (payload_offset > length || length - payload_offset < sizeof(struct tcphdr))
         return 0;
@@ -1267,11 +1270,12 @@ jboolean handle_tcp(const struct arguments *args,
     if (cur != NULL) {
         cur->tcp.monitor_dirty = true;
         // Only a resolved retransmission of this live connection may fill an unknown owner.
-        if (cur->tcp.uid < 0 && uid >= 0 && cur->socket >= 0 &&
+        if ((cur->tcp.uid < 0 || cur->tcp.uid_inferred) && uid >= 0 && cur->socket >= 0 &&
             cur->tcp.state != TCP_CLOSING && cur->tcp.state != TCP_CLOSE &&
             tcphdr->syn && !tcphdr->ack && !tcphdr->rst && !tcphdr->fin && !tcphdr->urg &&
             ntohl(tcphdr->seq) == cur->tcp.remote_start) {
             cur->tcp.uid = uid;
+            cur->tcp.uid_inferred = owner.inferred;
             struct log_address dest = {.version = version, .address = &cur->tcp.daddr};
             // handle_ip already looked up this SYN's owner and checked its policy.
             if (!apply_tcp_uid_policy(args, cur, allowed ? format_log_address(&dest) : NULL,
@@ -1345,6 +1349,7 @@ jboolean handle_tcp(const struct arguments *args,
 
             s->tcp.time = time(NULL);
             s->tcp.uid = uid;
+            s->tcp.uid_inferred = owner.inferred;
             s->tcp.version = version;
             s->tcp.mss = mss;
             s->tcp.recv_scale = ws;
@@ -1377,7 +1382,7 @@ jboolean handle_tcp(const struct arguments *args,
             s->tcp.route = TCP_ROUTE_DIRECT;
             s->tcp.uid_retries = 0;
             s->tcp.uid_retry_at = -1;
-            if (uid < 0) {
+            if (uid < 0 || owner.inferred) {
                 long long now = get_ms();
                 if (now >= 0)
                     s->tcp.uid_retry_at = now + TCP_UID_RETRY_INTERVAL;

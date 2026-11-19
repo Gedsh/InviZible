@@ -982,6 +982,9 @@ void test_dns_uid_restore(struct arguments *args, int protocol) {
             for (int scenario = 0; scenario < SCENARIOS; scenario++) {
                 _Alignas(8) uint8_t packet[128], output[2048];
                 const char *dest = version == 4 ? "9.9.9.9" : "2620:fe::fe";
+                // Each exact-restoration scenario starts without evidence from
+                // another scenario's authoritative lookup to the same destination.
+                memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
                 size_t off = ip_header(packet, version, protocol, 20, dest);
                 if (protocol == IPPROTO_UDP) {
                     struct udphdr *udp = (void *) (packet + off);
@@ -1102,6 +1105,287 @@ static void blocked_uid_unreachable(int tunnel, int version) {
 }
 #endif
 
+void test_uid_lazy_logging(void) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    const int expected_formats = ANDROID_LOG_INFO >= LOG_LEVEL ? 2 : 0;
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+            for (int root = 0; root <= 1; root++) {
+                uint8_t source[16] = {0}, dest[16] = {0};
+                assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                 version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+                assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                 version == 4 ? "203.0.113.2" : "2001:db8::2", dest) == 1);
+                jint owner = root ? 0 : 12345;
+                char table[256]; blocked_uid_lookup(version, true, owner, table, sizeof(table));
+                address_formats = 0;
+                assert(get_uid(version, protocol, source, 12345, dest, 443) == owner);
+                assert(address_formats == expected_formats && uid_cache_size == 1);
+                char expected[256];
+                snprintf(expected, sizeof(expected), "uid v%d p%d %s/12345 > %s/443 => %d",
+                         version, protocol, version == 4 ? "10.0.0.2" : "2001:db8::1",
+                         version == 4 ? "203.0.113.2" : "2001:db8::2", owner);
+                if (ANDROID_LOG_INFO >= LOG_LEVEL) assert(strcmp(last_log, expected) == 0);
+                int closes = file_closes;
+                address_formats = 0;
+                assert(get_uid(version, protocol, source, 12345, dest, 443) == owner);
+                assert(address_formats == expected_formats && uid_cache_size == 1);
+                if (ANDROID_LOG_INFO >= LOG_LEVEL) assert(strcmp(last_log, expected) == 0);
+                assert(file_closes == closes + (version == 4 ? 1 : 0));
+                release_uid_cache();
+                if (version == 4) {
+                    blocked_uid_lookup(version, true, owner, table, sizeof(table));
+                    proc6_open_error = EACCES;
+                    address_formats = 0;
+                    assert(get_uid(version, protocol, source, 12345, dest, 443) == owner);
+                    assert(address_formats == expected_formats);
+                    if (ANDROID_LOG_INFO >= LOG_LEVEL) assert(strcmp(last_log, expected) == 0);
+                    proc6_open_error = 0;
+                    release_uid_cache();
+                }
+                blocked_uid_lookup(version, true, -1, table, sizeof(table));
+                address_formats = 0;
+                assert(get_uid(version, protocol, source, 12345, dest, 443) == -1);
+                assert(address_formats == expected_formats && uid_cache_size == 0);
+                proc_contents = "header\nmalformed row\n";
+                address_formats = 0;
+                assert(get_uid(version, protocol, source, 12345, dest, 443) < 0);
+                assert(address_formats == expected_formats);
+                release_uid_cache();
+                assert(allocations == 0 && sockets == 0 && string_refs == 0);
+            }
+    fake_proc = 0;
+#endif
+}
+
+void test_uid_destination(struct arguments *args, int kind) {
+#ifdef INVIZIBLE_PACKET_OWNER
+    test_monotonic_enabled = true;
+    uid_clock_enabled = true;
+    test_monotonic_ms = 10000;
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP) {
+            clear(args->ctx); uid_test_clock = 10000;
+            _Alignas(8) uint8_t packet[128];
+            size_t length = checksum_packet(packet, version, protocol, 0), off = version == 4 ? 20 : 40;
+            void *source = packet + (version == 4 ? 12 : 8), *dest = packet + (version == 4 ? 16 : 24);
+            uint16_t port = protocol == IPPROTO_TCP ? 443 : 5000;
+            if (kind == 4) {
+                int tunnel[2]; assert(pipe(tunnel) == 0);
+                struct arguments running = *args; running.tun = tunnel[1];
+                capture_packets = 1; policy_requires_known_uid = true;
+                for (int legacy = 0; legacy <= 1; legacy++)
+                    for (int dns = 0; dns <= (protocol == IPPROTO_UDP); dns++)
+                        for (int forwarding = 0; forwarding <= 1; forwarding++)
+                            for (int denied = 0; denied <= 1; denied++) {
+                                clear(args->ctx); release_uid_cache(); uid_test_clock = 10000;
+                                running.fwd53 = forwarding; args->ctx->sdk = legacy ? 28 : 29;
+                                uint16_t sport = htons(12345), dport = htons(dns ? 53 : port);
+                                memcpy(packet + off, &sport, 2); memcpy(packet + off + 2, &dport, 2);
+                                packet_checksums(packet, length, off, protocol);
+                                char table[256]; blocked_uid_lookup(version, legacy, 12345, table, sizeof(table));
+                                deny_address = 1; // A denied lookup still provides authoritative evidence.
+                                handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                                assert(policy_uid == 12345);
+                                sport = htons(12346); memcpy(packet + off, &sport, 2);
+                                packet_checksums(packet, length, off, protocol);
+                                blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
+                                uid_test_clock = 10500; deny_address = denied;
+                                int checks = policy_checks, calls = protocol_calls(protocol);
+                                handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                                assert(policy_checks == checks + 1 && policy_uid == 12345);
+                                assert(protocol_calls(protocol) == calls + (protocol == IPPROTO_TCP || !denied));
+                                if (protocol == IPPROTO_TCP || !denied)
+                                    assert(captured_owner.uid == 12345 && captured_owner.inferred);
+                                if (protocol == IPPROTO_TCP) assert(tcp_last_allowed == !denied);
+                                uid_test_clock = 12000;
+                                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, dns ? 53 : port) == -1);
+                                sport = htons(12347); memcpy(packet + off, &sport, 2);
+                                packet_checksums(packet, length, off, protocol);
+                                deny_address = 0;
+                                for (int known_required = 0; known_required <= 1; known_required++) {
+                                    policy_requires_known_uid = known_required;
+                                    checks = policy_checks; calls = protocol_calls(protocol);
+                                    handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                                    assert(policy_checks == checks + 1 && policy_uid == -1);
+                                    assert(protocol_calls(protocol) == calls + (protocol == IPPROTO_TCP || !known_required));
+                                    if (protocol == IPPROTO_TCP) assert(tcp_last_allowed == !known_required);
+                                }
+                                policy_requires_known_uid = true;
+                                uint8_t output[2048];
+                                while (is_readable(tunnel[0])) assert(read(tunnel[0], output, sizeof(output)) > 0);
+                                clear(args->ctx); release_uid_cache();
+                                assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                            }
+                capture_packets = 0; policy_requires_known_uid = false; deny_address = 0;
+                close(tunnel[0]); close(tunnel[1]);
+                continue;
+            }
+            record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+            assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 12345);
+            if (kind == 0) {
+                uint8_t other[16] = {0}; memcpy(other, source, version == 4 ? 4 : 16); other[0] ^= 1;
+                assert(infer_uid_destination(args->ctx, version, protocol, other, dest, port) == -1);
+                memcpy(other, dest, version == 4 ? 4 : 16); other[0] ^= 1;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, other, port) == -1);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port + 1) == -1);
+                assert(infer_uid_destination(args->ctx, version, protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP, source, dest, port) == -1);
+                uid_test_clock = 11999;
+                for (int i = 0; i < 64; i++) assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 12345);
+                assert(args->ctx->uid_observations.count == 1);
+                uid_test_clock++;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+            } else if (kind == 8) {
+                int saved_uid = own_uid;
+                own_uid = 12345;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                own_uid = saved_uid;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 12345);
+            } else if (kind == 6) {
+                uint8_t other[16] = {0};
+                memcpy(other, dest, version == 4 ? 4 : 16);
+                size_t byte = version == 4 ? 3 : 15;
+                for (unsigned int i = 1; i < UID_OBSERVATIONS; i++) {
+                    other[byte] = (uint8_t) (((const uint8_t *) dest)[byte] + i);
+                    record_uid_observation(args->ctx, version, protocol, source, other, port, 12345);
+                }
+                uid_test_clock = 10500;
+                memory_comparisons = 0; count_memory_comparisons = true;
+                for (int i = 0; i < 64; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, other, port, 12345);
+                count_memory_comparisons = false;
+                assert(memory_comparisons == 128); // Only the two endpoint checks per refresh.
+                assert(args->ctx->uid_observations.count == UID_OBSERVATIONS);
+                uid_test_clock = 10600;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                // A match found by the ordinary scan must become the newest slot too.
+                memory_comparisons = 0; count_memory_comparisons = true;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                count_memory_comparisons = false;
+                assert(memory_comparisons == 2);
+                uid_test_clock = 10650;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                uid_test_clock = 11000;
+                for (int i = 0; i < 64; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                uid_test_clock = 12000;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                uid_test_clock = 12600;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+                uid_test_clock = 13000;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+            } else if (kind == 7) {
+                for (unsigned int i = 1; i < UID_OBSERVATIONS; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
+                uid_test_clock = 10500;
+                record_uid_observation(args->ctx, version, protocol, source, dest, 40000, 23456);
+                assert(args->ctx->uid_observations.incomplete_until == 12000);
+                uid_test_clock = 12500;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                assert(args->ctx->uid_observations.count == 0 && args->ctx->uid_observations.incomplete_until == 0);
+                assert(args->ctx->uid_observations.entry[20].expires == 12000); // Storage was not cleared.
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                assert(args->ctx->uid_observations.count == 1);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+                clear(args->ctx); uid_test_clock = 20000;
+                for (unsigned int i = 0; i < UID_OBSERVATIONS; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
+                // A write after idle must reset the count without requiring an inference first.
+                uid_test_clock = 22000;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                assert(args->ctx->uid_observations.count == 1 && args->ctx->uid_observations.incomplete_until == 0);
+                assert(args->ctx->uid_observations.entry[20].expires == 22000);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, 10020) == -1);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+            } else if (kind == 5) {
+                // Suspend advances boot time while the event-loop clock stays still.
+                uid_test_clock = 11999;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 12345);
+                uid_test_clock = 12000;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                assert(get_ms() == 10000);
+                clear(args->ctx); uid_test_clock = 10000;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                for (unsigned int i = 1; i < UID_OBSERVATIONS; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
+                uid_test_clock = 10500;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                uid_test_clock = 11999;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                uid_test_clock = 12000;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+                uid_test_clock = 12500;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 12345);
+                assert(get_ms() == 10000);
+                uid_test_clock = 10000;
+            } else if (kind == 1) {
+                uid_test_clock = 10500;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                uid_test_clock = 12000;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+                uid_test_clock = 12500;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                const jint excluded[] = {0, 1000, (jint) getuid()};
+                for (size_t i = 0; i < sizeof(excluded) / sizeof(*excluded); i++) {
+                    clear(args->ctx);
+                    record_uid_observation(args->ctx, version, protocol, source, dest, port, excluded[i]);
+                    assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                    record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                    assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                }
+            } else if (kind == 2) {
+                for (unsigned int i = 1; i < UID_OBSERVATIONS; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
+                uid_test_clock = 10500;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                assert(args->ctx->uid_observations.incomplete_until == 12000);
+                uid_test_clock = 11999;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                assert(args->ctx->uid_observations.count == UID_OBSERVATIONS);
+                assert(args->ctx->uid_observations.incomplete_until == 12000);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                uid_test_clock++;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+                clear(args->ctx); uid_test_clock = 10000;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                for (unsigned int i = 1; i < UID_OBSERVATIONS; i++) {
+                    uid_test_clock = 10000 + i;
+                    record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
+                }
+                uid_test_clock = 11000;
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
+                uid_test_clock++;
+                record_uid_observation(args->ctx, version, protocol, source, dest, 60000, 23456);
+                assert(args->ctx->uid_observations.incomplete_until == 12001);
+                uid_test_clock = 12000;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                uid_test_clock++;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
+            } else {
+                struct context isolated = {0};
+                assert(infer_uid_destination(&isolated, version, protocol, source, dest, port) == -1);
+                uid_clock_failure = true;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                uid_clock_failure = false;
+                assert(args->ctx->uid_observations.count == 0);
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                uid_test_clock--;
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
+                clear(args->ctx);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+            }
+            clear(args->ctx);
+            assert(allocations == 0 && sockets == 0 && string_refs == 0);
+        }
+    test_monotonic_enabled = false;
+    uid_clock_enabled = false;
+#endif
+}
+
 void test_dns_policy(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2];
@@ -1158,17 +1442,21 @@ void test_dns_policy(struct arguments *args, int kind) {
                     int socket = s->socket;
                     if (kind == 0) {
                         // Check policy again on an immediate repeat, preserving known owners.
-                        // A failed OS lookup may restore only an exact live known owner.
+                        // Active owners restore exactly; a recent authoritative
+                        // observation also supplies the denied destination's owner.
                         ng_free(uid_cache, __FILE__, __LINE__);
                         uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
                         blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
                         handle_ip(&running, packet, off + 20, epoll_fd, 1, SESSION_MAX);
                         assert(policy_checks == 2 && args->ctx->ng_session == s && s->socket == socket);
-                        assert(policy_uid == (denied ? -1 : initial));
+                        assert(policy_uid == initial);
                         assert(destination_calls == (denied ? 0 : 2));
                         assert(s->udp.uid == initial);
                         if (denied) blocked_uid_unreachable(tunnel[0], version);
                     } else if (kind == 3) {
+                        // Exercise blocked-record metadata without recent destination
+                        // evidence; the destination fallback has separate coverage.
+                        memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
                         // Retain a successful lookup while capacity postpones reopening.
                         ng_free(uid_cache, __FILE__, __LINE__);
                         uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
@@ -1185,6 +1473,7 @@ void test_dns_policy(struct arguments *args, int kind) {
                         uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
                         blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
                         for (int deny = 0; deny <= 1; deny++) {
+                            memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
                             deny_address = deny;
                             handle_ip(&running, packet, off + 20, epoll_fd, SESSION_MAX, SESSION_MAX);
                             // Stored blocked ownership is metadata, never a fallback for policy.
@@ -1202,6 +1491,7 @@ void test_dns_policy(struct arguments *args, int kind) {
                         assert(s->udp.state == UDP_CLOSED && s->udp.uid == retained && destination_calls == 1);
                         assert(find_udp_session(&running, packet, packet + off) == active);
                     } else if (kind == 2) {
+                        memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
                         ng_free(uid_cache, __FILE__, __LINE__);
                         uid_cache = NULL; uid_cache_size = uid_cache_capacity = 0;
                         blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
@@ -1784,8 +2074,70 @@ void test_blocked_udp_uid_retry(struct arguments *args, int kind) {
 #endif
 }
 
+void test_udp_inferred_uid_failure(struct arguments *args) {
+#ifdef INVIZIBLE_PACKET_OWNER
+    int tunnel[2]; assert(pipe(tunnel) == 0);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    struct arguments running = *args; running.tun = tunnel[1];
+    real_network = 1;
+    test_monotonic_enabled = true;
+    uid_clock_enabled = true;
+    policy_requires_known_uid = true;
+    for (int version = 4; version <= 6; version += 2)
+        for (int legacy = 0; legacy <= 1; legacy++) {
+            args->ctx->sdk = legacy ? 28 : 29;
+            _Alignas(8) uint8_t packet[128];
+            const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+            size_t off = ip_header(packet, version, IPPROTO_UDP, 9, dest);
+            struct udphdr *udp = (void *) (packet + off);
+            udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+            packet[off + 8] = 42;
+            packet_checksums(packet, off + 9, off, IPPROTO_UDP);
+            void *source = packet + (version == 4 ? 12 : 8);
+            void *destination = packet + (version == 4 ? 16 : 24);
+            uid_test_clock = test_monotonic_ms = 10000;
+            record_uid_observation(args->ctx, version, IPPROTO_UDP, source, destination, 5000, 12345);
+            char table[256]; blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
+            policy_checks = uid_lookups = 0;
+            expect_destination(version, dest, 5000);
+            handle_ip(&running, packet, off + 9, epoll_fd, 0, SESSION_MAX);
+            struct ng_session *session = find_udp_session(&running, packet, packet + off);
+            assert(session != NULL && session->udp.uid == 12345 && session->udp.uid_inferred);
+            int socket = session->socket;
+            assert(socket >= 0 && destination_calls == 1 && policy_uid == 12345);
+            const long long deadlines[] = {11000, 13000, 17000};
+            for (int i = 0; i < UDP_UID_RETRY_MAX; i++) {
+                uid_test_clock = test_monotonic_ms = deadlines[i];
+                handle_ip(&running, packet, off + 9, epoll_fd, 1, SESSION_MAX);
+                assert(policy_uid == 12345 && policy_checks == i + 2);
+                assert(find_udp_session(&running, packet, packet + off) == session);
+                assert(session->socket == socket && session->udp.state == UDP_ACTIVE);
+                assert(session->udp.uid == 12345 && session->udp.uid_inferred);
+                assert(session->udp.uid_retries == i + 1 && destination_calls == i + 2);
+                assert(sockets == 1 && allocations == 1 && !is_readable(tunnel[0]));
+            }
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, destination, 5000) == -1);
+            int queries = uid_lookups, closes = file_closes;
+            test_monotonic_ms = 100000;
+            handle_ip(&running, packet, off + 9, epoll_fd, 1, SESSION_MAX);
+            assert(destination_calls == 5 && policy_checks == 4);
+            assert(uid_lookups == queries && file_closes == closes);
+            clear(args->ctx); release_uid_cache();
+            assert(allocations == 0 && sockets == 0 && string_refs == 0 && !is_readable(tunnel[0]));
+        }
+    policy_requires_known_uid = false;
+    uid_clock_enabled = false;
+    test_monotonic_enabled = false;
+    real_network = 0;
+    args->ctx->sdk = 29;
+    close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    bool inferred_fixture = kind == 3;
+    if (inferred_fixture) kind = 1;
     int tunnel[2];
     assert(pipe(tunnel) == 0);
     int epoll_fd = epoll_create1(EPOLL_CLOEXEC);
@@ -1828,6 +2180,7 @@ void test_udp_uid_retry(struct arguments *args, int kind) {
             assert(old->udp.uid_retries == 0 && allocations == 1 && sockets == 1);
             assert(policy_checks == 1 && destination_calls == 1);
             assert(old->udp.uid_retry_at == (kind == 2 && scenario == 0 ? -1 : 11000));
+            if (inferred_fixture) { old->udp.uid = 54321; old->udp.uid_inferred = true; }
 
             if (kind == 0) {
                 // A burst before the deadline must not query the owner or policy.
@@ -1883,6 +2236,7 @@ void test_udp_uid_retry(struct arguments *args, int kind) {
                 handle_ip(&running, packet, off + 9, epoll_fd, SESSION_MAX, SESSION_MAX);
                 struct ng_session *current = find_udp_session(&running, packet, packet + off);
                 assert(current != NULL && current->udp.uid == owner);
+                if (inferred_fixture) assert(!current->udp.uid_inferred && !old->udp.uid_inferred);
                 assert((current != old) == retire);
                 assert(current->udp.state == (deny ? UDP_BLOCKED : UDP_ACTIVE));
                 assert(old->udp.uid == owner && old->udp.state == (retire ? UDP_FINISHING : UDP_ACTIVE));

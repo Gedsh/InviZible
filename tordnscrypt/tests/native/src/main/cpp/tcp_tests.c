@@ -490,7 +490,7 @@ void test_tcp_buffer_reuse(const struct arguments *args) {
         memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
         s.tcp.source = tcp->source; s.tcp.dest = tcp->dest;
         set_test_sessions(args->ctx, &s);
-        assert(handle_tcp(&running, packet, off + 24, packet + off, own_uid, 1, NULL, -1) == 1);
+        assert(handle_tcp(&running, packet, off + 24, packet + off, test_owner(own_uid), 1, NULL, -1) == 1);
         assert(s.tcp.forward != NULL && s.tcp.forward->data != packet + off + 20);
         packet = get_packet_buffer(&running, PACKET_INPUT, 4096, "tcp test input");
         assert(packet != NULL);
@@ -563,7 +563,7 @@ void test_lazy_tcp_logging(const struct arguments *args) {
 
         // An enabled error must still contain addresses and the state before reset.
         tcp->ack_seq = htonl(2001);
-        assert(handle_tcp(&running, packet, off + 20, packet + off, -1, 1, NULL, -1) == 0);
+        assert(handle_tcp(&running, packet, off + 20, packet + off, test_owner(-1), 1, NULL, -1) == 0);
         assert(address_formats == 2);
         assert(strstr(last_log, version == 4 ? "10.0.0.2/12345 > 203.0.113.2/443"
                                             : "2001:db8::1/12345 > 2001:db8::2/443") != NULL);
@@ -739,7 +739,7 @@ void test_tcp_allocation_failure(const struct arguments *args) {
     for (size_t i = 0; i < sizeof(tags) / sizeof(*tags); i++) {
         fail_alloc_tag = tags[i];
         fail_alloc_match = 1;
-        assert(handle_tcp(args, packet, sizeof(packet), packet + 20, own_uid, 1, NULL, -1) == 0);
+        assert(handle_tcp(args, packet, sizeof(packet), packet + 20, test_owner(own_uid), 1, NULL, -1) == 0);
         assert(fail_alloc_match == 0);
         assert(allocations == 0 && sockets == 0 && args->ctx->ng_session == NULL);
     }
@@ -885,7 +885,7 @@ void test_tcp(const struct arguments *args) {
         pkt[0] = 0x45;
         struct tcphdr *tcp = (void *) (pkt + 20);
         tcp->syn = 1; tcp->doff = doff;
-        handle_tcp(args, pkt, 40, pkt + 20, own_uid, 0, NULL, -1);
+        handle_tcp(args, pkt, 40, pkt + 20, test_owner(own_uid), 0, NULL, -1);
         free(pkt);
         assert(allocations == 0);
     }
@@ -894,10 +894,10 @@ void test_tcp(const struct arguments *args) {
     struct tcphdr *tcp = (void *) (pkt + 20);
     tcp->syn = 1; tcp->doff = 5;
     // Payload on a rejected SYN must release all segment storage.
-    handle_tcp(args, pkt, 44, pkt + 20, own_uid, 0, NULL, -1);
+    handle_tcp(args, pkt, 44, pkt + 20, test_owner(own_uid), 0, NULL, -1);
     assert(allocations == 0);
     failure = PROTECT;
-    handle_tcp(args, pkt, 44, pkt + 20, own_uid, 1, NULL, -1);
+    handle_tcp(args, pkt, 44, pkt + 20, test_owner(own_uid), 1, NULL, -1);
     assert(allocations == 0 && sockets == 0);
     failure = NONE;
     tcp->doff = 6;
@@ -907,7 +907,7 @@ void test_tcp(const struct arguments *args) {
     };
     for (size_t i = 0; i < sizeof(options) / sizeof(*options); i++) {
         memcpy(pkt + 40, options[i], 4);
-        handle_tcp(args, pkt, 44, pkt + 20, own_uid, 0, NULL, -1);
+        handle_tcp(args, pkt, 44, pkt + 20, test_owner(own_uid), 0, NULL, -1);
         assert(allocations == 0);
     }
     free(pkt);
@@ -978,7 +978,7 @@ static size_t tcp_packet(uint8_t *packet, int version, uint32_t seq, uint32_t ac
 
 static void tcp_input(const struct arguments *args, uint8_t *packet, size_t len, int version) {
     assert(handle_tcp(args, packet, len, packet + (version == 4 ? 20 : 40),
-                      own_uid, 1, NULL, -1) == 1);
+                      test_owner(own_uid), 1, NULL, -1) == 1);
 }
 
 void test_tcp_probe_clock_failure(const struct arguments *args) {
@@ -1092,7 +1092,7 @@ void test_tcp_backpressure(const struct arguments *args, int kind) {
             clear_tcp_data(&s.tcp);
             header->ack_seq = htonl(s.tcp.local_seq);
             // A real app ACK wakes TUN independently of the probe deadline.
-            assert(handle_tcp(&running, packet, length, packet + off, own_uid, 1, NULL, epoll_fd) == 1);
+            assert(handle_tcp(&running, packet, length, packet + off, test_owner(own_uid), 1, NULL, epoll_fd) == 1);
             assert(monitor_tcp_session(&running, &s, epoll_fd) == 0);
             assert(s.tcp.window_probe_interval == 0 && (s.ev.events & EPOLLIN));
             assert(send(stream[1], "reply", 5, 0) == 5);
@@ -1302,7 +1302,7 @@ void test_tcp_connect_failure(int version, int transient) {
         uint32_t seq = (i == 0 ? UINT32_MAX : 1000);
         size_t len = tcp_packet(packet, version, seq, 0, 1, 0, data, sizeof(data));
         size_t off = (version == 4 ? 20 : 40);
-        assert(handle_tcp(&args, packet, len, packet + off, own_uid, 1, NULL, -1) == 0);
+        assert(handle_tcp(&args, packet, len, packet + off, test_owner(own_uid), 1, NULL, -1) == 0);
         assert(ctx.ng_session == NULL && allocations == 0 && sockets == 0);
         if (transient == 2) {
             assert(connect_fd == -1);
@@ -1637,7 +1637,7 @@ void test_tcp_dns_buffer(int kind) {
                                             0, 0, NULL, 0);
                 size_t ip_len = version == 4 ? 20 : 40;
                 ((struct tcphdr *) (ack + ip_len))->dest = htons(53);
-                assert(handle_tcp(&args, ack, ack_len, ack + ip_len, own_uid, 1, NULL, epoll_fd) == 1);
+                assert(handle_tcp(&args, ack, ack_len, ack + ip_len, test_owner(own_uid), 1, NULL, epoll_fd) == 1);
                 assert(get_send_window(&s->tcp) > 0);
                 for (int turn = 0; turn < 8 && s->tcp.dns_response_ready; turn++) {
                     int recheck = monitor_tcp_session(&args, s, epoll_fd);
@@ -1757,14 +1757,14 @@ void test_tcp_half_close(int kind) {
     if (kind == 6) {
         failure = SHUTDOWN;
         len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 1, NULL, 0);
-        assert(handle_tcp(&args, packet, len, packet + off, -1, 1, NULL, epoll_fd) == 0);
+        assert(handle_tcp(&args, packet, len, packet + off, test_owner(-1), 1, NULL, epoll_fd) == 0);
         failure = NONE;
         reply = half_close_reply(tunnel[0], output, version);
         assert(reply->rst && s.tcp.state == TCP_CLOSING && !s.tcp.fin_acked);
     } else if (kind == 8) {
         close(s.socket); s.socket = -1;
         len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 0, request, sizeof(request));
-        assert(handle_tcp(&args, packet, len, packet + off, -1, 1, NULL, epoll_fd) == 0);
+        assert(handle_tcp(&args, packet, len, packet + off, test_owner(-1), 1, NULL, epoll_fd) == 0);
         assert(strstr(last_log, "data while local closed") != NULL);
         assert(strstr(last_log, "uid 12345") != NULL && strstr(last_log, "uid -1") == NULL);
         reply = half_close_reply(tunnel[0], output, version);
@@ -1793,7 +1793,7 @@ void test_tcp_half_close(int kind) {
             else {
                 len = tcp_packet(packet, version, 1000, s.tcp.local_seq, 0, 0, NULL, 0);
                 ((struct tcphdr *) (packet + off))->rst = 1;
-                assert(handle_tcp(&args, packet, len, packet + off, -1, 1, NULL, epoll_fd) == 0);
+                assert(handle_tcp(&args, packet, len, packet + off, test_owner(-1), 1, NULL, epoll_fd) == 0);
             }
         } else {
             assert(monitor_tcp_session(&args, &s, epoll_fd) == 0);
@@ -2036,7 +2036,7 @@ void test_tcp_uid_update(const struct arguments *args) {
             if (kind == 14) tcp->doff = 4;
             int uid = kind == 1 || kind == 2 || kind == 8 ? -1 : kind == 3 ? 23456 : kind == 9 ? 0 : 12345;
             set_test_sessions(args->ctx, &session);
-            handle_tcp(args, packet, length, packet + off, uid, 1, NULL, -1);
+            handle_tcp(args, packet, length, packet + off, test_owner(uid), 1, NULL, -1);
             int expected = kind >= 10 ? -1 : kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 8 ? 0 : -1;
             assert(session.tcp.uid == expected);
             set_test_sessions(args->ctx, NULL);
@@ -2180,8 +2180,10 @@ void test_tcp_fin_uid_recovery(struct arguments *args) {
 
 void test_tcp_uid_retry(struct arguments *args, int kind) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    bool inferred_fixture = kind == 6;
+    if (inferred_fixture) kind = 1;
     for (int version = 4; version <= 6; version += 2) {
-        if (kind == 0) {
+        if (kind == 0 || inferred_fixture) {
             for (int route = 0; route < 6; route++) {
                 struct context ctx = {.sdk = 29};
                 struct arguments running = *args;
@@ -2195,9 +2197,16 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 test_monotonic_failures = route == 4;
                 _Alignas(8) uint8_t packet[128];
                 size_t length = tcp_packet(packet, version, 100, 0, 1, 0, NULL, 0);
+                test_packet_owner initial_owner = test_owner(route == 5 ? 0 : inferred_fixture ? 54321 : -1);
+#ifdef INVIZIBLE_PACKET_OWNER
+                initial_owner.inferred = inferred_fixture && route != 5;
+#endif
                 handle_tcp(&running, packet, length, packet + (version == 4 ? 20 : 40),
-                           route == 5 ? 0 : -1, 1, route == 3 ? &redirect : NULL, -1);
+                           initial_owner, 1, route == 3 ? &redirect : NULL, -1);
                 assert(ctx.ng_session != NULL && ctx.ng_session->tcp.uid_retries == 0);
+#ifdef INVIZIBLE_PACKET_OWNER
+                assert(ctx.ng_session->tcp.uid_inferred == initial_owner.inferred);
+#endif
                 assert(ctx.ng_session->tcp.uid_retry_at == (route >= 4 ? -1 : 11000));
                 assert(ctx.ng_session->tcp.route == (route < 4 ? route : TCP_ROUTE_DIRECT));
                 clear(&ctx);
@@ -2217,6 +2226,9 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
             running.ctx = &ctx; running.tun = tunnel[1];
             struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
             s.tcp.version = version; s.tcp.uid = -1; s.tcp.state = TCP_ESTABLISHED;
+#ifdef INVIZIBLE_PACKET_OWNER
+            if (inferred_fixture) { s.tcp.uid = 54321; s.tcp.uid_inferred = true; }
+#endif
             if (kind == 5) {
                 const uint8_t states[] = {TCP_LISTEN, TCP_SYN_RECV, TCP_ESTABLISHED};
                 s.tcp.state = states[case_index % 3];
@@ -2267,13 +2279,13 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 if (scenario == 2) s.tcp.uid = 0;
                 if (scenario == 3) s.tcp.uid_retry_at = -1;
                 test_monotonic_ms = 10999;
-                handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups);
                 const long long times[] = {11000, 11000, 12999, 13000, 16999, 17000, 100000};
                 const int attempts[] = {1, 1, 1, 2, 2, 3, 3};
                 for (size_t i = 0; i < sizeof(times) / sizeof(*times); i++) {
                     test_monotonic_ms = times[i];
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                     assert(uid_lookups == lookups + (scenario == 0 ? attempts[i] : 0));
                 }
                 assert(s.tcp.uid == (scenario == 2 ? 0 : -1) && policy_checks == policies);
@@ -2321,10 +2333,15 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     handle_ip(&running, packet, length, epoll_fd, sessions, SESSION_MAX);
                     assert(ctx.ng_session == &s && s.next == NULL);
                 } else
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups + !legacy && policy_checks == policies + 1);
                 if (legacy) assert(file_closes == files + (version == 4 ? 2 : 1));
                 assert(s.tcp.uid == uid_lookup_result && policy_uid == uid_lookup_result);
+#ifdef INVIZIBLE_PACKET_OWNER
+                assert(!s.tcp.uid_inferred);
+                if (inferred_fixture && uid_lookup_result >= 10000 && uid_lookup_result != (jint) getuid())
+                    assert(infer_uid_destination(&ctx, version, IPPROTO_TCP, &s.tcp.saddr, &s.tcp.daddr, ntohs(s.tcp.dest)) == uid_lookup_result);
+#endif
                 assert(s.tcp.uid_retries == (kind == 5 ? 0 : 1));
                 if (reset) {
                     assert(s.socket == -1 && s.tcp.state == TCP_CLOSING);
@@ -2348,12 +2365,12 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     }
                     if (s.tcp.state == TCP_SYN_RECV) {
                         length = tcp_packet(packet, version, 101, s.tcp.local_seq, 0, 0, NULL, 0);
-                        handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                        handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                         assert(s.tcp.state == TCP_ESTABLISHED);
                     }
                     const uint8_t data[] = {11, 22, 33};
                     length = tcp_packet(packet, version, 101, s.tcp.local_seq, 0, 0, data, sizeof(data));
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                     s.ev.events = EPOLLOUT;
                     check_tcp_socket(&running, &s.ev, epoll_fd);
                     uint8_t received[sizeof(data)];
@@ -2407,14 +2424,14 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                         s.tcp.fin_seq = 101;
                     }
                 }
-                handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                 assert(uid_lookups == lookups && policy_checks == policies && s.tcp.uid_retries == 0);
                 assert(s.tcp.uid == -1);
             } else if (kind == 4) {
                 // Reach CLOSE_WAIT through a real app FIN/write shutdown before the first retry.
                 test_monotonic_ms = 10000;
                 length = tcp_packet(packet, version, 101, 2000, 0, 1, NULL, 0);
-                assert(handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd) == 1);
+                assert(handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd) == 1);
                 assert(s.tcp.state == TCP_CLOSE_WAIT && s.tcp.fin_received && s.tcp.fin_acked);
                 assert(s.tcp.remote_seq == 102 && s.socket == stream[0] && !s.tcp.upstream_eof);
                 assert(uid_lookups == lookups && file_closes == files);
@@ -2440,7 +2457,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 int tries = failed ? TCP_UID_RETRY_MAX : 1;
                 for (int attempt = 0; attempt < tries; attempt++) {
                     test_monotonic_ms = s.tcp.uid_retry_at;
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                     assert(uid_lookups == lookups + (legacy ? 0 : attempt + 1));
                     assert(s.tcp.uid_retries == attempt + 1 && policy_checks == policies + !failed);
                     assert(s.tcp.uid == (failed ? -1 : uid_lookup_result));
@@ -2464,7 +2481,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     length = tcp_packet(packet, version, 102, 2008, 0, 0, NULL, 0);
                     test_monotonic_ms = 1000000;
                     int clocks = test_monotonic_calls;
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                     assert(s.tcp.state == TCP_CLOSE_WAIT && s.tcp.remote_seq == 102);
                     assert(test_monotonic_calls == clocks && s.tcp.uid_retries == tries);
                     assert(uid_lookups == lookups + (legacy ? 0 : tries));
@@ -2499,7 +2516,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 for (int attempt = 0; attempt < tries; attempt++) {
                     header->seq = htonl(s.tcp.remote_seq);
                     test_monotonic_ms = s.tcp.uid_retry_at;
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                     assert(uid_lookups == lookups + (legacy ? 0 : attempt + 1));
                     assert(s.tcp.uid_retries == attempt + 1);
                     assert(policy_checks == policies + !failed);
@@ -2529,7 +2546,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                     int clocks = test_monotonic_calls;
                     test_monotonic_ms = 1000000;
                     header->seq = htonl(s.tcp.remote_seq);
-                    handle_tcp(&running, packet, length, packet + off, -1, 1, NULL, epoll_fd);
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, epoll_fd);
                     assert(s.tcp.uid_retries == TCP_UID_RETRY_MAX && uid_lookups == lookups + tries);
                     assert(test_monotonic_calls == clocks && policy_checks == policies);
                 }

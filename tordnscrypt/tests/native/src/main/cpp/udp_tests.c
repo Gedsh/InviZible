@@ -7,12 +7,12 @@ void test_udp_packet_bounds(const struct arguments *args) {
         size_t off = ip_header(packet, version, IPPROTO_UDP, sizeof(struct udphdr),
                                version == 4 ? "127.0.0.1" : "::1");
         for (size_t length = 0; length < sizeof(struct udphdr); length++) {
-            assert(handle_udp(args, packet, off + length, packet + off, own_uid, NULL, -1) == 0);
+            assert(handle_udp(args, packet, off + length, packet + off, test_owner(own_uid), NULL, -1) == 0);
             assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
         }
         assert(handle_udp(args, packet, off, packet + off + sizeof(struct udphdr),
-                          own_uid, NULL, -1) == 0);
-        assert(handle_udp(args, packet, 0, packet, own_uid, NULL, -1) == 0);
+                          test_owner(own_uid), NULL, -1) == 0);
+        assert(handle_udp(args, packet, 0, packet, test_owner(own_uid), NULL, -1) == 0);
         assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
     }
 #endif
@@ -208,7 +208,7 @@ void test_udp_dns_counts(int version, int response) {
             store16(dns + 4, counts[i]);
             if (i == 3) { store16(dns + 13, 1); store16(dns + 15, 1); }
             expect_destination(version, dest, 53);
-            assert(handle_udp(&args, packet, off + 8 + dns_len, packet + off, own_uid, NULL, -1) == 1);
+            assert(handle_udp(&args, packet, off + 8 + dns_len, packet + off, test_owner(own_uid), NULL, -1) == 1);
             if (i < 2) {
                 assert(ctx.ng_session == NULL && sockets == 0 && allocations == 0 && destination_calls == 0);
                 size_t len = tun_packet(tunnel[0], output, version, IPPROTO_UDP);
@@ -268,12 +268,12 @@ void test_udp_destination(const struct arguments *args) {
             struct allowed redirect = {.rport = 5354};
             strcpy(redirect.raddr, target);
             expect_destination(version, redirected ? target : direct, redirected ? 5354 : 5000);
-            assert(handle_udp(args, packet, off + 9, packet + off, own_uid,
+            assert(handle_udp(args, packet, off + 9, packet + off, test_owner(own_uid),
                                redirected ? &redirect : NULL, -1) == 1);
             assert(destination_calls == 1 && args->ctx->ng_session->udp.sent == 1);
 #ifndef INVIZIBLE_BASELINE_TESTS
             memset(&redirect, 0, sizeof(redirect));
-            assert(handle_udp(args, packet, off + 9, packet + off, own_uid, NULL, -1) == 1);
+            assert(handle_udp(args, packet, off + 9, packet + off, test_owner(own_uid), NULL, -1) == 1);
             assert(destination_calls == 2 && args->ctx->ng_session->udp.sent == 2);
 #endif
             clear(args->ctx);
@@ -293,7 +293,7 @@ void test_udp_allocation_failure(const struct arguments *args) {
         header->len = htons(sizeof(*header));
         fail_alloc_tag = "udp session";
         fail_alloc_match = 1;
-        assert(handle_udp(args, packet, off + sizeof(*header), packet + off, own_uid, NULL, -1) == 0);
+        assert(handle_udp(args, packet, off + sizeof(*header), packet + off, test_owner(own_uid), NULL, -1) == 0);
         assert(fail_alloc_match == 0);
         assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
         // Allocation fails before recv; use a live-session descriptor sentinel.
@@ -323,12 +323,12 @@ void test_udp_short_dns(struct arguments *args) {
     pkt[0] = 0x45;
     struct udphdr *udp = (void *) (pkt + 20);
     udp->source = htons(1234); udp->dest = htons(53);
-    assert(handle_udp(args, pkt, 28, pkt + 20, own_uid, NULL, -1) == 0);
+    assert(handle_udp(args, pkt, 28, pkt + 20, test_owner(own_uid), NULL, -1) == 0);
     assert(args->ctx->ng_session == NULL && allocations == 0);
     struct ng_session s = {.protocol = IPPROTO_UDP, .socket = 0};
     s.udp.version = 4; s.udp.source = udp->source; s.udp.dest = udp->dest;
     set_test_sessions(args->ctx, &s);
-    assert(handle_udp(args, pkt, 28, pkt + 20, own_uid, NULL, -1) == 0);
+    assert(handle_udp(args, pkt, 28, pkt + 20, test_owner(own_uid), NULL, -1) == 0);
     set_test_sessions(args->ctx, NULL);
     free(pkt);
 }
@@ -372,7 +372,7 @@ void test_udp_blocked_limit(struct arguments *args, int version) {
     uint8_t packet[48];
     for (int i = 0; i < UDP_BLOCKED_MAX + 50; i++) {
         size_t off = blocked_packet(packet, version, 1000 + i, 5000);
-        block_udp(args, packet, off + sizeof(struct udphdr), packet + off, own_uid);
+        block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(own_uid));
         assert(allocations <= UDP_BLOCKED_MAX + 2 && sockets == 1);
     }
 
@@ -396,16 +396,16 @@ void test_udp_blocked_limit(struct arguments *args, int version) {
     off = blocked_packet(packet, version, 1000 + UDP_BLOCKED_MAX + 49, 5000);
     assert(has_udp_session(args, packet, packet + off));
     int before = allocations;
-    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, 54321);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(54321));
     assert(allocations == before && args->ctx->ng_session->udp.uid == 54321);
 #ifndef INVIZIBLE_BASELINE_TESTS
-    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, -1);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(-1));
     assert(allocations == before && args->ctx->ng_session->udp.uid == 54321);
-    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, 0);
-    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, -1);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(0));
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(-1));
     assert(allocations == before && args->ctx->ng_session->udp.uid == 0);
     off = blocked_packet(packet, version, 1000 + UDP_BLOCKED_MAX + 50, 5000);
-    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, -1);
+    block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(-1));
     // Eviction reuses storage, but a different tuple must start with its own owner.
     assert(allocations == before && args->ctx->ng_session->udp.uid == -1);
 #endif
@@ -419,7 +419,7 @@ void test_udp_blocked_duplicates(struct arguments *args) {
     size_t off = blocked_packet(packet, 4, 1234, 53);
     // Forwarded DNS is rechecked against policy on each packet, even for an existing flow.
     for (int i = 0; i < 100; i++) {
-        block_udp(args, packet, off + sizeof(struct udphdr), packet + off, i);
+        block_udp(args, packet, off + sizeof(struct udphdr), packet + off, test_owner(i));
         assert(allocations == 1 && args->ctx->ng_session->next == NULL);
         assert(args->ctx->ng_session->udp.uid == i);
     }
@@ -512,7 +512,7 @@ void udp_flow(int version, int redirect, int extension) {
     struct ng_session *session = NULL;
     for (int i = 0; i < 2; i++) {
         if (redirect)
-            assert(handle_udp(&args, packet, len, packet + off, own_uid, &target, epoll_fd) == 1);
+            assert(handle_udp(&args, packet, len, packet + off, test_owner(own_uid), &target, epoll_fd) == 1);
         else
             handle_ip(&args, packet, len, epoll_fd, 0, 100);
         assert(ctx.ng_session != NULL);
@@ -563,6 +563,41 @@ void udp_flow(int version, int redirect, int extension) {
     cases++;
 }
 
+void test_udp_inferred_owner(struct arguments *args) {
+#ifdef INVIZIBLE_PACKET_OWNER
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[128];
+        const char *dest = version == 4 ? "203.0.113.2" : "2001:db8::2";
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 9, dest);
+        struct udphdr *udp = (void *) (packet + off);
+        udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+        packet[off + 8] = 42;
+        struct packet_owner guess = {.uid = 12345, .inferred = true};
+        expect_destination(version, dest, 5000);
+        assert(handle_udp(args, packet, off + 9, packet + off, guess, NULL, -1) == 1);
+        struct ng_session *s = args->ctx->ng_session;
+        assert(s != NULL && s->udp.uid == 12345 && s->udp.uid_inferred && s->udp.uid_retry_at == 11000);
+        assert(restore_uid(args, version, IPPROTO_UDP, &s->udp.saddr, 12345, &s->udp.daddr, 5000,
+                           "source", dest, "", packet + off) == -1);
+        assert(args->ctx->uid_observations.count == 0); // A guess never becomes evidence.
+        clear(args->ctx);
+        block_udp(args, packet, off + 9, packet + off, guess);
+        s = args->ctx->ng_session;
+        assert(s->udp.uid_inferred && s->udp.uid_retry_at == 11000);
+        block_udp(args, packet, off + 9, packet + off, test_owner(-1));
+        assert(args->ctx->ng_session == s && s->udp.uid_inferred);
+        block_udp(args, packet, off + 9, packet + off, test_owner(0));
+        assert(s->udp.uid == 0 && !s->udp.uid_inferred && s->udp.uid_retry_at == -1);
+        block_udp(args, packet, off + 9, packet + off, guess);
+        assert(s->udp.uid == 0 && !s->udp.uid_inferred);
+        clear(args->ctx);
+        assert(allocations == 0 && sockets == 0 && string_refs == 0);
+    }
+    test_monotonic_enabled = false;
+#endif
+}
+
 void test_udp_uid_update(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     for (int version = 4; version <= 6; version += 2) {
@@ -584,7 +619,7 @@ void test_udp_uid_update(const struct arguments *args) {
             int uid = kind == 1 || kind == 2 || kind == 6 ? -1 : kind == 3 ? 23456 : kind == 7 ? 0 : 12345;
             set_test_sessions(args->ctx, &session);
             expect_destination(version, destination, 5000);
-            handle_udp(args, packet, off + 9, packet + off, uid, NULL, -1);
+            handle_udp(args, packet, off + 9, packet + off, test_owner(uid), NULL, -1);
             int expected = kind == 0 || kind == 2 || kind == 3 ? 12345 : kind >= 6 ? 0 : -1;
             assert(session.udp.uid == expected);
             set_test_sessions(args->ctx, NULL);

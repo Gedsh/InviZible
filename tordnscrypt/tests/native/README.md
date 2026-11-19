@@ -86,6 +86,17 @@ disabled logs skip their arguments and normal packet/session diagnostics, enable
 errors retain addresses and the original TCP state, and usage accounting still
 receives its destination. Address formatting is cached only within a call and
 preserves errno; no persistent session cache or allocation is added.
+Legacy UID lookup uses the same cached address formatter. With INFO diagnostics
+disabled, successful proc lookups and cache hits skip both address conversions;
+other diagnostics format addresses only when their level is enabled. INFO cache-hit
+logging still receives the original addresses, including IPv4's IPv6-table probe.
+An IPv4/IPv6 TCP/UDP regression counts zero conversions for normal and root owners,
+cache hits, missing/malformed rows and IPv4 fallback after an IPv6 proc-open error,
+while checking resolved owners, cache reuse and resource balance.
+The same focused regression can run with INFO logging enabled to check unchanged
+address text and exactly two conversions per lookup, including cache hits. Restore
+the default ERROR level before running the full suite; disabled-log regressions
+expect that default.
 The native event loop owns two lazy scratch buffers: one shared by sequential
 TUN/socket reads and one for packet construction. Capacity grows only when needed
 (at least the MTU), and both buffers are freed on stop or fatal polling failure.
@@ -427,7 +438,8 @@ When an allowed blocked DNS flow cannot reopen because the active-session table
 is full, a successful lookup fills its unknown stored owner before returning.
 Known metadata is preserved while reopening waits. Capacity regressions cover
 UID zero and ordinary owners, both IP families, lookup paths and forwarding modes,
-and full/overfull tables without opening a socket. Subsequent failed lookups still
+and full/overfull tables without opening a socket. Subsequent failed lookups without
+recent destination evidence still
 reach policy as unknown, preserve metadata on denial, and can reopen an unknown
 active flow when policy permits it and capacity becomes available.
 Unknown-owner policy regressions cover TCP, UDP, DNS and ICMP in both IP families,
@@ -441,7 +453,66 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-The full run contains 273 tests plus the optional comparison test.
+Same-destination UID fallback uses one per-context array of 256 confirmed
+observations (about 12 KiB plus small metadata). It matches IP family, protocol,
+source IP, destination IP and destination port; source ports may differ. Only
+successful Android/proc lookups add or refresh observations, before policy and
+socket creation, including later authoritative TCP/UDP recovery. Connection
+completion does not remove observations. DNS hostname inference is not included.
+Each observation expires two seconds after its own confirmation, including device
+sleep, using `CLOCK_BOOTTIME`. Overflow deadlines use the same clock. Different UIDs
+for the same destination remain separate records; inference succeeds only when
+all recent matches agree on an app UID. Root, system and the VPN process participate
+in conflict detection but cannot themselves be inferred. Guessed and restored
+session owners never add observations, and inference never refreshes expiry.
+Inference compares candidates with the process UID saved during native initialization,
+without another `getuid()` call; a regression verifies exclusion uses that saved UID.
+The fixed array uses linear scans of populated entries, without hash buckets,
+allocations, timers, sleeps, extra platform lookups or an empty-cache clock read.
+One per-context slot index remembers the last authoritative write. Repeated
+observations for that same key and UID refresh it directly; misses retain the
+ordinary scan. Other UIDs remain separate observations for conflict detection.
+The remembered slot also has the latest expiry. Once it expires, reads or writes
+reset the populated count and overflow pause without clearing array storage.
+This avoids scanning stale entries after idle periods; stale storage is outside
+the populated range and cannot supply evidence. Clock failures and cleanup still
+clear the complete cache.
+Expired entries are reused first. If capacity requires eviction of a recent
+record, inference pauses until that record's original expiry; additional evictions
+retain the latest discarded expiry. Refreshing a retained record does not extend
+that pause. Unknown traffic continues through the configured policy.
+Clock failures/backwards reads invalidate the array; cleanup clears it and other
+VPN contexts cannot use its contents. This is heuristic attribution, not proof of
+ownership: unobserved apps can share a destination with the confirmed app.
+A packet-local UID/provenance value passes by value to TCP/UDP handlers. Session
+provenance prevents a guess from becoming exact confirmed restoration, and keeps
+the existing bounded traffic-driven recovery enabled. Authoritative recovery
+clears provenance and reevaluates policy, routing and Tor isolation before further
+forwarding. A guess cannot downgrade a confirmed blocked UDP record's owner.
+Failed UDP recovery retains the flow's provisional owner for policy and routing;
+observation expiry limits new inference without interrupting that flow. IPv4/IPv6
+regressions using JNI and legacy proc failures exercise every retry deadline,
+including after expiry, with unknown owners denied. They verify policy UID,
+forwarding calls, socket continuity, bounded retries and resource cleanup.
+Thirteen additional regressions cover exact matching and non-refreshing inference,
+independent conflict expiry, excluded owners, original-expiry overflow, clocks,
+context isolation/cleanup, both families and owner APIs, denied observations,
+DNS forwarding modes, inferred session creation/reuse and TCP/UDP authoritative
+recovery including policy, route changes, isolation and resource balance.
+Suspend coverage advances boot time while holding monotonic time still, checking
+exact observation expiry, original overflow deadlines and fresh evidence after
+waking for both address families and TCP/UDP. Retry timers retain their existing clock.
+Optimization cases count endpoint comparisons in a full cache: 64 repeated writes
+to the last slot require 128 comparisons, rather than 32,768. The test APK disables
+builtin `memcmp` expansion to count these calls; production build flags are unchanged.
+Cases also cover a refresh found by the normal scan becoming the newest write,
+independent conflict expiry, overflow deadlines and count resets on idle reads
+and writes while retaining the unused array contents.
+Exact-restoration and blocked-metadata fixtures explicitly isolate independent
+scenarios from recent destination observations; the fallback has separate tests.
+Failed-restoration errors are emitted after the destination fallback, avoiding
+an error for a packet whose owner was successfully inferred.
+The full run contains 287 tests plus the optional comparison test.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 

@@ -25,7 +25,35 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "uidLiveTcp4") == 0)
+    if (strcmp(id, "uidLazyLogging") == 0)
+        test_uid_lazy_logging();
+    else if (strcmp(id, "uidDestinationOwnUid") == 0)
+        test_uid_destination(&args, 8);
+    else if (strcmp(id, "uidDestinationLastSlot") == 0)
+        test_uid_destination(&args, 6);
+    else if (strcmp(id, "uidDestinationIdle") == 0)
+        test_uid_destination(&args, 7);
+    else if (strcmp(id, "uidDestinationSuspend") == 0)
+        test_uid_destination(&args, 5);
+    else if (strcmp(id, "udpInferredUidFailure") == 0)
+        test_udp_inferred_uid_failure(&args);
+    else if (strcmp(id, "udpInferredOwner") == 0)
+        test_udp_inferred_owner(&args);
+    else if (strcmp(id, "udpInferredUidRecovery") == 0)
+        test_udp_uid_retry(&args, 3);
+    else if (strcmp(id, "tcpInferredUidRecovery") == 0)
+        test_tcp_uid_retry(&args, 6);
+    else if (strcmp(id, "uidDestinationMatch") == 0)
+        test_uid_destination(&args, 0);
+    else if (strcmp(id, "uidDestinationConflict") == 0)
+        test_uid_destination(&args, 1);
+    else if (strcmp(id, "uidDestinationOverflow") == 0)
+        test_uid_destination(&args, 2);
+    else if (strcmp(id, "uidDestinationClock") == 0)
+        test_uid_destination(&args, 3);
+    else if (strcmp(id, "uidDestinationPolicy") == 0)
+        test_uid_destination(&args, 4);
+    else if (strcmp(id, "uidLiveTcp4") == 0)
         test_uid_live_proc(4, IPPROTO_TCP, false);
     else if (strcmp(id, "uidLiveTcp6") == 0)
         test_uid_live_proc(6, IPPROTO_TCP, false);

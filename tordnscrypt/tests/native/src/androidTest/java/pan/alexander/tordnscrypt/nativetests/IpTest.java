@@ -12,6 +12,18 @@ import static org.junit.Assume.assumeTrue;
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
+    @Test public void legacyUidLookupSkipsDisabledAddressFormatting() { check("uidLazyLogging"); }
+    @Test public void destinationUidExcludesCachedProcessOwner() { check("uidDestinationOwnUid"); }
+    @Test public void destinationUidRepeatedWritesAvoidScanningAndKeepConflicts() { check("uidDestinationLastSlot"); }
+    @Test public void destinationUidExpiredCacheResetsOnReadAndWriteWithoutClearingStorage() { check("uidDestinationIdle"); }
+    @Test public void destinationUidEvidenceAndOverflowPauseExpireDuringSuspend() { check("uidDestinationSuspend"); }
+    @Test public void inferredUdpOwnerSurvivesFailedRecoveryAfterEvidenceExpires() { check("udpInferredUidFailure"); }
+    @Test public void inferredUdpOwnersRecoverAndRecheckPolicyAndRoutes() { check("udpInferredUidRecovery"); }
+    @Test public void destinationUidMatchesEndpointsProtocolAndPortWithoutRefreshingOnInference() { check("uidDestinationMatch"); }
+    @Test public void destinationUidConflictsExpireIndependentlyIncludingExcludedOwners() { check("uidDestinationConflict"); }
+    @Test public void destinationUidOverflowUsesDiscardedOriginalExpiry() { check("uidDestinationOverflow"); }
+    @Test public void destinationUidClearsOnClockFailuresAndTeardownAndIsolatesContexts() { check("uidDestinationClock"); }
+    @Test public void destinationUidFallbackAppliesPolicyForBothFamiliesAndOwnerApis() { check("uidDestinationPolicy"); }
     @Test public void dnsChecksOwnershipAndPolicyWithAndWithoutForwarding() { check("dnsPolicy"); }
     @Test public void dnsEnforcesCapacityAndRetiresDeniedFlowsInBothModes() { check("dnsPolicyLifecycle"); }
     @Test public void blockedDnsFollowsUnknownOwnerPolicyAndPreservesStoredOwnersOnDenial() { check("dnsBlockedOwnerRecovery"); }

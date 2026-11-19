@@ -149,6 +149,7 @@ void clear(struct context *ctx) {
     }
     ctx->ng_session = NULL;
     memset(ctx->session_bucket, 0, sizeof(ctx->session_bucket));
+    memset(&ctx->uid_observations, 0, sizeof(ctx->uid_observations));
 }
 
 static long long refresh_tcp_monitor(const struct arguments *args, struct ng_session *s,

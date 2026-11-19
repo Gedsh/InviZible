@@ -350,7 +350,7 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
             tcp->source = monitor_sessions->tcp.source; tcp->dest = monitor_sessions->tcp.dest;
             tcp->seq = htonl(1000); tcp->ack_seq = htonl(2000); tcp->window = htons(8000);
             assert(handle_tcp(monitor_args, packet, sizeof(packet), packet + off,
-                              own_uid, 1, NULL, fd) == 1);
+                              test_owner(own_uid), 1, NULL, fd) == 1);
         } else if (monitor_polls == 3) {
             assert(monitor_calls == MONITOR_FLOWS + 1);
             assert(send(monitor_peer, "x", 1, 0) == 1);

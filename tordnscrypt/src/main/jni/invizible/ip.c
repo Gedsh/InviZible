@@ -144,7 +144,7 @@ static bool valid_transport_checksum(uint8_t version, uint8_t protocol,
 static bool retry_udp_uid(struct ng_session *s) {
     if (s == NULL ||
         !((s->udp.state == UDP_ACTIVE && s->socket >= 0) ||
-          (s->udp.state == UDP_BLOCKED && s->socket < 0)) || s->udp.uid >= 0 ||
+          (s->udp.state == UDP_BLOCKED && s->socket < 0)) || (s->udp.uid >= 0 && !s->udp.uid_inferred) ||
         s->udp.uid_retries >= UDP_UID_RETRY_MAX || s->udp.uid_retry_at < 0)
         return false;
 
@@ -174,6 +174,104 @@ static bool udp_route_matches(const struct udp_session *session, const struct al
     return session->redirect_version == version && session->redirect_port == htons(redirect->rport) &&
            inet_pton(version == 4 ? AF_INET : AF_INET6, target, &address) == 1 &&
            memcmp(&session->redirect_addr, &address, version == 4 ? 4 : 16) == 0;
+}
+
+static bool same_uid_destination(const struct uid_observation *entry, int version, int protocol,
+                                  const void *source, const void *dest, uint16_t port) {
+    return entry->version == version && entry->protocol == protocol && entry->port == port &&
+           memcmp(entry->source, source, version == 4 ? 4 : 16) == 0 &&
+           memcmp(entry->dest, dest, version == 4 ? 4 : 16) == 0;
+}
+
+static int64_t uid_cache_now(void);
+
+static int64_t uid_observation_time(struct uid_observations *cache) {
+    // Evidence and overflow deadlines must age while the device is suspended.
+    int64_t now = uid_cache_now();
+    if (now < 0 || now < cache->time) {
+        memset(cache, 0, sizeof(*cache));
+        return -1;
+    }
+    cache->time = now;
+    if (cache->count > 0 && cache->entry[cache->last].expires <= now) {
+        // Every entry and discarded observation has expired. Ignore stale storage.
+        cache->count = 0;
+        cache->last = 0;
+        cache->incomplete_until = 0;
+    }
+    return now;
+}
+
+// Only authoritative proc/Android lookups call this, before policy or socket setup.
+void record_uid_observation(struct context *ctx, int version, int protocol,
+                             const void *source, const void *dest, uint16_t port, jint uid) {
+    if (uid < 0 || (version != 4 && version != 6) ||
+        (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
+        return;
+    struct uid_observations *cache = &ctx->uid_observations;
+    int64_t now = uid_observation_time(cache);
+    if (now < 0)
+        return;
+    if (cache->count > 0) {
+        struct uid_observation *recent = &cache->entry[cache->last];
+        if (recent->uid == uid && same_uid_destination(recent, version, protocol, source, dest, port)) {
+            recent->expires = now + UID_OBSERVATION_MS;
+            return;
+        }
+    }
+    struct uid_observation *slot = NULL, *oldest = &cache->entry[0];
+    for (size_t i = 0; i < cache->count; i++) {
+        struct uid_observation *entry = &cache->entry[i];
+        if (entry->expires > now && entry->uid == uid &&
+            same_uid_destination(entry, version, protocol, source, dest, port)) {
+            entry->expires = now + UID_OBSERVATION_MS;
+            cache->last = i;
+            return;
+        }
+        if (slot == NULL && entry->expires <= now)
+            slot = entry;
+        if (entry->expires < oldest->expires)
+            oldest = entry;
+    }
+    if (slot == NULL && cache->count < UID_OBSERVATIONS)
+        slot = &cache->entry[cache->count++];
+    if (slot == NULL) {
+        // Missing evidence could hide a conflict. Keep its ORIGINAL expiry,
+        // rather than starting another full window at eviction or on inference.
+        slot = oldest;
+        if (slot->expires > cache->incomplete_until)
+            cache->incomplete_until = slot->expires;
+    }
+    slot->expires = now + UID_OBSERVATION_MS;
+    slot->uid = uid;
+    slot->version = (uint8_t) version;
+    slot->protocol = (uint8_t) protocol;
+    slot->port = port;
+    memcpy(slot->source, source, version == 4 ? 4 : 16);
+    memcpy(slot->dest, dest, version == 4 ? 4 : 16);
+    cache->last = (size_t) (slot - cache->entry);
+}
+
+jint infer_uid_destination(struct context *ctx, int version, int protocol,
+                            const void *source, const void *dest, uint16_t port) {
+    if ((version != 4 && version != 6) || (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
+        return -1;
+    struct uid_observations *cache = &ctx->uid_observations;
+    if (cache->count == 0)
+        return -1;
+    int64_t now = uid_observation_time(cache);
+    if (now < 0 || cache->count == 0 || now < cache->incomplete_until)
+        return -1;
+    jint uid = -1;
+    for (size_t i = 0; i < cache->count; i++) {
+        const struct uid_observation *entry = &cache->entry[i];
+        if (entry->expires <= now || !same_uid_destination(entry, version, protocol, source, dest, port))
+            continue;
+        if (uid >= 0 && uid != entry->uid)
+            return -1;
+        uid = entry->uid;
+    }
+    return uid >= 10000 && uid != own_uid ? uid : -1;
 }
 
 void handle_ip(const struct arguments *args,
@@ -478,6 +576,7 @@ void handle_ip(const struct arguments *args,
 
     // Get uid
     jint uid = -1;
+    bool inferred = false;
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
         (protocol == IPPROTO_UDP && (dport == 53 || !udp_existing || udp_uid_retry)) ||
         (protocol == IPPROTO_TCP && syn)) {
@@ -487,6 +586,7 @@ void handle_ip(const struct arguments *args,
             uid = get_uid_q(args, version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport);
         }
 
+        record_uid_observation(args->ctx, version, protocol, saddr, daddr, dport, uid);
         if (uid < 0 && !udp_uid_retry) {
             uid = restore_uid(args,
                               version,
@@ -500,13 +600,30 @@ void handle_ip(const struct arguments *args,
                               flags,
                               payload);
         }
+        if (uid < 0 && udp_existing && udp_lookup.session->udp.uid_inferred &&
+            udp_lookup.session->udp.uid >= 0) {
+            // A failed recovery does not replace this flow's provisional owner.
+            // Observation expiry only limits inference for other flows.
+            uid = udp_lookup.session->udp.uid;
+            inferred = true;
+        }
+        if (uid < 0) {
+            uid = infer_uid_destination(args->ctx, version, protocol, saddr, daddr, dport);
+            inferred = uid >= 0;
+        }
+        if (uid < 0 && (protocol == IPPROTO_TCP || protocol == IPPROTO_UDP || is_icmp_supported(pkt, payload)))
+            log_android(ANDROID_LOG_ERROR,
+                    "Packet uid can not be restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
+                    version, format_log_address(&source), sport, format_log_address(&dest), dport, protocol, flags, uid);
     }
 
     // Retain a newly learned owner even if policy denies this packet or retires the flow.
-    if (uid >= 0 && udp_existing && udp_lookup.session->udp.uid < 0 &&
+    if (uid >= 0 && udp_existing && (udp_lookup.session->udp.uid < 0 || udp_lookup.session->udp.uid_inferred) &&
         (udp_uid_retry || (dport == 53 && udp_lookup.session->udp.state == UDP_ACTIVE &&
-                          udp_lookup.session->socket >= 0)))
+                          udp_lookup.session->socket >= 0))) {
         udp_lookup.session->udp.uid = uid;
+        udp_lookup.session->udp.uid_inferred = inferred;
+    }
     if (uid >= 0 && (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) &&
         is_icmp_supported(pkt, payload)) {
         const struct icmp *icmp = (const struct icmp *) payload;
@@ -515,7 +632,7 @@ void handle_ip(const struct arguments *args,
         if (session != NULL && session->icmp.uid < 0 && session->socket >= 0)
             session->icmp.uid = uid;
     }
-    if (udp_uid_retry && uid < 0) {
+    if (udp_uid_retry && (uid < 0 || inferred)) {
         udp_lookup.preserve_uid_retry = true;
         udp_lookup.uid_retry_at = udp_lookup.session->udp.uid_retry_at;
         udp_lookup.uid_retries = udp_lookup.session->udp.uid_retries;
@@ -554,8 +671,10 @@ void handle_ip(const struct arguments *args,
         udp_lookup.session->udp.state == UDP_BLOCKED && (udp_uid_retry || dport == 53)) {
         if (allowed) {
             // Retain a resolved owner as metadata even if reopening must wait.
-            if (uid >= 0 && udp_lookup.session->udp.uid < 0)
+            if (uid >= 0 && (udp_lookup.session->udp.uid < 0 || udp_lookup.session->udp.uid_inferred)) {
                 udp_lookup.session->udp.uid = uid;
+                udp_lookup.session->udp.uid_inferred = inferred;
+            }
             if (sessions >= maxsessions)
                 return; // Replacing a socketless block requires a new active slot.
             // This record has no epoll registration. Retain its resolved owner for
@@ -584,19 +703,20 @@ void handle_ip(const struct arguments *args,
     }
 
     // Handle allowed traffic
+    struct packet_owner owner = {.uid = uid, .inferred = inferred};
     if (allowed) {
         if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6)
             handle_icmp(args, pkt, length, payload, uid, epoll_fd);
         else if (protocol == IPPROTO_UDP)
-            handle_udp_with_lookup(args, pkt, length, payload, uid, redirect, epoll_fd,
+            handle_udp_with_lookup(args, pkt, length, payload, owner, redirect, epoll_fd,
                                    &udp_lookup);
         else if (protocol == IPPROTO_TCP)
-            handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
+            handle_tcp(args, pkt, length, payload, owner, allowed, redirect, epoll_fd);
     } else {
         if (protocol == IPPROTO_UDP)
-            block_udp_with_lookup(args, pkt, length, payload, uid, &udp_lookup);
+            block_udp_with_lookup(args, pkt, length, payload, owner, &udp_lookup);
         else if (protocol == IPPROTO_TCP)
-            handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd);
+            handle_tcp(args, pkt, length, payload, owner, allowed, redirect, epoll_fd);
 
         log_android(ANDROID_LOG_WARN, "Address v%d p%d %s/%u syn %d uid %d not allowed",
                     version, protocol, format_log_address(&dest), dport, syn, uid);
@@ -617,10 +737,13 @@ jint get_uid(const int version, const int protocol,
              const void *daddr, const uint16_t dport) {
     jint uid = -1;
 
-    char source[INET6_ADDRSTRLEN + 1];
-    char dest[INET6_ADDRSTRLEN + 1];
-    inet_ntop(version == 4 ? AF_INET : AF_INET6, saddr, source, sizeof(source));
-    inet_ntop(version == 4 ? AF_INET : AF_INET6, daddr, dest, sizeof(dest));
+    struct log_address source = {.version = version, .address = saddr};
+    struct log_address dest = {.version = version, .address = daddr};
+    // The proc helper only uses these strings for INFO cache-hit diagnostics.
+    if (ANDROID_LOG_INFO >= LOG_LEVEL) {
+        format_log_address(&source);
+        format_log_address(&dest);
+    }
 
     int64_t now = uid_cache_now();
 
@@ -638,24 +761,24 @@ jint get_uid(const int version, const int protocol,
         daddr128[11] = 0xFF;
         memcpy(daddr128 + 12, daddr, 4);
 
-        uid = get_uid_sub(6, protocol, saddr128, sport, daddr128, dport, source, dest, now);
+        uid = get_uid_sub(6, protocol, saddr128, sport, daddr128, dport, source.text, dest.text, now);
         log_android(ANDROID_LOG_DEBUG, "uid v%d p%d %s/%u > %s/%u => %d as inet6",
-                    version, protocol, source, sport, dest, dport, uid);
+                    version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport, uid);
     }
 
     // A missing or unreadable IPv6 table must not prevent an IPv4 lookup.
     if (uid < 0) {
-        uid = get_uid_sub(version, protocol, saddr, sport, daddr, dport, source, dest, now);
+        uid = get_uid_sub(version, protocol, saddr, sport, daddr, dport, source.text, dest.text, now);
         log_android(ANDROID_LOG_DEBUG, "uid v%d p%d %s/%u > %s/%u => %d fallback",
-                    version, protocol, source, sport, dest, dport, uid);
+                    version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport, uid);
     }
 
     if (uid == -1)
         log_android(ANDROID_LOG_WARN, "uid v%d p%d %s/%u > %s/%u => not found",
-                    version, protocol, source, sport, dest, dport);
+                    version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport);
     else if (uid >= 0)
         log_android(ANDROID_LOG_INFO, "uid v%d p%d %s/%u > %s/%u => %d",
-                    version, protocol, source, sport, dest, dport, uid);
+                    version, protocol, format_log_address(&source), sport, format_log_address(&dest), dport, uid);
 
     return uid;
 }
@@ -1072,14 +1195,14 @@ jint restore_uid(const struct arguments *args,
         cur = find_session(args->ctx, version, protocol, saddr, htons(sport), daddr, htons(dport));
         const struct tcphdr *tcp = (const struct tcphdr *) payload;
         // A new SYN must not inherit the owner of a previous use of this tuple.
-        if (cur != NULL && cur->tcp.uid >= 0 && cur->socket >= 0 &&
+        if (cur != NULL && cur->tcp.uid >= 0 && !cur->tcp.uid_inferred && cur->socket >= 0 &&
             cur->tcp.state != TCP_CLOSING && cur->tcp.state != TCP_CLOSE &&
             (!tcp->syn || ntohl(tcp->seq) == cur->tcp.remote_start)) {
             uid = cur->tcp.uid;
         }
     } else if (protocol == IPPROTO_UDP) {
         cur = find_session(args->ctx, version, protocol, saddr, htons(sport), daddr, htons(dport));
-        if (cur != NULL && cur->udp.uid >= 0 && cur->socket >= 0 && cur->udp.state == UDP_ACTIVE) {
+        if (cur != NULL && cur->udp.uid >= 0 && !cur->udp.uid_inferred && cur->socket >= 0 && cur->udp.state == UDP_ACTIVE) {
             uid = cur->udp.uid;
         }
     } else if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) {
@@ -1100,11 +1223,7 @@ jint restore_uid(const struct arguments *args,
         return uid;
     }
 
-    if (uid < 0) {
-        log_android(ANDROID_LOG_ERROR,
-                    "Packet uid can not be restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
-                    version, source, sport, dest, dport, protocol, flags, uid);
-    } else {
+    if (uid >= 0) {
         log_android(ANDROID_LOG_ERROR,
                     "Packet uid restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
                     version, source, sport, dest, dport, protocol, flags, uid);
