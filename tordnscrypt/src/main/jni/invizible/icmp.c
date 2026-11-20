@@ -63,6 +63,29 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
     return 0;
 }
 
+// Shared across families and flows: burst 20, then one error per 100 ms.
+// Separate MTU feedback so ordinary unreachable floods cannot starve it.
+static bool allow_icmp_error(struct context *ctx, bool mtu) {
+    struct icmp_error_budget *budget = &ctx->icmp_errors[mtu ? 1 : 0];
+    int64_t now = get_ms();
+    if (now < 0) return false; // A failed clock read must not disable the cap.
+    if (!budget->initialized) {
+        budget->tokens = 20;
+        budget->updated = now;
+        budget->initialized = true;
+    } else if (now > budget->updated) {
+        int64_t refill = (now - budget->updated) / 100;
+        if (refill > 0) {
+            budget->tokens = refill >= 20 - budget->tokens ? 20 :
+                             budget->tokens + (unsigned int) refill;
+            budget->updated += refill * 100;
+        }
+    }
+    if (budget->tokens == 0) return false;
+    budget->tokens--;
+    return true;
+}
+
 // Quote the original tunnel packet, never the redirected upstream tuple.
 static void write_socket_error(const struct arguments *args,
                               const uint8_t *packet, size_t length, int serr,
@@ -100,6 +123,11 @@ static void write_socket_error(const struct arguments *args,
 
     if (length > original_length) length = original_length;
     if (length > limit) length = limit;
+    bool mtu_error = !expired && serr == EMSGSIZE;
+    if (mtu_error && (mtu == 0 || (reply.version == 4 && (mtu < 68 || mtu > UINT16_MAX))))
+        return;
+    if (!allow_icmp_error(args->ctx, mtu_error))
+        return;
     _Alignas(8) uint8_t message[1280 - sizeof(struct ip6_hdr)] = {0};
     message[0] = reply.version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH;
     message[1] = reply.version == 4
@@ -109,8 +137,6 @@ static void write_socket_error(const struct arguments *args,
         message[0] = reply.version == 4 ? ICMP_TIMXCEED : ICMP6_TIME_EXCEEDED;
         message[1] = 0;
     } else if (serr == EMSGSIZE) {
-        if (mtu == 0 || (reply.version == 4 && (mtu < 68 || mtu > UINT16_MAX)))
-            return;
         message[0] = reply.version == 4 ? ICMP_UNREACH : ICMP6_PACKET_TOO_BIG;
         message[1] = reply.version == 4 ? ICMP_UNREACH_NEEDFRAG : 0;
         if (reply.version == 4) {

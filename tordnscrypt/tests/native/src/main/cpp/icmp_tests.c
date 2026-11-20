@@ -604,6 +604,62 @@ void test_icmp_error_queue(const struct arguments *args) {
 #endif
 }
 
+void test_icmp_error_rate_limit(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    struct arguments running = *args; running.tun = tunnel[1];
+    test_monotonic_enabled = true; test_monotonic_ms = 0;
+    // Exhaust ordinary errors first, then verify MTU feedback has its own budget.
+    for (int mtu = 0; mtu < 2; mtu++) {
+        for (int stage = 0; stage < 7; stage++) {
+            if (stage == 1) test_monotonic_ms += 99;
+            if (stage == 2) test_monotonic_ms++;
+            if (stage == 3) test_monotonic_ms -= 50; // No refill on clock rollback.
+            if (stage == 4) test_monotonic_failures = -1;
+            if (stage == 5) {
+                test_monotonic_failures = 0;
+                test_monotonic_ms += 10000; // Idle refill is capped at the burst size.
+            }
+            if (stage == 6) clear(args->ctx); // A reused context starts with a fresh budget.
+            int expected = stage == 0 || stage >= 5 ? 20 : stage == 2 ? 1 : 0;
+            for (int i = 0; i < 25; i++) {
+                int version = i % 2 ? 6 : 4;
+                uint8_t packet[128], output[2048];
+                size_t off = ip_header(packet, version, IPPROTO_UDP, 24,
+                                       version == 4 ? "192.0.2.1" : "2001:db8::2");
+                store16(packet + off, 12345); store16(packet + off + 2, 5000);
+                store16(packet + off + 4, 24);
+                packet_checksums(packet, off + 24, off, IPPROTO_UDP);
+                if (mtu) {
+                    queue_error(77, version, EMSGSIZE, 1400);
+                    assert(forward_socket_errors(&running, 77, packet, off + 24) == 0);
+                    assert(queued_error.calls == 2); // Suppression still drains the queue.
+                } else
+                    write_connection_unreach(&running, packet, off + 24, ECONNREFUSED);
+                assert(is_readable(tunnel[0]) == (i < expected));
+                if (i < expected) {
+                    int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+                    size_t bytes = tun_packet(tunnel[0], output, version, protocol);
+                    assert_icmp_checksum(output, bytes, off, protocol);
+                    assert(memcmp(output + off + 8, packet, off + 24) == 0);
+                }
+                assert(allocations == 0 && sockets == 0);
+            }
+        }
+        // Echo replies use their normal forwarding path even after errors are capped.
+        struct icmp_session echo = {.version = 4};
+        uint8_t reply[8] = {ICMP_ECHOREPLY}, output[128];
+        assert(write_icmp(&running, &echo, reply, sizeof(reply)) > 0);
+        tun_packet(tunnel[0], output, 4, IPPROTO_ICMP);
+        // Leave the ordinary bucket exhausted when starting the MTU checks.
+    }
+    error_queue_recv = NULL;
+    test_monotonic_enabled = false; test_monotonic_failures = 0;
+    clear(args->ctx); close(tunnel[0]); close(tunnel[1]);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
 void test_icmp_error_queue_bounds(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);

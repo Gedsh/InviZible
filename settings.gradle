@@ -1,4 +1,6 @@
 include ':tordnscrypt', ':filepicker'
 project(':filepicker').projectDir = new File('android-filepicker/filepicker')
+include ':native-tests'
+project(':native-tests').projectDir = new File('tordnscrypt/tests/native')
 //Please comment line below if you are not the project owner
 //project(':tordnscrypt').buildFileName = 'owner.gradle'

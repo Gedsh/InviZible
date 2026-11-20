@@ -988,9 +988,8 @@ void test_dns_uid_restore(struct arguments *args, int protocol) {
             for (int scenario = 0; scenario < SCENARIOS; scenario++) {
                 _Alignas(8) uint8_t packet[128], output[2048];
                 const char *dest = version == 4 ? "9.9.9.9" : "2620:fe::fe";
-                // Each exact-restoration scenario starts without evidence from
-                // another scenario's authoritative lookup to the same destination.
-                memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
+                // Independent scenarios must not share UID evidence or ICMP error budgets.
+                clear(args->ctx);
                 size_t off = ip_header(packet, version, protocol, 20, dest);
                 if (protocol == IPPROTO_UDP) {
                     struct udphdr *udp = (void *) (packet + off);
@@ -1913,7 +1912,8 @@ void test_udp_retry_routes(struct arguments *args) {
                     assert(current != NULL && current->udp.uid < 0);
                     assert(current->udp.uid_retries == retry + 1);
                     assert(current->udp.uid_retry_at == deadlines[retry] + (UDP_UID_RETRY_INTERVAL << (retry + 1)));
-                    assert(test_monotonic_calls == clocks + 1); // Replacement must not restart its timer.
+                    // Replacement must not restart its timer; a denied packet also checks the ICMP budget.
+                    assert(test_monotonic_calls == clocks + 1 + denied);
                     assert(uid_lookups == queries + !legacy && policy_checks == retry + 2);
                     assert(current->udp.state == (denied ? UDP_BLOCKED : UDP_ACTIVE));
                     assert(destination_calls == !denied);
@@ -2277,7 +2277,8 @@ void test_blocked_udp_uid_retry(struct arguments *args, int kind) {
                     }
                     assert(uid_lookups == queries && file_closes == closes &&
                            policy_checks == (scenario == BUDGET ? UDP_UID_RETRY_MAX + 1 : 1));
-                    assert(test_monotonic_calls == clock_reads && old->udp.uid == owner);
+                    // The 16 error replies check their budget, without retrying ownership.
+                    assert(test_monotonic_calls == clock_reads + 16 && old->udp.uid == owner);
                     assert(args->ctx->ng_session == old && old->next == NULL && sockets == 0);
                 } else {
                     owner = kind == 3 ? -1 : kind == 1 && !(scenario & 1) ? 0 : 12345;

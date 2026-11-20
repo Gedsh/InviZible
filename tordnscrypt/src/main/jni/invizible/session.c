@@ -151,6 +151,7 @@ void clear(struct context *ctx) {
     memset(ctx->session_bucket, 0, sizeof(ctx->session_bucket));
     memset(&ctx->uid_observations, 0, sizeof(ctx->uid_observations));
     memset(&ctx->uid_dns_mappings, 0, sizeof(ctx->uid_dns_mappings));
+    memset(ctx->icmp_errors, 0, sizeof(ctx->icmp_errors));
 }
 
 static long long refresh_tcp_monitor(const struct arguments *args, struct ng_session *s,

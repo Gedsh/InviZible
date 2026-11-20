@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for icmp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IcmpTest extends NativeTestSupport {
+    @Test public void localErrorsAreRateLimitedWithoutStarvingMtuOrEchoReplies() { check("icmpErrorRateLimit"); }
     @Test public void invalidReplyTypesAndCodesAreDroppedAndLaterRepliesWork() { check("icmpReplyValidation"); }
     @Test public void maximumRepliesStayIntactAndOversizedRepliesAreDropped() { check("icmpReplyBounds"); }
     @Test public void receiveMtuErrorsAfterPollingKeepSessionsUsable() { check("icmpRecvMtu"); }

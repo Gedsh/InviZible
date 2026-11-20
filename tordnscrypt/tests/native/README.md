@@ -566,10 +566,26 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 309 tests plus the optional comparison test.
+The full run contains 310 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
+Locally generated ICMP errors share a per-context token bucket across IPv4/IPv6
+and flows: a burst of 20, replenished by one token per 100 monotonic milliseconds.
+MTU errors have an independent bucket with the same limits so unreachable floods
+cannot starve path-MTU feedback. Echo replies bypass the limiter. Invalid packets
+do not consume tokens; permitted attempts consume a token even if output fails.
+Suppression happens before message construction, checksum work or output allocation,
+with no timers or extra wake-ups. Clock-read failures suppress errors without
+refilling, and context cleanup resets both budgets. The ICMP regression covers
+both families, shared burst limits, fractional refill, idle refill caps, backward
+and failed clocks, cleanup/reuse, independent MTU feedback, echo forwarding,
+error-queue draining and allocation/socket balance.
+Validation on 2026-11-20 passed all 23 ICMP cases and the full suite on Android 10
+ARMv7 with ASan/UBSan and HEAD comparison: 303 passed, eight expected proc skips.
+The non-sanitized API 23 build also succeeded for ARMv7, ARM64 and x86_64;
+the rate-limit change has not yet been run on Android 6 hardware.
+
 Destination-unreachable errors now contain the original tunnel packet prefix,
 family-specific type/code and a checksum over the full ICMP message (including
 the IPv6 pseudo-header). Immediate UDP blocks/retries and blocked TCP requests

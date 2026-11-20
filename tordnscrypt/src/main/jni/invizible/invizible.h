@@ -176,6 +176,12 @@ struct uid_dns_mappings {
     size_t count, lost_count;
 };
 
+struct icmp_error_budget {
+    int64_t updated; // Monotonic milliseconds.
+    unsigned int tokens;
+    bool initialized;
+};
+
 struct context {
     pthread_mutex_t lock;
     int pipefds[2];
@@ -186,6 +192,8 @@ struct context {
     struct tcp_memory tcp_memory;
     struct uid_observations uid_observations; // Owned by this context's event thread.
     struct uid_dns_mappings uid_dns_mappings; // Names/addresses only, never DNS socket owners.
+    // Event-thread owned; MTU feedback has an independent budget.
+    struct icmp_error_budget icmp_errors[2];
 };
 
 enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };
