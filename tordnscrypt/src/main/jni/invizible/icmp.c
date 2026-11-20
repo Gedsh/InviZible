@@ -26,6 +26,12 @@
 
 extern int own_uid;
 
+static int icmp_reply_log_priority(int version, const struct icmp *icmp) {
+    return icmp->icmp_code == 0 &&
+           icmp->icmp_type == (version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY)
+           ? ANDROID_LOG_DEBUG : ANDROID_LOG_WARN;
+}
+
 int get_icmp_timeout(const struct icmp_session *u, int sessions, int maxsessions) {
     int timeout = ICMP_TIMEOUT;
 
@@ -43,7 +49,7 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
     if (s->icmp.stop || s->icmp.time + timeout < now) {
         struct log_address source = {.version = s->icmp.version, .address = &s->icmp.saddr};
         struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
-        log_android(ANDROID_LOG_WARN, "ICMP idle %jd/%d sec stop %d from %s to %s",
+        log_android(ANDROID_LOG_DEBUG, "ICMP idle %jd/%d sec stop %d from %s to %s",
                     (intmax_t) (now - s->icmp.time), timeout, s->icmp.stop,
                     format_log_address(&source), format_log_address(&dest));
 
@@ -318,7 +324,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 // The ping socket's echo ID may differ from the original session ID.
                 struct icmp *icmp = (struct icmp *) buffer;
                 log_android(
-                        s->icmp.id == icmp->icmp_id ? ANDROID_LOG_INFO : ANDROID_LOG_WARN,
+                        icmp_reply_log_priority(s->icmp.version, icmp),
                         "ICMP recv bytes %zd from %s for tun type %d code %d id %x/%x seq %d",
                         bytes, format_log_address(&dest),
                         icmp->icmp_type, icmp->icmp_code,
@@ -388,7 +394,7 @@ jboolean handle_icmp(const struct arguments *args,
 
     // Create new session if needed
     if (cur == NULL) {
-        log_android(ANDROID_LOG_INFO, "ICMP new session from %s to %s", format_log_address(&source), format_log_address(&dest));
+        log_android(ANDROID_LOG_DEBUG, "ICMP new session from %s to %s", format_log_address(&source), format_log_address(&dest));
 
         // Register session
         struct ng_session *s = ng_malloc(sizeof(struct ng_session), "icmp session");
@@ -468,7 +474,7 @@ jboolean handle_icmp(const struct arguments *args,
     icmp->icmp_cksum = 0;
     icmp->icmp_cksum = ~calc_checksum(csum, (uint8_t *) icmp, icmplen);
 
-    log_android(ANDROID_LOG_WARN,
+    log_android(ANDROID_LOG_DEBUG,
                 "ICMP forward from tun %s to %s type %d code %d id %x seq %d data %zu",
                 format_log_address(&source), format_log_address(&dest),
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq, icmplen);
@@ -595,7 +601,7 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
     struct log_address dest = {.version = cur->version, .address = &cur->daddr};
 
     // Send raw ICMP message
-    log_android(ANDROID_LOG_WARN,
+    log_android(icmp_reply_log_priority(cur->version, icmp),
                 "ICMP sending to tun %d from %s to %s data %zu type %d code %d id %x seq %d",
                 args->tun, format_log_address(&dest), format_log_address(&source), datalen,
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);

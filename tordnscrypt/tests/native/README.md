@@ -636,6 +636,12 @@ metadata is missing. Fatal queued errors still close the flow; ordinary network
 errors without queued metadata use the retained quote. Transient EAGAIN does not
 drain errors, logging cannot change the saved errno decision, and resources balance
 after every case. Receive-error buffers are released through the normal cleanup path.
+Routine ping forwarding, normal echo replies, session creation and idle cleanup
+log at DEBUG. Kernel-rewritten echo IDs do not turn normal replies into warnings.
+Unexpected reply types/codes, generated ICMP errors and socket/packet failures
+retain WARN/ERROR diagnostics. The existing lazy logging gate avoids address
+formatting when the selected log level suppresses these messages; packet handling
+and checksums are unchanged.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 
