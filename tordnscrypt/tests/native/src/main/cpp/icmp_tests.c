@@ -59,6 +59,7 @@ void test_icmp_short_replies(const struct arguments *args) {
 
 void test_icmp6_forward_checksums(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
     const size_t lengths[] = {8, 19, 40, 41, 1400};
     for (int extensions = 0; extensions < 2; extensions++) {
         for (size_t i = 0; i < sizeof(lengths) / sizeof(*lengths); i++) {
@@ -75,7 +76,7 @@ void test_icmp6_forward_checksums(const struct arguments *args) {
             store16(packet + off + 6, (uint16_t) i);
             memset(packet + off + 8, 0xa5, lengths[i] - 8);
             expect_destination(6, "2001:db8::2", 0);
-            assert(handle_icmp(args, packet, off + lengths[i], packet + off, own_uid, -1) == 1);
+            assert(handle_icmp(args, packet, off + lengths[i], packet + off, own_uid, epoll_fd) == 1);
             assert(load16(packet + off + 4) == (uint16_t) ~UINT16_C(12345));
             assert_icmp_checksum(packet, off + lengths[i], off, IPPROTO_ICMPV6);
             assert(destination_calls == 1);
@@ -83,6 +84,7 @@ void test_icmp6_forward_checksums(const struct arguments *args) {
             assert(allocations == 0 && sockets == 0);
         }
     }
+    close(epoll_fd);
 #endif
 }
 
@@ -145,6 +147,7 @@ void test_icmp_buffer_reuse(const struct arguments *args) {
 }
 
 void test_icmp_destination(const struct arguments *args) {
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
     for (int version = 4; version <= 6; version += 2) {
         const char *dest = version == 4 ? "198.51.100.1" : "fe80::1";
         _Alignas(8) uint8_t packet[64];
@@ -152,11 +155,12 @@ void test_icmp_destination(const struct arguments *args) {
                                8, dest);
         packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
         expect_destination(version, dest, 0);
-        assert(handle_icmp(args, packet, off + 8, packet + off, own_uid, -1) == 1);
+        assert(handle_icmp(args, packet, off + 8, packet + off, own_uid, epoll_fd) == 1);
         assert(destination_calls == 1);
         clear(args->ctx);
         assert(allocations == 0 && sockets == 0);
     }
+    close(epoll_fd);
 }
 
 void test_icmp_allocation_failure(const struct arguments *args) {
@@ -390,6 +394,7 @@ void test_icmp_unreachable_bounds(const struct arguments *args) {
 
 void test_icmp_echo_validation(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
     for (int version = 4; version <= 6; version += 2) {
         for (int kind = 0; kind < 7; kind++) {
             _Alignas(8) uint8_t packet[128];
@@ -410,8 +415,63 @@ void test_icmp_echo_validation(const struct arguments *args) {
                                ICMP_MINLEN, version == 4 ? "192.0.2.1" : "2001:db8::2");
         packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
         expect_destination(version, version == 4 ? "192.0.2.1" : "2001:db8::2", 0);
-        assert(handle_icmp(args, packet, off + ICMP_MINLEN, packet + off, own_uid, -1) == 1);
+        assert(handle_icmp(args, packet, off + ICMP_MINLEN, packet + off, own_uid, epoll_fd) == 1);
         clear(args->ctx);
+        assert(allocations == 0 && sockets == 0);
+    }
+    close(epoll_fd);
+#endif
+}
+
+void test_icmp_epoll_cleanup(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        _Alignas(8) uint8_t packet[128], original[128], output[2048];
+        int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        size_t off = ip_header(packet, version, protocol, ICMP_MINLEN,
+                               version == 4 ? "192.0.2.1" : "2001:db8::2");
+        packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+        store16(packet + off + 4, 12345); store16(packet + off + 6, 1);
+        packet_checksums(packet, off + ICMP_MINLEN, off, protocol);
+        memcpy(original, packet, off + ICMP_MINLEN);
+        expect_destination(version, version == 4 ? "192.0.2.1" : "2001:db8::2", 0);
+        for (int attempt = 0; attempt < 8; attempt++) {
+            // A real EBADF from epoll_ctl, without mocking its result.
+            assert(handle_icmp(&running, packet, off + ICMP_MINLEN, packet + off, own_uid, -1) == 0);
+            assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0 && last_socket == -1);
+            assert(destination_calls == 0 && !is_readable(tunnel[0]));
+            assert(memcmp(packet, original, off + ICMP_MINLEN) == 0);
+            assert(find_session(args->ctx, version, protocol,
+                                packet + (version == 4 ? 12 : 8), htons(12345),
+                                packet + (version == 4 ? 16 : 24), 0) == NULL);
+            assert_test_session_index(args->ctx);
+        }
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+        assert(handle_icmp(&running, packet, off + ICMP_MINLEN, packet + off, own_uid, epoll_fd) == 1);
+        struct ng_session *session = args->ctx->ng_session;
+        assert(session != NULL && allocations == 1 && sockets == 1 && destination_calls == 1);
+        // Deliver a reply through the pollable local socket and real epoll.
+        struct sockaddr_in local = {.sin_family = AF_INET, .sin_addr.s_addr = htonl(INADDR_LOOPBACK)};
+        assert(bind(session->socket, (struct sockaddr *) &local, sizeof(local)) == 0);
+        socklen_t address_length = sizeof(local);
+        assert(getsockname(session->socket, (struct sockaddr *) &local, &address_length) == 0);
+        // Use the real socket constructor because ordinary UDP fixtures use /dev/null.
+        int sender = __real_socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0); assert(sender >= 0);
+        uint8_t reply[ICMP_MINLEN] = {version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY};
+        store16(reply + 4, 54321); store16(reply + 6, 1);
+        extern ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+        assert(__real_sendto(sender, reply, sizeof(reply), 0, (struct sockaddr *) &local, sizeof(local)) == sizeof(reply));
+        struct epoll_event event;
+        assert(epoll_wait(epoll_fd, &event, 1, 100) == 1 && event.data.ptr == session);
+        check_icmp_socket(&running, &event);
+        assert(tun_packet(tunnel[0], output, version, protocol) == off + ICMP_MINLEN);
+        assert(output[off] == reply[0] && load16(output + off + 4) == 12345 && !session->icmp.stop);
+        assert_icmp_checksum(output, off + ICMP_MINLEN, off, protocol);
+        clear(args->ctx);
+        assert_test_session_index(args->ctx);
+        close(sender); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
     }
 #endif

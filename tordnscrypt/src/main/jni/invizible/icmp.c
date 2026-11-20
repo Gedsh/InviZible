@@ -271,8 +271,12 @@ jboolean handle_icmp(const struct arguments *args,
         memset(&s->ev, 0, sizeof(struct epoll_event));
         s->ev.events = EPOLLIN | EPOLLERR;
         s->ev.data.ptr = s;
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev))
+        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev)) {
             log_android(ANDROID_LOG_ERROR, "epoll add icmp error %d: %s", errno, strerror(errno));
+            close(s->socket);
+            ng_free(s, __FILE__, __LINE__);
+            return 0;
+        }
 
         add_session(args->ctx, s);
 

@@ -219,7 +219,11 @@ void __wrap_ng_free(void *p, const char *file, int line) {
 int __real_socket(int domain, int type, int protocol);
 int __wrap_socket(int domain, int type, int protocol) {
     assert(tracked_socket_count < (int) (sizeof(tracked_sockets) / sizeof(*tracked_sockets)));
-    last_socket = (real_network ? __real_socket(domain, type, protocol) : open("/dev/null", O_RDWR));
+    if (!real_network && (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6))
+        // Pollable local surrogate; outgoing ping traffic is captured by sendto.
+        last_socket = __real_socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+    else
+        last_socket = (real_network ? __real_socket(domain, type, protocol) : open("/dev/null", O_RDWR));
     assert(last_socket >= 0);
     tracked_sockets[tracked_socket_count++] = last_socket;
     sockets++;

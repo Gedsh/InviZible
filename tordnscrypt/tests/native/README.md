@@ -566,7 +566,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 301 tests plus the optional comparison test.
+The full run contains 302 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
@@ -597,6 +597,14 @@ echo replies, router solicitations, unreachable messages and unknown types. They
 assert no JNI/proc owner lookups, policy callbacks, forwarding or resource creation
 for rejected traffic, including at session capacity. Existing-owner restoration
 also rejects malformed requests and mismatched protocols.
+ICMP session creation closes its socket and frees the unregistered session when
+epoll registration fails, before changing the packet or sending it upstream.
+An IPv4/IPv6 regression uses real failing epoll calls repeatedly, verifies empty
+session indexes, unchanged packets, no sends and balanced resources, then checks
+successful registration and echo reply delivery through real epoll/local sockets.
+Successful ICMP fixtures use a pollable local UDP socket as the ping-socket
+surrogate; outgoing traffic remains captured, without external network access or
+a dependency on kernel ping-socket permissions.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 
