@@ -567,13 +567,9 @@ alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
 The full run contains 295 tests plus the optional comparison test.
-Temporary `UID inference declined:` diagnostics identify the rejection branch
-before the existing unknown-packet error on the same native thread. They distinguish
-missing/expired DNS mappings, ambiguous names, retained loss guards, missing or
-conflicting owners, excluded owners, clock failure and UID-observation overflow.
-Missing-mapping diagnostics report a retained expired name/age when available;
-an absent expired record does not establish whether a mapping was ever observed.
-These diagnostics add no packet delays, timers, DNS queries or successful-inference logs.
+Inference failures use the existing `Packet uid can not be restored` diagnostic.
+Temporary branch diagnostics and their expired-mapping-only scan have been removed;
+inference decisions and cache lifetimes are unchanged.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 

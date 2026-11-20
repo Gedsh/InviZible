@@ -382,46 +382,23 @@ static jint infer_uid_domain(const struct context *ctx, int version,
             memcmp(entry->address, dest, version == 4 ? 4 : 16) != 0)
             continue;
         // Shared addresses do not identify which hostname this connection uses.
-        if (domain != NULL && strcmp(domain, entry->domain) != 0) {
-            log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_ambiguous names=%s,%s", domain, entry->domain);
+        if (domain != NULL && strcmp(domain, entry->domain) != 0)
             return -1;
-        }
         domain = entry->domain;
     }
-    if (domain == NULL) {
-        // Temporary diagnostics: the UI can retain a name after native evidence expires.
-        const struct uid_dns_mapping *expired = NULL;
-        for (size_t i = 0; i < dns->count; i++) {
-            const struct uid_dns_mapping *entry = &dns->entry[i];
-            if (entry->expires <= now && uid_dns_address_matches(entry, version, dest) &&
-                (expired == NULL || entry->expires > expired->expires))
-                expired = entry;
-        }
-        log_android(ANDROID_LOG_ERROR,
-                    "UID inference declined: dns_mapping_missing mappings=%zu losses=%zu admission_ms=%jd expired_name=%s expired_ms=%jd",
-                    dns->count, dns->lost_count, (intmax_t) (dns->admit_after > now ? dns->admit_after - now : 0),
-                    expired == NULL ? "-" : expired->domain, (intmax_t) (expired == NULL ? -1 : now - expired->expires));
+    if (domain == NULL)
         return -1;
-    }
     for (size_t i = 0; i < dns->lost_count; i++) {
         const struct uid_dns_mapping *entry = &dns->lost[i];
         if (entry->expires > now &&
-            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest))) {
-            log_android(ANDROID_LOG_ERROR,
-                        "UID inference declined: dns_discarded domain=%s lost_domain=%s scope=%s remaining_ms=%jd losses=%zu",
-                        domain, entry->domain, strcmp(entry->domain, domain) == 0 ? "domain" : "address",
-                        (intmax_t) (entry->expires - now), dns->lost_count);
+            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest)))
             return -1;
-        }
     }
     for (size_t i = 0; i < dns->count; i++) {
         const struct uid_dns_mapping *entry = &dns->entry[i];
         if (entry->incomplete_until > now &&
-            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest))) {
-            log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_incomplete domain=%s remaining_ms=%jd",
-                        domain, (intmax_t) (entry->incomplete_until - now));
+            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest)))
             return -1;
-        }
     }
     jint uid = -1;
     for (size_t i = 0; i < ctx->uid_observations.count; i++) {
@@ -435,21 +412,13 @@ static jint infer_uid_domain(const struct context *ctx, int version,
             if (entry->expires > now && entry->version == owner->version &&
                 memcmp(entry->address, owner->dest, owner->version == 4 ? 4 : 16) == 0 &&
                 strcmp(domain, entry->domain) == 0) {
-                if (uid >= 0 && uid != owner->uid) {
-                    log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_owner_conflict domain=%s uids=%d,%d",
-                                domain, uid, owner->uid);
+                if (uid >= 0 && uid != owner->uid)
                     return -1;
-                }
                 uid = owner->uid;
                 break;
             }
         }
     }
-    if (uid < 0)
-        log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_owner_missing domain=%s observations=%zu",
-                    domain, ctx->uid_observations.count);
-    else if (uid < 10000 || uid == own_uid)
-        log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_owner_excluded domain=%s uid=%d", domain, uid);
     return uid >= 10000 && uid != own_uid ? uid : -1;
 }
 
@@ -458,20 +427,13 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
     if ((version != 4 && version != 6) || (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
         return -1;
     struct uid_observations *cache = &ctx->uid_observations;
-    if (cache->count == 0) {
-        log_android(ANDROID_LOG_ERROR, "UID inference declined: uid_evidence_empty");
+    if (cache->count == 0)
         return -1;
-    }
     int64_t now = uid_observation_time(ctx);
-    if (now < 0 || cache->count == 0) {
-        log_android(ANDROID_LOG_ERROR, "UID inference declined: %s", now < 0 ? "clock_failure" : "uid_evidence_expired");
+    if (now < 0 || cache->count == 0)
         return -1;
-    }
-    if (now < cache->incomplete_until) {
-        log_android(ANDROID_LOG_ERROR, "UID inference declined: uid_evidence_overflow observations=%zu remaining_ms=%jd",
-                    cache->count, (intmax_t) (cache->incomplete_until - now));
+    if (now < cache->incomplete_until)
         return -1;
-    }
     jint uid = -1;
     // Share exact endpoint evidence across TCP/UDP, including conflicting owners.
     // Observations retain independent expiry for each confirmed transport.
@@ -479,17 +441,12 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
         const struct uid_observation *entry = &cache->entry[i];
         if (entry->expires <= now || !same_uid_destination(entry, version, source, dest, port))
             continue;
-        if (uid >= 0 && uid != entry->uid) {
-            log_android(ANDROID_LOG_ERROR, "UID inference declined: ip_owner_conflict uids=%d,%d", uid, entry->uid);
+        if (uid >= 0 && uid != entry->uid)
             return -1;
-        }
         uid = entry->uid;
     }
-    if (uid >= 0) {
-        if (uid < 10000 || uid == own_uid)
-            log_android(ANDROID_LOG_ERROR, "UID inference declined: ip_owner_excluded uid=%d", uid);
+    if (uid >= 0)
         return uid >= 10000 && uid != own_uid ? uid : -1;
-    }
     return infer_uid_domain(ctx, version, source, dest, port, now);
 }
 
