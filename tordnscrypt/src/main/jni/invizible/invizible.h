@@ -128,7 +128,11 @@ struct tcp_memory {
 
 #define INVIZIBLE_PACKET_OWNER 1
 #define UID_OBSERVATIONS 256
-#define UID_OBSERVATION_MS 2000
+#define UID_OBSERVATION_MS 5000
+#define UID_DNS_MAPPINGS 128
+#define UID_DNS_LOSSES 64
+#define UID_DNS_ANSWERS 32
+#define UID_DNS_MAX_TTL 60
 
 struct packet_owner {
     jint uid;
@@ -150,6 +154,27 @@ struct uid_observations {
     size_t last; // Last authoritative write; has the latest expiry when count > 0.
 };
 
+struct uid_dns_answer {
+    uint8_t address[16];
+    uint32_t ttl;
+    uint8_t version;
+};
+
+struct uid_dns_mapping {
+    int64_t expires;
+    int64_t incomplete_until; // Retains unrecorded losses when the loss array is full.
+    uint8_t address[16];
+    char domain[256];
+    uint8_t version;
+};
+
+struct uid_dns_mappings {
+    struct uid_dns_mapping entry[UID_DNS_MAPPINGS];
+    struct uid_dns_mapping lost[UID_DNS_LOSSES];
+    int64_t admit_after; // Untracked losses restrict new keys, not existing inference.
+    size_t count, lost_count;
+};
+
 struct context {
     pthread_mutex_t lock;
     int pipefds[2];
@@ -159,6 +184,7 @@ struct context {
     struct ng_session *session_bucket[SESSION_BUCKETS];
     struct tcp_memory tcp_memory;
     struct uid_observations uid_observations; // Owned by this context's event thread.
+    struct uid_dns_mappings uid_dns_mappings; // Names/addresses only, never DNS socket owners.
 };
 
 enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };
@@ -662,6 +688,10 @@ jint get_uid_sub(int version, int protocol,
 // Ports are host order; payload points to the protocol header validated by handle_ip.
 void record_uid_observation(struct context *ctx, int version, int protocol,
                              const void *source, const void *dest, uint16_t port, jint uid);
+void record_uid_dns_answers(struct context *ctx, const char *domain,
+                            const struct uid_dns_answer *answers, size_t count);
+void discard_uid_dns_answer(struct context *ctx, const char *domain,
+                             const struct uid_dns_answer *answer);
 jint infer_uid_destination(struct context *ctx, int version, int protocol,
                             const void *source, const void *dest, uint16_t port);
 

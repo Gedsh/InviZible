@@ -154,6 +154,205 @@ static size_t dns_answer(uint8_t *data, uint16_t type) {
     return 34 + len;
 }
 
+size_t test_uid_dns_response(uint8_t *data, int version, bool alias) {
+    dns_answer(data, version == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+    memcpy(data + 13, "TeSt", 4);
+    store16(data + 18, version == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+    store16(data + 6, alias ? 3 : 2);
+    size_t off = 22;
+    if (alias) {
+        store16(data + off + 2, DNS_QTYPE_CNAME); store16(data + off + 8, 10);
+        store16(data + off + 10, 6);
+        data[off + 12] = 4; memcpy(data + off + 13, "EdGe", 4); data[off + 17] = 0;
+        off += 18;
+    }
+    for (int i = 0; i < 2; i++) {
+        size_t size = version == 4 ? 4 : 16;
+        memset(data + off, 0, 12 + size);
+        data[off] = 0xC0; data[off + 1] = alias ? 34 : 12;
+        store16(data + off + 2, version == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+        store16(data + off + 4, DNS_QCLASS_IN); store16(data + off + 8, 30);
+        store16(data + off + 10, (uint16_t) size);
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                         version == 4 ? (i ? "192.0.2.11" : "192.0.2.10")
+                                      : (i ? "2001:db8::11" : "2001:db8::10"), data + off + 12) == 1);
+        off += 12 + size;
+    }
+    return off;
+}
+
+void test_dns_uid_answer_order(struct arguments *args) {
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+            for (int hops = 1; hops <= 2; hops++)
+                for (int reverse = 0; reverse <= 1; reverse++)
+                    for (int rotation = 0; rotation < hops + 3; rotation++) {
+                        clear(args->ctx); set_uid_test_clock(10000);
+                        uint8_t data[512], addresses[3][16], source[16] = {0};
+                        dns_answer(data, version == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+                        store16(data + 18, version == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+                        store16(data + 6, (uint16_t) (hops + 3));
+                        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                         version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+                        for (int i = 0; i < 3; i++) {
+                            char address[32];
+                            snprintf(address, sizeof(address), version == 4 ? "192.0.2.%d" : "2001:db8::%d", 10 + i);
+                            assert(inet_pton(version == 4 ? AF_INET : AF_INET6, address, addresses[i]) == 1);
+                        }
+                        size_t length = 22;
+                        for (int r = 0; r < hops + 3; r++) {
+                            int record = (rotation + (reverse ? hops + 2 - r : r)) % (hops + 3);
+                            bool alias = record < hops;
+                            const char *owner = alias ? (record == 0 ? "test" : "next") : "edge";
+                            data[length++] = 4; memcpy(data + length, owner, 4); length += 4; data[length++] = 0;
+                            memset(data + length, 0, 10);
+                            store16(data + length, alias ? DNS_QTYPE_CNAME : version == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+                            store16(data + length + 2, DNS_QCLASS_IN);
+                            store16(data + length + 6, alias ? (record == 0 ? 10 : 5) : 30);
+                            size_t size = alias ? 6 : version == 4 ? 4 : 16;
+                            store16(data + length + 8, (uint16_t) size); length += 10;
+                            if (alias) {
+                                data[length] = 4;
+                                memcpy(data + length + 1, record + 1 == hops ? "edge" : "next", 4);
+                                data[length + 5] = 0;
+                            } else memcpy(data + length, addresses[record - hops], size);
+                            length += size;
+                        }
+                        struct ng_session session = {.protocol = protocol};
+                        record_uid_observation(args->ctx, version, protocol, source, addresses[0], 443, 12345);
+                        parse_dns_response(args, &session, data, &length);
+                        // Every address must participate, including those preceding its alias.
+                        assert(infer_uid_destination(args->ctx, version, protocol, source, addresses[1], 443) == 12345);
+                        record_uid_observation(args->ctx, version, protocol, source, addresses[2], 443, 23456);
+                        assert(infer_uid_destination(args->ctx, version, protocol, source, addresses[1], 443) == -1);
+                        assert(args->ctx->uid_dns_mappings.count == 3);
+                        for (size_t i = 0; i < 3; i++)
+                            assert(args->ctx->uid_dns_mappings.entry[i].expires == (hops == 1 ? 20000 : 15000));
+                        clear(args->ctx);
+                        assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                    }
+    set_uid_test_clock(-1);
+#endif
+}
+
+void test_dns_uid_mappings(struct arguments *args, int kind) {
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+        for (int version = 4; version <= 6; version += 2)
+            for (int alias = 0; alias <= 1; alias++) {
+                uint8_t data[2048];
+                struct ng_session session = {.protocol = protocol};
+                for (int scenario = 0; scenario < (kind == 1 ? 9 : 1); scenario++) {
+                    clear(args->ctx); set_uid_test_clock(10000);
+                    size_t length = test_uid_dns_response(data, version, alias);
+                    if (kind == 1) {
+                        if (scenario == 0) data[2] |= 2; // Truncated.
+                        if (scenario == 1) data[3] |= 3; // Failed response.
+                        if (scenario == 2) length--; // A later address is incomplete.
+                        if (scenario == 3) data[length++] = 0; // Unparsed trailing bytes.
+                        if (scenario == 4) store16(data + 20, 3); // Non-IN question.
+                        if (scenario == 5) data[14] = 0; // Binary label must not alias a prefix.
+                        if (scenario == 6) data[14] = '.'; // Embedded label separator.
+                        if (scenario == 7) block_domain = 1;
+                        if (scenario == 8) { store16(data + 10, 1); data[length++] = 0; } // Truncated additional RR.
+                    }
+                    parse_dns_response(args, &session, data, &length);
+                    assert(args->ctx->uid_observations.count == 0); // DNS sessions never supply an owner.
+                    if (kind == 1) assert(args->ctx->uid_dns_mappings.count == 0);
+                    else {
+                        assert(args->ctx->uid_dns_mappings.count == 2);
+                        for (size_t i = 0; i < 2; i++) {
+                            const struct uid_dns_mapping *entry = &args->ctx->uid_dns_mappings.entry[i];
+                            assert(strcmp(entry->domain, "test") == 0 && entry->version == version);
+                            assert(entry->expires == (alias ? 20000 : 40000));
+                        }
+                        if (kind == 2) {
+                            // Zero address/CNAME TTL must revoke that exact cached association.
+                            length = test_uid_dns_response(data, version, alias);
+                            store16(data + 30, 0);
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 10000);
+                            if (alias) assert(args->ctx->uid_dns_mappings.entry[1].expires == 10000);
+                            // A single mapping's TTL is capped even for an enormous wire TTL.
+                            clear(args->ctx);
+                            length = test_uid_dns_response(data, version, false);
+                            memset(data + 28, 0xFF, 4);
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 70000);
+                            // Duplicate addresses use the shortest TTL, regardless of order.
+                            clear(args->ctx);
+                            length = test_uid_dns_response(data, version, false);
+                            size_t size = version == 4 ? 4 : 16, stride = 12 + size;
+                            memcpy(data + 34 + stride, data + 34, size);
+                            store16(data + 30 + stride, 5);
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.count == 1);
+                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 15000);
+                            // A valid but unrelated owner name must not inherit the question.
+                            clear(args->ctx);
+                            length = test_uid_dns_response(data, version, false);
+                            data[23] = 17; // The root name at the question's terminator.
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.count == 1);
+                            assert(args->ctx->uid_dns_mappings.entry[0].address[version == 4 ? 3 : 15] == (version == 4 ? 11 : 0x11));
+                            // A CNAME cycle is not evidence, even with well-formed wire names.
+                            clear(args->ctx);
+                            length = test_uid_dns_response(data, version, true);
+                            store16(data + 6, 2); store16(data + 42, DNS_QTYPE_CNAME);
+                            store16(data + 50, 2); data[52] = 0xC0; data[53] = 12; length = 54;
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.count == 0);
+                            // No partial map set may be published when the batch is too large.
+                            clear(args->ctx);
+                            length = test_uid_dns_response(data, version, false);
+                            store16(data + 6, UID_DNS_ANSWERS + 1);
+                            for (unsigned int i = 2; i <= UID_DNS_ANSWERS; i++) {
+                                memcpy(data + length, data + 22, stride);
+                                length += stride;
+                            }
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.count == 0);
+                            assert(args->ctx->uid_dns_mappings.lost_count == 2);
+                            assert(args->ctx->uid_dns_mappings.lost[0].expires == 40000);
+                            // Overflow must neither disable unrelated names nor hide a
+                            // shared address appearing beyond the first 32 answers.
+                            clear(args->ctx);
+                            struct uid_dns_answer safe[2] = {{.version = version, .ttl = 30}, {.version = version, .ttl = 30}};
+                            uint8_t source[16] = {0};
+                            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                             version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+                            for (int i = 0; i < 2; i++)
+                                assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                                 version == 4 ? (i ? "198.51.100.11" : "198.51.100.10")
+                                                              : (i ? "2001:db8:1::11" : "2001:db8:1::10"), safe[i].address) == 1);
+                            record_uid_dns_answers(args->ctx, "safe", safe, 2);
+                            struct uid_dns_answer shared[2] = {safe[0], safe[1]};
+                            shared[1].address[version == 4 ? 3 : 15] = 99;
+                            record_uid_dns_answers(args->ctx, "shared", shared, 2);
+                            record_uid_observation(args->ctx, version, protocol, source, safe[0].address, 443, 12345);
+                            length = test_uid_dns_response(data, version, false);
+                            store16(data + 6, UID_DNS_ANSWERS + 1);
+                            for (unsigned int i = 2; i <= UID_DNS_ANSWERS; i++) {
+                                memcpy(data + length, data + 22, stride);
+                                if (i == UID_DNS_ANSWERS) memcpy(data + length + 12, shared[1].address, size);
+                                length += stride;
+                            }
+                            parse_dns_response(args, &session, data, &length);
+                            assert(infer_uid_destination(args->ctx, version, protocol, source, safe[1].address, 443) == 12345);
+                            assert(infer_uid_destination(args->ctx, version, protocol, source, shared[1].address, 443) == -1);
+                            assert(args->ctx->uid_dns_mappings.count == 4 && args->ctx->uid_dns_mappings.lost_count == 3);
+                        }
+                    }
+                    block_domain = 0;
+                    clear(args->ctx);
+                    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                }
+            }
+    set_uid_test_clock(-1);
+#endif
+}
+
 void test_dns_allocation_failure(const struct arguments *args) {
     struct ng_session session = {.protocol = IPPROTO_UDP};
     session.udp.version = 4;

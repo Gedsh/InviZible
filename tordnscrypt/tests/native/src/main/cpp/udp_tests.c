@@ -564,7 +564,7 @@ void udp_flow(int version, int redirect, int extension) {
 }
 
 void test_udp_inferred_owner(struct arguments *args) {
-#ifdef INVIZIBLE_PACKET_OWNER
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
     test_monotonic_enabled = true; test_monotonic_ms = 10000;
     for (int version = 4; version <= 6; version += 2) {
         _Alignas(8) uint8_t packet[128];

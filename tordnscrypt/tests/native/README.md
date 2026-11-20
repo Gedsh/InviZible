@@ -454,17 +454,24 @@ UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
 Same-destination UID fallback uses one per-context array of 256 confirmed
-observations (about 12 KiB plus small metadata). It matches IP family, protocol,
-source IP, destination IP and destination port; source ports may differ. Only
+observations (about 12 KiB plus small metadata). It matches IP family,
+source IP, destination IP and destination port across TCP and UDP; source ports may differ. Only
 successful Android/proc lookups add or refresh observations, before policy and
 socket creation, including later authoritative TCP/UDP recovery. Connection
 completion does not remove observations. DNS hostname inference is not included.
-Each observation expires two seconds after its own confirmation, including device
+Each observation expires five seconds after its own confirmation, including device
 sleep, using `CLOCK_BOOTTIME`. Overflow deadlines use the same clock. Different UIDs
 for the same destination remain separate records; inference succeeds only when
 all recent matches agree on an app UID. Root, system and the VPN process participate
 in conflict detection but cannot themselves be inferred. Guessed and restored
 session owners never add observations, and inference never refreshes expiry.
+Cross-protocol matches include conflicting and excluded owners. Records retain
+their protocol and independent expiry, so refreshing UDP evidence cannot extend
+TCP evidence used by domain fallback. Regression cases cover sharing in both
+directions, four-second-old evidence, exact five-second expiry, cross-protocol
+conflicts and excluded owners, and unchanged source/address/port restrictions.
+Packet/policy cases exercise both transports as the confirmed source with IPv4/IPv6,
+JNI/proc lookups, DNS forwarding modes and allowed/denied policy outcomes.
 Inference compares candidates with the process UID saved during native initialization,
 without another `getuid()` call; a regression verifies exclusion uses that saved UID.
 The fixed array uses linear scans of populated entries, without hash buckets,
@@ -512,7 +519,60 @@ Exact-restoration and blocked-metadata fixtures explicitly isolate independent
 scenarios from recent destination observations; the fallback has separate tests.
 Failed-restoration errors are emitted after the destination fallback, avoiding
 an error for a packet whose owner was successfully inferred.
-The full run contains 287 tests plus the optional comparison test.
+Domain UID fallback runs only when there is no usable direct-IP observation;
+direct-IP conflicts or excluded owners do not fall through to it. A separate
+per-context array stores up to 128 exact hostname/address mappings and 64 exact
+discarded-evidence records (about 56 KiB together),
+with no allocations, timers, DNS transaction tracking or Java/JNI additions.
+Only complete, successful, unfiltered standard A/AAAA responses supply mappings.
+Names are normalized to ASCII lowercase without suffix matching; binary labels
+cannot masquerade as hostname prefixes. The DNS parser validates record bounds across
+the whole response, including remaining sections, before publishing mappings. CNAME chains
+up to eight hops are followed regardless of record order, with address lifetime bounded
+by every alias TTL. Each hop uses a bounded scan of the existing response; the final
+scan collects all matching addresses together. No additional DNS queries are sent.
+Unrelated answer owners are ignored. Mapping lifetimes use boot time and are capped
+at 60 seconds; zero TTL revokes the matching association. Oversized answer sets
+(more than 32 matching addresses) publish no mappings; a validated rescan retains
+discarded evidence for every matching address, including those beyond the batch.
+Evicting a live mapping retains its exact hostname, address and original expiry.
+Only inference for that hostname or a shared destination address is suspended;
+unrelated cached domains continue working. There are no hash-only guards or
+global DNS inference pause. If the discarded-evidence array is also full, live
+guards and mappings are preserved, affected resident keys retain local deadlines,
+and admission of new mapping keys stops until the untracked evidence expires.
+Existing keys can still refresh without clearing their local deadlines. Direct-IP
+inference continues in every case. Both fixed arrays are cleared on teardown and
+clock failure; the fix adds no allocations, timers or network requests.
+For a uniquely mapped destination hostname, inference compares all recent confirmed
+owners of other addresses mapped to that exact hostname. Protocol and destination
+port must match. Same-family evidence must also match source IP; cross-family
+evidence is scoped to the VPN context. Shared destination addresses with multiple
+live hostnames are ambiguous and remain unknown. Root, system and own-UID evidence
+participate in conflicts but are not inferred. Parsing a DNS response never uses its
+socket owner as application ownership evidence. Inferred traffic never seeds ownership.
+The shared owner window is five seconds; domain matching remains protocol-specific,
+and DNS mappings cannot refresh ownership evidence. Clock failures/backwards reads and teardown clear
+both caches. DNS that is not visible to the VPN cannot supply these mappings.
+Four IP cases cover real packet/policy dispatch across both families and owner APIs,
+cross-family inference, provisional provenance, independent conflict expiry,
+protocol/port/source restrictions, excluded owners, ambiguity, exact-IP priority,
+selective original-expiry capacity guards, unrelated-domain continuity, shared-IP
+losses, saturation of both arrays, deferred admission and recovery, clocks,
+cleanup and context isolation. Four DNS
+cases cover TCP/UDP response parsing, normalization, aliases, TTLs, malformed tails,
+filtered/truncated/failed responses and resource balance. Reordered one- and two-hop
+alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
+when an address precedes its alias. Ownership still passes
+through the same policy and TCP/UDP recovery paths used by direct-IP inference.
+The full run contains 295 tests plus the optional comparison test.
+Temporary `UID inference declined:` diagnostics identify the rejection branch
+before the existing unknown-packet error on the same native thread. They distinguish
+missing/expired DNS mappings, ambiguous names, retained loss guards, missing or
+conflicting owners, excluded owners, clock failure and UID-observation overflow.
+Missing-mapping diagnostics report a retained expired name/age when available;
+an absent expired record does not establish whether a mapping was ever observed.
+These diagnostics add no packet delays, timers, DNS queries or successful-inference logs.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 

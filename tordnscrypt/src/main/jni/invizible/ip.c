@@ -176,20 +176,22 @@ static bool udp_route_matches(const struct udp_session *session, const struct al
            memcmp(&session->redirect_addr, &address, version == 4 ? 4 : 16) == 0;
 }
 
-static bool same_uid_destination(const struct uid_observation *entry, int version, int protocol,
+static bool same_uid_destination(const struct uid_observation *entry, int version,
                                   const void *source, const void *dest, uint16_t port) {
-    return entry->version == version && entry->protocol == protocol && entry->port == port &&
+    return entry->version == version && entry->port == port &&
            memcmp(entry->source, source, version == 4 ? 4 : 16) == 0 &&
            memcmp(entry->dest, dest, version == 4 ? 4 : 16) == 0;
 }
 
 static int64_t uid_cache_now(void);
 
-static int64_t uid_observation_time(struct uid_observations *cache) {
+static int64_t uid_observation_time(struct context *ctx) {
+    struct uid_observations *cache = &ctx->uid_observations;
     // Evidence and overflow deadlines must age while the device is suspended.
     int64_t now = uid_cache_now();
     if (now < 0 || now < cache->time) {
         memset(cache, 0, sizeof(*cache));
+        memset(&ctx->uid_dns_mappings, 0, sizeof(ctx->uid_dns_mappings));
         return -1;
     }
     cache->time = now;
@@ -209,12 +211,13 @@ void record_uid_observation(struct context *ctx, int version, int protocol,
         (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
         return;
     struct uid_observations *cache = &ctx->uid_observations;
-    int64_t now = uid_observation_time(cache);
+    int64_t now = uid_observation_time(ctx);
     if (now < 0)
         return;
     if (cache->count > 0) {
         struct uid_observation *recent = &cache->entry[cache->last];
-        if (recent->uid == uid && same_uid_destination(recent, version, protocol, source, dest, port)) {
+        if (recent->uid == uid && recent->protocol == protocol &&
+            same_uid_destination(recent, version, source, dest, port)) {
             recent->expires = now + UID_OBSERVATION_MS;
             return;
         }
@@ -222,8 +225,8 @@ void record_uid_observation(struct context *ctx, int version, int protocol,
     struct uid_observation *slot = NULL, *oldest = &cache->entry[0];
     for (size_t i = 0; i < cache->count; i++) {
         struct uid_observation *entry = &cache->entry[i];
-        if (entry->expires > now && entry->uid == uid &&
-            same_uid_destination(entry, version, protocol, source, dest, port)) {
+        if (entry->expires > now && entry->uid == uid && entry->protocol == protocol &&
+            same_uid_destination(entry, version, source, dest, port)) {
             entry->expires = now + UID_OBSERVATION_MS;
             cache->last = i;
             return;
@@ -252,26 +255,242 @@ void record_uid_observation(struct context *ctx, int version, int protocol,
     cache->last = (size_t) (slot - cache->entry);
 }
 
+static int64_t uid_dns_retained_until(const struct uid_dns_mapping *entry) {
+    return entry->expires > entry->incomplete_until ? entry->expires : entry->incomplete_until;
+}
+
+static bool uid_dns_address_matches(const struct uid_dns_mapping *entry, int version, const void *address) {
+    return entry->version == version && memcmp(entry->address, address, version == 4 ? 4 : 16) == 0;
+}
+
+static bool remember_uid_dns_loss(struct uid_dns_mappings *cache, const char *domain,
+                                  int version, const void *address, int64_t expires, int64_t now) {
+    if (expires <= now)
+        return true;
+    struct uid_dns_mapping *slot = NULL;
+    for (size_t i = 0; i < cache->lost_count; i++) {
+        struct uid_dns_mapping *entry = &cache->lost[i];
+        if (strcmp(entry->domain, domain) == 0 && uid_dns_address_matches(entry, version, address)) {
+            if (entry->expires < expires) entry->expires = expires;
+            return true;
+        }
+        if (slot == NULL && entry->expires <= now)
+            slot = entry;
+    }
+    if (slot == NULL && cache->lost_count < UID_DNS_LOSSES)
+        slot = &cache->lost[cache->lost_count++];
+    if (slot == NULL) {
+        // Never discard a live loss marker. Preserve affected resident keys in
+        // place and stop admitting new keys that could overlap untracked evidence.
+        if (cache->admit_after < expires) cache->admit_after = expires;
+        for (size_t i = 0; i < cache->count; i++) {
+            struct uid_dns_mapping *entry = &cache->entry[i];
+            if ((strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, address)) &&
+                entry->incomplete_until < expires)
+                entry->incomplete_until = expires;
+        }
+        return false;
+    }
+    slot->expires = expires;
+    slot->version = (uint8_t) version;
+    memcpy(slot->address, address, version == 4 ? 4 : 16);
+    strcpy(slot->domain, domain);
+    return true;
+}
+
+void discard_uid_dns_answer(struct context *ctx, const char *domain, const struct uid_dns_answer *answer) {
+    if (ctx == NULL || domain == NULL || *domain == 0 || strnlen(domain, 256) == 256 ||
+        answer == NULL || (answer->version != 4 && answer->version != 6))
+        return;
+    int64_t now = uid_observation_time(ctx);
+    if (now < 0)
+        return;
+    uint32_t ttl = answer->ttl > UID_DNS_MAX_TTL ? UID_DNS_MAX_TTL : answer->ttl;
+    remember_uid_dns_loss(&ctx->uid_dns_mappings, domain, answer->version, answer->address,
+                          now + (int64_t) ttl * 1000, now);
+}
+
+void record_uid_dns_answers(struct context *ctx, const char *domain,
+                            const struct uid_dns_answer *answers, size_t count) {
+    if (ctx == NULL || domain == NULL || *domain == 0 || strnlen(domain, 256) == 256 ||
+        answers == NULL || count == 0 || count > UID_DNS_ANSWERS)
+        return;
+    for (size_t i = 0; i < count; i++)
+        if (answers[i].version != 4 && answers[i].version != 6)
+            return;
+    int64_t now = uid_observation_time(ctx);
+    if (now < 0)
+        return;
+    struct uid_dns_mappings *cache = &ctx->uid_dns_mappings;
+    for (size_t a = 0; a < count; a++) {
+        const struct uid_dns_answer *answer = &answers[a];
+        uint32_t ttl = answer->ttl;
+        for (size_t d = 0; d < count; d++)
+            if (answers[d].version == answer->version && answers[d].ttl < ttl &&
+                memcmp(answers[d].address, answer->address, answer->version == 4 ? 4 : 16) == 0)
+                ttl = answers[d].ttl;
+        struct uid_dns_mapping *slot = NULL, *oldest = &cache->entry[0];
+        bool found = false;
+        for (size_t i = 0; i < cache->count; i++) {
+            struct uid_dns_mapping *entry = &cache->entry[i];
+            if (entry->version == answer->version && strcmp(entry->domain, domain) == 0 &&
+                memcmp(entry->address, answer->address, answer->version == 4 ? 4 : 16) == 0) {
+                slot = entry;
+                found = true;
+                break;
+            }
+            if (slot == NULL && uid_dns_retained_until(entry) <= now)
+                slot = entry;
+            if (uid_dns_retained_until(entry) < uid_dns_retained_until(oldest))
+                oldest = entry;
+        }
+        if (ttl == 0) {
+            if (found) slot->expires = now;
+            continue;
+        }
+        if (ttl > UID_DNS_MAX_TTL) ttl = UID_DNS_MAX_TTL;
+        int64_t expires = now + (int64_t) ttl * 1000;
+        if (!found && now < cache->admit_after) {
+            remember_uid_dns_loss(cache, domain, answer->version, answer->address, expires, now);
+            continue;
+        }
+        if (slot == NULL && cache->count < UID_DNS_MAPPINGS)
+            slot = &cache->entry[cache->count++];
+        if (slot == NULL) {
+            if (!remember_uid_dns_loss(cache, oldest->domain, oldest->version, oldest->address,
+                                       uid_dns_retained_until(oldest), now)) {
+                remember_uid_dns_loss(cache, domain, answer->version, answer->address, expires, now);
+                continue;
+            }
+            slot = oldest;
+        }
+        if (!found) slot->incomplete_until = 0;
+        slot->expires = expires;
+        slot->version = answer->version;
+        memcpy(slot->address, answer->address, answer->version == 4 ? 4 : 16);
+        strcpy(slot->domain, domain);
+    }
+}
+
+static jint infer_uid_domain(const struct context *ctx, int version, int protocol,
+                              const void *source, const void *dest, uint16_t port, int64_t now) {
+    const struct uid_dns_mappings *dns = &ctx->uid_dns_mappings;
+    const char *domain = NULL;
+    for (size_t i = 0; i < dns->count; i++) {
+        const struct uid_dns_mapping *entry = &dns->entry[i];
+        if (entry->expires <= now || entry->version != version ||
+            memcmp(entry->address, dest, version == 4 ? 4 : 16) != 0)
+            continue;
+        // Shared addresses do not identify which hostname this connection uses.
+        if (domain != NULL && strcmp(domain, entry->domain) != 0) {
+            log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_ambiguous names=%s,%s", domain, entry->domain);
+            return -1;
+        }
+        domain = entry->domain;
+    }
+    if (domain == NULL) {
+        // Temporary diagnostics: the UI can retain a name after native evidence expires.
+        const struct uid_dns_mapping *expired = NULL;
+        for (size_t i = 0; i < dns->count; i++) {
+            const struct uid_dns_mapping *entry = &dns->entry[i];
+            if (entry->expires <= now && uid_dns_address_matches(entry, version, dest) &&
+                (expired == NULL || entry->expires > expired->expires))
+                expired = entry;
+        }
+        log_android(ANDROID_LOG_ERROR,
+                    "UID inference declined: dns_mapping_missing mappings=%zu losses=%zu admission_ms=%jd expired_name=%s expired_ms=%jd",
+                    dns->count, dns->lost_count, (intmax_t) (dns->admit_after > now ? dns->admit_after - now : 0),
+                    expired == NULL ? "-" : expired->domain, (intmax_t) (expired == NULL ? -1 : now - expired->expires));
+        return -1;
+    }
+    for (size_t i = 0; i < dns->lost_count; i++) {
+        const struct uid_dns_mapping *entry = &dns->lost[i];
+        if (entry->expires > now &&
+            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest))) {
+            log_android(ANDROID_LOG_ERROR,
+                        "UID inference declined: dns_discarded domain=%s lost_domain=%s scope=%s remaining_ms=%jd losses=%zu",
+                        domain, entry->domain, strcmp(entry->domain, domain) == 0 ? "domain" : "address",
+                        (intmax_t) (entry->expires - now), dns->lost_count);
+            return -1;
+        }
+    }
+    for (size_t i = 0; i < dns->count; i++) {
+        const struct uid_dns_mapping *entry = &dns->entry[i];
+        if (entry->incomplete_until > now &&
+            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest))) {
+            log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_incomplete domain=%s remaining_ms=%jd",
+                        domain, (intmax_t) (entry->incomplete_until - now));
+            return -1;
+        }
+    }
+    jint uid = -1;
+    for (size_t i = 0; i < ctx->uid_observations.count; i++) {
+        const struct uid_observation *owner = &ctx->uid_observations.entry[i];
+        if (owner->expires <= now || owner->protocol != protocol || owner->port != port ||
+            (owner->version == version && memcmp(owner->source, source, version == 4 ? 4 : 16) != 0))
+            continue;
+        // Cross-family evidence is scoped to the VPN context, not a DNS socket UID.
+        for (size_t d = 0; d < dns->count; d++) {
+            const struct uid_dns_mapping *entry = &dns->entry[d];
+            if (entry->expires > now && entry->version == owner->version &&
+                memcmp(entry->address, owner->dest, owner->version == 4 ? 4 : 16) == 0 &&
+                strcmp(domain, entry->domain) == 0) {
+                if (uid >= 0 && uid != owner->uid) {
+                    log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_owner_conflict domain=%s uids=%d,%d",
+                                domain, uid, owner->uid);
+                    return -1;
+                }
+                uid = owner->uid;
+                break;
+            }
+        }
+    }
+    if (uid < 0)
+        log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_owner_missing domain=%s observations=%zu",
+                    domain, ctx->uid_observations.count);
+    else if (uid < 10000 || uid == own_uid)
+        log_android(ANDROID_LOG_ERROR, "UID inference declined: dns_owner_excluded domain=%s uid=%d", domain, uid);
+    return uid >= 10000 && uid != own_uid ? uid : -1;
+}
+
 jint infer_uid_destination(struct context *ctx, int version, int protocol,
                             const void *source, const void *dest, uint16_t port) {
     if ((version != 4 && version != 6) || (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
         return -1;
     struct uid_observations *cache = &ctx->uid_observations;
-    if (cache->count == 0)
+    if (cache->count == 0) {
+        log_android(ANDROID_LOG_ERROR, "UID inference declined: uid_evidence_empty");
         return -1;
-    int64_t now = uid_observation_time(cache);
-    if (now < 0 || cache->count == 0 || now < cache->incomplete_until)
+    }
+    int64_t now = uid_observation_time(ctx);
+    if (now < 0 || cache->count == 0) {
+        log_android(ANDROID_LOG_ERROR, "UID inference declined: %s", now < 0 ? "clock_failure" : "uid_evidence_expired");
         return -1;
+    }
+    if (now < cache->incomplete_until) {
+        log_android(ANDROID_LOG_ERROR, "UID inference declined: uid_evidence_overflow observations=%zu remaining_ms=%jd",
+                    cache->count, (intmax_t) (cache->incomplete_until - now));
+        return -1;
+    }
     jint uid = -1;
+    // Share exact endpoint evidence across TCP/UDP, including conflicting owners.
+    // Keep observations protocol-specific so domain fallback remains unchanged.
     for (size_t i = 0; i < cache->count; i++) {
         const struct uid_observation *entry = &cache->entry[i];
-        if (entry->expires <= now || !same_uid_destination(entry, version, protocol, source, dest, port))
+        if (entry->expires <= now || !same_uid_destination(entry, version, source, dest, port))
             continue;
-        if (uid >= 0 && uid != entry->uid)
+        if (uid >= 0 && uid != entry->uid) {
+            log_android(ANDROID_LOG_ERROR, "UID inference declined: ip_owner_conflict uids=%d,%d", uid, entry->uid);
             return -1;
+        }
         uid = entry->uid;
     }
-    return uid >= 10000 && uid != own_uid ? uid : -1;
+    if (uid >= 0) {
+        if (uid < 10000 || uid == own_uid)
+            log_android(ANDROID_LOG_ERROR, "UID inference declined: ip_owner_excluded uid=%d", uid);
+        return uid >= 10000 && uid != own_uid ? uid : -1;
+    }
+    return infer_uid_domain(ctx, version, protocol, source, dest, port, now);
 }
 
 void handle_ip(const struct arguments *args,

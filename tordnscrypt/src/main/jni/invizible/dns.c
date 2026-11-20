@@ -22,7 +22,8 @@
 
 #include "invizible.h"
 
-int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char *qname) {
+static int32_t read_qname(const uint8_t *data, const size_t datalen, uint16_t off,
+                          char *qname, bool hostname) {
     *qname = 0;
     size_t ptr = off;
     size_t noff = 0;
@@ -48,7 +49,18 @@ int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char 
             wire_length += len + 1;
             if (noff > 0)
                 qname[noff++] = '.';
-            memcpy(qname + noff, data + ptr, len);
+            if (hostname) {
+                for (size_t i = 0; i < len; i++) {
+                    uint8_t c = data[ptr + i];
+                    // Keep an unambiguous, case-insensitive hostname key. Binary
+                    // labels (including embedded dots/NULs) are not inference evidence.
+                    if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                          (c >= '0' && c <= '9') || c == '-' || c == '_'))
+                        return -1;
+                    qname[noff + i] = (char) (c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c);
+                }
+            } else
+                memcpy(qname + noff, data + ptr, len);
             noff += len;
             qname[noff] = 0;
             ptr += len;
@@ -59,6 +71,117 @@ int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char 
     *qname = 0;
     log_android(ANDROID_LOG_WARN, "DNS invalid qname");
     return -1;
+}
+
+int32_t get_qname(const uint8_t *data, const size_t datalen, uint16_t off, char *qname) {
+    return read_qname(data, datalen, off, qname, false);
+}
+
+static void cache_uid_dns_response(struct context *ctx, const uint8_t *data, size_t length) {
+    if (ctx == NULL || length < sizeof(struct dns_header) || length > UINT16_MAX ||
+        (data[2] & 0xFA) != 0x80 || (data[3] & 0x0F) != 0 || read_net16(data + 4) != 1)
+        return; // Only complete, successful standard responses can supply evidence.
+    char domain[DNS_QNAME_MAX + 1], current[DNS_QNAME_MAX + 1];
+    char name[DNS_QNAME_MAX + 1], target[DNS_QNAME_MAX + 1];
+    int32_t off = read_qname(data, length, 12, domain, true);
+    if (off < 0 || (size_t) off + 4 > length || *domain == 0 ||
+        read_net16(data + off + 2) != DNS_QCLASS_IN ||
+        (read_net16(data + off) != DNS_QTYPE_A && read_net16(data + off) != DNS_QTYPE_AAAA))
+        return;
+    off += 4;
+    const int32_t answer_offset = off;
+    strcpy(current, domain);
+    struct uid_dns_answer answers[UID_DNS_ANSWERS];
+    size_t chain_count = 0;
+    uint16_t chain[8];
+    uint32_t chain_ttl = UINT32_MAX;
+    unsigned int answer_count = read_net16(data + 6);
+    unsigned int records = answer_count + read_net16(data + 8) + read_net16(data + 10);
+    // Use only records already in this response. Keep the owner fixed throughout
+    // each scan so address collection never depends on where its CNAME appears.
+    for (;;) {
+        size_t count = 0;
+        int32_t alias_offset = -1;
+        uint16_t alias_owner = 0;
+        uint32_t alias_ttl = UINT32_MAX;
+        off = answer_offset;
+        for (unsigned int r = 0; r < records; r++) {
+            uint16_t owner_offset = (uint16_t) off;
+            off = read_qname(data, length, owner_offset, name, true);
+            if (off < 0 || (size_t) off + 10 > length)
+                return;
+            uint16_t type = read_net16(data + off), klass = read_net16(data + off + 2);
+            uint32_t ttl; memcpy(&ttl, data + off + 4, sizeof(ttl)); ttl = ntohl(ttl);
+            size_t size = read_net16(data + off + 8);
+            off += 10;
+            if (size > length - (size_t) off)
+                return;
+            if (type == 41 && (ttl >> 24) != 0)
+                return; // Extended EDNS error code.
+            if (klass == DNS_QCLASS_IN && type == DNS_QTYPE_CNAME) {
+                int32_t end = read_qname(data, length, (uint16_t) off, target, true);
+                if (end < 0 || (size_t) end != (size_t) off + size || *target == 0)
+                    return;
+                if (r < answer_count && strcmp(name, current) == 0) {
+                    if (alias_offset >= 0 &&
+                        (read_qname(data, length, (uint16_t) alias_offset, name, true) < 0 || strcmp(name, target) != 0))
+                        return;
+                    alias_offset = off;
+                    alias_owner = owner_offset;
+                    if (ttl < alias_ttl) alias_ttl = ttl;
+                }
+            } else if (klass == DNS_QCLASS_IN && (type == DNS_QTYPE_A || type == DNS_QTYPE_AAAA)) {
+                if (size != (type == DNS_QTYPE_A ? 4u : 16u))
+                    return;
+                if (r < answer_count && strcmp(name, current) == 0) {
+                    if (count < UID_DNS_ANSWERS) {
+                        answers[count].version = type == DNS_QTYPE_A ? 4 : 6;
+                        memcpy(answers[count].address, data + off, size);
+                        answers[count].ttl = ttl < chain_ttl ? ttl : chain_ttl;
+                    }
+                    count++;
+                }
+            }
+            off += (int32_t) size;
+        }
+        if ((size_t) off != length)
+            return;
+        if (alias_offset < 0) {
+            if (count != 0 && count <= UID_DNS_ANSWERS)
+                record_uid_dns_answers(ctx, domain, answers, count);
+            else if (count > UID_DNS_ANSWERS) {
+                // All record bounds have been validated. Retain loss evidence
+                // for every address, including those beyond the bounded batch.
+                off = answer_offset;
+                for (unsigned int r = 0; r < answer_count; r++) {
+                    off = read_qname(data, length, (uint16_t) off, name, true);
+                    if (off < 0) return;
+                    uint16_t type = read_net16(data + off), klass = read_net16(data + off + 2);
+                    uint32_t ttl; memcpy(&ttl, data + off + 4, sizeof(ttl)); ttl = ntohl(ttl);
+                    size_t size = read_net16(data + off + 8);
+                    off += 10;
+                    if (klass == DNS_QCLASS_IN && (type == DNS_QTYPE_A || type == DNS_QTYPE_AAAA) &&
+                        strcmp(name, current) == 0) {
+                        struct uid_dns_answer answer = {.version = type == DNS_QTYPE_A ? 4 : 6,
+                                                       .ttl = ttl < chain_ttl ? ttl : chain_ttl};
+                        memcpy(answer.address, data + off, size);
+                        discard_uid_dns_answer(ctx, domain, &answer);
+                    }
+                    off += (int32_t) size;
+                }
+            }
+            return;
+        }
+        if (count != 0 || chain_count == sizeof(chain) / sizeof(*chain) ||
+            read_qname(data, length, (uint16_t) alias_offset, target, true) < 0 || strcmp(current, target) == 0)
+            return;
+        for (size_t i = 0; i < chain_count; i++)
+            if (read_qname(data, length, chain[i], name, true) < 0 || strcmp(name, target) == 0)
+                return;
+        chain[chain_count++] = alias_owner;
+        strcpy(current, target);
+        if (alias_ttl < chain_ttl) chain_ttl = alias_ttl;
+    }
 }
 
 bool dns_has_multiple_questions(const uint8_t *data, size_t datalen) {
@@ -290,7 +413,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                     name, 0, 0);
 
             log_packet(args, objPacket);*/
-        }
+        } else
+            cache_uid_dns_response(args->ctx, data, *datalen);
     } else if (acount > 0)
         log_android(ANDROID_LOG_WARN,
                     "DNS response qr %d opcode %d qcount %d acount %d",

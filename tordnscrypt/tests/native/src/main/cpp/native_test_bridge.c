@@ -25,7 +25,23 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "uidLazyLogging") == 0)
+    if (strcmp(id, "dnsUidMappings") == 0)
+        test_dns_uid_mappings(&args, 0);
+    else if (strcmp(id, "dnsUidInvalid") == 0)
+        test_dns_uid_mappings(&args, 1);
+    else if (strcmp(id, "dnsUidTtl") == 0)
+        test_dns_uid_mappings(&args, 2);
+    else if (strcmp(id, "dnsUidOrder") == 0)
+        test_dns_uid_answer_order(&args);
+    else if (strcmp(id, "uidDomainPolicy") == 0)
+        test_uid_domain(&args, 0);
+    else if (strcmp(id, "uidDomainConflict") == 0)
+        test_uid_domain(&args, 1);
+    else if (strcmp(id, "uidDomainCapacity") == 0)
+        test_uid_domain(&args, 2);
+    else if (strcmp(id, "uidDomainClock") == 0)
+        test_uid_domain(&args, 3);
+    else if (strcmp(id, "uidLazyLogging") == 0)
         test_uid_lazy_logging();
     else if (strcmp(id, "uidDestinationOwnUid") == 0)
         test_uid_destination(&args, 8);

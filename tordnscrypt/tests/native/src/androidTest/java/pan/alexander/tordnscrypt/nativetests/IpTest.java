@@ -12,6 +12,10 @@ import static org.junit.Assume.assumeTrue;
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
+    @Test public void domainUidFallbackAppliesPolicyAcrossFamiliesAndOwnerApis() { check("uidDomainPolicy"); }
+    @Test public void domainUidConflictsExpireIndependentlyAndRespectExactIpPriority() { check("uidDomainConflict"); }
+    @Test public void domainUidMappingOverflowKeepsOriginalDiscardedExpiry() { check("uidDomainCapacity"); }
+    @Test public void domainUidClocksCleanupAndContextIsolation() { check("uidDomainClock"); }
     @Test public void legacyUidLookupSkipsDisabledAddressFormatting() { check("uidLazyLogging"); }
     @Test public void destinationUidExcludesCachedProcessOwner() { check("uidDestinationOwnUid"); }
     @Test public void destinationUidRepeatedWritesAvoidScanningAndKeepConflicts() { check("uidDestinationLastSlot"); }
@@ -19,8 +23,8 @@ public final class IpTest extends NativeTestSupport {
     @Test public void destinationUidEvidenceAndOverflowPauseExpireDuringSuspend() { check("uidDestinationSuspend"); }
     @Test public void inferredUdpOwnerSurvivesFailedRecoveryAfterEvidenceExpires() { check("udpInferredUidFailure"); }
     @Test public void inferredUdpOwnersRecoverAndRecheckPolicyAndRoutes() { check("udpInferredUidRecovery"); }
-    @Test public void destinationUidMatchesEndpointsProtocolAndPortWithoutRefreshingOnInference() { check("uidDestinationMatch"); }
-    @Test public void destinationUidConflictsExpireIndependentlyIncludingExcludedOwners() { check("uidDestinationConflict"); }
+    @Test public void destinationUidSharesTcpUdpEndpointsForFiveSecondsWithoutRefreshingOnInference() { check("uidDestinationMatch"); }
+    @Test public void destinationUidCrossProtocolConflictsExpireIndependentlyIncludingExcludedOwners() { check("uidDestinationConflict"); }
     @Test public void destinationUidOverflowUsesDiscardedOriginalExpiry() { check("uidDestinationOverflow"); }
     @Test public void destinationUidClearsOnClockFailuresAndTeardownAndIsolatesContexts() { check("uidDestinationClock"); }
     @Test public void destinationUidFallbackAppliesPolicyForBothFamiliesAndOwnerApis() { check("uidDestinationPolicy"); }
