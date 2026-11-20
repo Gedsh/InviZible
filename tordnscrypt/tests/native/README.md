@@ -566,7 +566,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 310 tests plus the optional comparison test.
+The full run contains 312 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
@@ -671,6 +671,22 @@ contiguous socket-buffer allocations on old kernels; complete output packets are
 checked byte-for-byte with independent checksums through a local stream socket.
 Both buffer-reuse modes verify allocation/socket balance. Existing receive-error
 regressions also exercise recvmsg, preserving MTU recovery and fatal-error handling.
+Two real ping-socket regressions send echo requests to IPv4 127.0.0.1 and IPv6 ::1
+through handle_icmp, wait with real epoll, peek at the kernel reply, then forward
+it through check_icmp_socket to a local tunnel surrogate. They verify the bare
+ICMP reply format, the kernel-assigned identifier and restoration of app ID zero,
+sequence/payload preservation, reversed IP addresses and independent checksums.
+Each family covers both buffer modes, repeated requests on the same socket,
+8/9/40/1400-byte messages and allocation/socket balance after cleanup; the IPv6
+40-byte case includes a Hop-by-Hop header in the tunnel request. Ping socket
+creation, sendto and recvmsg are real; VPN protect remains a test stub, so this
+checks local kernel interoperability rather than VPN routing or external reachability.
+Loopback permission/kernel failures fail visibly rather than silently skipping.
+On 2026-11-20, both cases and the full suite passed on Android 10 ARMv7 with
+ASan/UBSan and HEAD comparison: 305 passed, eight expected proc skips. The API 23
+build succeeded for ARMv7, ARM64 and x86_64; these new round-trip cases have not
+yet been run on Android 6 hardware.
+
 Android 6/API 23 compatibility uses the existing non-sanitized test configuration
 (`-PnativeSanitizers=false`); sanitizer builds require API 27. The receive path uses
 recvmsg, msghdr and MSG_TRUNC already provided by Android 6, with no newer platform

@@ -11,6 +11,85 @@ static void assert_icmp_checksum(const uint8_t *packet, size_t length, size_t of
 }
 #endif
 
+void test_icmp_real_round_trip(const struct arguments *args, int version) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    real_network = 1; // Real SOCK_DGRAM/IPPROTO_ICMP{V6}, sendto, recvmsg and epoll.
+    int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+    const char *destination = version == 4 ? "127.0.0.1" : "::1";
+    const size_t lengths[] = {8, 9, 40, 1400};
+    for (int reuse = 0; reuse < 2; reuse++) {
+        int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+        struct packet_buffers buffers = {0};
+        struct arguments running = *args;
+        running.tun = tunnel[1]; running.buffers = reuse ? &buffers : NULL;
+        int socket_fd = -1;
+        for (size_t i = 0; i < sizeof(lengths) / sizeof(*lengths); i++) {
+            _Alignas(8) uint8_t packet[1500], reply[1500], output[2048];
+            bool extension = version == 6 && i == 2;
+            size_t base = ip_header(packet, version, extension ? IPPROTO_HOPOPTS : protocol,
+                                    lengths[i] + (extension ? 8 : 0), destination);
+            size_t off = base;
+            if (extension) {
+                packet[off] = IPPROTO_ICMPV6; packet[off + 1] = 0;
+                off += 8;
+            }
+            packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+            // Zero is a valid app identifier, but the kernel assigns a nonzero ping ID.
+            store16(packet + off + 4, 0); store16(packet + off + 6, (uint16_t) (i + 1));
+            memset(packet + off + 8, (int) (0xa0 + i), lengths[i] - 8);
+            packet_checksums(packet, off + lengths[i], off, protocol);
+            if (!handle_icmp(&running, packet, off + lengths[i], packet + off, own_uid, epoll_fd)) {
+                char detail[256];
+                snprintf(detail, sizeof(detail), "Real ICMP%d loopback send failed: %.180s", version, last_log);
+                native_test_fail(detail, __FILE__, __LINE__);
+            }
+            struct ng_session *session = args->ctx->ng_session;
+            assert(session != NULL && !session->icmp.stop && session->icmp.id == 0);
+            if (i == 0) socket_fd = session->socket;
+            assert(session->socket == socket_fd && sockets == 1);
+            assert(fcntl(socket_fd, F_GETFL, 0) & O_NONBLOCK);
+            struct sockaddr_storage local = {0}; socklen_t local_length = sizeof(local);
+            assert(getsockname(socket_fd, (struct sockaddr *) &local, &local_length) == 0);
+            uint16_t kernel_id = version == 4 ? ((struct sockaddr_in *) &local)->sin_port :
+                                                ((struct sockaddr_in6 *) &local)->sin6_port;
+            assert(kernel_id != 0);
+            struct epoll_event event;
+            assert(epoll_wait(epoll_fd, &event, 1, 2000) == 1);
+            assert(event.data.ptr == session && (event.events & EPOLLIN) && !(event.events & EPOLLERR));
+            // Inspect without consuming: prove the kernel returns a bare echo reply
+            // with its own identifier before production restores the app identifier.
+            struct iovec iov = {.iov_base = reply, .iov_len = sizeof(reply)};
+            struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
+            assert(recvmsg(socket_fd, &message, MSG_PEEK | MSG_DONTWAIT) == (ssize_t) lengths[i]);
+            assert(!(message.msg_flags & MSG_TRUNC));
+            assert(reply[0] == (version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY) && reply[1] == 0);
+            assert(load16(reply + 4) == ntohs(kernel_id) && load16(reply + 6) == i + 1);
+            assert(memcmp(reply + 8, packet + off + 8, lengths[i] - 8) == 0);
+            check_icmp_socket(&running, &event);
+            size_t length = tun_packet(tunnel[0], output, version, protocol);
+            assert(length == base + lengths[i] && !session->icmp.stop);
+            assert(output[base] == reply[0] && output[base + 1] == 0);
+            assert(load16(output + base + 4) == 0 && load16(output + base + 6) == i + 1);
+            assert(memcmp(output + base + 8, reply + 8, lengths[i] - 8) == 0);
+            assert(memcmp(output + (version == 4 ? 12 : 8), packet + (version == 4 ? 16 : 24),
+                          version == 4 ? 4 : 16) == 0);
+            assert(memcmp(output + (version == 4 ? 16 : 24), packet + (version == 4 ? 12 : 8),
+                          version == 4 ? 4 : 16) == 0);
+            assert_icmp_checksum(output, length, base, protocol);
+            assert(!is_readable(tunnel[0]) && !is_readable(socket_fd));
+            assert(allocations == (reuse ? 3 : 1));
+            assert_test_session_index(args->ctx);
+        }
+        clear(args->ctx); clear_packet_buffers(&buffers);
+        assert_test_session_index(args->ctx);
+        close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0 && last_socket == -1);
+    }
+    real_network = 0;
+#endif
+}
+
 void test_icmp_short_replies(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     for (int version = 4; version <= 6; version += 2) {
