@@ -65,8 +65,9 @@
 
 #define TUN_YIELD 10 // packets
 
-#define ICMP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
-#define ICMP6_MAXMSG (IPV6_MAXPACKET - 40 - 8) // bytes (socket)
+// Ping sockets include the ICMP header. IPv6's maximum payload excludes its IP header.
+#define ICMP4_MAXMSG (IP_MAXPACKET - 20) // bytes (socket)
+#define ICMP6_MAXMSG IPV6_MAXPACKET // bytes (socket), without jumbograms
 #define UDP4_MAXMSG (IP_MAXPACKET - 20 - 8) // bytes (socket)
 #define UDP6_MAXMSG (IPV6_MAXPACKET - 40 - 8) // bytes (socket)
 

@@ -31,6 +31,7 @@ int tcp_sendbuf_queries, tcp_outq_queries;
 int tcp_capacity_fd = -1, tcp_capacity_available;
 int socket_error_fd = -1, socket_error_value;
 ssize_t (*error_queue_recv)(int, struct msghdr *, int);
+ssize_t (*packet_recv)(int, struct msghdr *, int);
 int sendto_error_fd = -1, sendto_error_value;
 int recv_error_fd = -1, recv_error_value;
 
@@ -58,8 +59,15 @@ ssize_t __wrap_recvfrom(int fd, void *buffer, size_t length, int flags,
 
 ssize_t __real_recvmsg(int fd, struct msghdr *message, int flags);
 ssize_t __wrap_recvmsg(int fd, struct msghdr *message, int flags) {
+    if (!(flags & MSG_ERRQUEUE) && recv_error_fd >= 0 && fd == recv_error_fd) {
+        errno = recv_error_value;
+        recv_error_fd = -1;
+        return -1;
+    }
     if (error_queue_recv != NULL && (flags & MSG_ERRQUEUE))
         return error_queue_recv(fd, message, flags);
+    if (packet_recv != NULL && !(flags & MSG_ERRQUEUE))
+        return packet_recv(fd, message, flags);
     return __real_recvmsg(fd, message, flags);
 }
 
@@ -704,6 +712,7 @@ struct segment *new_test_segment(uint16_t length) {
 
 void reset_test_state(void) {
     error_queue_recv = NULL;
+    packet_recv = NULL;
     sendto_error_fd = -1;
     sendto_error_value = 0;
     recv_error_fd = -1;

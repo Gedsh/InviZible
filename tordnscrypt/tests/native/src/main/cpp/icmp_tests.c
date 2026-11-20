@@ -464,7 +464,13 @@ void test_icmp_epoll_cleanup(const struct arguments *args) {
         uint8_t reply[ICMP_MINLEN] = {version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY};
         store16(reply + 4, 54321); store16(reply + 6, 1);
         extern ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
-        assert(__real_sendto(sender, reply, sizeof(reply), 0, (struct sockaddr *) &local, sizeof(local)) == sizeof(reply));
+        ssize_t sent = __real_sendto(sender, reply, sizeof(reply), 0, (struct sockaddr *) &local, sizeof(local));
+        if (sent != sizeof(reply)) {
+            char detail[128];
+            snprintf(detail, sizeof(detail), "ICMP local UDP reply send returned %zd errno %d: %s",
+                     sent, errno, strerror(errno));
+            native_test_fail(detail, __FILE__, __LINE__);
+        }
         struct epoll_event event;
         assert(epoll_wait(epoll_fd, &event, 1, 100) == 1 && event.data.ptr == session);
         check_icmp_socket(&running, &event);
@@ -718,7 +724,13 @@ void test_icmp_real_error_queue(const struct arguments *args) {
         memcpy(packet + off + 2, version == 4 ? (void *) &a4->sin_port : (void *) &a6->sin6_port, 2);
         store16(packet + off + 4, 24); memset(packet + off + 8, 0xa5, 16);
         packet_checksums(packet, off + 24, off, IPPROTO_UDP);
-        assert(__real_sendto(upstream, packet + off + 8, 16, 0, (struct sockaddr *) &storage, addrlen) == 16);
+        ssize_t sent = __real_sendto(upstream, packet + off + 8, 16, 0, (struct sockaddr *) &storage, addrlen);
+        if (sent != 16) {
+            char detail[128];
+            snprintf(detail, sizeof(detail), "UDP%d error-queue probe send returned %zd errno %d: %s",
+                     version, sent, errno, strerror(errno));
+            native_test_fail(detail, __FILE__, __LINE__);
+        }
         struct pollfd ready = {.fd = upstream, .events = POLLERR};
         assert(poll(&ready, 1, 1000) == 1 && (ready.revents & POLLERR));
         assert(forward_socket_errors(&running, upstream, packet, off + 24) == 1);
@@ -813,5 +825,155 @@ void test_icmp_recv_mtu(const struct arguments *args) {
             }
     real_udp_packets = 0;
     close(epoll_fd);
+#endif
+}
+
+void test_icmp_reply_validation(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int reuse = 0; reuse < 2; reuse++) {
+            int upstream[2], tunnel[2];
+            assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+            assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+            struct packet_buffers buffers = {0};
+            struct arguments running = *args;
+            running.tun = tunnel[1]; running.buffers = reuse ? &buffers : NULL;
+            struct ng_session s = {.socket = upstream[0]};
+            s.icmp.version = version; s.icmp.id = htons(12345);
+            struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+            const uint8_t types[] = {version == 4 ? ICMP6_ECHO_REPLY : ICMP_ECHOREPLY,
+                    version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                    version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH, 133, 255,
+                    version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY,
+                    version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY};
+            for (size_t i = 0; i < sizeof(types); i++) {
+                uint8_t reply[13] = {0}, output[2048];
+                reply[0] = types[i]; reply[1] = i == 5 ? 1 : i == 6 ? 255 : 0;
+                store16(reply + 4, 54321); store16(reply + 6, (uint16_t) i);
+                memset(reply + 8, 0xa5, sizeof(reply) - 8);
+                assert(send(upstream[1], reply, sizeof(reply), 0) == sizeof(reply));
+                check_icmp_socket(&running, &event);
+                assert(!s.icmp.stop && !is_readable(tunnel[0]));
+                // Invalid traffic must not poison reuse of either scratch buffer.
+                reply[0] = version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY; reply[1] = 0;
+                assert(send(upstream[1], reply, sizeof(reply), 0) == sizeof(reply));
+                check_icmp_socket(&running, &event);
+                int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+                size_t length = tun_packet(tunnel[0], output, version, protocol);
+                size_t off = version == 4 ? 20 : 40;
+                assert(length == off + sizeof(reply) && !s.icmp.stop);
+                assert(output[off] == reply[0] && output[off + 1] == 0);
+                assert(load16(output + off + 4) == 12345);
+                assert(memcmp(output + off + 6, reply + 6, sizeof(reply) - 6) == 0);
+                assert_icmp_checksum(output, length, off, protocol);
+                assert(allocations == (reuse ? 2 : 0));
+            }
+            clear_packet_buffers(&buffers);
+            close(upstream[0]); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+            assert(allocations == 0 && sockets == 0);
+        }
+#endif
+}
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+static const uint8_t *large_reply;
+static size_t large_reply_length;
+
+static ssize_t receive_large_reply(int fd, struct msghdr *message, int flags) {
+    assert(flags == 0 && message->msg_iovlen == 1);
+    size_t copied = large_reply_length;
+    if (copied > message->msg_iov[0].iov_len) {
+        copied = message->msg_iov[0].iov_len;
+        message->msg_flags |= MSG_TRUNC;
+    }
+    memcpy(message->msg_iov[0].iov_base, large_reply, copied);
+    return (ssize_t) copied;
+}
+
+static ssize_t receive_truncated_reply(int fd, struct msghdr *message, int flags) {
+    extern ssize_t __real_recvmsg(int, struct msghdr *, int);
+    // Exercise a real kernel MSG_TRUNC without requiring a huge contiguous skb
+    // allocation on old phones. The ordinary receive still sees its full buffer.
+    message->msg_iov[0].iov_len = 8;
+    return __real_recvmsg(fd, message, flags);
+}
+#endif
+
+void test_icmp_reply_bounds(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int reuse = 0; reuse < 2; reuse++) {
+            // Independent wire bounds: IPv4 includes its header in Total Length;
+            // IPv6's 16-bit Payload Length excludes its 40-byte header.
+            size_t off = version == 4 ? 20 : 40;
+            size_t limit = version == 4 ? UINT16_MAX - off : UINT16_MAX;
+            size_t capacity = off + limit + 1;
+            uint8_t *reply = malloc(limit + 1), *output = malloc(capacity), *expected = malloc(capacity);
+            assert(reply != NULL && output != NULL && expected != NULL);
+            int upstream[2], tunnel[2];
+            assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+            assert(socketpair(AF_UNIX, SOCK_STREAM, 0, tunnel) == 0);
+            int send_buffer = 256 * 1024;
+            assert(setsockopt(tunnel[1], SOL_SOCKET, SO_SNDBUF, &send_buffer, sizeof(send_buffer)) == 0);
+            struct packet_buffers buffers = {0};
+            struct arguments running = *args;
+            running.tun = tunnel[1]; running.buffers = reuse ? &buffers : NULL;
+            struct ng_session s = {.socket = upstream[0]};
+            s.icmp.version = version; s.icmp.id = htons(12345);
+            int family = version == 4 ? AF_INET : AF_INET6;
+            assert(inet_pton(family, version == 4 ? "10.0.0.2" : "2001:db8::1", &s.icmp.saddr) == 1);
+            assert(inet_pton(family, version == 4 ? "192.0.2.1" : "2001:db8::2", &s.icmp.daddr) == 1);
+            struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+            memset(reply, 0xa5, limit + 1);
+            reply[0] = version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY; reply[1] = 0;
+            store16(reply + 2, 0); store16(reply + 4, 54321); store16(reply + 6, 7);
+            const size_t lengths[] = {limit - 1, limit, limit + 1, 9};
+            for (size_t i = 0; i < sizeof(lengths) / sizeof(*lengths); i++) {
+                size_t length = lengths[i];
+                if (length > 9) {
+                    large_reply = reply; large_reply_length = length;
+                    packet_recv = receive_large_reply;
+                } else assert(send(upstream[1], reply, length, 0) == length);
+                check_icmp_socket(&running, &event);
+                packet_recv = NULL;
+                assert(!s.icmp.stop && s.socket == upstream[0]);
+                if (length > limit) {
+                    assert(!is_readable(tunnel[0]));
+                    continue;
+                }
+                assert(is_readable(tunnel[0]));
+                size_t received = 0;
+                while (received < off + length && is_readable(tunnel[0])) {
+                    ssize_t bytes = recv(tunnel[0], output + received, capacity - received, MSG_DONTWAIT);
+                    assert(bytes > 0);
+                    received += (size_t) bytes;
+                }
+                assert(received == off + length);
+                assert(output[0] >> 4 == version);
+                assert(load16(output + (version == 4 ? 2 : 4)) == (version == 4 ? off + length : length));
+                assert(output[off] == reply[0] && output[off + 1] == 0);
+                assert(load16(output + off + 4) == 12345);
+                assert(memcmp(output + off + 6, reply + 6, length - 6) == 0);
+                memcpy(expected, output, off + length);
+                packet_checksums(expected, off + length, off, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+                assert(memcmp(expected, output, off + length) == 0);
+                assert(allocations == (reuse ? 2 : 0));
+            }
+            assert(send(upstream[1], reply, 32, 0) == 32);
+            packet_recv = receive_truncated_reply;
+            check_icmp_socket(&running, &event);
+            packet_recv = NULL;
+            assert(!is_readable(tunnel[0]) && !s.icmp.stop);
+            assert(send(upstream[1], reply, 9, 0) == 9);
+            check_icmp_socket(&running, &event);
+            assert(is_readable(tunnel[0]));
+            assert(recv(tunnel[0], output, capacity, 0) == off + 9);
+            assert(load16(output + off + 4) == 12345 && !s.icmp.stop);
+            assert(!is_readable(tunnel[0]) && !is_readable(upstream[0]));
+            clear_packet_buffers(&buffers);
+            close(upstream[0]); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+            free(reply); free(output); free(expected);
+            assert(allocations == 0 && sockets == 0);
+        }
 #endif
 }

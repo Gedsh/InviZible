@@ -26,10 +26,9 @@
 
 extern int own_uid;
 
-static int icmp_reply_log_priority(int version, const struct icmp *icmp) {
+static bool is_icmp_reply(int version, const struct icmp *icmp) {
     return icmp->icmp_code == 0 &&
-           icmp->icmp_type == (version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY)
-           ? ANDROID_LOG_DEBUG : ANDROID_LOG_WARN;
+           icmp->icmp_type == (version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY);
 }
 
 int get_icmp_timeout(const struct icmp_session *u, int sessions, int maxsessions) {
@@ -296,7 +295,9 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 s->icmp.stop = 1;
                 return;
             }
-            ssize_t bytes = recv(s->socket, buffer, blen, 0);
+            struct iovec iov = {.iov_base = buffer, .iov_len = blen};
+            struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
+            ssize_t bytes = recvmsg(s->socket, &message, 0);
             if (bytes < 0) {
                 // Socket error
                 int serr = errno;
@@ -311,12 +312,17 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                         write_connection_unreach(args, s->icmp.error_quote, s->icmp.error_quote_length, serr);
                     s->icmp.stop = queued > 0 || (queued < 0 && serr != EMSGSIZE);
                 }
+            } else if ((message.msg_flags & MSG_TRUNC) || (size_t) bytes > blen) {
+                log_android(ANDROID_LOG_WARN, "ICMP recv truncated reply length %zd capacity %u", bytes, blen);
             } else if (bytes == 0) {
                 log_android(ANDROID_LOG_WARN, "ICMP recv eof");
                 s->icmp.stop = 1;
 
             } else if (bytes < ICMP_MINLEN) {
                 log_android(ANDROID_LOG_WARN, "ICMP recv packet too short length %zd", bytes);
+            } else if (!is_icmp_reply(s->icmp.version, (const struct icmp *) buffer)) {
+                log_android(ANDROID_LOG_WARN, "ICMP%d recv unsupported reply type %u code %u",
+                            s->icmp.version, buffer[0], buffer[1]);
             } else {
                 // Socket read data
                 struct log_address dest = {.version = s->icmp.version, .address = &s->icmp.daddr};
@@ -324,7 +330,7 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
                 // The ping socket's echo ID may differ from the original session ID.
                 struct icmp *icmp = (struct icmp *) buffer;
                 log_android(
-                        icmp_reply_log_priority(s->icmp.version, icmp),
+                        ANDROID_LOG_DEBUG,
                         "ICMP recv bytes %zd from %s for tun type %d code %d id %x/%x seq %d",
                         bytes, format_log_address(&dest),
                         icmp->icmp_type, icmp->icmp_code,
@@ -601,7 +607,7 @@ ssize_t write_icmp(const struct arguments *args, const struct icmp_session *cur,
     struct log_address dest = {.version = cur->version, .address = &cur->daddr};
 
     // Send raw ICMP message
-    log_android(icmp_reply_log_priority(cur->version, icmp),
+    log_android(is_icmp_reply(cur->version, icmp) ? ANDROID_LOG_DEBUG : ANDROID_LOG_WARN,
                 "ICMP sending to tun %d from %s to %s data %zu type %d code %d id %x seq %d",
                 args->tun, format_log_address(&dest), format_log_address(&source), datalen,
                 icmp->icmp_type, icmp->icmp_code, icmp->icmp_id, icmp->icmp_seq);

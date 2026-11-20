@@ -566,7 +566,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 307 tests plus the optional comparison test.
+The full run contains 309 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
@@ -638,10 +638,43 @@ drain errors, logging cannot change the saved errno decision, and resources bala
 after every case. Receive-error buffers are released through the normal cleanup path.
 Routine ping forwarding, normal echo replies, session creation and idle cleanup
 log at DEBUG. Kernel-rewritten echo IDs do not turn normal replies into warnings.
-Unexpected reply types/codes, generated ICMP errors and socket/packet failures
-retain WARN/ERROR diagnostics. The existing lazy logging gate avoids address
-formatting when the selected log level suppresses these messages; packet handling
-and checksums are unchanged.
+Unexpected reply types/codes are dropped with WARN diagnostics; generated ICMP
+errors and socket/packet failures retain WARN/ERROR diagnostics. The existing lazy
+logging gate avoids address formatting when the selected log level suppresses
+these messages. Logging priorities do not alter packet bytes.
+Ping replies use recvmsg so MSG_TRUNC is detected before any ID or checksum rewrite.
+Only complete IPv4 echo replies (type 0) and IPv6 echo replies (type 129), with
+code zero and at least eight bytes, are forwarded. The socket limits include the
+ICMP header: 65,515 bytes for IPv4 and 65,535 bytes for IPv6 without jumbograms.
+Truncated, short and unsupported replies are dropped without stopping the session.
+Two additional ICMP regressions cover wrong-family replies, echo requests received
+as replies, error/control/unknown types, nonzero codes, maximum and adjacent lengths,
+and valid replies after rejection. Real local datagram sockets exercise truncation
+and recovery. Maximum-size receives use controlled callbacks to avoid large
+contiguous socket-buffer allocations on old kernels; complete output packets are
+checked byte-for-byte with independent checksums through a local stream socket.
+Both buffer-reuse modes verify allocation/socket balance. Existing receive-error
+regressions also exercise recvmsg, preserving MTU recovery and fatal-error handling.
+Android 6/API 23 compatibility uses the existing non-sanitized test configuration
+(`-PnativeSanitizers=false`); sanitizer builds require API 27. The receive path uses
+recvmsg, msghdr and MSG_TRUNC already provided by Android 6, with no newer platform
+API requirement. Compatibility validation on 2026-11-20 built API 23 libraries for
+ARMv7, ARM64 and x86_64 (confirmed in their ELF Android notes), then ran the full
+suite on the connected Android 10 ARMv7 device: 302 passed and eight expected proc
+skips. These device runs do not establish coverage of every vendor kernel.
+The connected Meizu M5 Note subsequently passed the full 310-test suite on
+Android 7.0 ARM64, with no skips, using the non-sanitized API 23 build and HEAD
+baseline. All 22 ICMP cases passed, including real IPv4/IPv6 UDP error-queue
+delivery, reply type/code rejection, maximum-size/truncation handling, buffer
+reuse, receive-side MTU recovery and epoll-registration failure cleanup.
+Initial loopback UDP sends returned EPERM on this phone; both families passed
+on retry before the full run. The loopback fixtures report the IP family and
+send errno where needed to distinguish environment restrictions from
+packet-handling failures. A Mi 4 running Android 6.0.1 ARMv7 also passed the full
+310-test suite with no skips, using the same non-sanitized API 23 build and HEAD
+baseline. All 22 ICMP cases passed, including real IPv4/IPv6 UDP error-queue
+delivery. Initial loopback sends on this phone also returned EPERM; both real
+UDP cases passed on retry before the full run.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 

@@ -25,7 +25,11 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "icmpRecvMtu") == 0)
+    if (strcmp(id, "icmpReplyValidation") == 0)
+        test_icmp_reply_validation(&args);
+    else if (strcmp(id, "icmpReplyBounds") == 0)
+        test_icmp_reply_bounds(&args);
+    else if (strcmp(id, "icmpRecvMtu") == 0)
         test_icmp_recv_mtu(&args);
     else if (strcmp(id, "icmpErrorQueue") == 0)
         test_icmp_error_queue(&args);
