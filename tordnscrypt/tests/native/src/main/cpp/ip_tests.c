@@ -1202,52 +1202,56 @@ void test_uid_domain(struct arguments *args, int kind) {
         for (int known_version = 4; known_version <= 6; known_version += 2)
             for (int version = 4; version <= 6; version += 2)
                 for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
-                    for (int legacy = 0; legacy <= 1; legacy++)
-                        for (int denied = 0; denied <= 1; denied++) {
-                            clear(args->ctx); release_uid_cache(); set_uid_test_clock(10000);
-                            args->ctx->sdk = legacy ? 28 : 29;
-                            _Alignas(8) uint8_t packet[128]; uint8_t dns[512]; char table[256];
-                            size_t length = checksum_packet(packet, known_version, protocol, 0);
-                            size_t off = known_version == 4 ? 20 : 40;
-                            assert(inet_pton(known_version == 4 ? AF_INET : AF_INET6,
-                                             known_version == 4 ? "192.0.2.10" : "2001:db8::10",
-                                             packet + (known_version == 4 ? 16 : 24)) == 1);
-                            packet_checksums(packet, length, off, protocol);
-                            blocked_uid_lookup(known_version, legacy, 12345, table, sizeof(table));
-                            deny_address = 0;
-                            handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
-                            assert(policy_uid == 12345 && !captured_owner.inferred);
-                            assert(args->ctx->uid_observations.count == 1);
-                            // Learn both address families after the confirmed connection.
-                            struct ng_session dns_session = {.protocol = IPPROTO_UDP};
-                            for (int family = 4; family <= 6; family += 2) {
-                                size_t size = test_uid_dns_response(dns, family, true);
-                                parse_dns_response(&running, &dns_session, dns, &size);
+                    for (int cross_protocol = 0; cross_protocol <= 1; cross_protocol++)
+                        for (int legacy = 0; legacy <= 1; legacy++)
+                            for (int denied = 0; denied <= 1; denied++) {
+                                clear(args->ctx); release_uid_cache(); set_uid_test_clock(10000);
+                                args->ctx->sdk = legacy ? 28 : 29;
+                                _Alignas(8) uint8_t packet[128]; uint8_t dns[512]; char table[256];
+                                int known_protocol = cross_protocol
+                                        ? (protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP) : protocol;
+                                size_t length = checksum_packet(packet, known_version, known_protocol, 0);
+                                size_t off = known_version == 4 ? 20 : 40;
+                                assert(inet_pton(known_version == 4 ? AF_INET : AF_INET6,
+                                                 known_version == 4 ? "192.0.2.10" : "2001:db8::10",
+                                                 packet + (known_version == 4 ? 16 : 24)) == 1);
+                                store16(packet + off + 2, protocol == IPPROTO_TCP ? 443 : 5000);
+                                packet_checksums(packet, length, off, known_protocol);
+                                blocked_uid_lookup(known_version, legacy, 12345, table, sizeof(table));
+                                deny_address = 0;
+                                handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                                assert(policy_uid == 12345 && !captured_owner.inferred);
+                                assert(args->ctx->uid_observations.count == 1);
+                                // Learn both address families after the confirmed connection.
+                                struct ng_session dns_session = {.protocol = IPPROTO_UDP};
+                                for (int family = 4; family <= 6; family += 2) {
+                                    size_t size = test_uid_dns_response(dns, family, true);
+                                    parse_dns_response(&running, &dns_session, dns, &size);
+                                }
+                                length = checksum_packet(packet, version, protocol, 0);
+                                off = version == 4 ? 20 : 40;
+                                assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                                 version == 4 ? "192.0.2.11" : "2001:db8::11",
+                                                 packet + (version == 4 ? 16 : 24)) == 1);
+                                store16(packet + off, 12346);
+                                packet_checksums(packet, length, off, protocol);
+                                blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
+                                uid_test_clock = 14000; deny_address = denied;
+                                int checks = policy_checks;
+                                handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                                assert(policy_uid == 12345 && policy_checks == checks + 1);
+                                if (protocol == IPPROTO_TCP || !denied)
+                                    assert(captured_owner.uid == 12345 && captured_owner.inferred);
+                                else {
+                                    assert(args->ctx->ng_session != NULL && args->ctx->ng_session->udp.uid == 12345);
+                                    assert(args->ctx->ng_session->udp.uid_inferred);
+                                }
+                                assert(args->ctx->uid_observations.count == 1); // No inference feedback.
+                                clear(args->ctx); release_uid_cache();
+                                uint8_t output[2048];
+                                while (is_readable(tunnel[0])) assert(read(tunnel[0], output, sizeof(output)) > 0);
+                                assert(allocations == 0 && sockets == 0 && string_refs == 0);
                             }
-                            length = checksum_packet(packet, version, protocol, 0);
-                            off = version == 4 ? 20 : 40;
-                            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
-                                             version == 4 ? "192.0.2.11" : "2001:db8::11",
-                                             packet + (version == 4 ? 16 : 24)) == 1);
-                            store16(packet + off, 12346);
-                            packet_checksums(packet, length, off, protocol);
-                            blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
-                            uid_test_clock = 10500; deny_address = denied;
-                            int checks = policy_checks;
-                            handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
-                            assert(policy_uid == 12345 && policy_checks == checks + 1);
-                            if (protocol == IPPROTO_TCP || !denied)
-                                assert(captured_owner.uid == 12345 && captured_owner.inferred);
-                            else {
-                                assert(args->ctx->ng_session != NULL && args->ctx->ng_session->udp.uid == 12345);
-                                assert(args->ctx->ng_session->udp.uid_inferred);
-                            }
-                            assert(args->ctx->uid_observations.count == 1); // No inference feedback.
-                            clear(args->ctx); release_uid_cache();
-                            uint8_t output[2048];
-                            while (is_readable(tunnel[0])) assert(read(tunnel[0], output, sizeof(output)) > 0);
-                            assert(allocations == 0 && sockets == 0 && string_refs == 0);
-                        }
         capture_packets = 0; policy_requires_known_uid = false; deny_address = 0;
         args->ctx->sdk = 29; set_uid_test_clock(-1);
         close(tunnel[0]); close(tunnel[1]);
@@ -1266,9 +1270,12 @@ void test_uid_domain(struct arguments *args, int kind) {
     if (kind == 1) {
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, other_source, maps[1].address, 443) == -1);
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 444) == -1);
-        assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443) == -1);
-        record_uid_observation(args->ctx, 6, IPPROTO_TCP, source6, maps[2].address, 443, 23456);
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, other_source, maps[1].address, 443) == -1);
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 444) == -1);
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443) == 12345);
+        record_uid_observation(args->ctx, 6, IPPROTO_UDP, source6, maps[2].address, 443, 23456);
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443) == -1);
         uid_test_clock = 10500;
         record_uid_observation(args->ctx, 4, IPPROTO_TCP, source, maps[0].address, 443, 12345);
         uid_test_clock = 14999;
@@ -1276,16 +1283,20 @@ void test_uid_domain(struct arguments *args, int kind) {
         uid_test_clock = 15000;
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == 12345);
         uid_test_clock = 15500;
-        assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
+        // TCP evidence has expired; the independent UDP confirmation still applies to both.
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == 12345);
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443) == 12345);
+        uid_test_clock = 19999;
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443) == -1);
         const jint excluded[] = {0, 1000, own_uid};
         for (size_t i = 0; i < sizeof(excluded) / sizeof(*excluded); i++) {
             memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
-            record_uid_observation(args->ctx, 4, IPPROTO_TCP, source, maps[0].address, 443, excluded[i]);
+            record_uid_observation(args->ctx, 4, IPPROTO_UDP, source, maps[0].address, 443, excluded[i]);
             assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
             record_uid_observation(args->ctx, 6, IPPROTO_TCP, source6, maps[2].address, 443, 12345);
             assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
+            assert(infer_uid_destination(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443) == -1);
         }
         memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
         record_uid_observation(args->ctx, 4, IPPROTO_TCP, source, maps[0].address, 443, 12345);
@@ -1293,6 +1304,9 @@ void test_uid_domain(struct arguments *args, int kind) {
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
         record_uid_observation(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443, 23456);
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == 23456);
+        record_uid_observation(args->ctx, 4, IPPROTO_UDP, source, maps[1].address, 443, 34567);
+        // An exact-IP conflict cannot fall through to domain evidence for UID 12345.
+        assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
     } else if (kind == 2) {
         clear(args->ctx); set_uid_test_clock(10000);
         record_uid_dns_answers(args->ctx, "test", maps, 2);

@@ -372,7 +372,7 @@ void record_uid_dns_answers(struct context *ctx, const char *domain,
     }
 }
 
-static jint infer_uid_domain(const struct context *ctx, int version, int protocol,
+static jint infer_uid_domain(const struct context *ctx, int version,
                               const void *source, const void *dest, uint16_t port, int64_t now) {
     const struct uid_dns_mappings *dns = &ctx->uid_dns_mappings;
     const char *domain = NULL;
@@ -426,7 +426,7 @@ static jint infer_uid_domain(const struct context *ctx, int version, int protoco
     jint uid = -1;
     for (size_t i = 0; i < ctx->uid_observations.count; i++) {
         const struct uid_observation *owner = &ctx->uid_observations.entry[i];
-        if (owner->expires <= now || owner->protocol != protocol || owner->port != port ||
+        if (owner->expires <= now || owner->port != port ||
             (owner->version == version && memcmp(owner->source, source, version == 4 ? 4 : 16) != 0))
             continue;
         // Cross-family evidence is scoped to the VPN context, not a DNS socket UID.
@@ -474,7 +474,7 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
     }
     jint uid = -1;
     // Share exact endpoint evidence across TCP/UDP, including conflicting owners.
-    // Keep observations protocol-specific so domain fallback remains unchanged.
+    // Observations retain independent expiry for each confirmed transport.
     for (size_t i = 0; i < cache->count; i++) {
         const struct uid_observation *entry = &cache->entry[i];
         if (entry->expires <= now || !same_uid_destination(entry, version, source, dest, port))
@@ -490,7 +490,7 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
             log_android(ANDROID_LOG_ERROR, "UID inference declined: ip_owner_excluded uid=%d", uid);
         return uid >= 10000 && uid != own_uid ? uid : -1;
     }
-    return infer_uid_domain(ctx, version, protocol, source, dest, port, now);
+    return infer_uid_domain(ctx, version, source, dest, port, now);
 }
 
 void handle_ip(const struct arguments *args,

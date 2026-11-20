@@ -467,7 +467,7 @@ in conflict detection but cannot themselves be inferred. Guessed and restored
 session owners never add observations, and inference never refreshes expiry.
 Cross-protocol matches include conflicting and excluded owners. Records retain
 their protocol and independent expiry, so refreshing UDP evidence cannot extend
-TCP evidence used by domain fallback. Regression cases cover sharing in both
+an older TCP observation. Regression cases cover sharing in both
 directions, four-second-old evidence, exact five-second expiry, cross-protocol
 conflicts and excluded owners, and unchanged source/address/port restrictions.
 Packet/policy cases exercise both transports as the confirmed source with IPv4/IPv6,
@@ -545,18 +545,19 @@ Existing keys can still refresh without clearing their local deadlines. Direct-I
 inference continues in every case. Both fixed arrays are cleared on teardown and
 clock failure; the fix adds no allocations, timers or network requests.
 For a uniquely mapped destination hostname, inference compares all recent confirmed
-owners of other addresses mapped to that exact hostname. Protocol and destination
-port must match. Same-family evidence must also match source IP; cross-family
+owners of other addresses mapped to that exact hostname, across TCP and UDP.
+Destination port must match. Same-family evidence must also match source IP; cross-family
 evidence is scoped to the VPN context. Shared destination addresses with multiple
 live hostnames are ambiguous and remain unknown. Root, system and own-UID evidence
 participate in conflicts but are not inferred. Parsing a DNS response never uses its
 socket owner as application ownership evidence. Inferred traffic never seeds ownership.
-The shared owner window is five seconds; domain matching remains protocol-specific,
+The shared owner window is five seconds for both exact-IP and domain matching,
 and DNS mappings cannot refresh ownership evidence. Clock failures/backwards reads and teardown clear
 both caches. DNS that is not visible to the VPN cannot supply these mappings.
 Four IP cases cover real packet/policy dispatch across both families and owner APIs,
-cross-family inference, provisional provenance, independent conflict expiry,
-protocol/port/source restrictions, excluded owners, ambiguity, exact-IP priority,
+cross-family and cross-protocol inference in both directions, provisional provenance,
+independent cross-protocol conflict expiry, port/source restrictions, excluded owners,
+ambiguity, exact-IP priority,
 selective original-expiry capacity guards, unrelated-domain continuity, shared-IP
 losses, saturation of both arrays, deferred admission and recovery, clocks,
 cleanup and context isolation. Four DNS
