@@ -25,7 +25,11 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "icmpBlockedUnreachable") == 0)
+    if (strcmp(id, "icmpEchoValidation") == 0)
+        test_icmp_echo_validation(&args);
+    else if (strcmp(id, "ipIcmpValidation") == 0)
+        test_ip_icmp_validation(&args);
+    else if (strcmp(id, "icmpBlockedUnreachable") == 0)
         test_icmp_blocked_unreachable(&args);
     else if (strcmp(id, "icmpUpstreamUnreachable") == 0)
         test_icmp_upstream_unreachable(&args);

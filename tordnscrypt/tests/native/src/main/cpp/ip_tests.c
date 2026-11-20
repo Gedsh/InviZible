@@ -2755,6 +2755,17 @@ void test_restore_uid_icmp(const struct arguments *args, int version) {
     newest.icmp.uid = 23456;
     assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
                        "source", "dest", "", (const uint8_t *) &echo) == 23456);
+    echo.icmp_code = 1;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    echo.icmp_code = 0;
+    echo.icmp_type = version == 4 ? ICMP6_ECHO_REQUEST : ICMP_ECHO;
+    assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
+                       "source", "dest", "", (const uint8_t *) &echo) == -1);
+    echo.icmp_type = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+    assert(restore_uid(args, version, version == 4 ? IPPROTO_ICMPV6 : IPPROTO_ICMP,
+                       source, 1234, dest, 1234, "source", "dest", "",
+                       (const uint8_t *) &echo) == -1);
     newest.socket = -1;
     assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
                        "source", "dest", "", (const uint8_t *) &echo) == -1);
@@ -2776,5 +2787,43 @@ void test_restore_uid_icmp(const struct arguments *args, int version) {
     assert(restore_uid(args, version, protocol, source, 1234, dest, 1234,
                        "source", "dest", "", (const uint8_t *) &echo) == -1);
     set_test_sessions(args->ctx, NULL);
+#endif
+}
+
+void test_ip_icmp_validation(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    capture_packets = 1;
+    for (int version = 4; version <= 6; version += 2)
+        for (int legacy = 0; legacy <= 1; legacy++)
+            for (int full = 0; full <= 1; full++)
+                for (int kind = 0; kind < 8; kind++) {
+                    int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+                    if (kind == 6) protocol = version == 4 ? IPPROTO_ICMPV6 : IPPROTO_ICMP;
+                    _Alignas(8) uint8_t packet[128];
+                    size_t length = checksum_packet(packet, version, protocol, 0);
+                    size_t off = version == 4 ? 20 : 40;
+                    const uint8_t types[] = {version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                                            version == 4 ? ICMP6_ECHO_REQUEST : ICMP_ECHO,
+                                            version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                                            version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY,
+                                            133, 255, version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                                            version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH};
+                    packet[off] = types[kind]; packet[off + 1] = kind == 2 ? 1 : 0;
+                    packet_checksums(packet, length, off, protocol);
+                    args->ctx->sdk = legacy ? 28 : 29;
+                    fake_proc = legacy; proc_contents = proc6_contents = "header\n";
+                    uid_lookup_result = 12345;
+                    int queries = uid_lookups, files = file_closes, checks = policy_checks, calls = icmp_calls;
+                    handle_ip(args, packet, length, -1, full ? SESSION_MAX : 0, SESSION_MAX);
+                    bool accepted = kind == 0 && !full;
+                    assert(uid_lookups == queries + (accepted && !legacy));
+                    assert(accepted && legacy ? file_closes > files : file_closes == files);
+                    assert(policy_checks == checks + accepted && icmp_calls == calls + accepted);
+                    assert(args->ctx->ng_session == NULL);
+                    release_uid_cache();
+                    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                }
+    args->ctx->sdk = 29; capture_packets = fake_proc = 0;
+    proc_contents = proc6_contents = NULL;
 #endif
 }

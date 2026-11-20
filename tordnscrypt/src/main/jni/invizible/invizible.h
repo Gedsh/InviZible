@@ -585,7 +585,7 @@ jboolean handle_icmp(const struct arguments *args,
                      int uid,
                      int epoll_fd);
 
-jboolean is_icmp_supported(const uint8_t *pkt,
+jboolean is_icmp_supported(int version,
                            const uint8_t *payload);
 
 int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint8_t *payload);

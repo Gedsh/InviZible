@@ -197,15 +197,12 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
     }
 }
 
-jboolean is_icmp_supported(const uint8_t *pkt,
+jboolean is_icmp_supported(int version,
                            const uint8_t *payload) {
-    const struct icmp *icmp = (const struct icmp *) payload;
-
-    if (icmp->icmp_type != ICMP_ECHO && icmp->icmp_type != 128 /* ICMP_ECHOV6 */) {
-        return 0;
-    }
-
-    return 1;
+    // Callers validate the message length before reading type and code.
+    return payload[1] == 0 &&
+           ((version == 4 && payload[0] == ICMP_ECHO) ||
+            (version == 6 && payload[0] == ICMP6_ECHO_REQUEST));
 }
 
 jboolean handle_icmp(const struct arguments *args,
@@ -219,6 +216,8 @@ jboolean handle_icmp(const struct arguments *args,
 
     // Get headers
     const uint8_t version = (*pkt) >> 4;
+    if (!is_icmp_supported(version, payload))
+        return 0;
     const struct iphdr *ip4 = (struct iphdr *) pkt;
     const struct ip6_hdr *ip6 = (struct ip6_hdr *) pkt;
     struct icmp *icmp = (struct icmp *) payload;

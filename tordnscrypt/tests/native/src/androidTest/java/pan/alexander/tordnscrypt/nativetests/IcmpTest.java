@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for icmp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IcmpTest extends NativeTestSupport {
+    @Test public void echoRequestsRequireMatchingFamilyAndZeroCode() { check("icmpEchoValidation"); }
     @Test public void blockedUdpErrorsQuoteOriginalPacketAndHaveValidChecksums() { check("icmpBlockedUnreachable"); }
     @Test public void upstreamErrorsUseBoundedOriginalQuotesAfterBufferReuse() { check("icmpUpstreamUnreachable"); }
     @Test public void unreachableBoundsMulticastAndAllocationFailures() { check("icmpUnreachableBounds"); }

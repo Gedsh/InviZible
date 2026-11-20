@@ -387,3 +387,32 @@ void test_icmp_unreachable_bounds(const struct arguments *args) {
     }
 #endif
 }
+
+void test_icmp_echo_validation(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 7; kind++) {
+            _Alignas(8) uint8_t packet[128];
+            size_t off = ip_header(packet, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6,
+                                   ICMP_MINLEN, version == 4 ? "192.0.2.1" : "2001:db8::2");
+            const uint8_t types[] = {version == 4 ? ICMP6_ECHO_REQUEST : ICMP_ECHO,
+                                    version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                                    version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST,
+                                    version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY,
+                                    133, version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH, 255};
+            packet[off] = types[kind];
+            packet[off + 1] = kind == 1 ? 1 : kind == 2 ? 255 : 0;
+            assert(handle_icmp(args, packet, off + ICMP_MINLEN, packet + off, own_uid, -1) == 0);
+            assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
+        }
+        _Alignas(8) uint8_t packet[128];
+        size_t off = ip_header(packet, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6,
+                               ICMP_MINLEN, version == 4 ? "192.0.2.1" : "2001:db8::2");
+        packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+        expect_destination(version, version == 4 ? "192.0.2.1" : "2001:db8::2", 0);
+        assert(handle_icmp(args, packet, off + ICMP_MINLEN, packet + off, own_uid, -1) == 1);
+        clear(args->ctx);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}

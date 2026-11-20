@@ -111,6 +111,8 @@ void test_restore_uid_icmp(const struct arguments *args, int version);
 void test_tcp_uid_update(const struct arguments *args);
 void test_udp_uid_update(const struct arguments *args);
 void test_icmp_uid_update(const struct arguments *args);
+void test_icmp_echo_validation(const struct arguments *args);
+void test_ip_icmp_validation(struct arguments *args);
 void test_icmp_blocked_unreachable(const struct arguments *args);
 void test_icmp_upstream_unreachable(const struct arguments *args);
 void test_icmp_unreachable_bounds(const struct arguments *args);

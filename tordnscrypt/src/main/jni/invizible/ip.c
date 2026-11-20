@@ -629,6 +629,15 @@ void handle_ip(const struct arguments *args,
             return;
         }
 
+        // Only echo requests can use ping sockets. Reject all other ICMP before
+        // UID lookup, session lookup, policy callbacks or echo-ID interpretation.
+        if (protocol != (version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6) ||
+            !is_icmp_supported(version, payload)) {
+            log_android(ANDROID_LOG_WARN, "Unsupported ICMP v%d protocol %d type %u code %u",
+                        version, protocol, payload[0], payload[1]);
+            return;
+        }
+
         struct icmp *icmp = (struct icmp *) payload;
         if (!valid_transport_checksum(version, protocol, checksum_source, checksum_dest,
                                        payload, payload_length)) {
@@ -733,8 +742,7 @@ void handle_ip(const struct arguments *args,
         }
         // Existing live ping flows need no additional session or socket.
         bool icmp_existing = false;
-        if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) &&
-            is_icmp_supported(pkt, payload)) {
+        if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) {
             const struct icmp *icmp = (const struct icmp *) payload;
             struct ng_session *session = find_session(args->ctx, version, protocol,
                                                       saddr, icmp->icmp_id, daddr, 0);
@@ -787,7 +795,7 @@ void handle_ip(const struct arguments *args,
             uid = infer_uid_destination(args->ctx, version, protocol, saddr, daddr, dport);
             inferred = uid >= 0;
         }
-        if (uid < 0 && (protocol == IPPROTO_TCP || protocol == IPPROTO_UDP || is_icmp_supported(pkt, payload)))
+        if (uid < 0)
             log_android(ANDROID_LOG_ERROR,
                     "Packet uid can not be restored v%d %s/%u > %s/%u proto %d flags %s uid %d",
                     version, format_log_address(&source), sport, format_log_address(&dest), dport, protocol, flags, uid);
@@ -800,8 +808,7 @@ void handle_ip(const struct arguments *args,
         udp_lookup.session->udp.uid = uid;
         udp_lookup.session->udp.uid_inferred = inferred;
     }
-    if (uid >= 0 && (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6) &&
-        is_icmp_supported(pkt, payload)) {
+    if (uid >= 0 && (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6)) {
         const struct icmp *icmp = (const struct icmp *) payload;
         struct ng_session *session = find_session(args->ctx, version, protocol,
                                                   saddr, icmp->icmp_id, daddr, 0);
@@ -825,11 +832,6 @@ void handle_ip(const struct arguments *args,
         allowed = 1; // could be a lingering/blocked session
     } else if (protocol == IPPROTO_TCP && !syn) {
         allowed = 1; // assume existing session
-    } else if ((protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6)
-                && !is_icmp_supported(pkt, payload)) {
-        //Only ICMP ping traffic can be routed through the Android VPN service
-        log_android(ANDROID_LOG_WARN, "ICMP v%d p%d %s/%u uid %d not supported",
-                    version, protocol, format_log_address(&dest), dport, uid);
     } else if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP
                 && protocol != IPPROTO_ICMP && protocol != IPPROTO_ICMPV6) {
         log_android(ANDROID_LOG_ERROR, "PROTOCOL v%d p%d %s/%u uid %d not supported",
@@ -1385,7 +1387,8 @@ jint restore_uid(const struct arguments *args,
 
         const struct icmp *icmp = (const struct icmp *) payload;
 
-        if (icmp->icmp_type != ICMP_ECHO && icmp->icmp_type != 128 /* ICMP_ECHOV6 */) {
+        if (protocol != (version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6) ||
+            !is_icmp_supported(version, payload)) {
             log_android(ANDROID_LOG_WARN, "ICMP type %d code %d from %s to %s not supported",
                         icmp->icmp_type, icmp->icmp_code, source, dest);
             return uid;

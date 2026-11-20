@@ -566,7 +566,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 299 tests plus the optional comparison test.
+The full run contains 301 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
@@ -587,6 +587,16 @@ errors, input-buffer reuse, direct/redirected endpoints, IPv4 options, IPv6
 extensions, quote limits, malformed short packets, multicast suppression and
 allocation failure. A TCP case verifies socket failures produce a reset with no
 additional unquoted ICMP. Resource balance is checked across these paths.
+Outgoing ping requests require IPv4/ICMP type 8 or IPv6/ICMPv6 type 128,
+with code zero. Other types, nonzero codes and mismatched family/protocol pairs
+are rejected after the minimum-length check, before checksum work, owner lookup,
+session lookup or policy. Direct ICMP handling and UID restoration share the same
+type/code validator; valid echo requests retain checksum, policy and capacity checks.
+Two additional ICMP/IP cases cover opposite-family echo types, nonzero codes,
+echo replies, router solicitations, unreachable messages and unknown types. They
+assert no JNI/proc owner lookups, policy callbacks, forwarding or resource creation
+for rejected traffic, including at session capacity. Existing-owner restoration
+also rejects malformed requests and mismatched protocols.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 
