@@ -566,10 +566,27 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 295 tests plus the optional comparison test.
+The full run contains 299 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
+Destination-unreachable errors now contain the original tunnel packet prefix,
+family-specific type/code and a checksum over the full ICMP message (including
+the IPv6 pseudo-header). Immediate UDP blocks/retries and blocked TCP requests
+quote the current packet, bounded so the complete error fits in 576 bytes for
+IPv4 or 1280 bytes for IPv6. Async UDP errors retain the latest successfully sent
+packet's first 112 bytes inside existing session storage: no per-flow allocation
+or increase to `ng_session` size on ARMv7/ARM64. Redirected flows quote the original
+application endpoints. If extension headers push the UDP header past that bound,
+the async quote is invalidated and no unidentifiable error is emitted. SO_ERROR
+does not identify which datagram failed, so the quote is the latest sent datagram
+of that flow; detailed error-queue handling remains outside this change.
+Async TCP failures retain their TCP reset without a redundant unquoted ICMP packet.
+Three ICMP regressions cover blocked-flow bytes/checksums, injected UDP socket
+errors, input-buffer reuse, direct/redirected endpoints, IPv4 options, IPv6
+extensions, quote limits, malformed short packets, multicast suppression and
+allocation failure. A TCP case verifies socket failures produce a reset with no
+additional unquoted ICMP. Resource balance is checked across these paths.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 

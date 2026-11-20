@@ -861,7 +861,7 @@ void handle_ip(const struct arguments *args,
             udp_lookup.session = NULL;
         } else if (udp_uid_retry && uid < 0) {
             // Keep the retry deadline/budget when policy still denies an unknown owner.
-            write_connection_unreach(args, udp_lookup.session, EHOSTDOWN);
+            write_connection_unreach(args, pkt, length, EHOSTDOWN);
             return;
         }
     } else if ((udp_uid_retry &&

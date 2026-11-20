@@ -57,44 +57,60 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
     return 0;
 }
 
-// Connection refused
+// Quote the original tunnel packet, never the redirected upstream tuple.
 void write_connection_unreach(const struct arguments *args,
-                              const struct ng_session *s,
-                              const int serr) {
-    struct icmp icmp;
-    memset(&icmp, 0, sizeof(struct icmp));
-    icmp.icmp_type = ICMP_UNREACH;
-    if (serr == ECONNREFUSED)
-        icmp.icmp_code = ICMP_UNREACH_PORT;
-    else
-        icmp.icmp_code = ICMP_UNREACH_HOST;
-    icmp.icmp_cksum = 0;
-    icmp.icmp_cksum = ~calc_checksum(0, (const uint8_t *) &icmp, 4);
+                              const uint8_t *packet, size_t length, const int serr) {
+    if (packet == NULL || length == 0)
+        return;
+    struct icmp_session reply = {.version = packet[0] >> 4};
+    size_t limit, original_length;
+    if (reply.version == 4) {
+        if (length < sizeof(struct iphdr)) return;
+        size_t header = (packet[0] & 0x0F) * 4u;
+        original_length = read_net16(packet + 2);
+        if (header < sizeof(struct iphdr) || header + 8 > length ||
+            original_length < header + 8 || (read_net16(packet + 6) & IP_OFFMASK) != 0)
+            return;
+        memcpy(&reply.saddr.ip4, packet + 12, 4);
+        memcpy(&reply.daddr.ip4, packet + 16, 4);
+        uint32_t source = ntohl(reply.saddr.ip4), dest = ntohl(reply.daddr.ip4);
+        if (source == 0 || source == UINT32_MAX || IN_MULTICAST(source) ||
+            dest == UINT32_MAX || IN_MULTICAST(dest))
+            return;
+        limit = 576 - sizeof(struct iphdr) - 8;
+    } else if (reply.version == 6) {
+        if (length < sizeof(struct ip6_hdr) + 8) return;
+        original_length = sizeof(struct ip6_hdr) + read_net16(packet + 4);
+        if (original_length < sizeof(struct ip6_hdr) + 8) return;
+        memcpy(&reply.saddr.ip6, packet + 8, 16);
+        memcpy(&reply.daddr.ip6, packet + 24, 16);
+        if (IN6_IS_ADDR_UNSPECIFIED(&reply.saddr.ip6) || IN6_IS_ADDR_MULTICAST(&reply.saddr.ip6) ||
+            IN6_IS_ADDR_MULTICAST(&reply.daddr.ip6))
+            return;
+        limit = 1280 - sizeof(struct ip6_hdr) - 8;
+    } else
+        return;
 
-    struct icmp_session sicmp;
-    memset(&sicmp, 0, sizeof(struct icmp_session));
-
-    if (s->protocol == IPPROTO_TCP) {
-        sicmp.version = s->tcp.version;
-        if (s->tcp.version == 4) {
-            sicmp.saddr.ip4 = (__be32) s->tcp.saddr.ip4;
-            sicmp.daddr.ip4 = (__be32) s->tcp.daddr.ip4;
-        } else {
-            memcpy(&sicmp.saddr.ip6, &s->tcp.saddr.ip6, 16);
-            memcpy(&sicmp.daddr.ip6, &s->tcp.daddr.ip6, 16);
-        }
-        write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
-    } else if (s->protocol == IPPROTO_UDP) {
-        sicmp.version = s->udp.version;
-        if (s->udp.version == 4) {
-            sicmp.saddr.ip4 = (__be32) s->udp.saddr.ip4;
-            sicmp.daddr.ip4 = (__be32) s->udp.daddr.ip4;
-        } else {
-            memcpy(&sicmp.saddr.ip6, &s->udp.saddr.ip6, 16);
-            memcpy(&sicmp.daddr.ip6, &s->udp.daddr.ip6, 16);
-        }
-        write_icmp(args, &sicmp, (uint8_t *) &icmp, 8);
+    if (length > original_length) length = original_length;
+    if (length > limit) length = limit;
+    _Alignas(8) uint8_t message[1280 - sizeof(struct ip6_hdr)] = {0};
+    message[0] = reply.version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH;
+    message[1] = reply.version == 4
+                 ? (serr == ECONNREFUSED ? ICMP_UNREACH_PORT : ICMP_UNREACH_HOST)
+                 : (serr == ECONNREFUSED ? ICMP6_DST_UNREACH_NOPORT : ICMP6_DST_UNREACH_NOROUTE);
+    memcpy(message + 8, packet, length);
+    uint16_t csum = 0;
+    if (reply.version == 6) {
+        struct ip6_hdr_pseudo pseudo = {0};
+        pseudo.ip6ph_src = reply.daddr.ip6;
+        pseudo.ip6ph_dst = reply.saddr.ip6;
+        pseudo.ip6ph_len = htonl((uint32_t) (8 + length));
+        pseudo.ip6ph_nxt = IPPROTO_ICMPV6;
+        csum = calc_checksum(0, (const uint8_t *) &pseudo, sizeof(pseudo));
     }
+    csum = ~calc_checksum(csum, message, 8 + length);
+    memcpy(message + 2, &csum, sizeof(csum));
+    write_icmp(args, &reply, message, 8 + length);
 }
 
 void check_icmp_socket(const struct arguments *args, const struct epoll_event *ev) {

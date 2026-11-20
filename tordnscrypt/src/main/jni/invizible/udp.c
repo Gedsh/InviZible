@@ -117,7 +117,7 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
         s->udp.state = UDP_FINISHING;
 
         if (err >= 0 && (serr == ECONNREFUSED || serr == EHOSTUNREACH)) {
-            write_connection_unreach(args, s, serr);
+            write_connection_unreach(args, s->udp.error_quote, s->udp.error_quote_length, serr);
         }
     } else {
         // Check socket read
@@ -265,7 +265,7 @@ void block_udp_with_lookup(const struct arguments *args,
     s->socket = -1;
     init_udp_uid_retry(&s->udp, lookup);
 
-    write_connection_unreach(args, s, EHOSTDOWN);
+    write_connection_unreach(args, pkt, length, EHOSTDOWN);
 
     add_session(args->ctx, s);
 }
@@ -331,7 +331,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
     struct log_address dest = {.version = version, .address = version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst};
 
     if (cur != NULL && cur->socket < 0) {
-        write_connection_unreach(args, cur, EHOSTDOWN);
+        write_connection_unreach(args, pkt, length, EHOSTDOWN);
         return 0;
     }
 
@@ -371,6 +371,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
         s->udp.sent = 0;
         s->udp.received = 0;
+        s->udp.error_quote_length = 0;
         s->udp.redirect_version = 0;
         if (redirect != NULL && ntohs(udphdr->dest) != 53) {
             s->udp.redirect_version = (uint8_t) rversion;
@@ -540,8 +541,18 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
             cur->udp.state = UDP_FINISHING;
             return 0;
         }
-    } else
+    } else {
         cur->udp.sent += datalen;
+        // Retain a bounded copy before the shared tunnel buffer is reused. If
+        // extension headers hide the UDP header beyond the bound, omit the error
+        // rather than retaining an unusable quote or allocating per-flow buffers.
+        cur->udp.error_quote_length = 0;
+        if (payload_offset + sizeof(struct udphdr) <= sizeof(cur->udp.error_quote)) {
+            size_t quoted = length < sizeof(cur->udp.error_quote) ? length : sizeof(cur->udp.error_quote);
+            memcpy(cur->udp.error_quote, pkt, quoted);
+            cur->udp.error_quote_length = (uint16_t) quoted;
+        }
+    }
 
     return 1;
 }

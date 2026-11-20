@@ -25,7 +25,15 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "dnsUidMappings") == 0)
+    if (strcmp(id, "icmpBlockedUnreachable") == 0)
+        test_icmp_blocked_unreachable(&args);
+    else if (strcmp(id, "icmpUpstreamUnreachable") == 0)
+        test_icmp_upstream_unreachable(&args);
+    else if (strcmp(id, "icmpUnreachableBounds") == 0)
+        test_icmp_unreachable_bounds(&args);
+    else if (strcmp(id, "tcpSocketErrorReset") == 0)
+        test_tcp_socket_error_reset(&args);
+    else if (strcmp(id, "dnsUidMappings") == 0)
         test_dns_uid_mappings(&args, 0);
     else if (strcmp(id, "dnsUidInvalid") == 0)
         test_dns_uid_mappings(&args, 1);

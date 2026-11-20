@@ -2567,3 +2567,35 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
     }
 #endif
 }
+
+void test_tcp_socket_error_reset(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int tunnel[2], upstream[2];
+        assert(pipe(tunnel) == 0 && socketpair(AF_UNIX, SOCK_STREAM, 0, upstream) == 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        const int errors[] = {ECONNREFUSED, EHOSTUNREACH};
+        for (size_t e = 0; e < sizeof(errors) / sizeof(*errors); e++) {
+            struct ng_session session = {.protocol = IPPROTO_TCP, .socket = upstream[0]};
+            session.tcp.version = version; session.tcp.state = TCP_ESTABLISHED;
+            session.tcp.local_seq = session.tcp.acked = 1000; session.tcp.remote_seq = 2000;
+            session.tcp.source = htons(12345); session.tcp.dest = htons(443);
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                             version == 4 ? "10.0.0.2" : "2001:db8::1", &session.tcp.saddr) == 1);
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                             version == 4 ? "192.0.2.1" : "2001:db8::2", &session.tcp.daddr) == 1);
+            struct epoll_event event = {.events = EPOLLERR, .data.ptr = &session};
+            socket_error_fd = upstream[0]; socket_error_value = errors[e];
+            check_tcp_socket(&running, &event, -1);
+            _Alignas(8) uint8_t output[2048];
+            size_t off = version == 4 ? 20 : 40;
+            assert(tun_packet(tunnel[0], output, version, IPPROTO_TCP) == off + 20);
+            assert(((struct tcphdr *) (output + off))->rst);
+            assert(!is_readable(tunnel[0]) && session.tcp.state == TCP_CLOSING);
+        }
+        socket_error_fd = -1;
+        close(tunnel[0]); close(tunnel[1]); close(upstream[0]); close(upstream[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}

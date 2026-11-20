@@ -251,6 +251,7 @@ struct icmp_session {
 #define UDP_BLOCKED 3
 #define UDP_UID_RETRY_MAX 3
 #define UDP_UID_RETRY_INTERVAL 1000
+#define UDP_ERROR_QUOTE 112 // Original prefix; fits inside existing TCP-sized session storage.
 
 struct udp_session {
     time_t time;
@@ -286,6 +287,8 @@ struct udp_session {
     uint8_t state;
     uint8_t uid_retries;
     bool uid_inferred;
+    uint16_t error_quote_length;
+    uint8_t error_quote[UDP_ERROR_QUOTE];
 };
 
 #define TCP_UID_RETRY_MAX 3
@@ -363,6 +366,9 @@ struct tcp_session {
     bool dns_waiting;
     uint8_t dns_header[14]; // TCP length prefix and DNS header for incremental validation.
 };
+
+_Static_assert(sizeof(struct udp_session) <= sizeof(struct tcp_session),
+               "UDP error quotes must fit in existing session storage");
 
 struct ng_session {
     uint8_t protocol;
@@ -672,8 +678,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
                   int syn, int ack, int fin, int rst);
 
 void write_connection_unreach(const struct arguments *args,
-                              const struct ng_session *s,
-                              int serr);
+                              const uint8_t *packet, size_t length, int serr);
 
 jint get_uid(int version, int protocol,
              const void *saddr, uint16_t sport,

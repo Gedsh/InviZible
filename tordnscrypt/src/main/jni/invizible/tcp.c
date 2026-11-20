@@ -728,10 +728,6 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                         tcp_socket_text(&diagnostic), s->tcp.uid, s->socket, s->tcp.socks5, serr, strerror(serr));
 
         write_rst(args, &s->tcp);
-
-        if (err >= 0 && (serr == ECONNREFUSED || serr == EHOSTUNREACH)) {
-            write_connection_unreach(args, s, serr);
-        }
     } else {
         // Assume socket okay
         if (s->tcp.state == TCP_LISTEN) {
@@ -1430,7 +1426,7 @@ jboolean handle_tcp(const struct arguments *args,
                 log_android(ANDROID_LOG_WARN, "%s resetting blocked session", tcp_packet_text(&diagnostic));
 
                 write_rst(args, &s->tcp);
-                write_connection_unreach(args, s, EHOSTDOWN);
+                write_connection_unreach(args, pkt, length, EHOSTDOWN);
 
                 clear_tcp_data(&s->tcp);
                 ng_free(s, __FILE__, __LINE__);

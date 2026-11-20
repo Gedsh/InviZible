@@ -253,3 +253,137 @@ void test_icmp_uid_update(const struct arguments *args) {
     }
 #endif
 }
+
+void test_icmp_blocked_unreachable(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int tunnel[2]; assert(pipe(tunnel) == 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        _Alignas(8) uint8_t packet[1600], output[2048];
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 25,
+                               version == 4 ? "192.0.2.1" : "2001:db8::2");
+        store16(packet + off, 12345); store16(packet + off + 2, 54321);
+        store16(packet + off + 4, 25);
+        memset(packet + off + 8, 0xa5, 17);
+        packet_checksums(packet, off + 25, off, IPPROTO_UDP);
+        block_udp(&running, packet, off + 25, packet + off, test_owner(own_uid));
+        int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        size_t length = tun_packet(tunnel[0], output, version, protocol);
+        assert(length == off + 8 + off + 25);
+        assert(output[off] == (version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH));
+        assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_HOST : ICMP6_DST_UNREACH_NOROUTE));
+        assert(memcmp(output + off + 4, "\0\0\0\0", 4) == 0);
+        assert(memcmp(output + off + 8, packet, off + 25) == 0);
+        assert(memcmp(output + (version == 4 ? 12 : 8), packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16) == 0);
+        assert(memcmp(output + (version == 4 ? 16 : 24), packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16) == 0);
+        assert_icmp_checksum(output, length, off, protocol);
+        clear(args->ctx);
+        close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
+void test_icmp_upstream_unreachable(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int extension = 0; extension < 3; extension++)
+            for (int redirected = 0; redirected <= 1; redirected++) {
+                int tunnel[2]; assert(pipe(tunnel) == 0);
+                struct arguments running = *args; running.tun = tunnel[1];
+                _Alignas(8) uint8_t packet[512], original[512], output[2048];
+                size_t extra = extension == 0 ? 0 : version == 4 ? (extension == 1 ? 4 : 40)
+                                                                 : (extension == 1 ? 8 : 96);
+                size_t base = ip_header(packet, version, version == 6 && extra ? IPPROTO_HOPOPTS : IPPROTO_UDP,
+                                        extra + 208, version == 4 ? "192.0.2.1" : "2001:db8::2");
+                if (extra) {
+                    if (version == 4) {
+                        packet[0] = (uint8_t) (0x45 + extra / 4);
+                        memset(packet + base, 1, extra); // IPv4 NOP options.
+                    } else {
+                        memset(packet + base, 0, extra);
+                        packet[base] = IPPROTO_UDP;
+                        packet[base + 1] = (uint8_t) (extra / 8 - 1);
+                    }
+                }
+                size_t off = base + extra, length = off + 208;
+                store16(packet + off, 12345); store16(packet + off + 2, 5000);
+                store16(packet + off + 4, 208);
+                memset(packet + off + 8, 0xa5, 200);
+                packet_checksums(packet, length, off, IPPROTO_UDP);
+                memcpy(original, packet, length);
+                struct allowed redirect = {.rport = 6000};
+                strcpy(redirect.raddr, "192.0.2.99");
+                expect_destination(redirected ? 4 : version,
+                                   redirected ? "192.0.2.99" : version == 4 ? "192.0.2.1" : "2001:db8::2",
+                                   redirected ? 6000 : 5000);
+                assert(handle_udp(&running, packet, length, packet + off, test_owner(own_uid),
+                                  redirected ? &redirect : NULL, -1) == 1);
+                struct ng_session *session = args->ctx->ng_session;
+                assert(session != NULL && allocations == 1 && sockets == 1);
+                memset(packet, 0xcc, sizeof(packet)); // The shared input is no longer available.
+                const int errors[] = {ECONNREFUSED, EHOSTUNREACH};
+                for (size_t e = 0; e < sizeof(errors) / sizeof(*errors); e++) {
+                    socket_error_fd = session->socket; socket_error_value = errors[e];
+                    session->udp.state = UDP_ACTIVE;
+                    struct epoll_event event = {.events = EPOLLERR, .data.ptr = session};
+                    check_udp_socket(&running, &event);
+                    assert(session->udp.state == UDP_FINISHING);
+                    if (off + 8 > UDP_ERROR_QUOTE) {
+                        assert(!is_readable(tunnel[0]));
+                        continue;
+                    }
+                    int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+                    size_t received = tun_packet(tunnel[0], output, version, protocol);
+                    assert(received == base + 8 + UDP_ERROR_QUOTE);
+                    assert(output[base] == (version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH));
+                    assert(output[base + 1] == (version == 4
+                           ? (e == 0 ? ICMP_UNREACH_PORT : ICMP_UNREACH_HOST)
+                           : (e == 0 ? ICMP6_DST_UNREACH_NOPORT : ICMP6_DST_UNREACH_NOROUTE)));
+                    assert(memcmp(output + base + 8, original, UDP_ERROR_QUOTE) == 0);
+                    assert_icmp_checksum(output, received, base, protocol);
+                }
+                socket_error_fd = -1;
+                clear(args->ctx);
+                close(tunnel[0]); close(tunnel[1]);
+                assert(allocations == 0 && sockets == 0);
+            }
+#endif
+}
+
+void test_icmp_unreachable_bounds(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        int tunnel[2]; assert(pipe(tunnel) == 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        _Alignas(8) uint8_t packet[1600], output[2048];
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 1500,
+                               version == 4 ? "192.0.2.1" : "2001:db8::2");
+        store16(packet + off, 12345); store16(packet + off + 2, 54321);
+        store16(packet + off + 4, 1500);
+        memset(packet + off + 8, 0xa5, 1492);
+        packet_checksums(packet, off + 1500, off, IPPROTO_UDP);
+        for (size_t length = 0; length < off + 8; length++)
+            write_connection_unreach(&running, packet, length, ECONNREFUSED);
+        write_connection_unreach(&running, NULL, 0, ECONNREFUSED);
+        assert(!is_readable(tunnel[0]) && allocations == 0);
+        write_connection_unreach(&running, packet, off + 1500, ECONNREFUSED);
+        int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        size_t length = tun_packet(tunnel[0], output, version, protocol);
+        size_t quoted = version == 4 ? 548 : 1232;
+        assert(length == off + 8 + quoted);
+        assert(memcmp(output + off + 8, packet, quoted) == 0);
+        assert_icmp_checksum(output, length, off, protocol);
+        fail_alloc_tag = version == 4 ? "icmp write4" : "icmp write6";
+        fail_alloc_match = 1;
+        write_connection_unreach(&running, packet, off + 1500, ECONNREFUSED);
+        assert(fail_alloc_match == 0 && allocations == 0 && !is_readable(tunnel[0]));
+        fail_alloc_tag = NULL;
+        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                         version == 4 ? "224.0.0.1" : "ff02::1", packet + (version == 4 ? 16 : 24)) == 1);
+        write_connection_unreach(&running, packet, off + 1500, ECONNREFUSED);
+        assert(!is_readable(tunnel[0]) && allocations == 0);
+        close(tunnel[0]); close(tunnel[1]);
+    }
+#endif
+}

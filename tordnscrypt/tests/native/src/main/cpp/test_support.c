@@ -29,9 +29,16 @@ int __wrap_memcmp(const void *left, const void *right, size_t length) {
 #endif
 int tcp_sendbuf_queries, tcp_outq_queries;
 int tcp_capacity_fd = -1, tcp_capacity_available;
+int socket_error_fd = -1, socket_error_value;
 
 int __real_getsockopt(int fd, int level, int option, void *value, socklen_t *length);
 int __wrap_getsockopt(int fd, int level, int option, void *value, socklen_t *length) {
+    if (fd == socket_error_fd && level == SOL_SOCKET && option == SO_ERROR) {
+        assert(*length >= sizeof(int));
+        *(int *) value = socket_error_value;
+        *length = sizeof(int);
+        return 0;
+    }
     if (level == SOL_SOCKET && option == SO_SNDBUF) {
         tcp_sendbuf_queries++;
         if (tcp_capacity_fd >= 0 && fd == tcp_capacity_fd) {
@@ -655,6 +662,8 @@ struct segment *new_test_segment(uint16_t length) {
 }
 
 void reset_test_state(void) {
+    socket_error_fd = -1;
+    socket_error_value = 0;
     count_memory_comparisons = false;
     memory_comparisons = 0;
     test_monotonic_enabled = false;
