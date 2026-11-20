@@ -8,6 +8,11 @@ import org.junit.runner.RunWith;
 /** Regressions for icmp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IcmpTest extends NativeTestSupport {
+    @Test public void receiveMtuErrorsAfterPollingKeepSessionsUsable() { check("icmpRecvMtu"); }
+    @Test public void upstreamMtuTtlAndUnreachableErrorsReachOriginalFlow() { check("icmpErrorQueue"); }
+    @Test public void errorQueueRejectsMalformedAndMismatchedDataAndBoundsWork() { check("icmpErrorQueueBounds"); }
+    @Test public void synchronousMtuErrorsKeepSocketsUsableForSmallerPackets() { check("icmpSendMtu"); }
+    @Test public void realLocalUdpErrorQueueDeliversPortUnreachable() { check("icmpRealErrorQueue"); }
     @Test public void epollRegistrationFailureReleasesResourcesAndNextPingWorks() { check("icmpEpollCleanup"); }
     @Test public void echoRequestsRequireMatchingFamilyAndZeroCode() { check("icmpEchoValidation"); }
     @Test public void blockedUdpErrorsQuoteOriginalPacketAndHaveValidChecksums() { check("icmpBlockedUnreachable"); }

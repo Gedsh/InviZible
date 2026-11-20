@@ -105,6 +105,13 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
     if (ev->events & EPOLLERR) {
         s->udp.time = time(NULL);
 
+        int queued = forward_socket_errors(args, s->socket,
+                                           s->udp.error_quote, s->udp.error_quote_length);
+        if (queued >= 0) {
+            if (queued) s->udp.state = UDP_FINISHING;
+            return;
+        }
+
         int serr = 0;
         socklen_t optlen = sizeof(int);
         int err = getsockopt(s->socket, SOL_SOCKET, SO_ERROR, &serr, &optlen);
@@ -114,9 +121,12 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
         else if (serr)
             log_android(ANDROID_LOG_ERROR, "UDP SO_ERROR %d: %s", serr, strerror(serr));
 
-        s->udp.state = UDP_FINISHING;
+        if (err < 0 || (serr != 0 && serr != EMSGSIZE))
+            s->udp.state = UDP_FINISHING;
 
-        if (err >= 0 && (serr == ECONNREFUSED || serr == EHOSTUNREACH)) {
+        if (err >= 0 && (serr == ECONNREFUSED || serr == EHOSTUNREACH ||
+                        serr == EHOSTDOWN || serr == ENETUNREACH || serr == ENETDOWN ||
+                        serr == EACCES || serr == EPERM)) {
             write_connection_unreach(args, s->udp.error_quote, s->udp.error_quote_length, serr);
         }
     } else {
@@ -132,11 +142,19 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
             ssize_t bytes = recv(s->socket, buffer, s->udp.mss, 0);
             if (bytes < 0) {
                 // Socket error
+                int serr = errno;
                 log_android(ANDROID_LOG_WARN, "UDP recv error %d: %s",
-                            errno, strerror(errno));
+                            serr, strerror(serr));
 
-                if (errno != EINTR && errno != EAGAIN)
-                    s->udp.state = UDP_FINISHING;
+                if (serr != EINTR && serr != EAGAIN) {
+                    // An upstream error can arrive after the EPOLLIN snapshot.
+                    int queued = forward_socket_errors(args, s->socket,
+                                                       s->udp.error_quote, s->udp.error_quote_length);
+                    if (queued < 0 && serr != EMSGSIZE)
+                        write_connection_unreach(args, s->udp.error_quote, s->udp.error_quote_length, serr);
+                    if (queued > 0 || (queued < 0 && serr != EMSGSIZE))
+                        s->udp.state = UDP_FINISHING;
+                }
             } else if (bytes == 0) {
                 log_android(ANDROID_LOG_WARN, "UDP recv eof");
                 s->udp.state = UDP_FINISHING;
@@ -536,8 +554,15 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
                                        : (const struct sockaddr *) &addr6),
                           (socklen_t) (rversion == 4 ? sizeof(addr4) : sizeof(addr6)));
     if (sent < 0 || (size_t) sent != datalen) {
-        log_android(ANDROID_LOG_ERROR, "UDP sendto error %d: %s", errno, strerror(errno));
-        if (errno != EINTR && errno != EAGAIN) {
+        int serr = errno;
+        log_android(ANDROID_LOG_ERROR, "UDP sendto error %d: %s", serr, strerror(serr));
+        if (serr == EMSGSIZE) {
+            if (forward_socket_errors(args, cur->socket, pkt, length) > 0)
+                cur->udp.state = UDP_FINISHING;
+            return 0;
+        }
+        if (serr != EINTR && serr != EAGAIN) {
+            write_connection_unreach(args, pkt, length, serr);
             cur->udp.state = UDP_FINISHING;
             return 0;
         }
@@ -617,6 +642,8 @@ int open_udp_socket(const struct arguments *args,
                             errno, strerror(errno));
         }
     }
+
+    enable_socket_errors(sock, version);
 
     // Set non blocking
     int flags = fcntl(sock, F_GETFL, 0);

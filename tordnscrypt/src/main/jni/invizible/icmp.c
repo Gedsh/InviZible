@@ -22,6 +22,7 @@
 */
 
 #include "invizible.h"
+#include <linux/errqueue.h>
 
 extern int own_uid;
 
@@ -58,8 +59,9 @@ int check_icmp_session(const struct arguments *args, struct ng_session *s,
 }
 
 // Quote the original tunnel packet, never the redirected upstream tuple.
-void write_connection_unreach(const struct arguments *args,
-                              const uint8_t *packet, size_t length, const int serr) {
+static void write_socket_error(const struct arguments *args,
+                              const uint8_t *packet, size_t length, int serr,
+                              uint32_t mtu, bool expired) {
     if (packet == NULL || length == 0)
         return;
     struct icmp_session reply = {.version = packet[0] >> 4};
@@ -98,6 +100,26 @@ void write_connection_unreach(const struct arguments *args,
     message[1] = reply.version == 4
                  ? (serr == ECONNREFUSED ? ICMP_UNREACH_PORT : ICMP_UNREACH_HOST)
                  : (serr == ECONNREFUSED ? ICMP6_DST_UNREACH_NOPORT : ICMP6_DST_UNREACH_NOROUTE);
+    if (expired) {
+        message[0] = reply.version == 4 ? ICMP_TIMXCEED : ICMP6_TIME_EXCEEDED;
+        message[1] = 0;
+    } else if (serr == EMSGSIZE) {
+        if (mtu == 0 || (reply.version == 4 && (mtu < 68 || mtu > UINT16_MAX)))
+            return;
+        message[0] = reply.version == 4 ? ICMP_UNREACH : ICMP6_PACKET_TOO_BIG;
+        message[1] = reply.version == 4 ? ICMP_UNREACH_NEEDFRAG : 0;
+        if (reply.version == 4) {
+            uint16_t value = htons((uint16_t) mtu);
+            memcpy(message + 6, &value, sizeof(value));
+        } else {
+            uint32_t value = htonl(mtu);
+            memcpy(message + 4, &value, sizeof(value));
+        }
+    } else if (serr == EACCES || serr == EPERM) {
+        message[1] = reply.version == 4 ? ICMP_UNREACH_FILTER_PROHIB : ICMP6_DST_UNREACH_ADMIN;
+    } else if ((serr == ENETUNREACH || serr == ENETDOWN) && reply.version == 4) {
+        message[1] = ICMP_UNREACH_NET;
+    }
     memcpy(message + 8, packet, length);
     uint16_t csum = 0;
     if (reply.version == 6) {
@@ -113,12 +135,136 @@ void write_connection_unreach(const struct arguments *args,
     write_icmp(args, &reply, message, 8 + length);
 }
 
+void write_connection_unreach(const struct arguments *args,
+                              const uint8_t *packet, size_t length, int serr) {
+    if (serr == ECONNREFUSED || serr == EHOSTUNREACH || serr == EHOSTDOWN ||
+        serr == ENETUNREACH || serr == ENETDOWN || serr == EACCES || serr == EPERM)
+        write_socket_error(args, packet, length, serr, 0, false);
+}
+
+void enable_socket_errors(int sock, int version) {
+    int on = 1;
+    // Optional on older kernels: SO_ERROR remains the fallback if unsupported.
+    if (setsockopt(sock, version == 4 ? IPPROTO_IP : IPPROTO_IPV6,
+                   version == 4 ? IP_RECVERR : IPV6_RECVERR, &on, sizeof(on)))
+        log_android(ANDROID_LOG_WARN, "IP%d RECVERR error %d: %s", version, errno, strerror(errno));
+}
+
+// Locate the transport header within the bounded original quote. Only extension
+// headers accepted by the tunnel parser can appear here.
+static size_t quoted_transport(const uint8_t *packet, size_t length, int *protocol) {
+    if (length < 20) return 0;
+    if (packet[0] >> 4 == 4) {
+        size_t off = (packet[0] & 15u) * 4u;
+        if (off < 20 || off + 8 > length) return 0;
+        *protocol = packet[9];
+        return off;
+    }
+    if (packet[0] >> 4 != 6 || length < 48) return 0;
+    size_t off = 40;
+    *protocol = packet[6];
+    while (*protocol != IPPROTO_UDP && *protocol != IPPROTO_ICMPV6) {
+        if (length - off < 8) return 0;
+        size_t size;
+        if (*protocol == IPPROTO_FRAGMENT) size = 8;
+        else if (*protocol == IPPROTO_AH) size = ((size_t) packet[off + 1] + 2) * 4;
+        else if (*protocol == IPPROTO_HOPOPTS || *protocol == IPPROTO_ROUTING ||
+                 *protocol == IPPROTO_DSTOPTS) size = ((size_t) packet[off + 1] + 1) * 8;
+        else return 0;
+        if (size > length - off) return 0;
+        *protocol = packet[off];
+        off += size;
+    }
+    return off + 8 <= length ? off : 0;
+}
+
+int forward_socket_errors(const struct arguments *args, int sock,
+                          const uint8_t *packet, size_t length) {
+    int result = -1;
+    // Drain only on errors, with a work bound for fairness to other sessions.
+    // Further queued errors keep EPOLLERR level-triggered for the next iteration.
+    for (int i = 0; i < 8; i++) {
+        union {
+            struct cmsghdr alignment;
+            uint8_t data[CMSG_SPACE(sizeof(struct sock_extended_err) + sizeof(struct sockaddr_in6))];
+        } control;
+        uint8_t data[112];
+        struct iovec iov = {.iov_base = data, .iov_len = sizeof(data)};
+        struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1,
+                .msg_control = control.data, .msg_controllen = sizeof(control.data)};
+        ssize_t received = recvmsg(sock, &message, MSG_ERRQUEUE | MSG_DONTWAIT);
+        if (received < 0) {
+            if (errno == EINTR) continue;
+            break;
+        }
+        if (result < 0) result = 0;
+        if (message.msg_flags & MSG_CTRUNC) continue;
+        for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&message); cmsg != NULL;
+             cmsg = CMSG_NXTHDR(&message, cmsg)) {
+            int version = cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_RECVERR ? 4 :
+                          cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_RECVERR ? 6 : 0;
+            size_t available = message.msg_controllen - (size_t) ((uint8_t *) cmsg - control.data);
+            if (!version || cmsg->cmsg_len < CMSG_LEN(sizeof(struct sock_extended_err)) ||
+                cmsg->cmsg_len > available) continue;
+            struct sock_extended_err error;
+            memcpy(&error, CMSG_DATA(cmsg), sizeof(error));
+            if (error.ee_origin != SO_EE_ORIGIN_LOCAL &&
+                error.ee_origin != (version == 4 ? SO_EE_ORIGIN_ICMP : SO_EE_ORIGIN_ICMP6)) continue;
+            if (error.ee_errno == 0) continue;
+            log_android(ANDROID_LOG_WARN, "IP%d socket %d upstream error %u: %s mtu %u",
+                        version, sock, error.ee_errno, strerror((int) error.ee_errno),
+                        error.ee_errno == EMSGSIZE ? error.ee_info : 0);
+            if (error.ee_errno != EMSGSIZE) result = 1;
+            int protocol = 0;
+            size_t off = quoted_transport(packet, length, &protocol);
+            if (off == 0) continue;
+            // UDP error queues contain payload only; ping queues include the
+            // echo header with a kernel-assigned ID/checksum. Compare available
+            // payload bytes (and ping sequence) to avoid quoting an older send.
+            size_t skip = protocol == IPPROTO_UDP ? 0 : 6;
+            size_t original = off + (protocol == IPPROTO_UDP ? 8 : skip);
+            if ((size_t) received > skip) {
+                size_t compare = (size_t) received - skip;
+                if (compare > length - original) compare = length - original;
+                if (memcmp(data + skip, packet + original, compare) != 0) continue;
+            }
+            // Do not translate MTUs between redirected address families: their
+            // packet sizes differ. Never substitute the tunnel MTU for missing data.
+            if (error.ee_errno == EMSGSIZE && (length == 0 || packet[0] >> 4 != version)) continue;
+            uint32_t mtu = error.ee_info;
+            if (error.ee_errno == EMSGSIZE && mtu != 0) {
+                // The socket sends no tunnel IP options/extension headers.
+                size_t extra = off - (version == 4 ? 20u : 40u);
+                if (extra > UINT32_MAX - mtu) continue;
+                mtu += (uint32_t) extra;
+            }
+            bool expired = error.ee_origin != SO_EE_ORIGIN_LOCAL &&
+                    error.ee_type == (version == 4 ? ICMP_TIMXCEED : ICMP6_TIME_EXCEEDED) &&
+                    error.ee_code == 0;
+            if (expired || error.ee_errno == EMSGSIZE || error.ee_errno == ECONNREFUSED ||
+                error.ee_errno == EHOSTUNREACH || error.ee_errno == EHOSTDOWN ||
+                error.ee_errno == ENETUNREACH || error.ee_errno == ENETDOWN ||
+                error.ee_errno == EACCES || error.ee_errno == EPERM)
+                write_socket_error(args, packet, length, (int) error.ee_errno, mtu, expired);
+        }
+    }
+    return result;
+}
+
 void check_icmp_socket(const struct arguments *args, const struct epoll_event *ev) {
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
+    if (s->socket < 0 || s->icmp.stop) return;
 
     // Check socket error
     if (ev->events & EPOLLERR) {
         s->icmp.time = time(NULL);
+
+        int queued = forward_socket_errors(args, s->socket,
+                                           s->icmp.error_quote, s->icmp.error_quote_length);
+        if (queued >= 0) {
+            s->icmp.stop = queued != 0;
+            return;
+        }
 
         int serr = 0;
         socklen_t optlen = sizeof(int);
@@ -130,7 +276,9 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
             log_android(ANDROID_LOG_ERROR, "ICMP SO_ERROR %d: %s",
                         serr, strerror(serr));
 
-        s->icmp.stop = 1;
+        if (err >= 0 && serr != 0 && serr != EMSGSIZE)
+            write_connection_unreach(args, s->icmp.error_quote, s->icmp.error_quote_length, serr);
+        s->icmp.stop = err < 0 || (serr != 0 && serr != EMSGSIZE);
     } else {
         // Check socket read
         if (ev->events & EPOLLIN) {
@@ -145,11 +293,18 @@ void check_icmp_socket(const struct arguments *args, const struct epoll_event *e
             ssize_t bytes = recv(s->socket, buffer, blen, 0);
             if (bytes < 0) {
                 // Socket error
+                int serr = errno;
                 log_android(ANDROID_LOG_WARN, "ICMP recv error %d: %s",
-                            errno, strerror(errno));
+                            serr, strerror(serr));
 
-                if (errno != EINTR && errno != EAGAIN)
-                    s->icmp.stop = 1;
+                if (serr != EINTR && serr != EAGAIN) {
+                    // An upstream error can arrive after the EPOLLIN snapshot.
+                    int queued = forward_socket_errors(args, s->socket,
+                                                       s->icmp.error_quote, s->icmp.error_quote_length);
+                    if (queued < 0 && serr != EMSGSIZE)
+                        write_connection_unreach(args, s->icmp.error_quote, s->icmp.error_quote_length, serr);
+                    s->icmp.stop = queued > 0 || (queued < 0 && serr != EMSGSIZE);
+                }
             } else if (bytes == 0) {
                 log_android(ANDROID_LOG_WARN, "ICMP recv eof");
                 s->icmp.stop = 1;
@@ -256,6 +411,7 @@ jboolean handle_icmp(const struct arguments *args,
         s->icmp.id = icmp->icmp_id; // store original ID
 
         s->icmp.stop = 0;
+        s->icmp.error_quote_length = 0;
         s->next = NULL;
 
         // Open ICMP ping socket
@@ -285,6 +441,14 @@ jboolean handle_icmp(const struct arguments *args,
 
     if (cur->icmp.uid < 0 && uid >= 0 && cur->socket >= 0)
         cur->icmp.uid = uid;
+
+    // Keep the original identifier and checksum in any error sent back to the app.
+    cur->icmp.error_quote_length = 0;
+    if (payload_offset + ICMP_MINLEN <= sizeof(cur->icmp.error_quote)) {
+        size_t quoted = length < sizeof(cur->icmp.error_quote) ? length : sizeof(cur->icmp.error_quote);
+        memcpy(cur->icmp.error_quote, pkt, quoted);
+        cur->icmp.error_quote_length = (uint16_t) quoted;
+    }
 
     // Modify ID
     // http://lwn.net/Articles/443051/
@@ -329,8 +493,16 @@ jboolean handle_icmp(const struct arguments *args,
                                         : (const struct sockaddr *) &server6),
                           (socklen_t) (version == 4 ? sizeof(server4) : sizeof(server6)));
     if (sent < 0 || (size_t) sent != icmplen) {
-        log_android(ANDROID_LOG_ERROR, "ICMP sendto error %d: %s", errno, strerror(errno));
-        if (errno != EINTR && errno != EAGAIN) {
+        int serr = errno;
+        log_android(ANDROID_LOG_ERROR, "ICMP sendto error %d: %s", serr, strerror(serr));
+        if (serr == EMSGSIZE) {
+            if (forward_socket_errors(args, cur->socket,
+                                      cur->icmp.error_quote, cur->icmp.error_quote_length) > 0)
+                cur->icmp.stop = 1;
+            return 0;
+        }
+        if (serr != EINTR && serr != EAGAIN) {
+            write_connection_unreach(args, cur->icmp.error_quote, cur->icmp.error_quote_length, serr);
             cur->icmp.stop = 1;
             return 0;
         }
@@ -356,6 +528,8 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
         close(sock);
         return -1;
     }
+
+    enable_socket_errors(sock, cur->version);
 
     // Set non blocking
     int flags = fcntl(sock, F_GETFL, 0);

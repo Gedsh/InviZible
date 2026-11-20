@@ -174,7 +174,8 @@ void test_icmp_allocation_failure(const struct arguments *args) {
         assert(handle_icmp(args, packet, off + 8, packet + off, own_uid, -1) == 0);
         assert(fail_alloc_match == 0);
         assert(args->ctx->ng_session == NULL && allocations == 0 && sockets == 0);
-        struct ng_session s = {.socket = -1};
+        int upstream[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+        struct ng_session s = {.socket = upstream[0]};
         s.icmp.version = version;
         struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
         fail_alloc_tag = "icmp socket";
@@ -182,6 +183,7 @@ void test_icmp_allocation_failure(const struct arguments *args) {
         check_icmp_socket(args, &event);
         assert(fail_alloc_match == 0);
         assert(s.icmp.stop);
+        close(upstream[0]); close(upstream[1]);
         fail_alloc_tag = version == 4 ? "icmp write4" : "icmp write6";
         fail_alloc_match = 1;
         assert(write_icmp(args, &s.icmp, packet + off, 8) == -1);
@@ -474,5 +476,342 @@ void test_icmp_epoll_cleanup(const struct arguments *args) {
         close(sender); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
     }
+#endif
+}
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+#include <linux/errqueue.h>
+
+static struct {
+    int fd, version, remaining, calls, mode;
+    struct sock_extended_err error;
+    uint8_t payload[32];
+    size_t length;
+} queued_error;
+
+static ssize_t receive_error(int fd, struct msghdr *message, int flags) {
+    assert(fd == queued_error.fd && (flags & MSG_DONTWAIT));
+    queued_error.calls++;
+    if (queued_error.remaining-- <= 0) { errno = EAGAIN; return -1; }
+    assert(message->msg_controllen >= CMSG_SPACE(sizeof(struct sock_extended_err)));
+    struct cmsghdr *cmsg = CMSG_FIRSTHDR(message);
+    cmsg->cmsg_level = queued_error.version == 4 ? IPPROTO_IP : IPPROTO_IPV6;
+    cmsg->cmsg_type = queued_error.version == 4 ? IP_RECVERR : IPV6_RECVERR;
+    cmsg->cmsg_len = CMSG_LEN(sizeof(struct sock_extended_err));
+    memcpy(CMSG_DATA(cmsg), &queued_error.error, sizeof(queued_error.error));
+    message->msg_controllen = CMSG_SPACE(sizeof(struct sock_extended_err));
+    if (queued_error.mode == 1) message->msg_flags |= MSG_CTRUNC;
+    if (queued_error.mode == 2) cmsg->cmsg_len--;
+    if (queued_error.mode == 8) cmsg->cmsg_len = message->msg_controllen + 1;
+    assert(message->msg_iov[0].iov_len >= queued_error.length);
+    memcpy(message->msg_iov[0].iov_base, queued_error.payload, queued_error.length);
+    return (ssize_t) queued_error.length;
+}
+
+static void queue_error(int fd, int version, int serr, uint32_t mtu) {
+    memset(&queued_error, 0, sizeof(queued_error));
+    queued_error.fd = fd; queued_error.version = version; queued_error.remaining = 1;
+    queued_error.error.ee_errno = (uint32_t) serr;
+    queued_error.error.ee_info = mtu;
+    queued_error.error.ee_origin = version == 4 ? SO_EE_ORIGIN_ICMP : SO_EE_ORIGIN_ICMP6;
+    error_queue_recv = receive_error;
+}
+
+static struct ng_session *error_flow(const struct arguments *args, int version, bool ping,
+                                    int epoll_fd, uint8_t *original, size_t *length) {
+    uint8_t packet[128];
+    int protocol = ping ? (version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6) : IPPROTO_UDP;
+    size_t off = ip_header(packet, version, protocol, 24,
+                           version == 4 ? "192.0.2.1" : "2001:db8::2");
+    memset(packet + off, 0, 24);
+    if (ping) {
+        packet[off] = version == 4 ? ICMP_ECHO : ICMP6_ECHO_REQUEST;
+        store16(packet + off + 4, 12345); store16(packet + off + 6, 7);
+    } else {
+        store16(packet + off, 12345); store16(packet + off + 2, 5000);
+        store16(packet + off + 4, 24);
+    }
+    memset(packet + off + 8, 0xa5, 16);
+    *length = off + 24;
+    packet_checksums(packet, *length, off, protocol);
+    memcpy(original, packet, *length);
+    expect_destination(version, version == 4 ? "192.0.2.1" : "2001:db8::2", ping ? 0 : 5000);
+    assert((ping ? handle_icmp(args, packet, *length, packet + off, own_uid, epoll_fd) :
+                   handle_udp(args, packet, *length, packet + off, test_owner(own_uid), NULL, epoll_fd)) == 1);
+    assert(args->ctx->ng_session != NULL);
+    return args->ctx->ng_session;
+}
+
+static void check_error_event(const struct arguments *args, struct ng_session *s, bool ping) {
+    struct epoll_event event = {.events = EPOLLERR, .data.ptr = s};
+    if (ping) check_icmp_socket(args, &event);
+    else check_udp_socket(args, &event);
+}
+#endif
+
+void test_icmp_error_queue(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    for (int version = 4; version <= 6; version += 2)
+        for (int ping = 0; ping < 2; ping++) {
+            int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+            struct arguments running = *args; running.tun = tunnel[1];
+            uint8_t original[128], output[2048]; size_t length;
+            struct ng_session *s = error_flow(&running, version, ping, epoll_fd, original, &length);
+            size_t off = version == 4 ? 20 : 40;
+            int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+            const int errors[] = {EMSGSIZE, EHOSTUNREACH, ECONNREFUSED, ENETUNREACH, EACCES};
+            for (size_t i = 0; i < sizeof(errors) / sizeof(*errors); i++) {
+                if (ping) s->icmp.stop = 0; else s->udp.state = UDP_ACTIVE;
+                queue_error(s->socket, version, errors[i], 1400);
+                if (i == 0) {
+                    queued_error.length = ping ? 24 : 16;
+                    memcpy(queued_error.payload, original + off + (ping ? 0 : 8), queued_error.length);
+                    if (ping) memset(queued_error.payload, 0xbb, 6); // Kernel-rewritten fields.
+                }
+                if (i == 1) queued_error.error.ee_type = version == 4 ? ICMP_TIMXCEED : ICMP6_TIME_EXCEEDED;
+                check_error_event(&running, s, ping);
+                size_t bytes = tun_packet(tunnel[0], output, version, protocol);
+                assert(bytes == off + 8 + length);
+                assert(memcmp(output + off + 8, original, length) == 0);
+                assert_icmp_checksum(output, bytes, off, protocol);
+                assert(queued_error.calls == 2);
+                if (i == 0) {
+                    assert(output[off] == (version == 4 ? ICMP_UNREACH : ICMP6_PACKET_TOO_BIG));
+                    assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_NEEDFRAG : 0));
+                    assert(load16(output + off + 6) == 1400);
+                    if (version == 6) assert(load16(output + off + 4) == 0);
+                    assert(ping ? !s->icmp.stop : s->udp.state == UDP_ACTIVE);
+                } else {
+                    assert(ping ? s->icmp.stop : s->udp.state == UDP_FINISHING);
+                    if (i == 1) assert(output[off] == (version == 4 ? ICMP_TIMXCEED : ICMP6_TIME_EXCEEDED));
+                    if (i == 2) assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_PORT : ICMP6_DST_UNREACH_NOPORT));
+                    if (i == 3) assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_NET : ICMP6_DST_UNREACH_NOROUTE));
+                    if (i == 4) assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_FILTER_PROHIB : ICMP6_DST_UNREACH_ADMIN));
+                }
+            }
+            error_queue_recv = NULL;
+            clear(args->ctx); close(tunnel[0]); close(tunnel[1]);
+            assert(allocations == 0 && sockets == 0);
+        }
+    close(epoll_fd);
+#endif
+}
+
+void test_icmp_error_queue_bounds(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    struct arguments running = *args; running.tun = tunnel[1];
+    uint8_t original[128], output[2048]; size_t length;
+    struct ng_session *s = error_flow(&running, 6, false, -1, original, &length);
+    for (int mode = 0; mode < 9; mode++) {
+        queue_error(s->socket, 6, EMSGSIZE, 1400);
+        if (mode == 0) queued_error.error.ee_info = 0;
+        if (mode == 1 || mode == 2) queued_error.mode = mode;
+        if (mode == 3) { queued_error.length = 16; memset(queued_error.payload, 0xbb, 16); }
+        if (mode == 4) queued_error.error.ee_origin = SO_EE_ORIGIN_NONE;
+        if (mode == 5) queued_error.version = 4; // Cross-family redirect MTU cannot be copied.
+        if (mode == 6) s->udp.error_quote_length = 0;
+        if (mode == 7) {
+            s->udp.error_quote_length = (uint16_t) length;
+            s->udp.error_quote[6] = IPPROTO_HOPOPTS;
+            s->udp.error_quote[41] = 255; // Truncated extension header.
+        }
+        if (mode == 8) { memcpy(s->udp.error_quote, original, length); queued_error.mode = 8; }
+        check_error_event(&running, s, false);
+        assert(!is_readable(tunnel[0]) && s->udp.state == UDP_ACTIVE);
+    }
+    s->udp.error_quote_length = (uint16_t) length;
+    queue_error(s->socket, 6, EMSGSIZE, 1400); queued_error.remaining = 9;
+    check_error_event(&running, s, false);
+    assert(queued_error.calls == 8 && queued_error.remaining == 1);
+    for (int i = 0; i < 8; i++) tun_packet(tunnel[0], output, 6, IPPROTO_ICMPV6);
+    check_error_event(&running, s, false);
+    tun_packet(tunnel[0], output, 6, IPPROTO_ICMPV6);
+    assert(queued_error.calls == 10 && !is_readable(tunnel[0]) && s->udp.state == UDP_ACTIVE);
+    // Account for the original IP options/extension header omitted by sendto.
+    for (int version = 4; version <= 6; version += 2) {
+        uint8_t packet[128];
+        size_t base = ip_header(packet, version, version == 4 ? IPPROTO_UDP : IPPROTO_HOPOPTS,
+                                32, version == 4 ? "192.0.2.1" : "2001:db8::2");
+        if (version == 4) { packet[0] = 0x47; memset(packet + base, 1, 8); }
+        else { packet[base] = IPPROTO_UDP; packet[base + 1] = 0; }
+        size_t off = base + 8;
+        store16(packet + off, 12345); store16(packet + off + 2, 5000);
+        store16(packet + off + 4, 24); memset(packet + off + 8, 0xa5, 16);
+        packet_checksums(packet, off + 24, off, IPPROTO_UDP);
+        queue_error(s->socket, version, EMSGSIZE, 1400);
+        assert(forward_socket_errors(&running, s->socket, packet, off + 24) == 0);
+        size_t bytes = tun_packet(tunnel[0], output, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+        assert(load16(output + base + 6) == 1408);
+        assert(memcmp(output + base + 8, packet, off + 24) == 0);
+        assert_icmp_checksum(output, bytes, base, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+    }
+    error_queue_recv = NULL; clear(args->ctx); close(tunnel[0]); close(tunnel[1]);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
+void test_icmp_send_mtu(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    for (int version = 4; version <= 6; version += 2)
+        for (int ping = 0; ping < 2; ping++) {
+            int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+            struct arguments running = *args; running.tun = tunnel[1];
+            uint8_t original[128], packet[128], output[2048]; size_t length;
+            struct ng_session *s = error_flow(&running, version, ping, epoll_fd, original, &length);
+            size_t off = version == 4 ? 20 : 40;
+            queue_error(s->socket, version, EMSGSIZE, 1400);
+            queued_error.error.ee_origin = SO_EE_ORIGIN_LOCAL;
+            sendto_error_fd = s->socket; sendto_error_value = EMSGSIZE;
+            memcpy(packet, original, length);
+            assert((ping ? handle_icmp(&running, packet, length, packet + off, own_uid, epoll_fd) :
+                    handle_udp(&running, packet, length, packet + off, test_owner(own_uid), NULL, epoll_fd)) == 0);
+            int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+            size_t bytes = tun_packet(tunnel[0], output, version, protocol);
+            assert(memcmp(output + off + 8, original, length) == 0);
+            assert_icmp_checksum(output, bytes, off, protocol);
+            assert(ping ? !s->icmp.stop : s->udp.state == UDP_ACTIVE);
+            error_queue_recv = NULL;
+            // Retry a smaller request using the same indexed session and socket.
+            memcpy(packet, original, length); length -= 8;
+            if (version == 4) store16(packet + 2, (uint16_t) length);
+            else store16(packet + 4, (uint16_t) (length - 40));
+            if (!ping) store16(packet + off + 4, (uint16_t) (length - off));
+            packet_checksums(packet, length, off, ping ? protocol : IPPROTO_UDP);
+            int fd = s->socket;
+            assert((ping ? handle_icmp(&running, packet, length, packet + off, own_uid, epoll_fd) :
+                    handle_udp(&running, packet, length, packet + off, test_owner(own_uid), NULL, epoll_fd)) == 1);
+            assert(args->ctx->ng_session == s && s->socket == fd && sockets == 1 && allocations == 1);
+            clear(args->ctx); close(tunnel[0]); close(tunnel[1]);
+            assert(allocations == 0 && sockets == 0);
+        }
+    close(epoll_fd);
+#endif
+}
+
+void test_icmp_real_error_queue(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    extern int __real_socket(int, int, int);
+    extern ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+    // Reserve then close a local port, so the kernel produces a real port-unreachable.
+    for (int version = 4; version <= 6; version += 2) {
+        int family = version == 4 ? AF_INET : AF_INET6;
+        int reserved = __real_socket(family, SOCK_DGRAM | SOCK_CLOEXEC, 0); assert(reserved >= 0);
+        struct sockaddr_storage storage = {0};
+        struct sockaddr_in *a4 = (struct sockaddr_in *) &storage;
+        struct sockaddr_in6 *a6 = (struct sockaddr_in6 *) &storage;
+        socklen_t addrlen = version == 4 ? sizeof(*a4) : sizeof(*a6);
+        if (version == 4) { a4->sin_family = AF_INET; a4->sin_addr.s_addr = htonl(INADDR_LOOPBACK); }
+        else { a6->sin6_family = AF_INET6; a6->sin6_addr = in6addr_loopback; }
+        assert(bind(reserved, (struct sockaddr *) &storage, addrlen) == 0);
+        assert(getsockname(reserved, (struct sockaddr *) &storage, &addrlen) == 0);
+        close(reserved);
+        int upstream = __real_socket(family, SOCK_DGRAM | SOCK_CLOEXEC, 0); assert(upstream >= 0);
+        enable_socket_errors(upstream, version);
+        int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        struct arguments running = *args; running.tun = tunnel[1];
+        uint8_t packet[128], output[2048];
+        size_t off = ip_header(packet, version, IPPROTO_UDP, 24, version == 4 ? "127.0.0.1" : "::1");
+        store16(packet + off, 12345);
+        memcpy(packet + off + 2, version == 4 ? (void *) &a4->sin_port : (void *) &a6->sin6_port, 2);
+        store16(packet + off + 4, 24); memset(packet + off + 8, 0xa5, 16);
+        packet_checksums(packet, off + 24, off, IPPROTO_UDP);
+        assert(__real_sendto(upstream, packet + off + 8, 16, 0, (struct sockaddr *) &storage, addrlen) == 16);
+        struct pollfd ready = {.fd = upstream, .events = POLLERR};
+        assert(poll(&ready, 1, 1000) == 1 && (ready.revents & POLLERR));
+        assert(forward_socket_errors(&running, upstream, packet, off + 24) == 1);
+        int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+        size_t bytes = tun_packet(tunnel[0], output, version, protocol);
+        assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_PORT : ICMP6_DST_UNREACH_NOPORT));
+        assert(memcmp(output + off + 8, packet, off + 24) == 0);
+        assert_icmp_checksum(output, bytes, off, protocol);
+        close(upstream); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
+void test_icmp_recv_mtu(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    extern ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    real_udp_packets = 1;
+    for (int version = 4; version <= 6; version += 2)
+        for (int ping = 0; ping < 2; ping++)
+            for (int kind = 0; kind < 5; kind++) {
+                int tunnel[2], upstream[2];
+                assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+                assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, upstream) == 0);
+                struct arguments running = *args; running.tun = tunnel[1];
+                uint8_t original[128], output[2048], reply[24]; size_t length;
+                struct ng_session *s = error_flow(&running, version, ping, epoll_fd, original, &length);
+                // Local socket pair keeps a real reply readable while the first
+                // recv reports an error arriving after the EPOLLIN snapshot.
+                close(s->socket); s->socket = upstream[0];
+                memset(reply, 0xa5, sizeof(reply));
+                if (ping) {
+                    reply[0] = version == 4 ? ICMP_ECHOREPLY : ICMP6_ECHO_REPLY;
+                    reply[1] = 0; store16(reply + 2, 0);
+                    store16(reply + 4, 54321); store16(reply + 6, 7);
+                }
+                assert(__real_sendto(upstream[1], reply, sizeof(reply), 0, NULL, 0) == sizeof(reply));
+                assert(is_readable(s->socket));
+                int fd = s->socket;
+                queue_error(fd, version, kind == 2 ? ECONNREFUSED : EMSGSIZE, 1400);
+                if (kind == 1 || kind == 4) queued_error.remaining = 0;
+                recv_error_fd = fd;
+                recv_error_value = kind == 3 ? EAGAIN : kind == 4 ? ENETUNREACH : EMSGSIZE;
+                struct epoll_event event = {.events = EPOLLIN, .data.ptr = s};
+                if (kind == 0) log_errno = EAGAIN; // Logging must not change the error decision.
+                if (ping) check_icmp_socket(&running, &event);
+                else check_udp_socket(&running, &event);
+                log_errno = 0;
+                assert(recv_error_fd == -1);
+                int protocol = version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6;
+                size_t off = version == 4 ? 20 : 40;
+                if (kind == 0 || kind == 2 || kind == 4) {
+                    assert(queued_error.calls == (kind == 4 ? 1 : 2));
+                    size_t bytes = tun_packet(tunnel[0], output, version, protocol);
+                    assert(bytes == off + 8 + length);
+                    assert(memcmp(output + off + 8, original, length) == 0);
+                    assert_icmp_checksum(output, bytes, off, protocol);
+                    if (kind == 0) {
+                        assert(output[off] == (version == 4 ? ICMP_UNREACH : ICMP6_PACKET_TOO_BIG));
+                        assert(load16(output + off + 6) == 1400);
+                    } else if (kind == 2)
+                        assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_PORT : ICMP6_DST_UNREACH_NOPORT));
+                    else
+                        assert(output[off + 1] == (version == 4 ? ICMP_UNREACH_NET : ICMP6_DST_UNREACH_NOROUTE));
+                } else {
+                    assert(!is_readable(tunnel[0]));
+                    assert(queued_error.calls == (kind == 1 ? 1 : 0));
+                }
+                bool fatal = kind == 2 || kind == 4;
+                assert(ping ? (s->icmp.stop != 0) == fatal : s->udp.state == (fatal ? UDP_FINISHING : UDP_ACTIVE));
+                assert(s->socket == fd && args->ctx->ng_session == s);
+                error_queue_recv = NULL;
+                if (!fatal) {
+                    // The reply remains queued and must reach the app on the
+                    // next read, using the same session and descriptor.
+                    if (ping) check_icmp_socket(&running, &event);
+                    else check_udp_socket(&running, &event);
+                    size_t bytes = tun_packet(tunnel[0], output, version, ping ? protocol : IPPROTO_UDP);
+                    assert(bytes == off + sizeof(reply) + (ping ? 0 : 8));
+                    if (ping) {
+                        assert(load16(output + off + 4) == 12345);
+                        assert(memcmp(output + off + 6, reply + 6, sizeof(reply) - 6) == 0);
+                    } else assert(memcmp(output + off + 8, reply, sizeof(reply)) == 0);
+                    assert_icmp_checksum(output, bytes, off, ping ? protocol : IPPROTO_UDP);
+                    assert(ping ? !s->icmp.stop : s->udp.state == UDP_ACTIVE);
+                    assert(s->socket == fd && allocations == 1 && sockets == 0);
+                }
+                assert(!is_readable(tunnel[0]));
+                clear(args->ctx); close(upstream[1]); close(tunnel[0]); close(tunnel[1]);
+                assert(allocations == 0 && sockets == 0);
+            }
+    real_udp_packets = 0;
+    close(epoll_fd);
 #endif
 }

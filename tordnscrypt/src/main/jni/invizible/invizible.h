@@ -243,6 +243,8 @@ struct icmp_session {
     uint16_t id;
 
     uint8_t stop;
+    uint16_t error_quote_length;
+    uint8_t error_quote[112]; // Original echo request, before the ping socket rewrites its ID.
 };
 
 #define UDP_ACTIVE 0
@@ -369,6 +371,8 @@ struct tcp_session {
 
 _Static_assert(sizeof(struct udp_session) <= sizeof(struct tcp_session),
                "UDP error quotes must fit in existing session storage");
+_Static_assert(sizeof(struct icmp_session) <= sizeof(struct tcp_session),
+               "ICMP error quotes must fit in existing session storage");
 
 struct ng_session {
     uint8_t protocol;
@@ -679,6 +683,11 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
 
 void write_connection_unreach(const struct arguments *args,
                               const uint8_t *packet, size_t length, int serr);
+
+void enable_socket_errors(int sock, int version);
+// -1: no queued error; 0: only recoverable errors; 1: a fatal error was consumed.
+int forward_socket_errors(const struct arguments *args, int sock,
+                          const uint8_t *packet, size_t length);
 
 jint get_uid(int version, int protocol,
              const void *saddr, uint16_t sport,

@@ -30,6 +30,38 @@ int __wrap_memcmp(const void *left, const void *right, size_t length) {
 int tcp_sendbuf_queries, tcp_outq_queries;
 int tcp_capacity_fd = -1, tcp_capacity_available;
 int socket_error_fd = -1, socket_error_value;
+ssize_t (*error_queue_recv)(int, struct msghdr *, int);
+int sendto_error_fd = -1, sendto_error_value;
+int recv_error_fd = -1, recv_error_value;
+
+ssize_t __real_recv(int fd, void *buffer, size_t length, int flags);
+ssize_t __wrap_recv(int fd, void *buffer, size_t length, int flags) {
+    if (recv_error_fd >= 0 && fd == recv_error_fd) {
+        errno = recv_error_value;
+        recv_error_fd = -1;
+        return -1;
+    }
+    return __real_recv(fd, buffer, length, flags);
+}
+
+// Bionic's fortified recv() delegates to recvfrom().
+ssize_t __real_recvfrom(int, void *, size_t, int, struct sockaddr *, socklen_t *);
+ssize_t __wrap_recvfrom(int fd, void *buffer, size_t length, int flags,
+                        struct sockaddr *address, socklen_t *address_length) {
+    if (recv_error_fd >= 0 && fd == recv_error_fd) {
+        errno = recv_error_value;
+        recv_error_fd = -1;
+        return -1;
+    }
+    return __real_recvfrom(fd, buffer, length, flags, address, address_length);
+}
+
+ssize_t __real_recvmsg(int fd, struct msghdr *message, int flags);
+ssize_t __wrap_recvmsg(int fd, struct msghdr *message, int flags) {
+    if (error_queue_recv != NULL && (flags & MSG_ERRQUEUE))
+        return error_queue_recv(fd, message, flags);
+    return __real_recvmsg(fd, message, flags);
+}
 
 int __real_getsockopt(int fd, int level, int option, void *value, socklen_t *length);
 int __wrap_getsockopt(int fd, int level, int option, void *value, socklen_t *length) {
@@ -296,6 +328,11 @@ int __wrap_connect(int fd, const struct sockaddr *addr, socklen_t len) {
 ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
 ssize_t __wrap_sendto(int fd, const void *buffer, size_t length, int flags,
                       const struct sockaddr *addr, socklen_t addrlen) {
+    if (sendto_error_fd >= 0 && fd == sendto_error_fd) {
+        errno = sendto_error_value;
+        sendto_error_fd = -1;
+        return -1;
+    }
     if (destination_length) {
         check_destination(addr, addrlen);
         return (ssize_t) length;
@@ -666,6 +703,11 @@ struct segment *new_test_segment(uint16_t length) {
 }
 
 void reset_test_state(void) {
+    error_queue_recv = NULL;
+    sendto_error_fd = -1;
+    sendto_error_value = 0;
+    recv_error_fd = -1;
+    recv_error_value = 0;
     socket_error_fd = -1;
     socket_error_value = 0;
     count_memory_comparisons = false;

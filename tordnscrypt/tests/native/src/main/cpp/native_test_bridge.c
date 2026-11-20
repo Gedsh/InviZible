@@ -25,7 +25,17 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "icmpEpollCleanup") == 0)
+    if (strcmp(id, "icmpRecvMtu") == 0)
+        test_icmp_recv_mtu(&args);
+    else if (strcmp(id, "icmpErrorQueue") == 0)
+        test_icmp_error_queue(&args);
+    else if (strcmp(id, "icmpErrorQueueBounds") == 0)
+        test_icmp_error_queue_bounds(&args);
+    else if (strcmp(id, "icmpSendMtu") == 0)
+        test_icmp_send_mtu(&args);
+    else if (strcmp(id, "icmpRealErrorQueue") == 0)
+        test_icmp_real_error_queue(&args);
+    else if (strcmp(id, "icmpEpollCleanup") == 0)
         test_icmp_epoll_cleanup(&args);
     else if (strcmp(id, "icmpEchoValidation") == 0)
         test_icmp_echo_validation(&args);

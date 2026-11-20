@@ -566,7 +566,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 302 tests plus the optional comparison test.
+The full run contains 307 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
@@ -579,8 +579,8 @@ packet's first 112 bytes inside existing session storage: no per-flow allocation
 or increase to `ng_session` size on ARMv7/ARM64. Redirected flows quote the original
 application endpoints. If extension headers push the UDP header past that bound,
 the async quote is invalidated and no unidentifiable error is emitted. SO_ERROR
-does not identify which datagram failed, so the quote is the latest sent datagram
-of that flow; detailed error-queue handling remains outside this change.
+does not identify which datagram failed, so the fallback quotes the latest sent
+datagram of that flow.
 Async TCP failures retain their TCP reset without a redundant unquoted ICMP packet.
 Three ICMP regressions cover blocked-flow bytes/checksums, injected UDP socket
 errors, input-buffer reuse, direct/redirected endpoints, IPv4 options, IPv6
@@ -605,6 +605,37 @@ successful registration and echo reply delivery through real epoll/local sockets
 Successful ICMP fixtures use a pollable local UDP socket as the ping-socket
 surrogate; outgoing traffic remains captured, without external network access or
 a dependency on kernel ping-socket permissions.
+UDP and ping sockets now request IP_RECVERR/IPV6_RECVERR. Queued upstream errors
+produce port, host, network or administratively prohibited unreachables, or TTL
+exceeded replies. EMSGSIZE produces IPv4 fragmentation-needed/IPv6 Packet Too Big
+with the kernel's MTU and keeps the session/socket open for smaller retries.
+The reported MTU includes any original IP options/extension headers removed by
+socket forwarding. Ping retains the original request prefix before rewriting its
+identifier, also inside existing session storage. Error queues are drained only
+on error events, receive errors or synchronous EMSGSIZE, at most eight entries per invocation;
+remaining entries keep EPOLLERR ready. No extra timers or per-flow allocations
+are introduced. TCP retains its existing reset handling.
+Four additional ICMP cases cover both families and protocols, MTU/TTL/unreachable
+bytes and checksums, smaller retries on the same socket, IP options/extensions,
+malformed/truncated ancillary data, mismatched payloads, zero/missing MTUs,
+bounded draining and resource balance. Real IPv4/IPv6 loopback UDP sockets verify
+kernel error-queue delivery. MTU errors use controlled kernel-metadata injection;
+these tests do not establish end-to-end PMTU discovery over an external network.
+When available, queued payload prefixes (and ping sequence numbers) are checked
+against the retained request. Empty/identical payloads cannot uniquely identify
+older datagrams; only the latest bounded quote is retained. Long extension headers
+can still prevent an asynchronous reply. Cross-family redirects omit MTU replies
+because copying the upstream MTU would describe a different packet format.
+Unsupported RECVERR options retain SO_ERROR fallback; that fallback cannot supply
+a reliable MTU or distinguish TTL expiry. Such EMSGSIZE errors keep the flow alive
+without inventing an MTU. No additional DNS or ICMP traffic is sent upstream.
+An additional IPv4/IPv6 UDP/ping regression injects receive errors after an EPOLLIN
+snapshot while a real local reply remains readable. It verifies MTU bytes/checksums,
+the unchanged session/socket and subsequent reply delivery, including when MTU
+metadata is missing. Fatal queued errors still close the flow; ordinary network
+errors without queued metadata use the retained quote. Transient EAGAIN does not
+drain errors, logging cannot change the saved errno decision, and resources balance
+after every case. Receive-error buffers are released through the normal cleanup path.
 TCP packet fingerprint fixtures pin the initial sequence before the handshake;
 other process-wide random-generator users cannot change comparison results.
 
