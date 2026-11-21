@@ -240,10 +240,10 @@ public class VpnRulesHolder {
                 && (redirectToTor || isToTorTraffic(packet))) {
             logw("Disallowing" + (networkAvailable ? " non tcp " : " ") + "traffic to Tor " + packet);
         } else if (vpnPreferences.getUseProxy()
-                && packet.protocol != 6
+                && packet.protocol != 6 && packet.protocol != 17
                 && packet.dport != PLAINTEXT_DNS_PORT
                 && redirectToProxy) {
-            logw("Disallowing non tcp traffic to proxy " + packet);
+            logw("Disallowing icmp traffic to proxy " + packet);
         } else if (vpnPreferences.getFirewallEnabled()
                 && isIpInLanRange(packet.daddr)) {
             if (isDestinationInSpecialRange(packet.uid, packet.daddr, packet.dport)) {
@@ -318,6 +318,8 @@ public class VpnRulesHolder {
                 }
             } else {
                 allowed = new Allowed();
+                allowed.udpProxy = packet.protocol == 17 && redirectToProxy && !redirectToTor
+                        && packet.uid != vpnPreferences.getOwnUID();
             }
         }
 

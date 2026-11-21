@@ -25,7 +25,29 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "sessionReloadCaches") == 0)
+    if (strcmp(id, "jniUdpProxy") == 0)
+        test_jni_udp_proxy();
+    else if (strcmp(id, "udpProxy4") == 0)
+        test_udp_proxy_round_trip(&args, 0);
+    else if (strcmp(id, "udpProxy6") == 0)
+        test_udp_proxy_round_trip(&args, 1);
+    else if (strcmp(id, "udpProxyCross") == 0)
+        test_udp_proxy_round_trip(&args, 2);
+    else if (strcmp(id, "udpProxyRelayFamily") == 0)
+        test_udp_proxy_round_trip(&args, 3);
+    else if (strcmp(id, "udpProxyBadHandshakes") == 0)
+        test_udp_proxy_bad_handshakes(&args);
+    else if (strcmp(id, "udpProxyUidRoutes") == 0)
+        test_udp_proxy_uid_routes(&args);
+    else if (strcmp(id, "udpProxyLimits") == 0)
+        test_udp_proxy_failures(&args, 0);
+    else if (strcmp(id, "udpProxyAllocations") == 0)
+        test_udp_proxy_failures(&args, 1);
+    else if (strcmp(id, "udpProxyTimeout") == 0)
+        test_udp_proxy_failures(&args, 2);
+    else if (strcmp(id, "udpProxyRefused") == 0)
+        test_udp_proxy_failures(&args, 3);
+    else if (strcmp(id, "sessionReloadCaches") == 0)
         test_session_reload_caches(&args, 0);
     else if (strcmp(id, "sessionReloadGuards") == 0)
         test_session_reload_caches(&args, 1);

@@ -47,7 +47,7 @@ void __real_dns_resolved(const struct arguments *, const char *, const char *, c
 void __real_account_usage(const struct arguments *, jint, jint, const char *, jint, jint,
         jlong, jlong);
 
-enum fault { NO_FAULT, CLASS_REF, OBJECT_REF, STRING_REF, UTF_CHARS, FIELD_ID, INT_CALL };
+enum fault { NO_FAULT, CLASS_REF, OBJECT_REF, STRING_REF, UTF_CHARS, FIELD_ID, INT_CALL, BOOL_FIELD, INT_FIELD };
 static enum fault fault;
 static int nth, seen, hit, pending, ref_count, ref_index, callbacks, writes;
 static int live[64];
@@ -107,7 +107,13 @@ static jobject JNICALL object_field(JNIEnv *env, jobject object, jfieldID field)
 }
 static jint JNICALL int_field(JNIEnv *env, jobject object, jfieldID field) {
     assert(!pending && object != NULL && field != NULL);
+    fails(INT_FIELD);
     return 5354;
+}
+static jboolean JNICALL bool_field(JNIEnv *env, jobject object, jfieldID field) {
+    assert(!pending && object != NULL && field != NULL);
+    fails(BOOL_FIELD);
+    return JNI_TRUE;
 }
 static const char *JNICALL utf_chars(JNIEnv *env, jstring string, jboolean *copy) {
     assert(string != NULL);
@@ -161,6 +167,7 @@ static const struct JNINativeInterface mock_jni = {
     .GetObjectClass = object_class, .FindClass = throwable_class,
     .GetMethodID = method_id, .GetFieldID = field_id, .NewObject = new_object,
     .NewStringUTF = new_string, .GetObjectField = object_field, .GetIntField = int_field,
+    .GetBooleanField = bool_field,
     .GetStringUTFChars = utf_chars, .ReleaseStringUTFChars = release_utf,
     .CallObjectMethod = call_object, .CallVoidMethod = call_void,
     .CallIntMethod = call_int,
@@ -186,11 +193,14 @@ static void exercise(int kind, enum fault operation, int occurrence) {
         assert((packet == NULL) == (hit != 0));
         release_ref(&env, packet);
         assert(hit ? writes == 0 : writes == 11);
-    } else if (kind == 1) {
+    } else if (kind == 1 || kind == 4) {
         struct allowed *result = __real_is_address_allowed(&args, new_ref());
         assert((result == NULL) == (hit != 0));
         if (result != NULL)
             assert(strcmp(result->raddr, address) == 0 && result->rport == 5354);
+#ifdef INVIZIBLE_UDP_PROXY
+        if (result != NULL) assert(result->udp_proxy == (kind == 4));
+#endif
     } else if (kind == 2) {
         __real_dns_resolved(&args, "test", "test", "", "", "192.0.2.1", 0);
         assert(hit ? writes == 0 : writes == 7);
@@ -202,6 +212,27 @@ static void exercise(int kind, enum fault operation, int occurrence) {
     }
     assert(!pending && ref_count == 0 && string_refs == 0);
     assert(operation == NO_FAULT || hit);
+}
+
+void test_jni_udp_proxy(void) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    extern char proxy_socks5_addr[];
+    extern int proxy_socks5_port;
+    extern jfieldID fidUdpProxy;
+    jclass saved = clsAllowed; clsAllowed = (jclass) 1;
+    strcpy(proxy_socks5_addr, "127.0.0.1"); proxy_socks5_port = 1080;
+    for (int i = 0; i < 3; i++) {
+        fidUdpProxy = NULL;
+        exercise(4, FIELD_ID, i + 1);
+        exercise(4, NO_FAULT, 0);
+    }
+    exercise(4, BOOL_FIELD, 1);
+    exercise(4, INT_FIELD, 1); // A preceding field exception must skip the boolean read.
+    exercise(4, NO_FAULT, 0);
+    proxy_socks5_addr[0] = 0; proxy_socks5_port = 0;
+    exercise(1, NO_FAULT, 0); // A cached true flag must not affect the ordinary path.
+    clsAllowed = saved;
+#endif
 }
 
 void test_jni_uid_exceptions(void) {

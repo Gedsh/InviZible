@@ -25,6 +25,7 @@ import androidx.annotation.Keep;
 public class Allowed {
     public String raddr;
     public int rport;
+    public boolean udpProxy; // SOCKS5 UDP ASSOCIATE, distinct from address/port forwarding.
 
     public Allowed() {
         this.raddr = null;

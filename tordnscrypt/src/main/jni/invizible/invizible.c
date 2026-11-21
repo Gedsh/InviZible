@@ -894,9 +894,11 @@ jint get_uid_q(const struct arguments *args,
 static jmethodID midIsAddressAllowed = NULL;
 jfieldID fidRaddr = NULL;
 jfieldID fidRport = NULL;
+jfieldID fidUdpProxy = NULL;
 struct allowed allowed;
 
 struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket) {
+    allowed.udp_proxy = false;
 #ifdef PROFILE_JNI
     struct timeval start;
     bool started = gettimeofday(&start, NULL) == 0;
@@ -958,6 +960,17 @@ struct allowed *is_address_allowed(const struct arguments *args, jobject jpacket
         }
         if (!exceptionOccurred)
             allowed.rport = (uint16_t) (*args->env)->GetIntField(args->env, jallowed, fidRport);
+        // The external proxy is rarely enabled. Ordinary policy callbacks keep
+        // their existing JNI field reads and never allocate proxy state.
+        if (!exceptionOccurred && *proxy_socks5_addr && proxy_socks5_port) {
+            if ((*args->env)->ExceptionCheck(args->env)) exceptionOccurred = 1;
+            if (!exceptionOccurred && fidUdpProxy == NULL)
+                fidUdpProxy = jniGetFieldID(args->env, clsAllowed, "udpProxy", "Z");
+            if (exceptionOccurred || fidUdpProxy == NULL || (*args->env)->ExceptionCheck(args->env))
+                exceptionOccurred = 1;
+            else
+                allowed.udp_proxy = (*args->env)->GetBooleanField(args->env, jallowed, fidUdpProxy);
+        }
 
         (*args->env)->DeleteLocalRef(args->env, jraddr);
         ng_delete_alloc(jraddr, __FILE__, __LINE__);

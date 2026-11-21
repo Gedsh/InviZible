@@ -194,6 +194,7 @@ struct context {
     struct uid_dns_mappings uid_dns_mappings; // Names/addresses only, never DNS socket owners.
     // Event-thread owned; MTU feedback has an independent budget.
     struct icmp_error_budget icmp_errors[2];
+    unsigned int udp_proxy_count; // Only live external SOCKS5 UDP associations.
 };
 
 enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };
@@ -222,6 +223,7 @@ struct arguments {
 struct allowed {
     char raddr[INET6_ADDRSTRLEN + 1];
     uint16_t rport; // host notation
+    bool udp_proxy;
 };
 
 #define INVIZIBLE_COMBINED_TCP_SEGMENTS 1
@@ -265,40 +267,39 @@ struct icmp_session {
 #define UDP_ERROR_QUOTE 112 // Original prefix; fits inside existing TCP-sized session storage.
 
 struct udp_session {
-    time_t time;
-    jint uid;
-    int version;
-    uint16_t mss;
-
     uint64_t sent;
     uint64_t received;
-
     int64_t uid_retry_at; // Monotonic milliseconds; negative disables retries.
+    time_t time;
+    struct udp_proxy *proxy; // NULL on the ordinary UDP path; state allocated only on demand.
+    jint uid;
+    int version;
 
     union {
         __be32 ip4; // network notation
         struct in6_addr ip6;
     } saddr;
-    __be16 source; // network notation
 
     union {
         __be32 ip4; // network notation
         struct in6_addr ip6;
     } daddr;
-    __be16 dest; // network notation
 
     // Non-DNS forwarding target, independent of the original session key.
     union {
         __be32 ip4;
         struct in6_addr ip6;
     } redirect_addr;
+    __be16 source; // network notation
+    __be16 dest; // network notation
     __be16 redirect_port;
+    uint16_t mss;
+    uint16_t error_quote_length;
     uint8_t redirect_version; // Zero for direct traffic and per-request DNS routing.
 
     uint8_t state;
     uint8_t uid_retries;
     bool uid_inferred;
-    uint16_t error_quote_length;
     uint8_t error_quote[UDP_ERROR_QUOTE];
 };
 
@@ -665,6 +666,17 @@ int open_icmp_socket(const struct arguments *args, const struct icmp_session *cu
 
 int open_udp_socket(const struct arguments *args,
                     const struct udp_session *cur, const struct allowed *redirect);
+
+#define UDP_PROXY_MAX 16
+#define INVIZIBLE_UDP_PROXY 1
+int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll_fd);
+int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uint8_t *data, size_t length);
+void check_udp_proxy(const struct arguments *args, struct ng_session *event_session,
+                     const struct epoll_event *event);
+void close_udp_proxy(struct ng_session *s);
+void free_udp_proxy(struct ng_session *s);
+bool udp_proxy_ready(const struct udp_session *s);
+void forward_udp_reply(const struct arguments *args, struct ng_session *s, uint8_t *data, size_t length);
 
 int open_tcp_socket(const struct arguments *args,
                     const struct tcp_session *cur, struct allowed *redirect);

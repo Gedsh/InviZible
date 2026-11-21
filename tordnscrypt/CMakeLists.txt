@@ -10,6 +10,7 @@ add_library( invizible
              src/main/jni/invizible/ip.c
              src/main/jni/invizible/tcp.c
              src/main/jni/invizible/udp.c
+             src/main/jni/invizible/udp_proxy.c
              src/main/jni/invizible/icmp.c
              src/main/jni/invizible/dns.c
              src/main/jni/invizible/dhcp.c

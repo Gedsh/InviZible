@@ -162,6 +162,8 @@ static bool retry_udp_uid(struct ng_session *s) {
 }
 
 static bool udp_route_matches(const struct udp_session *session, const struct allowed *redirect) {
+    if (redirect != NULL && redirect->udp_proxy) return session->proxy != NULL;
+    if (session->proxy != NULL) return false;
     if (redirect == NULL)
         return session->redirect_version == 0;
     if (session->redirect_version == 0)
@@ -841,7 +843,7 @@ void handle_ip(const struct arguments *args,
                 args, version, protocol, flags, format_log_address(&source), sport, format_log_address(&dest), dport, data, uid, 0);
         redirect = is_address_allowed(args, objPacket);
         allowed = (redirect != NULL);
-        if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
+        if (redirect != NULL && !redirect->udp_proxy && (*redirect->raddr == 0 || redirect->rport == 0))
             redirect = NULL;
     }
 
@@ -872,10 +874,12 @@ void handle_ip(const struct arguments *args,
                 udp_lookup.session->udp.state == UDP_ACTIVE)) {
         // Preserve sockets (and their source ports) when the permitted route is unchanged.
         // Retired records stay alive until cleanup for queued epoll event pointers.
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, udp_lookup.session->socket, NULL))
+        if (udp_lookup.session->udp.proxy == NULL &&
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, udp_lookup.session->socket, NULL))
             log_android(ANDROID_LOG_ERROR, "epoll del udp UID recovery error %d: %s",
                         errno, strerror(errno));
         udp_lookup.session->udp.state = UDP_FINISHING;
+        close_udp_proxy(udp_lookup.session);
         unindex_session(args->ctx, udp_lookup.session);
         udp_lookup.session = NULL;
     }

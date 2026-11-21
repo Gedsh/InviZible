@@ -29,6 +29,47 @@ behavior. An independent byte-oriented checksum reference checks IPv4/IPv6 repli
 at minimum, odd/even and larger lengths, and IPv6 forwarding with and without a
 Hop-by-Hop header. ICMPv6 pseudo-headers use the ICMP message length in network byte
 order and protocol 58, excluding any IPv6 extension headers.
+External SOCKS5 UDP forwarding uses UDP ASSOCIATE with one protected TCP control
+socket and one protected UDP relay socket per selected flow. Tor-selected UDP
+remains blocked by the existing policy (including its explicit direct-UDP
+exceptions); external-proxy bypasses, firewall rules, IPv6 restrictions and local
+DNS forwarding retain their precedence. Policy explicitly marks external UDP
+routes, so negotiation failures never fall back to direct traffic. ICMP proxying
+is still unsupported. DNS replies received through the relay use the existing
+filtering and mapping-cache parser without additional DNS lookups.
+
+Association state is allocated only on demand, with at most 16 live associations.
+Only the first datagram is retained during negotiation; later handshake datagrams
+are dropped rather than queued. Negotiation has a fixed 20-second timeout, then
+uses the ordinary UDP idle timeout. All I/O is nonblocking in the existing epoll
+loop. Idle control sockets watch for input/closure without EPOLLOUT, polling
+timers or keepalives. Scatter/gather sends add the SOCKS header without allocating
+a payload copy. Ordinary direct UDP keeps its socket path and session-record size;
+disabled-proxy policy callbacks do not read an additional JNI field.
+
+The relay supports IPv4/IPv6 endpoints and destinations, including a different
+relay address family from the TCP proxy. A wildcard relay address uses the TCP
+peer's IP of the same family. No authentication and configured username/password
+authentication are supported. Numeric relay addresses and unfragmented SOCKS5
+datagrams are required: domain-name relay replies and SOCKS fragmentation are
+rejected without blocking name resolution or direct fallback. Credentials must
+have nonempty username and password when authentication is configured. SOCKS
+encapsulation reduces the maximum UDP payload by its 10-byte IPv4 or 22-byte IPv6
+destination header within the relay transport's UDP limit; oversized datagrams
+are dropped. Connected UDP accepts packets only from the negotiated relay, and
+received frames must match the original flow's destination address/port. Short,
+truncated, fragmented, reserved-byte and mismatched frames are discarded.
+
+`UdpProxyTest` uses real local TCP control and UDP relay sockets to exercise both
+families, cross-family relays, authentication, split replies, datagram framing,
+empty payloads, real MSG_TRUNC and recovery, malformed handshakes, refusal,
+control EOF, epoll failures, stale events, bounded memory, timeouts, owner-recovery
+switches between proxy/direct/blocked routes, and cleanup.
+JNI fault injection checks the explicit route flag, pending exceptions and
+disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
+UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
+These local fixtures do not establish a VPN or validate a third-party proxy server.
+
 Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
 cleanup list, with one additional link per record and no index allocations.
 Tests cover both address families, ports and echo IDs, IPv4 union padding,
@@ -566,7 +607,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 316 tests plus the optional comparison test.
+The full run contains 327 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

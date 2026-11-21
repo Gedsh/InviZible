@@ -43,6 +43,7 @@ static void init_udp_uid_retry(struct udp_session *session, const struct udp_ses
 }
 
 int get_udp_timeout(const struct udp_session *u, int sessions, int maxsessions) {
+    if (u->proxy != NULL && !udp_proxy_ready(u)) return TCP_INIT_TIMEOUT;
     int timeout = (ntohs(u->dest) == 53 ? UDP_TIMEOUT_53 : UDP_TIMEOUT_ANY);
 
     int scale = 100 - sessions * 100 / maxsessions;
@@ -72,7 +73,8 @@ int check_udp_session(const struct arguments *args, struct ng_session *s,
         log_android(ANDROID_LOG_INFO, "UDP close from %s/%u to %s/%u socket %d",
                     format_log_address(&source), ntohs(s->udp.source), format_log_address(&dest), ntohs(s->udp.dest), s->socket);
 
-        if (close(s->socket))
+        close_udp_proxy(s);
+        if (s->socket >= 0 && close(s->socket))
             log_android(ANDROID_LOG_ERROR, "UDP close %d error %d: %s",
                         s->socket, errno, strerror(errno));
         s->socket = -1;
@@ -98,6 +100,10 @@ int check_udp_session(const struct arguments *args, struct ng_session *s,
 
 void check_udp_socket(const struct arguments *args, const struct epoll_event *ev) {
     struct ng_session *s = (struct ng_session *) ev->data.ptr;
+    if (s->udp.proxy != NULL) {
+        check_udp_proxy(args, s, ev);
+        return;
+    }
     if (s->socket < 0 || s->udp.state != UDP_ACTIVE)
         return;
 
@@ -165,32 +171,24 @@ void check_udp_socket(const struct arguments *args, const struct epoll_event *ev
                 log_android(ANDROID_LOG_INFO, "UDP recv bytes %zd from %s/%u for tun",
                             bytes, format_log_address(&dest), ntohs(s->udp.dest));
 
-                s->udp.received += bytes;
-                size_t length = (size_t) bytes;
-
-                if (ntohs(s->udp.dest) == 53 && dns_has_multiple_questions(buffer, length)) {
-                    log_android(ANDROID_LOG_WARN, "Dropping DNS response with multiple questions");
-                    s->udp.state = UDP_FINISHING;
-                    release_packet_buffer(args, buffer);
-                    return;
-                }
-
-                // Process DNS response
-                if (ntohs(s->udp.dest) == 53)
-                    parse_dns_response(args, s, buffer, &length);
-
-                // Forward to tun
-                if (write_udp(args, &s->udp, buffer, length) < 0)
-                    s->udp.state = UDP_FINISHING;
-                else {
-                    // Prevent too many open files
-                    if (ntohs(s->udp.dest) == 53)
-                        s->udp.state = UDP_FINISHING;
-                }
+                forward_udp_reply(args, s, buffer, (size_t) bytes);
             }
             release_packet_buffer(args, buffer);
         }
     }
+}
+
+void forward_udp_reply(const struct arguments *args, struct ng_session *s, uint8_t *data, size_t length) {
+    s->udp.received += length;
+    if (ntohs(s->udp.dest) == 53 && dns_has_multiple_questions(data, length)) {
+        log_android(ANDROID_LOG_WARN, "Dropping DNS response with multiple questions");
+        s->udp.state = UDP_FINISHING;
+        return;
+    }
+    if (ntohs(s->udp.dest) == 53)
+        parse_dns_response(args, s, data, &length);
+    if (write_udp(args, &s->udp, data, length) < 0 || ntohs(s->udp.dest) == 53)
+        s->udp.state = UDP_FINISHING;
 }
 
 int has_udp_session(const struct arguments *args, const uint8_t *pkt, const uint8_t *payload) {
@@ -369,6 +367,8 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         if (s == NULL)
             return 0;
         s->protocol = IPPROTO_UDP;
+        s->udp.proxy = NULL;
+        s->socket = -1;
 
         s->udp.time = time(NULL);
         s->udp.uid = uid;
@@ -376,7 +376,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         s->udp.version = version;
 
         int rversion;
-        if (redirect == NULL) {
+        if (redirect == NULL || redirect->udp_proxy) {
             rversion = s->udp.version;
         } else if (s->udp.version == 6 && strcmp(redirect->raddr, LOOPBACK_ADDRESS) == 0) {
             strcpy(redirect->raddr, LOOPBACK_ADDRESS_IPv6);
@@ -391,7 +391,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         s->udp.received = 0;
         s->udp.error_quote_length = 0;
         s->udp.redirect_version = 0;
-        if (redirect != NULL && ntohs(udphdr->dest) != 53) {
+        if (redirect != NULL && !redirect->udp_proxy && ntohs(udphdr->dest) != 53) {
             s->udp.redirect_version = (uint8_t) rversion;
             s->udp.redirect_port = htons(redirect->rport);
             memset(&s->udp.redirect_addr, 0, sizeof(s->udp.redirect_addr));
@@ -413,7 +413,8 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         s->next = NULL;
 
         // Open UDP socket
-        s->socket = open_udp_socket(args, &s->udp, redirect);
+        bool proxy = redirect != NULL && redirect->udp_proxy;
+        s->socket = proxy ? open_udp_proxy(args, s, epoll_fd) : open_udp_socket(args, &s->udp, redirect);
         if (s->socket < 0) {
             ng_free(s, __FILE__, __LINE__);
             return 0;
@@ -425,7 +426,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         memset(&s->ev, 0, sizeof(struct epoll_event));
         s->ev.events = EPOLLIN | EPOLLERR;
         s->ev.data.ptr = s;
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev))
+        if (!proxy && epoll_ctl(epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev))
             log_android(ANDROID_LOG_ERROR, "epoll add udp error %d: %s", errno, strerror(errno));
 
         add_session(args->ctx, s);
@@ -447,7 +448,8 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
     log_android(ANDROID_LOG_INFO, "UDP forward from tun %s/%u to %s/%u data %zu",
                 format_log_address(&source), ntohs(udphdr->source), format_log_address(&dest), ntohs(udphdr->dest), datalen);
 
-    cur->udp.time = time(NULL);
+    if (cur->udp.proxy == NULL || udp_proxy_ready(&cur->udp))
+        cur->udp.time = time(NULL); // Handshake traffic must not extend its deadline.
 
     if (ntohs(udphdr->dest) == 53) {
         struct dns_header *dns = (struct dns_header *) data;
@@ -471,12 +473,12 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
 
             //handle onion websites
             if (tor_dns_port > 0) {
-                if (redirect != NULL && str_ends_with(qname, ".onion")) {
+                if (redirect != NULL && !redirect->udp_proxy && str_ends_with(qname, ".onion")) {
                     redirect->rport = tor_dns_port;
                 }
             }
 
-            if (redirect != NULL) {
+            if (redirect != NULL && !redirect->udp_proxy) {
                 //https://datatracker.ietf.org/doc/html/rfc7050
                 if (str_equal(qname, "ipv4only.arpa")) {
                     redirect = NULL;
@@ -499,6 +501,16 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
                 }
             }
         }
+    }
+
+    if (cur->udp.proxy != NULL) {
+        cur->udp.error_quote_length = 0;
+        if (payload_offset + sizeof(struct udphdr) <= sizeof(cur->udp.error_quote)) {
+            size_t quoted = length < sizeof(cur->udp.error_quote) ? length : sizeof(cur->udp.error_quote);
+            memcpy(cur->udp.error_quote, pkt, quoted);
+            cur->udp.error_quote_length = (uint16_t) quoted;
+        }
+        return send_udp_proxy(args, cur, data, datalen);
     }
 
     int rversion;
