@@ -20,6 +20,8 @@ public final class UdpProxyTest extends NativeTestSupport {
     @Test public void ipv6MtuErrorsKeepAssociationUsable() { check("udpProxyMtu6"); }
     @Test public void ipv6MtuThroughIpv4RelayAccountsForFraming() { check("udpProxyMtu6over4"); }
     @Test public void ipv4MtuThroughIpv6RelayAndRealKernelError() { check("udpProxyMtu4over6"); }
+    @Test public void ipv4ReceivesBoundedBatchesAndStopsOnFatalError() { check("udpProxyBatch4"); }
+    @Test public void ipv6BatchesReuseBuffersAndStopOnOutputFailure() { check("udpProxyBatch6"); }
     @Test public void malformedHandshakesAuthAndEventFailuresStayClosed() { check("udpProxyBadHandshakes"); }
     @Test public void uidRecoveryCanSwitchProxyDirectAndBlockedRoutesSafely() { check("udpProxyUidRoutes"); }
     @Test public void associationAndPendingMemoryStayBounded() { check("udpProxyLimits"); }

@@ -510,23 +510,29 @@ void check_udp_proxy(const struct arguments *args, struct ng_session *event_sess
     size_t max = p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG;
     uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, max, "udp proxy recv");
     if (buffer == NULL) { fail_proxy(args, p, "cannot allocate receive buffer", ENOMEM); return; }
-    struct iovec iov = {.iov_base = buffer, .iov_len = max};
-    struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
-    ssize_t bytes = recvmsg(s->socket, &message, 0);
-    if (bytes < 0) {
-        if (errno == EMSGSIZE) relay_errors(args, p, NULL, 0);
-        else if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "relay receive", errno);
-    } else if (!(message.msg_flags & MSG_TRUNC) && bytes >= 4 &&
-               buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0) {
-        size_t address = buffer[3] == 1 ? 4 : buffer[3] == 4 ? 16 : 0;
-        size_t header = 6 + address;
-        if (address == (s->udp.version == 4 ? 4 : 16) && (size_t) bytes >= header &&
-            (size_t) bytes - header <= (s->udp.version == 4 ? UDP4_MAXMSG : UDP6_MAXMSG) &&
-            memcmp(buffer + 4, &s->udp.daddr, address) == 0 &&
-            memcmp(buffer + 4 + address, &s->udp.dest, 2) == 0) {
-            s->udp.time = time(NULL);
-            forward_udp_reply(args, s, buffer + header, (size_t) bytes - header);
-            if (s->udp.state != UDP_ACTIVE) close_udp_proxy(s);
+    // Bound all receive attempts, including malformed frames, so other flows get
+    // a turn. Level-triggered epoll reports any remaining datagrams next time.
+    for (int i = 0; i < 8; i++) {
+        struct iovec iov = {.iov_base = buffer, .iov_len = max};
+        struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
+        ssize_t bytes = recvmsg(s->socket, &message, 0);
+        if (bytes < 0) {
+            if (errno == EMSGSIZE) relay_errors(args, p, NULL, 0);
+            else if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "relay receive", errno);
+            break;
+        }
+        if (!(message.msg_flags & MSG_TRUNC) && bytes >= 4 &&
+            buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0) {
+            size_t address = buffer[3] == 1 ? 4 : buffer[3] == 4 ? 16 : 0;
+            size_t header = 6 + address;
+            if (address == (s->udp.version == 4 ? 4 : 16) && (size_t) bytes >= header &&
+                (size_t) bytes - header <= (s->udp.version == 4 ? UDP4_MAXMSG : UDP6_MAXMSG) &&
+                memcmp(buffer + 4, &s->udp.daddr, address) == 0 &&
+                memcmp(buffer + 4 + address, &s->udp.dest, 2) == 0) {
+                s->udp.time = time(NULL);
+                forward_udp_reply(args, s, buffer + header, (size_t) bytes - header);
+                if (s->udp.state != UDP_ACTIVE) { close_udp_proxy(s); break; }
+            }
         }
     }
     release_packet_buffer(args, buffer);

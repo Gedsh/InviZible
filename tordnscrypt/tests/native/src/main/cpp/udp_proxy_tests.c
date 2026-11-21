@@ -60,12 +60,111 @@ static void queue_mtu(int fd, int version, const uint8_t *wire, size_t length, u
 ssize_t __real_recvmsg(int, struct msghdr *, int);
 static ssize_t truncated_relay_receive(int fd, struct msghdr *message, int flags) {
     // Exercise a real kernel MSG_TRUNC without allocating oversized UDP packets.
+    packet_recv = NULL;
     size_t capacity = message->msg_iov[0].iov_len;
     message->msg_iov[0].iov_len = 8;
     ssize_t bytes = __real_recvmsg(fd, message, flags);
     message->msg_iov[0].iov_len = capacity;
     assert(bytes == 8 && (message->msg_flags & MSG_TRUNC));
     return bytes;
+}
+
+static int batch_receives, batch_error_at, batch_error;
+static bool batch_truncate_first;
+static ssize_t batch_receive(int fd, struct msghdr *message, int flags) {
+    assert(message->msg_flags == 0 && message->msg_iovlen == 1);
+    batch_receives++;
+    if (batch_receives == batch_error_at) { errno = batch_error; return -1; }
+    size_t capacity = message->msg_iov[0].iov_len;
+    if (batch_truncate_first && batch_receives == 1) message->msg_iov[0].iov_len = 8;
+    ssize_t bytes = __real_recvmsg(fd, message, flags);
+    message->msg_iov[0].iov_len = capacity;
+    return bytes;
+}
+
+static void batch_reply(int tunnel, int version, int value, bool empty) {
+    uint8_t packet[128], expected[128];
+    size_t off = version == 4 ? 20 : 40;
+    size_t length = tun_packet(tunnel, packet, version, IPPROTO_UDP);
+    assert(length == off + 8 + (empty ? 0 : 1));
+    assert(load16(packet + off) == 5000 && load16(packet + off + 2) == 12345);
+    if (!empty) assert(packet[off + 8] == value);
+    memcpy(expected, packet, length);
+    packet_checksums(expected, length, off, IPPROTO_UDP);
+    assert(memcmp(expected, packet, length) == 0);
+}
+
+static void proxy_batch_checks(const struct arguments *args, struct ng_session *s, int relay,
+                               const struct sockaddr_storage *client, socklen_t client_length,
+                               int tunnel, int epoll_fd, bool output_failure) {
+    int version = s->udp.version;
+    size_t framing = version == 4 ? 10 : 22;
+    uint8_t wire[32] = {0}; wire[3] = version == 4 ? 1 : 4;
+    memcpy(wire + 4, &s->udp.daddr, version == 4 ? 4 : 16);
+    memcpy(wire + framing - 2, &s->udp.dest, 2);
+    struct epoll_event event = {.events = EPOLLIN, .data.ptr = s};
+    uint64_t received = s->udp.received;
+    batch_error_at = 0; batch_truncate_first = false; batch_receives = 0;
+    packet_recv = batch_receive;
+    for (int i = 0; i < 10; i++) {
+        wire[framing] = (uint8_t) i;
+        size_t length = framing + (i == 3 ? 0 : 1);
+        assert(sendto(relay, wire, length, 0, (const struct sockaddr *) client, client_length) == length);
+    }
+    readable(s->socket); check_udp_socket(args, &event);
+    assert(batch_receives == 8 && is_readable(s->socket));
+    for (int i = 0; i < 8; i++) batch_reply(tunnel, version, i, i == 3);
+    assert(!is_readable(tunnel) && s->udp.received == received + 7);
+    assert(epoll_wait(epoll_fd, &event, 1, 1000) == 1);
+    assert(event.data.ptr == s && (event.events & EPOLLIN));
+    batch_receives = 0; check_udp_socket(args, &event);
+    assert(batch_receives == 3 && !is_readable(s->socket)); // Two datagrams, then EAGAIN.
+    batch_reply(tunnel, version, 8, false); batch_reply(tunnel, version, 9, false);
+    assert(!is_readable(tunnel) && s->udp.received == received + 9);
+    // Malformed frames also consume the batch budget, without starving a valid successor.
+    wire[0] = 1;
+    for (int i = 0; i < 9; i++)
+        assert(sendto(relay, wire, framing + 1, 0, (const struct sockaddr *) client, client_length) == framing + 1);
+    wire[0] = 0; wire[framing] = 42;
+    assert(sendto(relay, wire, framing + 1, 0, (const struct sockaddr *) client, client_length) == framing + 1);
+    readable(s->socket); batch_receives = 0; check_udp_socket(args, &event);
+    assert(batch_receives == 8 && !is_readable(tunnel) && is_readable(s->socket));
+    batch_receives = 0; check_udp_socket(args, &event);
+    assert(batch_receives == 3); batch_reply(tunnel, version, 42, false);
+    // A truncated receive must not leave MSG_TRUNC set for the following message.
+    for (int i = 0; i < 2; i++)
+        assert(sendto(relay, wire, framing + 1, 0, (const struct sockaddr *) client, client_length) == framing + 1);
+    readable(s->socket); batch_receives = 0; batch_truncate_first = true;
+    check_udp_socket(args, &event);
+    assert(batch_receives == 3); batch_reply(tunnel, version, 42, false);
+    assert(!is_readable(tunnel)); batch_truncate_first = false;
+    const int transient[] = {EAGAIN, EINTR, EMSGSIZE};
+    for (size_t i = 0; i < sizeof(transient) / sizeof(transient[0]); i++) {
+        for (int j = 0; j < 2; j++)
+            assert(sendto(relay, wire, framing + 1, 0, (const struct sockaddr *) client, client_length) == framing + 1);
+        readable(s->socket); batch_receives = 0; batch_error_at = 2; batch_error = transient[i];
+        check_udp_socket(args, &event);
+        assert(batch_receives == 2 && s->udp.state == UDP_ACTIVE && is_readable(s->socket));
+        batch_reply(tunnel, version, 42, false); assert(!is_readable(tunnel));
+        batch_receives = 0; batch_error_at = 0; check_udp_socket(args, &event);
+        assert(batch_receives == 2); batch_reply(tunnel, version, 42, false);
+        assert(!is_readable(tunnel));
+    }
+    // A terminal result mid-batch must close both sockets and stop receiving.
+    for (int i = 0; i < 3; i++)
+        assert(sendto(relay, wire, framing + 1, 0, (const struct sockaddr *) client, client_length) == framing + 1);
+    readable(s->socket); batch_receives = 0;
+    struct arguments terminal = *args;
+    if (output_failure) terminal.tun = -1;
+    else { batch_error_at = 2; batch_error = ECONNREFUSED; }
+    check_udp_socket(&terminal, &event);
+    assert(batch_receives == (output_failure ? 1 : 2));
+    assert(s->udp.state == UDP_FINISHING && s->socket == -1);
+    assert(args->ctx->udp_proxy_count == 0 && sockets == 0);
+    if (!output_failure) batch_reply(tunnel, version, 42, false);
+    int calls = batch_receives; check_udp_socket(args, &event);
+    assert(batch_receives == calls);
+    packet_recv = NULL; batch_error_at = 0;
 }
 
 static int local_socket(int family, int type, struct sockaddr_storage *address, socklen_t *length) {
@@ -247,8 +346,8 @@ static void proxy_mtu_checks(const struct arguments *args, struct ng_session *s,
 
 void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
-    int version = kind == 0 || kind == 3 || kind == 7 || kind == 10 ? 4 : 6;
-    int family = kind == 1 || kind == 8 ? AF_INET6 : AF_INET;
+    int version = kind == 0 || kind == 3 || kind == 7 || kind == 10 || kind == 11 ? 4 : 6;
+    int family = kind == 1 || kind == 8 || kind == 12 ? AF_INET6 : AF_INET;
     int relay_family = kind == 3 || kind == 10 ? AF_INET6 : family;
     bool auth = kind != 0;
     struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
@@ -260,7 +359,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     setup_proxy(family, auth, &server);
     struct packet_buffers buffers = {0};
     struct arguments running = *args; running.tun = tunnel[1];
-    running.buffers = kind == 0 || kind >= 4 ? NULL : &buffers;
+    running.buffers = kind == 12 || (kind > 0 && kind < 4) ? &buffers : NULL;
     uint8_t packet[128], buffer[2048];
     size_t off = proxy_packet(packet, version, 12345);
     assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
@@ -373,7 +472,9 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     assert(sendto(relay, buffer, (size_t) bytes, 0, (struct sockaddr *) &client, client_length) == bytes);
     pump_proxy(&running, epoll_fd);
     assert(tun_packet(tunnel[0], buffer, version, IPPROTO_UDP) == off + 8);
-    if (kind >= 7) proxy_mtu_checks(&running, s, epoll_fd, relay, tunnel[0], relay_family);
+    if (kind >= 7 && kind <= 10) proxy_mtu_checks(&running, s, epoll_fd, relay, tunnel[0], relay_family);
+    if (kind >= 11) proxy_batch_checks(&running, s, relay, &client, client_length,
+                                      tunnel[0], epoll_fd, kind == 12);
     if (kind == 5 || kind == 6) {
         struct epoll_event event = {.events = kind == 5 ? EPOLLERR : EPOLLIN, .data.ptr = s};
         if (kind == 5) {
@@ -392,7 +493,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
         socket_error_fd = -1;
     }
     close(control); // Closing the TCP association must also close the UDP relay socket.
-    if (kind < 5 || kind >= 7) pump_proxy(&running, epoll_fd);
+    if (s->udp.state == UDP_ACTIVE) pump_proxy(&running, epoll_fd);
     assert(s->udp.state == UDP_FINISHING && s->socket == -1 && args->ctx->udp_proxy_count == 0);
     assert(sockets == 0);
     clear(args->ctx); clear_packet_buffers(&buffers);

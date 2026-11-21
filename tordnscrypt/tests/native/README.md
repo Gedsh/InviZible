@@ -92,6 +92,18 @@ JNI fault injection checks the explicit route flag, pending exceptions and
 disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
 UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
 These local fixtures do not establish a VPN or validate a third-party proxy server.
+Relay input handles at most eight receive attempts per readiness event, sharing
+one input buffer across the batch. Invalid and truncated frames consume that
+budget too. Remaining datagrams stay readable for the next level-triggered epoll
+event. EAGAIN, EINTR and handled MTU errors end the batch; fatal receive errors,
+DNS completion and output failures retain the existing close behavior and stop
+further reads. No timers, worker threads or additional packet queues are added.
+Two real-socket IPv4/IPv6 regressions cover ten-datagram bursts, ordering, empty
+payloads, independent output checksums, the eight-attempt limit for valid and
+malformed frames, truncation followed by a valid reply, transient errors mid-batch,
+fatal receive/output failures and stale events. They exercise both buffer-reuse
+modes and verify socket/allocation balance. The burst regression fails against
+the previous single-datagram receive path.
 
 Proxy failures identify the failed operation and retain numeric socket errors.
 Method selection, username/password rejection and UDP ASSOCIATE replies include
@@ -678,7 +690,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 339 tests plus the optional comparison test.
+The full run contains 341 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
