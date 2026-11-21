@@ -23,6 +23,10 @@ int __wrap_gettimeofday(struct timeval *tv, void *tz) {
 }
 time_t __real_time(time_t *);
 time_t __wrap_time(time_t *result) {
+    if (test_wall_time_enabled) {
+        if (result != NULL) *result = test_wall_time;
+        return test_wall_time;
+    }
     if (!wall_clock_enabled)
         return __real_time(result);
     wall_time_calls++;

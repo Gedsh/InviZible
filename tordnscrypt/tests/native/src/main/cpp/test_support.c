@@ -18,6 +18,8 @@ char last_log[2048];
 char last_proxy_log[2048];
 int proxy_logs;
 int socket_mtu_fd = -1, socket_mtu_value;
+bool test_wall_time_enabled;
+time_t test_wall_time;
 int log_errno, log_result;
 int address_formats;
 bool count_memory_comparisons;
@@ -725,6 +727,7 @@ struct segment *new_test_segment(uint16_t length) {
 }
 
 void reset_test_state(void) {
+    test_wall_time_enabled = false;
     error_queue_recv = NULL;
     packet_recv = NULL;
     sendto_error_fd = -1;

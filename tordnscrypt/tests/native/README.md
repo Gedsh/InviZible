@@ -39,6 +39,17 @@ is still unsupported. DNS replies received through the relay use the existing
 filtering and mapping-cache parser without additional DNS lookups.
 
 Association state is allocated only on demand, with at most 16 live associations.
+Only when admission reaches that limit, one session-list scan closes expired proxy
+associations using their unscaled ordinary timeout (20 seconds during negotiation).
+If still full, it closes the oldest ready association idle for at least 60 seconds.
+Recent traffic and unexpired handshakes remain protected; otherwise the new flow is
+rejected with the existing bounded feedback. Reclaimed records leave the lookup
+index so later traffic can reopen immediately, but remain until normal cleanup so
+queued epoll events stay safe. Usage accounting follows normal UDP cleanup.
+Reclamation sends no errors for old traffic. It adds no timers, periodic
+work or allocations. Failed/backward clock reads cannot establish idle eligibility.
+Pressure reclamation loses the relay's UDP mapping: later traffic must establish
+another association and applications depending on that mapping may be interrupted.
 During negotiation, up to four datagrams are retained in arrival order, with a
 64 KiB payload limit per association. New datagrams exceeding either limit are
 dropped without replacing queued packets; empty datagrams count toward the
@@ -72,6 +83,11 @@ empty queued datagrams, exact byte/count limits, allocation failures with a
 partially filled queue, fatal sends while flushing the queue, bounded memory,
 timeouts, owner-recovery
 switches between proxy/direct/blocked routes, and cleanup.
+Three admission regressions cover expired handshakes before idle replacement,
+the oldest eligible ready flow, the exact 59/60-second boundary, spare capacity,
+recent traffic and pending handshakes, failed/backward clocks, failed allocation
+after reclamation, stale relay/control events, surviving relay traffic and complete
+socket/allocation cleanup.
 JNI fault injection checks the explicit route flag, pending exceptions and
 disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
 UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
@@ -662,7 +678,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 336 tests plus the optional comparison test.
+The full run contains 339 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

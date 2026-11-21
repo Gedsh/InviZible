@@ -29,6 +29,7 @@ enum udp_proxy_stage { PROXY_CONNECT, PROXY_SEND_HELLO, PROXY_HELLO,
 
 #define PROXY_PENDING_PACKETS 4
 #define PROXY_PENDING_BYTES (64u * 1024u)
+#define PROXY_PRESSURE_IDLE 60 // seconds; only ready associations at capacity.
 
 struct udp_proxy {
     // An unindexed event endpoint, retained until its owner is freed so queued
@@ -139,7 +140,38 @@ static bool watch_control(struct udp_proxy *p, uint32_t events) {
     return epoll_ctl(p->epoll_fd, EPOLL_CTL_MOD, p->control.socket, &p->control.ev) == 0;
 }
 
+static void reclaim_capacity(const struct arguments *args) {
+    time_t now = time(NULL);
+    if (now == (time_t) -1) return;
+    struct ng_session *oldest = NULL;
+    for (struct ng_session *s = args->ctx->ng_session; s != NULL; s = s->next) {
+        if (s->protocol != IPPROTO_UDP || s->udp.proxy == NULL ||
+            !s->udp.proxy->counted || s->udp.state != UDP_ACTIVE ||
+            s->udp.time == (time_t) -1 || now < s->udp.time) continue;
+        // Subtract unsigned values to avoid overflowing time_t on 32-bit devices.
+        uintmax_t idle = (uintmax_t) now - (uintmax_t) s->udp.time;
+        // Use the ordinary unscaled timeout here; global pressure cleanup stays
+        // in the session monitor. Failed/backward clock reads cannot evict flows.
+        if (idle > (unsigned int) get_udp_timeout(&s->udp, 0, 1)) {
+            s->udp.state = UDP_FINISHING;
+            close_udp_proxy(s);
+            unindex_session(args->ctx, s);
+        } else if (udp_proxy_ready(&s->udp) && idle >= PROXY_PRESSURE_IDLE &&
+                   (oldest == NULL || s->udp.time < oldest->udp.time)) {
+            oldest = s;
+        }
+    }
+    if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX && oldest != NULL) {
+        oldest->udp.state = UDP_FINISHING;
+        close_udp_proxy(oldest);
+        unindex_session(args->ctx, oldest);
+    }
+    // Retain records until normal cleanup: epoll may already hold their events.
+    // Unindex them so later traffic can negotiate a fresh association immediately.
+}
+
 int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll_fd) {
+    if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) reclaim_capacity(args);
     if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) {
         int64_t now = get_ms();
         if (now >= 0 && now >= args->ctx->udp_proxy_limit_log_at) {

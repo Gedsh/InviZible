@@ -542,6 +542,127 @@ void test_udp_proxy_reset_replies(const struct arguments *args) {
 #endif
 }
 
+void test_udp_proxy_capacity(const struct arguments *args, int kind) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
+    int listener = local_socket(AF_INET, SOCK_STREAM, &server, &server_length);
+    assert(listen(listener, 32) == 0);
+    int relay = local_socket(AF_INET, SOCK_DGRAM, &relay_address, &relay_length);
+    int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    setup_proxy(AF_INET, false, &server);
+    struct arguments running = *args; running.tun = tunnel[1];
+    test_wall_time_enabled = true; test_wall_time = 1000;
+    struct ng_session *sessions[UDP_PROXY_MAX];
+    struct epoll_event controls[3];
+    int peers[3];
+    uint8_t packet[128], buffer[128]; size_t off = proxy_packet(packet, 4, 12345);
+    for (int i = 0; i < UDP_PROXY_MAX; i++) {
+        store16(packet + off, (uint16_t) (12345 + i));
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        sessions[i] = args->ctx->ng_session;
+        if (i < 3) {
+            readable(listener); peers[i] = accept(listener, NULL, NULL); assert(peers[i] >= 0);
+            assert(epoll_wait(epoll_fd, &controls[i], 1, 1000) == 1);
+            check_udp_socket(&running, &controls[i]); read_control(peers[i], buffer, 3);
+            const uint8_t hello[] = {5, 0};
+            assert(send(peers[i], hello, sizeof(hello), MSG_NOSIGNAL) == sizeof(hello));
+            pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+            read_control(peers[i], buffer, 10);
+            uint8_t accepted[10] = {5, 0, 0, 1};
+            memcpy(accepted + 8, &((struct sockaddr_in *) &relay_address)->sin_port, 2);
+            assert(send(peers[i], accepted, sizeof(accepted), MSG_NOSIGNAL) == sizeof(accepted));
+            while (!udp_proxy_ready(&sessions[i]->udp)) pump_proxy(&running, epoll_fd);
+            readable(relay); assert(recv(relay, buffer, sizeof(buffer), 0) == 13);
+        }
+        // Spare capacity must never trigger even ordinary timeout reclamation.
+        if (i == 2) sessions[0]->udp.time = 100;
+    }
+    assert(sessions[0]->udp.state == UDP_ACTIVE);
+    sessions[0]->udp.time = 1000;
+    store16(packet + off, 13000);
+    if (kind == 0) {
+        sessions[0]->udp.time = 900; // Eligible idle flow must survive when expiry makes room.
+        sessions[3]->udp.time = sessions[4]->udp.time = 979;
+        sessions[5]->udp.time = 980; // Exact handshake deadline is not expired yet.
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX - 1);
+        assert(sockets == 2 * (UDP_PROXY_MAX - 1));
+        assert(!is_readable(tunnel[0]));
+        assert(sessions[0]->udp.state == UDP_ACTIVE && sessions[5]->udp.state == UDP_ACTIVE);
+        for (int i = 3; i <= 4; i++) {
+            assert(sessions[i]->udp.state == UDP_FINISHING && sessions[i]->socket == -1);
+            struct epoll_event stale = {.events = EPOLLIN | EPOLLERR, .data.ptr = sessions[i]};
+            check_udp_socket(&running, &stale);
+        }
+        // Reuse an expired flow's exact tuple without waiting for linger cleanup.
+        store16(packet + off, 12348);
+        assert(find_udp_session(&running, packet, packet + off) == NULL);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(find_udp_session(&running, packet, packet + off) == args->ctx->ng_session);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX);
+    } else if (kind == 1) {
+        sessions[0]->udp.time = 940; sessions[1]->udp.time = 910; sessions[2]->udp.time = 941;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(sessions[1]->udp.state == UDP_FINISHING && sessions[1]->socket == -1);
+        store16(packet + off, 12346);
+        assert(find_udp_session(&running, packet, packet + off) == NULL);
+        store16(packet + off, 13000);
+        assert(sessions[0]->udp.state == UDP_ACTIVE && sessions[2]->udp.state == UDP_ACTIVE);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
+        assert(!is_readable(tunnel[0]));
+        // Already queued events may still reference both endpoints of the victim.
+        controls[1].events = EPOLLIN | EPOLLERR;
+        check_udp_socket(&running, &controls[1]);
+        check_udp_socket(&running, &sessions[1]->ev);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
+        store16(packet + off, 13001);
+        fail_alloc_tag = "udp proxy"; fail_alloc_match = 1;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        fail_alloc_tag = NULL;
+        assert(sessions[0]->udp.state == UDP_FINISHING && sessions[2]->udp.state == UDP_ACTIVE);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX - 1);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        store16(packet + off, 13002);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        assert(sessions[2]->udp.state == UDP_ACTIVE); // 59 seconds: retain it.
+        // A surviving association can still forward through its existing relay.
+        assert(send_udp_proxy(&running, sessions[2], (const uint8_t *) "def", 3) == 1);
+        readable(relay); assert(recv(relay, buffer, sizeof(buffer), 0) == 13);
+        assert(memcmp(buffer + 10, "def", 3) == 0);
+        test_wall_time = 1001;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(sessions[2]->udp.state == UDP_FINISHING); // 60 seconds: reclaim it.
+    } else {
+        test_wall_time = -1;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        test_wall_time = 900;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        test_wall_time = 1000;
+        sessions[0]->udp.time = -1; sessions[1]->udp.time = 1100; sessions[2]->udp.time = 941;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        for (int i = 0; i < UDP_PROXY_MAX; i++) assert(sessions[i]->udp.state == UDP_ACTIVE);
+    }
+    // Capacity reclamation itself is silent: it must not send errors quoting old traffic.
+    clear(args->ctx);
+    assert(args->ctx->udp_proxy_count == 0 && allocations == 0 && sockets == 0);
+    test_wall_time_enabled = false;
+    for (int i = 0; i < 3; i++) close(peers[i]);
+    close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
 void test_udp_proxy_failures(const struct arguments *args, int kind) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
     struct sockaddr_storage server; socklen_t server_length;

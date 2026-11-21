@@ -23,6 +23,9 @@ public final class UdpProxyTest extends NativeTestSupport {
     @Test public void malformedHandshakesAuthAndEventFailuresStayClosed() { check("udpProxyBadHandshakes"); }
     @Test public void uidRecoveryCanSwitchProxyDirectAndBlockedRoutesSafely() { check("udpProxyUidRoutes"); }
     @Test public void associationAndPendingMemoryStayBounded() { check("udpProxyLimits"); }
+    @Test public void expiredAssociationsAreReclaimedBeforeRejectingNewFlows() { check("udpProxyExpiredCapacity"); }
+    @Test public void capacityReplacesOnlyTheOldestReadyIdleAssociation() { check("udpProxyIdleCapacity"); }
+    @Test public void failedAndBackwardClocksDoNotReclaimAssociations() { check("udpProxyCapacityClocks"); }
     @Test public void allocationProtectionAndEpollFailuresReleaseResources() { check("udpProxyAllocations"); }
     @Test public void handshakeTimesOutWithoutTrafficExtendingDeadline() { check("udpProxyTimeout"); }
     @Test public void refusedAuthenticationNeverFallsBackToDirect() { check("udpProxyRefused"); }
