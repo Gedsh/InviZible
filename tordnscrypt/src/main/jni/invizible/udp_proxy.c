@@ -98,16 +98,31 @@ void free_udp_proxy(struct ng_session *s) {
     }
 }
 
-static void log_failure(int uid, const char *reason, int error) {
+static void log_failure(struct context *ctx, int uid, const char *reason, int error) {
+    if (LOG_LEVEL > ANDROID_LOG_ERROR) return;
+    int64_t now = get_ms(), at = ctx->udp_proxy_failure_log_at;
+    // Share one window across owners and causes. Invalid clocks and readings
+    // before the last log bypass the budget so diagnostics can recover.
+    if (now >= 0 && now < at && at - now <= 1000) {
+        if (ctx->udp_proxy_failures_suppressed < UINT_MAX) ctx->udp_proxy_failures_suppressed++;
+        return;
+    }
+    ctx->udp_proxy_failure_log_at = now >= 0 && now <= INT64_MAX - 1000 ? now + 1000 : 0;
+    unsigned int count = ctx->udp_proxy_failures_suppressed;
+    ctx->udp_proxy_failures_suppressed = 0;
+    char suffix[64] = "";
+    if (count != 0)
+        snprintf(suffix, sizeof(suffix), " (%s%u further failures suppressed)",
+                 count == UINT_MAX ? "at least " : "", count);
     if (error != 0)
-        log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 uid %d: %s error %d: %s", uid, reason, error, strerror(error));
+        log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 uid %d: %s error %d: %s%s", uid, reason, error, strerror(error), suffix);
     else
-        log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 uid %d: %s", uid, reason);
+        log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 uid %d: %s%s", uid, reason, suffix);
 }
 
 static bool fail_proxy(const struct arguments *args, struct udp_proxy *p, const char *reason, int error) {
     if (p->owner->udp.state != UDP_ACTIVE) return false;
-    log_failure(p->owner->udp.uid, reason, error);
+    log_failure(p->ctx, p->owner->udp.uid, reason, error);
     write_connection_unreach(args, p->owner->udp.error_quote,
             p->owner->udp.error_quote_length,
             error == EACCES || error == EPERM || error == ECONNREFUSED ||
@@ -130,8 +145,8 @@ static int socket_error(int fd) {
     return getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &length) < 0 ? errno : error;
 }
 
-static int open_failure(struct ng_session *s, const char *reason, int error) {
-    log_failure(s->udp.uid, reason, error);
+static int open_failure(const struct arguments *args, struct ng_session *s, const char *reason, int error) {
+    log_failure(args->ctx, s->udp.uid, reason, error);
     free_udp_proxy(s);
     errno = error; // Cleanup must not replace the cause returned to the caller.
     return -1;
@@ -183,11 +198,11 @@ static void reclaim_capacity(const struct arguments *args, int64_t ms) {
 int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll_fd) {
     // Reject unusable settings before evicting another flow or opening sockets.
     if (proxy_socks5_port < 1 || proxy_socks5_port > UINT16_MAX)
-        return open_failure(s, "invalid proxy port", EINVAL);
+        return open_failure(args, s, "invalid proxy port", EINVAL);
     size_t ulen = strnlen(proxy_socks5_username, sizeof(proxy_socks5_username));
     size_t plen = strnlen(proxy_socks5_password, sizeof(proxy_socks5_password));
     if ((ulen == 0) != (plen == 0) || ulen > 127 || plen > 127)
-        return open_failure(s, "invalid username/password lengths", EINVAL);
+        return open_failure(args, s, "invalid username/password lengths", EINVAL);
     struct sockaddr_storage peer = {0};
     int family = strchr(proxy_socks5_addr, ':') == NULL ? AF_INET : AF_INET6;
     int valid;
@@ -203,7 +218,7 @@ int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll
         valid = inet_pton(AF_INET6, proxy_socks5_addr, &address->sin6_addr);
         length = sizeof(*address);
     }
-    if (valid != 1) return open_failure(s, "invalid proxy address", EINVAL);
+    if (valid != 1) return open_failure(args, s, "invalid proxy address", EINVAL);
     if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) {
         int64_t now = get_ms();
         reclaim_capacity(args, now);
@@ -218,7 +233,7 @@ int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll
         }
     }
     struct udp_proxy *p = ng_calloc(1, sizeof(*p), "udp proxy");
-    if (p == NULL) return open_failure(s, "cannot allocate association", ENOMEM);
+    if (p == NULL) return open_failure(args, s, "cannot allocate association", ENOMEM);
     p->owner = s; p->ctx = args->ctx; p->epoll_fd = epoll_fd;
     p->family = family; p->peer = peer;
     p->control.protocol = IPPROTO_UDP;
@@ -227,15 +242,15 @@ int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll
     p->control.socket = -1;
     s->udp.proxy = p;
     s->socket = protected_socket(args, p->family, SOCK_DGRAM, s->udp.uid);
-    if (s->socket < 0) return open_failure(s, "open protected relay socket", errno);
+    if (s->socket < 0) return open_failure(args, s, "open protected relay socket", errno);
     p->control.socket = protected_socket(args, p->family, SOCK_STREAM, s->udp.uid);
-    if (p->control.socket < 0) return open_failure(s, "open protected control socket", errno);
+    if (p->control.socket < 0) return open_failure(args, s, "open protected control socket", errno);
     int result = connect(p->control.socket, (struct sockaddr *) &p->peer, length);
     p->control.ev.events = EPOLLOUT | EPOLLERR | EPOLLRDHUP;
     p->control.ev.data.ptr = &p->control;
-    if (result < 0 && errno != EINPROGRESS) return open_failure(s, "control connect", errno);
+    if (result < 0 && errno != EINPROGRESS) return open_failure(args, s, "control connect", errno);
     if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, p->control.socket, &p->control.ev) < 0)
-        return open_failure(s, "monitor control socket", errno);
+        return open_failure(args, s, "monitor control socket", errno);
     p->counted = true; args->ctx->udp_proxy_count++;
     return s->socket;
 }

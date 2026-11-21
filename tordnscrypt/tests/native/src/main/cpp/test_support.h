@@ -132,6 +132,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind);
 void test_udp_proxy_failures(const struct arguments *args, int kind);
 void test_udp_proxy_capacity(const struct arguments *args, int kind);
 void test_udp_proxy_configuration(const struct arguments *args, int version);
+void test_udp_proxy_failure_logging(const struct arguments *args, int version);
 extern bool test_wall_time_enabled;
 extern time_t test_wall_time;
 void test_udp_proxy_bad_handshakes(const struct arguments *args);

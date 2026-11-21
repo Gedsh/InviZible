@@ -33,6 +33,8 @@ public final class UdpProxyTest extends NativeTestSupport {
     @Test public void invalidIpv4ConfigurationFailsBeforeAllocatingOrConnecting() { check("udpProxyConfiguration4"); }
     @Test public void invalidIpv6ConfigurationFailsBeforeAllocatingOrConnecting() { check("udpProxyConfiguration6"); }
     @Test public void invalidConfigurationDoesNotReclaimExistingAssociations() { check("udpProxyConfigurationCapacity"); }
+    @Test public void ipv4FailureLogsAreBoundedWithoutChangingCleanup() { check("udpProxyFailureLogging4"); }
+    @Test public void ipv6FailureLogsAreBoundedAndRecoverAfterClockChanges() { check("udpProxyFailureLogging6"); }
     @Test public void allocationProtectionAndEpollFailuresReleaseResources() { check("udpProxyAllocations"); }
     @Test public void handshakeTimesOutWithoutTrafficExtendingDeadline() { check("udpProxyTimeout"); }
     @Test public void refusedAuthenticationNeverFallsBackToDirect() { check("udpProxyRefused"); }

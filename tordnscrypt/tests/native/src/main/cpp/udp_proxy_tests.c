@@ -234,6 +234,7 @@ static const char *invalid_proxy_setting(int kind) {
 
 void test_udp_proxy_configuration(const struct arguments *args, int version) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
     int family = version == 4 ? AF_INET : AF_INET6;
     struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
     int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
@@ -244,6 +245,7 @@ void test_udp_proxy_configuration(const struct arguments *args, int version) {
     struct arguments running = *args; running.tun = tunnel[1];
     uint8_t packet[128], buffer[300]; size_t off = proxy_packet(packet, version, 12345);
     for (int bad = 0; bad < 12; bad++) {
+        test_monotonic_ms += 1000; // Inspect each independent validation diagnostic.
         setup_proxy(family, false, &server);
         const char *reason = invalid_proxy_setting(bad);
         fail_alloc_tag = "udp proxy"; fail_alloc_match = 1;
@@ -295,6 +297,7 @@ void test_udp_proxy_configuration(const struct arguments *args, int version) {
         assert(allocations == 0 && sockets == 0 && args->ctx->udp_proxy_count == 0);
     }
     close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+    test_monotonic_enabled = false;
 #endif
 }
 
@@ -582,9 +585,87 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
 #endif
 }
 
+void test_udp_proxy_failure_logging(const struct arguments *args, int version) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    int family = version == 4 ? AF_INET : AF_INET6;
+    struct sockaddr_storage server; socklen_t server_length;
+    int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
+    assert(listen(listener, 4) == 0);
+    int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    struct arguments running = *args; running.tun = tunnel[1];
+    struct ng_session candidate = {.socket = -1, .udp = {.uid = own_uid + 1}};
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
+    setup_proxy(family, false, &server); proxy_socks5_port = 0;
+    log_errno = EIO;
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == 1 && strstr(last_proxy_log, "invalid proxy port error 22") != NULL);
+    for (int i = 0; i < 100; i++) {
+        assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+        assert(proxy_logs == 1);
+    }
+    log_errno = 0;
+    // A suppressed handshake rejection still reports policy feedback and cleans up.
+    setup_proxy(family, false, &server);
+    uint8_t packet[128], buffer[32]; size_t off = proxy_packet(packet, version, 12345);
+    assert(handle_udp(&running, packet, off + 11, packet + off,
+                      test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+    struct ng_session *s = args->ctx->ng_session;
+    readable(listener); int peer = accept(listener, NULL, NULL); assert(peer >= 0);
+    pump_proxy(&running, epoll_fd); read_control(peer, buffer, 3);
+    const uint8_t rejected[] = {5, 0xff};
+    assert(send(peer, rejected, sizeof(rejected), MSG_NOSIGNAL) == sizeof(rejected));
+    pump_proxy(&running, epoll_fd);
+    assert(proxy_logs == 1 && s->udp.state == UDP_FINISHING && s->socket == -1);
+    assert(sockets == 0 && args->ctx->udp_proxy_count == 0);
+    proxy_feedback(tunnel[0], version, version == 4 ? ICMP_UNREACH_FILTER_PROHIB : ICMP6_DST_UNREACH_ADMIN,
+                   packet, off + 11);
+    clear(args->ctx); close(peer);
+    assert(allocations == 0 && sockets == 0);
+    proxy_socks5_port = 0; test_monotonic_ms = 10999;
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == 1);
+    test_monotonic_ms = 11000;
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == 2 && strstr(last_proxy_log, "102 further failures suppressed") != NULL);
+    // Different owners and causes share the budget; the next log shows its current cause.
+    candidate.udp.uid++;
+    setup_proxy(family, false, &server); strcpy(proxy_socks5_addr, "invalid");
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == 2);
+    test_monotonic_ms = 12000;
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == 3 && strstr(last_proxy_log, "invalid proxy address error 22") != NULL);
+    assert(strstr(last_proxy_log, "1 further failures suppressed") != NULL);
+    // Zero, failed and backward clocks cannot leave diagnostics permanently suppressed.
+    const int64_t clocks[] = {-1, 0, 10000, 9999, INT64_MAX - 500, INT64_MAX - 500};
+    for (size_t i = 0; i < sizeof(clocks) / sizeof(clocks[0]); i++) {
+        test_monotonic_ms = clocks[i]; int before = proxy_logs;
+        assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+        assert(proxy_logs == before + 1);
+    }
+    test_monotonic_ms = 1000;
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    args->ctx->udp_proxy_failures_suppressed = UINT_MAX - 1;
+    int before = proxy_logs;
+    for (int i = 0; i < 2; i++)
+        assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == before && args->ctx->udp_proxy_failures_suppressed == UINT_MAX);
+    test_monotonic_ms = 2000;
+    assert(open_udp_proxy(&running, &candidate, epoll_fd) == -1 && errno == EINVAL);
+    assert(proxy_logs == before + 1 && args->ctx->udp_proxy_failures_suppressed == 0);
+    assert(strstr(last_proxy_log, "at least ") != NULL);
+    test_monotonic_enabled = false;
+    close(listener); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+    assert(allocations == 0 && sockets == 0);
+#endif
+}
+
 void test_udp_proxy_bad_handshakes(const struct arguments *args) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
     for (int bad = 0; bad < 17; bad++) {
+        test_monotonic_ms += 1000;
         struct sockaddr_storage address; socklen_t address_length;
         int listener = local_socket(AF_INET, SOCK_STREAM, &address, &address_length);
         assert(listen(listener, 4) == 0);
@@ -643,13 +724,16 @@ void test_udp_proxy_bad_handshakes(const struct arguments *args) {
         close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
     }
+    test_monotonic_enabled = false;
 #endif
 }
 
 void test_udp_proxy_reset_replies(const struct arguments *args) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
     for (int version = 4; version <= 6; version += 2) {
         for (int kind = 0; kind < 10; kind++) {
+            test_monotonic_ms += 1000;
             int family = version == 4 ? AF_INET : AF_INET6;
             struct sockaddr_storage address; socklen_t address_length;
             int listener = local_socket(family, SOCK_STREAM, &address, &address_length);
@@ -720,6 +804,7 @@ void test_udp_proxy_reset_replies(const struct arguments *args) {
             assert(allocations == 0 && sockets == 0);
         }
     }
+    test_monotonic_enabled = false;
 #endif
 }
 
@@ -907,6 +992,7 @@ void test_udp_proxy_capacity(const struct arguments *args, int kind) {
         sessions[0]->udp.time = 940; // Eligible for eviction if validation happens too late.
         int before = allocations;
         for (int bad = 0; bad < 12; bad++) {
+            test_monotonic_ms += 1000;
             setup_proxy(AF_INET, false, &server);
             const char *reason = invalid_proxy_setting(bad);
             fail_alloc_tag = "udp proxy"; fail_alloc_match = 1;
@@ -1050,8 +1136,10 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
 
 void test_udp_proxy_socket_errors(const struct arguments *args) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
     for (int version = 4; version <= 6; version += 2) {
         for (int kind = 0; kind < 3; kind++) {
+            test_monotonic_ms += 1000;
             int family = version == 4 ? AF_INET : AF_INET6;
             struct sockaddr_storage server; socklen_t server_length;
             int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
@@ -1098,6 +1186,7 @@ void test_udp_proxy_socket_errors(const struct arguments *args) {
             connect_errno = 0;
         }
     }
+    test_monotonic_enabled = false;
 #endif
 }
 

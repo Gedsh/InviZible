@@ -197,6 +197,8 @@ struct context {
     unsigned int udp_proxy_count; // Only live external SOCKS5 UDP associations.
     int64_t udp_proxy_scan_at; // Next capacity scan after failure; zero means no cooldown.
     int64_t udp_proxy_limit_log_at; // Monotonic; checked only when admission fails.
+    int64_t udp_proxy_failure_log_at; // Shared failure-log budget, owned by the event thread.
+    unsigned int udp_proxy_failures_suppressed;
 };
 
 enum packet_buffer_kind { PACKET_INPUT, PACKET_OUTPUT, PACKET_BUFFER_COUNT };

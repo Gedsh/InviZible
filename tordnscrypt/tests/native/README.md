@@ -131,6 +131,23 @@ modes and verify socket/allocation balance. The burst regression fails against
 the previous single-datagram receive path.
 
 Proxy failures identify the failed operation and retain numeric socket errors.
+Failure diagnostics share one one-second monotonic budget per native context,
+across flows, owners and causes. The first failure is logged immediately; further
+failures in that window only increment a saturating counter. The next allowed
+failure log contains its current cause and the number of intervening failures
+suppressed (reported as a lower bound if the counter saturates). Intervening causes
+are not retained. The count is reported only when another failure occurs, with no
+timer, background work or allocation. Suppressed failures still send the existing
+bounded ICMP feedback and perform normal cleanup. Capacity-limit messages retain
+their separate budget. Invalid clock readings bypass throttling; overflow cannot
+create an indefinite window. Disabled ERROR logging skips the limiter as well.
+Two IPv4/IPv6 regressions cover repeated admission failures, suppressed real
+handshake rejection with unchanged feedback/cleanup, the 999/1000 ms boundary,
+sharing between owners and causes, suppression counts, clock recovery and counter
+saturation. They check errno preservation and socket/allocation balance. Existing
+diagnostic-specific fixtures advance a deterministic clock between independent
+cases so each cause remains observable. The burst regression fails against the
+previous unbounded logger.
 Method selection, username/password rejection and UDP ASSOCIATE replies include
 their protocol status codes; unsupported UDP ASSOCIATE is reported explicitly.
 A rejection followed immediately by control closure is read before handling EOF.
@@ -715,7 +732,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 346 tests plus the optional comparison test.
+The full run contains 348 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
