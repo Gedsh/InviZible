@@ -209,6 +209,26 @@ static size_t quoted_transport(const uint8_t *packet, size_t length, int *protoc
     return off + 8 <= length ? off : 0;
 }
 
+void write_udp_mtu(const struct arguments *args, const uint8_t *packet, size_t length,
+                   const uint8_t *payload, size_t payload_length, uint32_t max_payload) {
+    int protocol = 0;
+    size_t off = quoted_transport(packet, length, &protocol);
+    if (off == 0 || protocol != IPPROTO_UDP || payload == NULL) return;
+    size_t udp_length = read_net16(packet + off + 4);
+    size_t original = packet[0] >> 4 == 4 ? read_net16(packet + 2) : 40u + read_net16(packet + 4);
+    if (udp_length < 8 || off + udp_length != original || udp_length - 8 <= max_payload) return;
+    size_t compare = length - off - 8;
+    if (compare > udp_length - 8) compare = udp_length - 8;
+    if (compare > payload_length) compare = payload_length;
+    if (compare == 0 || memcmp(packet + off + 8, payload, compare) != 0) return;
+    if (off > UINT32_MAX - 8 || max_payload > UINT32_MAX - (uint32_t) off - 8) return;
+    uint32_t mtu = max_payload + (uint32_t) off + 8;
+    // IPv6 senders cannot reduce their PMTU below 1280. Do not invent a larger
+    // limit when SOCKS encapsulation leaves less room than that.
+    if ((packet[0] >> 4 == 6 && mtu < 1280) || (packet[0] >> 4 == 4 && mtu < 68)) return;
+    write_socket_error(args, packet, length, EMSGSIZE, mtu, false);
+}
+
 int forward_socket_errors(const struct arguments *args, int sock,
                           const uint8_t *packet, size_t length) {
     int result = -1;

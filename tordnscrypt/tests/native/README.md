@@ -91,7 +91,23 @@ the existing shared rate limit (burst 20, then one per 100 ms). Association-limi
 warnings are limited to once per second per context, without polling or timers.
 Known permission, refusal and network failures produce the corresponding ICMP
 unreachable code; failures without a suitable ICMP equivalent use host/no-route
-unreachable. Relay MTU handling remains a separate limitation.
+unreachable.
+
+Relay MTU errors keep both sockets and the association usable. UDP error queues
+are enabled only on the selected relay socket and drained at most eight entries
+per event. MTU feedback subtracts the relay's outer IP/UDP and SOCKS headers, then
+adds the original IP header (including options/extensions) and UDP header. Mapped
+IPv4 relay addresses use an IPv4 socket so framing and MTU accounting agree with
+the actual wire protocol. Only a matching SOCKS frame and bounded original-payload
+prefix can produce feedback for an asynchronous error. Synchronous EMSGSIZE can
+also use a known connected-socket route MTU when queued metadata is unavailable.
+The existing independent ICMP MTU rate budget applies.
+
+Missing, malformed, uncorrelated or unusable MTUs are consumed without guessing a
+size or closing the association. Translated IPv6 limits below 1280 are omitted;
+this does not implement fragmentation or a new path-MTU probing mechanism. These
+changes introduce no timers, background work or additional proxy allocations.
+Successful sends make no MTU queries; the direct UDP/ICMP error paths are unchanged.
 
 Regressions check all defined nonzero UDP ASSOCIATE reply codes and an unassigned
 code, rejection followed by closure, authentication rejection, synchronous and
@@ -101,6 +117,13 @@ IPv4/IPv6 packet, and socket/allocation balances are checked after failures.
 Combined readable/reset events cover complete and split rejections, truncated
 replies, method/authentication rejection, and successful replies with a pending
 error, including a success prefix read before reset.
+MTU regressions cover send, receive and epoll errors for both IP families and
+cross-family relays, mapped relay addresses, IP options/extensions, missing and
+malformed metadata, quote mismatch, queue-drain bounds, independent checksums,
+and successful forwarding after errors. A real IPv6 socket size limit with
+fragmentation disabled produces a kernel EMSGSIZE; feedback is checked if the
+kernel exposes a usable MTU, and smaller datagrams must still pass. This local
+test does not establish end-to-end PMTU discovery through an external proxy.
 
 Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
 cleanup list, with one additional link per record and no index allocations.
@@ -639,7 +662,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 332 tests plus the optional comparison test.
+The full run contains 336 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

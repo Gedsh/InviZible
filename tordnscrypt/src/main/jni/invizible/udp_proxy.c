@@ -19,6 +19,7 @@
 
 /* External SOCKS5 UDP associations. All state belongs to the VPN event thread. */
 #include "invizible.h"
+#include <linux/errqueue.h>
 
 extern int proxy_socks5_port;
 extern char proxy_socks5_addr[], proxy_socks5_username[], proxy_socks5_password[];
@@ -195,12 +196,82 @@ static size_t udp_header(const struct udp_session *s, uint8_t *header) {
     return 6 + address;
 }
 
+static void relay_mtu(const struct arguments *args, struct udp_proxy *p, uint32_t mtu,
+                      const uint8_t *payload, size_t length) {
+    size_t header = (p->family == AF_INET ? 20u : 40u) + 8u +
+                    (p->owner->udp.version == 4 ? 10u : 22u);
+    if (mtu <= header) return;
+    uint32_t limit = mtu - (uint32_t) header;
+    uint32_t transport_limit = (p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG) -
+                               (p->owner->udp.version == 4 ? 10u : 22u);
+    if (limit > transport_limit) limit = transport_limit;
+    write_udp_mtu(args, p->owner->udp.error_quote, p->owner->udp.error_quote_length,
+                  payload, length, limit);
+}
+
+// A non-NULL payload identifies a synchronous failed send. Other callers can
+// reflect queued MTU errors only when their SOCKS framing and payload match.
+static bool relay_errors(const struct arguments *args, struct udp_proxy *p,
+                         const uint8_t *payload, size_t length) {
+    uint32_t mtu = 0;
+    int version = p->family == AF_INET ? 4 : 6;
+    uint8_t expected[22]; size_t header = udp_header(&p->owner->udp, expected);
+    for (int i = 0; i < 8; i++) {
+        union {
+            struct cmsghdr alignment;
+            uint8_t bytes[CMSG_SPACE(sizeof(struct sock_extended_err) + sizeof(struct sockaddr_in6))];
+        } control;
+        uint8_t data[134]; // SOCKS header plus a bounded prefix of the original payload.
+        struct iovec iov = {.iov_base = data, .iov_len = sizeof(data)};
+        struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1,
+                .msg_control = control.bytes, .msg_controllen = sizeof(control.bytes)};
+        ssize_t bytes = recvmsg(p->owner->socket, &message, MSG_ERRQUEUE | MSG_DONTWAIT);
+        if (bytes < 0) {
+            if (errno == EINTR) continue;
+            break;
+        }
+        if (message.msg_flags & MSG_CTRUNC) continue;
+        for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&message); cmsg != NULL; cmsg = CMSG_NXTHDR(&message, cmsg)) {
+            size_t available = message.msg_controllen - (size_t) ((uint8_t *) cmsg - control.bytes);
+            if (cmsg->cmsg_level != (version == 4 ? IPPROTO_IP : IPPROTO_IPV6) ||
+                cmsg->cmsg_type != (version == 4 ? IP_RECVERR : IPV6_RECVERR) ||
+                cmsg->cmsg_len < CMSG_LEN(sizeof(struct sock_extended_err)) || cmsg->cmsg_len > available) continue;
+            struct sock_extended_err error; memcpy(&error, CMSG_DATA(cmsg), sizeof(error));
+            if (error.ee_origin != SO_EE_ORIGIN_LOCAL &&
+                error.ee_origin != (version == 4 ? SO_EE_ORIGIN_ICMP : SO_EE_ORIGIN_ICMP6)) continue;
+            if (error.ee_errno == 0) continue;
+            if (error.ee_errno != EMSGSIZE) return fail_proxy(args, p, "relay socket", (int) error.ee_errno);
+            if (payload != NULL) {
+                if (error.ee_info != 0 && (mtu == 0 || error.ee_info < mtu)) mtu = error.ee_info;
+            } else if ((size_t) bytes > header && memcmp(data, expected, header) == 0) {
+                relay_mtu(args, p, error.ee_info, data + header, (size_t) bytes - header);
+            }
+        }
+    }
+    int error = socket_error(p->owner->socket);
+    if (error != 0 && error != EMSGSIZE) return fail_proxy(args, p, "relay socket", error);
+    if (payload != NULL) {
+        if (mtu == 0) {
+            int value = 0; socklen_t size = sizeof(value);
+            if (getsockopt(p->owner->socket, version == 4 ? IPPROTO_IP : IPPROTO_IPV6,
+                           version == 4 ? IP_MTU : IPV6_MTU, &value, &size) == 0 && value > 0)
+                mtu = (uint32_t) value;
+        }
+        relay_mtu(args, p, mtu, payload, length);
+    }
+    return true;
+}
+
 int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uint8_t *data, size_t length) {
     struct udp_proxy *p = s->udp.proxy;
     size_t overhead = s->udp.version == 4 ? 10 : 22;
     size_t wire_max = p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG;
-    if (length > wire_max - overhead || length > (s->udp.version == 4 ? UDP4_MAXMSG : UDP6_MAXMSG))
+    if (length > wire_max - overhead || length > (s->udp.version == 4 ? UDP4_MAXMSG : UDP6_MAXMSG)) {
+        if (p->stage == PROXY_READY)
+            write_udp_mtu(args, s->udp.error_quote, s->udp.error_quote_length, data, length,
+                          (uint32_t) (wire_max - overhead));
         return 0;
+    }
     if (p->stage != PROXY_READY) {
         if (p->pending_count == PROXY_PENDING_PACKETS || length > PROXY_PENDING_BYTES - p->pending_bytes)
             return 0; // Keep the oldest datagrams in order; discard new overflow.
@@ -218,7 +289,8 @@ int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uin
     struct msghdr message = {.msg_iov = iov, .msg_iovlen = 2};
     ssize_t sent = sendmsg(s->socket, &message, MSG_NOSIGNAL);
     if (sent == (ssize_t) (header_length + length)) { s->udp.sent += length; return 1; }
-    if (sent < 0 && (errno == EAGAIN || errno == EINTR || errno == EMSGSIZE)) return 0;
+    if (sent < 0 && errno == EMSGSIZE) { relay_errors(args, p, data, length); return 0; }
+    if (sent < 0 && (errno == EAGAIN || errno == EINTR)) return 0;
     fail_proxy(args, p, "relay send", sent < 0 ? errno : EIO);
     return 0;
 }
@@ -246,6 +318,13 @@ static bool finish_associate(const struct arguments *args, struct udp_proxy *p) 
         if (IN6_IS_ADDR_UNSPECIFIED(&a->sin6_addr))
             return fail_proxy(args, p, "unusable wildcard relay address", EPROTO);
         length = sizeof(*a);
+        if (IN6_IS_ADDR_V4MAPPED(&a->sin6_addr)) {
+            // A mapped endpoint uses IPv4 on the wire, including for MTU/error accounting.
+            struct sockaddr_in mapped = {.sin_family = AF_INET, .sin_port = a->sin6_port};
+            memcpy(&mapped.sin_addr, &a->sin6_addr.s6_addr[12], 4);
+            memset(&relay, 0, sizeof(relay)); memcpy(&relay, &mapped, sizeof(mapped));
+            family = AF_INET; length = sizeof(mapped);
+        }
     } else return fail_proxy(args, p, "unsupported relay address type", EAFNOSUPPORT);
     if (family != p->family) {
         int fd = protected_socket(args, family, SOCK_DGRAM, p->owner->udp.uid);
@@ -253,6 +332,7 @@ static bool finish_associate(const struct arguments *args, struct udp_proxy *p) 
         close(p->owner->socket); p->owner->socket = fd; p->family = family;
     }
     // Connected UDP rejects packets from anyone except the negotiated relay.
+    enable_socket_errors(p->owner->socket, family == AF_INET ? 4 : 6);
     if (connect(p->owner->socket, (struct sockaddr *) &relay, length) < 0)
         return fail_proxy(args, p, "relay connect", errno);
     struct ng_session *s = p->owner;
@@ -392,9 +472,8 @@ void check_udp_proxy(const struct arguments *args, struct ng_session *event_sess
     struct ng_session *s = p->owner;
     if (s->udp.state != UDP_ACTIVE || s->socket < 0) { close_udp_proxy(s); return; }
     if (event_session == &p->control) { control_event(args, p, event->events); return; }
-    if (event->events & (EPOLLERR | EPOLLHUP)) {
-        fail_proxy(args, p, "relay socket", socket_error(s->socket)); return;
-    }
+    if ((event->events & EPOLLERR) && !relay_errors(args, p, NULL, 0)) return;
+    if (event->events & EPOLLHUP) { fail_proxy(args, p, "relay socket closed", 0); return; }
     if (!(event->events & EPOLLIN)) return;
     size_t max = p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG;
     uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, max, "udp proxy recv");
@@ -403,7 +482,8 @@ void check_udp_proxy(const struct arguments *args, struct ng_session *event_sess
     struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
     ssize_t bytes = recvmsg(s->socket, &message, 0);
     if (bytes < 0) {
-        if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "relay receive", errno);
+        if (errno == EMSGSIZE) relay_errors(args, p, NULL, 0);
+        else if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "relay receive", errno);
     } else if (!(message.msg_flags & MSG_TRUNC) && bytes >= 4 &&
                buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0) {
         size_t address = buffer[3] == 1 ? 4 : buffer[3] == 4 ? 16 : 0;

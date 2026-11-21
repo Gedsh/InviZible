@@ -52,6 +52,7 @@ extern int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 extern char last_log[2048];
 extern char last_proxy_log[2048];
 extern int proxy_logs;
+extern int socket_mtu_fd, socket_mtu_value;
 extern int log_errno, log_result;
 extern bool test_monotonic_enabled;
 extern long long test_monotonic_ms;

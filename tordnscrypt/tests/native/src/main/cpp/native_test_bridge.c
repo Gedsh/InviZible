@@ -45,6 +45,14 @@ static const char *run_case(const char *id) {
         test_udp_proxy_socket_errors(&args);
     else if (strcmp(id, "udpProxyResetReplies") == 0)
         test_udp_proxy_reset_replies(&args);
+    else if (strcmp(id, "udpProxyMtu4") == 0)
+        test_udp_proxy_round_trip(&args, 7);
+    else if (strcmp(id, "udpProxyMtu6") == 0)
+        test_udp_proxy_round_trip(&args, 8);
+    else if (strcmp(id, "udpProxyMtu6over4") == 0)
+        test_udp_proxy_round_trip(&args, 9);
+    else if (strcmp(id, "udpProxyMtu4over6") == 0)
+        test_udp_proxy_round_trip(&args, 10);
     else if (strcmp(id, "udpProxyBadHandshakes") == 0)
         test_udp_proxy_bad_handshakes(&args);
     else if (strcmp(id, "udpProxyUidRoutes") == 0)

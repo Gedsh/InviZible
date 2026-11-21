@@ -17,6 +17,7 @@ int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
 char last_proxy_log[2048];
 int proxy_logs;
+int socket_mtu_fd = -1, socket_mtu_value;
 int log_errno, log_result;
 int address_formats;
 bool count_memory_comparisons;
@@ -75,6 +76,13 @@ ssize_t __wrap_recvmsg(int fd, struct msghdr *message, int flags) {
 
 int __real_getsockopt(int fd, int level, int option, void *value, socklen_t *length);
 int __wrap_getsockopt(int fd, int level, int option, void *value, socklen_t *length) {
+    if (fd == socket_mtu_fd && ((level == IPPROTO_IP && option == IP_MTU) ||
+                               (level == IPPROTO_IPV6 && option == IPV6_MTU))) {
+        if (socket_mtu_value < 0) { errno = ENOPROTOOPT; return -1; }
+        assert(*length >= sizeof(int));
+        *(int *) value = socket_mtu_value; *length = sizeof(int);
+        return 0;
+    }
     if (fd == socket_error_fd && level == SOL_SOCKET && option == SO_ERROR) {
         assert(*length >= sizeof(int));
         *(int *) value = socket_error_value;
@@ -725,6 +733,7 @@ void reset_test_state(void) {
     recv_error_value = 0;
     socket_error_fd = -1;
     socket_error_value = 0;
+    socket_mtu_fd = -1; socket_mtu_value = 0;
     count_memory_comparisons = false;
     memory_comparisons = 0;
     test_monotonic_enabled = false;

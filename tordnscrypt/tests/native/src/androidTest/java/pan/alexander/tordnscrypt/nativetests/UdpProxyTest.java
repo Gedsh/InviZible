@@ -16,6 +16,10 @@ public final class UdpProxyTest extends NativeTestSupport {
     @Test public void relayReceiveFailureReportsItsActualCause() { check("udpProxyReceiveError"); }
     @Test public void controlSocketErrorsPreserveCauseAndReportOnce() { check("udpProxySocketErrors"); }
     @Test public void bufferedRejectionsTakePrecedenceOverControlReset() { check("udpProxyResetReplies"); }
+    @Test public void ipv4MtuErrorsKeepAssociationUsable() { check("udpProxyMtu4"); }
+    @Test public void ipv6MtuErrorsKeepAssociationUsable() { check("udpProxyMtu6"); }
+    @Test public void ipv6MtuThroughIpv4RelayAccountsForFraming() { check("udpProxyMtu6over4"); }
+    @Test public void ipv4MtuThroughIpv6RelayAndRealKernelError() { check("udpProxyMtu4over6"); }
     @Test public void malformedHandshakesAuthAndEventFailuresStayClosed() { check("udpProxyBadHandshakes"); }
     @Test public void uidRecoveryCanSwitchProxyDirectAndBlockedRoutesSafely() { check("udpProxyUidRoutes"); }
     @Test public void associationAndPendingMemoryStayBounded() { check("udpProxyLimits"); }

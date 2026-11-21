@@ -709,6 +709,9 @@ void write_connection_unreach(const struct arguments *args,
                               const uint8_t *packet, size_t length, int serr);
 
 void enable_socket_errors(int sock, int version);
+// Match a quoted UDP payload prefix before advertising its usable payload limit.
+void write_udp_mtu(const struct arguments *args, const uint8_t *packet, size_t length,
+                   const uint8_t *payload, size_t payload_length, uint32_t max_payload);
 // -1: no queued error; 0: only recoverable errors; 1: a fatal error was consumed.
 int forward_socket_errors(const struct arguments *args, int sock,
                           const uint8_t *packet, size_t length);

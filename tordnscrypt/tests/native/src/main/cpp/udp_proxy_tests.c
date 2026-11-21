@@ -2,19 +2,61 @@
 
 ssize_t __real_sendmsg(int, const struct msghdr *, int);
 static int fail_relay_send;
+static int relay_send_error = EHOSTUNREACH;
+static int last_relay_errno;
 ssize_t __wrap_sendmsg(int fd, const struct msghdr *message, int flags) {
     if (fail_relay_send > 0 && --fail_relay_send == 0) {
-        errno = EHOSTUNREACH;
+        errno = relay_send_error;
         return -1;
     }
-    return __real_sendmsg(fd, message, flags);
+    ssize_t result = __real_sendmsg(fd, message, flags);
+    last_relay_errno = result < 0 ? errno : 0;
+    return result;
 }
 
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+#include <linux/errqueue.h>
 extern char proxy_socks5_addr[], proxy_socks5_username[], proxy_socks5_password[];
 extern int proxy_socks5_port;
 int __real_socket(int, int, int);
 static struct allowed proxy_route = {.udp_proxy = true};
+static struct {
+    int fd, version, remaining, calls, mode, error;
+    uint32_t mtu;
+    uint8_t wire[134];
+    size_t length;
+} mtu_error;
+
+static ssize_t receive_mtu_error(int fd, struct msghdr *message, int flags) {
+    assert(fd == mtu_error.fd && (flags & MSG_DONTWAIT));
+    mtu_error.calls++;
+    if (mtu_error.remaining == 0) { errno = EAGAIN; return -1; }
+    mtu_error.remaining--;
+    assert(message->msg_iov[0].iov_len >= mtu_error.length);
+    memcpy(message->msg_iov[0].iov_base, mtu_error.wire, mtu_error.length);
+    assert(message->msg_controllen >= CMSG_SPACE(sizeof(struct sock_extended_err)));
+    message->msg_controllen = CMSG_SPACE(sizeof(struct sock_extended_err));
+    struct cmsghdr *cmsg = CMSG_FIRSTHDR(message);
+    cmsg->cmsg_level = mtu_error.version == 4 ? IPPROTO_IP : IPPROTO_IPV6;
+    cmsg->cmsg_type = mtu_error.version == 4 ? IP_RECVERR : IPV6_RECVERR;
+    cmsg->cmsg_len = CMSG_LEN(sizeof(struct sock_extended_err)) - (mtu_error.mode == 2 ? 1 : 0);
+    struct sock_extended_err error = {.ee_errno = (uint32_t) mtu_error.error, .ee_info = mtu_error.mtu,
+            .ee_origin = mtu_error.mode == 3 ? SO_EE_ORIGIN_TIMESTAMPING :
+                         mtu_error.mode == 4 ? SO_EE_ORIGIN_LOCAL :
+                         mtu_error.version == 4 ? SO_EE_ORIGIN_ICMP : SO_EE_ORIGIN_ICMP6};
+    memcpy(CMSG_DATA(cmsg), &error, sizeof(error));
+    message->msg_flags = mtu_error.mode == 1 ? MSG_CTRUNC : MSG_TRUNC;
+    return (ssize_t) mtu_error.length;
+}
+
+static void queue_mtu(int fd, int version, const uint8_t *wire, size_t length, uint32_t mtu) {
+    memset(&mtu_error, 0, sizeof(mtu_error));
+    mtu_error.fd = fd; mtu_error.version = version; mtu_error.mtu = mtu; mtu_error.remaining = 1;
+    mtu_error.error = EMSGSIZE;
+    mtu_error.length = length < sizeof(mtu_error.wire) ? length : sizeof(mtu_error.wire);
+    if (mtu_error.length != 0) memcpy(mtu_error.wire, wire, mtu_error.length);
+    error_queue_recv = receive_mtu_error;
+}
 ssize_t __real_recvmsg(int, struct msghdr *, int);
 static ssize_t truncated_relay_receive(int fd, struct msghdr *message, int flags) {
     // Exercise a real kernel MSG_TRUNC without allocating oversized UDP packets.
@@ -87,13 +129,127 @@ static void proxy_feedback(int fd, int version, int code, const uint8_t *packet,
     assert(memcmp(reply + header + 8, packet, length) == 0);
     assert(!is_readable(fd)); // One failure must produce only one report.
 }
+
+static void mtu_feedback(int fd, int version, const uint8_t *packet, uint32_t mtu) {
+    uint8_t reply[2048], expected[2048];
+    size_t header = version == 4 ? 20 : 40;
+    size_t size = tun_packet(fd, reply, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+    assert(size == header + 8 + 112);
+    assert(reply[header] == (version == 4 ? ICMP_UNREACH : ICMP6_PACKET_TOO_BIG));
+    assert(reply[header + 1] == (version == 4 ? ICMP_UNREACH_NEEDFRAG : 0));
+    uint32_t reported = load16(reply + header + 6);
+    if (version == 6) reported |= (uint32_t) load16(reply + header + 4) << 16;
+    assert(reported == mtu);
+    assert(memcmp(reply + header + 8, packet, 112) == 0);
+    memcpy(expected, reply, size);
+    packet_checksums(expected, size, header, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6);
+    assert(memcmp(reply, expected, size) == 0 && !is_readable(fd));
+}
+
+static void proxy_mtu_checks(const struct arguments *args, struct ng_session *s, int epoll_fd,
+                             int relay, int tunnel, int family) {
+    int version = s->udp.version;
+    uint8_t packet[1600], wire[2048];
+    size_t base = version == 4 ? 20 : 40, extra = version == 4 ? 4 : 8;
+    size_t off = base + extra, payload = 1500 - off - 8;
+    ip_header(packet, version, IPPROTO_UDP, 1500 - base, version == 4 ? "192.0.2.5" : "2001:db8::5");
+    memset(packet + base, 0, extra);
+    if (version == 4) packet[0] = 0x46;
+    else { packet[6] = IPPROTO_HOPOPTS; packet[base] = IPPROTO_UDP; }
+    store16(packet + off, 12345); store16(packet + off + 2, 5000); store16(packet + off + 4, (uint16_t) (payload + 8));
+    memset(packet + off + 8, 0x5a, payload);
+    packet_checksums(packet, 1500, off, IPPROTO_UDP);
+    uint32_t expected_mtu = 1400 - (family == AF_INET ? 28u : 48u) - (version == 4 ? 10u : 22u) + (uint32_t) off + 8;
+    socket_mtu_fd = socket_error_fd = s->socket;
+    socket_mtu_value = 1400; socket_error_value = EMSGSIZE;
+    uint64_t sent = s->udp.sent;
+    queue_mtu(s->socket, family == AF_INET ? 4 : 6, NULL, 0, 1400);
+    mtu_error.mode = 4; // Local synchronous errors may quote no UDP payload.
+    fail_relay_send = 1; relay_send_error = EMSGSIZE;
+    assert(handle_udp(args, packet, 1500, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+    assert(s->udp.state == UDP_ACTIVE && s->udp.sent == sent && sockets == 2);
+    mtu_feedback(tunnel, version, packet, expected_mtu);
+    assert(handle_udp(args, packet, 1500, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+    readable(relay); ssize_t wire_length = recv(relay, wire, sizeof(wire), 0); assert(wire_length > 134);
+    struct epoll_event event = {.events = EPOLLERR, .data.ptr = s};
+    queue_mtu(s->socket, family == AF_INET ? 4 : 6, wire, (size_t) wire_length, 1400);
+    check_udp_socket(args, &event);
+    mtu_feedback(tunnel, version, packet, expected_mtu);
+    queue_mtu(s->socket, family == AF_INET ? 4 : 6, wire, (size_t) wire_length, 1400);
+    recv_error_fd = s->socket; recv_error_value = EMSGSIZE; event.events = EPOLLIN;
+    check_udp_socket(args, &event);
+    mtu_feedback(tunnel, version, packet, expected_mtu);
+    for (int mode = 0; mode < 10; mode++) {
+        queue_mtu(s->socket, family == AF_INET ? 4 : 6, wire, (size_t) wire_length, mode == 0 ? 0 : mode == 9 ? 60 : 1400);
+        if (mode >= 1 && mode <= 3) mtu_error.mode = mode;
+        if (mode == 4) mtu_error.wire[2] = 1; // SOCKS fragmentation cannot identify this datagram.
+        if (mode == 5) mtu_error.wire[version == 4 ? 10 : 22] ^= 1;
+        if (mode == 6) mtu_error.length = 3;
+        if (mode == 7) mtu_error.mtu = 9000; // The original packet fits already.
+        uint16_t quote = s->udp.error_quote_length;
+        if (mode == 8) s->udp.error_quote_length = (uint16_t) (off + 7);
+        event.events = EPOLLERR;
+        check_udp_socket(args, &event);
+        s->udp.error_quote_length = quote;
+        assert(!is_readable(tunnel) && s->udp.state == UDP_ACTIVE && sockets == 2);
+    }
+    // Recover without usable MTU metadata, including older-kernel option failures.
+    for (int value = -1; value <= 0; value++) {
+        queue_mtu(s->socket, family == AF_INET ? 4 : 6, NULL, 0, 0); mtu_error.remaining = 0;
+        socket_mtu_value = value; fail_relay_send = 1;
+        assert(handle_udp(args, packet, 1500, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        assert(!is_readable(tunnel) && s->udp.state == UDP_ACTIVE);
+    }
+    // Fallback to the connected socket's known route MTU after a synchronous error.
+    socket_mtu_value = 1400; fail_relay_send = 1;
+    assert(handle_udp(args, packet, 1500, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+    mtu_feedback(tunnel, version, packet, expected_mtu);
+    queue_mtu(s->socket, family == AF_INET ? 4 : 6, wire, (size_t) wire_length, 1400);
+    mtu_error.remaining = 9; event.events = EPOLLERR;
+    check_udp_socket(args, &event);
+    assert(mtu_error.calls == 8 && mtu_error.remaining == 1);
+    int reports = 0;
+    while (is_readable(tunnel)) { uint8_t reply[2048]; tun_packet(tunnel, reply, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6); reports++; }
+    assert(reports == 8);
+    check_udp_socket(args, &event);
+    mtu_feedback(tunnel, version, packet, expected_mtu);
+    if (version == 6) {
+        uint32_t outside = 1280 + (family == AF_INET ? 28u : 48u) + 22u - (uint32_t) off - 8;
+        queue_mtu(s->socket, family == AF_INET ? 4 : 6, wire, (size_t) wire_length, outside - 1);
+        check_udp_socket(args, &event);
+        assert(!is_readable(tunnel) && s->udp.state == UDP_ACTIVE);
+        queue_mtu(s->socket, family == AF_INET ? 4 : 6, wire, (size_t) wire_length, outside);
+        check_udp_socket(args, &event);
+        mtu_feedback(tunnel, version, packet, 1280);
+    }
+    error_queue_recv = NULL; socket_error_fd = socket_mtu_fd = -1;
+    relay_send_error = EHOSTUNREACH;
+    if (version == 4 && family == AF_INET6) {
+        int mtu = 1280, discovery = IPV6_PMTUDISC_DO, dont_fragment = 1;
+        assert(setsockopt(s->socket, IPPROTO_IPV6, IPV6_MTU, &mtu, sizeof(mtu)) == 0);
+        assert(setsockopt(s->socket, IPPROTO_IPV6, IPV6_MTU_DISCOVER, &discovery, sizeof(discovery)) == 0);
+        assert(setsockopt(s->socket, IPPROTO_IPV6, IPV6_DONTFRAG, &dont_fragment, sizeof(dont_fragment)) == 0);
+        assert(handle_udp(args, packet, 1500, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        assert(last_relay_errno == EMSGSIZE && s->udp.state == UDP_ACTIVE && sockets == 2);
+        // Some older kernels return no error-queue entry and expose only the
+        // route MTU, not this per-socket limit. Feedback then must be omitted.
+        if (is_readable(tunnel)) mtu_feedback(tunnel, version, packet, expected_mtu - 120);
+    }
+    // A smaller datagram must still pass through the same association.
+    size_t small = off + 8 + 1200;
+    store16(packet + (version == 4 ? 2 : 4), (uint16_t) (small - (version == 4 ? 0 : 40)));
+    store16(packet + off + 4, 1208); packet_checksums(packet, small, off, IPPROTO_UDP);
+    assert(handle_udp(args, packet, small, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+    readable(relay); assert(recv(relay, wire, sizeof(wire), 0) == 1200 + (version == 4 ? 10 : 22));
+    assert(s->udp.state == UDP_ACTIVE && sockets == 2 && args->ctx->udp_proxy_count == 1);
+}
 #endif
 
 void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
-    int version = kind == 0 || kind == 3 ? 4 : 6;
-    int family = kind == 1 ? AF_INET6 : AF_INET;
-    int relay_family = kind == 3 ? AF_INET6 : family;
+    int version = kind == 0 || kind == 3 || kind == 7 || kind == 10 ? 4 : 6;
+    int family = kind == 1 || kind == 8 ? AF_INET6 : AF_INET;
+    int relay_family = kind == 3 || kind == 10 ? AF_INET6 : family;
     bool auth = kind != 0;
     struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
     int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
@@ -138,9 +294,13 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     pump_proxy(&running, epoll_fd); read_control(control, buffer, 10);
     const uint8_t associate[] = {5, 3, 0, 1, 0, 0, 0, 0, 0, 0};
     assert(memcmp(buffer, associate, sizeof(associate)) == 0);
-    uint8_t accepted[22] = {5, 0, 0, relay_family == AF_INET ? 1 : 4};
-    size_t header = relay_family == AF_INET ? 10 : 22;
-    if (relay_family != family)
+    bool mapped = kind == 9;
+    uint8_t accepted[22] = {5, 0, 0, relay_family == AF_INET && !mapped ? 1 : 4};
+    size_t header = relay_family == AF_INET && !mapped ? 10 : 22;
+    if (mapped) {
+        accepted[14] = accepted[15] = 0xff;
+        memcpy(accepted + 16, &((struct sockaddr_in *) &relay_address)->sin_addr, 4);
+    } else if (relay_family != family)
         memcpy(accepted + 4, &((struct sockaddr_in6 *) &relay_address)->sin6_addr, 16);
     // Wildcard relay IP must use the control peer's IP, never INADDR_ANY as an egress route.
     uint16_t port = relay_family == AF_INET ? ((struct sockaddr_in *) &relay_address)->sin_port :
@@ -213,14 +373,17 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     assert(sendto(relay, buffer, (size_t) bytes, 0, (struct sockaddr *) &client, client_length) == bytes);
     pump_proxy(&running, epoll_fd);
     assert(tun_packet(tunnel[0], buffer, version, IPPROTO_UDP) == off + 8);
-    if (kind >= 5) {
+    if (kind >= 7) proxy_mtu_checks(&running, s, epoll_fd, relay, tunnel[0], relay_family);
+    if (kind == 5 || kind == 6) {
         struct epoll_event event = {.events = kind == 5 ? EPOLLERR : EPOLLIN, .data.ptr = s};
         if (kind == 5) {
             socket_error_fd = s->socket; socket_error_value = ENETUNREACH;
+            queue_mtu(s->socket, 4, NULL, 0, 0); mtu_error.error = ENETUNREACH;
         } else {
             recv_error_fd = s->socket; recv_error_value = ECONNREFUSED;
         }
         check_udp_socket(&running, &event);
+        error_queue_recv = NULL;
         assert(strstr(last_proxy_log, kind == 5 ? "relay socket error 101" : "relay receive error 111") != NULL);
         assert(s->udp.state == UDP_FINISHING && sockets == 0 && args->ctx->udp_proxy_count == 0);
         proxy_feedback(tunnel[0], version, kind == 5 ? 0 : 4, packet, off + 11);
@@ -229,7 +392,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
         socket_error_fd = -1;
     }
     close(control); // Closing the TCP association must also close the UDP relay socket.
-    if (kind < 5) pump_proxy(&running, epoll_fd);
+    if (kind < 5 || kind >= 7) pump_proxy(&running, epoll_fd);
     assert(s->udp.state == UDP_FINISHING && s->socket == -1 && args->ctx->udp_proxy_count == 0);
     assert(sockets == 0);
     clear(args->ctx); clear_packet_buffers(&buffers);
