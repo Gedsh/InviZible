@@ -195,6 +195,7 @@ struct context {
     // Event-thread owned; MTU feedback has an independent budget.
     struct icmp_error_budget icmp_errors[2];
     unsigned int udp_proxy_count; // Only live external SOCKS5 UDP associations.
+    int64_t udp_proxy_scan_at; // Next capacity scan after failure; zero means no cooldown.
     int64_t udp_proxy_limit_log_at; // Monotonic; checked only when admission fails.
 };
 

@@ -30,6 +30,7 @@ enum udp_proxy_stage { PROXY_CONNECT, PROXY_SEND_HELLO, PROXY_HELLO,
 #define PROXY_PENDING_PACKETS 4
 #define PROXY_PENDING_BYTES (64u * 1024u)
 #define PROXY_PRESSURE_IDLE 60 // seconds; only ready associations at capacity.
+#define PROXY_CAPACITY_RETRY_MS 100
 
 struct udp_proxy {
     // An unindexed event endpoint, retained until its owner is freed so queued
@@ -84,6 +85,7 @@ void close_udp_proxy(struct ng_session *s) {
     p->pending_count = p->pending_bytes = 0;
     if (p->counted) {
         p->ctx->udp_proxy_count--;
+        p->ctx->udp_proxy_scan_at = 0;
         p->counted = false;
     }
 }
@@ -140,7 +142,12 @@ static bool watch_control(struct udp_proxy *p, uint32_t events) {
     return epoll_ctl(p->epoll_fd, EPOLL_CTL_MOD, p->control.socket, &p->control.ev) == 0;
 }
 
-static void reclaim_capacity(const struct arguments *args) {
+static void reclaim_capacity(const struct arguments *args, int64_t ms) {
+    int64_t at = args->ctx->udp_proxy_scan_at;
+    // A deadline more than one interval ahead means time predates the last scan.
+    // Such readings and clock failures bypass throttling.
+    if (ms >= 0 && ms < at && at - ms <= PROXY_CAPACITY_RETRY_MS) return;
+    args->ctx->udp_proxy_scan_at = 0;
     time_t now = time(NULL);
     if (now == (time_t) -1) return;
     struct ng_session *oldest = NULL;
@@ -166,21 +173,26 @@ static void reclaim_capacity(const struct arguments *args) {
         close_udp_proxy(oldest);
         unindex_session(args->ctx, oldest);
     }
+    if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX &&
+        ms >= 0 && ms <= INT64_MAX - PROXY_CAPACITY_RETRY_MS)
+        args->ctx->udp_proxy_scan_at = ms + PROXY_CAPACITY_RETRY_MS;
     // Retain records until normal cleanup: epoll may already hold their events.
     // Unindex them so later traffic can negotiate a fresh association immediately.
 }
 
 int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll_fd) {
-    if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) reclaim_capacity(args);
     if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) {
         int64_t now = get_ms();
-        if (now >= 0 && now >= args->ctx->udp_proxy_limit_log_at) {
-            log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 association limit reached (%u/%d); dropping new flows",
-                        args->ctx->udp_proxy_count, UDP_PROXY_MAX);
-            args->ctx->udp_proxy_limit_log_at = now + 1000;
+        reclaim_capacity(args, now);
+        if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) {
+            if (now >= 0 && now >= args->ctx->udp_proxy_limit_log_at) {
+                log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 association limit reached (%u/%d); dropping new flows",
+                            args->ctx->udp_proxy_count, UDP_PROXY_MAX);
+                args->ctx->udp_proxy_limit_log_at = now + 1000;
+            }
+            errno = ENOBUFS;
+            return -1;
         }
-        errno = ENOBUFS;
-        return -1;
     }
     struct udp_proxy *p = ng_calloc(1, sizeof(*p), "udp proxy");
     if (p == NULL) return open_failure(s, "cannot allocate association", ENOMEM);

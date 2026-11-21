@@ -42,6 +42,12 @@ Association state is allocated only on demand, with at most 16 live associations
 Only when admission reaches that limit, one session-list scan closes expired proxy
 associations using their unscaled ordinary timeout (20 seconds during negotiation).
 If still full, it closes the oldest ready association idle for at least 60 seconds.
+An unsuccessful scan starts a 100 ms monotonic cooldown: further full-capacity
+admissions are rejected without rescanning until that deadline. Rejections do not
+extend it. Successful reclamation starts no cooldown; closing any live association
+clears it, and spare slots remain immediately usable. The check runs only during
+proxy admission and adds no timer or wake-up. Failed clock reads or readings before
+the last scan bypass throttling; unrepresentable deadlines are omitted.
 Recent traffic and unexpired handshakes remain protected; otherwise the new flow is
 rejected with the existing bounded feedback. Reclaimed records leave the lookup
 index so later traffic can reopen immediately, but remain until normal cleanup so
@@ -88,6 +94,11 @@ the oldest eligible ready flow, the exact 59/60-second boundary, spare capacity,
 recent traffic and pending handshakes, failed/backward clocks, failed allocation
 after reclamation, stale relay/control events, surviving relay traffic and complete
 socket/allocation cleanup.
+Two additional capacity regressions cover burst rejection, the 99/100 ms boundary,
+successive successful reclamations, immediate use of freed slots, invalidation
+after closure, monotonic zero/failure/backward readings and deadline overflow.
+They retain the real socket and allocation-balance checks; the cooldown regression
+fails against the earlier unthrottled admission path.
 JNI fault injection checks the explicit route flag, pending exceptions and
 disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
 UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
@@ -690,7 +701,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 341 tests plus the optional comparison test.
+The full run contains 343 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

@@ -654,6 +654,7 @@ void test_udp_proxy_capacity(const struct arguments *args, int kind) {
     setup_proxy(AF_INET, false, &server);
     struct arguments running = *args; running.tun = tunnel[1];
     test_wall_time_enabled = true; test_wall_time = 1000;
+    test_monotonic_enabled = true; test_monotonic_ms = 10000;
     struct ng_session *sessions[UDP_PROXY_MAX];
     struct epoll_event controls[3];
     int peers[3];
@@ -739,26 +740,95 @@ void test_udp_proxy_capacity(const struct arguments *args, int kind) {
         readable(relay); assert(recv(relay, buffer, sizeof(buffer), 0) == 13);
         assert(memcmp(buffer + 10, "def", 3) == 0);
         test_wall_time = 1001;
+        test_monotonic_ms += 1000;
         assert(handle_udp(&running, packet, off + 11, packet + off,
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
         assert(sessions[2]->udp.state == UDP_FINISHING); // 60 seconds: reclaim it.
-    } else {
+    } else if (kind == 2) {
         test_wall_time = -1;
         assert(handle_udp(&running, packet, off + 11, packet + off,
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
         test_wall_time = 900;
+        test_monotonic_ms += 100;
         assert(handle_udp(&running, packet, off + 11, packet + off,
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
         test_wall_time = 1000;
+        test_monotonic_ms += 100;
         sessions[0]->udp.time = -1; sessions[1]->udp.time = 1100; sessions[2]->udp.time = 941;
         assert(handle_udp(&running, packet, off + 11, packet + off,
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
         for (int i = 0; i < UDP_PROXY_MAX; i++) assert(sessions[i]->udp.state == UDP_ACTIVE);
+    } else if (kind == 3) {
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        sessions[0]->udp.time = 940;
+        // Newly eligible flows wait until the cooldown expires, even in a burst.
+        for (int i = 0; i < 100; i++)
+            assert(handle_udp(&running, packet, off + 11, packet + off,
+                              test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        test_monotonic_ms = 10099;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        test_monotonic_ms = 10100;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(sessions[0]->udp.state == UDP_FINISHING);
+        // Successful scans do not arm the cooldown.
+        sessions[1]->udp.time = 940; store16(packet + off, 13001);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(sessions[1]->udp.state == UDP_FINISHING);
+        store16(packet + off, 13002);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        // A genuinely freed slot bypasses the cooldown, without waiting 100 ms.
+        sessions[3]->udp.state = UDP_FINISHING;
+        close_udp_proxy(sessions[3]); unindex_session(args->ctx, sessions[3]);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        // Closing the association also invalidates the previous full-table scan.
+        sessions[2]->udp.time = 940; store16(packet + off, 13003);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(sessions[2]->udp.state == UDP_FINISHING);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
+    } else {
+        test_monotonic_ms = 0; // Zero is valid and must still start a cooldown.
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        sessions[0]->udp.time = 940;
+        test_monotonic_ms = 99;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        // A backward monotonic reading must not prolong an old cooldown.
+        test_monotonic_ms = 10000;
+        sessions[0]->udp.time = 1000;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        sessions[0]->udp.time = 940; test_monotonic_ms = 9999;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        store16(packet + off, 13001); test_monotonic_ms = 11000;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        sessions[1]->udp.time = 940; test_monotonic_ms = -1;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        // Near INT64_MAX, omit an unrepresentable deadline rather than overflow.
+        store16(packet + off, 13002); test_monotonic_ms = INT64_MAX - 50;
+        args->ctx->udp_proxy_limit_log_at = INT64_MAX; // Keep this boundary test on the scan deadline.
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        sessions[2]->udp.time = 940;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
     }
     // Capacity reclamation itself is silent: it must not send errors quoting old traffic.
     clear(args->ctx);
     assert(args->ctx->udp_proxy_count == 0 && allocations == 0 && sockets == 0);
     test_wall_time_enabled = false;
+    test_monotonic_enabled = false;
     for (int i = 0; i < 3; i++) close(peers[i]);
     close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
 #endif
