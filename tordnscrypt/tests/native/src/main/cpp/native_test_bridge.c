@@ -57,6 +57,10 @@ static const char *run_case(const char *id) {
         test_udp_proxy_round_trip(&args, 11);
     else if (strcmp(id, "udpProxyBatch6") == 0)
         test_udp_proxy_round_trip(&args, 12);
+    else if (strcmp(id, "udpProxyCongestion4") == 0)
+        test_udp_proxy_round_trip(&args, 13);
+    else if (strcmp(id, "udpProxyCongestion6") == 0)
+        test_udp_proxy_round_trip(&args, 14);
     else if (strcmp(id, "udpProxyBadHandshakes") == 0)
         test_udp_proxy_bad_handshakes(&args);
     else if (strcmp(id, "udpProxyUidRoutes") == 0)

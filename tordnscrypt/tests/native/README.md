@@ -63,12 +63,16 @@ Reclamation sends no errors for old traffic. It adds no timers, periodic
 work or allocations. Failed/backward clock reads cannot establish idle eligibility.
 Pressure reclamation loses the relay's UDP mapping: later traffic must establish
 another association and applications depending on that mapping may be interrupted.
-During negotiation, up to four datagrams are retained in arrival order, with a
-64 KiB payload limit per association. New datagrams exceeding either limit are
+During negotiation or temporary relay send congestion, up to four datagrams are
+retained in arrival order, with a 64 KiB payload limit per association. New datagrams exceeding either limit are
 dropped without replacing queued packets; empty datagrams count toward the
-four-packet limit. The queue is sent once negotiation succeeds and is freed on
-success, failure, timeout or cleanup. It adds no retransmission timers or writable
-socket watches for relay traffic. Negotiation has a fixed 20-second timeout, then
+four-packet limit. After negotiation, EAGAIN/EINTR retains the unsent head and
+later traffic appends behind it. Relay EPOLLOUT is enabled only while data remains
+queued and removed after draining; each event attempts at most four sends.
+EMSGSIZE drops only the affected datagram when the association remains usable.
+Queued copies are freed after sending/dropping, failure, timeout or cleanup.
+Successful uncongested sends allocate no payload copy. There are no retransmission
+timers. Negotiation has a fixed 20-second timeout, then
 uses the ordinary UDP idle timeout. All I/O is nonblocking in the existing epoll
 loop. Idle control sockets watch for input/closure without EPOLLOUT, polling
 timers or keepalives. Scatter/gather sends add the SOCKS header without allocating
@@ -96,6 +100,11 @@ empty queued datagrams, exact byte/count limits, allocation failures with a
 partially filled queue, fatal sends while flushing the queue, bounded memory,
 timeouts, owner-recovery
 switches between proxy/direct/blocked routes, and cleanup.
+Two congestion regressions inject temporary send failures over real IPv4/IPv6
+relay sockets. They cover handshake retention, EAGAIN/EINTR, empty datagrams,
+partial draining, FIFO ordering with later arrivals, overflow, MTU recovery,
+allocation/epoll failures, stale events, resource balance and removal of writable
+wake-ups after draining. Congestion itself is injected for deterministic coverage.
 Three admission regressions cover expired handshakes before idle replacement,
 the oldest eligible ready flow, the exact 59/60-second boundary, spare capacity,
 recent traffic and pending handshakes, failed/backward clocks, failed allocation
@@ -732,7 +741,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 348 tests plus the optional comparison test.
+The full run contains 350 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

@@ -7,6 +7,8 @@ import org.junit.runner.RunWith;
 /** Real local SOCKS5 control and UDP relay regressions for udp_proxy.c. */
 @RunWith(AndroidJUnit4.class)
 public final class UdpProxyTest extends NativeTestSupport {
+    @Test public void ipv4CongestionRetainsOrderedDatagramsAndCleansUpAllocationFailure() { check("udpProxyCongestion4"); }
+    @Test public void ipv6CongestionRetainsOrderedDatagramsAndCleansUpEpollFailure() { check("udpProxyCongestion6"); }
     @Test public void ipv4RelayPreservesDatagramsAndRejectsMalformedFrames() { check("udpProxy4"); }
     @Test public void authenticatedIpv6RelayAndControlLifetime() { check("udpProxy6"); }
     @Test public void ipv6DestinationThroughIpv4Proxy() { check("udpProxyCross"); }

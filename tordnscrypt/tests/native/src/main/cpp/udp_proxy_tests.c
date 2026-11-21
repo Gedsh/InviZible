@@ -4,7 +4,15 @@ ssize_t __real_sendmsg(int, const struct msghdr *, int);
 static int fail_relay_send;
 static int relay_send_error = EHOSTUNREACH;
 static int last_relay_errno;
+static int congested_relay = -1;
+static int congested_error = EAGAIN;
+static unsigned congested_attempts;
 ssize_t __wrap_sendmsg(int fd, const struct msghdr *message, int flags) {
+    if (fd == congested_relay) {
+        congested_attempts++;
+        errno = congested_error;
+        return -1;
+    }
     if (fail_relay_send > 0 && --fail_relay_send == 0) {
         errno = relay_send_error;
         return -1;
@@ -429,8 +437,8 @@ static void proxy_mtu_checks(const struct arguments *args, struct ng_session *s,
 
 void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
-    int version = kind == 0 || kind == 3 || kind == 7 || kind == 10 || kind == 11 ? 4 : 6;
-    int family = kind == 1 || kind == 8 || kind == 12 ? AF_INET6 : AF_INET;
+    int version = kind == 0 || kind == 3 || kind == 7 || kind == 10 || kind == 11 || kind == 13 ? 4 : 6;
+    int family = kind == 1 || kind == 8 || kind == 12 || kind == 14 ? AF_INET6 : AF_INET;
     int relay_family = kind == 3 || kind == 10 ? AF_INET6 : family;
     bool auth = kind != 0;
     struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
@@ -490,7 +498,16 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     memcpy(accepted + header - 2, &port, 2);
     assert(send(control, accepted, header, MSG_NOSIGNAL) == header);
     if (kind == 4) fail_relay_send = 2; // Fail after the first queued datagram was sent.
+    if (kind >= 13) { congested_attempts = 0; congested_relay = s->socket; }
     for (int i = 0; i < 4 && !udp_proxy_ready(&s->udp); i++) pump_proxy(&running, epoll_fd);
+    if (kind >= 13) {
+        assert(congested_attempts == 1 && s->udp.sent == 0 && allocations == 6);
+        assert(s->ev.events & EPOLLOUT);
+        assert(!is_readable(relay));
+        congested_relay = -1;
+        pump_proxy(&running, epoll_fd);
+        assert(!(s->ev.events & EPOLLOUT));
+    }
     if (kind == 4) {
         assert(fail_relay_send == 0 && s->udp.state == UDP_FINISHING && s->udp.sent == 3);
         assert(allocations == 2 && sockets == 0 && args->ctx->udp_proxy_count == 0);
@@ -556,8 +573,100 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     pump_proxy(&running, epoll_fd);
     assert(tun_packet(tunnel[0], buffer, version, IPPROTO_UDP) == off + 8);
     if (kind >= 7 && kind <= 10) proxy_mtu_checks(&running, s, epoll_fd, relay, tunnel[0], relay_family);
-    if (kind >= 11) proxy_batch_checks(&running, s, relay, &client, client_length,
+    if (kind == 11 || kind == 12) proxy_batch_checks(&running, s, relay, &client, client_length,
                                       tunnel[0], epoll_fd, kind == 12);
+    if (kind >= 13) {
+        // Temporary send failures retain datagrams, including empty ones, in FIFO order.
+        for (int interrupted = 0; interrupted < 2; interrupted++) {
+            congested_relay = s->socket;
+            congested_error = interrupted ? EINTR : EAGAIN;
+            congested_attempts = 0;
+            uint64_t sent = s->udp.sent;
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "one", 3) == 1);
+            assert(send_udp_proxy(&running, s, NULL, 0) == 1);
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "two", 3) == 1);
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "end", 3) == 1);
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "overflow", 8) == 0);
+            assert(congested_attempts == 1 && allocations == 6 && s->udp.sent == sent);
+            pump_proxy(&running, epoll_fd);
+            assert(congested_attempts == 2 && allocations == 6 && !is_readable(relay));
+            if (!interrupted) {
+                // Backpressure in one direction must not prevent relay replies.
+                uint8_t reply[25] = {0, 0, 0, version == 4 ? 1 : 4};
+                memcpy(reply + 4, &s->udp.daddr, version == 4 ? 4 : 16);
+                memcpy(reply + udp_header - 2, &s->udp.dest, 2);
+                reply[udp_header] = 'r';
+                assert(sendto(relay, reply, udp_header + 1, 0,
+                              (struct sockaddr *) &client, client_length) == (ssize_t) (udp_header + 1));
+                pump_proxy(&running, epoll_fd);
+                assert(tun_packet(tunnel[0], buffer, version, IPPROTO_UDP) == off + 9);
+                assert(buffer[off + 8] == 'r' && allocations == 6);
+            }
+            congested_relay = -1;
+            // Partial flush must retain the unsent head and all following entries.
+            relay_send_error = EAGAIN; fail_relay_send = 2;
+            pump_proxy(&running, epoll_fd);
+            assert(allocations == 5 && s->udp.sent == sent + 3 && (s->ev.events & EPOLLOUT));
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "new", 3) == 1);
+            pump_proxy(&running, epoll_fd);
+            const char *expected[] = {"one", "", "two", "end", "new"};
+            for (int i = 0; i < 5; i++) {
+                readable(relay);
+                size_t size = strlen(expected[i]);
+                assert(recv(relay, buffer, sizeof(buffer), 0) == (ssize_t) (udp_header + size));
+                assert(memcmp(buffer + udp_header, expected[i], size) == 0);
+            }
+            assert(s->udp.sent == sent + 12 && allocations == 2 && !is_readable(relay));
+            assert(!(s->ev.events & EPOLLOUT));
+            struct epoll_event idle[2];
+            assert(epoll_wait(epoll_fd, idle, 2, 0) == 0); // No writable wake-ups after draining.
+        }
+        congested_error = EAGAIN;
+        // The byte limit still applies after draining and refilling the queue.
+        uint8_t large[32768] = {0};
+        congested_relay = s->socket;
+        assert(send_udp_proxy(&running, s, large, sizeof(large)) == 1);
+        assert(send_udp_proxy(&running, s, large, sizeof(large)) == 1);
+        assert(send_udp_proxy(&running, s, large, 1) == 0);
+        assert(send_udp_proxy(&running, s, NULL, 0) == 1);
+        assert(allocations == 5);
+        congested_relay = -1;
+        pump_proxy(&running, epoll_fd);
+        for (int i = 0; i < 3; i++) {
+            readable(relay);
+            assert(recv(relay, buffer, sizeof(buffer), MSG_TRUNC) ==
+                   (ssize_t) (udp_header + (i < 2 ? sizeof(large) : 0)));
+        }
+        assert(allocations == 2 && !(s->ev.events & EPOLLOUT));
+        congested_relay = s->socket;
+        assert(send_udp_proxy(&running, s, (const uint8_t *) "mtu", 3) == 1);
+        assert(send_udp_proxy(&running, s, (const uint8_t *) "ok", 2) == 1);
+        congested_relay = -1;
+        relay_send_error = EMSGSIZE; fail_relay_send = 1;
+        pump_proxy(&running, epoll_fd);
+        readable(relay);
+        assert(recv(relay, buffer, sizeof(buffer), 0) == (ssize_t) (udp_header + 2));
+        assert(memcmp(buffer + udp_header, "ok", 2) == 0);
+        assert(s->udp.state == UDP_ACTIVE && allocations == 2 && !(s->ev.events & EPOLLOUT));
+        relay_send_error = EHOSTUNREACH;
+        congested_relay = s->socket;
+        assert(send_udp_proxy(&running, s, (const uint8_t *) "held", 4) == 1);
+        if (kind == 13) {
+            fail_alloc_tag = "udp proxy pending";
+            fail_alloc_match = 1;
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "allocation", 10) == 0);
+            fail_alloc_tag = NULL;
+        } else {
+            // Failing the writable-mask update when draining must release the association.
+            congested_relay = -1;
+            assert(close(epoll_fd) == 0); epoll_fd = -1;
+            struct epoll_event writable = {.events = EPOLLOUT, .data.ptr = s};
+            check_udp_socket(&running, &writable);
+            check_udp_socket(&running, &writable); // Stale event is harmless.
+        }
+        congested_relay = -1;
+        assert(s->udp.state == UDP_FINISHING && allocations == 2 && sockets == 0);
+    }
     if (kind == 5 || kind == 6) {
         struct epoll_event event = {.events = kind == 5 ? EPOLLERR : EPOLLIN, .data.ptr = s};
         if (kind == 5) {

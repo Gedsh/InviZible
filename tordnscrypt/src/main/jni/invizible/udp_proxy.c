@@ -330,7 +330,8 @@ static bool relay_errors(const struct arguments *args, struct udp_proxy *p,
     return true;
 }
 
-int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uint8_t *data, size_t length) {
+static bool datagram_fits(const struct arguments *args, struct ng_session *s,
+                          const uint8_t *data, size_t length) {
     struct udp_proxy *p = s->udp.proxy;
     size_t overhead = s->udp.version == 4 ? 10 : 22;
     size_t wire_max = p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG;
@@ -338,29 +339,68 @@ int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uin
         if (p->stage == PROXY_READY)
             write_udp_mtu(args, s->udp.error_quote, s->udp.error_quote_length, data, length,
                           (uint32_t) (wire_max - overhead));
-        return 0;
+        return false;
     }
-    if (p->stage != PROXY_READY) {
-        if (p->pending_count == PROXY_PENDING_PACKETS || length > PROXY_PENDING_BYTES - p->pending_bytes)
-            return 0; // Keep the oldest datagrams in order; discard new overflow.
-        uint8_t *copy = ng_malloc(length ? length : 1, "udp proxy pending");
-        if (copy == NULL) { fail_proxy(args, p, "cannot buffer handshake datagram", ENOMEM); return 0; }
-        if (length != 0) memcpy(copy, data, length);
-        p->pending[p->pending_count].data = copy;
-        p->pending[p->pending_count++].length = length;
-        p->pending_bytes += length;
-        return 1;
-    }
+    return true;
+}
+
+// -1 retains the datagram for a writable event; 0 drops it or closes the flow.
+static int send_datagram(const struct arguments *args, struct ng_session *s,
+                         const uint8_t *data, size_t length) {
+    if (!datagram_fits(args, s, data, length)) return 0;
     uint8_t header[22]; size_t header_length = udp_header(&s->udp, header);
     struct iovec iov[2] = {{.iov_base = header, .iov_len = header_length},
                           {.iov_base = (void *) data, .iov_len = length}};
     struct msghdr message = {.msg_iov = iov, .msg_iovlen = 2};
     ssize_t sent = sendmsg(s->socket, &message, MSG_NOSIGNAL);
     if (sent == (ssize_t) (header_length + length)) { s->udp.sent += length; return 1; }
-    if (sent < 0 && errno == EMSGSIZE) { relay_errors(args, p, data, length); return 0; }
-    if (sent < 0 && (errno == EAGAIN || errno == EINTR)) return 0;
-    fail_proxy(args, p, "relay send", sent < 0 ? errno : EIO);
+    if (sent < 0 && errno == EMSGSIZE) { relay_errors(args, s->udp.proxy, data, length); return 0; }
+    if (sent < 0 && (errno == EAGAIN || errno == EINTR)) return -1;
+    fail_proxy(args, s->udp.proxy, "relay send", sent < 0 ? errno : EIO);
     return 0;
+}
+
+static bool watch_pending(const struct arguments *args, struct udp_proxy *p) {
+    struct ng_session *s = p->owner;
+    uint32_t events = EPOLLIN | EPOLLERR | (p->pending_count != 0 ? EPOLLOUT : 0);
+    if (s->ev.events == events) return true;
+    s->ev.events = events;
+    if (epoll_ctl(p->epoll_fd, EPOLL_CTL_MOD, s->socket, &s->ev) < 0)
+        return fail_proxy(args, p, "monitor relay pending datagrams", errno);
+    return true;
+}
+
+static bool flush_pending(const struct arguments *args, struct udp_proxy *p) {
+    // At most four sends per event; new traffic appends behind the unsent head.
+    while (p->pending_count != 0) {
+        int result = send_datagram(args, p->owner, p->pending[0].data, p->pending[0].length);
+        // A fatal error has already freed every pending entry.
+        if (p->owner->udp.state != UDP_ACTIVE) return false;
+        if (result < 0) break;
+        if (result > 0) p->owner->udp.time = time(NULL);
+        p->pending_bytes -= p->pending[0].length;
+        ng_free(p->pending[0].data, __FILE__, __LINE__);
+        p->pending_count--;
+        memmove(p->pending, p->pending + 1, p->pending_count * sizeof(p->pending[0]));
+    }
+    return watch_pending(args, p);
+}
+
+int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uint8_t *data, size_t length) {
+    struct udp_proxy *p = s->udp.proxy;
+    if (p->stage == PROXY_READY && p->pending_count == 0) {
+        int result = send_datagram(args, s, data, length);
+        if (result >= 0) return result;
+    } else if (!datagram_fits(args, s, data, length)) return 0;
+    if (p->pending_count == PROXY_PENDING_PACKETS || length > PROXY_PENDING_BYTES - p->pending_bytes)
+        return 0; // Keep the oldest datagrams in order; discard new overflow.
+    uint8_t *copy = ng_malloc(length ? length : 1, "udp proxy pending");
+    if (copy == NULL) { fail_proxy(args, p, "cannot buffer datagram", ENOMEM); return 0; }
+    if (length != 0) memcpy(copy, data, length);
+    p->pending[p->pending_count].data = copy;
+    p->pending[p->pending_count++].length = length;
+    p->pending_bytes += length;
+    return p->stage != PROXY_READY || watch_pending(args, p);
 }
 
 static bool finish_associate(const struct arguments *args, struct udp_proxy *p) {
@@ -409,15 +449,7 @@ static bool finish_associate(const struct arguments *args, struct udp_proxy *p) 
         return fail_proxy(args, p, "monitor relay socket", errno);
     p->stage = PROXY_READY; s->udp.time = time(NULL);
     if (!watch_control(p, EPOLLIN)) return fail_proxy(args, p, "monitor ready control socket", errno);
-    for (size_t i = 0; i < p->pending_count && s->udp.state == UDP_ACTIVE; i++) {
-        uint8_t *data = p->pending[i].data; size_t size = p->pending[i].length;
-        // Detach this entry: a fatal send closes the association and frees the rest.
-        p->pending[i].data = NULL;
-        send_udp_proxy(args, s, data, size);
-        ng_free(data, __FILE__, __LINE__);
-    }
-    p->pending_count = p->pending_bytes = 0;
-    return s->udp.state == UDP_ACTIVE;
+    return flush_pending(args, p);
 }
 
 static bool next_handshake(const struct arguments *args, struct udp_proxy *p, int error) {
@@ -542,6 +574,7 @@ void check_udp_proxy(const struct arguments *args, struct ng_session *event_sess
     if (event_session == &p->control) { control_event(args, p, event->events); return; }
     if ((event->events & EPOLLERR) && !relay_errors(args, p, NULL, 0)) return;
     if (event->events & EPOLLHUP) { fail_proxy(args, p, "relay socket closed", 0); return; }
+    if ((event->events & EPOLLOUT) && !flush_pending(args, p)) return;
     if (!(event->events & EPOLLIN)) return;
     size_t max = p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG;
     uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, max, "udp proxy recv");
