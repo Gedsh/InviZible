@@ -37,6 +37,14 @@ static const char *run_case(const char *id) {
         test_udp_proxy_round_trip(&args, 3);
     else if (strcmp(id, "udpProxyQueueSendFailure") == 0)
         test_udp_proxy_round_trip(&args, 4);
+    else if (strcmp(id, "udpProxyRelayError") == 0)
+        test_udp_proxy_round_trip(&args, 5);
+    else if (strcmp(id, "udpProxyReceiveError") == 0)
+        test_udp_proxy_round_trip(&args, 6);
+    else if (strcmp(id, "udpProxySocketErrors") == 0)
+        test_udp_proxy_socket_errors(&args);
+    else if (strcmp(id, "udpProxyResetReplies") == 0)
+        test_udp_proxy_reset_replies(&args);
     else if (strcmp(id, "udpProxyBadHandshakes") == 0)
         test_udp_proxy_bad_handshakes(&args);
     else if (strcmp(id, "udpProxyUidRoutes") == 0)

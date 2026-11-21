@@ -77,6 +77,16 @@ static void setup_proxy(int family, bool auth, const struct sockaddr_storage *ad
     strcpy(proxy_socks5_username, auth ? "user" : "");
     strcpy(proxy_socks5_password, auth ? "pass" : "");
 }
+
+static void proxy_feedback(int fd, int version, int code, const uint8_t *packet, size_t length) {
+    uint8_t reply[2048];
+    size_t header = version == 4 ? 20 : 40;
+    assert(tun_packet(fd, reply, version, version == 4 ? IPPROTO_ICMP : IPPROTO_ICMPV6) == header + 8 + length);
+    assert(reply[header] == (version == 4 ? ICMP_UNREACH : ICMP6_DST_UNREACH));
+    assert(reply[header + 1] == code);
+    assert(memcmp(reply + header + 8, packet, length) == 0);
+    assert(!is_readable(fd)); // One failure must produce only one report.
+}
 #endif
 
 void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
@@ -94,7 +104,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     setup_proxy(family, auth, &server);
     struct packet_buffers buffers = {0};
     struct arguments running = *args; running.tun = tunnel[1];
-    running.buffers = kind == 0 || kind == 4 ? NULL : &buffers;
+    running.buffers = kind == 0 || kind >= 4 ? NULL : &buffers;
     uint8_t packet[128], buffer[2048];
     size_t off = proxy_packet(packet, version, 12345);
     assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
@@ -145,6 +155,9 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
         readable(relay);
         assert(recv(relay, buffer, sizeof(buffer), 0) == 25); // IPv6 destination header plus "abc".
         assert(!is_readable(relay));
+        assert(strstr(last_proxy_log, "relay send error") != NULL);
+        assert(proxy_logs == 1);
+        proxy_feedback(tunnel[0], version, 0, packet, off + 11);
         clear(args->ctx); clear_packet_buffers(&buffers);
         close(control); close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
@@ -200,8 +213,23 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     assert(sendto(relay, buffer, (size_t) bytes, 0, (struct sockaddr *) &client, client_length) == bytes);
     pump_proxy(&running, epoll_fd);
     assert(tun_packet(tunnel[0], buffer, version, IPPROTO_UDP) == off + 8);
+    if (kind >= 5) {
+        struct epoll_event event = {.events = kind == 5 ? EPOLLERR : EPOLLIN, .data.ptr = s};
+        if (kind == 5) {
+            socket_error_fd = s->socket; socket_error_value = ENETUNREACH;
+        } else {
+            recv_error_fd = s->socket; recv_error_value = ECONNREFUSED;
+        }
+        check_udp_socket(&running, &event);
+        assert(strstr(last_proxy_log, kind == 5 ? "relay socket error 101" : "relay receive error 111") != NULL);
+        assert(s->udp.state == UDP_FINISHING && sockets == 0 && args->ctx->udp_proxy_count == 0);
+        proxy_feedback(tunnel[0], version, kind == 5 ? 0 : 4, packet, off + 11);
+        check_udp_socket(&running, &event); // Stale events must not report twice.
+        assert(!is_readable(tunnel[0]));
+        socket_error_fd = -1;
+    }
     close(control); // Closing the TCP association must also close the UDP relay socket.
-    pump_proxy(&running, epoll_fd);
+    if (kind < 5) pump_proxy(&running, epoll_fd);
     assert(s->udp.state == UDP_FINISHING && s->socket == -1 && args->ctx->udp_proxy_count == 0);
     assert(sockets == 0);
     clear(args->ctx); clear_packet_buffers(&buffers);
@@ -212,7 +240,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
 
 void test_udp_proxy_bad_handshakes(const struct arguments *args) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
-    for (int bad = 0; bad < 8; bad++) {
+    for (int bad = 0; bad < 17; bad++) {
         struct sockaddr_storage address; socklen_t address_length;
         int listener = local_socket(AF_INET, SOCK_STREAM, &address, &address_length);
         assert(listen(listener, 4) == 0);
@@ -243,19 +271,110 @@ void test_udp_proxy_bad_handshakes(const struct arguments *args) {
                 pump_proxy(&running, epoll_fd);
             } else if (bad >= 3) {
                 pump_proxy(&running, epoll_fd); read_control(control, buffer, 10);
-                uint8_t reply[] = {5, bad == 3 ? 7 : 0, bad == 4 ? 1 : 0,
+                uint8_t reply[] = {5, bad == 3 ? 7 : bad >= 8 ? bad - 7 : 0, bad == 4 ? 1 : 0,
                                    bad == 5 ? 3 : 1, 127, 0, 0, 1, 0, bad == 6 ? 0 : 53};
-                assert(send(control, reply, sizeof(reply), MSG_NOSIGNAL) == sizeof(reply));
+                size_t reply_length = bad >= 8 ? 4 : sizeof(reply);
+                assert(send(control, reply, reply_length, MSG_NOSIGNAL) == reply_length);
+                if (bad >= 8) assert(shutdown(control, SHUT_WR) == 0);
                 for (int i = 0; i < 3 && s->udp.state == UDP_ACTIVE; i++) pump_proxy(&running, epoll_fd);
             }
         }
         assert(s->udp.state == UDP_FINISHING && s->socket == -1 && s->udp.sent == 0);
         assert(args->ctx->udp_proxy_count == 0 && sockets == 0);
+        const char *reason = bad == 0 ? "invalid method reply version" : bad == 1 ? "method was not offered" :
+                bad == 2 ? "authentication status 0x01" : bad == 3 ? "UDP ASSOCIATE unsupported" :
+                bad == 4 ? "invalid UDP ASSOCIATE reply header" : bad == 5 ? "relay address type 0x03" :
+                bad == 6 ? "zero relay port" : bad == 7 ? "monitor control reply" : "UDP ASSOCIATE reply";
+        assert(strstr(last_proxy_log, reason) != NULL);
+        if (bad >= 8) {
+            char code[8]; snprintf(code, sizeof(code), "0x%02x", bad - 7);
+            assert(strstr(last_proxy_log, code) != NULL);
+        }
+        int code = bad == 2 || bad == 9 ? ICMP_UNREACH_FILTER_PROHIB : bad == 10 ? ICMP_UNREACH_NET :
+                   bad == 12 ? ICMP_UNREACH_PORT : ICMP_UNREACH_HOST;
+        proxy_feedback(tunnel[0], 4, code, packet, off + 11);
         close(control); close(listener);
         clear(args->ctx);
         if (epoll_fd >= 0) close(epoll_fd);
         close(tunnel[0]); close(tunnel[1]);
         assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
+void test_udp_proxy_reset_replies(const struct arguments *args) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 10; kind++) {
+            int family = version == 4 ? AF_INET : AF_INET6;
+            struct sockaddr_storage address; socklen_t address_length;
+            int listener = local_socket(family, SOCK_STREAM, &address, &address_length);
+            assert(listen(listener, 4) == 0);
+            int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+            int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+            bool auth = kind == 6 || kind == 7;
+            setup_proxy(family, auth, &address);
+            struct arguments running = *args; running.tun = tunnel[1];
+            uint8_t packet[128], buffer[32]; size_t off = proxy_packet(packet, version, 12345);
+            assert(handle_udp(&running, packet, off + 11, packet + off,
+                              test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+            struct ng_session *s = args->ctx->ng_session;
+            readable(listener); int control = accept(listener, NULL, NULL); assert(control >= 0);
+            struct epoll_event event;
+            assert(epoll_wait(epoll_fd, &event, 1, 1000) == 1);
+            struct ng_session *endpoint = event.data.ptr;
+            check_udp_socket(&running, &event); read_control(control, buffer, 3);
+            uint8_t reply[10] = {5, 7, 0, 1, 127, 0, 0, 1, 0x14, 0xe9};
+            size_t offset = 0, length = 4;
+            if (kind != 4 && kind != 5) {
+                uint8_t hello[] = {5, auth ? 2 : 0};
+                assert(send(control, hello, 2, MSG_NOSIGNAL) == 2);
+                pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+                read_control(control, buffer, auth ? 11 : 10);
+            }
+            if (kind == 1) {
+                assert(send(control, reply, 2, MSG_NOSIGNAL) == 2);
+                pump_proxy(&running, epoll_fd); // Prefix partly read before reset readiness.
+                offset = 2; length = 2;
+            } else if (kind == 2) length = 3; // Incomplete reply: retain the socket cause.
+            else if (kind == 3 || kind == 8 || kind == 9) {
+                reply[1] = 0;
+                if (kind == 8) length = 10;
+                if (kind == 9) {
+                    assert(send(control, reply, 4, MSG_NOSIGNAL) == 4);
+                    pump_proxy(&running, epoll_fd); // Success prefix read before reset.
+                    offset = 4; length = 6;
+                }
+            } else if (kind == 4 || kind == 5) {
+                reply[1] = kind == 4 ? 0xff : 0;
+                length = 2;
+            } else if (auth) {
+                reply[0] = 1; reply[1] = kind == 6 ? 1 : 0;
+                length = 2;
+            }
+            assert(send(control, reply + offset, length, MSG_NOSIGNAL) == length);
+            readable(endpoint->socket);
+            socket_error_fd = endpoint->socket; socket_error_value = ECONNRESET;
+            event.events = EPOLLIN | EPOLLERR | EPOLLHUP | EPOLLRDHUP;
+            int before = proxy_logs;
+            check_udp_socket(&running, &event);
+            socket_error_fd = -1;
+            const char *expected = kind <= 1 ? "UDP ASSOCIATE reply 0x07" :
+                    kind == 4 ? "authentication method 0xff" :
+                    kind == 6 ? "authentication status 0x01" : "control socket error 104";
+            assert(strstr(last_proxy_log, expected) != NULL);
+            assert(proxy_logs == before + 1 && s->udp.state == UDP_FINISHING && s->udp.sent == 0);
+            assert(sockets == 0 && args->ctx->udp_proxy_count == 0);
+            int code = kind == 4 || kind == 6 ?
+                       (version == 4 ? ICMP_UNREACH_FILTER_PROHIB : ICMP6_DST_UNREACH_ADMIN) :
+                       version == 4 ? ICMP_UNREACH_HOST : ICMP6_DST_UNREACH_NOROUTE;
+            proxy_feedback(tunnel[0], version, code, packet, off + 11);
+            check_udp_socket(&running, &event);
+            assert(proxy_logs == before + 1 && !is_readable(tunnel[0]));
+            clear(args->ctx);
+            close(control); close(listener); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+            assert(allocations == 0 && sockets == 0);
+        }
     }
 #endif
 }
@@ -271,6 +390,7 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
     setup_proxy(AF_INET, false, &server);
     uint8_t packet[128], buffer[2048]; size_t off = proxy_packet(packet, 4, 12345);
     if (kind == 0) {
+        test_monotonic_enabled = true; test_monotonic_ms = 10000;
         for (int i = 0; i <= UDP_PROXY_MAX; i++) {
             store16(packet + off, (uint16_t) (12345 + i));
             assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd)
@@ -278,6 +398,27 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
         }
         assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
         assert(allocations == 3 * UDP_PROXY_MAX);
+        assert(strstr(last_proxy_log, "association limit reached") != NULL);
+        assert(proxy_logs == 1);
+        assert(args->ctx->udp_proxy_limit_log_at == 11000);
+        for (int i = 0; i < 100; i++) {
+            assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+            assert(args->ctx->udp_proxy_limit_log_at == 11000);
+            assert(proxy_logs == 1);
+        }
+        int reports = 0;
+        while (is_readable(tunnel[0])) {
+            assert(tun_packet(tunnel[0], buffer, 4, IPPROTO_ICMP) > 28);
+            assert(buffer[20] == ICMP_UNREACH && buffer[21] == ICMP_UNREACH_HOST);
+            reports++;
+        }
+        assert(reports == 20); // Shared feedback budget: burst 20, then one per 100 ms.
+        test_monotonic_ms = 11000;
+        assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        assert(args->ctx->udp_proxy_limit_log_at == 12000);
+        assert(proxy_logs == 2);
+        proxy_feedback(tunnel[0], 4, ICMP_UNREACH_HOST, packet, off + 11);
+        test_monotonic_enabled = false;
         clear(args->ctx);
         assert(allocations == 0 && sockets == 0);
         assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
@@ -341,12 +482,67 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
             assert(send(control, rejected, 2, MSG_NOSIGNAL) == 2);
             pump_proxy(&running, epoll_fd);
             assert(s->udp.state == UDP_FINISHING && s->socket == -1 && sockets == 0);
+            assert(strstr(last_proxy_log, "authentication method 0xff") != NULL);
+            proxy_feedback(tunnel[0], 4, ICMP_UNREACH_FILTER_PROHIB, packet, off + 11);
             close(control);
         }
     }
     clear(args->ctx);
     close(listener); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
     assert(allocations == 0 && sockets == 0 && args->ctx->udp_proxy_count == 0);
+#endif
+}
+
+void test_udp_proxy_socket_errors(const struct arguments *args) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 3; kind++) {
+            int family = version == 4 ? AF_INET : AF_INET6;
+            struct sockaddr_storage server; socklen_t server_length;
+            int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
+            assert(listen(listener, 4) == 0);
+            int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+            int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+            setup_proxy(family, false, &server);
+            struct arguments running = *args; running.tun = tunnel[1];
+            uint8_t packet[128], buffer[32]; size_t off = proxy_packet(packet, version, 12345);
+            int before = proxy_logs;
+            if (kind == 2) { real_network = 0; connect_errno = ENETUNREACH; }
+            assert(handle_udp(&running, packet, off + 11, packet + off,
+                              test_owner(own_uid + 1), &proxy_route, epoll_fd) == (kind != 2));
+            if (kind != 2) {
+                struct epoll_event event;
+                assert(epoll_wait(epoll_fd, &event, 1, 1000) == 1);
+                struct ng_session *endpoint = event.data.ptr;
+                if (kind == 0) {
+                    socket_error_fd = endpoint->socket; socket_error_value = ECONNREFUSED;
+                    event.events = EPOLLOUT | EPOLLERR | EPOLLHUP;
+                } else {
+                    check_udp_socket(&running, &event); // Send HELLO, then inject a receive failure.
+                    readable(listener); int control = accept(listener, NULL, NULL); assert(control >= 0);
+                    read_control(control, buffer, 3);
+                    recv_error_fd = endpoint->socket; recv_error_value = ECONNRESET;
+                    event.events = EPOLLIN;
+                    check_udp_socket(&running, &event);
+                    close(control);
+                }
+                check_udp_socket(&running, &event);
+                assert(args->ctx->ng_session->udp.state == UDP_FINISHING);
+                socket_error_fd = -1;
+            }
+            assert(strstr(last_proxy_log, kind == 0 ? "control socket error 111" :
+                          kind == 1 ? "control receive error 104" : "control connect error 101") != NULL);
+            assert(proxy_logs == before + 1 && sockets == 0 && args->ctx->udp_proxy_count == 0);
+            int code = kind == 0 ? (version == 4 ? ICMP_UNREACH_PORT : ICMP6_DST_UNREACH_NOPORT) :
+                       kind == 2 && version == 4 ? ICMP_UNREACH_NET :
+                       version == 4 ? ICMP_UNREACH_HOST : ICMP6_DST_UNREACH_NOROUTE;
+            proxy_feedback(tunnel[0], version, code, packet, off + 11);
+            clear(args->ctx);
+            assert(allocations == 0);
+            close(listener); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+            connect_errno = 0;
+        }
+    }
 #endif
 }
 

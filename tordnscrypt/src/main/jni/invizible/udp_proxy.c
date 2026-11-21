@@ -56,6 +56,7 @@ static int protected_socket(const struct arguments *args, int family, int type, 
     int fd = socket(family, type | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (fd >= 0 && protect_socket(args, fd, uid) < 0) {
         close(fd);
+        errno = EACCES; // protect_socket reports JNI/policy failure, not a socket errno.
         return -1;
     }
     return fd;
@@ -93,12 +94,43 @@ void free_udp_proxy(struct ng_session *s) {
     }
 }
 
-static void fail_proxy(const struct arguments *args, struct udp_proxy *p, const char *reason) {
-    log_android(ANDROID_LOG_WARN, "UDP SOCKS5 uid %d: %s", p->owner->udp.uid, reason);
+static void log_failure(int uid, const char *reason, int error) {
+    if (error != 0)
+        log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 uid %d: %s error %d: %s", uid, reason, error, strerror(error));
+    else
+        log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 uid %d: %s", uid, reason);
+}
+
+static bool fail_proxy(const struct arguments *args, struct udp_proxy *p, const char *reason, int error) {
+    if (p->owner->udp.state != UDP_ACTIVE) return false;
+    log_failure(p->owner->udp.uid, reason, error);
     write_connection_unreach(args, p->owner->udp.error_quote,
-                              p->owner->udp.error_quote_length, EHOSTUNREACH);
+            p->owner->udp.error_quote_length,
+            error == EACCES || error == EPERM || error == ECONNREFUSED ||
+            error == ENETUNREACH || error == ENETDOWN ? error : EHOSTUNREACH);
     p->owner->udp.state = UDP_FINISHING;
     close_udp_proxy(p->owner);
+    return false;
+}
+
+static bool fail_reply(const struct arguments *args, struct udp_proxy *p,
+                       const char *phase, unsigned int code, const char *description, int error) {
+    char reason[128];
+    snprintf(reason, sizeof(reason), "%s 0x%02x: %s", phase, code, description);
+    return fail_proxy(args, p, reason, error);
+}
+
+static int socket_error(int fd) {
+    int error = 0;
+    socklen_t length = sizeof(error);
+    return getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &length) < 0 ? errno : error;
+}
+
+static int open_failure(struct ng_session *s, const char *reason, int error) {
+    log_failure(s->udp.uid, reason, error);
+    free_udp_proxy(s);
+    errno = error; // Cleanup must not replace the cause returned to the caller.
+    return -1;
 }
 
 static bool watch_control(struct udp_proxy *p, uint32_t events) {
@@ -107,9 +139,18 @@ static bool watch_control(struct udp_proxy *p, uint32_t events) {
 }
 
 int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll_fd) {
-    if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) return -1;
+    if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) {
+        int64_t now = get_ms();
+        if (now >= 0 && now >= args->ctx->udp_proxy_limit_log_at) {
+            log_android(ANDROID_LOG_ERROR, "UDP SOCKS5 association limit reached (%u/%d); dropping new flows",
+                        args->ctx->udp_proxy_count, UDP_PROXY_MAX);
+            args->ctx->udp_proxy_limit_log_at = now + 1000;
+        }
+        errno = ENOBUFS;
+        return -1;
+    }
     struct udp_proxy *p = ng_calloc(1, sizeof(*p), "udp proxy");
-    if (p == NULL) return -1;
+    if (p == NULL) return open_failure(s, "cannot allocate association", ENOMEM);
     p->owner = s; p->ctx = args->ctx; p->epoll_fd = epoll_fd;
     p->family = strchr(proxy_socks5_addr, ':') == NULL ? AF_INET : AF_INET6;
     p->control.protocol = IPPROTO_UDP;
@@ -130,24 +171,17 @@ int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll
         valid = inet_pton(AF_INET6, proxy_socks5_addr, &address->sin6_addr);
         length = sizeof(*address);
     }
-    if (valid == 1) {
-        s->socket = protected_socket(args, p->family, SOCK_DGRAM, s->udp.uid);
-        if (s->socket >= 0)
-            p->control.socket = protected_socket(args, p->family, SOCK_STREAM, s->udp.uid);
-    }
-    if (s->socket < 0 || p->control.socket < 0) {
-        free_udp_proxy(s);
-        s->socket = -1;
-        return -1;
-    }
+    if (valid != 1) return open_failure(s, "invalid proxy address", EINVAL);
+    s->socket = protected_socket(args, p->family, SOCK_DGRAM, s->udp.uid);
+    if (s->socket < 0) return open_failure(s, "open protected relay socket", errno);
+    p->control.socket = protected_socket(args, p->family, SOCK_STREAM, s->udp.uid);
+    if (p->control.socket < 0) return open_failure(s, "open protected control socket", errno);
     int result = connect(p->control.socket, (struct sockaddr *) &p->peer, length);
     p->control.ev.events = EPOLLOUT | EPOLLERR | EPOLLRDHUP;
     p->control.ev.data.ptr = &p->control;
-    if ((result < 0 && errno != EINPROGRESS) ||
-        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, p->control.socket, &p->control.ev) < 0) {
-        free_udp_proxy(s);
-        return -1;
-    }
+    if (result < 0 && errno != EINPROGRESS) return open_failure(s, "control connect", errno);
+    if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, p->control.socket, &p->control.ev) < 0)
+        return open_failure(s, "monitor control socket", errno);
     p->counted = true; args->ctx->udp_proxy_count++;
     return s->socket;
 }
@@ -171,7 +205,7 @@ int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uin
         if (p->pending_count == PROXY_PENDING_PACKETS || length > PROXY_PENDING_BYTES - p->pending_bytes)
             return 0; // Keep the oldest datagrams in order; discard new overflow.
         uint8_t *copy = ng_malloc(length ? length : 1, "udp proxy pending");
-        if (copy == NULL) { fail_proxy(args, p, "cannot buffer handshake datagram"); return 0; }
+        if (copy == NULL) { fail_proxy(args, p, "cannot buffer handshake datagram", ENOMEM); return 0; }
         if (length != 0) memcpy(copy, data, length);
         p->pending[p->pending_count].data = copy;
         p->pending[p->pending_count++].length = length;
@@ -185,45 +219,48 @@ int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uin
     ssize_t sent = sendmsg(s->socket, &message, MSG_NOSIGNAL);
     if (sent == (ssize_t) (header_length + length)) { s->udp.sent += length; return 1; }
     if (sent < 0 && (errno == EAGAIN || errno == EINTR || errno == EMSGSIZE)) return 0;
-    fail_proxy(args, p, "relay send failed");
+    fail_proxy(args, p, "relay send", sent < 0 ? errno : EIO);
     return 0;
 }
 
 static bool finish_associate(const struct arguments *args, struct udp_proxy *p) {
     uint8_t *b = p->handshake;
-    if (b[0] != 5 || b[1] != 0 || b[2] != 0) return false;
+    // Version, reply code and reserved byte were checked in the four-byte prefix.
     struct sockaddr_storage relay = {0}; socklen_t length; int family;
     if (b[3] == 1) {
         struct sockaddr_in *a = (void *) &relay;
         a->sin_family = family = AF_INET;
         memcpy(&a->sin_addr, b + 4, 4); memcpy(&a->sin_port, b + 8, 2);
-        if (a->sin_port == 0) return false;
+        if (a->sin_port == 0) return fail_proxy(args, p, "zero relay port", EPROTO);
         if (a->sin_addr.s_addr == 0 && p->family == AF_INET)
             a->sin_addr = ((struct sockaddr_in *) &p->peer)->sin_addr;
-        if (a->sin_addr.s_addr == 0) return false;
+        if (a->sin_addr.s_addr == 0) return fail_proxy(args, p, "unusable wildcard relay address", EPROTO);
         length = sizeof(*a);
     } else if (b[3] == 4) {
         struct sockaddr_in6 *a = (void *) &relay;
         a->sin6_family = family = AF_INET6;
         memcpy(&a->sin6_addr, b + 4, 16); memcpy(&a->sin6_port, b + 20, 2);
-        if (a->sin6_port == 0) return false;
+        if (a->sin6_port == 0) return fail_proxy(args, p, "zero relay port", EPROTO);
         if (IN6_IS_ADDR_UNSPECIFIED(&a->sin6_addr) && p->family == AF_INET6)
             a->sin6_addr = ((struct sockaddr_in6 *) &p->peer)->sin6_addr;
-        if (IN6_IS_ADDR_UNSPECIFIED(&a->sin6_addr)) return false;
+        if (IN6_IS_ADDR_UNSPECIFIED(&a->sin6_addr))
+            return fail_proxy(args, p, "unusable wildcard relay address", EPROTO);
         length = sizeof(*a);
-    } else return false; // No blocking name resolution on the VPN event thread.
+    } else return fail_proxy(args, p, "unsupported relay address type", EAFNOSUPPORT);
     if (family != p->family) {
         int fd = protected_socket(args, family, SOCK_DGRAM, p->owner->udp.uid);
-        if (fd < 0) return false;
+        if (fd < 0) return fail_proxy(args, p, "open protected relay socket", errno);
         close(p->owner->socket); p->owner->socket = fd; p->family = family;
     }
     // Connected UDP rejects packets from anyone except the negotiated relay.
-    if (connect(p->owner->socket, (struct sockaddr *) &relay, length) < 0) return false;
+    if (connect(p->owner->socket, (struct sockaddr *) &relay, length) < 0)
+        return fail_proxy(args, p, "relay connect", errno);
     struct ng_session *s = p->owner;
     s->ev.events = EPOLLIN | EPOLLERR; s->ev.data.ptr = s;
-    if (epoll_ctl(p->epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev) < 0) return false;
+    if (epoll_ctl(p->epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev) < 0)
+        return fail_proxy(args, p, "monitor relay socket", errno);
     p->stage = PROXY_READY; s->udp.time = time(NULL);
-    if (!watch_control(p, EPOLLIN)) return false;
+    if (!watch_control(p, EPOLLIN)) return fail_proxy(args, p, "monitor ready control socket", errno);
     for (size_t i = 0; i < p->pending_count && s->udp.state == UDP_ACTIVE; i++) {
         uint8_t *data = p->pending[i].data; size_t size = p->pending[i].length;
         // Detach this entry: a fatal send closes the association and frees the rest.
@@ -235,42 +272,67 @@ static bool finish_associate(const struct arguments *args, struct udp_proxy *p) 
     return s->udp.state == UDP_ACTIVE;
 }
 
-static bool next_handshake(const struct arguments *args, struct udp_proxy *p) {
+static bool next_handshake(const struct arguments *args, struct udp_proxy *p, int error) {
     uint8_t *b = p->handshake;
     if (p->stage == PROXY_HELLO) {
         bool auth = *proxy_socks5_username || *proxy_socks5_password;
-        if (b[0] != 5 || b[1] != (auth ? 2 : 0)) return false;
+        if (b[0] != 5) return fail_proxy(args, p, "invalid method reply version", EPROTO);
+        if (b[1] != (auth ? 2 : 0))
+            return fail_reply(args, p, "authentication method", b[1],
+                    b[1] == 0xff ? "no acceptable authentication method" : "method was not offered",
+                    b[1] == 0xff ? EACCES : EPROTO);
+        if (error != 0) return fail_proxy(args, p, "control socket", error);
         if (auth) {
             size_t ulen = strlen(proxy_socks5_username), plen = strlen(proxy_socks5_password);
-            if (ulen == 0 || ulen > 127 || plen == 0 || plen > 127) return false;
+            if (ulen == 0 || ulen > 127 || plen == 0 || plen > 127)
+                return fail_proxy(args, p, "invalid username/password lengths", EINVAL);
             b[0] = 1; b[1] = (uint8_t) ulen;
             memcpy(b + 2, proxy_socks5_username, ulen); b[2 + ulen] = (uint8_t) plen;
             memcpy(b + 3 + ulen, proxy_socks5_password, plen);
             p->wanted = 3 + ulen + plen; p->stage = PROXY_SEND_AUTH;
         } else p->stage = PROXY_SEND_ASSOCIATE;
     } else if (p->stage == PROXY_AUTH) {
-        if (b[0] != 1 || b[1] != 0) return false;
+        if (b[0] != 1) return fail_proxy(args, p, "invalid authentication reply version", EPROTO);
+        if (b[1] != 0)
+            return fail_reply(args, p, "authentication status", b[1], "username/password rejected", EACCES);
+        if (error != 0) return fail_proxy(args, p, "control socket", error);
         p->stage = PROXY_SEND_ASSOCIATE;
-    } else if (p->stage == PROXY_ASSOCIATE) return finish_associate(args, p);
+    } else if (p->stage == PROXY_ASSOCIATE) {
+        if (error != 0) return fail_proxy(args, p, "control socket", error);
+        return finish_associate(args, p);
+    }
     if (p->stage == PROXY_SEND_ASSOCIATE) {
         memset(b, 0, 10); b[0] = 5; b[1] = 3; b[3] = 1;
         p->wanted = 10; // Unknown external UDP tuple: RFC 1928 all-zero address/port.
     }
     p->used = 0;
-    return watch_control(p, EPOLLOUT);
+    return watch_control(p, EPOLLOUT) || fail_proxy(args, p, "monitor control request", errno);
 }
 
 static void control_event(const struct arguments *args, struct udp_proxy *p, uint32_t events) {
-    if (events & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) { fail_proxy(args, p, "control connection closed"); return; }
+    int error = 0;
+    if (p->stage == PROXY_CONNECT || (events & EPOLLERR)) {
+        error = socket_error(p->control.socket);
+        bool reading = p->stage == PROXY_HELLO || p->stage == PROXY_AUTH || p->stage == PROXY_ASSOCIATE;
+        if (error != 0 && (!reading || !(events & EPOLLIN))) {
+            fail_proxy(args, p, "control socket", error); return;
+        }
+    }
+    // A proxy may send a rejection and immediately close. Read its reply first.
+    if ((events & (EPOLLHUP | EPOLLRDHUP)) && !(events & EPOLLIN)) {
+        fail_proxy(args, p, "control connection closed", 0); return;
+    }
     if (p->stage == PROXY_READY) {
-        if (events & EPOLLIN) fail_proxy(args, p, "unexpected control data or EOF");
+        if (events & EPOLLIN) {
+            uint8_t byte;
+            ssize_t count = recv(p->control.socket, &byte, 1, 0);
+            if (count == 0) fail_proxy(args, p, "control connection closed", 0);
+            else if (count > 0) fail_proxy(args, p, "unexpected control data", EPROTO);
+            else if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "control receive", errno);
+        }
         return;
     }
     if (p->stage == PROXY_CONNECT) {
-        int error = 0; socklen_t size = sizeof(error);
-        if (getsockopt(p->control.socket, SOL_SOCKET, SO_ERROR, &error, &size) < 0 || error) {
-            fail_proxy(args, p, "control connect failed"); return;
-        }
         p->stage = PROXY_SEND_HELLO; p->used = 0; p->wanted = 3;
         p->handshake[0] = 5; p->handshake[1] = 1;
         p->handshake[2] = *proxy_socks5_username || *proxy_socks5_password ? 2 : 0;
@@ -279,19 +341,49 @@ static void control_event(const struct arguments *args, struct udp_proxy *p, uin
     ssize_t bytes = sending
             ? send(p->control.socket, p->handshake + p->used, p->wanted - p->used, MSG_NOSIGNAL)
             : recv(p->control.socket, p->handshake + p->used, p->wanted - p->used, 0);
+    // SO_ERROR clears the pending error. Drain only the current reply on this
+    // terminal path, retaining its cause if the buffered bytes are incomplete.
+    // Positive reads bound this loop by the fixed handshake buffer size.
+    while (error != 0 && bytes > 0 && p->used + (size_t) bytes < p->wanted) {
+        p->used += (size_t) bytes;
+        bytes = recv(p->control.socket, p->handshake + p->used, p->wanted - p->used, 0);
+    }
+    if (error != 0 && bytes <= 0) { fail_proxy(args, p, "control socket", error); return; }
     if (bytes < 0 && (errno == EAGAIN || errno == EINTR)) return;
-    if (bytes <= 0) { fail_proxy(args, p, "control read/write failed"); return; }
+    if (bytes <= 0) {
+        fail_proxy(args, p, bytes == 0 ? "control connection closed during handshake" :
+                   sending ? "control send" : "control receive", bytes < 0 ? errno : 0);
+        return;
+    }
     p->used += (size_t) bytes;
     if (p->used != p->wanted) return;
     if (sending) {
         p->stage = p->stage == PROXY_SEND_HELLO ? PROXY_HELLO :
                    p->stage == PROXY_SEND_AUTH ? PROXY_AUTH : PROXY_ASSOCIATE;
         p->used = 0; p->wanted = p->stage == PROXY_ASSOCIATE ? 4 : 2;
-        if (!watch_control(p, EPOLLIN)) fail_proxy(args, p, "cannot monitor control reply");
+        if (!watch_control(p, EPOLLIN)) fail_proxy(args, p, "monitor control reply", errno);
     } else if (p->stage == PROXY_ASSOCIATE && p->wanted == 4) {
+        if (p->handshake[0] != 5 || p->handshake[2] != 0) {
+            fail_proxy(args, p, "invalid UDP ASSOCIATE reply header", EPROTO); return;
+        }
+        unsigned int code = p->handshake[1];
+        if (code != 0) {
+            static const char *const reasons[] = {"success", "general server failure",
+                "not allowed by proxy rules", "network unreachable", "host unreachable",
+                "connection refused", "TTL expired", "UDP ASSOCIATE unsupported", "address type unsupported"};
+            static const int errors[] = {0, EIO, EACCES, ENETUNREACH, EHOSTUNREACH,
+                ECONNREFUSED, ETIMEDOUT, EOPNOTSUPP, EAFNOSUPPORT};
+            fail_reply(args, p, "UDP ASSOCIATE reply", code,
+                       code < 9 ? reasons[code] : "unassigned reply code", code < 9 ? errors[code] : EPROTO);
+            return;
+        }
+        if (error != 0) { fail_proxy(args, p, "control socket", error); return; }
         p->wanted = p->handshake[3] == 1 ? 10 : p->handshake[3] == 4 ? 22 : 0;
-        if (p->wanted == 0) fail_proxy(args, p, "relay must advertise an IPv4/IPv6 address");
-    } else if (!next_handshake(args, p)) fail_proxy(args, p, "proxy refused or malformed handshake");
+        if (p->wanted == 0)
+            fail_reply(args, p, "relay address type", p->handshake[3], "numeric IPv4/IPv6 required", EAFNOSUPPORT);
+    } else {
+        next_handshake(args, p, error); // A buffered rejection takes precedence over reset.
+    }
 }
 
 void check_udp_proxy(const struct arguments *args, struct ng_session *event_session,
@@ -300,16 +392,18 @@ void check_udp_proxy(const struct arguments *args, struct ng_session *event_sess
     struct ng_session *s = p->owner;
     if (s->udp.state != UDP_ACTIVE || s->socket < 0) { close_udp_proxy(s); return; }
     if (event_session == &p->control) { control_event(args, p, event->events); return; }
-    if (event->events & (EPOLLERR | EPOLLHUP)) { fail_proxy(args, p, "relay socket failed"); return; }
+    if (event->events & (EPOLLERR | EPOLLHUP)) {
+        fail_proxy(args, p, "relay socket", socket_error(s->socket)); return;
+    }
     if (!(event->events & EPOLLIN)) return;
     size_t max = p->family == AF_INET ? UDP4_MAXMSG : UDP6_MAXMSG;
     uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, max, "udp proxy recv");
-    if (buffer == NULL) { fail_proxy(args, p, "cannot receive relay datagram"); return; }
+    if (buffer == NULL) { fail_proxy(args, p, "cannot allocate receive buffer", ENOMEM); return; }
     struct iovec iov = {.iov_base = buffer, .iov_len = max};
     struct msghdr message = {.msg_iov = &iov, .msg_iovlen = 1};
     ssize_t bytes = recvmsg(s->socket, &message, 0);
     if (bytes < 0) {
-        if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "relay receive failed");
+        if (errno != EAGAIN && errno != EINTR) fail_proxy(args, p, "relay receive", errno);
     } else if (!(message.msg_flags & MSG_TRUNC) && bytes >= 4 &&
                buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0) {
         size_t address = buffer[3] == 1 ? 4 : buffer[3] == 4 ? 16 : 0;

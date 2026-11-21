@@ -416,6 +416,13 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         bool proxy = redirect != NULL && redirect->udp_proxy;
         s->socket = proxy ? open_udp_proxy(args, s, epoll_fd) : open_udp_socket(args, &s->udp, redirect);
         if (s->socket < 0) {
+            if (proxy) {
+                int error = errno;
+                // The existing ICMP budget bounds feedback even for repeated admission failures.
+                write_connection_unreach(args, pkt, length,
+                        error == EACCES || error == EPERM || error == ECONNREFUSED ||
+                        error == ENETUNREACH || error == ENETDOWN ? error : EHOSTUNREACH);
+            }
             ng_free(s, __FILE__, __LINE__);
             return 0;
         }

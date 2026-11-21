@@ -77,6 +77,31 @@ disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, externa
 UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
 These local fixtures do not establish a VPN or validate a third-party proxy server.
 
+Proxy failures identify the failed operation and retain numeric socket errors.
+Method selection, username/password rejection and UDP ASSOCIATE replies include
+their protocol status codes; unsupported UDP ASSOCIATE is reported explicitly.
+A rejection followed immediately by control closure is read before handling EOF.
+When reset/error readiness accompanies a buffered handshake reply, complete
+rejections retain their SOCKS status. Incomplete replies retain the socket error;
+successful replies cannot advance negotiation or send queued datagrams after a
+known reset. This uses bounded nonblocking reads only on the failure path.
+Each failed association reports once, including failure while draining its queue.
+Opening failures also return ICMP feedback for the original tunnel packet, using
+the existing shared rate limit (burst 20, then one per 100 ms). Association-limit
+warnings are limited to once per second per context, without polling or timers.
+Known permission, refusal and network failures produce the corresponding ICMP
+unreachable code; failures without a suitable ICMP equivalent use host/no-route
+unreachable. Relay MTU handling remains a separate limitation.
+
+Regressions check all defined nonzero UDP ASSOCIATE reply codes and an unassigned
+code, rejection followed by closure, authentication rejection, synchronous and
+asynchronous control failures, relay socket/receive errors, single-report cleanup,
+and bounded admission feedback and logging. Error replies quote the original
+IPv4/IPv6 packet, and socket/allocation balances are checked after failures.
+Combined readable/reset events cover complete and split rejections, truncated
+replies, method/authentication rejection, and successful replies with a pending
+error, including a success prefix read before reset.
+
 Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
 cleanup list, with one additional link per record and no index allocations.
 Tests cover both address families, ports and echo IDs, IPv4 union padding,
@@ -614,7 +639,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 328 tests plus the optional comparison test.
+The full run contains 332 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

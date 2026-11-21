@@ -15,6 +15,8 @@ int uid_cache_allocations;
 const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
+char last_proxy_log[2048];
+int proxy_logs;
 int log_errno, log_result;
 int address_formats;
 bool count_memory_comparisons;
@@ -495,6 +497,10 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
     va_start(capture, fmt);
     vsnprintf(last_log, sizeof(last_log), fmt, capture);
     va_end(capture);
+    if (strncmp(last_log, "UDP SOCKS5", 10) == 0) {
+        snprintf(last_proxy_log, sizeof(last_proxy_log), "%s", last_log);
+        proxy_logs++;
+    }
     if (real_network) {
         va_list ap;
         va_start(ap, fmt);
@@ -746,6 +752,8 @@ void reset_test_state(void) {
     fail_alloc_tag = NULL;
     fail_alloc_match = fail_fcntl_call = fcntl_calls = 0;
     last_log[0] = 0;
+    last_proxy_log[0] = 0;
+    proxy_logs = 0;
     log_errno = log_result = 0;
     real_exit_reports = exit_reports = 0;
     real_network = real_udp_packets = block_domain = trace_dns = 0;
