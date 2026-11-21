@@ -73,6 +73,12 @@ static const char *run_case(const char *id) {
         test_udp_proxy_capacity(&args, 3);
     else if (strcmp(id, "udpProxyCapacityCooldownClocks") == 0)
         test_udp_proxy_capacity(&args, 4);
+    else if (strcmp(id, "udpProxyConfiguration4") == 0)
+        test_udp_proxy_configuration(&args, 4);
+    else if (strcmp(id, "udpProxyConfiguration6") == 0)
+        test_udp_proxy_configuration(&args, 6);
+    else if (strcmp(id, "udpProxyConfigurationCapacity") == 0)
+        test_udp_proxy_capacity(&args, 5);
     else if (strcmp(id, "udpProxyAllocations") == 0)
         test_udp_proxy_failures(&args, 1);
     else if (strcmp(id, "udpProxyTimeout") == 0)

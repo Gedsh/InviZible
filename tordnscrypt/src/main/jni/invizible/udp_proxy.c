@@ -22,7 +22,7 @@
 #include <linux/errqueue.h>
 
 extern int proxy_socks5_port;
-extern char proxy_socks5_addr[], proxy_socks5_username[], proxy_socks5_password[];
+extern char proxy_socks5_addr[], proxy_socks5_username[127 + 1], proxy_socks5_password[127 + 1];
 
 enum udp_proxy_stage { PROXY_CONNECT, PROXY_SEND_HELLO, PROXY_HELLO,
     PROXY_SEND_AUTH, PROXY_AUTH, PROXY_SEND_ASSOCIATE, PROXY_ASSOCIATE, PROXY_READY };
@@ -181,6 +181,29 @@ static void reclaim_capacity(const struct arguments *args, int64_t ms) {
 }
 
 int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll_fd) {
+    // Reject unusable settings before evicting another flow or opening sockets.
+    if (proxy_socks5_port < 1 || proxy_socks5_port > UINT16_MAX)
+        return open_failure(s, "invalid proxy port", EINVAL);
+    size_t ulen = strnlen(proxy_socks5_username, sizeof(proxy_socks5_username));
+    size_t plen = strnlen(proxy_socks5_password, sizeof(proxy_socks5_password));
+    if ((ulen == 0) != (plen == 0) || ulen > 127 || plen > 127)
+        return open_failure(s, "invalid username/password lengths", EINVAL);
+    struct sockaddr_storage peer = {0};
+    int family = strchr(proxy_socks5_addr, ':') == NULL ? AF_INET : AF_INET6;
+    int valid;
+    socklen_t length;
+    if (family == AF_INET) {
+        struct sockaddr_in *address = (void *) &peer;
+        address->sin_family = AF_INET; address->sin_port = htons((uint16_t) proxy_socks5_port);
+        valid = inet_pton(AF_INET, proxy_socks5_addr, &address->sin_addr);
+        length = sizeof(*address);
+    } else {
+        struct sockaddr_in6 *address = (void *) &peer;
+        address->sin6_family = AF_INET6; address->sin6_port = htons((uint16_t) proxy_socks5_port);
+        valid = inet_pton(AF_INET6, proxy_socks5_addr, &address->sin6_addr);
+        length = sizeof(*address);
+    }
+    if (valid != 1) return open_failure(s, "invalid proxy address", EINVAL);
     if (args->ctx->udp_proxy_count >= UDP_PROXY_MAX) {
         int64_t now = get_ms();
         reclaim_capacity(args, now);
@@ -197,26 +220,12 @@ int open_udp_proxy(const struct arguments *args, struct ng_session *s, int epoll
     struct udp_proxy *p = ng_calloc(1, sizeof(*p), "udp proxy");
     if (p == NULL) return open_failure(s, "cannot allocate association", ENOMEM);
     p->owner = s; p->ctx = args->ctx; p->epoll_fd = epoll_fd;
-    p->family = strchr(proxy_socks5_addr, ':') == NULL ? AF_INET : AF_INET6;
+    p->family = family; p->peer = peer;
     p->control.protocol = IPPROTO_UDP;
     p->control.udp.proxy = p;
     p->control.udp.state = UDP_ACTIVE;
     p->control.socket = -1;
     s->udp.proxy = p;
-    int valid;
-    socklen_t length;
-    if (p->family == AF_INET) {
-        struct sockaddr_in *address = (void *) &p->peer;
-        address->sin_family = AF_INET; address->sin_port = htons((uint16_t) proxy_socks5_port);
-        valid = inet_pton(AF_INET, proxy_socks5_addr, &address->sin_addr);
-        length = sizeof(*address);
-    } else {
-        struct sockaddr_in6 *address = (void *) &p->peer;
-        address->sin6_family = AF_INET6; address->sin6_port = htons((uint16_t) proxy_socks5_port);
-        valid = inet_pton(AF_INET6, proxy_socks5_addr, &address->sin6_addr);
-        length = sizeof(*address);
-    }
-    if (valid != 1) return open_failure(s, "invalid proxy address", EINVAL);
     s->socket = protected_socket(args, p->family, SOCK_DGRAM, s->udp.uid);
     if (s->socket < 0) return open_failure(s, "open protected relay socket", errno);
     p->control.socket = protected_socket(args, p->family, SOCK_STREAM, s->udp.uid);

@@ -219,6 +219,86 @@ static void setup_proxy(int family, bool auth, const struct sockaddr_storage *ad
     strcpy(proxy_socks5_password, auth ? "pass" : "");
 }
 
+static const char *invalid_proxy_setting(int kind) {
+    const char *addresses[] = {"not-an-ip", "999.0.0.1", "::gg", ""};
+    const int ports[] = {0, -1, 65536, INT_MAX};
+    if (kind < 4) { strcpy(proxy_socks5_addr, addresses[kind]); return "invalid proxy address"; }
+    if (kind < 8) { proxy_socks5_port = ports[kind - 4]; return "invalid proxy port"; }
+    if (kind == 8) strcpy(proxy_socks5_username, "user");
+    else if (kind == 9) strcpy(proxy_socks5_password, "pass");
+    else if (kind == 10) memset(proxy_socks5_username, 'u', 128);
+    else memset(proxy_socks5_password, 'p', 128);
+    return "invalid username/password lengths";
+}
+#endif
+
+void test_udp_proxy_configuration(const struct arguments *args, int version) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    int family = version == 4 ? AF_INET : AF_INET6;
+    struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
+    int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
+    assert(listen(listener, 4) == 0);
+    int relay = local_socket(family, SOCK_DGRAM, &relay_address, &relay_length);
+    int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+    struct arguments running = *args; running.tun = tunnel[1];
+    uint8_t packet[128], buffer[300]; size_t off = proxy_packet(packet, version, 12345);
+    for (int bad = 0; bad < 12; bad++) {
+        setup_proxy(family, false, &server);
+        const char *reason = invalid_proxy_setting(bad);
+        fail_alloc_tag = "udp proxy"; fail_alloc_match = 1;
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+        assert(fail_alloc_match == 1); // No association allocation was attempted.
+        fail_alloc_tag = NULL;
+        assert(strstr(last_proxy_log, reason) != NULL);
+        assert(args->ctx->ng_session == NULL && args->ctx->udp_proxy_count == 0);
+        assert(allocations == 0 && sockets == 0 && !is_readable(listener));
+        while (is_readable(tunnel[0])) assert(recv(tunnel[0], buffer, sizeof(buffer), 0) > 0);
+    }
+    // Both no-auth and maximum supported credentials still negotiate and send.
+    for (int auth = 0; auth < 2; auth++) {
+        setup_proxy(family, false, &server);
+        if (auth) {
+            memset(proxy_socks5_username, 'u', 127); proxy_socks5_username[127] = 0;
+            memset(proxy_socks5_password, 'p', 127); proxy_socks5_password[127] = 0;
+        }
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        struct ng_session *s = args->ctx->ng_session;
+        readable(listener); int peer = accept(listener, NULL, NULL); assert(peer >= 0);
+        pump_proxy(&running, epoll_fd); read_control(peer, buffer, 3);
+        assert(buffer[0] == 5 && buffer[1] == 1 && buffer[2] == (auth ? 2 : 0));
+        uint8_t hello[] = {5, auth ? 2 : 0};
+        assert(send(peer, hello, sizeof(hello), MSG_NOSIGNAL) == sizeof(hello));
+        pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+        if (auth) {
+            read_control(peer, buffer, 257);
+            assert(buffer[0] == 1 && buffer[1] == 127 && buffer[129] == 127);
+            for (int i = 0; i < 127; i++) assert(buffer[2 + i] == 'u' && buffer[130 + i] == 'p');
+            const uint8_t accepted[] = {1, 0};
+            assert(send(peer, accepted, sizeof(accepted), MSG_NOSIGNAL) == sizeof(accepted));
+            pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+        }
+        read_control(peer, buffer, 10);
+        assert(buffer[0] == 5 && buffer[1] == 3);
+        uint8_t accepted[22] = {5, 0, 0, version == 4 ? 1 : 4};
+        size_t length = version == 4 ? 10 : 22;
+        uint16_t port = version == 4 ? ((struct sockaddr_in *) &relay_address)->sin_port :
+                                      ((struct sockaddr_in6 *) &relay_address)->sin6_port;
+        memcpy(accepted + length - 2, &port, 2);
+        assert(send(peer, accepted, length, MSG_NOSIGNAL) == length);
+        while (!udp_proxy_ready(&s->udp)) pump_proxy(&running, epoll_fd);
+        readable(relay); assert(recv(relay, buffer, sizeof(buffer), 0) == length + 3);
+        assert(memcmp(buffer + length, "abc", 3) == 0 && s->udp.sent == 3);
+        clear(args->ctx); close(peer);
+        assert(allocations == 0 && sockets == 0 && args->ctx->udp_proxy_count == 0);
+    }
+    close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
 static void proxy_feedback(int fd, int version, int code, const uint8_t *packet, size_t length) {
     uint8_t reply[2048];
     size_t header = version == 4 ? 20 : 40;
@@ -792,7 +872,7 @@ void test_udp_proxy_capacity(const struct arguments *args, int kind) {
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
         assert(sessions[2]->udp.state == UDP_FINISHING);
         assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
-    } else {
+    } else if (kind == 4) {
         test_monotonic_ms = 0; // Zero is valid and must still start a cooldown.
         assert(handle_udp(&running, packet, off + 11, packet + off,
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
@@ -823,6 +903,26 @@ void test_udp_proxy_capacity(const struct arguments *args, int kind) {
         assert(handle_udp(&running, packet, off + 11, packet + off,
                           test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
         assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
+    } else {
+        sessions[0]->udp.time = 940; // Eligible for eviction if validation happens too late.
+        int before = allocations;
+        for (int bad = 0; bad < 12; bad++) {
+            setup_proxy(AF_INET, false, &server);
+            const char *reason = invalid_proxy_setting(bad);
+            fail_alloc_tag = "udp proxy"; fail_alloc_match = 1;
+            assert(handle_udp(&running, packet, off + 11, packet + off,
+                              test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+            assert(fail_alloc_match == 1 && strstr(last_proxy_log, reason) != NULL);
+            fail_alloc_tag = NULL;
+            assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
+            assert(args->ctx->udp_proxy_scan_at == 0 && args->ctx->udp_proxy_limit_log_at == 0);
+            assert(allocations == before);
+            for (int i = 0; i < UDP_PROXY_MAX; i++) assert(sessions[i]->udp.state == UDP_ACTIVE);
+        }
+        setup_proxy(AF_INET, false, &server);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        assert(sessions[0]->udp.state == UDP_FINISHING && args->ctx->udp_proxy_count == UDP_PROXY_MAX);
     }
     // Capacity reclamation itself is silent: it must not send errors quoting old traffic.
     clear(args->ctx);

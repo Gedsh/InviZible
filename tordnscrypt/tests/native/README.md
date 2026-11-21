@@ -39,6 +39,13 @@ is still unsupported. DNS replies received through the relay use the existing
 filtering and mapping-cache parser without additional DNS lookups.
 
 Association state is allocated only on demand, with at most 16 live associations.
+UDP proxy admission validates the numeric proxy endpoint, port range 1 through
+65535 and credential lengths before allocating association state, reclaiming
+capacity or opening sockets. Both credentials may be empty for no authentication;
+otherwise both must contain 1 through 127 encoded bytes. Invalid settings fail
+locally without evicting an existing flow or changing capacity-scan deadlines.
+The parsed endpoint is reused for connection setup; handshake checks remain as
+defensive validation. No resolver, timer or work on ordinary direct traffic is added.
 Only when admission reaches that limit, one session-list scan closes expired proxy
 associations using their unscaled ordinary timeout (20 seconds during negotiation).
 If still full, it closes the oldest ready association idle for at least 60 seconds.
@@ -99,6 +106,13 @@ successive successful reclamations, immediate use of freed slots, invalidation
 after closure, monotonic zero/failure/backward readings and deadline overflow.
 They retain the real socket and allocation-balance checks; the cooldown regression
 fails against the earlier unthrottled admission path.
+Three configuration regressions cover malformed/empty numeric addresses, invalid
+ports, incomplete credentials and missing credential terminators. They verify
+rejection before association allocation or connection, preservation of a full
+association table and recovery after correcting settings. Real IPv4/IPv6 control
+and relay sockets validate no-auth and 127-byte username/password negotiation,
+datagram forwarding and complete socket/allocation cleanup. The early-rejection
+regression fails against the previous allocation-before-validation path.
 JNI fault injection checks the explicit route flag, pending exceptions and
 disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
 UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
@@ -701,7 +715,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 343 tests plus the optional comparison test.
+The full run contains 346 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

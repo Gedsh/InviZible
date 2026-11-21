@@ -30,6 +30,9 @@ public final class UdpProxyTest extends NativeTestSupport {
     @Test public void failedAndBackwardClocksDoNotReclaimAssociations() { check("udpProxyCapacityClocks"); }
     @Test public void unsuccessfulCapacityScansWaitButFreedSlotsRemainUsable() { check("udpProxyCapacityCooldown"); }
     @Test public void capacityCooldownHandlesZeroFailedBackwardAndOverflowingClocks() { check("udpProxyCapacityCooldownClocks"); }
+    @Test public void invalidIpv4ConfigurationFailsBeforeAllocatingOrConnecting() { check("udpProxyConfiguration4"); }
+    @Test public void invalidIpv6ConfigurationFailsBeforeAllocatingOrConnecting() { check("udpProxyConfiguration6"); }
+    @Test public void invalidConfigurationDoesNotReclaimExistingAssociations() { check("udpProxyConfigurationCapacity"); }
     @Test public void allocationProtectionAndEpollFailuresReleaseResources() { check("udpProxyAllocations"); }
     @Test public void handshakeTimesOutWithoutTrafficExtendingDeadline() { check("udpProxyTimeout"); }
     @Test public void refusedAuthenticationNeverFallsBackToDirect() { check("udpProxyRefused"); }
