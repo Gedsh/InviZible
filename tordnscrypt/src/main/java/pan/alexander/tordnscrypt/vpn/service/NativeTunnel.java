@@ -30,7 +30,7 @@ final class NativeTunnel implements AutoCloseable {
 
         void stop(long context);
 
-        void clear(long context);
+        void clear(long context, boolean preserveUidCaches);
 
         void destroy(long context);
     }
@@ -78,6 +78,8 @@ final class NativeTunnel implements AutoCloseable {
     private long context;
     private Thread worker;
     private boolean stopRequested;
+    // A timed-out full stop must still discard caches when cleanup eventually runs.
+    private boolean discardUidCaches;
     private volatile boolean closed;
     // Command cancellation must not wait on LOCK while a worker is stopping.
     private final Object retryLock = new Object();
@@ -172,7 +174,7 @@ final class NativeTunnel implements AutoCloseable {
                 previous.stopRequested = false;
                 if (previous == this) {
                     if (context != 0)
-                        backend.clear(context);
+                        clearLocked(true);
                 } else {
                     previous.retire();
                     previous.destroyLocked();
@@ -223,7 +225,7 @@ final class NativeTunnel implements AutoCloseable {
             throw new IllegalStateException("Native tunnel is closed");
         if (active != null && active != this) {
             NativeTunnel previous = active;
-            previous.stopLocked();
+            previous.stopLocked(false);
             previous.retire();
             previous.destroyLocked();
         }
@@ -242,7 +244,7 @@ final class NativeTunnel implements AutoCloseable {
             if (!stopRequested && worker != null && worker.isAlive())
                 return;
             // A worker may have exited on its own since the last start.
-            stopLocked();
+            stopLocked(true);
             prepareLocked();
             try {
                 // Initialization resets global SOCKS settings, so configure afterward.
@@ -264,11 +266,19 @@ final class NativeTunnel implements AutoCloseable {
 
     void stop() {
         synchronized (LOCK) {
-            stopLocked();
+            stopLocked(false);
         }
     }
 
-    private void stopLocked() {
+    void stopForReload() {
+        synchronized (LOCK) {
+            stopLocked(true);
+        }
+    }
+
+    private void stopLocked(boolean preserveUidCaches) {
+        if (!preserveUidCaches)
+            discardUidCaches = true;
         if (worker != null && worker.isAlive()) {
             stopRequested = true;
             backend.stop(context);
@@ -283,8 +293,13 @@ final class NativeTunnel implements AutoCloseable {
         }
         worker = null;
         stopRequested = false;
+        clearLocked(preserveUidCaches);
+    }
+
+    private void clearLocked(boolean preserveUidCaches) {
         if (context != 0)
-            backend.clear(context);
+            backend.clear(context, preserveUidCaches && !discardUidCaches);
+        discardUidCaches = false;
     }
 
     /**
@@ -327,6 +342,7 @@ final class NativeTunnel implements AutoCloseable {
     private void destroyLocked() {
         long ownedContext = context;
         context = 0;
+        discardUidCaches = false;
         if (active == this)
             active = null;
         if (ownedContext != 0)

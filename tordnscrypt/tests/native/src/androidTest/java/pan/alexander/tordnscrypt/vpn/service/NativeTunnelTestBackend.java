@@ -16,6 +16,7 @@ final class NativeTunnelTestBackend implements NativeTunnel.Backend {
     boolean releaseOnStop = true;
     volatile Thread worker;
     int initialized, cleared, destroyed;
+    boolean uidCachesPresent;
 
     @Override public long initialize() { events.add("initialize"); initialized++; return 42; }
     @Override public void start(long context) { assertEquals(42, context); events.add("start"); }
@@ -24,11 +25,13 @@ final class NativeTunnelTestBackend implements NativeTunnel.Backend {
         events.add("stop"); stopped.countDown();
         if (releaseOnStop) exit.countDown();
     }
-    @Override public void clear(long context) {
+    @Override public void clear(long context, boolean preserveUidCaches) {
         assertStopped(); events.add("clear"); cleared++;
+        if (!preserveUidCaches) uidCachesPresent = false;
     }
     @Override public void destroy(long context) {
         assertStopped(); events.add("destroy"); destroyed++;
+        uidCachesPresent = false;
     }
     void assertStopped() { assertTrue(worker == null || !worker.isAlive()); }
     void run(long context) {

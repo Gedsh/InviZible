@@ -524,6 +524,8 @@ void report_exit(const struct arguments *args, const char *fmt, ...)
 void check_allowed(const struct arguments *args);
 
 void clear(struct context *ctx);
+// Worker must have exited. Retains inference evidence and its original deadlines.
+void clear_sessions(struct context *ctx);
 
 int check_icmp_session(const struct arguments *args,
                        struct ng_session *s,

@@ -245,14 +245,17 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1stop(
 
 JNIEXPORT void JNICALL
 Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
-        JNIEnv *env, jobject instance, jlong context) {
+        JNIEnv *env, jobject instance, jlong context, jboolean preserve_uid_caches) {
 
     if (context == 0) {
         return;
     }
 
     struct context *ctx = (struct context *) context;
-    clear(ctx);
+    if (preserve_uid_caches)
+        clear_sessions(ctx);
+    else
+        clear(ctx);
 }
 
 JNIEXPORT jint JNICALL

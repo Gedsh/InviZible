@@ -163,8 +163,8 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         }
 
         @Override
-        public void clear(long context) {
-            jni_clear(context);
+        public void clear(long context, boolean preserveUidCaches) {
+            jni_clear(context, preserveUidCaches);
         }
 
         @Override
@@ -214,7 +214,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native void jni_stop(long context);
 
     @Keep
-    private native void jni_clear(long context);
+    private native void jni_clear(long context, boolean preserveUidCaches);
 
     @Keep
     native int jni_get_mtu();
@@ -340,6 +340,12 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
         logi("VPN Stop native");
         nativeTunnel.stop();
         logi("VPN Stopped tunnel thread");
+    }
+
+    void stopNativeForReload() {
+        logi("VPN Stop native for reload");
+        nativeTunnel.stopForReload();
+        logi("VPN Stopped tunnel thread for reload");
     }
 
     // Called from native code

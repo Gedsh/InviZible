@@ -125,6 +125,7 @@ extern int recv_error_fd, recv_error_value;
 void test_icmp_recv_mtu(const struct arguments *args);
 void test_icmp_reply_validation(const struct arguments *args);
 void test_icmp_real_round_trip(const struct arguments *args, int version);
+void test_session_reload_caches(struct arguments *args, int guards);
 void test_icmp_error_rate_limit(const struct arguments *args);
 void test_icmp_reply_bounds(const struct arguments *args);
 void test_icmp_error_queue(const struct arguments *args);

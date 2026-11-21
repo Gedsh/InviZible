@@ -25,7 +25,11 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "icmpRealRoundTrip4") == 0)
+    if (strcmp(id, "sessionReloadCaches") == 0)
+        test_session_reload_caches(&args, 0);
+    else if (strcmp(id, "sessionReloadGuards") == 0)
+        test_session_reload_caches(&args, 1);
+    else if (strcmp(id, "icmpRealRoundTrip4") == 0)
         test_icmp_real_round_trip(&args, 4);
     else if (strcmp(id, "icmpRealRoundTrip6") == 0)
         test_icmp_real_round_trip(&args, 6);

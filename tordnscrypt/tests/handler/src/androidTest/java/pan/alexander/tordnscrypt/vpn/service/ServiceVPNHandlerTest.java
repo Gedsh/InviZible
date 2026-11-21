@@ -18,6 +18,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,13 +42,15 @@ public final class ServiceVPNHandlerTest {
         final CountDownLatch exit = new CountDownLatch(1);
         final AtomicInteger destroyed = new AtomicInteger();
         volatile Thread worker;
+        volatile boolean uidCachesPresent;
         @Override public long initialize() { return 42; }
         @Override public void start(long context) {}
         @Override public void stop(long context) {}
-        @Override public void clear(long context) {
+        @Override public void clear(long context, boolean preserveUidCaches) {
             assertTrue("Cleared before worker exit", worker == null || !worker.isAlive());
+            if (!preserveUidCaches) uidCachesPresent = false;
         }
-        @Override public void destroy(long context) { clear(context); destroyed.incrementAndGet(); }
+        @Override public void destroy(long context) { clear(context, false); destroyed.incrementAndGet(); }
         void run(long context) {
             worker = Thread.currentThread();
             entered.countDown();
@@ -94,6 +97,7 @@ public final class ServiceVPNHandlerTest {
         }
         @Override boolean isNativeRunning() { return owner.isRunning(); }
         @Override void stopNative() { owner.stop(); }
+        @Override void stopNativeForReload() { owner.stopForReload(); }
         void blockWorker() throws InterruptedException {
             owner.start(() -> {}, backend::run);
             await(backend.entered);
@@ -267,6 +271,7 @@ public final class ServiceVPNHandlerTest {
     @Test public void reloadTimeoutRetriesOnHandlerAndBalancesTethering() throws Exception {
         try (Fixture fixture = new Fixture()) {
             fixture.service.blockWorker();
+            fixture.service.backend.uidCachesPresent = true;
             fixture.queue(VPNCommand.RELOAD);
             fixture.service.awaitRetry();
             assertEquals(0, fixture.handler.blocks.get());
@@ -282,6 +287,24 @@ public final class ServiceVPNHandlerTest {
             assertTrue("Cleanup retry was treated as terminal", fixture.service.failures.isEmpty());
             assertArrayEquals(new String[]{"block", "restart", "unblock"}, fixture.handler.events.toArray());
             assertFalse(fixture.service.reloading);
+            assertTrue(fixture.service.backend.uidCachesPresent);
+        }
+    }
+
+    @Test public void nativeCleanupBindsBothCacheModesAndDestroysContext() throws Exception {
+        try (Fixture fixture = new Fixture()) {
+            Method initialize = ServiceVPN.class.getDeclaredMethod("jni_init", int.class);
+            Method clear = ServiceVPN.class.getDeclaredMethod("jni_clear", long.class, boolean.class);
+            Method destroy = ServiceVPN.class.getDeclaredMethod("jni_done", long.class);
+            initialize.setAccessible(true); clear.setAccessible(true); destroy.setAccessible(true);
+            long context = (long) initialize.invoke(fixture.service, android.os.Build.VERSION.SDK_INT);
+            assertNotEquals(0L, context);
+            try {
+                clear.invoke(fixture.service, context, true);
+                clear.invoke(fixture.service, context, false);
+            } finally {
+                destroy.invoke(fixture.service, context);
+            }
         }
     }
 

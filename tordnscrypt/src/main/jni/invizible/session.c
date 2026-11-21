@@ -135,7 +135,7 @@ struct ng_session *find_udp_session(const struct arguments *args, const uint8_t 
                         version == 4 ? (const void *) &ip4->daddr : &ip6->ip6_dst, udp->dest);
 }
 
-void clear(struct context *ctx) {
+void clear_sessions(struct context *ctx) {
     struct ng_session *s = ctx->ng_session;
     while (s != NULL) {
         if (s->socket >= 0 && close(s->socket))
@@ -149,9 +149,13 @@ void clear(struct context *ctx) {
     }
     ctx->ng_session = NULL;
     memset(ctx->session_bucket, 0, sizeof(ctx->session_bucket));
+    memset(ctx->icmp_errors, 0, sizeof(ctx->icmp_errors));
+}
+
+void clear(struct context *ctx) {
+    clear_sessions(ctx);
     memset(&ctx->uid_observations, 0, sizeof(ctx->uid_observations));
     memset(&ctx->uid_dns_mappings, 0, sizeof(ctx->uid_dns_mappings));
-    memset(ctx->icmp_errors, 0, sizeof(ctx->icmp_errors));
 }
 
 static long long refresh_tcp_monitor(const struct arguments *args, struct ng_session *s,

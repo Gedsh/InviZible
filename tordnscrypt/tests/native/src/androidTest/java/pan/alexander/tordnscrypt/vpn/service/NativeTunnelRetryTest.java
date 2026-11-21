@@ -84,13 +84,15 @@ public final class NativeTunnelRetryTest {
         CountDownLatch restarted = new CountDownLatch(1);
         try {
             startBlocked(tunnel, backend);
+            backend.uidCachesPresent = true;
             assertTrue(tunnel.isRunning());
             long generation = tunnel.cancelPendingRetry();
             NativeTunnel.ShutdownTimeoutException timeout = assertThrows(
-                    NativeTunnel.ShutdownTimeoutException.class, tunnel::stop);
+                    NativeTunnel.ShutdownTimeoutException.class, tunnel::stopForReload);
             assertFalse(tunnel.isRunning());
             assertTrue(tunnel.retryAfterCleanup(timeout, generation, queue::add, () -> {
                 assertEquals(1, backend.cleared);
+                assertTrue(backend.uidCachesPresent);
                 tunnel.prepare();
                 tunnel.withOwnership(() -> tunnel.start(() -> {}, context -> restarted.countDown()));
             }));
@@ -100,6 +102,7 @@ public final class NativeTunnelRetryTest {
             assertTrue(restarted.await(2, TimeUnit.SECONDS));
             assertEquals(1, backend.initialized);
             assertEquals(0, backend.destroyed);
+            assertTrue(backend.uidCachesPresent);
         } finally {
             backend.exit.countDown();
             tunnel.close();

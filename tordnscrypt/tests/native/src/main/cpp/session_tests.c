@@ -147,6 +147,68 @@ void test_session_index_keys(struct arguments *args, int version) {
 #endif
 }
 
+void test_session_reload_caches(struct arguments *args, int guards) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    extern void Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
+            JNIEnv *, jobject, jlong, jboolean);
+    for (int version = 4; version <= 6; version += 2) {
+        set_uid_test_clock(10000);
+        uint8_t source[16] = {0};
+        struct uid_dns_answer answers[2] = {{.version = version, .ttl = 3},
+                                           {.version = version, .ttl = 3}};
+        int family = version == 4 ? AF_INET : AF_INET6;
+        assert(inet_pton(family, version == 4 ? "10.1.10.1" : "2001:db8::1", source) == 1);
+        assert(inet_pton(family, version == 4 ? "192.0.2.1" : "2001:db8::2", answers[0].address) == 1);
+        assert(inet_pton(family, version == 4 ? "192.0.2.2" : "2001:db8::3", answers[1].address) == 1);
+        record_uid_dns_answers(args->ctx, "reload.test", answers, 2);
+        record_uid_observation(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443, 12345);
+        assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == 12345);
+        if (guards) {
+            record_uid_observation(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443, 23456);
+            discard_uid_dns_answer(args->ctx, "reload.test", &answers[1]);
+            args->ctx->uid_observations.incomplete_until = 14000;
+            args->ctx->uid_dns_mappings.entry[0].incomplete_until = 16000;
+            args->ctx->uid_dns_mappings.admit_after = 17000;
+        }
+        struct ng_session *s = ng_calloc(1, sizeof(*s), "reload session"); assert(s != NULL);
+        index_key(s, version, IPPROTO_UDP, 12345);
+        s->socket = socket(AF_INET, SOCK_DGRAM, 0); assert(s->socket >= 0);
+        add_session(args->ctx, s);
+        assert(allocations == 1 && sockets == 1);
+        set_uid_test_clock(11000);
+        Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
+                NULL, NULL, (jlong) args->ctx, JNI_TRUE);
+        assert_index_empty(args->ctx);
+        assert(allocations == 0 && sockets == 0);
+        assert(args->ctx->uid_observations.entry[0].expires == 15000);
+        assert(args->ctx->uid_dns_mappings.entry[0].expires == 13000);
+        if (guards) {
+            assert(args->ctx->uid_observations.count == 2);
+            assert(args->ctx->uid_observations.incomplete_until == 14000);
+            assert(args->ctx->uid_dns_mappings.entry[0].incomplete_until == 16000);
+            assert(args->ctx->uid_dns_mappings.admit_after == 17000);
+            assert(args->ctx->uid_dns_mappings.lost_count == 1);
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443) == -1);
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == -1);
+        } else {
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == 12345);
+            set_uid_test_clock(13000); // DNS expires at its original deadline, not reload + TTL.
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == -1);
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443) == 12345);
+            set_uid_test_clock(15000);
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443) == -1);
+        }
+        Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
+                NULL, NULL, (jlong) args->ctx, JNI_FALSE);
+        assert(args->ctx->uid_observations.count == 0 && args->ctx->uid_observations.incomplete_until == 0);
+        assert(args->ctx->uid_dns_mappings.count == 0 && args->ctx->uid_dns_mappings.lost_count == 0 &&
+               args->ctx->uid_dns_mappings.admit_after == 0);
+        assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == -1);
+    }
+    set_uid_test_clock(-1);
+#endif
+}
+
 void test_session_index_policy(struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     struct ng_session *closed = ng_calloc(1, sizeof(*closed), "closed index anchor");

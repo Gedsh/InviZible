@@ -566,7 +566,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 312 tests plus the optional comparison test.
+The full run contains 316 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
@@ -715,6 +715,22 @@ retry. It waits for that worker to exit and native cleanup to finish, then posts
 the original command back to the VPN handler. A newer command, service destruction,
 or VPN permission revocation cancels the pending retry. Ordinary configuration
 and startup errors do not trigger this retry.
+
+RELOAD keeps the same context's bounded UID observations and DNS mappings while
+closing all session sockets and releasing session/queue storage. Cleanup retains
+the caches in place without copies, allocations, refreshed timestamps or extended
+expiry. Conflicting UID observations and DNS/observation overflow guards survive
+alongside positive evidence. Normal STOP, service replacement/destruction and
+failed native startup discard the caches. Startup's redundant cleanup and delayed
+same-owner reload cleanup preserve them; a timed-out full STOP remembers that its
+eventual cleanup must discard them even if another START arrives.
+Session regressions call the JNI cleanup entry point with both preservation modes
+for IPv4/IPv6, checking socket/allocation balance, direct/domain inference, original
+expiry, conflicts and overflow metadata. NativeTunnel tests cover normal reload,
+full stop/destruction and both reload/full-stop timeout paths. The handler timeout
+regression also verifies that caches survive the retried production RELOAD path.
+An app instrumentation case initializes a real native context, invokes both
+boolean JNI cleanup modes through the VM, then destroys it without opening a VPN.
 
 For example, run just the TCP tests with:
 

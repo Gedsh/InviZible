@@ -34,6 +34,26 @@ public final class NativeTunnelTest {
         assertEquals(1, backend.destroyed);
     }
 
+    @Test public void reloadRetainsUidCachesButStopAndDestroyDiscardThem() throws Exception {
+        NativeTunnelTestBackend backend = new NativeTunnelTestBackend();
+        try (NativeTunnel tunnel = new NativeTunnel(backend)) {
+            tunnel.start(() -> {}, backend::run);
+            await(backend.entered);
+            backend.uidCachesPresent = true;
+            tunnel.stopForReload();
+            assertTrue(backend.uidCachesPresent);
+            CountDownLatch entered = new CountDownLatch(1);
+            tunnel.start(() -> assertTrue(backend.uidCachesPresent), context -> entered.countDown());
+            await(entered);
+            assertTrue(backend.uidCachesPresent);
+            assertEquals(1, backend.initialized);
+            tunnel.stop();
+            assertFalse(backend.uidCachesPresent);
+            backend.uidCachesPresent = true;
+        }
+        assertFalse(backend.uidCachesPresent);
+    }
+
     @Test public void preparingBeforeVpnSetupDoesNotReinitializeAtStart() throws Exception {
         NativeTunnelTestBackend backend = new NativeTunnelTestBackend();
         try (NativeTunnel tunnel = new NativeTunnel(backend)) {
@@ -45,6 +65,27 @@ public final class NativeTunnelTest {
             assertTrue(backend.events.indexOf("initialize") < backend.events.indexOf("configure"));
         }
         assertEquals(1, backend.destroyed);
+    }
+
+    @Test public void timedOutFullStopDiscardsCachesBeforeAnotherStart() throws Exception {
+        NativeTunnelTestBackend backend = new NativeTunnelTestBackend();
+        backend.releaseOnStop = false;
+        NativeTunnel tunnel = new NativeTunnel(backend, 20);
+        try {
+            tunnel.start(() -> {}, backend::run);
+            await(backend.entered);
+            backend.uidCachesPresent = true;
+            assertThrows(NativeTunnel.ShutdownTimeoutException.class, tunnel::stop);
+            assertTrue(backend.uidCachesPresent); // Still owned by the live worker.
+            backend.exit.countDown();
+            backend.worker.join(2000);
+            assertFalse(backend.worker.isAlive());
+            tunnel.start(() -> assertFalse(backend.uidCachesPresent), context -> {});
+            assertFalse(backend.uidCachesPresent);
+        } finally {
+            backend.exit.countDown();
+            tunnel.close();
+        }
     }
 
     @Test public void timeoutKeepsContextAndWorkerUntilTermination() throws Exception {

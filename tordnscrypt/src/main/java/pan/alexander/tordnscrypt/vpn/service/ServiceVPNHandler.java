@@ -272,7 +272,7 @@ public class ServiceVPNHandler extends Handler {
 
         // A shutdown timeout must leave no temporary tethering rule for the retry to duplicate.
         // Confirm termination before blocking tethering or changing any TUN descriptor.
-        serviceVPN.stopNative();
+        serviceVPN.stopNativeForReload();
 
         String oldVpnInterfaceName = "";
         if (fixTTL) {
