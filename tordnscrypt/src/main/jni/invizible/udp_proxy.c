@@ -26,6 +26,9 @@ extern char proxy_socks5_addr[], proxy_socks5_username[], proxy_socks5_password[
 enum udp_proxy_stage { PROXY_CONNECT, PROXY_SEND_HELLO, PROXY_HELLO,
     PROXY_SEND_AUTH, PROXY_AUTH, PROXY_SEND_ASSOCIATE, PROXY_ASSOCIATE, PROXY_READY };
 
+#define PROXY_PENDING_PACKETS 4
+#define PROXY_PENDING_BYTES (64u * 1024u)
+
 struct udp_proxy {
     // An unindexed event endpoint, retained until its owner is freed so queued
     // events cannot point at freed memory. It never owns a UDP session itself.
@@ -38,8 +41,11 @@ struct udp_proxy {
     size_t used, wanted;
     uint8_t handshake[262];
     struct sockaddr_storage peer;
-    uint8_t *pending; // At most the first datagram; later handshake traffic is dropped.
-    size_t pending_length;
+    struct {
+        uint8_t *data;
+        size_t length;
+    } pending[PROXY_PENDING_PACKETS];
+    size_t pending_count, pending_bytes;
 };
 
 bool udp_proxy_ready(const struct udp_session *s) {
@@ -66,10 +72,13 @@ void close_udp_proxy(struct ng_session *s) {
         close(p->control.socket);
         p->control.socket = -1;
     }
-    if (p->pending != NULL) {
-        ng_free(p->pending, __FILE__, __LINE__);
-        p->pending = NULL;
+    for (size_t i = 0; i < p->pending_count; i++) {
+        if (p->pending[i].data != NULL) {
+            ng_free(p->pending[i].data, __FILE__, __LINE__);
+            p->pending[i].data = NULL;
+        }
     }
+    p->pending_count = p->pending_bytes = 0;
     if (p->counted) {
         p->ctx->udp_proxy_count--;
         p->counted = false;
@@ -159,11 +168,14 @@ int send_udp_proxy(const struct arguments *args, struct ng_session *s, const uin
     if (length > wire_max - overhead || length > (s->udp.version == 4 ? UDP4_MAXMSG : UDP6_MAXMSG))
         return 0;
     if (p->stage != PROXY_READY) {
-        if (p->pending == NULL) {
-            p->pending = ng_malloc(length ? length : 1, "udp proxy pending");
-            if (p->pending == NULL) { fail_proxy(args, p, "cannot buffer first datagram"); return 0; }
-            memcpy(p->pending, data, length); p->pending_length = length;
-        }
+        if (p->pending_count == PROXY_PENDING_PACKETS || length > PROXY_PENDING_BYTES - p->pending_bytes)
+            return 0; // Keep the oldest datagrams in order; discard new overflow.
+        uint8_t *copy = ng_malloc(length ? length : 1, "udp proxy pending");
+        if (copy == NULL) { fail_proxy(args, p, "cannot buffer handshake datagram"); return 0; }
+        if (length != 0) memcpy(copy, data, length);
+        p->pending[p->pending_count].data = copy;
+        p->pending[p->pending_count++].length = length;
+        p->pending_bytes += length;
         return 1;
     }
     uint8_t header[22]; size_t header_length = udp_header(&s->udp, header);
@@ -212,12 +224,14 @@ static bool finish_associate(const struct arguments *args, struct udp_proxy *p) 
     if (epoll_ctl(p->epoll_fd, EPOLL_CTL_ADD, s->socket, &s->ev) < 0) return false;
     p->stage = PROXY_READY; s->udp.time = time(NULL);
     if (!watch_control(p, EPOLLIN)) return false;
-    if (p->pending != NULL) {
-        uint8_t *data = p->pending; size_t size = p->pending_length;
-        p->pending = NULL;
+    for (size_t i = 0; i < p->pending_count && s->udp.state == UDP_ACTIVE; i++) {
+        uint8_t *data = p->pending[i].data; size_t size = p->pending[i].length;
+        // Detach this entry: a fatal send closes the association and frees the rest.
+        p->pending[i].data = NULL;
         send_udp_proxy(args, s, data, size);
         ng_free(data, __FILE__, __LINE__);
     }
+    p->pending_count = p->pending_bytes = 0;
     return s->udp.state == UDP_ACTIVE;
 }
 

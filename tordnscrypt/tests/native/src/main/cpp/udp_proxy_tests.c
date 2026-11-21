@@ -1,5 +1,15 @@
 #include "test_support.h"
 
+ssize_t __real_sendmsg(int, const struct msghdr *, int);
+static int fail_relay_send;
+ssize_t __wrap_sendmsg(int fd, const struct msghdr *message, int flags) {
+    if (fail_relay_send > 0 && --fail_relay_send == 0) {
+        errno = EHOSTUNREACH;
+        return -1;
+    }
+    return __real_sendmsg(fd, message, flags);
+}
+
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
 extern char proxy_socks5_addr[], proxy_socks5_username[], proxy_socks5_password[];
 extern int proxy_socks5_port;
@@ -84,16 +94,20 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     setup_proxy(family, auth, &server);
     struct packet_buffers buffers = {0};
     struct arguments running = *args; running.tun = tunnel[1];
-    running.buffers = kind == 0 ? NULL : &buffers;
+    running.buffers = kind == 0 || kind == 4 ? NULL : &buffers;
     uint8_t packet[128], buffer[2048];
     size_t off = proxy_packet(packet, version, 12345);
     assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
     struct ng_session *s = args->ctx->ng_session;
     assert(s != NULL && s->udp.proxy != NULL && args->ctx->udp_proxy_count == 1 && sockets == 2);
-    assert(allocations == 3); // Session, association and exactly one pending datagram.
+    assert(allocations == 3); // Session, association and the first queued datagram.
+    assert(send_udp_proxy(&running, s, NULL, 0) == 1);
+    assert(send_udp_proxy(&running, s, (const uint8_t *) "def", 3) == 1);
+    assert(send_udp_proxy(&running, s, (const uint8_t *) "ghi", 3) == 1);
+    assert(allocations == 6); // Four datagrams, including an empty one.
     for (int i = 0; i < 20; i++)
-        assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
-    assert(allocations == 3); // Handshake bursts cannot grow a queue.
+        assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+    assert(allocations == 6); // Overflow drops new packets without replacing queued data.
     readable(listener); int control = accept(listener, NULL, NULL); assert(control >= 0);
     pump_proxy(&running, epoll_fd); read_control(control, buffer, 3);
     assert(buffer[0] == 5 && buffer[1] == 1 && buffer[2] == (auth ? 2 : 0));
@@ -123,7 +137,19 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
                                       ((struct sockaddr_in6 *) &relay_address)->sin6_port;
     memcpy(accepted + header - 2, &port, 2);
     assert(send(control, accepted, header, MSG_NOSIGNAL) == header);
+    if (kind == 4) fail_relay_send = 2; // Fail after the first queued datagram was sent.
     for (int i = 0; i < 4 && !udp_proxy_ready(&s->udp); i++) pump_proxy(&running, epoll_fd);
+    if (kind == 4) {
+        assert(fail_relay_send == 0 && s->udp.state == UDP_FINISHING && s->udp.sent == 3);
+        assert(allocations == 2 && sockets == 0 && args->ctx->udp_proxy_count == 0);
+        readable(relay);
+        assert(recv(relay, buffer, sizeof(buffer), 0) == 25); // IPv6 destination header plus "abc".
+        assert(!is_readable(relay));
+        clear(args->ctx); clear_packet_buffers(&buffers);
+        close(control); close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+        return;
+    }
     assert(udp_proxy_ready(&s->udp));
     struct sockaddr_storage client; socklen_t client_length = sizeof(client);
     readable(relay);
@@ -133,7 +159,16 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     assert(buffer[0] == 0 && buffer[1] == 0 && buffer[2] == 0 && buffer[3] == (version == 4 ? 1 : 4));
     assert(memcmp(buffer + 4, &s->udp.daddr, version == 4 ? 4 : 16) == 0);
     assert(load16(buffer + udp_header - 2) == 5000 && memcmp(buffer + udp_header, "abc", 3) == 0);
-    assert(!is_readable(relay) && s->udp.sent == 3); // Only the retained first packet was sent.
+    uint8_t queued[128];
+    for (int i = 0; i < 3; i++) {
+        readable(relay);
+        size_t payload_length = i == 0 ? 0 : 3;
+        assert(recv(relay, queued, sizeof(queued), 0) == (ssize_t) (udp_header + payload_length));
+        assert(memcmp(queued, buffer, udp_header) == 0);
+        if (payload_length != 0)
+            assert(memcmp(queued + udp_header, i == 1 ? "def" : "ghi", 3) == 0);
+    }
+    assert(!is_readable(relay) && s->udp.sent == 9 && allocations == 2);
     // Reject SOCKS fragmentation, reserved bytes and mismatched flow addresses/ports.
     for (int bad = 0; bad < 4; bad++) {
         buffer[bad == 0 ? 2 : bad == 1 ? 0 : bad == 2 ? 4 : udp_header - 1] ^= 1;
@@ -243,6 +278,20 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
         }
         assert(args->ctx->udp_proxy_count == UDP_PROXY_MAX && sockets == 2 * UDP_PROXY_MAX);
         assert(allocations == 3 * UDP_PROXY_MAX);
+        clear(args->ctx);
+        assert(allocations == 0 && sockets == 0);
+        assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        struct ng_session *s = args->ctx->ng_session;
+        uint8_t large[32768] = {0};
+        assert(send_udp_proxy(&running, s, large, sizeof(large)) == 1);
+        assert(send_udp_proxy(&running, s, large, sizeof(large) - 3) == 1);
+        assert(allocations == 5); // Exactly 64 KiB across three datagrams.
+        assert(send_udp_proxy(&running, s, large, 1) == 0);
+        assert(allocations == 5 && s->udp.state == UDP_ACTIVE);
+        assert(send_udp_proxy(&running, s, NULL, 0) == 1); // Byte limit allows an empty fourth packet.
+        assert(allocations == 6);
+        assert(send_udp_proxy(&running, s, NULL, 0) == 0); // Count limit includes empty packets.
+        assert(allocations == 6);
     } else if (kind == 1) {
         const char *tags[] = {"udp proxy", "udp proxy pending"};
         for (int i = 0; i < 2; i++) {
@@ -253,6 +302,19 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
             assert(allocations == 0 && sockets == 0 && args->ctx->udp_proxy_count == 0);
         }
         fail_alloc_tag = NULL;
+        for (int queued = 1; queued < 4; queued++) {
+            assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+            struct ng_session *s = args->ctx->ng_session;
+            for (int i = 1; i < queued; i++)
+                assert(send_udp_proxy(&running, s, (const uint8_t *) "abc", 3) == 1);
+            fail_alloc_tag = "udp proxy pending"; fail_alloc_match = 1;
+            assert(send_udp_proxy(&running, s, (const uint8_t *) "abc", 3) == 0);
+            assert(fail_alloc_match == 0 && s->udp.state == UDP_FINISHING);
+            assert(allocations == 2 && sockets == 0 && args->ctx->udp_proxy_count == 0);
+            fail_alloc_tag = NULL;
+            clear(args->ctx);
+            assert(allocations == 0);
+        }
         failure = PROTECT;
         assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
         assert(allocations == 0 && sockets == 0);
@@ -266,6 +328,8 @@ void test_udp_proxy_failures(const struct arguments *args, int kind) {
             // Ongoing app traffic does not extend the fixed handshake deadline.
             time_t started = s->udp.time;
             assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+            for (int i = 0; i < 2; i++)
+                assert(send_udp_proxy(&running, s, (const uint8_t *) "abc", 3) == 1);
             assert(s->udp.time == started);
             s->udp.time = time(NULL) - TCP_INIT_TIMEOUT - 1;
             assert(check_udp_session(&running, s, 1, SESSION_MAX) == 0);

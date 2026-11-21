@@ -39,8 +39,12 @@ is still unsupported. DNS replies received through the relay use the existing
 filtering and mapping-cache parser without additional DNS lookups.
 
 Association state is allocated only on demand, with at most 16 live associations.
-Only the first datagram is retained during negotiation; later handshake datagrams
-are dropped rather than queued. Negotiation has a fixed 20-second timeout, then
+During negotiation, up to four datagrams are retained in arrival order, with a
+64 KiB payload limit per association. New datagrams exceeding either limit are
+dropped without replacing queued packets; empty datagrams count toward the
+four-packet limit. The queue is sent once negotiation succeeds and is freed on
+success, failure, timeout or cleanup. It adds no retransmission timers or writable
+socket watches for relay traffic. Negotiation has a fixed 20-second timeout, then
 uses the ordinary UDP idle timeout. All I/O is nonblocking in the existing epoll
 loop. Idle control sockets watch for input/closure without EPOLLOUT, polling
 timers or keepalives. Scatter/gather sends add the SOCKS header without allocating
@@ -63,7 +67,10 @@ truncated, fragmented, reserved-byte and mismatched frames are discarded.
 `UdpProxyTest` uses real local TCP control and UDP relay sockets to exercise both
 families, cross-family relays, authentication, split replies, datagram framing,
 empty payloads, real MSG_TRUNC and recovery, malformed handshakes, refusal,
-control EOF, epoll failures, stale events, bounded memory, timeouts, owner-recovery
+control EOF, epoll failures, stale events, handshake queue ordering and overflow,
+empty queued datagrams, exact byte/count limits, allocation failures with a
+partially filled queue, fatal sends while flushing the queue, bounded memory,
+timeouts, owner-recovery
 switches between proxy/direct/blocked routes, and cleanup.
 JNI fault injection checks the explicit route flag, pending exceptions and
 disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
@@ -607,7 +614,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 327 tests plus the optional comparison test.
+The full run contains 328 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.
