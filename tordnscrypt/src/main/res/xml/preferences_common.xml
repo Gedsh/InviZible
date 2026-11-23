@@ -111,9 +111,9 @@
         android:key="categoryCommonProxy"
         android:layout="@layout/preferences_category_custom"
         android:title="@string/pref_common_proxy_categ">
-        <Preference
-            android:id="@+id/swUseProxy"
-            android:key="swUseProxy"
+        <SwitchPreference
+            android:id="@+id/swUseSocks5Proxy"
+            android:key="swUseSocks5Proxy"
             android:summary="@string/pref_common_proxy_summ"
             android:title="@string/pref_common_proxy" />
     </PreferenceCategory>

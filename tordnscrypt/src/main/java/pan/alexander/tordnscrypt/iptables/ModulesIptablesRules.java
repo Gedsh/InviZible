@@ -90,7 +90,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MOD
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_DEFAULT_BRIDGES;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_OWN_BRIDGES;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WIFI_ON_REQUESTED;
 import static pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK;
 import static pan.alexander.tordnscrypt.utils.enums.ModuleState.RUNNING;
@@ -160,7 +160,7 @@ public class ModulesIptablesRules extends IptablesRulesSender {
 
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean ttlFix = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE) && !modulesStatus.isUseModulesWithRoot();
-        boolean useProxy = shPref.getBoolean(USE_PROXY, false);
+        boolean useProxy = shPref.getBoolean(USE_PROXY_NON_TOR, false);
 
         boolean arpSpoofingDetection = shPref.getBoolean(ARP_SPOOFING_DETECTION, false);
         boolean blockInternetWhenArpAttackDetected = shPref.getBoolean(ARP_SPOOFING_BLOCK_INTERNET, false);

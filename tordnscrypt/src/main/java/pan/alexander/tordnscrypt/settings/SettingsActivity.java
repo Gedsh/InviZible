@@ -210,9 +210,6 @@ public class SettingsActivity extends LangAppCompatActivity {
         } else if (Objects.equals(intent.getAction(), "tor_bridges")) {
             fSupportTrans.replace(R.id.fragment_container, new PreferencesTorBridges(), "PreferencesTorBridges");
             fSupportTrans.commit();
-        } else if (Objects.equals(intent.getAction(), "use_proxy")) {
-            fSupportTrans.replace(R.id.fragment_container, new ProxyFragment(), "ProxyFragment");
-            fSupportTrans.commit();
         } else if (Objects.equals(intent.getAction(), "proxy_apps_exclude")) {
             Bundle bundle = new Bundle();
             bundle.putBoolean("proxy", true);

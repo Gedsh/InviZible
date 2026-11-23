@@ -62,7 +62,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR
 import javax.inject.Inject
 
 const val CLEARNET_APPS_FOR_PROXY = "clearnetAppsForProxy"
@@ -92,6 +92,10 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
     private var etBackground: Drawable? = null
     private var task: Job? = null
     private var progressJob: Job? = null
+
+    interface OnProxySettingsChangeListener {
+        fun onSocks5ProxySettingEnabled(enable: Boolean)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         App.instance.daggerComponent.inject(this)
@@ -136,7 +140,7 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
             addTextChangedListener(this@ProxyFragment)
         }
 
-        val nonTorProxified = sharedPreferences?.getBoolean(USE_PROXY, false) ?: false
+        val nonTorProxified = sharedPreferences?.getBoolean(USE_PROXY_NON_TOR, false) ?: false
         val dnsCryptProxified =
             sharedPreferences?.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false) ?: false
         val torProxified = sharedPreferences?.getBoolean(TOR_OUTBOUND_PROXY, false) ?: false
@@ -183,7 +187,13 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
         val activateTorProxy = binding.chbProxyTor.isEnabled && binding.chbProxyTor.isChecked
         val activateITPDProxy = binding.chbProxyITPD.isEnabled && binding.chbProxyITPD.isChecked
 
-        if (getBoolFromSharedPreferences(USE_PROXY) != activateNonTorProxy) {
+        if (activateNonTorProxy || activateDNSCryptProxy || activateTorProxy || activateITPDProxy) {
+            toggleSocks5ProxySwitch(true)
+        } else {
+            toggleSocks5ProxySwitch(false)
+        }
+
+        if (getBoolFromSharedPreferences(USE_PROXY_NON_TOR) != activateNonTorProxy) {
             settingsChanged = true
         }
         if (getBoolFromSharedPreferences(PROXIFY_DNSCRYPT) != activateDNSCryptProxy) {
@@ -266,6 +276,15 @@ class ProxyFragment : Fragment(), View.OnClickListener, TextWatcher {
 
         Toast.makeText(context, R.string.toastSettings_saved, Toast.LENGTH_SHORT).show()
 
+    }
+
+    private fun toggleSocks5ProxySwitch(enable: Boolean) {
+        for (fragment in parentFragmentManager.fragments) {
+            if (fragment is OnProxySettingsChangeListener) {
+                (fragment as OnProxySettingsChangeListener).onSocks5ProxySettingEnabled(enable)
+                break
+            }
+        }
     }
 
     override fun onDestroyView() {

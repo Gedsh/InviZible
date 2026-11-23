@@ -40,7 +40,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection.HTTP_OK
@@ -226,7 +226,7 @@ class HttpsConnectionManager @Inject constructor(
                 DEFAULT_PROXY_PORT.toInt()
             }
         }
-        val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
+        val useProxy = defaultPreferences.getBoolean(USE_PROXY_NON_TOR, false)
                 && proxyAddress.isNotBlank()
                 && proxyPort != 0
 
