@@ -131,7 +131,7 @@ public class SnowflakeConfigurator {
         if (rendezvous == AMP_CACHE) {
             return "www.google.com,cdn.ampproject.org";
         } else if (rendezvous == CDN77) {
-            return "docs.plesk.com,maxst.icons8.com,app.datapacket.com";
+            return "wiki.gnome.org,cdn.kde.org,docs.plesk.com,maxst.icons8.com,app.datapacket.com";
         } else {
             return "ajax.aspnetcdn.com";
         }
