@@ -2115,7 +2115,7 @@ ssize_t write_tcp(const struct arguments *args, const struct tcp_session *cur,
     if (syn) {
         *(options) = 2; // MSS
         *(options + 1) = 4; // total option length
-        *((uint16_t *) (options + 2)) = get_default_mss(cur->version);
+        *((uint16_t *) (options + 2)) = htons(get_default_mss(cur->version));
 
         *(options + 4) = 3; // window scale
         *(options + 5) = 3; // total option length

@@ -1,5 +1,52 @@
 #include "test_support.h"
 
+void test_tcp_syn_ack_mss(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    extern char proxy_socks5_addr[];
+    extern int proxy_socks5_port;
+    int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+    real_network = 1;
+    for (int reuse = 0; reuse < 2; reuse++) {
+        struct packet_buffers buffers = {0};
+        struct arguments running = *args; running.tun = tunnel[1];
+        running.buffers = reuse ? &buffers : NULL;
+        for (int mode = 0; mode < 3; mode++) {
+            bool proxy = mode == 1;
+            strcpy(proxy_socks5_addr, proxy ? "127.0.0.1" : "");
+            proxy_socks5_port = proxy ? 1080 : 0;
+            for (int version = 4; version <= 6; version += 2) {
+                struct tcp_session session = {.version = version, .source = htons(12345),
+                        .dest = htons(443), .local_seq = 2000, .remote_seq = 1001,
+                        .recv_window = 65535};
+                int family = version == 4 ? AF_INET : AF_INET6;
+                assert(inet_pton(family, version == 4 ? "10.1.10.1" : "fd00::1", &session.saddr) == 1);
+                assert(inet_pton(family, version == 4 ? "192.0.2.1" : "2001:db8::1", &session.daddr) == 1);
+                assert(write_syn_ack(&running, &session) == 0);
+                uint8_t output[128], expected[128];
+                size_t length = tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+                size_t off = version == 4 ? 20 : 40;
+                assert(length == off + 28 && output[off + 12] >> 4 == 7);
+                assert(output[off + 13] == (TH_SYN | TH_ACK));
+                assert(load16(output + off) == 443 && load16(output + off + 2) == 12345);
+                unsigned mss = proxy ? (version == 4 ? 1430 : 1410) : (version == 4 ? 1460 : 1440);
+                const uint8_t *options = output + off + 20;
+                assert(options[0] == 2 && options[1] == 4);
+                // Inspect wire bytes independently of the host-order MSS helper.
+                assert(options[2] == (uint8_t) (mss >> 8) && options[3] == (uint8_t) mss);
+                memcpy(expected, output, length);
+                packet_checksums(expected, length, off, IPPROTO_TCP);
+                assert(memcmp(expected, output, length) == 0);
+                assert(allocations == (reuse ? 1 : 0));
+            }
+        }
+        clear_packet_buffers(&buffers);
+        assert(allocations == 0);
+    }
+    close(tunnel[0]); close(tunnel[1]);
+    assert(sockets == 0);
+#endif
+}
+
 void test_tcp_scaled_capacity(const struct arguments *args, int version) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     real_network = 1;
