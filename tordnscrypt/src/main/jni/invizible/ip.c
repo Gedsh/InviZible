@@ -27,9 +27,11 @@ int max_tun_msg = 0;
 extern int own_uid;
 extern bool compatibility_mode;
 extern bool can_filter;
+extern char proxy_socks5_addr[];
+extern int proxy_socks5_port;
 
 uint16_t get_mtu(void) {
-    return 1500;
+    return *proxy_socks5_addr && proxy_socks5_port ? VPN_PROXY_MTU : VPN_MTU;
 }
 
 uint16_t get_default_mss(int version) {
@@ -58,12 +60,13 @@ int check_tun(const struct arguments *args,
 
     // Check tun read
     if (ev->events & EPOLLIN) {
-        uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, get_mtu(), "tun read");
+        // Keep the maximum read size independent of pending proxy configuration.
+        uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, VPN_MTU, "tun read");
         if (buffer == NULL) {
             report_exit(args, "Cannot allocate tunnel read buffer");
             return -1;
         }
-        ssize_t length = read(args->tun, buffer, get_mtu());
+        ssize_t length = read(args->tun, buffer, VPN_MTU);
         if (length < 0) {
             release_packet_buffer(args, buffer);
 
@@ -80,7 +83,7 @@ int check_tun(const struct arguments *args,
         } else if (length > 0) {
 
             if (length > max_tun_msg) {
-                // Positive read length is bounded by get_mtu() (1500), so it fits in int.
+                // Positive read length is bounded by VPN_MTU (1500), so it fits in int.
                 max_tun_msg = (int) length;
                 log_android(ANDROID_LOG_WARN, "Maximum tun msg length %d", max_tun_msg);
             }

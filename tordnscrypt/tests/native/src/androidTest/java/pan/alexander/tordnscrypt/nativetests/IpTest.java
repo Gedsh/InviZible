@@ -12,6 +12,7 @@ import static org.junit.Assume.assumeTrue;
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
+    @Test public void proxyMtuTracksConfigurationAndPreservesMaximumTunnelReads() { check("proxyMtu"); }
     @Test public void unsupportedIcmpSkipsOwnerLookupPolicyAndForwarding() { check("ipIcmpValidation"); }
     @Test public void domainUidFallbackAppliesPolicyAcrossFamiliesAndOwnerApis() { check("uidDomainPolicy"); }
     @Test public void domainUidConflictsExpireIndependentlyAndRespectExactIpPriority() { check("uidDomainConflict"); }

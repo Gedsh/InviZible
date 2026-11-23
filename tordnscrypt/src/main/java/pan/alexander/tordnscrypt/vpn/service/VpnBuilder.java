@@ -54,7 +54,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWAL
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR;
 import static pan.alexander.tordnscrypt.vpn.VpnUtils.multicastIPv6;
 
 import android.annotation.SuppressLint;
@@ -119,7 +119,8 @@ public class VpnBuilder {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
+    BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule,
+                          boolean useProxy) {
         SharedPreferences prefs = defaultPreferences.get();
         boolean lan = prefs.getBoolean(BYPASS_LAN, true);
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
@@ -152,7 +153,7 @@ public class VpnBuilder {
         addIPv6Routes(builder, lan);
 
         // MTU
-        int mtu = vpn.jni_get_mtu();
+        int mtu = vpn.jni_get_mtu(useProxy);
         logi("VPN MTU=" + mtu);
         builder.setMtu(mtu);
 
@@ -292,7 +293,7 @@ public class VpnBuilder {
     private void manageAppsTunneling(BuilderVPN builder, List<Rule> listRule, boolean fixTTL) {
         SharedPreferences prefs = defaultPreferences.get();
         Set<String> setVpnBypassApps = preferenceRepository.get().getStringSetPreference(APPS_BYPASS_VPN);
-        boolean useProxy = prefs.getBoolean(USE_PROXY, false);
+        boolean useProxy = prefs.getBoolean(USE_PROXY_NON_TOR, false);
         if (useProxy && (prefs.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS).isEmpty()
                 || prefs.getString(PROXY_PORT, DEFAULT_PROXY_PORT).isEmpty())) {
             useProxy = false;

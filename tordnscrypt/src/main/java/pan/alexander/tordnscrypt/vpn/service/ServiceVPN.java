@@ -217,7 +217,7 @@ public class ServiceVPN extends VpnService implements OnInternetConnectionChecke
     private native void jni_clear(long context, boolean preserveUidCaches);
 
     @Keep
-    native int jni_get_mtu();
+    native int jni_get_mtu(boolean useProxy);
 
     @Keep
     private native void jni_socks5_for_tor(String addr, int port, String username, String password, boolean isolateUid, int dnsPort);

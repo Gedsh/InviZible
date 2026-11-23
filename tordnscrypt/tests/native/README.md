@@ -38,6 +38,26 @@ routes, so negotiation failures never fall back to direct traffic. ICMP proxying
 is still unsupported. DNS replies received through the relay use the existing
 filtering and mapping-cache parser without additional DNS lookups.
 
+The VPN interface MTU is 1470 when the external SOCKS5 proxy is enabled and 1500
+otherwise; Tor alone retains 1500. The builder queries the MTU using the prepared
+settings for the upcoming start/reload, independently of old native proxy globals.
+Changing proxy mode changes builder equality and therefore replaces the interface.
+Native TCP MSS calculations use the corresponding configured MTU. Tunnel reads
+retain the 1500-byte maximum to avoid truncating packets during transitions.
+The TCP regression checks generated IPv4/IPv6 SYN-ACK MSS bytes in network order:
+1460/1440 without the external proxy, and 1430/1410 with it. It toggles proxy
+mode in both directions, uses temporary and reused output buffers, and checks
+packet checksums independently and allocation/socket balance. The regression
+fails against the previous host-order MSS serialization. SYN-ACK fingerprints
+intentionally differ from revisions preceding these MTU/MSS corrections; strict
+baseline comparisons require a baseline containing the corrections.
+The IP regression checks both MTUs, IPv4/IPv6 MSS, enable/disable transitions,
+Tor-only configuration, JNI queries against differing native state, full-size
+tunnel reads and allocation cleanup. App `VpnMtuTest` checks the Java/JNI binding
+and interface-builder equality across both toggle directions without establishing
+a VPN. This reserves framing space for a 1500-byte relay path; smaller paths still
+need MTU feedback, and IP/SOCKS fragmentation remains unsupported.
+
 Association state is allocated only on demand, with at most 16 live associations.
 UDP proxy admission validates the numeric proxy endpoint, port range 1 through
 65535 and credential lengths before allocating association state, reclaiming
@@ -754,7 +774,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 352 tests plus the optional comparison test.
+The full run contains 354 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

@@ -239,7 +239,7 @@ public class ServiceVPNHandler extends Handler {
         listRule.addAll(Rule.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
 
-        last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
+        last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule, preferences.getUseProxy());
         serviceVPN.vpn = startVPN(last_builder);
 
         if (serviceVPN.vpn == null) {
@@ -268,7 +268,7 @@ public class ServiceVPNHandler extends Handler {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean fixTTL = shouldFixTTL();
 
-        ReloadPlan plan = prepareReload();
+        ReloadPlan plan = prepareReload(preferences);
 
         // A shutdown timeout must leave no temporary tethering rule for the retry to duplicate.
         // Confirm termination before blocking tethering or changing any TUN descriptor.
@@ -325,11 +325,12 @@ public class ServiceVPNHandler extends Handler {
         ModulesIptablesRules.allowTethering(serviceVPN, pathVars.get(), oldVpnInterfaceName);
     }
 
-    ReloadPlan prepareReload() {
+    ReloadPlan prepareReload(VpnPreferenceHolder preferences) {
         listRule.clear();
         listRule.addAll(Rule.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
-        return new ReloadPlan(vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule), listAllowed);
+        return new ReloadPlan(vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule,
+                preferences.getUseProxy()), listAllowed);
     }
 
     void restartVpn(ReloadPlan plan, VpnPreferenceHolder preferences) {

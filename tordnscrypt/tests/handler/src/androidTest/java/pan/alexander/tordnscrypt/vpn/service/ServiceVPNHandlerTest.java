@@ -135,7 +135,7 @@ public final class ServiceVPNHandlerTest {
             started.countDown();
         }
         @Override boolean shouldFixTTL() { return true; }
-        @Override ReloadPlan prepareReload() { return null; }
+        @Override ReloadPlan prepareReload(VpnPreferenceHolder preferences) { return null; }
         @Override String blockTethering() {
             events.add("block");
             blocks.incrementAndGet();

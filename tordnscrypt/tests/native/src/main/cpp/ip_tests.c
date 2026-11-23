@@ -1,5 +1,49 @@
 #include "test_support.h"
 
+void test_proxy_mtu(const struct arguments *args) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    extern char proxy_socks5_addr[], tor_socks5_addr[];
+    extern int proxy_socks5_port, tor_socks5_port;
+    extern jint Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(
+            JNIEnv *, jobject, jboolean);
+    strcpy(tor_socks5_addr, "127.0.0.1"); tor_socks5_port = 9050;
+    for (int mode = 0; mode < 5; mode++) {
+        strcpy(proxy_socks5_addr, mode == 2 ? "" : "127.0.0.1");
+        proxy_socks5_port = mode == 1 || mode == 2 || mode == 3 ? 1080 : 0;
+        unsigned mtu = mode == 1 || mode == 3 ? 1470 : 1500;
+        assert(get_mtu() == mtu); // Tor alone does not lower the MTU.
+        assert(get_default_mss(4) == mtu - 40 && get_default_mss(6) == mtu - 60);
+        // Builder settings must win over the old native state, in both directions.
+        assert(Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(NULL, NULL, JNI_TRUE) == 1470);
+        assert(Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(NULL, NULL, JNI_FALSE) == 1500);
+    }
+    strcpy(proxy_socks5_addr, "127.0.0.1"); proxy_socks5_port = 1080;
+    int tunnel[2]; assert(pipe(tunnel) == 0);
+    struct packet_buffers buffers = {0};
+    struct arguments running = *args; running.tun = tunnel[0]; running.buffers = &buffers;
+    struct epoll_event event = {.events = EPOLLIN};
+    real_network = 1; capture_packets = 1;
+    for (int version = 4; version <= 6; version += 2) {
+        _Alignas(8) uint8_t packet[1500] = {0};
+        size_t off = version == 4 ? 20 : 40;
+        ip_header(packet, version, IPPROTO_UDP, sizeof(packet) - off,
+                  version == 4 ? "203.0.113.2" : "2001:db8::2");
+        struct udphdr *udp = (void *) (packet + off);
+        udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(sizeof(packet) - off);
+        packet_checksums(packet, sizeof(packet), off, IPPROTO_UDP);
+        int before = udp_calls;
+        assert(write(tunnel[1], packet, sizeof(packet)) == sizeof(packet));
+        assert(check_tun(&running, &event, -1, 0, SESSION_MAX) == 0);
+        assert(udp_calls == before + 1 && buffers.buffer[PACKET_INPUT].capacity >= sizeof(packet));
+        assert(memcmp(buffers.buffer[PACKET_INPUT].data, packet, sizeof(packet)) == 0);
+    }
+    capture_packets = 0;
+    clear_packet_buffers(&buffers); close(tunnel[0]); close(tunnel[1]);
+    *proxy_socks5_addr = *tor_socks5_addr = 0; proxy_socks5_port = tor_socks5_port = 0;
+    assert(get_mtu() == 1500 && allocations == 0 && sockets == 0);
+#endif
+}
+
 void test_restore_uid_addresses(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     _Alignas(4) uint8_t source[5], dest[5];

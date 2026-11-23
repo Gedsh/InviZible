@@ -25,7 +25,11 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "jniUdpProxy") == 0)
+    if (strcmp(id, "tcpSynAckMss") == 0)
+        test_tcp_syn_ack_mss(&args);
+    else if (strcmp(id, "proxyMtu") == 0)
+        test_proxy_mtu(&args);
+    else if (strcmp(id, "jniUdpProxy") == 0)
         test_jni_udp_proxy();
     else if (strcmp(id, "udpProxy4") == 0)
         test_udp_proxy_round_trip(&args, 0);
