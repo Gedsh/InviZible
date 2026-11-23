@@ -79,6 +79,19 @@ timers or keepalives. Scatter/gather sends add the SOCKS header without allocati
 a payload copy. Ordinary direct UDP keeps its socket path and session-record size;
 disabled-proxy policy callbacks do not read an additional JNI field.
 
+The UDP proxy handshake advances immediately through available request/reply
+steps, including the prefix and remaining address of a UDP ASSOCIATE reply.
+Normal processing is bounded to eight handshake read/write attempts per callback; short reads and
+writes consume that budget, and EAGAIN/EINTR yields immediately. Epoll watches
+change only when the required direction changes. The existing terminal-error
+drain remains bounded by the handshake buffer so buffered rejection replies keep
+their diagnostic precedence. This adds no timers, allocations or direct-traffic work.
+Two IPv4/IPv6 regressions cover immediate next-request transmission, combined and
+split replies, authentication, maximum-length credentials, interrupted reads,
+blocked sends, one-byte writes across the work limit, idle watch masks, forwarded
+payloads and complete allocation/socket cleanup. Existing handshake fixtures
+expect the next request without an extra writable event.
+
 The relay supports IPv4/IPv6 endpoints and destinations, including a different
 relay address family from the TCP proxy. A wildcard relay address uses the TCP
 peer's IP of the same family. No authentication and configured username/password
@@ -741,7 +754,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 350 tests plus the optional comparison test.
+The full run contains 352 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

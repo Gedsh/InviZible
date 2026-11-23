@@ -7,6 +7,25 @@ static int last_relay_errno;
 static int congested_relay = -1;
 static int congested_error = EAGAIN;
 static unsigned congested_attempts;
+static int control_send_fd = -1, control_send_error;
+static size_t control_send_limit;
+static unsigned control_send_calls;
+bool limit_proxy_control_send(int fd, size_t *length) {
+    if (fd == control_send_fd) {
+        control_send_calls++;
+        if (control_send_error != 0) {
+            errno = control_send_error; control_send_error = 0;
+            return false;
+        }
+        if (control_send_limit != 0 && *length > control_send_limit) *length = control_send_limit;
+    }
+    return true;
+}
+ssize_t __real_send(int, const void *, size_t, int);
+ssize_t __wrap_send(int fd, const void *data, size_t length, int flags) {
+    if (!limit_proxy_control_send(fd, &length)) return -1;
+    return __real_send(fd, data, length, flags);
+}
 ssize_t __wrap_sendmsg(int fd, const struct msghdr *message, int flags) {
     if (fd == congested_relay) {
         congested_attempts++;
@@ -281,14 +300,14 @@ void test_udp_proxy_configuration(const struct arguments *args, int version) {
         assert(buffer[0] == 5 && buffer[1] == 1 && buffer[2] == (auth ? 2 : 0));
         uint8_t hello[] = {5, auth ? 2 : 0};
         assert(send(peer, hello, sizeof(hello), MSG_NOSIGNAL) == sizeof(hello));
-        pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+        pump_proxy(&running, epoll_fd);
         if (auth) {
             read_control(peer, buffer, 257);
             assert(buffer[0] == 1 && buffer[1] == 127 && buffer[129] == 127);
             for (int i = 0; i < 127; i++) assert(buffer[2 + i] == 'u' && buffer[130 + i] == 'p');
             const uint8_t accepted[] = {1, 0};
             assert(send(peer, accepted, sizeof(accepted), MSG_NOSIGNAL) == sizeof(accepted));
-            pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+            pump_proxy(&running, epoll_fd);
         }
         read_control(peer, buffer, 10);
         assert(buffer[0] == 5 && buffer[1] == 3);
@@ -435,6 +454,94 @@ static void proxy_mtu_checks(const struct arguments *args, struct ng_session *s,
 }
 #endif
 
+void test_udp_proxy_handshake(const struct arguments *args, int version) {
+#if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int mode = 0; mode < 3; mode++) {
+        int family = version == 4 ? AF_INET : AF_INET6;
+        struct sockaddr_storage server, relay_address; socklen_t server_length, relay_length;
+        int listener = local_socket(family, SOCK_STREAM, &server, &server_length);
+        assert(listen(listener, 4) == 0);
+        int relay = local_socket(family, SOCK_DGRAM, &relay_address, &relay_length);
+        int tunnel[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
+        int epoll_fd = epoll_create1(EPOLL_CLOEXEC); assert(epoll_fd >= 0);
+        setup_proxy(family, mode != 0, &server);
+        if (mode == 2) {
+            memset(proxy_socks5_username, 'u', 127); proxy_socks5_username[127] = 0;
+            memset(proxy_socks5_password, 'p', 127); proxy_socks5_password[127] = 0;
+        }
+        struct arguments running = *args; running.tun = tunnel[1];
+        uint8_t packet[128], buffer[300]; size_t off = proxy_packet(packet, version, 12345);
+        assert(handle_udp(&running, packet, off + 11, packet + off,
+                          test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
+        struct ng_session *s = args->ctx->ng_session;
+        readable(listener); int peer = accept(listener, NULL, NULL); assert(peer >= 0);
+        struct epoll_event event;
+        assert(epoll_wait(epoll_fd, &event, 1, 1000) == 1);
+        struct ng_session *endpoint = event.data.ptr;
+        check_udp_socket(&running, &event); read_control(peer, buffer, 3);
+        assert(endpoint->ev.events == (EPOLLIN | EPOLLERR | EPOLLRDHUP));
+        uint8_t hello[] = {5, mode != 0 ? 2 : 0};
+        assert(send(peer, hello, 1, MSG_NOSIGNAL) == 1);
+        pump_proxy(&running, epoll_fd);
+        assert(!is_readable(peer) && !udp_proxy_ready(&s->udp));
+        assert(send(peer, hello + 1, 1, MSG_NOSIGNAL) == 1);
+        if (mode == 2) {
+            control_send_fd = endpoint->socket; control_send_limit = 1;
+            control_send_error = EAGAIN; control_send_calls = 0;
+        }
+        pump_proxy(&running, epoll_fd);
+        if (mode == 2) {
+            assert(control_send_calls == 1 && !is_readable(peer));
+            assert(endpoint->ev.events & EPOLLOUT);
+            control_send_calls = 0;
+            while (control_send_calls < 257) {
+                unsigned before = control_send_calls;
+                pump_proxy(&running, epoll_fd);
+                assert(control_send_calls > before && control_send_calls <= before + 8);
+            }
+            assert(control_send_calls == 257);
+            control_send_fd = -1; control_send_limit = 0;
+        } else assert(is_readable(peer)); // No second epoll turn to send the next request.
+        read_control(peer, buffer, mode == 2 ? 257 : mode == 1 ? 11 : 10);
+        if (mode != 0) {
+            assert(buffer[0] == 1 && buffer[1] == (mode == 2 ? 127 : 4));
+            const uint8_t accepted[] = {1, 0};
+            assert(send(peer, accepted, 1, MSG_NOSIGNAL) == 1);
+            recv_error_fd = endpoint->socket; recv_error_value = EINTR;
+            pump_proxy(&running, epoll_fd); // Interrupted receive retains the read watch.
+            pump_proxy(&running, epoll_fd); // Consume only the first byte.
+            assert(!is_readable(peer));
+            assert(send(peer, accepted + 1, 1, MSG_NOSIGNAL) == 1);
+            pump_proxy(&running, epoll_fd);
+            assert(is_readable(peer));
+            read_control(peer, buffer, 10);
+        }
+        const uint8_t request[] = {5, 3, 0, 1, 0, 0, 0, 0, 0, 0};
+        assert(memcmp(buffer, request, sizeof(request)) == 0);
+        uint8_t accepted[22] = {5, 0, 0, version == 4 ? 1 : 4};
+        size_t length = version == 4 ? 10 : 22;
+        uint16_t port = version == 4 ? ((struct sockaddr_in *) &relay_address)->sin_port :
+                                      ((struct sockaddr_in6 *) &relay_address)->sin6_port;
+        memcpy(accepted + length - 2, &port, 2);
+        if (mode == 0) {
+            assert(send(peer, accepted, 4, MSG_NOSIGNAL) == 4);
+            pump_proxy(&running, epoll_fd);
+            assert(!udp_proxy_ready(&s->udp) && !is_readable(relay));
+            assert(send(peer, accepted + 4, length - 4, MSG_NOSIGNAL) == (ssize_t) length - 4);
+        } else assert(send(peer, accepted, length, MSG_NOSIGNAL) == (ssize_t) length);
+        pump_proxy(&running, epoll_fd);
+        assert(udp_proxy_ready(&s->udp) && s->udp.sent == 3 && allocations == 2);
+        readable(relay); assert(recv(relay, buffer, sizeof(buffer), 0) == (ssize_t) length + 3);
+        assert(memcmp(buffer + length, "abc", 3) == 0);
+        assert(endpoint->ev.events == (EPOLLIN | EPOLLERR | EPOLLRDHUP));
+        struct epoll_event idle[2]; assert(epoll_wait(epoll_fd, idle, 2, 0) == 0);
+        clear(args->ctx);
+        close(peer); close(listener); close(relay); close(epoll_fd); close(tunnel[0]); close(tunnel[1]);
+        assert(allocations == 0 && sockets == 0);
+    }
+#endif
+}
+
 void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
 #if defined(INVIZIBLE_UDP_PROXY) && !defined(INVIZIBLE_BASELINE_TESTS)
     int version = kind == 0 || kind == 3 || kind == 7 || kind == 10 || kind == 11 || kind == 13 ? 4 : 6;
@@ -474,14 +581,14 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     assert(send(control, hello + 1, 1, MSG_NOSIGNAL) == 1);
     pump_proxy(&running, epoll_fd);
     if (auth) {
-        pump_proxy(&running, epoll_fd); read_control(control, buffer, 11);
+        read_control(control, buffer, 11);
         const uint8_t expected[] = {1, 4, 'u', 's', 'e', 'r', 4, 'p', 'a', 's', 's'};
         assert(memcmp(buffer, expected, sizeof(expected)) == 0);
         const uint8_t accepted[] = {1, 0};
         assert(send(control, accepted, 2, MSG_NOSIGNAL) == 2);
         pump_proxy(&running, epoll_fd);
     }
-    pump_proxy(&running, epoll_fd); read_control(control, buffer, 10);
+    read_control(control, buffer, 10);
     const uint8_t associate[] = {5, 3, 0, 1, 0, 0, 0, 0, 0, 0};
     assert(memcmp(buffer, associate, sizeof(associate)) == 0);
     bool mapped = kind == 9;
@@ -799,12 +906,12 @@ void test_udp_proxy_bad_handshakes(const struct arguments *args) {
             assert(send(control, hello, sizeof(hello), MSG_NOSIGNAL) == sizeof(hello));
             pump_proxy(&running, epoll_fd);
             if (bad == 2) {
-                pump_proxy(&running, epoll_fd); read_control(control, buffer, 11);
+                read_control(control, buffer, 11);
                 const uint8_t rejected[] = {1, 1};
                 assert(send(control, rejected, 2, MSG_NOSIGNAL) == 2);
                 pump_proxy(&running, epoll_fd);
             } else if (bad >= 3) {
-                pump_proxy(&running, epoll_fd); read_control(control, buffer, 10);
+                read_control(control, buffer, 10);
                 uint8_t reply[] = {5, bad == 3 ? 7 : bad >= 8 ? bad - 7 : 0, bad == 4 ? 1 : 0,
                                    bad == 5 ? 3 : 1, 127, 0, 0, 1, 0, bad == 6 ? 0 : 53};
                 size_t reply_length = bad >= 8 ? 4 : sizeof(reply);
@@ -866,7 +973,7 @@ void test_udp_proxy_reset_replies(const struct arguments *args) {
             if (kind != 4 && kind != 5) {
                 uint8_t hello[] = {5, auth ? 2 : 0};
                 assert(send(control, hello, 2, MSG_NOSIGNAL) == 2);
-                pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+                pump_proxy(&running, epoll_fd);
                 read_control(control, buffer, auth ? 11 : 10);
             }
             if (kind == 1) {
@@ -944,7 +1051,7 @@ void test_udp_proxy_capacity(const struct arguments *args, int kind) {
             check_udp_socket(&running, &controls[i]); read_control(peers[i], buffer, 3);
             const uint8_t hello[] = {5, 0};
             assert(send(peers[i], hello, sizeof(hello), MSG_NOSIGNAL) == sizeof(hello));
-            pump_proxy(&running, epoll_fd); pump_proxy(&running, epoll_fd);
+            pump_proxy(&running, epoll_fd);
             read_control(peers[i], buffer, 10);
             uint8_t accepted[10] = {5, 0, 0, 1};
             memcpy(accepted + 8, &((struct sockaddr_in *) &relay_address)->sin_port, 2);

@@ -153,7 +153,9 @@ static int open_failure(const struct arguments *args, struct ng_session *s, cons
 }
 
 static bool watch_control(struct udp_proxy *p, uint32_t events) {
-    p->control.ev.events = events | EPOLLERR | EPOLLRDHUP;
+    events |= EPOLLERR | EPOLLRDHUP;
+    if (p->control.ev.events == events) return true;
+    p->control.ev.events = events;
     return epoll_ctl(p->epoll_fd, EPOLL_CTL_MOD, p->control.socket, &p->control.ev) == 0;
 }
 
@@ -486,7 +488,56 @@ static bool next_handshake(const struct arguments *args, struct udp_proxy *p, in
         p->wanted = 10; // Unknown external UDP tuple: RFC 1928 all-zero address/port.
     }
     p->used = 0;
-    return watch_control(p, EPOLLOUT) || fail_proxy(args, p, "monitor control request", errno);
+    return true;
+}
+
+// Return true only after progress, allowing another bounded nonblocking step.
+static bool handshake_step(const struct arguments *args, struct udp_proxy *p, int error) {
+    bool sending = p->stage == PROXY_SEND_HELLO || p->stage == PROXY_SEND_AUTH || p->stage == PROXY_SEND_ASSOCIATE;
+    ssize_t bytes = sending
+            ? send(p->control.socket, p->handshake + p->used, p->wanted - p->used, MSG_NOSIGNAL)
+            : recv(p->control.socket, p->handshake + p->used, p->wanted - p->used, 0);
+    // SO_ERROR clears the pending error. Drain only the current reply on this
+    // terminal path, retaining its cause if the buffered bytes are incomplete.
+    // Positive reads bound this loop by the fixed handshake buffer size.
+    while (error != 0 && bytes > 0 && p->used + (size_t) bytes < p->wanted) {
+        p->used += (size_t) bytes;
+        bytes = recv(p->control.socket, p->handshake + p->used, p->wanted - p->used, 0);
+    }
+    if (error != 0 && bytes <= 0) return fail_proxy(args, p, "control socket", error);
+    if (bytes < 0 && (errno == EAGAIN || errno == EINTR)) return false;
+    if (bytes <= 0) {
+        return fail_proxy(args, p, bytes == 0 ? "control connection closed during handshake" :
+                   sending ? "control send" : "control receive", bytes < 0 ? errno : 0);
+    }
+    p->used += (size_t) bytes;
+    if (p->used != p->wanted) return true;
+    if (sending) {
+        p->stage = p->stage == PROXY_SEND_HELLO ? PROXY_HELLO :
+                   p->stage == PROXY_SEND_AUTH ? PROXY_AUTH : PROXY_ASSOCIATE;
+        p->used = 0; p->wanted = p->stage == PROXY_ASSOCIATE ? 4 : 2;
+    } else if (p->stage == PROXY_ASSOCIATE && p->wanted == 4) {
+        if (p->handshake[0] != 5 || p->handshake[2] != 0) {
+            return fail_proxy(args, p, "invalid UDP ASSOCIATE reply header", EPROTO);
+        }
+        unsigned int code = p->handshake[1];
+        if (code != 0) {
+            static const char *const reasons[] = {"success", "general server failure",
+                "not allowed by proxy rules", "network unreachable", "host unreachable",
+                "connection refused", "TTL expired", "UDP ASSOCIATE unsupported", "address type unsupported"};
+            static const int errors[] = {0, EIO, EACCES, ENETUNREACH, EHOSTUNREACH,
+                ECONNREFUSED, ETIMEDOUT, EOPNOTSUPP, EAFNOSUPPORT};
+            return fail_reply(args, p, "UDP ASSOCIATE reply", code,
+                       code < 9 ? reasons[code] : "unassigned reply code", code < 9 ? errors[code] : EPROTO);
+        }
+        if (error != 0) return fail_proxy(args, p, "control socket", error);
+        p->wanted = p->handshake[3] == 1 ? 10 : p->handshake[3] == 4 ? 22 : 0;
+        if (p->wanted == 0)
+            return fail_reply(args, p, "relay address type", p->handshake[3], "numeric IPv4/IPv6 required", EAFNOSUPPORT);
+    } else {
+        return next_handshake(args, p, error); // A buffered rejection takes precedence over reset.
+    }
+    return true;
 }
 
 static void control_event(const struct arguments *args, struct udp_proxy *p, uint32_t events) {
@@ -517,52 +568,15 @@ static void control_event(const struct arguments *args, struct udp_proxy *p, uin
         p->handshake[0] = 5; p->handshake[1] = 1;
         p->handshake[2] = *proxy_socks5_username || *proxy_socks5_password ? 2 : 0;
     }
-    bool sending = p->stage == PROXY_SEND_HELLO || p->stage == PROXY_SEND_AUTH || p->stage == PROXY_SEND_ASSOCIATE;
-    ssize_t bytes = sending
-            ? send(p->control.socket, p->handshake + p->used, p->wanted - p->used, MSG_NOSIGNAL)
-            : recv(p->control.socket, p->handshake + p->used, p->wanted - p->used, 0);
-    // SO_ERROR clears the pending error. Drain only the current reply on this
-    // terminal path, retaining its cause if the buffered bytes are incomplete.
-    // Positive reads bound this loop by the fixed handshake buffer size.
-    while (error != 0 && bytes > 0 && p->used + (size_t) bytes < p->wanted) {
-        p->used += (size_t) bytes;
-        bytes = recv(p->control.socket, p->handshake + p->used, p->wanted - p->used, 0);
+    // Continue across complete replies/requests without an intervening epoll wait.
+    // Short writes/reads also consume the budget; EAGAIN/EINTR yields immediately.
+    for (int i = 0; i < 8 && p->stage != PROXY_READY; i++) {
+        if (!handshake_step(args, p, error)) break;
     }
-    if (error != 0 && bytes <= 0) { fail_proxy(args, p, "control socket", error); return; }
-    if (bytes < 0 && (errno == EAGAIN || errno == EINTR)) return;
-    if (bytes <= 0) {
-        fail_proxy(args, p, bytes == 0 ? "control connection closed during handshake" :
-                   sending ? "control send" : "control receive", bytes < 0 ? errno : 0);
-        return;
-    }
-    p->used += (size_t) bytes;
-    if (p->used != p->wanted) return;
-    if (sending) {
-        p->stage = p->stage == PROXY_SEND_HELLO ? PROXY_HELLO :
-                   p->stage == PROXY_SEND_AUTH ? PROXY_AUTH : PROXY_ASSOCIATE;
-        p->used = 0; p->wanted = p->stage == PROXY_ASSOCIATE ? 4 : 2;
-        if (!watch_control(p, EPOLLIN)) fail_proxy(args, p, "monitor control reply", errno);
-    } else if (p->stage == PROXY_ASSOCIATE && p->wanted == 4) {
-        if (p->handshake[0] != 5 || p->handshake[2] != 0) {
-            fail_proxy(args, p, "invalid UDP ASSOCIATE reply header", EPROTO); return;
-        }
-        unsigned int code = p->handshake[1];
-        if (code != 0) {
-            static const char *const reasons[] = {"success", "general server failure",
-                "not allowed by proxy rules", "network unreachable", "host unreachable",
-                "connection refused", "TTL expired", "UDP ASSOCIATE unsupported", "address type unsupported"};
-            static const int errors[] = {0, EIO, EACCES, ENETUNREACH, EHOSTUNREACH,
-                ECONNREFUSED, ETIMEDOUT, EOPNOTSUPP, EAFNOSUPPORT};
-            fail_reply(args, p, "UDP ASSOCIATE reply", code,
-                       code < 9 ? reasons[code] : "unassigned reply code", code < 9 ? errors[code] : EPROTO);
-            return;
-        }
-        if (error != 0) { fail_proxy(args, p, "control socket", error); return; }
-        p->wanted = p->handshake[3] == 1 ? 10 : p->handshake[3] == 4 ? 22 : 0;
-        if (p->wanted == 0)
-            fail_reply(args, p, "relay address type", p->handshake[3], "numeric IPv4/IPv6 required", EAFNOSUPPORT);
-    } else {
-        next_handshake(args, p, error); // A buffered rejection takes precedence over reset.
+    if (p->owner->udp.state == UDP_ACTIVE && p->stage != PROXY_READY) {
+        bool sending = p->stage == PROXY_SEND_HELLO || p->stage == PROXY_SEND_AUTH || p->stage == PROXY_SEND_ASSOCIATE;
+        if (!watch_control(p, sending ? EPOLLOUT : EPOLLIN))
+            fail_proxy(args, p, sending ? "monitor control request" : "monitor control reply", errno);
     }
 }
 

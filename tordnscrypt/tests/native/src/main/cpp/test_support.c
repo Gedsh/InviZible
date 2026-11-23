@@ -348,6 +348,8 @@ int __wrap_connect(int fd, const struct sockaddr *addr, socklen_t len) {
 ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
 ssize_t __wrap_sendto(int fd, const void *buffer, size_t length, int flags,
                       const struct sockaddr *addr, socklen_t addrlen) {
+    // Bionic's fortified send() delegates to sendto().
+    if (!limit_proxy_control_send(fd, &length)) return -1;
     if (sendto_error_fd >= 0 && fd == sendto_error_fd) {
         errno = sendto_error_value;
         sendto_error_fd = -1;

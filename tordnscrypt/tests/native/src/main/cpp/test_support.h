@@ -129,6 +129,8 @@ void test_icmp_recv_mtu(const struct arguments *args);
 void test_icmp_reply_validation(const struct arguments *args);
 void test_icmp_real_round_trip(const struct arguments *args, int version);
 void test_udp_proxy_round_trip(const struct arguments *args, int kind);
+void test_udp_proxy_handshake(const struct arguments *args, int version);
+bool limit_proxy_control_send(int fd, size_t *length);
 void test_udp_proxy_failures(const struct arguments *args, int kind);
 void test_udp_proxy_capacity(const struct arguments *args, int kind);
 void test_udp_proxy_configuration(const struct arguments *args, int version);

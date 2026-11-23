@@ -53,6 +53,10 @@ static const char *run_case(const char *id) {
         test_udp_proxy_round_trip(&args, 9);
     else if (strcmp(id, "udpProxyMtu4over6") == 0)
         test_udp_proxy_round_trip(&args, 10);
+    else if (strcmp(id, "udpProxyHandshake4") == 0)
+        test_udp_proxy_handshake(&args, 4);
+    else if (strcmp(id, "udpProxyHandshake6") == 0)
+        test_udp_proxy_handshake(&args, 6);
     else if (strcmp(id, "udpProxyBatch4") == 0)
         test_udp_proxy_round_trip(&args, 11);
     else if (strcmp(id, "udpProxyBatch6") == 0)
