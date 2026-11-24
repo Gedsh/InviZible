@@ -1226,6 +1226,31 @@ static void test_uid_dns_loss_limits(struct arguments *args) {
                args->ctx->uid_dns_mappings.lost_count == UID_DNS_LOSSES);
         for (size_t i = 0; i < args->ctx->uid_dns_mappings.count; i++)
             assert(strcmp(args->ctx->uid_dns_mappings.entry[i].domain, "new") != 0);
+        // Long-lived mappings fill the enlarged cache without premature eviction.
+        clear(args->ctx); set_uid_test_clock(10000);
+        maps[0].ttl = maps[1].ttl = UINT32_MAX;
+        record_uid_dns_answers(args->ctx, "test", maps, 2);
+        for (unsigned int i = 2; i < UID_DNS_MAPPINGS; i++) {
+            char domain[32]; snprintf(domain, sizeof(domain), "long-%u", i);
+            struct uid_dns_answer fill = {.version = 4, .ttl = 600, .address = {203, 0, 113, (uint8_t) i}};
+            record_uid_dns_answers(args->ctx, domain, &fill, 1);
+        }
+        assert(args->ctx->uid_dns_mappings.count == 256 && args->ctx->uid_dns_mappings.lost_count == 0);
+        set_uid_test_clock(10500);
+        record_uid_dns_answers(args->ctx, "safe", safe, 1);
+        assert(args->ctx->uid_dns_mappings.lost_count == 1);
+        assert(args->ctx->uid_dns_mappings.lost[0].expires == 310000);
+        set_uid_test_clock(11000);
+        record_uid_dns_answers(args->ctx, "test", maps, 2);
+        // Refreshing the mappings must not extend or erase the original guard.
+        set_uid_test_clock(309999);
+        record_uid_observation(args->ctx, version, IPPROTO_TCP, source, maps[0].address, 443, 12345);
+        assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, maps[1].address, 443) == -1);
+        set_uid_test_clock(310000);
+        assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, maps[1].address, 443) == 12345);
+        clear(args->ctx); set_uid_test_clock(10000);
+        discard_uid_dns_answer(args->ctx, "oversized", &maps[0]);
+        assert(args->ctx->uid_dns_mappings.lost[0].expires == 310000);
         clear(args->ctx);
         assert(args->ctx->uid_dns_mappings.lost_count == 0 && args->ctx->uid_dns_mappings.admit_after == 0);
         assert(allocations == 0 && sockets == 0 && string_refs == 0);

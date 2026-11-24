@@ -133,10 +133,10 @@ struct tcp_memory {
 #define UID_OBSERVATIONS 256
 #define UID_OBSERVATION_LOSSES 64
 #define UID_OBSERVATION_MS 5000
-#define UID_DNS_MAPPINGS 128
-#define UID_DNS_LOSSES 64
+#define UID_DNS_MAPPINGS 256
+#define UID_DNS_LOSSES 128
 #define UID_DNS_ANSWERS 32
-#define UID_DNS_MAX_TTL 60
+#define UID_DNS_MAX_TTL 300
 
 struct packet_owner {
     jint uid;

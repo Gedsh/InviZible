@@ -740,8 +740,8 @@ Failed-restoration errors are emitted after the destination fallback, avoiding
 an error for a packet whose owner was successfully inferred.
 Domain UID fallback runs only when there is no usable direct-IP observation;
 direct-IP conflicts or excluded owners do not fall through to it. A separate
-per-context array stores up to 128 exact hostname/address mappings and 64 exact
-discarded-evidence records (about 56 KiB together),
+per-context array stores up to 256 exact hostname/address mappings and 128 exact
+discarded-evidence records (about 112 KiB together),
 with no allocations, timers, DNS transaction tracking or Java/JNI additions.
 Only complete, successful, unfiltered standard A/AAAA responses supply mappings.
 Names are normalized to ASCII lowercase without suffix matching; binary labels
@@ -751,7 +751,10 @@ up to eight hops are followed regardless of record order, with address lifetime 
 by every alias TTL. Each hop uses a bounded scan of the existing response; the final
 scan collects all matching addresses together. No additional DNS queries are sent.
 Unrelated answer owners are ignored. Mapping lifetimes use boot time and are capped
-at 60 seconds; zero TTL revokes the matching association. Oversized answer sets
+at 300 seconds; shorter address/CNAME TTLs still apply, and zero TTL revokes the
+matching association. Fresh confirmed ownership can use a mapping older than a
+minute; traffic and inference never refresh its DNS deadline or extend the
+five-second UID window. Oversized answer sets
 (more than 32 matching addresses) publish no mappings; a validated rescan retains
 discarded evidence for every matching address, including those beyond the batch.
 Evicting a live mapping retains its exact hostname, address and original expiry.
@@ -781,7 +784,11 @@ selective original-expiry capacity guards, unrelated-domain continuity, shared-I
 losses, saturation of both arrays, deferred admission and recovery, clocks,
 cleanup and context isolation. Four DNS
 cases cover TCP/UDP response parsing, normalization, aliases, TTLs, malformed tails,
-filtered/truncated/failed responses and resource balance. Reordered one- and two-hop
+filtered/truncated/failed responses and resource balance. Retention cases check
+inference after one minute, exact five-minute and shorter CNAME expiry, independent
+UID expiry, all 256 resident slots, and original guard deadlines after eviction and
+mapping refresh. Both saturation arrays retain their fixed bounds; larger limits
+add no timers or packet-time allocations. Reordered one- and two-hop
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.

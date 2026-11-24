@@ -279,7 +279,36 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                             length = test_uid_dns_response(data, version, false);
                             memset(data + 28, 0xFF, 4);
                             parse_dns_response(args, &session, data, &length);
-                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 70000);
+                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 310000);
+                            // Fresh owner evidence can use older DNS, without extending
+                            // either the DNS/CNAME deadline or the five-second UID window.
+                            clear(args->ctx);
+                            length = test_uid_dns_response(data, version, alias);
+                            size_t first = alias ? 40 : 22;
+                            size_t address_stride = 12 + (version == 4 ? 4 : 16);
+                            for (int i = 0; i < 2; i++)
+                                store16(data + first + i * address_stride + 8, 600);
+                            if (alias) store16(data + 30, 120);
+                            parse_dns_response(args, &session, data, &length);
+                            int64_t expires = alias ? 130000 : 310000;
+                            assert(args->ctx->uid_dns_mappings.entry[0].expires == expires);
+                            uint8_t retention_source[16] = {0};
+                            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                             version == 4 ? "10.0.0.2" : "fd00::1", retention_source) == 1);
+                            const void *known = args->ctx->uid_dns_mappings.entry[0].address;
+                            const void *unknown = args->ctx->uid_dns_mappings.entry[1].address;
+                            set_uid_test_clock(80000);
+                            record_uid_observation(args->ctx, version, protocol, retention_source, known, 443, 12345);
+                            assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == 12345);
+                            set_uid_test_clock(85000);
+                            assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == -1);
+                            set_uid_test_clock(expires - 1);
+                            record_uid_observation(args->ctx, version, protocol, retention_source, known, 443, 12345);
+                            assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == 12345);
+                            assert(args->ctx->uid_dns_mappings.entry[0].expires == expires);
+                            set_uid_test_clock(expires);
+                            assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == -1);
+                            set_uid_test_clock(10000);
                             // Duplicate addresses use the shortest TTL, regardless of order.
                             clear(args->ctx);
                             length = test_uid_dns_response(data, version, false);
