@@ -239,7 +239,7 @@ public class ServiceVPNHandler extends Handler {
         listRule.addAll(Rule.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
 
-        last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule, preferences.getUseProxy());
+        last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
         serviceVPN.vpn = startVPN(last_builder);
 
         if (serviceVPN.vpn == null) {
@@ -329,8 +329,7 @@ public class ServiceVPNHandler extends Handler {
         listRule.clear();
         listRule.addAll(Rule.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
-        return new ReloadPlan(vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule,
-                preferences.getUseProxy()), listAllowed);
+        return new ReloadPlan(vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule), listAllowed);
     }
 
     void restartVpn(ReloadPlan plan, VpnPreferenceHolder preferences) {

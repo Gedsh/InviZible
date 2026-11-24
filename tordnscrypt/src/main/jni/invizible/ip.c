@@ -31,7 +31,7 @@ extern char proxy_socks5_addr[];
 extern int proxy_socks5_port;
 
 uint16_t get_mtu(void) {
-    return *proxy_socks5_addr && proxy_socks5_port ? VPN_PROXY_MTU : VPN_MTU;
+    return VPN_MTU;
 }
 
 uint16_t get_default_mss(int version) {

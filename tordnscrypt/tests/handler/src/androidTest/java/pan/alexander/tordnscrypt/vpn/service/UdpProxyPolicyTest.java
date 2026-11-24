@@ -51,7 +51,7 @@ public final class UdpProxyPolicyTest {
             modules.setMode(OperationMode.VPN_MODE); modules.setFixTTL(false);
             modules.setTorState(ModuleState.STOPPED); modules.setDnsCryptState(ModuleState.STOPPED);
             modules.setItpdState(ModuleState.STOPPED);
-            assertTrue(preferences.edit().clear().putBoolean(USE_PROXY, true)
+            assertTrue(preferences.edit().clear().putBoolean(USE_PROXY_NON_TOR, true)
                     .putBoolean(CONNECTION_LOGS, false).commit());
             repository = (PreferenceRepository) Proxy.newProxyInstance(
                     PreferenceRepository.class.getClassLoader(), new Class[]{PreferenceRepository.class},
@@ -129,7 +129,7 @@ public final class UdpProxyPolicyTest {
     }
     @Test public void disabledProxyLeavesUdpDirect() {
         try (Fixture f = new Fixture()) {
-            assertTrue(f.preferences.edit().putBoolean(USE_PROXY, false).commit());
+            assertTrue(f.preferences.edit().putBoolean(USE_PROXY_NON_TOR, false).commit());
             f.service.vpnPreferences = new VpnPreferenceHolder(f.preferences,
                     f.repository,
                     App.getInstance().getDaggerComponent().getPathVars().get());

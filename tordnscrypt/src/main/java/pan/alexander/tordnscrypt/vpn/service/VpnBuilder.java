@@ -119,8 +119,7 @@ public class VpnBuilder {
     }
 
     @SuppressLint("UnspecifiedImmutableFlag")
-    BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule,
-                          boolean useProxy) {
+    BuilderVPN getBuilder(ServiceVPN vpn, List<String> listAllowed, List<Rule> listRule) {
         SharedPreferences prefs = defaultPreferences.get();
         boolean lan = prefs.getBoolean(BYPASS_LAN, true);
         boolean fixTTL = modulesStatus.isFixTTL() && (modulesStatus.getMode() == ROOT_MODE)
@@ -153,7 +152,7 @@ public class VpnBuilder {
         addIPv6Routes(builder, lan);
 
         // MTU
-        int mtu = vpn.jni_get_mtu(useProxy);
+        int mtu = vpn.jni_get_mtu();
         logi("VPN MTU=" + mtu);
         builder.setMtu(mtu);
 

@@ -10,21 +10,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import static org.junit.Assert.*;
 
-/** MTU selection before native setup, and interface replacement on proxy toggles. */
+/** Constant MTU through the Java/JNI binding and interface-builder equality. */
 @RunWith(AndroidJUnit4.class)
 public final class VpnMtuTest {
     private static final class TestService extends ServiceVPN {
         TestService(Context context) { attachBaseContext(context); }
     }
 
-    @Test public void mtuQueryUsesUpcomingProxySetting() {
+    @Test public void mtuQueryReturns1500() {
         ServiceVPN service = new TestService(InstrumentationRegistry.getInstrumentation().getTargetContext());
-        assertEquals(1500, service.jni_get_mtu(false));
-        assertEquals(1470, service.jni_get_mtu(true));
-        assertEquals(1500, service.jni_get_mtu(false));
+        assertEquals(1500, service.jni_get_mtu());
     }
 
-    @Test public void proxyMtuChangesRequireInterfaceReplacement() throws Exception {
+    @Test public void unchangedMtuPermitsInterfaceReuse() throws Exception {
         ServiceVPN service = new TestService(InstrumentationRegistry.getInstrumentation().getTargetContext());
         BuilderVPN previous = new BuilderVPN(service), next = new BuilderVPN(service);
         // Keep connectivity deterministic, including on a device with no active network.
@@ -32,10 +30,9 @@ public final class VpnMtuTest {
         network.setAccessible(true);
         NetworkInfo info = new NetworkInfo(ConnectivityManager.TYPE_WIFI, 0, "WIFI", "");
         network.set(previous, info); network.set(next, info);
-        previous.setMtu(service.jni_get_mtu(false)); next.setMtu(service.jni_get_mtu(false));
+        previous.setMtu(service.jni_get_mtu()); next.setMtu(service.jni_get_mtu());
         assertEquals(previous, next);
-        next.setMtu(service.jni_get_mtu(true)); assertNotEquals(previous, next);
-        previous.setMtu(service.jni_get_mtu(true)); assertEquals(previous, next);
-        next.setMtu(service.jni_get_mtu(false)); assertNotEquals(previous, next);
+        next.setMtu(1400); assertNotEquals(previous, next);
+        next.setMtu(service.jni_get_mtu()); assertEquals(previous, next);
     }
 }

@@ -66,7 +66,6 @@
 #define TUN_YIELD 10 // packets
 
 #define VPN_MTU 1500
-#define VPN_PROXY_MTU 1470 // Reserve up to 30 bytes for external SOCKS5 UDP framing.
 
 // Ping sockets include the ICMP header. IPv6's maximum payload excludes its IP header.
 #define ICMP4_MAXMSG (IP_MAXPACKET - 20) // bytes (socket)

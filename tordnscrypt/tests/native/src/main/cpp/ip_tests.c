@@ -5,17 +5,15 @@ void test_proxy_mtu(const struct arguments *args) {
     extern char proxy_socks5_addr[], tor_socks5_addr[];
     extern int proxy_socks5_port, tor_socks5_port;
     extern jint Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(
-            JNIEnv *, jobject, jboolean);
+            JNIEnv *, jobject);
     strcpy(tor_socks5_addr, "127.0.0.1"); tor_socks5_port = 9050;
     for (int mode = 0; mode < 5; mode++) {
         strcpy(proxy_socks5_addr, mode == 2 ? "" : "127.0.0.1");
         proxy_socks5_port = mode == 1 || mode == 2 || mode == 3 ? 1080 : 0;
-        unsigned mtu = mode == 1 || mode == 3 ? 1470 : 1500;
-        assert(get_mtu() == mtu); // Tor alone does not lower the MTU.
+        unsigned mtu = 1500;
+        assert(get_mtu() == mtu); // Neither proxy changes the interface MTU.
         assert(get_default_mss(4) == mtu - 40 && get_default_mss(6) == mtu - 60);
-        // Builder settings must win over the old native state, in both directions.
-        assert(Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(NULL, NULL, JNI_TRUE) == 1470);
-        assert(Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(NULL, NULL, JNI_FALSE) == 1500);
+        assert(Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(NULL, NULL) == mtu);
     }
     strcpy(proxy_socks5_addr, "127.0.0.1"); proxy_socks5_port = 1080;
     int tunnel[2]; assert(pipe(tunnel) == 0);

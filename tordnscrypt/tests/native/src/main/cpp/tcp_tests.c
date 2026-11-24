@@ -28,7 +28,7 @@ void test_tcp_syn_ack_mss(const struct arguments *args) {
                 assert(length == off + 28 && output[off + 12] >> 4 == 7);
                 assert(output[off + 13] == (TH_SYN | TH_ACK));
                 assert(load16(output + off) == 443 && load16(output + off + 2) == 12345);
-                unsigned mss = proxy ? (version == 4 ? 1430 : 1410) : (version == 4 ? 1460 : 1440);
+                unsigned mss = version == 4 ? 1460 : 1440;
                 const uint8_t *options = output + off + 20;
                 assert(options[0] == 2 && options[1] == 4);
                 // Inspect wire bytes independently of the host-order MSS helper.

@@ -259,10 +259,8 @@ Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
 }
 
 JNIEXPORT jint JNICALL
-Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(JNIEnv *env, jobject instance,
-                                                               jboolean use_proxy) {
-    // The builder runs before native proxy settings are applied on start/reload.
-    return use_proxy ? VPN_PROXY_MTU : VPN_MTU;
+Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1get_1mtu(JNIEnv *env, jobject instance) {
+    return get_mtu();
 }
 
 static int validate_socks5_string(JNIEnv *env, jstring value, size_t capacity) {
