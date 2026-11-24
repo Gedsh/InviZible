@@ -141,8 +141,11 @@ void clear_sessions(struct context *ctx) {
         if (s->socket >= 0 && close(s->socket))
             log_android(ANDROID_LOG_ERROR, "close %d error %d: %s",
                         s->socket, errno, strerror(errno));
+        s->socket = -1;
         if (s->protocol == IPPROTO_TCP)
             clear_tcp_data(&s->tcp);
+        else if (s->protocol == IPPROTO_UDP)
+            free_udp_proxy(s);
         struct ng_session *p = s;
         s = s->next;
         ng_free(p, __FILE__, __LINE__);
@@ -366,6 +369,8 @@ void *handle_events(void *a) {
                     s = s->next;
                     if (c->protocol == IPPROTO_TCP)
                         clear_tcp_data(&c->tcp);
+                    else if (c->protocol == IPPROTO_UDP)
+                        free_udp_proxy(c);
                     ng_free(c, __FILE__, __LINE__);
                 } else {
                     sl = s;

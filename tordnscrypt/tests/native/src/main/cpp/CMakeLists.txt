@@ -9,11 +9,14 @@ get_filename_component(INVIZIBLE_SOURCE
 function(add_native_tests target source)
     add_library(${target} SHARED native_test_bridge.c test_support.c
             invizible_tests.c invizible_jni_tests.c util_tests.c session_tests.c ip_tests.c tcp_tests.c udp_tests.c
-            icmp_tests.c dns_tests.c dhcp_tests.c compatibility_tests.c
+            icmp_tests.c dns_tests.c dhcp_tests.c compatibility_tests.c udp_proxy_tests.c
             "${source}/invizible.c" "${source}/session.c" "${source}/ip.c"
             "${source}/tcp.c" "${source}/udp.c" "${source}/icmp.c"
             "${source}/dns.c" "${source}/dhcp.c" "${source}/util.c")
     target_include_directories(${target} PRIVATE "${source}")
+    if(EXISTS "${source}/udp_proxy.c")
+        target_sources(${target} PRIVATE "${source}/udp_proxy.c")
+    endif()
     target_compile_features(${target} PRIVATE c_std_11)
     target_compile_options(${target} PRIVATE -UNDEBUG -O1 -g -Wformat -Werror=format
             -ffunction-sections -fdata-sections -Wno-unknown-pragmas
@@ -25,7 +28,7 @@ function(add_native_tests target source)
     # Do not run the application's JNI class lookups in the test APK.
     set_source_files_properties("${source}/invizible.c" PROPERTIES
             COMPILE_DEFINITIONS "JNI_OnLoad=invizible_app_JNI_OnLoad;JNI_OnUnload=invizible_app_JNI_OnUnload")
-    set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect sendto recv recvfrom recvmsg shutdown
+    set(wraps ng_malloc ng_calloc ng_realloc ng_free socket close fcntl connect send sendto sendmsg recv recvfrom recvmsg shutdown
             protect_socket write_udp dns_resolved is_domain_blocked handle_udp handle_tcp handle_icmp
             getpeername is_redirect_to_tor is_redirect_to_proxy
             get_uid_q create_packet is_address_allowed report_exit fopen fclose access account_usage
@@ -62,6 +65,7 @@ endif()
 add_library(invizible_memory_profile_tests SHARED memory_profile_tests.c
         "${INVIZIBLE_SOURCE}/session.c" "${INVIZIBLE_SOURCE}/ip.c"
         "${INVIZIBLE_SOURCE}/tcp.c" "${INVIZIBLE_SOURCE}/udp.c"
+        "${INVIZIBLE_SOURCE}/udp_proxy.c"
         "${INVIZIBLE_SOURCE}/icmp.c" "${INVIZIBLE_SOURCE}/dns.c"
         "${INVIZIBLE_SOURCE}/dhcp.c" "${INVIZIBLE_SOURCE}/util.c")
 target_include_directories(invizible_memory_profile_tests PRIVATE "${INVIZIBLE_SOURCE}")

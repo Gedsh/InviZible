@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.proxy
@@ -38,7 +38,7 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.I2PD_OUTBOUND_
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PASS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_USER
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_OUTBOUND_PROXY
-import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY
+import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -46,6 +46,7 @@ import java.net.Socket
 import java.net.SocketAddress
 import javax.inject.Inject
 import javax.inject.Named
+import androidx.core.content.edit
 
 class ProxyHelper @Inject constructor(
     private val context: Context,
@@ -66,7 +67,7 @@ class ProxyHelper @Inject constructor(
 
         val modulesStatus = ModulesStatus.getInstance()
 
-        val nonTorProxified = defaultPreferences.getBoolean(USE_PROXY, false)
+        val nonTorProxified = defaultPreferences.getBoolean(USE_PROXY_NON_TOR, false)
         val dnsCryptProxified = defaultPreferences.getBoolean(DNSCRYPT_OUTBOUND_PROXY, false)
         val torProxified = defaultPreferences.getBoolean(TOR_OUTBOUND_PROXY, false)
         val itpdProxified = defaultPreferences.getBoolean(I2PD_OUTBOUND_PROXY, false)
@@ -81,8 +82,7 @@ class ProxyHelper @Inject constructor(
             val dnsCryptSettingChanged = enableDNSCryptProxy xor dnsCryptProxified
             if (dnsCryptSettingChanged || serverOrPortChanged) {
                 manageDNSCryptProxy(pathVars.dnscryptConfPath, proxyAddr, enableDNSCryptProxy)
-                defaultPreferences.edit().putBoolean(DNSCRYPT_OUTBOUND_PROXY, enableDNSCryptProxy)
-                    .apply()
+                defaultPreferences.edit { putBoolean(DNSCRYPT_OUTBOUND_PROXY, enableDNSCryptProxy) }
 
                 if (modulesStatus.dnsCryptState == ModuleState.RUNNING && (enableDNSCryptProxy || dnsCryptSettingChanged)) {
                     ModulesRestarter.restartDNSCrypt(context)
@@ -91,7 +91,7 @@ class ProxyHelper @Inject constructor(
             val torSettingChanged = enableTorProxy xor torProxified
             if (torSettingChanged || serverOrPortChanged) {
                 mangeTorProxy(pathVars.torConfPath, proxyAddr, enableTorProxy)
-                defaultPreferences.edit().putBoolean(TOR_OUTBOUND_PROXY, enableTorProxy).apply()
+                defaultPreferences.edit { putBoolean(TOR_OUTBOUND_PROXY, enableTorProxy) }
                 if (modulesStatus.torState == ModuleState.RUNNING && (enableTorProxy || torSettingChanged)) {
                     ModulesRestarter.restartTor(context)
                 }
@@ -99,7 +99,7 @@ class ProxyHelper @Inject constructor(
             val itpdSettingChanged = enableItpdProxy xor itpdProxified
             if (itpdSettingChanged || serverOrPortChanged) {
                 manageITPDProxy(pathVars.itpdConfPath, proxyAddr, enableItpdProxy)
-                defaultPreferences.edit().putBoolean(I2PD_OUTBOUND_PROXY, enableItpdProxy).apply()
+                defaultPreferences.edit { putBoolean(I2PD_OUTBOUND_PROXY, enableItpdProxy) }
                 if (modulesStatus.itpdState == ModuleState.RUNNING && (enableItpdProxy || itpdSettingChanged)) {
                     ModulesRestarter.restartITPD(context)
                 }
@@ -109,7 +109,7 @@ class ProxyHelper @Inject constructor(
             if (dnsCryptSettingChanged || torSettingChanged || itpdSettingChanged
                 || nonTorProxySettingsChanged || serverOrPortChanged
             ) {
-                defaultPreferences.edit().putBoolean(USE_PROXY, enableNonTorProxy).apply()
+                defaultPreferences.edit { putBoolean(USE_PROXY_NON_TOR, enableNonTorProxy) }
                 modulesStatus.setIptablesRulesUpdateRequested(context, true)
             }
 

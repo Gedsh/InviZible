@@ -252,7 +252,7 @@ class ConnectionCheckerInteractorImpl @Inject constructor(
                 }
                 val proxyUser = defaultPreferences.getString(PROXY_USER, "") ?: ""
                 val proxyPass = defaultPreferences.getString(PROXY_PASS, "") ?: ""
-                val useProxy = defaultPreferences.getBoolean(USE_PROXY, false)
+                val useProxy = defaultPreferences.getBoolean(USE_PROXY_NON_TOR, false)
                         && proxyAddress.isNotBlank()
                         && proxyPort != 0
 

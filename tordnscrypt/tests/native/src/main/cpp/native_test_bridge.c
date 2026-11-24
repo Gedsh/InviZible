@@ -25,7 +25,83 @@ static const char *run_case(const char *id) {
 
     struct context ctx = {.sdk = 29};
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
-    if (strcmp(id, "sessionReloadCaches") == 0)
+    if (strcmp(id, "tcpSynAckMss") == 0)
+        test_tcp_syn_ack_mss(&args);
+    else if (strcmp(id, "proxyMtu") == 0)
+        test_proxy_mtu(&args);
+    else if (strcmp(id, "jniUdpProxy") == 0)
+        test_jni_udp_proxy();
+    else if (strcmp(id, "udpProxy4") == 0)
+        test_udp_proxy_round_trip(&args, 0);
+    else if (strcmp(id, "udpProxy6") == 0)
+        test_udp_proxy_round_trip(&args, 1);
+    else if (strcmp(id, "udpProxyCross") == 0)
+        test_udp_proxy_round_trip(&args, 2);
+    else if (strcmp(id, "udpProxyRelayFamily") == 0)
+        test_udp_proxy_round_trip(&args, 3);
+    else if (strcmp(id, "udpProxyQueueSendFailure") == 0)
+        test_udp_proxy_round_trip(&args, 4);
+    else if (strcmp(id, "udpProxyRelayError") == 0)
+        test_udp_proxy_round_trip(&args, 5);
+    else if (strcmp(id, "udpProxyReceiveError") == 0)
+        test_udp_proxy_round_trip(&args, 6);
+    else if (strcmp(id, "udpProxySocketErrors") == 0)
+        test_udp_proxy_socket_errors(&args);
+    else if (strcmp(id, "udpProxyResetReplies") == 0)
+        test_udp_proxy_reset_replies(&args);
+    else if (strcmp(id, "udpProxyMtu4") == 0)
+        test_udp_proxy_round_trip(&args, 7);
+    else if (strcmp(id, "udpProxyMtu6") == 0)
+        test_udp_proxy_round_trip(&args, 8);
+    else if (strcmp(id, "udpProxyMtu6over4") == 0)
+        test_udp_proxy_round_trip(&args, 9);
+    else if (strcmp(id, "udpProxyMtu4over6") == 0)
+        test_udp_proxy_round_trip(&args, 10);
+    else if (strcmp(id, "udpProxyHandshake4") == 0)
+        test_udp_proxy_handshake(&args, 4);
+    else if (strcmp(id, "udpProxyHandshake6") == 0)
+        test_udp_proxy_handshake(&args, 6);
+    else if (strcmp(id, "udpProxyBatch4") == 0)
+        test_udp_proxy_round_trip(&args, 11);
+    else if (strcmp(id, "udpProxyBatch6") == 0)
+        test_udp_proxy_round_trip(&args, 12);
+    else if (strcmp(id, "udpProxyCongestion4") == 0)
+        test_udp_proxy_round_trip(&args, 13);
+    else if (strcmp(id, "udpProxyCongestion6") == 0)
+        test_udp_proxy_round_trip(&args, 14);
+    else if (strcmp(id, "udpProxyBadHandshakes") == 0)
+        test_udp_proxy_bad_handshakes(&args);
+    else if (strcmp(id, "udpProxyUidRoutes") == 0)
+        test_udp_proxy_uid_routes(&args);
+    else if (strcmp(id, "udpProxyLimits") == 0)
+        test_udp_proxy_failures(&args, 0);
+    else if (strcmp(id, "udpProxyExpiredCapacity") == 0)
+        test_udp_proxy_capacity(&args, 0);
+    else if (strcmp(id, "udpProxyIdleCapacity") == 0)
+        test_udp_proxy_capacity(&args, 1);
+    else if (strcmp(id, "udpProxyCapacityClocks") == 0)
+        test_udp_proxy_capacity(&args, 2);
+    else if (strcmp(id, "udpProxyCapacityCooldown") == 0)
+        test_udp_proxy_capacity(&args, 3);
+    else if (strcmp(id, "udpProxyCapacityCooldownClocks") == 0)
+        test_udp_proxy_capacity(&args, 4);
+    else if (strcmp(id, "udpProxyConfiguration4") == 0)
+        test_udp_proxy_configuration(&args, 4);
+    else if (strcmp(id, "udpProxyConfiguration6") == 0)
+        test_udp_proxy_configuration(&args, 6);
+    else if (strcmp(id, "udpProxyConfigurationCapacity") == 0)
+        test_udp_proxy_capacity(&args, 5);
+    else if (strcmp(id, "udpProxyFailureLogging4") == 0)
+        test_udp_proxy_failure_logging(&args, 4);
+    else if (strcmp(id, "udpProxyFailureLogging6") == 0)
+        test_udp_proxy_failure_logging(&args, 6);
+    else if (strcmp(id, "udpProxyAllocations") == 0)
+        test_udp_proxy_failures(&args, 1);
+    else if (strcmp(id, "udpProxyTimeout") == 0)
+        test_udp_proxy_failures(&args, 2);
+    else if (strcmp(id, "udpProxyRefused") == 0)
+        test_udp_proxy_failures(&args, 3);
+    else if (strcmp(id, "sessionReloadCaches") == 0)
         test_session_reload_caches(&args, 0);
     else if (strcmp(id, "sessionReloadGuards") == 0)
         test_session_reload_caches(&args, 1);

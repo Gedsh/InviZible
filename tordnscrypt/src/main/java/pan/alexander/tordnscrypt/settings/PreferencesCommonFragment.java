@@ -31,10 +31,12 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceScreen;
+import androidx.preference.SwitchPreference;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -57,6 +59,7 @@ import pan.alexander.tordnscrypt.modules.ModulesService;
 import pan.alexander.tordnscrypt.modules.ModulesServiceActions;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.modules.ModulesStatusBroadcaster;
+import pan.alexander.tordnscrypt.proxy.ProxyFragment;
 import pan.alexander.tordnscrypt.proxy.ProxyHelper;
 import pan.alexander.tordnscrypt.utils.Utils;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
@@ -93,7 +96,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.REMOTE_
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.RUN_MODULES_WITH_ROOT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_TETHERING;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_IPTABLES;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_SOCKS5_PROXY;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.WAIT_IPTABLES;
 import static pan.alexander.tordnscrypt.utils.enums.FileOperationsVariants.readTextFile;
 import static pan.alexander.tordnscrypt.utils.enums.OperationMode.PROXY_MODE;
@@ -107,7 +110,7 @@ import javax.inject.Named;
 
 public class PreferencesCommonFragment extends PreferenceFragmentCompat
         implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener,
-        OnTextFileOperationsCompleteListener {
+        OnTextFileOperationsCompleteListener, ProxyFragment.OnProxySettingsChangeListener {
 
     @Inject
     public Lazy<PreferenceRepository> preferenceRepository;
@@ -202,10 +205,10 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
                 && !modulesStatus.isUseModulesWithRoot();
         PreferenceScreen preferenceScreen = findPreference("pref_common");
         PreferenceCategory proxySettingsCategory = findPreference("categoryCommonProxy");
-        Preference swUseProxy = findPreference(USE_PROXY);
+        SwitchPreference swUseSocks5Proxy = findPreference(USE_SOCKS5_PROXY);
         if (preferenceScreen != null && proxySettingsCategory != null) {
-            if ((modulesStatus.getMode() == VPN_MODE || fixTTL) && swUseProxy != null) {
-                swUseProxy.setOnPreferenceClickListener(this);
+            if ((modulesStatus.getMode() == VPN_MODE || fixTTL) && swUseSocks5Proxy != null) {
+                swUseSocks5Proxy.setOnPreferenceClickListener(this);
             } else {
                 preferenceScreen.removePreference(proxySettingsCategory);
             }
@@ -505,22 +508,20 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             } catch (Exception e) {
                 loge("PreferencesCommonFragment ALWAYS_ON_VPN", e);
             }
-        } else if (USE_PROXY.equals(preference.getKey())) {
+        } else if (USE_SOCKS5_PROXY.equals(preference.getKey())) {
             openProxySettings();
         }
         return false;
     }
 
     private void openProxySettings() {
-        Context context = getActivity();
-
-        if (context == null) {
-            return;
-        }
-
-        Intent intent = new Intent(context, SettingsActivity.class);
-        intent.setAction("use_proxy");
-        context.startActivity(intent);
+        ProxyFragment proxyFragment = new ProxyFragment();
+        FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+        fragmentTransaction.setReorderingAllowed(true);
+        fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        fragmentTransaction.replace(R.id.fragment_container, proxyFragment);
+        fragmentTransaction.addToBackStack("ProxyFragment");
+        fragmentTransaction.commit();
     }
 
     private void activityCurrentRecreate() {
@@ -728,6 +729,16 @@ public class PreferencesCommonFragment extends PreferenceFragmentCompat
             if (preference != null) {
                 preference.setOnPreferenceChangeListener(this);
             }
+        }
+    }
+
+    @Override
+    public void onSocks5ProxySettingEnabled(boolean enable) {
+        PreferenceScreen preferenceScreen = findPreference("pref_common");
+        PreferenceCategory proxySettingsCategory = findPreference("categoryCommonProxy");
+        SwitchPreference swUseSocks5Proxy = findPreference(USE_SOCKS5_PROXY);
+        if (preferenceScreen != null && proxySettingsCategory != null && swUseSocks5Proxy != null) {
+            swUseSocks5Proxy.setChecked(enable);
         }
     }
 

@@ -27,9 +27,11 @@ int max_tun_msg = 0;
 extern int own_uid;
 extern bool compatibility_mode;
 extern bool can_filter;
+extern char proxy_socks5_addr[];
+extern int proxy_socks5_port;
 
 uint16_t get_mtu(void) {
-    return 1500;
+    return VPN_MTU;
 }
 
 uint16_t get_default_mss(int version) {
@@ -58,12 +60,13 @@ int check_tun(const struct arguments *args,
 
     // Check tun read
     if (ev->events & EPOLLIN) {
-        uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, get_mtu(), "tun read");
+        // Keep the maximum read size independent of pending proxy configuration.
+        uint8_t *buffer = get_packet_buffer(args, PACKET_INPUT, VPN_MTU, "tun read");
         if (buffer == NULL) {
             report_exit(args, "Cannot allocate tunnel read buffer");
             return -1;
         }
-        ssize_t length = read(args->tun, buffer, get_mtu());
+        ssize_t length = read(args->tun, buffer, VPN_MTU);
         if (length < 0) {
             release_packet_buffer(args, buffer);
 
@@ -80,7 +83,7 @@ int check_tun(const struct arguments *args,
         } else if (length > 0) {
 
             if (length > max_tun_msg) {
-                // Positive read length is bounded by get_mtu() (1500), so it fits in int.
+                // Positive read length is bounded by VPN_MTU (1500), so it fits in int.
                 max_tun_msg = (int) length;
                 log_android(ANDROID_LOG_WARN, "Maximum tun msg length %d", max_tun_msg);
             }
@@ -162,6 +165,8 @@ static bool retry_udp_uid(struct ng_session *s) {
 }
 
 static bool udp_route_matches(const struct udp_session *session, const struct allowed *redirect) {
+    if (redirect != NULL && redirect->udp_proxy) return session->proxy != NULL;
+    if (session->proxy != NULL) return false;
     if (redirect == NULL)
         return session->redirect_version == 0;
     if (session->redirect_version == 0)
@@ -841,7 +846,7 @@ void handle_ip(const struct arguments *args,
                 args, version, protocol, flags, format_log_address(&source), sport, format_log_address(&dest), dport, data, uid, 0);
         redirect = is_address_allowed(args, objPacket);
         allowed = (redirect != NULL);
-        if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
+        if (redirect != NULL && !redirect->udp_proxy && (*redirect->raddr == 0 || redirect->rport == 0))
             redirect = NULL;
     }
 
@@ -872,10 +877,12 @@ void handle_ip(const struct arguments *args,
                 udp_lookup.session->udp.state == UDP_ACTIVE)) {
         // Preserve sockets (and their source ports) when the permitted route is unchanged.
         // Retired records stay alive until cleanup for queued epoll event pointers.
-        if (epoll_ctl(epoll_fd, EPOLL_CTL_DEL, udp_lookup.session->socket, NULL))
+        if (udp_lookup.session->udp.proxy == NULL &&
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, udp_lookup.session->socket, NULL))
             log_android(ANDROID_LOG_ERROR, "epoll del udp UID recovery error %d: %s",
                         errno, strerror(errno));
         udp_lookup.session->udp.state = UDP_FINISHING;
+        close_udp_proxy(udp_lookup.session);
         unindex_session(args->ctx, udp_lookup.session);
         udp_lookup.session = NULL;
     }

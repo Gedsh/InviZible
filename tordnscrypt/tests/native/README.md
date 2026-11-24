@@ -29,6 +29,212 @@ behavior. An independent byte-oriented checksum reference checks IPv4/IPv6 repli
 at minimum, odd/even and larger lengths, and IPv6 forwarding with and without a
 Hop-by-Hop header. ICMPv6 pseudo-headers use the ICMP message length in network byte
 order and protocol 58, excluding any IPv6 extension headers.
+External SOCKS5 UDP forwarding uses UDP ASSOCIATE with one protected TCP control
+socket and one protected UDP relay socket per selected flow. Tor-selected UDP
+remains blocked by the existing policy (including its explicit direct-UDP
+exceptions); external-proxy bypasses, firewall rules, IPv6 restrictions and local
+DNS forwarding retain their precedence. Policy explicitly marks external UDP
+routes, so negotiation failures never fall back to direct traffic. ICMP proxying
+is still unsupported. DNS replies received through the relay use the existing
+filtering and mapping-cache parser without additional DNS lookups.
+
+The VPN interface MTU is always 1500, including with Tor or an external SOCKS5
+proxy enabled. The builder and native TCP MSS calculations use the same constant;
+proxy toggles do not change the MTU or require interface replacement for that reason.
+Tunnel reads retain the 1500-byte maximum.
+The TCP regression checks generated IPv4/IPv6 SYN-ACK MSS bytes in network order:
+1460/1440 with or without the external proxy. It toggles proxy
+mode in both directions, uses temporary and reused output buffers, and checks
+packet checksums independently and allocation/socket balance. The regression
+fails against the previous host-order MSS serialization. SYN-ACK fingerprints
+intentionally differ from revisions preceding these MTU/MSS corrections; strict
+baseline comparisons require a baseline containing the corrections.
+The IP regression checks the constant MTU, IPv4/IPv6 MSS, enable/disable transitions,
+Tor-only configuration, JNI queries against differing native state, full-size
+tunnel reads and allocation cleanup. App `VpnMtuTest` checks the Java/JNI binding
+and interface-builder equality without establishing a VPN. Remote SOCKS5 UDP
+framing can exceed the relay path MTU for large datagrams; packet-size error
+handling remains necessary, and IP/SOCKS fragmentation remains unsupported.
+
+Association state is allocated only on demand, with at most 16 live associations.
+UDP proxy admission validates the numeric proxy endpoint, port range 1 through
+65535 and credential lengths before allocating association state, reclaiming
+capacity or opening sockets. Both credentials may be empty for no authentication;
+otherwise both must contain 1 through 127 encoded bytes. Invalid settings fail
+locally without evicting an existing flow or changing capacity-scan deadlines.
+The parsed endpoint is reused for connection setup; handshake checks remain as
+defensive validation. No resolver, timer or work on ordinary direct traffic is added.
+Only when admission reaches that limit, one session-list scan closes expired proxy
+associations using their unscaled ordinary timeout (20 seconds during negotiation).
+If still full, it closes the oldest ready association idle for at least 60 seconds.
+An unsuccessful scan starts a 100 ms monotonic cooldown: further full-capacity
+admissions are rejected without rescanning until that deadline. Rejections do not
+extend it. Successful reclamation starts no cooldown; closing any live association
+clears it, and spare slots remain immediately usable. The check runs only during
+proxy admission and adds no timer or wake-up. Failed clock reads or readings before
+the last scan bypass throttling; unrepresentable deadlines are omitted.
+Recent traffic and unexpired handshakes remain protected; otherwise the new flow is
+rejected with the existing bounded feedback. Reclaimed records leave the lookup
+index so later traffic can reopen immediately, but remain until normal cleanup so
+queued epoll events stay safe. Usage accounting follows normal UDP cleanup.
+Reclamation sends no errors for old traffic. It adds no timers, periodic
+work or allocations. Failed/backward clock reads cannot establish idle eligibility.
+Pressure reclamation loses the relay's UDP mapping: later traffic must establish
+another association and applications depending on that mapping may be interrupted.
+During negotiation or temporary relay send congestion, up to four datagrams are
+retained in arrival order, with a 64 KiB payload limit per association. New datagrams exceeding either limit are
+dropped without replacing queued packets; empty datagrams count toward the
+four-packet limit. After negotiation, EAGAIN/EINTR retains the unsent head and
+later traffic appends behind it. Relay EPOLLOUT is enabled only while data remains
+queued and removed after draining; each event attempts at most four sends.
+EMSGSIZE drops only the affected datagram when the association remains usable.
+Queued copies are freed after sending/dropping, failure, timeout or cleanup.
+Successful uncongested sends allocate no payload copy. There are no retransmission
+timers. Negotiation has a fixed 20-second timeout, then
+uses the ordinary UDP idle timeout. All I/O is nonblocking in the existing epoll
+loop. Idle control sockets watch for input/closure without EPOLLOUT, polling
+timers or keepalives. Scatter/gather sends add the SOCKS header without allocating
+a payload copy. Ordinary direct UDP keeps its socket path and session-record size;
+disabled-proxy policy callbacks do not read an additional JNI field.
+
+The UDP proxy handshake advances immediately through available request/reply
+steps, including the prefix and remaining address of a UDP ASSOCIATE reply.
+Normal processing is bounded to eight handshake read/write attempts per callback; short reads and
+writes consume that budget, and EAGAIN/EINTR yields immediately. Epoll watches
+change only when the required direction changes. The existing terminal-error
+drain remains bounded by the handshake buffer so buffered rejection replies keep
+their diagnostic precedence. This adds no timers, allocations or direct-traffic work.
+Two IPv4/IPv6 regressions cover immediate next-request transmission, combined and
+split replies, authentication, maximum-length credentials, interrupted reads,
+blocked sends, one-byte writes across the work limit, idle watch masks, forwarded
+payloads and complete allocation/socket cleanup. Existing handshake fixtures
+expect the next request without an extra writable event.
+
+The relay supports IPv4/IPv6 endpoints and destinations, including a different
+relay address family from the TCP proxy. A wildcard relay address uses the TCP
+peer's IP of the same family. No authentication and configured username/password
+authentication are supported. Numeric relay addresses and unfragmented SOCKS5
+datagrams are required: domain-name relay replies and SOCKS fragmentation are
+rejected without blocking name resolution or direct fallback. Credentials must
+have nonempty username and password when authentication is configured. SOCKS
+encapsulation reduces the maximum UDP payload by its 10-byte IPv4 or 22-byte IPv6
+destination header within the relay transport's UDP limit; oversized datagrams
+are dropped. Connected UDP accepts packets only from the negotiated relay, and
+received frames must match the original flow's destination address/port. Short,
+truncated, fragmented, reserved-byte and mismatched frames are discarded.
+
+`UdpProxyTest` uses real local TCP control and UDP relay sockets to exercise both
+families, cross-family relays, authentication, split replies, datagram framing,
+empty payloads, real MSG_TRUNC and recovery, malformed handshakes, refusal,
+control EOF, epoll failures, stale events, handshake queue ordering and overflow,
+empty queued datagrams, exact byte/count limits, allocation failures with a
+partially filled queue, fatal sends while flushing the queue, bounded memory,
+timeouts, owner-recovery
+switches between proxy/direct/blocked routes, and cleanup.
+Two congestion regressions inject temporary send failures over real IPv4/IPv6
+relay sockets. They cover handshake retention, EAGAIN/EINTR, empty datagrams,
+partial draining, FIFO ordering with later arrivals, overflow, MTU recovery,
+allocation/epoll failures, stale events, resource balance and removal of writable
+wake-ups after draining. Congestion itself is injected for deterministic coverage.
+Three admission regressions cover expired handshakes before idle replacement,
+the oldest eligible ready flow, the exact 59/60-second boundary, spare capacity,
+recent traffic and pending handshakes, failed/backward clocks, failed allocation
+after reclamation, stale relay/control events, surviving relay traffic and complete
+socket/allocation cleanup.
+Two additional capacity regressions cover burst rejection, the 99/100 ms boundary,
+successive successful reclamations, immediate use of freed slots, invalidation
+after closure, monotonic zero/failure/backward readings and deadline overflow.
+They retain the real socket and allocation-balance checks; the cooldown regression
+fails against the earlier unthrottled admission path.
+Three configuration regressions cover malformed/empty numeric addresses, invalid
+ports, incomplete credentials and missing credential terminators. They verify
+rejection before association allocation or connection, preservation of a full
+association table and recovery after correcting settings. Real IPv4/IPv6 control
+and relay sockets validate no-auth and 127-byte username/password negotiation,
+datagram forwarding and complete socket/allocation cleanup. The early-rejection
+regression fails against the previous allocation-before-validation path.
+JNI fault injection checks the explicit route flag, pending exceptions and
+disabled-proxy reset. App `UdpProxyPolicyTest` exercises Tor precedence, external
+UDP selection, proxy bypass, explicit Tor UDP exceptions and local DNS forwarding.
+These local fixtures do not establish a VPN or validate a third-party proxy server.
+Relay input handles at most eight receive attempts per readiness event, sharing
+one input buffer across the batch. Invalid and truncated frames consume that
+budget too. Remaining datagrams stay readable for the next level-triggered epoll
+event. EAGAIN, EINTR and handled MTU errors end the batch; fatal receive errors,
+DNS completion and output failures retain the existing close behavior and stop
+further reads. No timers, worker threads or additional packet queues are added.
+Two real-socket IPv4/IPv6 regressions cover ten-datagram bursts, ordering, empty
+payloads, independent output checksums, the eight-attempt limit for valid and
+malformed frames, truncation followed by a valid reply, transient errors mid-batch,
+fatal receive/output failures and stale events. They exercise both buffer-reuse
+modes and verify socket/allocation balance. The burst regression fails against
+the previous single-datagram receive path.
+
+Proxy failures identify the failed operation and retain numeric socket errors.
+Failure diagnostics share one one-second monotonic budget per native context,
+across flows, owners and causes. The first failure is logged immediately; further
+failures in that window only increment a saturating counter. The next allowed
+failure log contains its current cause and the number of intervening failures
+suppressed (reported as a lower bound if the counter saturates). Intervening causes
+are not retained. The count is reported only when another failure occurs, with no
+timer, background work or allocation. Suppressed failures still send the existing
+bounded ICMP feedback and perform normal cleanup. Capacity-limit messages retain
+their separate budget. Invalid clock readings bypass throttling; overflow cannot
+create an indefinite window. Disabled ERROR logging skips the limiter as well.
+Two IPv4/IPv6 regressions cover repeated admission failures, suppressed real
+handshake rejection with unchanged feedback/cleanup, the 999/1000 ms boundary,
+sharing between owners and causes, suppression counts, clock recovery and counter
+saturation. They check errno preservation and socket/allocation balance. Existing
+diagnostic-specific fixtures advance a deterministic clock between independent
+cases so each cause remains observable. The burst regression fails against the
+previous unbounded logger.
+Method selection, username/password rejection and UDP ASSOCIATE replies include
+their protocol status codes; unsupported UDP ASSOCIATE is reported explicitly.
+A rejection followed immediately by control closure is read before handling EOF.
+When reset/error readiness accompanies a buffered handshake reply, complete
+rejections retain their SOCKS status. Incomplete replies retain the socket error;
+successful replies cannot advance negotiation or send queued datagrams after a
+known reset. This uses bounded nonblocking reads only on the failure path.
+Each failed association reports once, including failure while draining its queue.
+Opening failures also return ICMP feedback for the original tunnel packet, using
+the existing shared rate limit (burst 20, then one per 100 ms). Association-limit
+warnings are limited to once per second per context, without polling or timers.
+Known permission, refusal and network failures produce the corresponding ICMP
+unreachable code; failures without a suitable ICMP equivalent use host/no-route
+unreachable.
+
+Relay MTU errors keep both sockets and the association usable. UDP error queues
+are enabled only on the selected relay socket and drained at most eight entries
+per event. MTU feedback subtracts the relay's outer IP/UDP and SOCKS headers, then
+adds the original IP header (including options/extensions) and UDP header. Mapped
+IPv4 relay addresses use an IPv4 socket so framing and MTU accounting agree with
+the actual wire protocol. Only a matching SOCKS frame and bounded original-payload
+prefix can produce feedback for an asynchronous error. Synchronous EMSGSIZE can
+also use a known connected-socket route MTU when queued metadata is unavailable.
+The existing independent ICMP MTU rate budget applies.
+
+Missing, malformed, uncorrelated or unusable MTUs are consumed without guessing a
+size or closing the association. Translated IPv6 limits below 1280 are omitted;
+this does not implement fragmentation or a new path-MTU probing mechanism. These
+changes introduce no timers, background work or additional proxy allocations.
+Successful sends make no MTU queries; the direct UDP/ICMP error paths are unchanged.
+
+Regressions check all defined nonzero UDP ASSOCIATE reply codes and an unassigned
+code, rejection followed by closure, authentication rejection, synchronous and
+asynchronous control failures, relay socket/receive errors, single-report cleanup,
+and bounded admission feedback and logging. Error replies quote the original
+IPv4/IPv6 packet, and socket/allocation balances are checked after failures.
+Combined readable/reset events cover complete and split rejections, truncated
+replies, method/authentication rejection, and successful replies with a pending
+error, including a success prefix read before reset.
+MTU regressions cover send, receive and epoll errors for both IP families and
+cross-family relays, mapped relay addresses, IP options/extensions, missing and
+malformed metadata, quote mismatch, queue-drain bounds, independent checksums,
+and successful forwarding after errors. A real IPv6 socket size limit with
+fragmentation disabled produces a kernel EMSGSIZE; feedback is checked if the
+kernel exposes a usable MTU, and smaller datagrams must still pass. This local
+test does not establish end-to-end PMTU discovery through an external proxy.
+
 Exact TCP, UDP and ICMP flow lookups use a fixed 1,024-bucket index alongside the
 cleanup list, with one additional link per record and no index allocations.
 Tests cover both address families, ports and echo IDs, IPv4 union padding,
@@ -566,7 +772,7 @@ filtered/truncated/failed responses and resource balance. Reordered one- and two
 alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
 when an address precedes its alias. Ownership still passes
 through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 316 tests plus the optional comparison test.
+The full run contains 354 tests plus the optional comparison test.
 Inference failures use the existing `Packet uid can not be restored` diagnostic.
 Temporary branch diagnostics and their expired-mapping-only scan have been removed;
 inference decisions and cache lifetimes are unchanged.

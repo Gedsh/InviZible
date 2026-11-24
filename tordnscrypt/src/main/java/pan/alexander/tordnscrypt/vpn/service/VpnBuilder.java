@@ -54,7 +54,7 @@ import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWAL
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_ADDRESS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.PROXY_PORT;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.TOR_USE_IPV6;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR;
 import static pan.alexander.tordnscrypt.vpn.VpnUtils.multicastIPv6;
 
 import android.annotation.SuppressLint;
@@ -292,7 +292,7 @@ public class VpnBuilder {
     private void manageAppsTunneling(BuilderVPN builder, List<Rule> listRule, boolean fixTTL) {
         SharedPreferences prefs = defaultPreferences.get();
         Set<String> setVpnBypassApps = preferenceRepository.get().getStringSetPreference(APPS_BYPASS_VPN);
-        boolean useProxy = prefs.getBoolean(USE_PROXY, false);
+        boolean useProxy = prefs.getBoolean(USE_PROXY_NON_TOR, false);
         if (useProxy && (prefs.getString(PROXY_ADDRESS, LOOPBACK_ADDRESS).isEmpty()
                 || prefs.getString(PROXY_PORT, DEFAULT_PROXY_PORT).isEmpty())) {
             useProxy = false;

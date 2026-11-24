@@ -15,6 +15,11 @@ int uid_cache_allocations;
 const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
+char last_proxy_log[2048];
+int proxy_logs;
+int socket_mtu_fd = -1, socket_mtu_value;
+bool test_wall_time_enabled;
+time_t test_wall_time;
 int log_errno, log_result;
 int address_formats;
 bool count_memory_comparisons;
@@ -73,6 +78,13 @@ ssize_t __wrap_recvmsg(int fd, struct msghdr *message, int flags) {
 
 int __real_getsockopt(int fd, int level, int option, void *value, socklen_t *length);
 int __wrap_getsockopt(int fd, int level, int option, void *value, socklen_t *length) {
+    if (fd == socket_mtu_fd && ((level == IPPROTO_IP && option == IP_MTU) ||
+                               (level == IPPROTO_IPV6 && option == IPV6_MTU))) {
+        if (socket_mtu_value < 0) { errno = ENOPROTOOPT; return -1; }
+        assert(*length >= sizeof(int));
+        *(int *) value = socket_mtu_value; *length = sizeof(int);
+        return 0;
+    }
     if (fd == socket_error_fd && level == SOL_SOCKET && option == SO_ERROR) {
         assert(*length >= sizeof(int));
         *(int *) value = socket_error_value;
@@ -336,6 +348,8 @@ int __wrap_connect(int fd, const struct sockaddr *addr, socklen_t len) {
 ssize_t __real_sendto(int, const void *, size_t, int, const struct sockaddr *, socklen_t);
 ssize_t __wrap_sendto(int fd, const void *buffer, size_t length, int flags,
                       const struct sockaddr *addr, socklen_t addrlen) {
+    // Bionic's fortified send() delegates to sendto().
+    if (!limit_proxy_control_send(fd, &length)) return -1;
     if (sendto_error_fd >= 0 && fd == sendto_error_fd) {
         errno = sendto_error_value;
         sendto_error_fd = -1;
@@ -495,6 +509,10 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
     va_start(capture, fmt);
     vsnprintf(last_log, sizeof(last_log), fmt, capture);
     va_end(capture);
+    if (strncmp(last_log, "UDP SOCKS5", 10) == 0) {
+        snprintf(last_proxy_log, sizeof(last_proxy_log), "%s", last_log);
+        proxy_logs++;
+    }
     if (real_network) {
         va_list ap;
         va_start(ap, fmt);
@@ -711,6 +729,7 @@ struct segment *new_test_segment(uint16_t length) {
 }
 
 void reset_test_state(void) {
+    test_wall_time_enabled = false;
     error_queue_recv = NULL;
     packet_recv = NULL;
     sendto_error_fd = -1;
@@ -719,6 +738,7 @@ void reset_test_state(void) {
     recv_error_value = 0;
     socket_error_fd = -1;
     socket_error_value = 0;
+    socket_mtu_fd = -1; socket_mtu_value = 0;
     count_memory_comparisons = false;
     memory_comparisons = 0;
     test_monotonic_enabled = false;
@@ -746,6 +766,8 @@ void reset_test_state(void) {
     fail_alloc_tag = NULL;
     fail_alloc_match = fail_fcntl_call = fcntl_calls = 0;
     last_log[0] = 0;
+    last_proxy_log[0] = 0;
+    proxy_logs = 0;
     log_errno = log_result = 0;
     real_exit_reports = exit_reports = 0;
     real_network = real_udp_packets = block_domain = trace_dns = 0;

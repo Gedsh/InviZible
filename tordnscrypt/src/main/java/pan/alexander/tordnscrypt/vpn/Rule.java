@@ -40,7 +40,7 @@ import static pan.alexander.tordnscrypt.utils.logger.Logger.loge;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALL_THROUGH_TOR;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CLEARNET_APPS;
 import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.UNLOCK_APPS;
-import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY;
+import static pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.USE_PROXY_NON_TOR;
 
 import androidx.preference.PreferenceManager;
 
@@ -101,7 +101,7 @@ public class Rule {
 
         Set<String> setUnlockApps = preferences.getStringSetPreference(unlockAppsStr);
 
-        boolean useProxy = prefs.getBoolean(USE_PROXY, false);
+        boolean useProxy = prefs.getBoolean(USE_PROXY_NON_TOR, false);
         Set<String> setBypassProxy;
         if (useProxy) {
             setBypassProxy = preferences.getStringSetPreference(CLEARNET_APPS_FOR_PROXY);

@@ -117,7 +117,8 @@ public interface PreferenceKeys {
     String ITPD_TETHERING = "pref_common_itpd_tethering";
     String COMPATIBILITY_MODE = "swCompatibilityMode";
     String DNS_REBIND_PROTECTION = "pref_common_dns_rebind_protection";
-    String USE_PROXY = "swUseProxy";
+    String USE_SOCKS5_PROXY = "swUseSocks5Proxy";
+    String USE_PROXY_NON_TOR = "swUseProxy";
     String PROXY_ADDRESS = "ProxyServer";
     String PROXY_PORT = "ProxyPort";
     String PROXY_USER = "ProxyUserName";

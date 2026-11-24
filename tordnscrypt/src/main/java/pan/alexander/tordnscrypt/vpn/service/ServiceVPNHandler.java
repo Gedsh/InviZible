@@ -268,7 +268,7 @@ public class ServiceVPNHandler extends Handler {
         ModulesStatus modulesStatus = ModulesStatus.getInstance();
         boolean fixTTL = shouldFixTTL();
 
-        ReloadPlan plan = prepareReload();
+        ReloadPlan plan = prepareReload(preferences);
 
         // A shutdown timeout must leave no temporary tethering rule for the retry to duplicate.
         // Confirm termination before blocking tethering or changing any TUN descriptor.
@@ -325,7 +325,7 @@ public class ServiceVPNHandler extends Handler {
         ModulesIptablesRules.allowTethering(serviceVPN, pathVars.get(), oldVpnInterfaceName);
     }
 
-    ReloadPlan prepareReload() {
+    ReloadPlan prepareReload(VpnPreferenceHolder preferences) {
         listRule.clear();
         listRule.addAll(Rule.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
