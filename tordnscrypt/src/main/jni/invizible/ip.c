@@ -203,10 +203,33 @@ static int64_t uid_observation_time(struct context *ctx) {
     if (cache->count > 0 && cache->entry[cache->last].expires <= now) {
         // Every entry and discarded observation has expired. Ignore stale storage.
         cache->count = 0;
+        cache->lost_count = 0;
         cache->last = 0;
         cache->incomplete_until = 0;
     }
     return now;
+}
+
+static void remember_uid_observation_loss(struct uid_observations *cache,
+                                          const struct uid_observation *lost, int64_t now) {
+    struct uid_observation *slot = NULL;
+    for (size_t i = 0; i < cache->lost_count; i++) {
+        struct uid_observation *entry = &cache->lost[i];
+        if (same_uid_destination(entry, lost->version, lost->source, lost->dest, lost->port)) {
+            if (entry->expires < lost->expires) entry->expires = lost->expires;
+            return;
+        }
+        if (slot == NULL && entry->expires <= now)
+            slot = entry;
+    }
+    if (slot == NULL && cache->lost_count < UID_OBSERVATION_LOSSES)
+        slot = &cache->lost[cache->lost_count++];
+    if (slot == NULL) {
+        // Never forget a live conflict. Fall back only for untracked losses.
+        if (cache->incomplete_until < lost->expires)
+            cache->incomplete_until = lost->expires;
+    } else
+        *slot = *lost;
 }
 
 // Only authoritative proc/Android lookups call this, before policy or socket setup.
@@ -244,11 +267,9 @@ void record_uid_observation(struct context *ctx, int version, int protocol,
     if (slot == NULL && cache->count < UID_OBSERVATIONS)
         slot = &cache->entry[cache->count++];
     if (slot == NULL) {
-        // Missing evidence could hide a conflict. Keep its ORIGINAL expiry,
-        // rather than starting another full window at eviction or on inference.
         slot = oldest;
-        if (slot->expires > cache->incomplete_until)
-            cache->incomplete_until = slot->expires;
+        // Keep the exact discarded endpoint and its ORIGINAL expiry.
+        remember_uid_observation_loss(cache, slot, now);
     }
     slot->expires = now + UID_OBSERVATION_MS;
     slot->uid = uid;
@@ -406,8 +427,10 @@ static jint infer_uid_domain(const struct context *ctx, int version,
             return -1;
     }
     jint uid = -1;
-    for (size_t i = 0; i < ctx->uid_observations.count; i++) {
-        const struct uid_observation *owner = &ctx->uid_observations.entry[i];
+    const struct uid_observations *owners = &ctx->uid_observations;
+    for (size_t i = 0; i < owners->count + owners->lost_count; i++) {
+        bool lost = i >= owners->count;
+        const struct uid_observation *owner = lost ? &owners->lost[i - owners->count] : &owners->entry[i];
         if (owner->expires <= now || owner->port != port ||
             (owner->version == version && memcmp(owner->source, source, version == 4 ? 4 : 16) != 0))
             continue;
@@ -417,6 +440,9 @@ static jint infer_uid_domain(const struct context *ctx, int version,
             if (entry->expires > now && entry->version == owner->version &&
                 memcmp(entry->address, owner->dest, owner->version == 4 ? 4 : 16) == 0 &&
                 strcmp(domain, entry->domain) == 0) {
+                // A discarded owner of another address may hide a domain conflict.
+                // Resolve this relationship now, including DNS learned after eviction.
+                if (lost) return -1;
                 if (uid >= 0 && uid != owner->uid)
                     return -1;
                 uid = owner->uid;
@@ -439,6 +465,11 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
         return -1;
     if (now < cache->incomplete_until)
         return -1;
+    for (size_t i = 0; i < cache->lost_count; i++) {
+        const struct uid_observation *entry = &cache->lost[i];
+        if (entry->expires > now && same_uid_destination(entry, version, source, dest, port))
+            return -1;
+    }
     jint uid = -1;
     // Share exact endpoint evidence across TCP/UDP, including conflicting owners.
     // Observations retain independent expiry for each confirmed transport.

@@ -1454,6 +1454,79 @@ void test_uid_lazy_logging(void) {
 #endif
 }
 
+#ifndef INVIZIBLE_BASELINE_TESTS
+static void test_uid_selective_eviction(struct arguments *args, int version, int protocol) {
+    uint8_t source[16] = {0};
+    struct uid_dns_answer maps[5] = {0};
+    int family = version == 4 ? AF_INET : AF_INET6;
+    assert(inet_pton(family, version == 4 ? "10.1.10.1" : "fd00::1", source) == 1);
+    for (size_t i = 0; i < 5; i++) {
+        maps[i].version = version; maps[i].ttl = 60;
+        assert(inet_pton(family, version == 4 ? "192.0.2.1" : "2001:db8::1", maps[i].address) == 1);
+        maps[i].address[version == 4 ? 3 : 15] += (uint8_t) i;
+    }
+    clear(args->ctx); uid_test_clock = 10000;
+    record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 23456);
+    uid_test_clock = 10001;
+    record_uid_observation(args->ctx, version, protocol, source, maps[1].address, 443, 12345);
+    record_uid_observation(args->ctx, version, protocol, source, maps[3].address, 443, 12345);
+    for (unsigned int i = 3; i < UID_OBSERVATIONS; i++)
+        record_uid_observation(args->ctx, version, protocol, source, maps[3].address,
+                               (uint16_t) (10000 + i), 12345);
+    uid_test_clock = 11000;
+    record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+    // A discarded conflicting owner must not disable unrelated exact endpoints.
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[3].address, 443) == 12345);
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[0].address, 443) == -1);
+    // DNS can arrive after eviction: resolve relationships at inference time.
+    record_uid_dns_answers(args->ctx, "affected.example", maps, 3);
+    record_uid_dns_answers(args->ctx, "unrelated.example", maps + 3, 2);
+    struct uid_dns_answer cross = {.version = 10 - version, .ttl = 60};
+    uint8_t cross_source[16] = {0};
+    assert(inet_pton(cross.version == 4 ? AF_INET : AF_INET6,
+                     cross.version == 4 ? "198.51.100.1" : "2001:db8:1::1", cross.address) == 1);
+    assert(inet_pton(cross.version == 4 ? AF_INET : AF_INET6,
+                     cross.version == 4 ? "10.1.10.1" : "fd00::1", cross_source) == 1);
+    record_uid_dns_answers(args->ctx, "affected.example", &cross, 1);
+    assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, maps[4].address, 443) == 12345);
+    assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, maps[2].address, 443) == -1);
+    assert(infer_uid_destination(args->ctx, cross.version, IPPROTO_UDP, cross_source, cross.address, 443) == -1);
+    uid_test_clock = 14999;
+    record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[2].address, 443) == -1);
+    uid_test_clock = 15000;
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[2].address, 443) == 12345);
+    assert(infer_uid_destination(args->ctx, cross.version, IPPROTO_TCP, cross_source, cross.address, 443) == 12345);
+    // All loss records are bounded. Exhaustion must never discard a live guard.
+    clear(args->ctx); uid_test_clock = 10000;
+    for (unsigned int i = 0; i < UID_OBSERVATIONS; i++)
+        record_uid_observation(args->ctx, version, protocol, source, maps[0].address,
+                               (uint16_t) (10000 + i), 23456);
+    uid_test_clock = 11000;
+    for (unsigned int i = 0; i <= UID_OBSERVATION_LOSSES; i++)
+        record_uid_observation(args->ctx, version, protocol, source, maps[1].address,
+                               (uint16_t) (20000 + i), 12345);
+    assert(args->ctx->uid_observations.lost_count == UID_OBSERVATION_LOSSES);
+    assert(args->ctx->uid_observations.lost[0].expires == 15000);
+    assert(args->ctx->uid_observations.incomplete_until == 15000);
+    uint16_t latest = 20000 + UID_OBSERVATION_LOSSES;
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[1].address, latest) == -1);
+    uid_test_clock = 14999;
+    record_uid_observation(args->ctx, version, protocol, source, maps[1].address, latest, 12345);
+    uid_test_clock = 15000;
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[1].address, latest) == 12345);
+    // Reuse expired loss storage after filling the expired observation slots.
+    for (unsigned int i = 0; i < UID_OBSERVATIONS - UID_OBSERVATION_LOSSES; i++)
+        record_uid_observation(args->ctx, version, protocol, source, maps[3].address,
+                               (uint16_t) (30000 + i), 12345);
+    assert(args->ctx->uid_observations.lost[0].expires == 16000);
+    assert(args->ctx->uid_observations.incomplete_until == 15000);
+    assert(infer_uid_destination(args->ctx, version, protocol, source, maps[1].address, latest) == 12345);
+    clear(args->ctx); uid_test_clock = 10000;
+    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+}
+#endif
+
 void test_uid_destination(struct arguments *args, int kind) {
 #if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
     test_monotonic_enabled = true;
@@ -1590,10 +1663,11 @@ void test_uid_destination(struct arguments *args, int kind) {
                     record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
                 uid_test_clock = 10500;
                 record_uid_observation(args->ctx, version, protocol, source, dest, 40000, 23456);
-                assert(args->ctx->uid_observations.incomplete_until == 15000);
+                assert(args->ctx->uid_observations.lost[0].expires == 15000);
                 uid_test_clock = 15500;
                 assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
-                assert(args->ctx->uid_observations.count == 0 && args->ctx->uid_observations.incomplete_until == 0);
+                assert(args->ctx->uid_observations.count == 0 && args->ctx->uid_observations.lost_count == 0 &&
+                       args->ctx->uid_observations.incomplete_until == 0);
                 assert(args->ctx->uid_observations.entry[20].expires == 15000); // Storage was not cleared.
                 record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
                 assert(args->ctx->uid_observations.count == 1);
@@ -1655,15 +1729,17 @@ void test_uid_destination(struct arguments *args, int kind) {
                     assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
                 }
             } else if (kind == 2) {
+                test_uid_selective_eviction(args, version, protocol);
+                record_uid_observation(args->ctx, version, protocol, source, dest, port, 12345);
                 for (unsigned int i = 1; i < UID_OBSERVATIONS; i++)
                     record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
                 uid_test_clock = 10500;
                 record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
-                assert(args->ctx->uid_observations.incomplete_until == 15000);
+                assert(args->ctx->uid_observations.lost[0].expires == 15000);
                 uid_test_clock = 14999;
                 record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
                 assert(args->ctx->uid_observations.count == UID_OBSERVATIONS);
-                assert(args->ctx->uid_observations.incomplete_until == 15000);
+                assert(args->ctx->uid_observations.lost[0].expires == 15000);
                 assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
                 uid_test_clock++;
                 assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
@@ -1677,9 +1753,9 @@ void test_uid_destination(struct arguments *args, int kind) {
                 record_uid_observation(args->ctx, version, protocol, source, dest, port, 23456);
                 uid_test_clock++;
                 record_uid_observation(args->ctx, version, protocol, source, dest, 60000, 23456);
-                assert(args->ctx->uid_observations.incomplete_until == 15001);
+                assert(args->ctx->uid_observations.lost[1].expires == 15001);
                 uid_test_clock = 15000;
-                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
                 uid_test_clock++;
                 assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
             } else {

@@ -167,6 +167,8 @@ void test_session_reload_caches(struct arguments *args, int guards) {
             record_uid_observation(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443, 23456);
             discard_uid_dns_answer(args->ctx, "reload.test", &answers[1]);
             args->ctx->uid_observations.incomplete_until = 14000;
+            args->ctx->uid_observations.lost[0] = args->ctx->uid_observations.entry[0];
+            args->ctx->uid_observations.lost_count = 1;
             args->ctx->uid_dns_mappings.entry[0].incomplete_until = 16000;
             args->ctx->uid_dns_mappings.admit_after = 17000;
         }
@@ -185,6 +187,8 @@ void test_session_reload_caches(struct arguments *args, int guards) {
         if (guards) {
             assert(args->ctx->uid_observations.count == 2);
             assert(args->ctx->uid_observations.incomplete_until == 14000);
+            assert(args->ctx->uid_observations.lost_count == 1);
+            assert(args->ctx->uid_observations.lost[0].expires == 15000);
             assert(args->ctx->uid_dns_mappings.entry[0].incomplete_until == 16000);
             assert(args->ctx->uid_dns_mappings.admit_after == 17000);
             assert(args->ctx->uid_dns_mappings.lost_count == 1);
@@ -200,7 +204,8 @@ void test_session_reload_caches(struct arguments *args, int guards) {
         }
         Java_pan_alexander_tordnscrypt_vpn_service_ServiceVPN_jni_1clear(
                 NULL, NULL, (jlong) args->ctx, JNI_FALSE);
-        assert(args->ctx->uid_observations.count == 0 && args->ctx->uid_observations.incomplete_until == 0);
+        assert(args->ctx->uid_observations.count == 0 && args->ctx->uid_observations.lost_count == 0 &&
+               args->ctx->uid_observations.incomplete_until == 0);
         assert(args->ctx->uid_dns_mappings.count == 0 && args->ctx->uid_dns_mappings.lost_count == 0 &&
                args->ctx->uid_dns_mappings.admit_after == 0);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == -1);

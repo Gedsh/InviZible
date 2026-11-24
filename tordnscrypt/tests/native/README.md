@@ -659,8 +659,9 @@ their independent checks.
 UDP route-retry cases cover unchanged binary endpoints with different IPv6 text,
 IPv6 loopback normalization, port/family changes, active/blocked transitions, and
 no further owner/policy/clock queries after the shared retry budget is exhausted.
-Same-destination UID fallback uses one per-context array of 256 confirmed
-observations (about 12 KiB plus small metadata). It matches IP family,
+Same-destination UID fallback uses per-context arrays of 256 confirmed
+observations and 64 exact discarded-endpoint guards (about 15 KiB plus small
+metadata). It matches IP family,
 source IP, destination IP and destination port across TCP and UDP; source ports may differ. Only
 successful Android/proc lookups add or refresh observations, before policy and
 socket creation, including later authoritative TCP/UDP recovery. Connection
@@ -686,14 +687,26 @@ One per-context slot index remembers the last authoritative write. Repeated
 observations for that same key and UID refresh it directly; misses retain the
 ordinary scan. Other UIDs remain separate observations for conflict detection.
 The remembered slot also has the latest expiry. Once it expires, reads or writes
-reset the populated count and overflow pause without clearing array storage.
+reset the populated count, discarded guards and overflow fallback without clearing array storage.
 This avoids scanning stale entries after idle periods; stale storage is outside
 the populated range and cannot supply evidence. Clock failures and cleanup still
 clear the complete cache.
-Expired entries are reused first. If capacity requires eviction of a recent
-record, inference pauses until that record's original expiry; additional evictions
-retain the latest discarded expiry. Refreshing a retained record does not extend
-that pause. Unknown traffic continues through the configured policy.
+Expired entries are reused first. Evicting a recent observation retains its exact
+endpoint and original expiry in the bounded guard array. Only that endpoint's
+inference pauses; unrelated retained endpoints remain usable. TCP/UDP share these
+guards, and domain inference also rejects discarded endpoints mapped to the same
+hostname, including cross-family relationships and DNS learned after eviction.
+Guards are matched by full addresses, source and destination port, without hashes.
+Refreshing a retained observation does not extend a discarded observation's lifetime.
+If all 64 guard slots remain live and another distinct endpoint must be discarded,
+a conservative global fallback lasts until the untracked observation's original
+expiry. Existing guards are never overwritten to admit another live guard.
+Unknown traffic continues through the configured policy.
+Overflow regressions cover unrelated exact-IP and domain continuity, conflicting
+owners, cross-family/cross-protocol relationships, late DNS mappings, independent
+expiry, guard saturation and expired-slot reuse. Reload preserves guard deadlines;
+teardown and idle expiry clear them. No allocations, polling or extra owner queries
+are added to packet processing.
 Clock failures/backwards reads invalidate the array; cleanup clears it and other
 VPN contexts cannot use its contents. This is heuristic attribution, not proof of
 ownership: unobserved apps can share a destination with the confirmed app.

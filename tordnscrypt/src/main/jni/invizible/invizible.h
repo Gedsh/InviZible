@@ -131,6 +131,7 @@ struct tcp_memory {
 
 #define INVIZIBLE_PACKET_OWNER 1
 #define UID_OBSERVATIONS 256
+#define UID_OBSERVATION_LOSSES 64
 #define UID_OBSERVATION_MS 5000
 #define UID_DNS_MAPPINGS 128
 #define UID_DNS_LOSSES 64
@@ -152,8 +153,9 @@ struct uid_observation {
 
 struct uid_observations {
     struct uid_observation entry[UID_OBSERVATIONS];
-    int64_t time, incomplete_until;
-    size_t count;
+    struct uid_observation lost[UID_OBSERVATION_LOSSES]; // Exact endpoints; only key/expiry are used.
+    int64_t time, incomplete_until; // Global fallback only when loss storage is full.
+    size_t count, lost_count;
     size_t last; // Last authoritative write; has the latest expiry when count > 0.
 };
 
