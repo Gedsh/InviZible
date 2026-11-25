@@ -1181,24 +1181,29 @@ static bool apply_tcp_uid_policy(const struct arguments *args, struct ng_session
     return false;
 }
 
-// Traffic drives three attempts after 1, 2 and 4 seconds; idle streams add no wake-ups.
 // Require an in-order packet and an ACK within this live stream's outstanding range.
+static bool valid_tcp_uid_activity(const struct tcp_session *tcp,
+                                    const struct tcphdr *header, uint16_t datalen) {
+    uint32_t ack = ntohl(header->ack_seq);
+    return !header->syn && !header->rst && !header->urg && header->ack &&
+           ntohl(header->seq) == tcp->remote_seq &&
+           compare_u32(ack, tcp->acked) >= 0 && compare_u32(ack, tcp->local_seq) <= 0 &&
+           datalen <= tcp->recv_window &&
+           !(datalen && tcp->fin_received && compare_u32(tcp->remote_seq + datalen, tcp->fin_seq) > 0) &&
+           !(header->fin && tcp->fin_received &&
+             (tcp->fin_acked || tcp->remote_seq + datalen != tcp->fin_seq));
+}
+
+// Traffic drives three attempts after 1, 2 and 4 seconds; idle streams add no wake-ups.
 static bool recover_tcp_uid(const struct arguments *args, struct ng_session *s,
                              const struct tcphdr *header, uint16_t datalen, int epoll_fd) {
     struct tcp_session *tcp = &s->tcp;
-    uint32_t ack = ntohl(header->ack_seq);
     if ((tcp->uid >= 0 && !tcp->uid_inferred) ||
         (tcp->state != TCP_ESTABLISHED && tcp->state != TCP_CLOSE_WAIT &&
          tcp->state != TCP_FIN_WAIT1 && tcp->state != TCP_FIN_WAIT2) ||
         s->socket < 0 ||
         tcp->uid_retries >= TCP_UID_RETRY_MAX || tcp->uid_retry_at < 0 ||
-        header->syn || header->rst || header->urg || !header->ack ||
-        ntohl(header->seq) != tcp->remote_seq ||
-        compare_u32(ack, tcp->acked) < 0 || compare_u32(ack, tcp->local_seq) > 0 ||
-        datalen > tcp->recv_window ||
-        (datalen && tcp->fin_received && compare_u32(tcp->remote_seq + datalen, tcp->fin_seq) > 0) ||
-        (header->fin && tcp->fin_received &&
-         (tcp->fin_acked || tcp->remote_seq + datalen != tcp->fin_seq)))
+        !valid_tcp_uid_activity(tcp, header, datalen))
         return true;
     long long now = get_ms();
     if (now < 0) {
@@ -1497,6 +1502,9 @@ jboolean handle_tcp(const struct arguments *args,
             uint8_t oldstate = cur->tcp.state;
             uint32_t oldlocal = cur->tcp.local_seq;
             uint32_t oldremote = cur->tcp.remote_seq;
+            bool uid_activity_valid = cur->tcp.uid >= 0 && !cur->tcp.uid_inferred &&
+                                      !uid_activity_batch_throttled(args->ctx, cur) &&
+                                      valid_tcp_uid_activity(&cur->tcp, tcphdr, datalen);
 
             log_android(ANDROID_LOG_DEBUG, "%s handling", tcp_packet_text(&diagnostic));
 
@@ -1590,8 +1598,11 @@ jboolean handle_tcp(const struct arguments *args,
                             cur->tcp.acked = ack;
                         }
 
-                        if (!tcphdr->fin && !cur->tcp.fin_received)
+                        if (!tcphdr->fin && !cur->tcp.fin_received) {
+                            if (uid_activity_valid)
+                                refresh_uid_activity(args->ctx, cur);
                             return 1;
+                        }
                     } else {
                         log_android(ANDROID_LOG_ERROR, "%s future ACK", tcp_packet_text(&diagnostic));
                         write_rst(args, &cur->tcp);
@@ -1622,6 +1633,8 @@ jboolean handle_tcp(const struct arguments *args,
             int finished = finish_tcp_input(args, cur);
             if (finished < 0)
                 return 0;
+            if (uid_activity_valid)
+                refresh_uid_activity(args->ctx, cur);
             if (!finished && datalen && cur->tcp.fin_acked && !tcphdr->fin &&
                 cur->tcp.state != TCP_CLOSING)
                 write_ack(args, &cur->tcp);

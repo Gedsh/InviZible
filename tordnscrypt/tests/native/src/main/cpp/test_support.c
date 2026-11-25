@@ -15,6 +15,7 @@ int uid_cache_allocations;
 const char *fail_alloc_tag;
 int fail_alloc_match, fail_fcntl_call, fcntl_calls;
 char last_log[2048];
+int uid_probe_logs;
 char last_proxy_log[2048];
 int proxy_logs;
 int socket_mtu_fd = -1, socket_mtu_value;
@@ -509,6 +510,8 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...) {
     va_start(capture, fmt);
     vsnprintf(last_log, sizeof(last_log), fmt, capture);
     va_end(capture);
+    if (strncmp(last_log, "UID diagnostic ", 15) == 0 || strncmp(last_log, "UID capacity ", 13) == 0)
+        uid_probe_logs++;
     if (strncmp(last_log, "UDP SOCKS5", 10) == 0) {
         snprintf(last_proxy_log, sizeof(last_proxy_log), "%s", last_log);
         proxy_logs++;
@@ -766,6 +769,7 @@ void reset_test_state(void) {
     fail_alloc_tag = NULL;
     fail_alloc_match = fail_fcntl_call = fcntl_calls = 0;
     last_log[0] = 0;
+    uid_probe_logs = 0;
     last_proxy_log[0] = 0;
     proxy_logs = 0;
     log_errno = log_result = 0;

@@ -662,16 +662,63 @@ no further owner/policy/clock queries after the shared retry budget is exhausted
 Same-destination UID fallback uses per-context arrays of 256 confirmed
 observations and 64 exact discarded-endpoint guards (about 15 KiB plus small
 metadata). It matches IP family,
-source IP, destination IP and destination port across TCP and UDP; source ports may differ. Only
-successful Android/proc lookups add or refresh observations, before policy and
-socket creation, including later authoritative TCP/UDP recovery. Connection
+source IP, destination IP and destination port across TCP and UDP; source ports may differ.
+Successful Android/proc lookups add or refresh observations before policy and
+socket creation, including later authoritative TCP/UDP recovery. Validated app
+traffic on a live session with a confirmed owner also refreshes evidence, at most
+once per second per session. A per-session slot hint makes an existing-owner
+refresh constant work even when other connections interleave updates. Before use,
+the hint must be within the live cache and match UID, protocol, address family,
+source/destination IP and destination port; expired or replaced entries fall back
+to the normal scan, which supplies a new hint. Hits update the newest-write marker
+and retain every conflicting owner and loss guard. Session creation/reuse clears
+the hint; clock failures invalidate it. The 16-bit hint fits existing structure
+padding on ARMv7, ARM64 and x86_64, adding no session allocation size or timers.
+Within each TUN batch (at most ten packets), activity refreshes share a lazily
+sampled boot-clock timestamp only to skip already throttled updates. Every actual
+evidence write and inference still reads the current clock. A slow callback or
+suspend can defer a refresh until the next batch but cannot extend stale evidence.
+The batch timestamp lives on the event loop's stack; one borrowed context pointer
+is cleared before leaving the batch, including read-error and stop paths. No
+allocation, timer or idle wake-up is added. The IP regression checks one clock
+read for ten repeated refreshes, fresh inference/writes after a long pause,
+batch boundaries, standalone calls, conflicts, and clock failure/backwards time
+for both families/transports. Event-loop buffer-cleanup tests also check that the
+borrowed pointer is cleared on normal and failed reads.
+The IP regression checks a full interleaved cache with two endpoint comparisons
+per hit, every key mismatch, unset/out-of-range hints, expiry, cache reset and slot
+reuse, clock failures/backwards time, conflict retention and resource balance for
+both families/transports. TCP requires a current sequence and an ACK within
+the acknowledged/sent range, with valid data/FIN bounds; rejected packets and
+queue failures do not refresh evidence. Activity-only validation is skipped for
+unknown and inferred TCP owners, which cannot seed evidence. The TCP regression
+checks that their ACK handling and ownership stay unchanged without those extra
+sequence comparisons. Confirmed TCP traffic also skips activity-only validation
+when the existing batch timestamp already throttles its refresh. The same inline
+predicate is shared with the refresh function, without added clock reads or state.
+TCP cases check unchanged ACK handling with no activity sequence comparisons or
+clock reads while throttled, normal validation at the one-second boundary, and
+missing/invalid/backward samples and first use. A future ACK is still rejected by
+normal TCP processing while activity is throttled. UID recovery still performs its own packet validation; an
+owner confirmed by recovery can refresh activity in the same packet. UDP refreshes after successful direct
+sends or acceptance into the bounded SOCKS queue, excluding overflow and failed
+sends. Connection
 completion does not remove observations. DNS hostname inference is not included.
-Each observation expires five seconds after its own confirmation, including device
+Each observation expires five seconds after its latest confirmation or eligible activity, including device
 sleep, using `CLOCK_BOOTTIME`. Overflow deadlines use the same clock. Different UIDs
 for the same destination remain separate records; inference succeeds only when
 all recent matches agree on an app UID. Root, system and the VPN process participate
-in conflict detection but cannot themselves be inferred. Guessed and restored
-session owners never add observations, and inference never refreshes expiry.
+in conflict detection but cannot themselves be inferred. Guessed session owners
+never add observations, and inference never refreshes expiry. Inactive sessions
+cannot keep evidence alive. Activity adds at most one boot-clock read per eligible
+packet, with throttled checks sharing reads within a TUN batch, and a timestamp
+per session, without new owner lookups, allocations, timers or
+wake-ups. Existing sessions keep their UID after inference evidence expires.
+TCP/UDP activity regressions cover both families, throttling, idle expiration,
+cross-protocol inference, conflicting confirmed owners, inferred/unknown owners,
+root evidence, invalid packets, send/queue failures, half-closed streams, and
+clock failure/backwards recovery; SOCKS round trips check queue admission versus
+overflow. Resource accounting remains balanced.
 Cross-protocol matches include conflicting and excluded owners. Records retain
 their protocol and independent expiry, so refreshing UDP evidence cannot extend
 an older TCP observation. Regression cases cover sharing in both
@@ -738,64 +785,104 @@ Exact-restoration and blocked-metadata fixtures explicitly isolate independent
 scenarios from recent destination observations; the fallback has separate tests.
 Failed-restoration errors are emitted after the destination fallback, avoiding
 an error for a packet whose owner was successfully inferred.
-Domain UID fallback runs only when there is no usable direct-IP observation;
-direct-IP conflicts or excluded owners do not fall through to it. A separate
-per-context array stores up to 256 exact hostname/address mappings and 128 exact
-discarded-evidence records (about 112 KiB together),
-with no allocations, timers, DNS transaction tracking or Java/JNI additions.
+Domain UID fallback runs only when exact-IP inference has no matching owner;
+exact-IP conflicts, excluded owners and applicable owner-loss guards do not fall
+through to it. It uses passive DNS history and recent confirmed ownership, not
+the DNS socket's UID. Inferred traffic never seeds ownership evidence, and an
+inferred owner still passes through normal policy and TCP/UDP recovery handling.
+
+Each VPN context holds up to 512 exact hostname/address mappings and 256 DNS
+loss guards, alongside 256 ownership observations and 64 owner-loss guards.
+Ownership evidence lasts five seconds and is shared across TCP/UDP. Positive DNS
+answers retain historical hostname/address associations for 15 minutes using
+`CLOCK_BOOTTIME`, independently of their wire TTL. Both the known and unknown
+destination mappings must remain within that history window. Only another
+observed positive DNS answer refreshes DNS history; confirmed session activity
+or an authoritative UID lookup refreshes ownership. Zero TTL at an address or
+CNAME revokes its matching history immediately. DNS answer freshness is not
+stored or used to resolve names.
+
 Only complete, successful, unfiltered standard A/AAAA responses supply mappings.
-Names are normalized to ASCII lowercase without suffix matching; binary labels
-cannot masquerade as hostname prefixes. The DNS parser validates record bounds across
-the whole response, including remaining sections, before publishing mappings. CNAME chains
-up to eight hops are followed regardless of record order, with address lifetime bounded
-by every alias TTL. Each hop uses a bounded scan of the existing response; the final
-scan collects all matching addresses together. No additional DNS queries are sent.
-Unrelated answer owners are ignored. Mapping lifetimes use boot time and are capped
-at 300 seconds; shorter address/CNAME TTLs still apply, and zero TTL revokes the
-matching association. Fresh confirmed ownership can use a mapping older than a
-minute; traffic and inference never refresh its DNS deadline or extend the
-five-second UID window. Oversized answer sets
-(more than 32 matching addresses) publish no mappings; a validated rescan retains
-discarded evidence for every matching address, including those beyond the batch.
-Evicting a live mapping retains its exact hostname, address and original expiry.
-Only inference for that hostname or a shared destination address is suspended;
-unrelated cached domains continue working. There are no hash-only guards or
-global DNS inference pause. If the discarded-evidence array is also full, live
-guards and mappings are preserved, affected resident keys retain local deadlines,
-and admission of new mapping keys stops until the untracked evidence expires.
-Existing keys can still refresh without clearing their local deadlines. Direct-IP
-inference continues in every case. Both fixed arrays are cleared on teardown and
-clock failure; the fix adds no allocations, timers or network requests.
-For a uniquely mapped destination hostname, inference compares all recent confirmed
-owners of other addresses mapped to that exact hostname, across TCP and UDP.
-Destination port must match. Same-family evidence must also match source IP; cross-family
-evidence is scoped to the VPN context. Shared destination addresses with multiple
-live hostnames are ambiguous and remain unknown. Root, system and own-UID evidence
-participate in conflicts but are not inferred. Parsing a DNS response never uses its
-socket owner as application ownership evidence. Inferred traffic never seeds ownership.
-The shared owner window is five seconds for both exact-IP and domain matching,
-and DNS mappings cannot refresh ownership evidence. Clock failures/backwards reads and teardown clear
-both caches. DNS that is not visible to the VPN cannot supply these mappings.
-Four IP cases cover real packet/policy dispatch across both families and owner APIs,
-cross-family and cross-protocol inference in both directions, provisional provenance,
-independent cross-protocol conflict expiry, port/source restrictions, excluded owners,
-ambiguity, exact-IP priority,
-selective original-expiry capacity guards, unrelated-domain continuity, shared-IP
-losses, saturation of both arrays, deferred admission and recovery, clocks,
-cleanup and context isolation. Four DNS
-cases cover TCP/UDP response parsing, normalization, aliases, TTLs, malformed tails,
-filtered/truncated/failed responses and resource balance. Retention cases check
-inference after one minute, exact five-minute and shorter CNAME expiry, independent
-UID expiry, all 256 resident slots, and original guard deadlines after eviction and
-mapping refresh. Both saturation arrays retain their fixed bounds; larger limits
-add no timers or packet-time allocations. Reordered one- and two-hop
-alias responses verify IPv4/IPv6 inference and conflicting-owner rejection even
-when an address precedes its alias. Ownership still passes
-through the same policy and TCP/UDP recovery paths used by direct-IP inference.
-The full run contains 354 tests plus the optional comparison test.
-Inference failures use the existing `Packet uid can not be restored` diagnostic.
-Temporary branch diagnostics and their expired-mapping-only scan have been removed;
-inference decisions and cache lifetimes are unchanged.
+The parser validates the whole response before publishing evidence, normalizes
+ASCII hostname case, rejects binary labels as inference keys, and follows up to
+eight CNAME hops regardless of record order. It ignores unrelated answer owners
+and sends no additional DNS queries. Duplicate family/IP pairs share a slot in
+the 128-answer buffer, with the shortest address/CNAME TTL taking precedence,
+including zero. Parser-normalized batches skip the cache writer's duplicate
+check; the general writer still honors zero-TTL duplicates in either order.
+
+More than 128 distinct matching pairs publish no mappings. After validating the
+response, the parser rescans its answers and retains loss evidence for every
+matching address, including those beyond the buffer. The same buffer supplies
+batches of at most 128 discarded answers, with one boot-clock read per batch.
+Zero-TTL answers still revoke resident history. Response bytes remain unchanged.
+
+Evicting a retained DNS mapping records its exact hostname, address and original
+history deadline. Applicable hostname or destination guards reject domain
+inference; unrelated cached domains remain usable. When all 256 DNS guard slots
+are live, existing guards and mappings are preserved, affected resident keys
+receive local incomplete-evidence deadlines, and admission of new mapping keys
+pauses until untracked evidence expires. Existing keys may refresh without
+erasing guards. Each loss retains its 15-minute deadline; further losses can
+prolong restrictions. DNS pressure does not disable exact-IP inference. The
+separate owner-guard overflow can suppress all inference until its untracked
+five-second evidence expires.
+
+For each live hostname mapped to the unknown destination, domain inference
+requires recent confirmed ownership evidence for the same app UID. Destination
+ports must match; same-family evidence must also match source IP, while
+cross-family evidence is scoped to the VPN context. All matching hostnames must
+agree. A hostname without usable ownership evidence, conflicting or excluded
+owners, or an applicable DNS/owner loss guard leaves the UID unknown. Root,
+system and the VPN process participate in conflict detection but cannot be
+inferred. Expired/revoked mappings supply no ownership association, although
+their live incomplete-evidence guards still apply.
+
+The implementation uses bounded arrays without packet-time allocations, timers,
+extra wake-ups, DNS transactions or Java/JNI additions. Mapping updates validate
+the last matched slot and its successor before falling back to a full scan.
+Exact refreshes retain their keys and guard deadlines. Revocation and paused
+admission skip insertion bookkeeping; admission is checked per answer because
+earlier losses in the batch may pause it. Writers stop tracking the oldest entry
+after finding a reusable slot but continue looking for an exact match.
+
+Domain inference scans owners only for the candidate hostname's live mappings.
+Destination loss guards are checked once, after finding a usable mapping and
+before scanning its owners. Hostname guards share the mapping traversal, and no
+UID is returned before all applicable evidence is checked. Worst-case work is
+bounded by mappings times owner records, plus per-hostname mapping/guard scans.
+Confirmed flows and successful exact-IP inference avoid these domain scans.
+Reload retains both caches and their original deadlines; clock failure,
+backward reads and teardown clear them. DNS hidden from the VPN cannot supply
+mappings. Attribution remains heuristic: unobserved apps may share destinations,
+and longer history can increase ambiguity or misattribution risk.
+
+The IP, DNS, TCP/UDP activity and session regressions cover:
+
+- IPv4/IPv6, cross-family and cross-protocol evidence, Android/legacy owner APIs,
+  allowed/denied policy, provisional provenance and authoritative recovery.
+- Shared hostnames with agreeing, missing, expired, conflicting or excluded
+  owners; source/port restrictions, exact-IP priority and context isolation.
+- Historical DNS reuse, the exact 15-minute and five-second boundaries, partial
+  refresh, zero-TTL revocation, reload retention and failed/backward clocks.
+- Duplicate addresses below/at the 128-pair limit, mixed families, reordered
+  aliases, malformed/truncated/filtered/failed replies, and oversized responses
+  spanning multiple discarded-answer batches without publishing partial mappings.
+- Capacity eviction, original guard deadlines, selective losses, saturation,
+  admission pauses, exact refresh/revocation while paused and boundary recovery.
+- Full-key slot-hint validation, invalid/reused hints, wraparound, reset, earlier
+  free slots followed by exact matches, and complete cache-state equivalence
+  against ordinary scans.
+- Bounded work with full caches and unrelated mappings/losses, including 256
+  hostnames sharing one destination. That saturated-cache regression allows at
+  most 655,360 address comparisons; ordered eight-address refreshes use at most
+  sixteen comparisons, and 514 discarded answer records use at most five clock reads.
+- Unchanged packet bytes, policy and resource balance, and absence of temporary
+  UID/capacity diagnostic output.
+
+The full run contains 367 tests plus the optional comparison test. Inference
+failures retain the existing `Packet uid can not be restored` message.
+
 Locally generated ICMP errors share a per-context token bucket across IPv4/IPv6
 and flows: a burst of 20, replenished by one token per 100 monotonic milliseconds.
 MTU errors have an independent bucket with the same limits so unreachable floods

@@ -1023,6 +1023,127 @@ static size_t tcp_packet(uint8_t *packet, int version, uint32_t seq, uint32_t ac
     return off + 20 + optlen + len;
 }
 
+void test_tcp_uid_activity(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 21; kind++) {
+            struct context ctx = {.sdk = 29};
+            struct arguments running = *args; running.ctx = &ctx;
+            int stream[2], tunnel[2];
+            assert(socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, stream) == 0);
+            assert(socketpair(AF_UNIX, SOCK_DGRAM | SOCK_NONBLOCK, 0, tunnel) == 0);
+            running.tun = tunnel[1];
+            _Alignas(8) uint8_t packet[128];
+            uint8_t data = 42;
+            size_t length = tcp_packet(packet, version, kind == 5 ? 102 : 101,
+                                       kind == 6 || kind == 20 ? 2001 : kind == 7 ? 1998 : kind == 8 ? 1999 : 2000,
+                                       0, kind == 10 || kind == 19,
+                                       kind == 9 || kind == 12 || kind == 16 ? &data : NULL,
+                                       kind == 9 || kind == 12 || kind == 16 ? 1 : 0);
+            size_t off = version == 4 ? 20 : 40;
+            struct tcphdr *tcp = (void *) (packet + off);
+            if (kind == 3) tcp->rst = 1;
+            if (kind == 4) tcp->urg = 1;
+            if (kind == 17) tcp->syn = 1;
+            if (kind == 18) tcp->ack = 0;
+            struct ng_session s = {.protocol = IPPROTO_TCP, .socket = stream[0]};
+            s.tcp.version = version; s.tcp.uid = kind == 2 ? -1 : 12345;
+            s.tcp.uid_inferred = kind == 1;
+            s.tcp.state = kind == 11 ? TCP_FIN_WAIT2 : kind == 13 ? TCP_CLOSING :
+                          kind == 14 ? TCP_CLOSE_WAIT : TCP_ESTABLISHED;
+            s.tcp.remote_seq = 101; s.tcp.local_seq = 2000; s.tcp.acked = 1999;
+            s.tcp.recv_window = kind == 12 ? 0 : 65535; s.tcp.send_window = 65535;
+            s.tcp.source = tcp->source; s.tcp.dest = tcp->dest;
+            s.tcp.memory = &ctx.tcp_memory;
+            s.tcp.uid_retry_at = -1;
+            if (kind == 15) s.socket = -1;
+            if (kind == 19) {
+                s.tcp.fin_received = s.tcp.fin_acked = true;
+                s.tcp.fin_seq = 101;
+            }
+            memcpy(&s.tcp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+            memcpy(&s.tcp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+            set_test_sessions(&ctx, &s);
+            set_uid_test_clock(10000);
+            int64_t batch_time = 10999;
+            if (kind == 20) {
+                ctx.uid_activity_batch_time = &batch_time;
+                s.uid_activity_at = 10000;
+                set_uid_test_clock(10999);
+            }
+            int lookups = uid_lookups;
+            if (kind == 16) { fail_alloc_tag = "tcp segment"; fail_alloc_match = 1; }
+            tcp_sequence_compares = 0;
+            int handled = handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, -1);
+            if (kind == 1 || kind == 2) {
+                // No activity-only validation when this owner cannot seed evidence.
+                assert(tcp_sequence_compares == 0);
+                assert(handled == 1 && s.tcp.state == TCP_ESTABLISHED);
+                assert(s.tcp.acked == 2000 && s.tcp.remote_seq == 101);
+                assert(s.tcp.uid == (kind == 1 ? 12345 : -1) && s.tcp.uid_inferred == (kind == 1));
+            }
+            if (kind == 20) {
+                // Throttling activity evidence must not bypass normal ACK checks.
+                assert(handled == 0 && tcp_sequence_compares > 0);
+                assert(s.uid_activity_at == 10000);
+            }
+            fail_alloc_tag = NULL;
+            bool recorded = kind == 0 || kind == 8 || kind == 9 || kind == 10 || kind == 11 || kind == 14;
+            assert(ctx.uid_observations.count == (recorded ? 1 : 0));
+            assert(uid_lookups == lookups);
+            if (kind == 0) {
+                ctx.uid_activity_batch_time = &batch_time;
+                for (int sample = 0; sample < 2; sample++) {
+                    batch_time = sample == 0 ? 10000 : 10999;
+                    set_uid_test_clock(10999);
+                    tcp_sequence_compares = 0; uid_clock_reads = 0;
+                    assert(handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, -1) == 1);
+                    assert(tcp_sequence_compares == 0 && uid_clock_reads == 0);
+                    assert(s.tcp.acked == 2000 && s.tcp.remote_seq == 101 && s.tcp.state == TCP_ESTABLISHED);
+                    assert(ctx.uid_observations.entry[0].expires == 15000);
+                }
+                batch_time = 11000;
+                set_uid_test_clock(11000);
+                tcp_sequence_compares = 0; uid_clock_reads = 0;
+                handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, -1);
+                assert(tcp_sequence_compares >= 2 && uid_clock_reads == 1);
+                assert(ctx.uid_observations.entry[0].expires == 16000);
+                for (int sample = 0; sample < 3; sample++) {
+                    // Missing, invalid and backward batch samples cannot skip validation.
+                    ctx.uid_activity_batch_time = sample == 0 ? NULL : &batch_time;
+                    batch_time = sample == 1 ? -1 : 10000;
+                    set_uid_test_clock(11999);
+                    tcp_sequence_compares = 0; uid_clock_reads = 0;
+                    handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, -1);
+                    assert(tcp_sequence_compares >= 2 && uid_clock_reads == 1);
+                    assert(ctx.uid_observations.entry[0].expires == 16000);
+                }
+                ctx.uid_activity_batch_time = &batch_time;
+                batch_time = 12000; s.uid_activity_at = -1;
+                set_uid_test_clock(12000);
+                tcp_sequence_compares = 0; uid_clock_reads = 0;
+                handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, -1);
+                assert(tcp_sequence_compares >= 2 && uid_clock_reads == 1);
+                assert(ctx.uid_observations.entry[0].expires == 17000);
+                ctx.uid_activity_batch_time = NULL;
+                set_uid_test_clock(15001);
+                handle_tcp(&running, packet, length, packet + off, test_owner(-1), 1, NULL, -1);
+                assert(infer_uid_destination(&ctx, version, IPPROTO_UDP, &s.tcp.saddr,
+                                             &s.tcp.daddr, 443) == 12345);
+                set_uid_test_clock(20001);
+                assert(infer_uid_destination(&ctx, version, IPPROTO_TCP, &s.tcp.saddr,
+                                             &s.tcp.daddr, 443) == -1);
+            }
+            set_test_sessions(&ctx, NULL);
+            clear_tcp_data(&s.tcp);
+            close(stream[0]); close(stream[1]); close(tunnel[0]); close(tunnel[1]);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+    set_uid_test_clock(-1);
+#endif
+}
+
 static void tcp_input(const struct arguments *args, uint8_t *packet, size_t len, int version) {
     assert(handle_tcp(args, packet, len, packet + (version == 4 ? 20 : 40),
                       test_owner(own_uid), 1, NULL, -1) == 1);

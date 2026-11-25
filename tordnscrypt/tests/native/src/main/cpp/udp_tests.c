@@ -628,3 +628,78 @@ void test_udp_uid_update(const struct arguments *args) {
     }
 #endif
 }
+
+void test_udp_uid_activity(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2) {
+        for (int kind = 0; kind < 8; kind++) {
+            struct context ctx = {.sdk = 29};
+            struct arguments running = *args; running.ctx = &ctx;
+            _Alignas(8) uint8_t packet[128];
+            const char *destination = version == 4 ? "203.0.113.2" : "2001:db8::2";
+            size_t off = ip_header(packet, version, IPPROTO_UDP, 9, destination);
+            struct udphdr *udp = (void *) (packet + off);
+            udp->source = htons(12345); udp->dest = htons(5000); udp->len = htons(9);
+            packet[off + 8] = 42;
+            struct ng_session s = {.protocol = IPPROTO_UDP, .socket = 42};
+            s.udp.version = version; s.udp.uid = kind == 2 ? -1 : kind == 3 ? 0 : 12345;
+            s.udp.uid_inferred = kind == 1;
+            s.udp.state = kind == 4 ? UDP_CLOSED : UDP_ACTIVE;
+            if (kind == 5) s.socket = -1;
+            s.udp.source = udp->source; s.udp.dest = udp->dest;
+            memcpy(&s.udp.saddr, packet + (version == 4 ? 12 : 8), version == 4 ? 4 : 16);
+            memcpy(&s.udp.daddr, packet + (version == 4 ? 16 : 24), version == 4 ? 4 : 16);
+            if (kind == 7) s.udp.dest = udp->dest = htons(53); // Truncated DNS.
+            set_test_sessions(&ctx, &s);
+            set_uid_test_clock(10000);
+            if (kind == 6) { sendto_error_fd = s.socket; sendto_error_value = EAGAIN; }
+            expect_destination(version, destination, 5000);
+            int lookups = uid_lookups;
+            handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+            bool recorded = kind == 0 || kind == 3;
+            assert(ctx.uid_observations.count == (recorded ? 1 : 0));
+            assert(uid_lookups == lookups);
+            if (kind == 0) {
+                assert(s.udp.sent == 1);
+                set_uid_test_clock(10999);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(ctx.uid_observations.entry[0].expires == 15000);
+                set_uid_test_clock(11000);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(ctx.uid_observations.entry[0].expires == 16000);
+                set_uid_test_clock(15001);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(s.udp.sent == 4);
+                assert(infer_uid_destination(&ctx, version, IPPROTO_TCP, &s.udp.saddr,
+                                             &s.udp.daddr, 5000) == 12345);
+                set_uid_test_clock(20001);
+                assert(infer_uid_destination(&ctx, version, IPPROTO_UDP, &s.udp.saddr,
+                                             &s.udp.daddr, 5000) == -1);
+                // Activity cannot overwrite a different recently confirmed owner.
+                record_uid_observation(&ctx, version, IPPROTO_TCP, &s.udp.saddr,
+                                       &s.udp.daddr, 5000, 23456);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(infer_uid_destination(&ctx, version, IPPROTO_UDP, &s.udp.saddr,
+                                             &s.udp.daddr, 5000) == -1);
+                // Clock failure invalidates evidence and does not disable later refreshes.
+                set_uid_test_clock_failure(true);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(ctx.uid_observations.count == 0);
+                set_uid_test_clock(20002);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(ctx.uid_observations.count == 1);
+                set_uid_test_clock(1000); // Backwards clock: discard, then recover.
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(ctx.uid_observations.count == 0);
+                set_uid_test_clock(1001);
+                handle_udp(&running, packet, off + 9, packet + off, test_owner(-1), NULL, -1);
+                assert(infer_uid_destination(&ctx, version, IPPROTO_TCP, &s.udp.saddr,
+                                             &s.udp.daddr, 5000) == 12345);
+            }
+            set_test_sessions(&ctx, NULL);
+            assert(allocations == 0 && sockets == 0);
+        }
+    }
+    set_uid_test_clock(-1);
+#endif
+}

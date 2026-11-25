@@ -8,6 +8,8 @@ import org.junit.runner.RunWith;
 /** Regressions for dns.c. */
 @RunWith(AndroidJUnit4.class)
 public final class DnsTest extends NativeTestSupport {
+    @Test public void oversizedAnswersBatchGuardsWithoutChangingPackets() { check("dnsUidOverflowBatches"); }
+    @Test public void uidMappingLimitCountsDistinctAddressesAndPreservesShortestTtl() { check("dnsUidDistinct"); }
     @Test public void uidMappingsPreserveConflictingOwnersRegardlessOfAnswerOrder() { check("dnsUidOrder"); }
     @Test public void uidMappingsUseNormalizedQuestionNamesAndValidatedAliases() { check("dnsUidMappings"); }
     @Test public void uidMappingsRejectIncompleteMalformedAndFilteredResponses() { check("dnsUidInvalid"); }

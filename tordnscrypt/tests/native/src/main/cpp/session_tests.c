@@ -183,7 +183,7 @@ void test_session_reload_caches(struct arguments *args, int guards) {
         assert_index_empty(args->ctx);
         assert(allocations == 0 && sockets == 0);
         assert(args->ctx->uid_observations.entry[0].expires == 15000);
-        assert(args->ctx->uid_dns_mappings.entry[0].expires == 13000);
+        assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
         if (guards) {
             assert(args->ctx->uid_observations.count == 2);
             assert(args->ctx->uid_observations.incomplete_until == 14000);
@@ -196,8 +196,9 @@ void test_session_reload_caches(struct arguments *args, int guards) {
             assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == -1);
         } else {
             assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == 12345);
-            set_uid_test_clock(13000); // DNS expires at its original deadline, not reload + TTL.
-            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == -1);
+            set_uid_test_clock(13000); // The wire TTL expires; retained history still applies.
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, answers[1].address, 443) == 12345);
+            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
             assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443) == 12345);
             set_uid_test_clock(15000);
             assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, answers[0].address, 443) == -1);
@@ -299,6 +300,7 @@ long long tcp_test_clock;
 #ifndef INVIZIBLE_BASELINE_TESTS
 static struct arguments *buffer_loop_args;
 static int buffer_loop_kind;
+static int buffer_loop_peer, buffer_loop_polls;
 static struct context *probe_context;
 static struct ng_session *probe_sessions;
 static int probe_polls;
@@ -492,6 +494,24 @@ int __wrap_epoll_wait(int fd, struct epoll_event *events, int count, int timeout
     }
     if (buffer_loop_args != NULL) {
         assert(buffer_loop_args->buffers != NULL);
+        assert(buffer_loop_args->ctx->uid_activity_batch_time == NULL);
+        if (buffer_loop_kind >= 2) {
+            buffer_loop_polls++;
+            if (buffer_loop_polls == 1) {
+                // Cross a real TUN batch boundary, or fail with an empty read.
+                for (int i = 0; i < (buffer_loop_kind == 2 ? TUN_YIELD + 1 : 1); i++)
+                    assert(send(buffer_loop_peer, "x", buffer_loop_kind == 2 ? 1 : 0, 0) ==
+                           (buffer_loop_kind == 2 ? 1 : 0));
+            }
+            if (buffer_loop_polls <= 2) {
+                assert(is_readable(buffer_loop_args->tun));
+                events[0].events = EPOLLIN; events[0].data.ptr = NULL;
+                return 1;
+            }
+            assert(buffer_loop_polls == 3 && !is_readable(buffer_loop_args->tun));
+            buffer_loop_args->ctx->stopping = 1;
+            return 0;
+        }
         assert(get_packet_buffer(buffer_loop_args, PACKET_INPUT, 4096, "loop input") != NULL);
         struct tcp_session tcp = {.version = 4, .recv_window = 4096};
         assert(write_ack(buffer_loop_args, &tcp) >= 0);
@@ -696,7 +716,7 @@ void test_tcp_probe_deadlines(struct arguments *args) {
 
 void test_event_buffer_cleanup(struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
-    for (int kind = 0; kind < 2; kind++) {
+    for (int kind = 0; kind < 4; kind++) {
         int tunnel[2];
         assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, tunnel) == 0);
         assert(pipe(args->ctx->pipefds) == 0);
@@ -705,11 +725,14 @@ void test_event_buffer_cleanup(struct arguments *args) {
         *owned = *args;
         owned->tun = tunnel[0];
         buffer_loop_kind = kind;
+        buffer_loop_peer = tunnel[1]; buffer_loop_polls = 0;
         buffer_loop_args = owned;
         handle_events(owned);
         buffer_loop_args = NULL;
+        assert(args->ctx->uid_activity_batch_time == NULL);
         assert(allocations == 0 && sockets == 0 && args->ctx->ng_session == NULL);
-        assert(exit_reports == kind);
+        assert(exit_reports == (kind + 1) / 2);
+        if (kind >= 2) assert(buffer_loop_polls == (kind == 2 ? 3 : 1));
         close(tunnel[0]); close(tunnel[1]);
         close(args->ctx->pipefds[0]); close(args->ctx->pipefds[1]);
     }

@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for udp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class UdpTest extends NativeTestSupport {
+    @Test public void acceptedConfirmedDatagramsRefreshEvidenceWithThrottle() { check("udpUidActivity"); }
     @Test public void inferredUdpOwnersRemainProvisionalAcrossCreationAndBlockedRecordReuse() { check("udpInferredOwner"); }
     @Test public void resolvedUidFillsUnknownActiveOwnerAndPreservesKnownOwner() { check("udpUidUpdate"); }
     @Test public void truncatedHeadersAndOffsetsPastPacketEndAreRejected() { check("udpPacketBounds"); }

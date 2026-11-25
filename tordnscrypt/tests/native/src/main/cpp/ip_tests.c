@@ -674,6 +674,11 @@ void test_uid_live_proc(int version, int protocol, bool mapped) {
 #ifndef INVIZIBLE_BASELINE_TESTS
 static bool uid_clock_enabled, uid_clock_failure;
 static int64_t uid_test_clock;
+int uid_clock_reads;
+
+void set_uid_test_clock_failure(bool failure) {
+    uid_clock_failure = failure;
+}
 
 void set_uid_test_clock(int64_t now) {
     uid_clock_enabled = now >= 0;
@@ -698,6 +703,7 @@ int __wrap_clock_gettime(clockid_t clock, struct timespec *ts) {
         return 0;
     }
     if (clock == CLOCK_BOOTTIME && uid_clock_enabled) {
+        uid_clock_reads++;
         if (uid_clock_failure) {
             errno = EIO;
             return -1;
@@ -1186,7 +1192,7 @@ static void test_uid_dns_loss_limits(struct arguments *args) {
         set_uid_test_clock(10500);
         struct uid_dns_answer lost = maps[1]; lost.address[15] = lost.address[3] = 99; lost.ttl = 10;
         discard_uid_dns_answer(args->ctx, "test", &lost);
-        assert(args->ctx->uid_dns_mappings.admit_after == 20500);
+        assert(args->ctx->uid_dns_mappings.admit_after == 910500);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, maps[1].address, 443) == -1);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, safe[1].address, 443) == 12345);
         // With no room for loss bookkeeping, decline new keys even if mapping slots are free.
@@ -1197,23 +1203,29 @@ static void test_uid_dns_loss_limits(struct arguments *args) {
         record_uid_dns_answers(args->ctx, "test", maps, 2); // Refresh cannot clear the resident guard.
         assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, maps[1].address, 443) == -1);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, safe[1].address, 443) == 12345);
-        set_uid_test_clock(20500);
+        set_uid_test_clock(910499);
+        record_uid_dns_answers(args->ctx, "test", maps, 2);
+        record_uid_observation(args->ctx, version, IPPROTO_TCP, source, maps[0].address, 443, 12345);
+        assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, maps[1].address, 443) == -1);
+        set_uid_test_clock(910500);
         record_uid_observation(args->ctx, version, IPPROTO_TCP, source, maps[0].address, 443, 12345);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, maps[1].address, 443) == 12345);
-        // The unrecorded "new" answers were valid for 30s, so admission stays closed until 40500.
-        assert(args->ctx->uid_dns_mappings.admit_after == 40500);
-        set_uid_test_clock(40500);
+        // Untracked historical evidence keeps admission closed for fifteen minutes.
+        assert(args->ctx->uid_dns_mappings.admit_after == 910500);
         record_uid_dns_answers(args->ctx, "new", fresh, 2);
         record_uid_observation(args->ctx, version, IPPROTO_TCP, source, fresh[0].address, 443, 12345);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_TCP, source, fresh[1].address, 443) == 12345);
         // If both arrays are full, preserve resident mappings and live guards.
         clear(args->ctx); set_uid_test_clock(50000);
-        record_uid_dns_answers(args->ctx, "safe", safe, 2);
         for (unsigned int i = 2; i < UID_DNS_MAPPINGS; i++) {
             char domain[32]; snprintf(domain, sizeof(domain), "fill-%u", i);
             struct uid_dns_answer fill = {.version = 4, .ttl = 1, .address = {203, 0, 113, (uint8_t) i}};
             record_uid_dns_answers(args->ctx, domain, &fill, 1);
         }
+        // Freshness no longer determines eviction order. Keep the unrelated
+        // mappings newer than the intentionally selected overflow victims.
+        set_uid_test_clock(50001);
+        record_uid_dns_answers(args->ctx, "safe", safe, 2);
         for (unsigned int i = 0; i < UID_DNS_LOSSES; i++) {
             char domain[32]; snprintf(domain, sizeof(domain), "lost-%u", i);
             struct uid_dns_answer loss = {.ttl = 10, .version = 4, .address = {198, 51, 100, (uint8_t) i}};
@@ -1230,32 +1242,971 @@ static void test_uid_dns_loss_limits(struct arguments *args) {
         clear(args->ctx); set_uid_test_clock(10000);
         maps[0].ttl = maps[1].ttl = UINT32_MAX;
         record_uid_dns_answers(args->ctx, "test", maps, 2);
-        for (unsigned int i = 2; i < UID_DNS_MAPPINGS; i++) {
+        for (unsigned int i = 2; i < 512; i++) {
             char domain[32]; snprintf(domain, sizeof(domain), "long-%u", i);
             struct uid_dns_answer fill = {.version = 4, .ttl = 600, .address = {203, 0, 113, (uint8_t) i}};
+            fill.address[2] = (uint8_t) (i >> 8);
             record_uid_dns_answers(args->ctx, domain, &fill, 1);
+            if (i == 256) assert(args->ctx->uid_dns_mappings.lost_count == 0);
         }
-        assert(args->ctx->uid_dns_mappings.count == 256 && args->ctx->uid_dns_mappings.lost_count == 0);
+        assert(args->ctx->uid_dns_mappings.count == 512 && args->ctx->uid_dns_mappings.lost_count == 0);
+        record_uid_observation(args->ctx, version, IPPROTO_TCP, source, maps[0].address, 443, 12345);
+        assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, maps[1].address, 443) == 12345);
         set_uid_test_clock(10500);
         record_uid_dns_answers(args->ctx, "safe", safe, 1);
         assert(args->ctx->uid_dns_mappings.lost_count == 1);
-        assert(args->ctx->uid_dns_mappings.lost[0].expires == 310000);
+        assert(args->ctx->uid_dns_mappings.lost[0].inference_until == 910000);
         set_uid_test_clock(11000);
         record_uid_dns_answers(args->ctx, "test", maps, 2);
         // Refreshing the mappings must not extend or erase the original guard.
-        set_uid_test_clock(309999);
+        set_uid_test_clock(909999);
         record_uid_observation(args->ctx, version, IPPROTO_TCP, source, maps[0].address, 443, 12345);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, maps[1].address, 443) == -1);
-        set_uid_test_clock(310000);
+        set_uid_test_clock(910000);
         assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, maps[1].address, 443) == 12345);
         clear(args->ctx); set_uid_test_clock(10000);
         discard_uid_dns_answer(args->ctx, "oversized", &maps[0]);
-        assert(args->ctx->uid_dns_mappings.lost[0].expires == 310000);
+        assert(args->ctx->uid_dns_mappings.lost[0].inference_until == 910000);
         clear(args->ctx);
         assert(args->ctx->uid_dns_mappings.lost_count == 0 && args->ctx->uid_dns_mappings.admit_after == 0);
         assert(allocations == 0 && sockets == 0 && string_refs == 0);
     }
     set_uid_test_clock(-1);
+#endif
+}
+
+#ifndef INVIZIBLE_BASELINE_TESTS
+static void test_uid_capacity_guards(struct arguments *args) {
+    struct context *ctx = args->ctx;
+    for (int version = 4; version <= 6; version += 2) {
+        clear(ctx); set_uid_test_clock(10000);
+        uint8_t source[16] = {1}, dest[16] = {0};
+        for (uint32_t i = 0; i < UID_OBSERVATIONS + UID_OBSERVATION_LOSSES + 2; i++) {
+            memcpy(dest, &i, sizeof(i));
+            record_uid_observation(ctx, version, IPPROTO_TCP, source, dest, 443, 12345);
+        }
+        assert(ctx->uid_observations.count == UID_OBSERVATIONS);
+        assert(ctx->uid_observations.lost_count == UID_OBSERVATION_LOSSES);
+        assert(ctx->uid_observations.incomplete_until == 15000);
+        set_uid_test_clock(11000);
+        uint32_t next = 999; memcpy(dest, &next, sizeof(next));
+        record_uid_observation(ctx, version, IPPROTO_UDP, source, dest, 443, 12345);
+        assert(infer_uid_destination(ctx, version, IPPROTO_TCP, source, dest, 443) == -1);
+
+        clear(ctx); set_uid_test_clock(20000);
+        struct uid_dns_answer answer = {.version = version, .ttl = 30};
+        for (uint32_t i = 0; i < UID_DNS_MAPPINGS + UID_DNS_LOSSES + 2; i++) {
+            memcpy(answer.address, &i, sizeof(i));
+            record_uid_dns_answers(ctx, "capacity.example", &answer, 1);
+        }
+        assert(ctx->uid_dns_mappings.count == UID_DNS_MAPPINGS);
+        assert(ctx->uid_dns_mappings.lost_count == UID_DNS_LOSSES);
+        assert(ctx->uid_dns_mappings.admit_after == 920000);
+        set_uid_test_clock(21000);
+        next = 999; memcpy(answer.address, &next, sizeof(next));
+        record_uid_dns_answers(ctx, "capacity.example", &answer, 1);
+        assert(ctx->uid_dns_mappings.admit_after == 921000);
+        // A second loss in the same batch cannot extend these resident guards.
+        // Only the full loss array needs key comparisons; skip resident keys.
+        ctx->uid_dns_mappings.entry[0].incomplete_until = 930000;
+        memory_comparisons = 0; count_memory_comparisons = true;
+        discard_uid_dns_answer(ctx, "unrelated.example", &answer);
+        count_memory_comparisons = false;
+        assert(memory_comparisons == UID_DNS_LOSSES);
+        assert(ctx->uid_dns_mappings.admit_after == 921000);
+        for (size_t i = 0; i < ctx->uid_dns_mappings.count; i++) {
+            assert(ctx->uid_dns_mappings.entry[i].incomplete_until == (i == 0 ? 930000 : 921000));
+            assert(ctx->uid_dns_mappings.entry[i].inference_until == 920000);
+        }
+        set_uid_test_clock(22000);
+        discard_uid_dns_answer(ctx, "discarded.example", &answer);
+        discard_uid_dns_answer(ctx, "capacity.example", &answer);
+        for (size_t i = 0; i < ctx->uid_dns_mappings.count; i++)
+            assert(ctx->uid_dns_mappings.entry[i].incomplete_until == (i == 0 ? 930000 : 922000));
+        clear_sessions(ctx);
+        assert(ctx->uid_dns_mappings.admit_after == 922000);
+        assert(ctx->uid_dns_mappings.lost_count == UID_DNS_LOSSES);
+        set_uid_test_clock(1900000); // Expired slots are reusable without discarding live guards.
+        next++; memcpy(answer.address, &next, sizeof(next));
+        record_uid_dns_answers(ctx, "fresh.example", &answer, 1);
+        assert(ctx->uid_dns_mappings.entry[0].inference_until == 2800000);
+        assert(strcmp(ctx->uid_dns_mappings.entry[0].domain, "fresh.example") == 0);
+        discard_uid_dns_answer(ctx, "fresh.example", &answer);
+        assert(ctx->uid_dns_mappings.lost[0].inference_until == 2800000);
+        assert(strcmp(ctx->uid_dns_mappings.lost[0].domain, "fresh.example") == 0);
+        assert(uid_probe_logs == 0);
+        clear(ctx);
+    }
+}
+#endif
+
+void test_uid_activity_batch(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP) {
+            clear(args->ctx); set_uid_test_clock(10000);
+            struct ng_session *s = ng_calloc(1, sizeof(*s), "batch session");
+            assert(s != NULL);
+            s->protocol = protocol;
+            s->socket = socket(AF_INET, SOCK_DGRAM, 0); assert(s->socket >= 0);
+            uint8_t source[16] = {0}, dest[16] = {0};
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                             version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                             version == 4 ? "203.0.113.2" : "2001:db8::2", dest) == 1);
+            if (protocol == IPPROTO_TCP) {
+                s->tcp.version = version; s->tcp.uid = 12345; s->tcp.state = TCP_ESTABLISHED;
+                s->tcp.dest = htons(443);
+                memcpy(&s->tcp.saddr, source, sizeof(source)); memcpy(&s->tcp.daddr, dest, sizeof(dest));
+            } else {
+                s->udp.version = version; s->udp.uid = 12345; s->udp.state = UDP_ACTIVE;
+                s->udp.dest = htons(443);
+                memcpy(&s->udp.saddr, source, sizeof(source)); memcpy(&s->udp.daddr, dest, sizeof(dest));
+            }
+            add_session(args->ctx, s);
+            int64_t batch_time = -1;
+            args->ctx->uid_activity_batch_time = &batch_time;
+            uid_clock_reads = 0;
+            for (int i = 0; i < TUN_YIELD; i++) refresh_uid_activity(args->ctx, s);
+            assert(uid_clock_reads == 1 && s->uid_activity_at == 10000);
+            assert(args->ctx->uid_observations.entry[s->uid_observation_slot].expires == 15000);
+
+            // Even a suspended thread or slow callback cannot extend stale evidence.
+            set_uid_test_clock(20000);
+            refresh_uid_activity(args->ctx, s);
+            assert(uid_clock_reads == 1 && s->uid_activity_at == 10000);
+            assert(infer_uid_destination(args->ctx, version, protocol, source, dest, 443) == -1);
+            assert(uid_clock_reads == 2);
+            // An actual new owner write must also read the current clock inside a batch.
+            record_uid_observation(args->ctx, version, protocol, source, dest, 443, 23456);
+            assert(uid_clock_reads == 3 && args->ctx->uid_observations.entry[0].expires == 25000);
+
+            // Each new batch, and standalone calls, must sample again.
+            args->ctx->uid_activity_batch_time = NULL;
+            batch_time = -1;
+            args->ctx->uid_activity_batch_time = &batch_time;
+            refresh_uid_activity(args->ctx, s);
+            assert(uid_clock_reads == 4 && s->uid_activity_at == 20000);
+            assert(infer_uid_destination(args->ctx, version, protocol, source, dest, 443) == -1);
+            args->ctx->uid_activity_batch_time = NULL;
+            set_uid_test_clock(21000);
+            refresh_uid_activity(args->ctx, s);
+            assert(s->uid_activity_at == 21000);
+            // First-use clock failures and backwards time still invalidate evidence.
+            for (int failure = 0; failure < 2; failure++) {
+                batch_time = -1; args->ctx->uid_activity_batch_time = &batch_time;
+                if (failure == 0) set_uid_test_clock_failure(true);
+                else set_uid_test_clock(1);
+                refresh_uid_activity(args->ctx, s);
+                assert(s->uid_activity_at == -1 && s->uid_observation_slot == UINT16_MAX);
+                assert(args->ctx->uid_observations.count == 0);
+                args->ctx->uid_activity_batch_time = NULL;
+                set_uid_test_clock(22000);
+                refresh_uid_activity(args->ctx, s);
+                assert(s->uid_activity_at == 22000);
+            }
+            clear(args->ctx);
+            assert(allocations == 0 && sockets == 0 && string_refs == 0);
+        }
+    set_uid_test_clock(-1);
+#endif
+}
+
+void test_uid_owner_slot_hint(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+            for (int mode = 0; mode < 15; mode++) {
+                clear(args->ctx); set_uid_test_clock(10000);
+                struct ng_session *s = ng_calloc(1, sizeof(*s), "hint session");
+                assert(s != NULL);
+                s->protocol = protocol;
+                s->socket = socket(AF_INET, SOCK_DGRAM, 0); assert(s->socket >= 0);
+                uint8_t source[16] = {0}, dest[16] = {0}, other[16] = {198};
+                assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                 version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+                assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                 version == 4 ? "203.0.113.2" : "2001:db8::2", dest) == 1);
+                if (protocol == IPPROTO_TCP) {
+                    s->tcp.version = version; s->tcp.uid = 12345;
+                    s->tcp.state = TCP_ESTABLISHED; s->tcp.dest = htons(443);
+                    memcpy(&s->tcp.saddr, source, sizeof(source));
+                    memcpy(&s->tcp.daddr, dest, sizeof(dest));
+                } else {
+                    s->udp.version = version; s->udp.uid = 12345;
+                    s->udp.state = UDP_ACTIVE; s->udp.dest = htons(443);
+                    memcpy(&s->udp.saddr, source, sizeof(source));
+                    memcpy(&s->udp.daddr, dest, sizeof(dest));
+                }
+                s->uid_observation_slot = 123; // Reused sessions must not inherit a hint.
+                add_session(args->ctx, s);
+                assert(s->uid_observation_slot == UINT16_MAX);
+                for (unsigned int i = 0; i < UID_OBSERVATIONS - 1; i++) {
+                    other[version == 4 ? 3 : 15] = (uint8_t) i;
+                    record_uid_observation(args->ctx, version, protocol, source, other, 443, 12345);
+                }
+                refresh_uid_activity(args->ctx, s);
+                size_t slot = args->ctx->uid_observations.last;
+                assert(slot == UID_OBSERVATIONS - 1);
+                assert(args->ctx->uid_observations.entry[slot].expires == 15000);
+                set_uid_test_clock(10999);
+                memory_comparisons = 0; count_memory_comparisons = true;
+                refresh_uid_activity(args->ctx, s);
+                count_memory_comparisons = false;
+                assert(memory_comparisons == 0); // Throttled packets do not validate the hint.
+                set_uid_test_clock(11000);
+                other[version == 4 ? 3 : 15] = 0;
+                record_uid_observation(args->ctx, version, protocol, source, other, 443, 12345);
+                struct uid_observation *entry = &args->ctx->uid_observations.entry[slot];
+                if (mode == 1) entry->uid = 23456;
+                if (mode == 2) entry->protocol = protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP;
+                if (mode == 3) entry->version = 10 - version;
+                if (mode == 4) entry->source[0] ^= 1;
+                if (mode == 5) entry->dest[0] ^= 1;
+                if (mode == 6) entry->port = 444;
+                if (mode == 7) s->uid_observation_slot = UINT16_MAX;
+                if (mode == 8) s->uid_observation_slot = UID_OBSERVATIONS;
+                if (mode == 9) entry->expires = 11000;
+                if (mode == 10) {
+                    // A reset followed by unrelated insertions may reuse the same index.
+                    memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
+                    for (unsigned int i = 0; i < UID_OBSERVATIONS; i++) {
+                        other[version == 4 ? 3 : 15] = (uint8_t) i;
+                        record_uid_observation(args->ctx, version, protocol, source, other, 443, 23456);
+                    }
+                }
+                if (mode == 11) memset(&args->ctx->uid_observations, 0, sizeof(args->ctx->uid_observations));
+                if (mode == 12) set_uid_test_clock_failure(true);
+                if (mode == 13) set_uid_test_clock(9000);
+                if (mode == 14) set_uid_test_clock(16000); // Logical reset after all owners expired.
+                struct uid_observation previous = *entry;
+                memory_comparisons = 0; count_memory_comparisons = true;
+                refresh_uid_activity(args->ctx, s);
+                count_memory_comparisons = false;
+                if (mode == 0) assert(memory_comparisons == 2); // Constant work despite a full, interleaved cache.
+                if (mode == 12 || mode == 13) {
+                    assert(s->uid_observation_slot == UINT16_MAX && s->uid_activity_at == -1);
+                    assert(args->ctx->uid_observations.count == 0);
+                    set_uid_test_clock(11000);
+                    refresh_uid_activity(args->ctx, s);
+                }
+                assert(s->uid_observation_slot < args->ctx->uid_observations.count);
+                struct uid_observation *refreshed = &args->ctx->uid_observations.entry[s->uid_observation_slot];
+                assert(refreshed->uid == 12345 && refreshed->protocol == protocol && refreshed->version == version);
+                assert(refreshed->port == 443 && memcmp(refreshed->source, source, version == 4 ? 4 : 16) == 0);
+                assert(memcmp(refreshed->dest, dest, version == 4 ? 4 : 16) == 0);
+                assert(refreshed->expires == (mode == 14 ? 21000 : 16000));
+                assert(args->ctx->uid_observations.last == s->uid_observation_slot);
+                if ((mode >= 1 && mode <= 6) || mode == 10) {
+                    assert(memcmp(entry, &previous, sizeof(previous)) == 0); // Never refresh a replacement owner/key.
+                }
+                if (mode == 0) {
+                    record_uid_observation(args->ctx, version, protocol, source, dest, 443, 23456);
+                    set_uid_test_clock(12000);
+                    size_t guards = args->ctx->uid_observations.lost_count;
+                    refresh_uid_activity(args->ctx, s);
+                    assert(args->ctx->uid_observations.lost_count == guards);
+                    assert(infer_uid_destination(args->ctx, version, protocol, source, dest, 443) == -1);
+                }
+                clear(args->ctx);
+                assert(allocations == 0 && sockets == 0 && string_refs == 0);
+            }
+    set_uid_test_clock(-1);
+#endif
+}
+
+void test_uid_dns_slot_hint(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    struct uid_dns_mappings *before = ng_malloc(sizeof(*before), "DNS hint initial state");
+    struct uid_dns_mappings *expected = ng_malloc(sizeof(*expected), "DNS hint expected state");
+    assert(before != NULL && expected != NULL);
+    for (int version = 4; version <= 6; version += 2)
+        for (int unique = 0; unique <= 1; unique++)
+            for (int mode = 0; mode < 13; mode++) {
+                void (*record)(struct context *, const char *, const struct uid_dns_answer *, size_t) =
+                        unique ? record_uid_dns_unique_answers : record_uid_dns_answers;
+                clear(args->ctx); set_uid_test_clock(10000);
+                struct uid_dns_mappings *cache = &args->ctx->uid_dns_mappings;
+                for (uint32_t i = 0; i < UID_DNS_MAPPINGS; i++) {
+                    struct uid_dns_answer answer = {.version = version, .ttl = 30};
+                    memcpy(answer.address, &i, sizeof(i));
+                    record(args->ctx, "hint.example", &answer, 1);
+                }
+                enum { BATCH = 8 };
+                const size_t first = UID_DNS_MAPPINGS - BATCH;
+                struct uid_dns_answer answers[BATCH] = {0};
+                for (size_t i = 0; i < BATCH; i++) {
+                    answers[i].version = version; answers[i].ttl = 30;
+                    memcpy(answers[i].address, cache->entry[first + i].address, sizeof(answers[i].address));
+                }
+                cache->last = first - 1; // The successor probe should find the first answer.
+                if (mode == 1) cache->last = first;
+                if (mode == 2) cache->last = UID_DNS_MAPPINGS - 1; // Wraparound miss.
+                if (mode == 3) cache->last = SIZE_MAX;
+                if (mode == 4) cache->last = UID_DNS_MAPPINGS;
+                if (mode >= 5 && mode <= 8) cache->last = first;
+                if (mode == 5) strcpy(cache->entry[first].domain, "other.example");
+                if (mode == 6) cache->entry[first].version = 10 - version;
+                if (mode == 7) cache->entry[first].address[version == 4 ? 3 : 15] = 0xff;
+                if (mode == 8) {
+                    cache->entry[0].inference_until = 11000; // Earlier free slot must not hide an exact match.
+                    cache->entry[first].inference_until = 11000;
+                    cache->entry[first].incomplete_until = 1100000;
+                }
+                if (mode == 9) answers[3].ttl = 0;
+                if (mode == 10) {
+                    cache->entry[first + 1].incomplete_until = 1100000;
+                    cache->admit_after = 1200000;
+                }
+                if (mode == 11) answers[0].address[version == 4 ? 3 : 15] = 0xfe;
+                if (mode == 12) memset(cache, 0, sizeof(*cache));
+                *before = *cache;
+                set_uid_test_clock(11000);
+                memory_comparisons = 0; count_memory_comparisons = true;
+                record(args->ctx, "hint.example", answers, BATCH);
+                count_memory_comparisons = false;
+                if (mode < 2) assert(memory_comparisons <= 2 * BATCH);
+                *expected = *cache;
+                *cache = *before;
+                // Force the original full scan for every distinct input key.
+                // A fixed clock makes separate updates equivalent to this batch.
+                for (size_t i = 0; i < BATCH; i++) {
+                    cache->last = SIZE_MAX;
+                    record(args->ctx, "hint.example", answers + i, 1);
+                }
+                assert(memcmp(cache, expected, sizeof(*cache)) == 0);
+                assert(cache->count <= UID_DNS_MAPPINGS && cache->lost_count <= UID_DNS_LOSSES);
+            }
+    clear(args->ctx); set_uid_test_clock(-1);
+    ng_free(before, __FILE__, __LINE__); ng_free(expected, __FILE__, __LINE__);
+    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+#endif
+}
+
+void test_uid_dns_unique_updates(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    struct uid_dns_mappings *saved = ng_malloc(sizeof(*saved), "DNS comparison");
+    assert(saved != NULL);
+    for (int version = 4; version <= 6; version += 2)
+        for (size_t count = 2; count <= UID_DNS_ANSWERS; count *= 2) {
+            struct uid_dns_answer answers[UID_DNS_ANSWERS] = {0};
+            for (size_t i = 0; i < count; i++) {
+                answers[i].version = version;
+                answers[i].address[0] = (uint8_t) i;
+                answers[i].ttl = (uint32_t) (5 + i);
+            }
+            for (int mode = 0; mode < 4; mode++) {
+                clear(args->ctx); set_uid_test_clock(10000);
+                if (mode == 1 || mode == 3) {
+                    // Exercise eviction and exhausted guards as well as an empty cache.
+                    for (uint32_t i = 0; i < UID_DNS_MAPPINGS + (mode == 3 ? UID_DNS_LOSSES : 0); i++) {
+                        struct uid_dns_answer fill = {.version = version, .ttl = 1};
+                        memcpy(fill.address, &i, sizeof(i));
+                        record_uid_dns_answers(args->ctx, "fill.test", &fill, 1);
+                    }
+                }
+                if (mode == 2) {
+                    record_uid_dns_answers(args->ctx, "unique.test", answers, count);
+                    for (size_t i = 0; i < count; i += 2) answers[i].ttl = 0;
+                }
+                struct uid_dns_mappings *before = ng_malloc(sizeof(*before), "DNS initial state");
+                assert(before != NULL);
+                *before = args->ctx->uid_dns_mappings;
+                memory_comparisons = 0; count_memory_comparisons = true;
+                record_uid_dns_answers(args->ctx, "unique.test", answers, count);
+                count_memory_comparisons = false;
+                int general_comparisons = memory_comparisons;
+                *saved = args->ctx->uid_dns_mappings;
+                args->ctx->uid_dns_mappings = *before;
+                ng_free(before, __FILE__, __LINE__);
+                memory_comparisons = 0; count_memory_comparisons = true;
+                record_uid_dns_unique_answers(args->ctx, "unique.test", answers, count);
+                count_memory_comparisons = false;
+                int unique_comparisons = memory_comparisons;
+                assert(memcmp(saved, &args->ctx->uid_dns_mappings, sizeof(*saved)) == 0);
+                if (mode == 0) {
+                    // Positive TTL differences no longer require address comparisons.
+                    assert(general_comparisons == unique_comparisons);
+                }
+                if (mode == 2)
+                    assert(general_comparisons - unique_comparisons == (int) (count * count / 4));
+                if (mode == 2)
+                    for (size_t i = 0; i < count; i++) answers[i].ttl = (uint32_t) (5 + i);
+            }
+        }
+    // The general API must still merge duplicates, with zero TTL taking precedence.
+    for (int reverse = 0; reverse <= 1; reverse++) {
+        clear(args->ctx); set_uid_test_clock(10000);
+        struct uid_dns_answer answers[4] = {{.version = 4, .ttl = 30, .address = {1}},
+                                           {.version = 6, .ttl = 40, .address = {1}},
+                                           {.version = 4, .ttl = 0, .address = {1}},
+                                           {.version = 6, .ttl = 5, .address = {1}}};
+        if (reverse)
+            for (size_t i = 0; i < 2; i++) {
+                struct uid_dns_answer swap = answers[i];
+                answers[i] = answers[3 - i]; answers[3 - i] = swap;
+            }
+        record_uid_dns_answers(args->ctx, "duplicates.test", answers, 4);
+        assert(args->ctx->uid_dns_mappings.count == 1);
+        assert(args->ctx->uid_dns_mappings.entry[0].version == 6);
+        assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
+    }
+    // A free earlier slot must not replace a later exact match. Refreshes retain
+    // its key and loss deadline; insertion into the free slot must set a new key.
+    // Paused admission still permits exact refresh/revocation, then insertion at its boundary.
+    for (int version = 4; version <= 6; version += 2)
+        for (int mode = 0; mode < 4; mode++) {
+            bool unique = mode % 2 != 0, paused = mode >= 2;
+            void (*record)(struct context *, const char *, const struct uid_dns_answer *, size_t) =
+                    unique ? record_uid_dns_unique_answers : record_uid_dns_answers;
+            clear(args->ctx); set_uid_test_clock(10000);
+            char domain[256] = {0};
+            memset(domain, 'a', 253); domain[63] = domain[127] = domain[191] = '.';
+            struct uid_dns_answer answer = {.version = version, .ttl = 30, .address = {1}};
+            record(args->ctx, "expired.example", &answer, 1);
+            answer.address[0] = 2;
+            record(args->ctx, domain, &answer, 1);
+            struct uid_dns_mapping *free_slot = &args->ctx->uid_dns_mappings.entry[0];
+            struct uid_dns_mapping *existing = &args->ctx->uid_dns_mappings.entry[1];
+            free_slot->inference_until = 10000;
+            existing->incomplete_until = 1100000;
+            struct uid_dns_mapping expected = *existing;
+            set_uid_test_clock(11000); answer.ttl = 10;
+            args->ctx->uid_dns_mappings.last = SIZE_MAX; // Exercise the full exact-key search.
+            if (paused) args->ctx->uid_dns_mappings.admit_after = 12000;
+            record(args->ctx, domain, &answer, 1);
+            expected.inference_until = 911000;
+            assert(memcmp(existing, &expected, sizeof(expected)) == 0);
+            assert(args->ctx->uid_dns_mappings.count == 2 && free_slot->inference_until == 10000);
+            answer.ttl = 0;
+            args->ctx->uid_dns_mappings.last = SIZE_MAX;
+            record(args->ctx, domain, &answer, 1);
+            expected.inference_until = 11000;
+            assert(memcmp(existing, &expected, sizeof(expected)) == 0);
+            if (paused) {
+                struct uid_dns_answer missing = {.version = 10 - version, .ttl = 30, .address = {3}};
+                record(args->ctx, "replacement.example", &missing, 1);
+                assert(args->ctx->uid_dns_mappings.count == 2 && args->ctx->uid_dns_mappings.lost_count == 1);
+                struct uid_dns_mapping *loss = &args->ctx->uid_dns_mappings.lost[0];
+                assert(loss->inference_until == 911000 && loss->version == missing.version);
+                assert(memcmp(loss->address, missing.address, missing.version == 4 ? 4 : 16) == 0);
+                assert(strcmp(loss->domain, "replacement.example") == 0);
+                missing.ttl = 0;
+                record(args->ctx, "replacement.example", &missing, 1);
+                assert(args->ctx->uid_dns_mappings.count == 2 && args->ctx->uid_dns_mappings.lost_count == 1);
+                assert(loss->inference_until == 911000 && free_slot->inference_until == 10000);
+                assert(memcmp(existing, &expected, sizeof(expected)) == 0);
+                assert(args->ctx->uid_dns_mappings.admit_after == 12000);
+            }
+            set_uid_test_clock(12000); answer.ttl = UINT32_MAX;
+            record(args->ctx, domain, &answer, 1);
+            expected.inference_until = 12000 + UID_DNS_INFERENCE_MS;
+            assert(memcmp(existing, &expected, sizeof(expected)) == 0);
+            answer.version = 10 - version; answer.address[0] = 3;
+            record(args->ctx, "replacement.example", &answer, 1);
+            assert(args->ctx->uid_dns_mappings.count == 2);
+            assert(memcmp(existing, &expected, sizeof(expected)) == 0);
+            assert(free_slot->version == answer.version && free_slot->incomplete_until == 0);
+            assert(memcmp(free_slot->address, answer.address, answer.version == 4 ? 4 : 16) == 0);
+            assert(strcmp(free_slot->domain, "replacement.example") == 0);
+            assert(free_slot->inference_until == expected.inference_until);
+        }
+    clear(args->ctx); set_uid_test_clock(-1);
+    ng_free(saved, __FILE__, __LINE__);
+    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+#endif
+}
+
+void test_uid_dns_history(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP) {
+            clear(args->ctx); set_uid_test_clock(10000);
+            uint8_t source[16] = {1};
+            struct uid_dns_answer maps[3] = {{.version = version, .ttl = 1},
+                                            {.version = version, .ttl = 1},
+                                            {.version = version, .ttl = 1}};
+            for (int i = 0; i < 3; i++) maps[i].address[0] = (uint8_t) (20 + i);
+            record_uid_dns_answers(args->ctx, "history.example", maps, 3);
+            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
+            set_uid_test_clock(610000); // Browser uses the DNS addresses ten minutes later.
+            record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+            int other = protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP;
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == 12345);
+            set_uid_test_clock(615000);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+            record_uid_observation(args->ctx, version, other, source, maps[2].address, 443, 23456);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            set_uid_test_clock(620000);
+            // Both old owner observations expired; another family/transport may confirm ownership.
+            struct uid_dns_answer cross = maps[0]; cross.version = 10 - version;
+            record_uid_dns_answers(args->ctx, "history.example", &cross, 1);
+            record_uid_observation(args->ctx, cross.version, other, source, cross.address, 443, 12345);
+            assert(infer_uid_destination(args->ctx, version, protocol, source, maps[1].address, 443) == 12345);
+            clear_sessions(args->ctx);
+            assert(args->ctx->uid_dns_mappings.entry[1].inference_until == 910000);
+            set_uid_test_clock(909999);
+            record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == 12345);
+            set_uid_test_clock(910000);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            record_uid_dns_answers(args->ctx, "history.example", maps, 1); // Refresh only the known address.
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            record_uid_dns_answers(args->ctx, "history.example", maps + 1, 1);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == 12345);
+            maps[1].ttl = 0;
+            record_uid_dns_answers(args->ctx, "history.example", maps + 1, 1);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            maps[1].ttl = 1;
+            record_uid_dns_answers(args->ctx, "history.example", maps + 1, 1);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == 12345);
+            maps[1].ttl = 0; // Oversized DNS responses must also revoke resident history.
+            discard_uid_dns_answer(args->ctx, "history.example", maps + 1);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            maps[1].ttl = 1;
+            record_uid_dns_answers(args->ctx, "history.example", maps + 1, 1);
+            record_uid_dns_answers(args->ctx, "ambiguous.example", maps + 1, 1);
+            assert(infer_uid_destination(args->ctx, version, other, source, maps[1].address, 443) == -1);
+            clear(args->ctx);
+            assert(allocations == 0 && sockets == 0 && string_refs == 0);
+        }
+    set_uid_test_clock(-1);
+#endif
+}
+
+void test_uid_inference_policy(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    test_uid_capacity_guards(args);
+    int tunnel[2]; assert(pipe(tunnel) == 0);
+    struct arguments running = *args; running.tun = tunnel[1];
+    capture_packets = 1; deny_address = 1;
+    for (int legacy = 0; legacy <= 1; legacy++)
+        for (int version = 4; version <= 6; version += 2)
+            for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+                for (size_t scenario = 0; scenario < 20; scenario++) {
+                    clear(args->ctx); release_uid_cache(); set_uid_test_clock(10000);
+                    args->ctx->sdk = legacy ? 28 : 29;
+                    _Alignas(8) uint8_t packet[128];
+                    size_t length = checksum_packet(packet, version, protocol, 0);
+                    size_t off = version == 4 ? 20 : 40;
+                    uint16_t sport = htons(12345), dport = htons(443);
+                    memcpy(packet + off, &sport, 2); memcpy(packet + off + 2, &dport, 2);
+                    packet_checksums(packet, length, off, protocol);
+                    const void *source = packet + (version == 4 ? 12 : 8);
+                    const void *dest = packet + (version == 4 ? 16 : 24);
+                    struct uid_dns_answer maps[3] = {0};
+                    for (int i = 0; i < 3; i++) {
+                        maps[i].version = version; maps[i].ttl = scenario == 2 ? 1 : 30;
+                        memcpy(maps[i].address, dest, version == 4 ? 4 : 16);
+                        if (i != 1) maps[i].address[version == 4 ? 3 : 15] ^= (uint8_t) (0x40 + i);
+                    }
+                    if (scenario != 0)
+                        record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+                    if ((scenario >= 2 && scenario <= 5) || scenario == 7 || scenario == 8 || scenario == 16 || scenario == 18)
+                        record_uid_dns_answers(args->ctx, "test.example", maps, 3);
+                    if (scenario == 18) {
+                        maps[1].ttl = 0;
+                        record_uid_dns_answers(args->ctx, "test.example", maps + 1, 1);
+                    }
+                    if (scenario == 2) {
+                        set_uid_test_clock(911000);
+                        record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+                    }
+                    if (scenario == 3) record_uid_dns_answers(args->ctx, "other.example", maps + 1, 1);
+                    if (scenario == 4) discard_uid_dns_answer(args->ctx, "test.example", maps + 1);
+                    if (scenario == 5) args->ctx->uid_dns_mappings.entry[1].incomplete_until = 15000;
+                    if (scenario == 6) record_uid_dns_answers(args->ctx, "test.example", maps + 1, 1);
+                    if (scenario == 7)
+                        record_uid_observation(args->ctx, version, protocol, source, maps[2].address, 443, 23456);
+                    if (scenario == 8 || scenario == 11) {
+                        args->ctx->uid_observations.lost[0] = args->ctx->uid_observations.entry[0];
+                        args->ctx->uid_observations.lost_count = 1;
+                        if (scenario == 11)
+                            memcpy(args->ctx->uid_observations.lost[0].dest, dest, version == 4 ? 4 : 16);
+                    }
+                    if (scenario == 9) {
+                        record_uid_observation(args->ctx, version, protocol, source, dest, 443, 12345);
+                        record_uid_observation(args->ctx, version, protocol, source, dest, 443, 23456);
+                    }
+                    if (scenario == 10) record_uid_observation(args->ctx, version, protocol, source, dest, 443, 0);
+                    if (scenario == 12) args->ctx->uid_observations.incomplete_until = 15000;
+                    if (scenario == 17) set_uid_test_clock(15000);
+                    if (scenario == 19) {
+                        // Keep expired and live long hostnames to exercise ambiguity without logging.
+                        char names[3][254];
+                        for (int i = 0; i < 3; i++) {
+                            memset(names[i], 'a', 253); names[i][253] = 0;
+                            names[i][0] = (char) ('a' + i);
+                            names[i][63] = names[i][127] = names[i][191] = '.';
+                        }
+                        record_uid_dns_answers(args->ctx, names[0], maps + 1, 1);
+                        set_uid_test_clock(510000);
+                        record_uid_dns_answers(args->ctx, names[1], maps + 1, 1);
+                        record_uid_dns_answers(args->ctx, names[1], maps, 1);
+                        record_uid_dns_answers(args->ctx, names[2], maps + 1, 1);
+                        set_uid_test_clock(911000);
+                        record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 12345);
+                    }
+                    uid_clock_failure = scenario == 13;
+                    char table[256];
+                    jint raw = scenario == 14 ? 0 : scenario == 15 ? 12345 : -1;
+                    blocked_uid_lookup(version, legacy, raw, table, sizeof(table));
+                    uid_probe_logs = 0;
+                    int checks = policy_checks;
+                    handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                    assert(policy_checks == checks + 1);
+                    assert(policy_uid == (scenario == 14 ? 0 : scenario == 15 || scenario == 16 ? 12345 : -1));
+                    assert(uid_probe_logs == 0);
+                    if (scenario == 16) {
+                        clear_sessions(args->ctx);
+                        record_uid_dns_answers(args->ctx, "other.example", maps + 1, 1);
+                        handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
+                        assert(policy_uid == -1 && uid_probe_logs == 0);
+                    }
+                    uid_clock_failure = false;
+                    uint8_t output[2048];
+                    while (is_readable(tunnel[0])) assert(read(tunnel[0], output, sizeof(output)) > 0);
+                    clear(args->ctx); release_uid_cache();
+                    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                }
+    capture_packets = 0; deny_address = 0; fake_proc = 0;
+    args->ctx->sdk = 29; set_uid_test_clock(-1);
+    close(tunnel[0]); close(tunnel[1]);
+#endif
+}
+
+void test_uid_relevant_domain_work(struct arguments *args) {
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int version = 4; version <= 6; version += 2)
+        for (int known_version = 4; known_version <= 6; known_version += 2)
+            for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+                for (int reverse = 0; reverse <= 1; reverse++)
+                    for (int mode = 0; mode < 5; mode++) {
+                        clear(args->ctx); set_uid_test_clock(10000);
+                        uint8_t source[16] = {10, 0, 0, 2};
+                        struct uid_dns_answer target = {.version = version, .ttl = 30, .address = {203, 0, 113, 2}};
+                        struct uid_dns_answer known = {.version = known_version, .ttl = 30, .address = {203, 0, 113, 3}};
+                        int other_protocol = protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP;
+                        for (size_t n = 0; n < UID_DNS_MAPPINGS; n++) {
+                            size_t i = reverse ? UID_DNS_MAPPINGS - n - 1 : n;
+                            if (i < 2) {
+                                const struct uid_dns_answer *answer = i == 0 ? &target : &known;
+                                record_uid_dns_answers(args->ctx, "candidate.example", answer, 1);
+                            } else {
+                                char domain[32];
+                                snprintf(domain, sizeof(domain), "unrelated-%zu.example", i);
+                                struct uid_dns_answer answer = {.version = i % 2 ? 4 : 6, .ttl = 30, .address = {198}};
+                                answer.address[answer.version == 4 ? 2 : 14] = (uint8_t) (i >> 8);
+                                answer.address[answer.version == 4 ? 3 : 15] = (uint8_t) i;
+                                record_uid_dns_answers(args->ctx, domain, &answer, 1);
+                                if (i < UID_OBSERVATIONS)
+                                    record_uid_observation(args->ctx, answer.version, other_protocol,
+                                                             source, answer.address, 443, 12345 + (jint) (i % 2));
+                            }
+                        }
+                        record_uid_observation(args->ctx, known.version, other_protocol, source, known.address, 443, 12345);
+                        assert(args->ctx->uid_dns_mappings.count == UID_DNS_MAPPINGS);
+                        assert(args->ctx->uid_observations.count == UID_OBSERVATIONS - 1);
+                        size_t slot = args->ctx->uid_observations.last;
+                        if (mode == 1) {
+                            // Neither a lost owner nor DNS loss for unrelated names may veto this hostname.
+                            args->ctx->uid_observations.lost[0] = args->ctx->uid_observations.entry[slot == 0 ? 1 : 0];
+                            args->ctx->uid_observations.lost_count = 1;
+                            struct uid_dns_answer unrelated = {.version = 6, .ttl = 30, .address = {198}};
+                            unrelated.address[15] = 2;
+                            discard_uid_dns_answer(args->ctx, "unrelated-2.example", &unrelated);
+                        }
+                        if (mode == 2)
+                            record_uid_observation(args->ctx, known.version, protocol, source, known.address, 443, 23456);
+                        if (mode == 3) {
+                            args->ctx->uid_observations.lost[0] = args->ctx->uid_observations.entry[slot];
+                            args->ctx->uid_observations.lost_count = 1;
+                        }
+                        if (mode == 4) discard_uid_dns_answer(args->ctx, "candidate.example", &known);
+                        memory_comparisons = 0; count_memory_comparisons = true;
+                        jint uid = infer_uid_destination(args->ctx, version, protocol, source, target.address, 443);
+                        count_memory_comparisons = false;
+                        assert(uid == (mode < 2 ? 12345 : -1));
+                        // Only two mappings belong to this candidate, despite a full DNS cache and hundreds of owners.
+                        assert(memory_comparisons < 12 * (UID_DNS_MAPPINGS + UID_OBSERVATIONS + UID_OBSERVATION_LOSSES));
+                        assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                    }
+    clear(args->ctx); set_uid_test_clock(-1);
+#endif
+}
+
+void test_uid_domain_work(struct arguments *args) {
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
+    // Missing/expired DNS candidates must not scan unrelated destination losses.
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+            for (int mode = 0; mode < 7; mode++) {
+                clear(args->ctx); set_uid_test_clock(10000);
+                uint8_t source[16] = {1}, dest[16] = {2};
+                struct uid_dns_answer pair[2] = {{.version = version, .ttl = 30, .address = {2}},
+                                                 {.version = version, .ttl = 30, .address = {3}}};
+                record_uid_dns_answers(args->ctx, "candidate.example", pair, 2);
+                record_uid_observation(args->ctx, version, protocol, source, pair[1].address, 443, 12345);
+                struct uid_dns_mappings *dns = &args->ctx->uid_dns_mappings;
+                if (mode == 0) memset(dns, 0, sizeof(*dns));
+                if (mode == 1) dns->entry[0].inference_until = dns->entry[1].inference_until = 10000;
+                if (mode == 2) dest[0] = 4;
+                if (mode == 3) dns->entry[0].version = dns->entry[1].version = 10 - version;
+                if (mode == 4) {
+                    dns->entry[0].inference_until = 10000;
+                    dns->entry[0].incomplete_until = 15000;
+                }
+                memory_comparisons = 0; count_memory_comparisons = true;
+                jint baseline_uid = infer_uid_destination(args->ctx, version, protocol, source, dest, 443);
+                count_memory_comparisons = false;
+                int baseline_comparisons = memory_comparisons;
+                assert(baseline_uid == (mode >= 5 ? 12345 : -1));
+                for (uint32_t i = 0; i < UID_DNS_LOSSES; i++) {
+                    dns->lost[i].version = version;
+                    dns->lost[i].address[0] = 5;
+                    memcpy(dns->lost[i].address + 1, &i, 3);
+                    strcpy(dns->lost[i].domain, "lost.example");
+                    dns->lost[i].inference_until = 15000;
+                }
+                dns->lost_count = UID_DNS_LOSSES;
+                if (mode == 5) memcpy(dns->lost[UID_DNS_LOSSES - 1].address, dest, sizeof(dest));
+                memory_comparisons = 0; count_memory_comparisons = true;
+                jint uid = infer_uid_destination(args->ctx, version, protocol, source, dest, 443);
+                count_memory_comparisons = false;
+                assert(uid == (mode == 6 ? 12345 : -1));
+                if (mode < 5) assert(memory_comparisons == baseline_comparisons);
+                if (mode == 6) assert(memory_comparisons == baseline_comparisons + UID_DNS_LOSSES);
+                assert(allocations == 0 && sockets == 0 && string_refs == 0);
+            }
+    // Unrelated address guards add one pass, not one pass per shared hostname.
+    for (int version = 4; version <= 6; version += 2)
+        for (int scenario = 0; scenario < 7; scenario++) {
+            clear(args->ctx); set_uid_test_clock(10000);
+            uint8_t source[16] = {1};
+            struct uid_dns_answer pair[2] = {{.version = version, .ttl = 30, .address = {2}},
+                                             {.version = version, .ttl = 30, .address = {3}}};
+            for (size_t i = 0; i < 8; i++) {
+                char domain[32];
+                snprintf(domain, sizeof(domain), "guard-%zu.example", i);
+                record_uid_dns_answers(args->ctx, domain, pair, 2);
+            }
+            record_uid_observation(args->ctx, version, IPPROTO_TCP, source, pair[1].address, 443, 12345);
+            struct uid_dns_mappings *dns = &args->ctx->uid_dns_mappings;
+            const size_t mappings = dns->count;
+            // Fill the rest with unrelated keys; these cannot identify an owner.
+            for (size_t i = mappings; i < UID_DNS_MAPPINGS; i++) {
+                dns->entry[i].version = version;
+                dns->entry[i].address[0] = 4;
+                strcpy(dns->entry[i].domain, "unrelated.example");
+            }
+            dns->count = UID_DNS_MAPPINGS;
+            memory_comparisons = 0; count_memory_comparisons = true;
+            assert(infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, pair[0].address, 443) == 12345);
+            count_memory_comparisons = false;
+            int baseline = memory_comparisons;
+            for (size_t i = 0; i < UID_DNS_LOSSES; i++) {
+                dns->lost[i] = dns->entry[mappings];
+                dns->lost[i].inference_until = scenario == 1 ? 10000 : 15000;
+            }
+            dns->lost_count = UID_DNS_LOSSES;
+            for (size_t i = mappings; i < dns->count; i++)
+                dns->entry[i].incomplete_until = scenario == 1 ? 10000 : 15000;
+            if (scenario == 2) memcpy(dns->lost[UID_DNS_LOSSES - 1].address, pair[0].address, 16);
+            if (scenario == 3) memcpy(dns->entry[UID_DNS_MAPPINGS - 1].address, pair[0].address, 16);
+            if (scenario == 4) strcpy(dns->lost[UID_DNS_LOSSES - 1].domain, "guard-7.example");
+            if (scenario == 5) strcpy(dns->entry[UID_DNS_MAPPINGS - 1].domain, "guard-7.example");
+            if (scenario == 6) {
+                for (size_t i = 0; i < dns->lost_count; i++) {
+                    dns->lost[i].version = 10 - version;
+                    memcpy(dns->lost[i].address, pair[0].address, 16);
+                }
+                for (size_t i = mappings; i < dns->count; i++) {
+                    dns->entry[i].version = 10 - version;
+                    memcpy(dns->entry[i].address, pair[0].address, 16);
+                }
+            }
+            memory_comparisons = 0; count_memory_comparisons = true;
+            jint uid = infer_uid_destination(args->ctx, version, IPPROTO_UDP, source, pair[0].address, 443);
+            count_memory_comparisons = false;
+            assert(uid == ((scenario == 0 || scenario == 1 || scenario == 6) ? 12345 : -1));
+            assert(memory_comparisons <= baseline + UID_DNS_LOSSES + UID_DNS_MAPPINGS - (int) mappings);
+            assert(allocations == 0 && sockets == 0 && string_refs == 0);
+        }
+    const size_t domains = UID_DNS_MAPPINGS / 2;
+    assert(domains <= UID_OBSERVATIONS);
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+            for (int reverse = 0; reverse <= 1; reverse++)
+                for (int scenario = 0; scenario < 9; scenario++) {
+                    clear(args->ctx); set_uid_test_clock(10000);
+                    uint8_t source[16] = {0};
+                    assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                     version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+                    struct uid_dns_answer pair[2] = {{.version = version, .ttl = 30},
+                                                     {.version = version, .ttl = 30}};
+                    assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                     version == 4 ? "203.0.113.2" : "2001:db8::2", pair[0].address) == 1);
+                    char domain[32];
+                    for (size_t i = 0; i < domains; i++) {
+                        size_t name = reverse ? domains - i - 1 : i;
+                        snprintf(domain, sizeof(domain), "shared-%zu.example", name);
+                        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                         version == 4 ? "198.18.0.0" : "2001:db8:1::", pair[1].address) == 1);
+                        pair[1].address[version == 4 ? 2 : 14] = (uint8_t) (name >> 8);
+                        pair[1].address[version == 4 ? 3 : 15] = (uint8_t) name;
+                        record_uid_dns_answers(args->ctx, domain, pair, 2);
+                        record_uid_observation(args->ctx, version,
+                                               protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP,
+                                               source, pair[1].address, 443, 12345);
+                    }
+                    assert(args->ctx->uid_dns_mappings.count == UID_DNS_MAPPINGS);
+                    assert(args->ctx->uid_dns_mappings.lost_count == 0);
+                    struct uid_observation *last = &args->ctx->uid_observations.entry[domains - 1];
+                    if (scenario == 1) last->uid = 23456;
+                    if (scenario == 2) {
+                        last->expires = 10000;
+                        args->ctx->uid_observations.last = 0; // Newest live observation.
+                    }
+                    if (scenario == 3) {
+                        args->ctx->uid_observations.lost[0] = *last;
+                        args->ctx->uid_observations.lost_count = 1;
+                    }
+                    if (scenario == 4) discard_uid_dns_answer(args->ctx, domain, pair + 1);
+                    if (scenario == 5) args->ctx->uid_dns_mappings.entry[UID_DNS_MAPPINGS - 1].incomplete_until = 15000;
+                    if (scenario == 6) discard_uid_dns_answer(args->ctx, "unseen.example", pair);
+                    if (scenario == 7) last->uid = 0;
+                    if (scenario == 8) last->uid = own_uid;
+                    memory_comparisons = 0; count_memory_comparisons = true;
+                    jint uid = infer_uid_destination(args->ctx, version, protocol, source, pair[0].address, 443);
+                    count_memory_comparisons = false;
+                    assert(uid == (scenario == 0 ? 12345 : -1));
+                    // Permit a constant number of owner/DNS passes, independent of
+                    // the number of hostnames sharing the destination address.
+                    size_t bound = 4u * UID_DNS_MAPPINGS * (UID_OBSERVATIONS + UID_OBSERVATION_LOSSES);
+                    if ((size_t) memory_comparisons > bound) {
+                        char detail[128];
+                        snprintf(detail, sizeof(detail), "shared-domain comparisons=%d bound=%zu", memory_comparisons, bound);
+                        native_test_fail(detail, __FILE__, __LINE__);
+                    }
+                    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                }
+    clear(args->ctx); set_uid_test_clock(-1);
+#endif
+}
+
+void test_uid_shared_domains(struct arguments *args) {
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
+    const char *names[] = {"alpha.example", "beta.example"};
+    for (int version = 4; version <= 6; version += 2)
+        for (int known_version = 4; known_version <= 6; known_version += 2)
+            for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+                for (int reverse = 0; reverse <= 1; reverse++)
+                    for (int scenario = 0; scenario < 26; scenario++) {
+                        if (scenario == 18 && known_version != version) continue;
+                        clear(args->ctx); set_uid_test_clock(10000);
+                        uint8_t source[16] = {0}, known_source[16] = {0}, other_source[16];
+                        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                         version == 4 ? "10.0.0.2" : "2001:db8::1", source) == 1);
+                        assert(inet_pton(known_version == 4 ? AF_INET : AF_INET6,
+                                         known_version == 4 ? "10.0.0.2" : "2001:db8::1", known_source) == 1);
+                        memcpy(other_source, known_source, sizeof(other_source));
+                        other_source[known_version == 4 ? 3 : 15] ^= 0x40;
+                        struct uid_dns_answer maps[3] = {
+                            {.version = version, .ttl = 30},
+                            {.version = known_version, .ttl = 30},
+                            {.version = known_version, .ttl = 30}};
+                        assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                                         version == 4 ? "203.0.113.2" : "2001:db8::2", maps[0].address) == 1);
+                        for (int i = 1; i < 3; i++)
+                            assert(inet_pton(known_version == 4 ? AF_INET : AF_INET6,
+                                             known_version == 4 ? (i == 1 ? "192.0.2.10" : "192.0.2.11")
+                                                                : (i == 1 ? "2001:db8::10" : "2001:db8::11"),
+                                             maps[i].address) == 1);
+                        for (int i = 0; i < 2; i++) {
+                            int name = reverse ? 1 - i : i;
+                            struct uid_dns_answer pair[] = {maps[0], maps[name + 1]};
+                            record_uid_dns_answers(args->ctx, names[name], pair, 2);
+                        }
+                        int known_protocol = protocol == IPPROTO_TCP ? IPPROTO_UDP : IPPROTO_TCP;
+                        record_uid_observation(args->ctx, known_version, known_protocol, known_source,
+                                               maps[1].address, 443, 12345);
+                        jint second_uid = scenario == 2 || scenario == 7 || scenario == 15 ? 23456 :
+                                          scenario == 3 ? 0 : scenario == 4 ? 1000 :
+                                          scenario == 5 ? own_uid : 12345;
+                        if (scenario != 1 && scenario != 16)
+                            record_uid_observation(args->ctx, known_version, protocol,
+                                                   scenario == 18 ? other_source : known_source,
+                                                   maps[2].address, scenario == 17 ? 444 : 443, second_uid);
+                        if (scenario == 6) {
+                            set_uid_test_clock(15000); // Only beta's ownership expires.
+                            record_uid_observation(args->ctx, known_version, known_protocol, known_source,
+                                                   maps[1].address, 443, 12345);
+                        }
+                        if (scenario == 7) {
+                            set_uid_test_clock(10500);
+                            record_uid_dns_answers(args->ctx, names[0], maps, 2);
+                            set_uid_test_clock(910000); // Only beta's DNS history expires.
+                            record_uid_observation(args->ctx, known_version, known_protocol, known_source,
+                                                   maps[1].address, 443, 12345);
+                            record_uid_observation(args->ctx, known_version, protocol, known_source,
+                                                   maps[2].address, 443, second_uid);
+                        }
+                        if (scenario == 8) discard_uid_dns_answer(args->ctx, names[1], maps + 2);
+                        if (scenario == 9) discard_uid_dns_answer(args->ctx, "unseen.example", maps);
+                        if (scenario == 10)
+                            for (size_t i = 0; i < args->ctx->uid_dns_mappings.count; i++)
+                                if (strcmp(args->ctx->uid_dns_mappings.entry[i].domain, names[1]) == 0)
+                                    args->ctx->uid_dns_mappings.entry[i].incomplete_until = 15000;
+                        if (scenario == 11 || scenario == 19) {
+                            args->ctx->uid_observations.lost[0] = args->ctx->uid_observations.entry[1];
+                            args->ctx->uid_observations.lost_count = 1;
+                            if (scenario == 19) args->ctx->uid_observations.lost[0].expires = 10000;
+                        }
+                        if (scenario == 12)
+                            record_uid_observation(args->ctx, version, protocol, source, maps[0].address, 443, 34567);
+                        if (scenario == 13) {
+                            struct uid_dns_answer unrelated = maps[0]; unrelated.address[0] ^= 0x40;
+                            discard_uid_dns_answer(args->ctx, "unrelated.example", &unrelated);
+                        }
+                        if (scenario == 14)
+                            record_uid_observation(args->ctx, known_version, known_protocol, known_source,
+                                                   maps[2].address, 443, 23456);
+                        if (scenario == 15) {
+                            struct uid_dns_answer revoked = maps[0]; revoked.ttl = 0;
+                            record_uid_dns_answers(args->ctx, names[1], &revoked, 1);
+                        }
+                        if (scenario == 20 || scenario == 21) {
+                            struct uid_dns_answer pair[] = {maps[0], maps[1]};
+                            record_uid_dns_answers(args->ctx, "gamma.example", pair, scenario == 20 ? 1 : 2);
+                        }
+                        if (scenario >= 22) {
+                            // A revoked mapping can retain a hostname guard, even
+                            // after a matching owner was found earlier in the scan.
+                            struct uid_dns_answer revoked = maps[1];
+                            revoked.address[known_version == 4 ? 3 : 15] ^= 0x40;
+                            const char *guard_name = scenario < 24 ? names[0] : "unrelated.example";
+                            record_uid_dns_answers(args->ctx, guard_name, &revoked, 1);
+                            struct uid_dns_mappings *dns = &args->ctx->uid_dns_mappings;
+                            dns->entry[dns->count - 1].incomplete_until = scenario % 2 == 0 ? 15000 : 10000;
+                            revoked.ttl = 0;
+                            record_uid_dns_answers(args->ctx, guard_name, &revoked, 1);
+                            if (!reverse) {
+                                struct uid_dns_mapping swap = dns->entry[0];
+                                dns->entry[0] = dns->entry[dns->count - 1];
+                                dns->entry[dns->count - 1] = swap;
+                            }
+                        }
+                        size_t count = args->ctx->uid_observations.count;
+                        jint expected = scenario == 12 ? 34567 :
+                                        scenario == 0 || scenario == 7 || scenario == 13 ||
+                                        scenario == 15 || scenario == 19 || scenario == 21 ||
+                                        scenario >= 23 ? 12345 : -1;
+                        assert(infer_uid_destination(args->ctx, version, protocol, source, maps[0].address, 443) == expected);
+                        assert(args->ctx->uid_observations.count == count); // Inference never feeds evidence back.
+                        assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                    }
+    clear(args->ctx); set_uid_test_clock(-1);
 #endif
 }
 
@@ -1270,7 +2221,9 @@ void test_uid_domain(struct arguments *args, int kind) {
                 for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
                     for (int cross_protocol = 0; cross_protocol <= 1; cross_protocol++)
                         for (int legacy = 0; legacy <= 1; legacy++)
-                            for (int denied = 0; denied <= 1; denied++) {
+                            for (int mode = 0; mode < 8; mode++) {
+                                bool historical = mode % 4 >= 2;
+                                int denied = mode % 2;
                                 clear(args->ctx); release_uid_cache(); set_uid_test_clock(10000);
                                 args->ctx->sdk = legacy ? 28 : 29;
                                 _Alignas(8) uint8_t packet[128]; uint8_t dns[512]; char table[256];
@@ -1294,6 +2247,23 @@ void test_uid_domain(struct arguments *args, int kind) {
                                     size_t size = test_uid_dns_response(dns, family, true);
                                     parse_dns_response(&running, &dns_session, dns, &size);
                                 }
+                                if (mode >= 4) {
+                                    // A second plausible hostname has the same complete address set.
+                                    size_t count = args->ctx->uid_dns_mappings.count;
+                                    for (size_t i = 0; i < count; i++) {
+                                        const struct uid_dns_mapping *mapping = &args->ctx->uid_dns_mappings.entry[i];
+                                        struct uid_dns_answer answer = {.version = mapping->version, .ttl = 30};
+                                        memcpy(answer.address, mapping->address, sizeof(answer.address));
+                                        record_uid_dns_answers(args->ctx, "shared.example", &answer, 1);
+                                    }
+                                }
+                                if (historical) {
+                                    set_uid_test_clock(610000);
+                                    record_uid_observation(args->ctx, known_version, known_protocol,
+                                                           packet + (known_version == 4 ? 12 : 8),
+                                                           packet + (known_version == 4 ? 16 : 24),
+                                                           protocol == IPPROTO_TCP ? 443 : 5000, 12345);
+                                }
                                 length = checksum_packet(packet, version, protocol, 0);
                                 off = version == 4 ? 20 : 40;
                                 assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
@@ -1302,7 +2272,7 @@ void test_uid_domain(struct arguments *args, int kind) {
                                 store16(packet + off, 12346);
                                 packet_checksums(packet, length, off, protocol);
                                 blocked_uid_lookup(version, legacy, -1, table, sizeof(table));
-                                uid_test_clock = 14000; deny_address = denied;
+                                uid_test_clock = historical ? 614000 : 14000; deny_address = denied;
                                 int checks = policy_checks;
                                 handle_ip(&running, packet, length, -1, 0, SESSION_MAX);
                                 assert(policy_uid == 12345 && policy_checks == checks + 1);
@@ -1393,13 +2363,13 @@ void test_uid_domain(struct arguments *args, int kind) {
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, late[1].address, 443) == 12345);
         // Restoring a discarded mapping cannot erase its original loss deadline.
         record_uid_dns_answers(args->ctx, "test", maps, 2);
-        uid_test_clock = 19500;
+        uid_test_clock = 909500;
         record_uid_observation(args->ctx, 4, IPPROTO_TCP, source, maps[0].address, 443, 12345);
-        uid_test_clock = 19999;
+        uid_test_clock = 909999;
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
-        uid_test_clock = 20000;
+        uid_test_clock = 910000;
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == 12345);
-        uid_test_clock = 20500;
+        uid_test_clock = 910500;
         assert(infer_uid_destination(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443) == -1);
         // Lost DNS evidence must never suppress direct-IP evidence.
         record_uid_observation(args->ctx, 4, IPPROTO_TCP, source, maps[1].address, 443, 23456);
@@ -1683,6 +2653,33 @@ void test_uid_destination(struct arguments *args, int kind) {
                 assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == 23456);
                 uid_test_clock = 16000;
                 assert(infer_uid_destination(args->ctx, version, protocol, source, dest, port) == -1);
+                // Keep scanning after a reusable slot: a later exact key wins.
+                clear(args->ctx); uid_test_clock = 20000;
+                for (unsigned int i = 0; i < 4; i++)
+                    record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);
+                struct uid_observations *cache = &args->ctx->uid_observations;
+                cache->entry[0].expires = 21000;
+                cache->entry[1].expires = 20500; // Older, but the first free slot still wins.
+                cache->entry[2].expires = 24000;
+                uid_test_clock = 22000;
+                record_uid_observation(args->ctx, version, protocol, source, dest, 10002, 12345);
+                assert(cache->count == 4 && cache->lost_count == 0 && cache->last == 2);
+                assert(cache->entry[2].expires == 27000);
+                assert(cache->entry[0].expires == 21000 && cache->entry[1].expires == 20500);
+                record_uid_observation(args->ctx, version, protocol, source, dest, 30000, 12345);
+                assert(cache->last == 0 && cache->entry[0].port == 30000);
+                assert(cache->entry[1].expires == 20500 && cache->lost_count == 0);
+                record_uid_observation(args->ctx, version, protocol, source, dest, 30001, 12345);
+                assert(cache->last == 1 && cache->entry[1].port == 30001 && cache->lost_count == 0);
+                // Full caches still evict the oldest live entry with its original loss deadline.
+                cache->count = UID_OBSERVATIONS;
+                for (size_t i = 4; i < cache->count; i++) {
+                    cache->entry[i] = cache->entry[0];
+                    cache->entry[i].port = (uint16_t) (10000 + i);
+                }
+                record_uid_observation(args->ctx, version, protocol, source, dest, 30002, 12345);
+                assert(cache->last == 3 && cache->entry[3].port == 30002 && cache->lost_count == 1);
+                assert(cache->lost[0].port == 10003 && cache->lost[0].expires == 25000);
             } else if (kind == 7) {
                 for (unsigned int i = 1; i < UID_OBSERVATIONS; i++)
                     record_uid_observation(args->ctx, version, protocol, source, dest, (uint16_t) (10000 + i), 12345);

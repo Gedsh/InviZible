@@ -145,8 +145,30 @@ static const char *run_case(const char *id) {
         test_dns_uid_mappings(&args, 1);
     else if (strcmp(id, "dnsUidTtl") == 0)
         test_dns_uid_mappings(&args, 2);
+    else if (strcmp(id, "dnsUidOverflowBatches") == 0)
+        test_dns_uid_overflow_batches(&args);
+    else if (strcmp(id, "dnsUidDistinct") == 0)
+        test_dns_uid_distinct_addresses(&args);
     else if (strcmp(id, "dnsUidOrder") == 0)
         test_dns_uid_answer_order(&args);
+    else if (strcmp(id, "uidInferencePolicy") == 0)
+        test_uid_inference_policy(&args);
+    else if (strcmp(id, "uidDnsHistory") == 0)
+        test_uid_dns_history(&args);
+    else if (strcmp(id, "uidDnsUniqueUpdates") == 0)
+        test_uid_dns_unique_updates(&args);
+    else if (strcmp(id, "uidDnsSlotHint") == 0)
+        test_uid_dns_slot_hint(&args);
+    else if (strcmp(id, "uidOwnerSlotHint") == 0)
+        test_uid_owner_slot_hint(&args);
+    else if (strcmp(id, "uidActivityBatch") == 0)
+        test_uid_activity_batch(&args);
+    else if (strcmp(id, "uidDomainWork") == 0)
+        test_uid_domain_work(&args);
+    else if (strcmp(id, "uidRelevantDomainWork") == 0)
+        test_uid_relevant_domain_work(&args);
+    else if (strcmp(id, "uidSharedDomains") == 0)
+        test_uid_shared_domains(&args);
     else if (strcmp(id, "uidDomainPolicy") == 0)
         test_uid_domain(&args, 0);
     else if (strcmp(id, "uidDomainConflict") == 0)
@@ -287,6 +309,10 @@ static const char *run_case(const char *id) {
         test_udp_retry_routes(&args);
     else if (strcmp(id, "blockedUdpUnknownPolicy") == 0)
         test_blocked_udp_uid_retry(&args, 3);
+    else if (strcmp(id, "tcpUidActivity") == 0)
+        test_tcp_uid_activity(&args);
+    else if (strcmp(id, "udpUidActivity") == 0)
+        test_udp_uid_activity(&args);
     else if (strcmp(id, "tcpUidUpdate") == 0)
         test_tcp_uid_update(&args);
     else if (strcmp(id, "tcpUidRetryBudget") == 0)

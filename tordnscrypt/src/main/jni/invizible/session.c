@@ -99,6 +99,8 @@ struct ng_session *find_session(const struct context *ctx, uint8_t version, uint
 
 void add_session(struct context *ctx, struct ng_session *s) {
     struct session_key key;
+    s->uid_activity_at = -1;
+    s->uid_observation_slot = UINT16_MAX;
     if (s->protocol == IPPROTO_TCP)
         s->tcp.monitor_initialized = false;
     s->hash_next = NULL;
@@ -454,12 +456,15 @@ void *handle_events(void *a) {
                                 (ev[i].events & EPOLLHUP) != 0);
 
                     int count = 0;
+                    int64_t uid_activity_time = -1;
+                    args->ctx->uid_activity_batch_time = &uid_activity_time;
                     while (count < TUN_YIELD && !error && !args->ctx->stopping &&
                            is_readable(args->tun)) {
                         count++;
                         if (check_tun(args, &ev[i], epoll_fd, sessions, maxsessions) < 0)
                             error = 1;
                     }
+                    args->ctx->uid_activity_batch_time = NULL;
 
                 } else {
                     // Check downstream

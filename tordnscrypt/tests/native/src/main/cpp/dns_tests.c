@@ -228,10 +228,191 @@ void test_dns_uid_answer_order(struct arguments *args) {
                         assert(infer_uid_destination(args->ctx, version, protocol, source, addresses[1], 443) == -1);
                         assert(args->ctx->uid_dns_mappings.count == 3);
                         for (size_t i = 0; i < 3; i++)
-                            assert(args->ctx->uid_dns_mappings.entry[i].expires == (hops == 1 ? 20000 : 15000));
+                            assert(args->ctx->uid_dns_mappings.entry[i].inference_until == 910000);
                         clear(args->ctx);
                         assert(allocations == 0 && sockets == 0 && string_refs == 0);
                     }
+    set_uid_test_clock(-1);
+#endif
+}
+
+void test_dns_uid_overflow_batches(struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    for (int version = 4; version <= 6; version += 2)
+        for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+            for (int alias = 0; alias <= 1; alias++)
+                for (int scenario = 0; scenario < 8; scenario++) {
+                    clear(args->ctx); set_uid_test_clock(10000);
+                    uint8_t data[16384], original[16384];
+                    test_uid_dns_response(data, version, alias);
+                    size_t start = alias ? 40 : 22, size = version == 4 ? 4 : 16, stride = 12 + size;
+                    uint8_t record[28]; memcpy(record, data + start, stride);
+                    unsigned int unique = scenario == 1 ? 149 : scenario == 2 ? 257 :
+                                          scenario == 6 ? 33 : scenario == 7 ? 96 :
+                                          scenario == 5 ? UID_DNS_ANSWERS : UID_DNS_ANSWERS + 1;
+                    unsigned int records = unique * 2;
+                    store16(data + 6, (uint16_t) (records + alias));
+                    size_t length = start;
+                    for (unsigned int i = 0; i < records; i++) {
+                        memcpy(data + length, record, stride);
+                        unsigned int key = i % unique;
+                        data[length + stride - 2] = (uint8_t) (key >> 8);
+                        data[length + stride - 1] = (uint8_t) key;
+                        store16(data + length + 8, i + 1 == records ? 0 : 30);
+                        length += stride;
+                    }
+                    if (scenario == 3) { store16(data + 10, 1); data[length++] = 0; }
+                    if (scenario == 4) data[2] |= 2;
+                    memcpy(original, data, length);
+                    size_t original_length = length;
+                    struct ng_session session = {.protocol = protocol};
+                    int clock_reads = uid_clock_reads;
+                    parse_dns_response(args, &session, data, &length);
+                    assert(length == original_length && memcmp(data, original, length) == 0);
+                    if (scenario < 3) {
+                        // Hundreds of address records must not cause one clock read each.
+                        assert(uid_clock_reads - clock_reads <= 5);
+                        assert(args->ctx->uid_dns_mappings.count == 0);
+                        assert(args->ctx->uid_dns_mappings.lost_count == (unique < UID_DNS_LOSSES ? unique : UID_DNS_LOSSES));
+                        assert((args->ctx->uid_dns_mappings.admit_after > 10000) == (unique > UID_DNS_LOSSES));
+                        for (size_t i = 0; i < args->ctx->uid_dns_mappings.lost_count; i++)
+                            assert(args->ctx->uid_dns_mappings.lost[i].inference_until == 910000);
+                        if (scenario == 0) {
+                            assert(args->ctx->uid_dns_mappings.lost_count == UID_DNS_ANSWERS + 1);
+                            assert(args->ctx->uid_dns_mappings.admit_after == 0);
+                            parse_dns_response(args, &session, data, &length);
+                            assert(args->ctx->uid_dns_mappings.lost_count == UID_DNS_ANSWERS + 1);
+                            clear_sessions(args->ctx); // Reload keeps guards and their deadlines.
+                            set_uid_test_clock(11000);
+                            parse_dns_response(args, &session, data, &length);
+                            for (size_t i = 0; i < args->ctx->uid_dns_mappings.lost_count; i++)
+                                assert(args->ctx->uid_dns_mappings.lost[i].inference_until == 911000);
+                        }
+                    } else if (scenario >= 5) {
+                        assert(uid_clock_reads - clock_reads == 1);
+                        assert(args->ctx->uid_dns_mappings.count == unique - 1); // Duplicate zero TTL wins.
+                        assert(args->ctx->uid_dns_mappings.lost_count == 0 && args->ctx->uid_dns_mappings.admit_after == 0);
+                    } else {
+                        assert(uid_clock_reads == clock_reads);
+                        assert(args->ctx->uid_dns_mappings.count == 0 && args->ctx->uid_dns_mappings.lost_count == 0);
+                    }
+                    clear(args->ctx);
+                    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                }
+    // A batch preserves revocations without confusing equal address bytes across families.
+    clear(args->ctx); set_uid_test_clock(10000);
+    struct uid_dns_answer batch[2] = {{.version = 4, .ttl = 30, .address = {1}},
+                                     {.version = 6, .ttl = 30, .address = {1}}};
+    record_uid_dns_answers(args->ctx, "batch.test", batch, 2);
+    batch[1].ttl = 0;
+    int clock_reads = uid_clock_reads;
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, 2);
+    assert(uid_clock_reads == clock_reads + 1);
+    assert(args->ctx->uid_dns_mappings.lost_count == 1);
+    assert(args->ctx->uid_dns_mappings.lost[0].version == 4);
+    assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
+    assert(args->ctx->uid_dns_mappings.entry[1].inference_until == 10000);
+    // Reject the whole invalid batch before reading the clock or changing evidence.
+    batch[1].version = 5;
+    clock_reads = uid_clock_reads;
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, 2);
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, 0);
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, UID_DNS_ANSWERS + 1);
+    assert(uid_clock_reads == clock_reads && args->ctx->uid_dns_mappings.lost_count == 1);
+    batch[1].version = 6;
+    set_uid_test_clock_failure(true);
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, 2);
+    assert(args->ctx->uid_dns_mappings.count == 0 && args->ctx->uid_dns_mappings.lost_count == 0);
+    set_uid_test_clock_failure(false);
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, 2);
+    set_uid_test_clock(9000); // A backwards clock must clear the same evidence.
+    discard_uid_dns_answers(args->ctx, "batch.test", batch, 2);
+    assert(args->ctx->uid_dns_mappings.count == 0 && args->ctx->uid_dns_mappings.lost_count == 0);
+    clear(args->ctx);
+    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+    set_uid_test_clock(-1);
+#endif
+}
+
+void test_dns_uid_distinct_addresses(struct arguments *args) {
+#if defined(INVIZIBLE_PACKET_OWNER) && !defined(INVIZIBLE_BASELINE_TESTS)
+    for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
+        for (int version = 4; version <= 6; version += 2)
+            for (int alias = 0; alias <= 1; alias++)
+                for (int mode = 0; mode < 16; mode++) {
+                    int scenario = mode / 2;
+                    bool reverse = mode % 2;
+                    if (scenario == 7 && !alias) continue;
+                    clear(args->ctx); set_uid_test_clock(10000);
+                    uint8_t data[12288], original[12288];
+                    struct ng_session session = {.protocol = protocol};
+                    if (scenario == 4 || scenario == 7) {
+                        size_t initial = test_uid_dns_response(data, version, alias);
+                        parse_dns_response(args, &session, data, &initial);
+                    }
+                    test_uid_dns_response(data, version, alias);
+                    size_t start = alias ? 40 : 22, stride = 12 + (version == 4 ? 4 : 16);
+                    uint8_t record[28]; memcpy(record, data + start, stride);
+                    size_t length = start;
+                    int unique = scenario == 1 ? UID_DNS_ANSWERS : scenario == 2 ? UID_DNS_ANSWERS + 1 : scenario == 3 ? 1 : 2;
+                    int records = unique >= UID_DNS_ANSWERS ? unique * 3 : 300;
+                    store16(data + 6, (uint16_t) (records + alias));
+                    if (scenario == 7) store16(data + 30, 0); // Zero CNAME TTL revokes all addresses.
+                    for (int i = 0; i < records; i++) {
+                        int index = reverse ? records - 1 - i : i;
+                        int family = scenario == 3 ? (index % 2 ? 6 : 4) : version;
+                        size_t size = family == 4 ? 4 : 16;
+                        memcpy(data + length, record, 12);
+                        store16(data + length + 2, family == 4 ? DNS_QTYPE_A : DNS_QTYPE_AAAA);
+                        store16(data + length + 10, (uint16_t) size);
+                        memset(data + length + 12, 0, size);
+                        if (scenario == 3)
+                            data[length + 15] = 1; // Same first four bytes, different families.
+                        else {
+                            memcpy(data + length + 12, record + 12, size);
+                            int key = scenario == 2 ? (index == records - 1 ? UID_DNS_ANSWERS : index % UID_DNS_ANSWERS) : index % unique;
+                            data[length + 11 + size] = (uint8_t) ((version == 4 ? 10 : 0x10) + key);
+                        }
+                        store16(data + length + 8, index == records - 1 ? (scenario == 4 ? 0 : 5) : 30);
+                        length += 12 + size;
+                    }
+                    if (scenario == 5) { store16(data + 10, 1); data[length++] = 0; }
+                    if (scenario == 6) data[2] |= 2; // Truncated response.
+                    size_t wire_length = length;
+                    memcpy(original, data, length);
+                    parse_dns_response(args, &session, data, &length);
+                    assert(length == wire_length && memcmp(data, original, length) == 0);
+                    if (scenario == 2) {
+                        assert(args->ctx->uid_dns_mappings.count == 0);
+                        assert(args->ctx->uid_dns_mappings.lost_count == UID_DNS_ANSWERS + 1);
+                    } else if (scenario == 5 || scenario == 6)
+                        assert(args->ctx->uid_dns_mappings.count == 0 && args->ctx->uid_dns_mappings.lost_count == 0);
+                    else {
+                        assert(args->ctx->uid_dns_mappings.count == (scenario == 3 ? 2 : (size_t) unique));
+                        assert(args->ctx->uid_dns_mappings.lost_count == 0 && args->ctx->uid_dns_mappings.admit_after == 0);
+                        for (size_t i = 0; i < args->ctx->uid_dns_mappings.count; i++) {
+                            const struct uid_dns_mapping *entry = &args->ctx->uid_dns_mappings.entry[i];
+                            int key = scenario == 3 ? entry->version == 6
+                                      : entry->address[version == 4 ? 3 : 15] - (version == 4 ? 10 : 0x10);
+                            int ttl = scenario == 7 ? 0 : key == (scenario == 3 ? 1 : (records - 1) % unique)
+                                      ? (scenario == 4 ? 0 : 5) : alias ? 10 : 30;
+                            assert(entry->inference_until == (ttl == 0 ? 10000 : 910000));
+                        }
+                        uint8_t source[16] = {1};
+                        const struct uid_dns_mapping *known = &args->ctx->uid_dns_mappings.entry[0];
+                        const struct uid_dns_mapping *unknown = &args->ctx->uid_dns_mappings.entry[1];
+                        // Select a live confirmed address in the revocation case.
+                        if (scenario == 4 && known->inference_until == 10000) {
+                            known = &args->ctx->uid_dns_mappings.entry[1];
+                            unknown = &args->ctx->uid_dns_mappings.entry[0];
+                        }
+                        record_uid_observation(args->ctx, known->version, protocol, source, known->address, 443, 12345);
+                        assert(infer_uid_destination(args->ctx, unknown->version, protocol, source, unknown->address, 443)
+                               == (scenario == 4 || scenario == 7 ? -1 : 12345));
+                    }
+                    clear(args->ctx);
+                    assert(allocations == 0 && sockets == 0 && string_refs == 0);
+                }
     set_uid_test_clock(-1);
 #endif
 }
@@ -241,7 +422,7 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
     for (int protocol = IPPROTO_TCP; protocol <= IPPROTO_UDP; protocol += IPPROTO_UDP - IPPROTO_TCP)
         for (int version = 4; version <= 6; version += 2)
             for (int alias = 0; alias <= 1; alias++) {
-                uint8_t data[2048];
+                uint8_t data[8192];
                 struct ng_session session = {.protocol = protocol};
                 for (int scenario = 0; scenario < (kind == 1 ? 9 : 1); scenario++) {
                     clear(args->ctx); set_uid_test_clock(10000);
@@ -265,23 +446,23 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                         for (size_t i = 0; i < 2; i++) {
                             const struct uid_dns_mapping *entry = &args->ctx->uid_dns_mappings.entry[i];
                             assert(strcmp(entry->domain, "test") == 0 && entry->version == version);
-                            assert(entry->expires == (alias ? 20000 : 40000));
+                            assert(entry->inference_until == 910000);
                         }
                         if (kind == 2) {
                             // Zero address/CNAME TTL must revoke that exact cached association.
                             length = test_uid_dns_response(data, version, alias);
                             store16(data + 30, 0);
                             parse_dns_response(args, &session, data, &length);
-                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 10000);
-                            if (alias) assert(args->ctx->uid_dns_mappings.entry[1].expires == 10000);
-                            // A single mapping's TTL is capped even for an enormous wire TTL.
+                            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 10000);
+                            assert(args->ctx->uid_dns_mappings.entry[1].inference_until == (alias ? 10000 : 910000));
+                            // Even an enormous wire TTL cannot extend the historical window.
                             clear(args->ctx);
                             length = test_uid_dns_response(data, version, false);
                             memset(data + 28, 0xFF, 4);
                             parse_dns_response(args, &session, data, &length);
-                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 310000);
+                            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
                             // Fresh owner evidence can use older DNS, without extending
-                            // either the DNS/CNAME deadline or the five-second UID window.
+                            // either the historical deadline or the five-second UID window.
                             clear(args->ctx);
                             length = test_uid_dns_response(data, version, alias);
                             size_t first = alias ? 40 : 22;
@@ -290,8 +471,8 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                                 store16(data + first + i * address_stride + 8, 600);
                             if (alias) store16(data + 30, 120);
                             parse_dns_response(args, &session, data, &length);
-                            int64_t expires = alias ? 130000 : 310000;
-                            assert(args->ctx->uid_dns_mappings.entry[0].expires == expires);
+                            int64_t wire_ttl_until = alias ? 130000 : 610000;
+                            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
                             uint8_t retention_source[16] = {0};
                             assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
                                              version == 4 ? "10.0.0.2" : "fd00::1", retention_source) == 1);
@@ -302,14 +483,20 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                             assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == 12345);
                             set_uid_test_clock(85000);
                             assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == -1);
-                            set_uid_test_clock(expires - 1);
+                            set_uid_test_clock(wire_ttl_until - 1);
                             record_uid_observation(args->ctx, version, protocol, retention_source, known, 443, 12345);
                             assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == 12345);
-                            assert(args->ctx->uid_dns_mappings.entry[0].expires == expires);
-                            set_uid_test_clock(expires);
+                            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
+                            set_uid_test_clock(wire_ttl_until);
+                            assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == 12345);
+                            set_uid_test_clock(909999);
+                            record_uid_observation(args->ctx, version, protocol, retention_source, known, 443, 12345);
+                            assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == 12345);
+                            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
+                            set_uid_test_clock(910000);
                             assert(infer_uid_destination(args->ctx, version, protocol, retention_source, unknown, 443) == -1);
                             set_uid_test_clock(10000);
-                            // Duplicate addresses use the shortest TTL, regardless of order.
+                            // Different positive TTLs for duplicate addresses share one historical deadline.
                             clear(args->ctx);
                             length = test_uid_dns_response(data, version, false);
                             size_t size = version == 4 ? 4 : 16, stride = 12 + size;
@@ -317,7 +504,7 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                             store16(data + 30 + stride, 5);
                             parse_dns_response(args, &session, data, &length);
                             assert(args->ctx->uid_dns_mappings.count == 1);
-                            assert(args->ctx->uid_dns_mappings.entry[0].expires == 15000);
+                            assert(args->ctx->uid_dns_mappings.entry[0].inference_until == 910000);
                             // A valid but unrelated owner name must not inherit the question.
                             clear(args->ctx);
                             length = test_uid_dns_response(data, version, false);
@@ -338,12 +525,13 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                             store16(data + 6, UID_DNS_ANSWERS + 1);
                             for (unsigned int i = 2; i <= UID_DNS_ANSWERS; i++) {
                                 memcpy(data + length, data + 22, stride);
+                                data[length + stride - 1] = (uint8_t) ((version == 4 ? 10 : 0x10) + i);
                                 length += stride;
                             }
                             parse_dns_response(args, &session, data, &length);
                             assert(args->ctx->uid_dns_mappings.count == 0);
-                            assert(args->ctx->uid_dns_mappings.lost_count == 2);
-                            assert(args->ctx->uid_dns_mappings.lost[0].expires == 40000);
+                            assert(args->ctx->uid_dns_mappings.lost_count == UID_DNS_ANSWERS + 1);
+                            assert(args->ctx->uid_dns_mappings.lost[0].inference_until == 910000);
                             // Overflow must neither disable unrelated names nor hide a
                             // shared address appearing beyond the first 32 answers.
                             clear(args->ctx);
@@ -364,13 +552,15 @@ void test_dns_uid_mappings(struct arguments *args, int kind) {
                             store16(data + 6, UID_DNS_ANSWERS + 1);
                             for (unsigned int i = 2; i <= UID_DNS_ANSWERS; i++) {
                                 memcpy(data + length, data + 22, stride);
+                                data[length + stride - 1] = (uint8_t) ((version == 4 ? 10 : 0x10) + i);
                                 if (i == UID_DNS_ANSWERS) memcpy(data + length + 12, shared[1].address, size);
                                 length += stride;
                             }
                             parse_dns_response(args, &session, data, &length);
                             assert(infer_uid_destination(args->ctx, version, protocol, source, safe[1].address, 443) == 12345);
                             assert(infer_uid_destination(args->ctx, version, protocol, source, shared[1].address, 443) == -1);
-                            assert(args->ctx->uid_dns_mappings.count == 4 && args->ctx->uid_dns_mappings.lost_count == 3);
+                            assert(args->ctx->uid_dns_mappings.count == 4 &&
+                                   args->ctx->uid_dns_mappings.lost_count == UID_DNS_ANSWERS + 1);
                         }
                     }
                     block_domain = 0;

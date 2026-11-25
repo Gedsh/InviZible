@@ -101,6 +101,7 @@ static void cache_uid_dns_response(struct context *ctx, const uint8_t *data, siz
     // each scan so address collection never depends on where its CNAME appears.
     for (;;) {
         size_t count = 0;
+        bool overflow = false;
         int32_t alias_offset = -1;
         uint16_t alias_owner = 0;
         uint32_t alias_ttl = UINT32_MAX;
@@ -133,13 +134,23 @@ static void cache_uid_dns_response(struct context *ctx, const uint8_t *data, siz
             } else if (klass == DNS_QCLASS_IN && (type == DNS_QTYPE_A || type == DNS_QTYPE_AAAA)) {
                 if (size != (type == DNS_QTYPE_A ? 4u : 16u))
                     return;
-                if (r < answer_count && strcmp(name, current) == 0) {
-                    if (count < UID_DNS_ANSWERS) {
-                        answers[count].version = type == DNS_QTYPE_A ? 4 : 6;
+                if (!overflow && r < answer_count && strcmp(name, current) == 0) {
+                    uint8_t version = type == DNS_QTYPE_A ? 4 : 6;
+                    uint32_t address_ttl = ttl < chain_ttl ? ttl : chain_ttl;
+                    size_t index = 0;
+                    while (index < count &&
+                           (answers[index].version != version || memcmp(answers[index].address, data + off, size) != 0))
+                        index++;
+                    if (index < count) {
+                        // Duplicates do not consume slots; zero TTL must also win.
+                        if (address_ttl < answers[index].ttl) answers[index].ttl = address_ttl;
+                    } else if (count < UID_DNS_ANSWERS) {
+                        answers[count].version = version;
                         memcpy(answers[count].address, data + off, size);
-                        answers[count].ttl = ttl < chain_ttl ? ttl : chain_ttl;
-                    }
-                    count++;
+                        answers[count].ttl = address_ttl;
+                        count++;
+                    } else
+                        overflow = true;
                 }
             }
             off += (int32_t) size;
@@ -147,11 +158,13 @@ static void cache_uid_dns_response(struct context *ctx, const uint8_t *data, siz
         if ((size_t) off != length)
             return;
         if (alias_offset < 0) {
-            if (count != 0 && count <= UID_DNS_ANSWERS)
-                record_uid_dns_answers(ctx, domain, answers, count);
-            else if (count > UID_DNS_ANSWERS) {
+            if (count != 0 && !overflow)
+                record_uid_dns_unique_answers(ctx, domain, answers, count);
+            else if (overflow) {
                 // All record bounds have been validated. Retain loss evidence
                 // for every address, including those beyond the bounded batch.
+                // Reuse the existing buffer so each batch shares one clock read.
+                count = 0;
                 off = answer_offset;
                 for (unsigned int r = 0; r < answer_count; r++) {
                     off = read_qname(data, length, (uint16_t) off, name, true);
@@ -162,13 +175,17 @@ static void cache_uid_dns_response(struct context *ctx, const uint8_t *data, siz
                     off += 10;
                     if (klass == DNS_QCLASS_IN && (type == DNS_QTYPE_A || type == DNS_QTYPE_AAAA) &&
                         strcmp(name, current) == 0) {
-                        struct uid_dns_answer answer = {.version = type == DNS_QTYPE_A ? 4 : 6,
-                                                       .ttl = ttl < chain_ttl ? ttl : chain_ttl};
-                        memcpy(answer.address, data + off, size);
-                        discard_uid_dns_answer(ctx, domain, &answer);
+                        answers[count].version = type == DNS_QTYPE_A ? 4 : 6;
+                        answers[count].ttl = ttl < chain_ttl ? ttl : chain_ttl;
+                        memcpy(answers[count].address, data + off, size);
+                        if (++count == UID_DNS_ANSWERS) {
+                            discard_uid_dns_answers(ctx, domain, answers, count);
+                            count = 0;
+                        }
                     }
                     off += (int32_t) size;
                 }
+                if (count != 0) discard_uid_dns_answers(ctx, domain, answers, count);
             }
             return;
         }
@@ -228,7 +245,7 @@ bool check_dns_tcp_response(struct tcp_session *cur, const uint8_t *data, size_t
 
 void parse_dns_response(const struct arguments *args, const struct ng_session *s,
                         uint8_t *data, size_t *datalen) {
-    (void) s; // Used only by the disabled qname logging below.
+    (void) s; // Used by the commented packet logging below.
     if (dns_has_multiple_questions(data, *datalen)) {
         log_android(ANDROID_LOG_WARN, "DNS response has multiple questions");
         return;

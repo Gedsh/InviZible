@@ -560,6 +560,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     running.buffers = kind == 12 || (kind > 0 && kind < 4) ? &buffers : NULL;
     uint8_t packet[128], buffer[2048];
     size_t off = proxy_packet(packet, version, 12345);
+    if (kind == 0) set_uid_test_clock(10000);
     assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 1);
     struct ng_session *s = args->ctx->ng_session;
     assert(s != NULL && s->udp.proxy != NULL && args->ctx->udp_proxy_count == 1 && sockets == 2);
@@ -568,8 +569,17 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind) {
     assert(send_udp_proxy(&running, s, (const uint8_t *) "def", 3) == 1);
     assert(send_udp_proxy(&running, s, (const uint8_t *) "ghi", 3) == 1);
     assert(allocations == 6); // Four datagrams, including an empty one.
+    if (kind == 0) {
+        assert(args->ctx->uid_observations.count == 1);
+        assert(args->ctx->uid_observations.entry[0].expires == 15000);
+        set_uid_test_clock(11000);
+    }
     for (int i = 0; i < 20; i++)
         assert(handle_udp(&running, packet, off + 11, packet + off, test_owner(own_uid + 1), &proxy_route, epoll_fd) == 0);
+    if (kind == 0) {
+        assert(args->ctx->uid_observations.entry[0].expires == 15000);
+        set_uid_test_clock(-1);
+    }
     assert(allocations == 6); // Overflow drops new packets without replacing queued data.
     readable(listener); int control = accept(listener, NULL, NULL); assert(control >= 0);
     pump_proxy(&running, epoll_fd); read_control(control, buffer, 3);

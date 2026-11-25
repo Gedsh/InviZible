@@ -232,22 +232,16 @@ static void remember_uid_observation_loss(struct uid_observations *cache,
         *slot = *lost;
 }
 
-// Only authoritative proc/Android lookups call this, before policy or socket setup.
-void record_uid_observation(struct context *ctx, int version, int protocol,
-                             const void *source, const void *dest, uint16_t port, jint uid) {
-    if (uid < 0 || (version != 4 && version != 6) ||
-        (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
-        return;
+static size_t record_uid_observation_at(struct context *ctx, int version, int protocol,
+                                      const void *source, const void *dest, uint16_t port,
+                                      jint uid, int64_t now) {
     struct uid_observations *cache = &ctx->uid_observations;
-    int64_t now = uid_observation_time(ctx);
-    if (now < 0)
-        return;
     if (cache->count > 0) {
         struct uid_observation *recent = &cache->entry[cache->last];
         if (recent->uid == uid && recent->protocol == protocol &&
             same_uid_destination(recent, version, source, dest, port)) {
             recent->expires = now + UID_OBSERVATION_MS;
-            return;
+            return cache->last;
         }
     }
     struct uid_observation *slot = NULL, *oldest = &cache->entry[0];
@@ -257,12 +251,14 @@ void record_uid_observation(struct context *ctx, int version, int protocol,
             same_uid_destination(entry, version, source, dest, port)) {
             entry->expires = now + UID_OBSERVATION_MS;
             cache->last = i;
-            return;
+            return i;
         }
-        if (slot == NULL && entry->expires <= now)
-            slot = entry;
-        if (entry->expires < oldest->expires)
-            oldest = entry;
+        if (slot == NULL) {
+            if (entry->expires <= now)
+                slot = entry;
+            else if (entry->expires < oldest->expires)
+                oldest = entry;
+        }
     }
     if (slot == NULL && cache->count < UID_OBSERVATIONS)
         slot = &cache->entry[cache->count++];
@@ -279,10 +275,78 @@ void record_uid_observation(struct context *ctx, int version, int protocol,
     memcpy(slot->source, source, version == 4 ? 4 : 16);
     memcpy(slot->dest, dest, version == 4 ? 4 : 16);
     cache->last = (size_t) (slot - cache->entry);
+    return cache->last;
+}
+
+// Authoritative proc/Android lookups are recorded before policy or socket setup.
+void record_uid_observation(struct context *ctx, int version, int protocol,
+                             const void *source, const void *dest, uint16_t port, jint uid) {
+    if (uid < 0 || (version != 4 && version != 6) ||
+        (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP))
+        return;
+    int64_t now = uid_observation_time(ctx);
+    if (now >= 0)
+        record_uid_observation_at(ctx, version, protocol, source, dest, port, uid, now);
+}
+
+// Call only after accepting validated app traffic. Guessed owners never seed evidence.
+void refresh_uid_activity(struct context *ctx, struct ng_session *s) {
+    int version;
+    jint uid;
+    uint16_t port;
+    const void *source, *dest;
+    if (s->socket < 0)
+        return;
+    if (s->protocol == IPPROTO_TCP) {
+        if (s->tcp.uid < 0 || s->tcp.uid_inferred ||
+            (s->tcp.state != TCP_ESTABLISHED && s->tcp.state != TCP_CLOSE_WAIT &&
+             s->tcp.state != TCP_FIN_WAIT1 && s->tcp.state != TCP_FIN_WAIT2))
+            return;
+        version = s->tcp.version; uid = s->tcp.uid; port = ntohs(s->tcp.dest);
+        source = &s->tcp.saddr; dest = &s->tcp.daddr;
+    } else if (s->protocol == IPPROTO_UDP) {
+        if (s->udp.uid < 0 || s->udp.uid_inferred || s->udp.state != UDP_ACTIVE)
+            return;
+        version = s->udp.version; uid = s->udp.uid; port = ntohs(s->udp.dest);
+        source = &s->udp.saddr; dest = &s->udp.daddr;
+    } else
+        return;
+    if (version != 4 && version != 6)
+        return;
+    // A batch snapshot may only defer a throttled refresh. Never use it to
+    // extend evidence: callbacks or suspend may have advanced the boot clock.
+    int64_t *batch_time = ctx->uid_activity_batch_time;
+    if (uid_activity_batch_throttled(ctx, s))
+        return;
+    int64_t now = uid_observation_time(ctx);
+    if (batch_time != NULL)
+        *batch_time = now;
+    if (now < 0) {
+        s->uid_activity_at = -1;
+        s->uid_observation_slot = UINT16_MAX;
+        return;
+    }
+    // No timers or extra owner lookups: one bounded cache update per active second.
+    if (s->uid_activity_at >= 0 && now >= s->uid_activity_at &&
+        now - s->uid_activity_at < UID_ACTIVITY_REFRESH_MS)
+        return;
+    struct uid_observations *cache = &ctx->uid_observations;
+    size_t index = s->uid_observation_slot;
+    struct uid_observation *entry = index < cache->count ? &cache->entry[index] : NULL;
+    // A hint owns no storage: resets and eviction may replace this slot. Validate
+    // the entire authoritative key, and leave other owners and loss guards intact.
+    if (entry != NULL && entry->expires > now && entry->uid == uid && entry->protocol == s->protocol &&
+        same_uid_destination(entry, version, source, dest, port)) {
+        entry->expires = now + UID_OBSERVATION_MS;
+        cache->last = index;
+    } else
+        s->uid_observation_slot = (uint16_t) record_uid_observation_at(
+                ctx, version, s->protocol, source, dest, port, uid, now);
+    s->uid_activity_at = now;
 }
 
 static int64_t uid_dns_retained_until(const struct uid_dns_mapping *entry) {
-    return entry->expires > entry->incomplete_until ? entry->expires : entry->incomplete_until;
+    return entry->inference_until > entry->incomplete_until ? entry->inference_until : entry->incomplete_until;
 }
 
 static bool uid_dns_address_matches(const struct uid_dns_mapping *entry, int version, const void *address) {
@@ -296,11 +360,11 @@ static bool remember_uid_dns_loss(struct uid_dns_mappings *cache, const char *do
     struct uid_dns_mapping *slot = NULL;
     for (size_t i = 0; i < cache->lost_count; i++) {
         struct uid_dns_mapping *entry = &cache->lost[i];
-        if (strcmp(entry->domain, domain) == 0 && uid_dns_address_matches(entry, version, address)) {
-            if (entry->expires < expires) entry->expires = expires;
+        if (uid_dns_address_matches(entry, version, address) && strcmp(entry->domain, domain) == 0) {
+            if (entry->inference_until < expires) entry->inference_until = expires;
             return true;
         }
-        if (slot == NULL && entry->expires <= now)
+        if (slot == NULL && entry->inference_until <= now)
             slot = entry;
     }
     if (slot == NULL && cache->lost_count < UID_DNS_LOSSES)
@@ -311,13 +375,13 @@ static bool remember_uid_dns_loss(struct uid_dns_mappings *cache, const char *do
         if (cache->admit_after < expires) cache->admit_after = expires;
         for (size_t i = 0; i < cache->count; i++) {
             struct uid_dns_mapping *entry = &cache->entry[i];
-            if ((strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, address)) &&
-                entry->incomplete_until < expires)
+            if (entry->incomplete_until < expires &&
+                (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, address)))
                 entry->incomplete_until = expires;
         }
         return false;
     }
-    slot->expires = expires;
+    slot->inference_until = expires;
     slot->version = (uint8_t) version;
     memcpy(slot->address, address, version == 4 ? 4 : 16);
     strcpy(slot->domain, domain);
@@ -325,19 +389,40 @@ static bool remember_uid_dns_loss(struct uid_dns_mappings *cache, const char *do
 }
 
 void discard_uid_dns_answer(struct context *ctx, const char *domain, const struct uid_dns_answer *answer) {
+    discard_uid_dns_answers(ctx, domain, answer, 1);
+}
+
+void discard_uid_dns_answers(struct context *ctx, const char *domain,
+                              const struct uid_dns_answer *answers, size_t count) {
     if (ctx == NULL || domain == NULL || *domain == 0 || strnlen(domain, 256) == 256 ||
-        answer == NULL || (answer->version != 4 && answer->version != 6))
+        answers == NULL || count == 0 || count > UID_DNS_ANSWERS)
         return;
+    for (size_t i = 0; i < count; i++)
+        if (answers[i].version != 4 && answers[i].version != 6)
+            return;
     int64_t now = uid_observation_time(ctx);
     if (now < 0)
         return;
-    uint32_t ttl = answer->ttl > UID_DNS_MAX_TTL ? UID_DNS_MAX_TTL : answer->ttl;
-    remember_uid_dns_loss(&ctx->uid_dns_mappings, domain, answer->version, answer->address,
-                          now + (int64_t) ttl * 1000, now);
+    for (size_t a = 0; a < count; a++) {
+        const struct uid_dns_answer *answer = &answers[a];
+        // An oversized response still supplies revocations and conflicting evidence.
+        if (answer->ttl == 0) {
+            for (size_t i = 0; i < ctx->uid_dns_mappings.count; i++) {
+                struct uid_dns_mapping *entry = &ctx->uid_dns_mappings.entry[i];
+                if (uid_dns_address_matches(entry, answer->version, answer->address) && strcmp(entry->domain, domain) == 0) {
+                    entry->inference_until = now;
+                    break;
+                }
+            }
+            continue;
+        }
+        remember_uid_dns_loss(&ctx->uid_dns_mappings, domain, answer->version, answer->address,
+                              now + UID_DNS_INFERENCE_MS, now);
+    }
 }
 
-void record_uid_dns_answers(struct context *ctx, const char *domain,
-                            const struct uid_dns_answer *answers, size_t count) {
+static void record_uid_dns_answers_impl(struct context *ctx, const char *domain,
+                                        const struct uid_dns_answer *answers, size_t count, bool unique) {
     if (ctx == NULL || domain == NULL || *domain == 0 || strnlen(domain, 256) == 256 ||
         answers == NULL || count == 0 || count > UID_DNS_ANSWERS)
         return;
@@ -350,34 +435,58 @@ void record_uid_dns_answers(struct context *ctx, const char *domain,
     struct uid_dns_mappings *cache = &ctx->uid_dns_mappings;
     for (size_t a = 0; a < count; a++) {
         const struct uid_dns_answer *answer = &answers[a];
-        uint32_t ttl = answer->ttl;
-        for (size_t d = 0; d < count; d++)
-            if (answers[d].version == answer->version && answers[d].ttl < ttl &&
-                memcmp(answers[d].address, answer->address, answer->version == 4 ? 4 : 16) == 0)
-                ttl = answers[d].ttl;
+        bool revoke = answer->ttl == 0;
+        if (!unique && !revoke)
+            for (size_t d = 0; d < count; d++)
+                if (answers[d].ttl == 0 && answers[d].version == answer->version &&
+                    memcmp(answers[d].address, answer->address, answer->version == 4 ? 4 : 16) == 0) {
+                    revoke = true;
+                    break;
+                }
+        // Loss handling may pause admission between answers in this batch.
+        bool can_insert = !revoke && now >= cache->admit_after;
         struct uid_dns_mapping *slot = NULL, *oldest = &cache->entry[0];
         bool found = false;
-        for (size_t i = 0; i < cache->count; i++) {
-            struct uid_dns_mapping *entry = &cache->entry[i];
-            if (entry->version == answer->version && strcmp(entry->domain, domain) == 0 &&
-                memcmp(entry->address, answer->address, answer->version == 4 ? 4 : 16) == 0) {
+        // Repeated responses often revisit the same key or the next answer.
+        // A hint identifies no owner and must match the complete resident key.
+        size_t hint = cache->last;
+        for (unsigned int probe = 0; probe < 2 && hint < cache->count; probe++) {
+            struct uid_dns_mapping *entry = &cache->entry[hint];
+            if (uid_dns_address_matches(entry, answer->version, answer->address) && strcmp(entry->domain, domain) == 0) {
                 slot = entry;
                 found = true;
                 break;
             }
-            if (slot == NULL && uid_dns_retained_until(entry) <= now)
-                slot = entry;
-            if (uid_dns_retained_until(entry) < uid_dns_retained_until(oldest))
-                oldest = entry;
+            if (++hint == cache->count) hint = 0;
+            if (hint == cache->last) break; // A one-entry cache has no second candidate.
         }
-        if (ttl == 0) {
-            if (found) slot->expires = now;
+        if (!found) {
+            for (size_t i = 0; i < cache->count; i++) {
+                struct uid_dns_mapping *entry = &cache->entry[i];
+                if (uid_dns_address_matches(entry, answer->version, answer->address) && strcmp(entry->domain, domain) == 0) {
+                    slot = entry;
+                    found = true;
+                    break;
+                }
+                if (can_insert && slot == NULL) {
+                    int64_t retained_until = uid_dns_retained_until(entry);
+                    if (retained_until <= now)
+                        slot = entry;
+                    else if (retained_until < uid_dns_retained_until(oldest))
+                        oldest = entry;
+                }
+            }
+        }
+        if (revoke) {
+            if (found) {
+                slot->inference_until = now;
+                cache->last = (size_t) (slot - cache->entry);
+            }
             continue;
         }
-        if (ttl > UID_DNS_MAX_TTL) ttl = UID_DNS_MAX_TTL;
-        int64_t expires = now + (int64_t) ttl * 1000;
-        if (!found && now < cache->admit_after) {
-            remember_uid_dns_loss(cache, domain, answer->version, answer->address, expires, now);
+        int64_t inference_until = now + UID_DNS_INFERENCE_MS;
+        if (!found && !can_insert) {
+            remember_uid_dns_loss(cache, domain, answer->version, answer->address, inference_until, now);
             continue;
         }
         if (slot == NULL && cache->count < UID_DNS_MAPPINGS)
@@ -385,72 +494,106 @@ void record_uid_dns_answers(struct context *ctx, const char *domain,
         if (slot == NULL) {
             if (!remember_uid_dns_loss(cache, oldest->domain, oldest->version, oldest->address,
                                        uid_dns_retained_until(oldest), now)) {
-                remember_uid_dns_loss(cache, domain, answer->version, answer->address, expires, now);
+                remember_uid_dns_loss(cache, domain, answer->version, answer->address, inference_until, now);
                 continue;
             }
             slot = oldest;
         }
-        if (!found) slot->incomplete_until = 0;
-        slot->expires = expires;
-        slot->version = answer->version;
-        memcpy(slot->address, answer->address, answer->version == 4 ? 4 : 16);
-        strcpy(slot->domain, domain);
+        if (!found) {
+            slot->incomplete_until = 0;
+            slot->version = answer->version;
+            memcpy(slot->address, answer->address, answer->version == 4 ? 4 : 16);
+            strcpy(slot->domain, domain);
+        }
+        slot->inference_until = inference_until;
+        cache->last = (size_t) (slot - cache->entry);
     }
+}
+
+void record_uid_dns_answers(struct context *ctx, const char *domain,
+                            const struct uid_dns_answer *answers, size_t count) {
+    record_uid_dns_answers_impl(ctx, domain, answers, count, false);
+}
+
+void record_uid_dns_unique_answers(struct context *ctx, const char *domain,
+                                   const struct uid_dns_answer *answers, size_t count) {
+    record_uid_dns_answers_impl(ctx, domain, answers, count, true);
+}
+
+static jint infer_uid_domain_owner(const struct context *ctx, const char *domain, int version,
+                              const void *source, uint16_t port, int64_t now) {
+    const struct uid_dns_mappings *dns = &ctx->uid_dns_mappings;
+    for (size_t i = 0; i < dns->lost_count; i++) {
+        const struct uid_dns_mapping *entry = &dns->lost[i];
+        if (entry->inference_until > now && strcmp(entry->domain, domain) == 0) {
+            return -1;
+        }
+    }
+    jint uid = -1;
+    const struct uid_observations *owners = &ctx->uid_observations;
+    for (size_t d = 0; d < dns->count; d++) {
+        const struct uid_dns_mapping *entry = &dns->entry[d];
+        // Expired mappings may still carry a live hostname loss guard. Check
+        // that guard in this same pass, before considering ownership evidence.
+        if (entry->inference_until <= now && entry->incomplete_until <= now)
+            continue;
+        if (strcmp(domain, entry->domain) != 0)
+            continue;
+        if (entry->incomplete_until > now)
+            return -1;
+        // Only this hostname's mappings need owner scans. Destination/name keys
+        // are unique, so sharing the destination never repeats a mapping's scan.
+        for (size_t i = 0; i < owners->count + owners->lost_count; i++) {
+            bool lost = i >= owners->count;
+            const struct uid_observation *owner = lost ? &owners->lost[i - owners->count] : &owners->entry[i];
+            if (owner->expires <= now || owner->port != port || entry->version != owner->version ||
+                memcmp(entry->address, owner->dest, owner->version == 4 ? 4 : 16) != 0 ||
+                (owner->version == version && memcmp(owner->source, source, version == 4 ? 4 : 16) != 0))
+                continue;
+            // Cross-family evidence remains scoped to this VPN context. A lost
+            // owner can hide a conflict even when other matching owners agree.
+            if (lost || (uid >= 0 && uid != owner->uid))
+                return -1;
+            uid = owner->uid;
+        }
+    }
+    if (uid >= 10000 && uid != own_uid) return uid;
+    return -1;
 }
 
 static jint infer_uid_domain(const struct context *ctx, int version,
                               const void *source, const void *dest, uint16_t port, int64_t now) {
     const struct uid_dns_mappings *dns = &ctx->uid_dns_mappings;
-    const char *domain = NULL;
-    for (size_t i = 0; i < dns->count; i++) {
-        const struct uid_dns_mapping *entry = &dns->entry[i];
-        if (entry->expires <= now || entry->version != version ||
-            memcmp(entry->address, dest, version == 4 ? 4 : 16) != 0)
-            continue;
-        // Shared addresses do not identify which hostname this connection uses.
-        if (domain != NULL && strcmp(domain, entry->domain) != 0)
-            return -1;
-        domain = entry->domain;
-    }
-    if (domain == NULL)
-        return -1;
-    for (size_t i = 0; i < dns->lost_count; i++) {
-        const struct uid_dns_mapping *entry = &dns->lost[i];
-        if (entry->expires > now &&
-            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest)))
-            return -1;
-    }
-    for (size_t i = 0; i < dns->count; i++) {
-        const struct uid_dns_mapping *entry = &dns->entry[i];
-        if (entry->incomplete_until > now &&
-            (strcmp(entry->domain, domain) == 0 || uid_dns_address_matches(entry, version, dest)))
-            return -1;
-    }
     jint uid = -1;
-    const struct uid_observations *owners = &ctx->uid_observations;
-    for (size_t i = 0; i < owners->count + owners->lost_count; i++) {
-        bool lost = i >= owners->count;
-        const struct uid_observation *owner = lost ? &owners->lost[i - owners->count] : &owners->entry[i];
-        if (owner->expires <= now || owner->port != port ||
-            (owner->version == version && memcmp(owner->source, source, version == 4 ? 4 : 16) != 0))
+    bool destination_losses_checked = false;
+    for (size_t i = 0; i < dns->count; i++) {
+        const struct uid_dns_mapping *entry = &dns->entry[i];
+        if (entry->inference_until <= now && entry->incomplete_until <= now)
             continue;
-        // Cross-family evidence is scoped to the VPN context, not a DNS socket UID.
-        for (size_t d = 0; d < dns->count; d++) {
-            const struct uid_dns_mapping *entry = &dns->entry[d];
-            if (entry->expires > now && entry->version == owner->version &&
-                memcmp(entry->address, owner->dest, owner->version == 4 ? 4 : 16) == 0 &&
-                strcmp(domain, entry->domain) == 0) {
-                // A discarded owner of another address may hide a domain conflict.
-                // Resolve this relationship now, including DNS learned after eviction.
-                if (lost) return -1;
-                if (uid >= 0 && uid != owner->uid)
+        if (!uid_dns_address_matches(entry, version, dest))
+            continue;
+        if (entry->incomplete_until > now)
+            return -1;
+        // No destination loss scan is needed without a usable mapping. These
+        // guards apply to every hostname, so check once before resolving owners.
+        if (!destination_losses_checked) {
+            for (size_t d = 0; d < dns->lost_count; d++) {
+                const struct uid_dns_mapping *lost = &dns->lost[d];
+                if (lost->inference_until > now && uid_dns_address_matches(lost, version, dest))
                     return -1;
-                uid = owner->uid;
-                break;
             }
+            destination_losses_checked = true;
         }
+        // The packet could use any matching hostname. Every one must identify
+        // the same recent confirmed owner, with no missing or discarded evidence.
+        jint candidate = infer_uid_domain_owner(ctx, entry->domain, version, source, port, now);
+        if (candidate < 0) return -1;
+        if (uid >= 0 && uid != candidate) {
+            return -1;
+        }
+        uid = candidate;
     }
-    return uid >= 10000 && uid != own_uid ? uid : -1;
+    return uid;
 }
 
 jint infer_uid_destination(struct context *ctx, int version, int protocol,
@@ -461,14 +604,18 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
     if (cache->count == 0)
         return -1;
     int64_t now = uid_observation_time(ctx);
-    if (now < 0 || cache->count == 0)
+    if (now < 0)
         return -1;
-    if (now < cache->incomplete_until)
+    if (cache->count == 0)
         return -1;
+    if (now < cache->incomplete_until) {
+        return -1;
+    }
     for (size_t i = 0; i < cache->lost_count; i++) {
         const struct uid_observation *entry = &cache->lost[i];
-        if (entry->expires > now && same_uid_destination(entry, version, source, dest, port))
+        if (entry->expires > now && same_uid_destination(entry, version, source, dest, port)) {
             return -1;
+        }
     }
     jint uid = -1;
     // Share exact endpoint evidence across TCP/UDP, including conflicting owners.
@@ -477,12 +624,15 @@ jint infer_uid_destination(struct context *ctx, int version, int protocol,
         const struct uid_observation *entry = &cache->entry[i];
         if (entry->expires <= now || !same_uid_destination(entry, version, source, dest, port))
             continue;
-        if (uid >= 0 && uid != entry->uid)
+        if (uid >= 0 && uid != entry->uid) {
             return -1;
+        }
         uid = entry->uid;
     }
-    if (uid >= 0)
-        return uid >= 10000 && uid != own_uid ? uid : -1;
+    if (uid >= 0) {
+        if (uid >= 10000 && uid != own_uid) return uid;
+        return -1;
+    }
     return infer_uid_domain(ctx, version, source, dest, port, now);
 }
 

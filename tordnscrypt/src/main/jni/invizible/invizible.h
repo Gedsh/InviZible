@@ -131,12 +131,14 @@ struct tcp_memory {
 
 #define INVIZIBLE_PACKET_OWNER 1
 #define UID_OBSERVATIONS 256
+_Static_assert(UID_OBSERVATIONS <= UINT16_MAX, "UID owner slots must leave room for an unset hint");
 #define UID_OBSERVATION_LOSSES 64
 #define UID_OBSERVATION_MS 5000
-#define UID_DNS_MAPPINGS 256
-#define UID_DNS_LOSSES 128
-#define UID_DNS_ANSWERS 32
-#define UID_DNS_MAX_TTL 300
+#define UID_ACTIVITY_REFRESH_MS 1000
+#define UID_DNS_MAPPINGS 512
+#define UID_DNS_LOSSES 256
+#define UID_DNS_ANSWERS 128 // Distinct address-family/IP pairs per response.
+#define UID_DNS_INFERENCE_MS 900000 // Historical associations, not DNS answer freshness.
 
 struct packet_owner {
     jint uid;
@@ -166,7 +168,7 @@ struct uid_dns_answer {
 };
 
 struct uid_dns_mapping {
-    int64_t expires;
+    int64_t inference_until; // Historical association or loss-guard deadline; zero TTL revokes mappings immediately.
     int64_t incomplete_until; // Retains unrecorded losses when the loss array is full.
     uint8_t address[16];
     char domain[256];
@@ -178,6 +180,7 @@ struct uid_dns_mappings {
     struct uid_dns_mapping lost[UID_DNS_LOSSES];
     int64_t admit_after; // Untracked losses restrict new keys, not existing inference.
     size_t count, lost_count;
+    size_t last; // Resident-slot hint for the last matched/written key; always validate.
 };
 
 struct icmp_error_budget {
@@ -195,6 +198,9 @@ struct context {
     struct ng_session *session_bucket[SESSION_BUCKETS];
     struct tcp_memory tcp_memory;
     struct uid_observations uid_observations; // Owned by this context's event thread.
+    // Borrowed from the TUN batch's stack; NULL outside that bounded packet loop.
+    // Used only to skip throttled refreshes, never for inference or evidence writes.
+    int64_t *uid_activity_batch_time;
     struct uid_dns_mappings uid_dns_mappings; // Names/addresses only, never DNS socket owners.
     // Event-thread owned; MTU feedback has an independent budget.
     struct icmp_error_budget icmp_errors[2];
@@ -394,11 +400,13 @@ _Static_assert(sizeof(struct icmp_session) <= sizeof(struct tcp_session),
 
 struct ng_session {
     uint8_t protocol;
+    uint16_t uid_observation_slot; // Validated cache index; UINT16_MAX means unset.
     union {
         struct icmp_session icmp;
         struct udp_session udp;
         struct tcp_session tcp;
     };
+    int64_t uid_activity_at; // Last confirmed-traffic refresh, CLOCK_BOOTTIME ms; -1 before first use.
     jint socket;
     struct epoll_event ev;
     struct ng_session *next;
@@ -736,10 +744,23 @@ jint get_uid_sub(int version, int protocol,
 // Ports are host order; payload points to the protocol header validated by handle_ip.
 void record_uid_observation(struct context *ctx, int version, int protocol,
                              const void *source, const void *dest, uint16_t port, jint uid);
+// A batch snapshot may only skip a refresh, never timestamp evidence or inference.
+static inline bool uid_activity_batch_throttled(const struct context *ctx, const struct ng_session *s) {
+    const int64_t *batch_time = ctx->uid_activity_batch_time;
+    return batch_time != NULL && s->uid_activity_at >= 0 &&
+           *batch_time >= s->uid_activity_at &&
+           *batch_time - s->uid_activity_at < UID_ACTIVITY_REFRESH_MS;
+}
+void refresh_uid_activity(struct context *ctx, struct ng_session *s);
 void record_uid_dns_answers(struct context *ctx, const char *domain,
                             const struct uid_dns_answer *answers, size_t count);
+// Caller supplies distinct family/IP pairs with zero-TTL duplicates already taking precedence.
+void record_uid_dns_unique_answers(struct context *ctx, const char *domain,
+                                   const struct uid_dns_answer *answers, size_t count);
 void discard_uid_dns_answer(struct context *ctx, const char *domain,
                              const struct uid_dns_answer *answer);
+void discard_uid_dns_answers(struct context *ctx, const char *domain,
+                              const struct uid_dns_answer *answers, size_t count);
 jint infer_uid_destination(struct context *ctx, int version, int protocol,
                             const void *source, const void *dest, uint16_t port);
 

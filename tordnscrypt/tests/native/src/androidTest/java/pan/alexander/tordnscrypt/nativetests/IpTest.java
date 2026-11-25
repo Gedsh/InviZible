@@ -12,6 +12,15 @@ import static org.junit.Assume.assumeTrue;
 /** Regressions for ip.c. */
 @RunWith(AndroidJUnit4.class)
 public final class IpTest extends NativeTestSupport {
+    @Test public void ownerSlotHintsValidateReusedSlotsAndBoundActiveRefreshWork() { check("uidOwnerSlotHint"); }
+    @Test public void activityBatchesShareThrottleClockButKeepInferenceAndWritesFresh() { check("uidActivityBatch"); }
+    @Test public void normalizedDnsBatchesSkipDuplicateScanAndPreserveCacheState() { check("uidDnsUniqueUpdates"); }
+    @Test public void dnsSlotHintsBoundRefreshWorkAndPreserveFullScanResults() { check("uidDnsSlotHint"); }
+    @Test public void sharedDomainWorkStaysBoundedAtFullCacheCapacity() { check("uidDomainWork"); }
+    @Test public void unrelatedDnsMappingsDoNotMultiplyOwnerScans() { check("uidRelevantDomainWork"); }
+    @Test public void sharedIpDomainsRequireCompleteMatchingOwnerEvidence() { check("uidSharedDomains"); }
+    @Test public void domainUidHistoryOutlivesDnsTtlWithoutExtendingOwnership() { check("uidDnsHistory"); }
+    @Test public void uidInferencePreservesPolicyWithoutTemporaryLogs() { check("uidInferencePolicy"); }
     @Test public void mtuStays1500AcrossProxyConfigurationsAndPreservesMaximumTunnelReads() { check("proxyMtu"); }
     @Test public void unsupportedIcmpSkipsOwnerLookupPolicyAndForwarding() { check("ipIcmpValidation"); }
     @Test public void domainUidFallbackAppliesPolicyAcrossFamiliesAndOwnerApis() { check("uidDomainPolicy"); }

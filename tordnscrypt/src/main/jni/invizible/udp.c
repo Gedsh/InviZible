@@ -517,7 +517,10 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
             memcpy(cur->udp.error_quote, pkt, quoted);
             cur->udp.error_quote_length = (uint16_t) quoted;
         }
-        return send_udp_proxy(args, cur, data, datalen);
+        int accepted = send_udp_proxy(args, cur, data, datalen);
+        if (accepted)
+            refresh_uid_activity(args->ctx, cur);
+        return accepted;
     }
 
     int rversion;
@@ -587,6 +590,7 @@ jboolean handle_udp_with_lookup(const struct arguments *args,
         }
     } else {
         cur->udp.sent += datalen;
+        refresh_uid_activity(args->ctx, cur);
         // Retain a bounded copy before the shared tunnel buffer is reused. If
         // extension headers hide the UDP header beyond the bound, omit the error
         // rather than retaining an unusable quote or allocating per-flow buffers.
