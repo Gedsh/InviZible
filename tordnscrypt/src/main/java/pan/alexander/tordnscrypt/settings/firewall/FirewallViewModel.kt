@@ -19,12 +19,20 @@
 
 package pan.alexander.tordnscrypt.settings.firewall
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.di.CoroutinesModule.Companion.DISPATCHER_COMPUTATION
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
@@ -33,6 +41,7 @@ import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Utils
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager
+import pan.alexander.tordnscrypt.utils.apps.CrossUserPermission
 import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.*
@@ -62,90 +71,110 @@ class FirewallViewModel @Inject constructor(
     private val appsBypassVpn = mutableSetOf<String>()
 
     val criticalSystemUids = hashSetOf<Int>()
+    private val appsLock = Mutex()
+    private val broadcasts = LocalBroadcastManager.getInstance(App.instance)
+    private val permissionReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) =
+            getDeviceApps(initialLoading = false)
+    }
 
-    fun getDeviceApps() {
-        viewModelScope.launch(dispatcherComputation) {
-            tryGetDeviceApps()
+    init {
+        broadcasts.registerReceiver(permissionReceiver, IntentFilter(CrossUserPermission.APPS_CHANGED))
+    }
+
+    fun getDeviceApps() = getDeviceApps(initialLoading = true)
+
+    private fun getDeviceApps(initialLoading: Boolean) {
+        viewModelScope.launch {
+            appsLock.withLock { tryGetDeviceApps(initialLoading) }
         }
     }
 
-    private fun tryGetDeviceApps() {
+    override fun onCleared() {
+        broadcasts.unregisterReceiver(permissionReceiver)
+    }
+
+    private suspend fun tryGetDeviceApps(initialLoading: Boolean) {
         try {
-
-            appsCompleteSet.clear()
-            firewallStateMutableLiveData.postValue(FirewallState.Preparing)
-
-            val preferences = preferenceRepository.get()
-
-            appsAllowLan.addAll(
-                preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF).toIntSet()
-            )
-            appsAllowWifi.addAll(
-                preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF).toIntSet()
-            )
-            appsAllowGsm.addAll(
-                preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF).toIntSet()
-            )
-            appsAllowRoaming.addAll(
-                preferences.getStringSetPreference(APPS_ALLOW_ROAMING).toIntSet()
-            )
-            appsAllowVpn.addAll(
-                preferences.getStringSetPreference(APPS_ALLOW_VPN).toIntSet()
-            )
-            if (modulesStatus.mode == OperationMode.VPN_MODE) {
-                appsBypassVpn.addAll(
-                    preferences.getStringSetPreference(APPS_BYPASS_VPN)
-                )
+            // Keep the live objects so edits made while discovery runs survive the refresh.
+            val previous = if (initialLoading) {
+                emptyMap()
+            } else {
+                appsCompleteSet.associateBy { it.applicationData.uid }
             }
 
-            val installedApps = InstalledApplicationsManager.Builder()
-                .setOnAppAddListener(this)
+            if (initialLoading) {
+                appsCompleteSet.clear()
+                firewallStateMutableLiveData.value = FirewallState.Preparing
+
+                // The saved baseline is UI-owned. Refresh must retain edits/saves made since loading.
+                val preferences = preferenceRepository.get()
+                appsAllowLan.addAll(
+                    preferences.getStringSetPreference(APPS_ALLOW_LAN_PREF).toIntSet()
+                )
+                appsAllowWifi.addAll(
+                    preferences.getStringSetPreference(APPS_ALLOW_WIFI_PREF).toIntSet()
+                )
+                appsAllowGsm.addAll(
+                    preferences.getStringSetPreference(APPS_ALLOW_GSM_PREF).toIntSet()
+                )
+                appsAllowRoaming.addAll(
+                    preferences.getStringSetPreference(APPS_ALLOW_ROAMING).toIntSet()
+                )
+                appsAllowVpn.addAll(
+                    preferences.getStringSetPreference(APPS_ALLOW_VPN).toIntSet()
+                )
+                if (modulesStatus.mode == OperationMode.VPN_MODE) {
+                    appsBypassVpn.addAll(
+                        preferences.getStringSetPreference(APPS_BYPASS_VPN)
+                    )
+                }
+            }
+
+            val builder = InstalledApplicationsManager.Builder()
                 .showSpecialApps(true)
                 .setIconRequired()
-                .build()
-                .getInstalledApps()
-
-            Utils.getCriticalSystemUids(pathVars.get().appUid)
-                .also { criticalSystemUids.addAll(it) }
-
-            appsCompleteSet.clear()
-
-            for (applicationData: ApplicationData in installedApps) {
-                val uid = applicationData.uid
-                appsCompleteSet.add(
-                    FirewallAppModel(
-                        applicationData,
-                        appsAllowLan.contains(uid),
-                        appsAllowWifi.contains(uid),
-                        appsAllowGsm.contains(uid),
-                        appsAllowRoaming.contains(uid),
-                        appsAllowVpn.contains(uid),
-                        appsBypassVpn.contains(applicationData.pack)
-                    )
-                )
+            if (initialLoading) builder.setOnAppAddListener(this)
+            val (installedApps, complete) = withContext(dispatcherComputation) {
+                val manager = builder.build()
+                manager.getInstalledApps() to manager.isInventoryComplete
             }
+            if (!initialLoading && (installedApps.isEmpty() || !complete)) return
+
+            criticalSystemUids.addAll(Utils.getCriticalSystemUids(pathVars.get().appUid))
+
+            val replacement = installedApps.map { applicationData ->
+                previous[applicationData.uid] ?: createFirewallAppModel(applicationData)
+            }
+            // Publish together with UI edits and saving, never an empty/partially rebuilt list.
+            appsCompleteSet.clear()
+            appsCompleteSet.addAll(replacement)
 
         } catch (e: Exception) {
             loge("FirewallViewModel getDeviceApps exception", e)
         } finally {
-            firewallStateMutableLiveData.postValue(FirewallState.Ready)
+            firewallStateMutableLiveData.value = FirewallState.Ready
         }
     }
 
     override fun onAppAdded(application: ApplicationData) {
+        viewModelScope.launch {
+            appsCompleteSet.add(createFirewallAppModel(application))
+            firewallStateMutableLiveData.value = FirewallState.Preparing
+        }
+    }
+
+    private fun createFirewallAppModel(application: ApplicationData): FirewallAppModel {
         val uid = application.uid
-        appsCompleteSet.add(
-            FirewallAppModel(
-                application,
-                appsAllowLan.contains(uid),
-                appsAllowWifi.contains(uid),
-                appsAllowGsm.contains(uid),
-                appsAllowRoaming.contains(uid),
-                appsAllowVpn.contains(uid),
-                appsBypassVpn.contains(application.pack)
-            )
+        return FirewallAppModel(
+            application,
+            appsAllowLan.contains(uid),
+            appsAllowWifi.contains(uid),
+            appsAllowGsm.contains(uid),
+            appsAllowRoaming.contains(uid),
+            appsAllowVpn.contains(uid),
+            appsBypassVpn.contains(application.pack)
         )
-        firewallStateMutableLiveData.postValue(FirewallState.Preparing)
     }
 
     fun isFirewallChangesSavingRequired(): Boolean {
@@ -180,29 +209,19 @@ class FirewallViewModel @Inject constructor(
 
         var iptablesUpdateRequired = false
 
-        if (appsAllowLanToSave.size != appsAllowLan.size
-            || !appsAllowLanToSave.containsAll(appsAllowLan)
-        ) {
+        if (appsAllowLanToSave != appsAllowLan) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowWifiToSave.size != appsAllowWifi.size
-            || !appsAllowWifiToSave.containsAll(appsAllowWifi)
-        ) {
+        if (appsAllowWifiToSave != appsAllowWifi) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowGsmToSave.size != appsAllowGsm.size
-            || !appsAllowGsmToSave.containsAll(appsAllowGsm)
-        ) {
+        if (appsAllowGsmToSave != appsAllowGsm) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowRoamingToSave.size != appsAllowRoaming.size
-            || !appsAllowRoamingToSave.containsAll(appsAllowRoaming)
-        ) {
+        if (appsAllowRoamingToSave != appsAllowRoaming) {
             iptablesUpdateRequired = true
         }
-        if (appsAllowVpnToSave.size != appsAllowVpn.size
-            || !appsAllowVpnToSave.containsAll(appsAllowVpn)
-        ) {
+        if (appsAllowVpnToSave != appsAllowVpn) {
             iptablesUpdateRequired = true
         }
 
@@ -240,37 +259,27 @@ class FirewallViewModel @Inject constructor(
         val preferences = preferenceRepository.get()
 
 
-        if (appsAllowLanToSave.size != appsAllowLan.size
-            || !appsAllowLanToSave.containsAll(appsAllowLan)
-        ) {
+        if (appsAllowLanToSave != appsAllowLan) {
             appsAllowLan = appsAllowLanToSave
             preferences.setStringSetPreference(APPS_ALLOW_LAN_PREF, appsAllowLan.toStringSet())
             iptablesUpdateRequired = true
         }
-        if (appsAllowWifiToSave.size != appsAllowWifi.size
-            || !appsAllowWifiToSave.containsAll(appsAllowWifi)
-        ) {
+        if (appsAllowWifiToSave != appsAllowWifi) {
             appsAllowWifi = appsAllowWifiToSave
             preferences.setStringSetPreference(APPS_ALLOW_WIFI_PREF, appsAllowWifi.toStringSet())
             iptablesUpdateRequired = true
         }
-        if (appsAllowGsmToSave.size != appsAllowGsm.size
-            || !appsAllowGsmToSave.containsAll(appsAllowGsm)
-        ) {
+        if (appsAllowGsmToSave != appsAllowGsm) {
             appsAllowGsm = appsAllowGsmToSave
             preferences.setStringSetPreference(APPS_ALLOW_GSM_PREF, appsAllowGsm.toStringSet())
             iptablesUpdateRequired = true
         }
-        if (appsAllowRoamingToSave.size != appsAllowRoaming.size
-            || !appsAllowRoamingToSave.containsAll(appsAllowRoaming)
-        ) {
+        if (appsAllowRoamingToSave != appsAllowRoaming) {
             appsAllowRoaming = appsAllowRoamingToSave
             preferences.setStringSetPreference(APPS_ALLOW_ROAMING, appsAllowRoaming.toStringSet())
             iptablesUpdateRequired = true
         }
-        if (appsAllowVpnToSave.size != appsAllowVpn.size
-            || !appsAllowVpnToSave.containsAll(appsAllowVpn)
-        ) {
+        if (appsAllowVpnToSave != appsAllowVpn) {
             appsAllowVpn = appsAllowVpnToSave
             preferences.setStringSetPreference(APPS_ALLOW_VPN, appsAllowVpn.toStringSet())
             iptablesUpdateRequired = true

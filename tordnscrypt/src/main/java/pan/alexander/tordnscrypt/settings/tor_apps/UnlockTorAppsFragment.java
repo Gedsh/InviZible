@@ -20,6 +20,9 @@
 package pan.alexander.tordnscrypt.settings.tor_apps;
 
 import android.content.Context;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -44,11 +48,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import dagger.Lazy;
@@ -60,6 +65,7 @@ import pan.alexander.tordnscrypt.dialogs.NotificationHelper;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.modules.ModulesStatus;
 import pan.alexander.tordnscrypt.utils.apps.InstalledApplicationsManager;
+import pan.alexander.tordnscrypt.utils.apps.CrossUserPermission;
 import pan.alexander.tordnscrypt.utils.executors.CoroutineExecutor;
 import pan.alexander.tordnscrypt.utils.integrity.Verifier;
 
@@ -94,6 +100,16 @@ public class UnlockTorAppsFragment extends Fragment
     RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHolder> mAdapter;
 
     final CopyOnWriteArrayList<TorAppData> appsUnlock = new CopyOnWriteArrayList<>();
+    private final BroadcastReceiver permissionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            inventoryRefreshRequired = true;
+            if (rvListTorApps != null) {
+                inventoryRefreshRequired = false;
+                getDeviceApps(setUnlockApps, false);
+            }
+        }
+    };
     CopyOnWriteArrayList<TorAppData> savedAppsUnlockWhenSearch = null;
     private Set<String> setUnlockApps;
     @Nullable
@@ -103,6 +119,9 @@ public class UnlockTorAppsFragment extends Fragment
 
     String unlockAppsStr;
     private Job task;
+    private Job refreshTask;
+    private boolean inventoryRefreshRequired;
+    private boolean destroyed;
     private final ReentrantLock reentrantLock = new ReentrantLock();
     private volatile boolean appsListComplete = false;
     private String searchText;
@@ -134,6 +153,8 @@ public class UnlockTorAppsFragment extends Fragment
         }
 
         setRetainInstance(true);
+        LocalBroadcastManager.getInstance(context.getApplicationContext()).registerReceiver(
+                permissionReceiver, new IntentFilter(CrossUserPermission.APPS_CHANGED));
 
         ////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////Reverse logic when route all through Tor!///////////////////
@@ -223,7 +244,10 @@ public class UnlockTorAppsFragment extends Fragment
         mAdapter.setHasStableIds(true);
         rvListTorApps.setAdapter(mAdapter);
 
-        if (appsUnlock.isEmpty()) {
+        if (inventoryRefreshRequired) {
+            inventoryRefreshRequired = false;
+            getDeviceApps(setUnlockApps, false);
+        } else if (appsUnlock.isEmpty()) {
             getDeviceApps(setUnlockApps);
         } else {
             syncAppsWithSelectedChips();
@@ -339,10 +363,15 @@ public class UnlockTorAppsFragment extends Fragment
 
     @Override
     public void onDestroy() {
+        destroyed = true;
         super.onDestroy();
+        LocalBroadcastManager.getInstance(App.getInstance()).unregisterReceiver(permissionReceiver);
 
         if (task != null) {
             task.cancel(new CancellationException());
+        }
+        if (refreshTask != null) {
+            refreshTask.cancel(new CancellationException());
         }
 
         handler.get().removeCallbacksAndMessages(null);
@@ -433,10 +462,11 @@ public class UnlockTorAppsFragment extends Fragment
 
         appsUnlock.clear();
 
+        String query = text.toLowerCase().trim();
         for (int i = 0; i < savedAppsUnlockWhenSearch.size(); i++) {
             TorAppData app = savedAppsUnlockWhenSearch.get(i);
-            if (app.toString().toLowerCase().contains(text.toLowerCase().trim())
-                    || app.getPack().toLowerCase().contains(text.toLowerCase().trim())) {
+            if (app.toString().toLowerCase().contains(query)
+                    || app.getPack().toLowerCase().contains(query)) {
                 if (allAppsSelected
                         || systemAppsSelected && app.getSystem()
                         || userAppsSelected && !app.getSystem()) {
@@ -487,14 +517,15 @@ public class UnlockTorAppsFragment extends Fragment
 
         appsUnlock.clear();
 
+        String query = searchText == null ? "" : searchText.toLowerCase().trim();
         for (TorAppData applicationData : savedAppsUnlockWhenSearch) {
             if (filterSystem == null
                     || filterSystem && applicationData.getSystem()
                     || !filterSystem && !applicationData.getSystem()) {
-                if (searchText == null || searchText.isEmpty()) {
+                if (query.isEmpty()) {
                     appsUnlock.add(applicationData);
-                } else if (applicationData.toString().toLowerCase().contains(searchText.toLowerCase().trim())
-                        || applicationData.getPack().toLowerCase().contains(searchText.toLowerCase().trim())) {
+                } else if (applicationData.toString().toLowerCase().contains(query)
+                        || applicationData.getPack().toLowerCase().contains(query)) {
                     appsUnlock.add(applicationData);
                 }
             }
@@ -514,29 +545,41 @@ public class UnlockTorAppsFragment extends Fragment
                 return;
             }
 
-            TorAppData torAppData = TorAppData.mapToTorAppData(application);
-            if (setDirectUdpApps != null) {
-                torAppData.setDirectUdp(setDirectUdpApps.contains(String.valueOf(application.getUid())));
-            }
-            if (setVpnBypassApps != null) {
-                torAppData.setExcludeFromAll(setVpnBypassApps.contains(application.getPack()));
-            }
+            TorAppData torAppData = createTorAppData(application);
             appsUnlock.add(0, torAppData);
             mAdapter.notifyItemInserted(0);
             rvListTorApps.scrollToPosition(0);
         });
     }
 
-    private void getDeviceApps(final Set<String> unlockAppsArrListSaved) {
+    private TorAppData createTorAppData(ApplicationData application) {
+        TorAppData app = TorAppData.mapToTorAppData(application);
+        if (setDirectUdpApps != null) {
+            app.setDirectUdp(setDirectUdpApps.contains(String.valueOf(application.getUid())));
+        }
+        if (setVpnBypassApps != null) {
+            app.setExcludeFromAll(setVpnBypassApps.contains(application.getPack()));
+        }
+        return app;
+    }
 
-        task = executor.submit("UnlockTorAppsFragment getDeviceApps", () -> {
+    private void getDeviceApps(final Set<String> savedUnlockApps) {
+        getDeviceApps(savedUnlockApps, true);
+    }
+
+    private void getDeviceApps(final Set<String> savedUnlockApps, boolean initialLoading) {
+
+        if (!initialLoading && refreshTask != null) {
+            refreshTask.cancel(new CancellationException());
+        }
+        Set<String> activeApps = new HashSet<>(savedUnlockApps);
+        Job submitted = executor.submit("UnlockTorAppsFragment getDeviceApps", () -> {
             try {
 
                 reentrantLock.lockInterruptibly();
 
-                if (appsUnlock.isEmpty()) {
-
-                    if (handler != null && pbTorApp != null) {
+                if (!initialLoading || appsUnlock.isEmpty()) {
+                    if (initialLoading && handler != null && pbTorApp != null) {
                         handler.get().post(() -> {
                             if (pbTorApp != null) {
                                 pbTorApp.setIndeterminate(true);
@@ -545,66 +588,87 @@ public class UnlockTorAppsFragment extends Fragment
                         });
                     }
 
-                    appsListComplete = false;
+                    // An already displayed list remains editable and saveable during refresh.
+                    if (initialLoading) {
+                        appsListComplete = false;
+                    }
 
-                    List<ApplicationData> installedApps = new InstalledApplicationsManager.Builder()
-                            .setOnAppAddListener(this)
-                            .activeApps(unlockAppsArrListSaved)
-                            .setIconRequired()
-                            .build()
-                            .getInstalledApps();
+                    InstalledApplicationsManager.Builder builder = new InstalledApplicationsManager.Builder()
+                            .activeApps(activeApps)
+                            .setIconRequired();
+                    if (initialLoading) {
+                        builder.setOnAppAddListener(this);
+                    }
+                    InstalledApplicationsManager manager = builder.build();
+                    List<ApplicationData> installedApps = manager.getInstalledApps();
+                    if (!initialLoading && (installedApps.isEmpty() || !manager.isInventoryComplete())) {
+                        return null;
+                    }
 
                     boolean showAllApps = defaultPreferences.get().getBoolean(FIREWALL_SHOWS_ALL_APPS, false);
                     if (!showAllApps) {
                         installedApps = filterUserAppsWithoutInternetPermission(installedApps);
                     }
 
-                    while (rvListTorApps != null && rvListTorApps.isComputingLayout()) {
-                        TimeUnit.MILLISECONDS.sleep(100);
-                    }
-
-                    appsListComplete = true;
-
-                    appsUnlock.clear();
-                    for (ApplicationData data : installedApps) {
-                        TorAppData torAppData = TorAppData.mapToTorAppData(data);
-                        if (setDirectUdpApps != null) {
-                            torAppData.setDirectUdp(setDirectUdpApps.contains(String.valueOf(data.getUid())));
+                    List<ApplicationData> result = installedApps;
+                    handler.get().post(() -> {
+                        if (!destroyed) {
+                            applyInstalledApps(result, initialLoading);
                         }
-                        if (setVpnBypassApps != null) {
-                            torAppData.setExcludeFromAll(setVpnBypassApps.contains(data.getPack()));
-                        }
-                        appsUnlock.add(torAppData);
-                    }
-
-                    if (handler != null && pbTorApp != null) {
-                        handler.get().post(() -> {
-                            if (pbTorApp != null && mAdapter != null) {
-                                pbTorApp.setIndeterminate(false);
-                                pbTorApp.setVisibility(View.GONE);
-
-                                syncAppsWithSelectedChips();
-
-                                mAdapter.notifyDataSetChanged();
-                            }
-                        });
-                    }
+                    });
 
                 }
 
             } catch (Exception e) {
                 loge("UnlockTorAppsFragment getDeviceApps", e, true);
             } finally {
-                if (reentrantLock.isLocked()) {
+                if (reentrantLock.isHeldByCurrentThread()) {
                     reentrantLock.unlock();
                 }
             }
 
-            System.gc();
-
             return null;
         });
+        if (initialLoading) {
+            task = submitted;
+        } else {
+            refreshTask = submitted;
+        }
 
+    }
+
+    private void applyInstalledApps(List<ApplicationData> installedApps, boolean initialLoading) {
+        // Commit on the main thread so filtering, edits and onStop see a complete snapshot.
+        Map<Integer, TorAppData> previous = new HashMap<>();
+        if (!initialLoading) {
+            List<TorAppData> existing = savedAppsUnlockWhenSearch == null
+                    ? appsUnlock : savedAppsUnlockWhenSearch;
+            for (TorAppData app : existing) {
+                previous.put(app.getUid(), app);
+            }
+        }
+        List<TorAppData> replacement = new ArrayList<>(installedApps.size());
+        for (ApplicationData data : installedApps) {
+            TorAppData app = previous.get(data.getUid());
+            if (app == null) {
+                app = createTorAppData(data);
+            }
+            replacement.add(app);
+        }
+        appsUnlock.clear();
+        appsUnlock.addAll(replacement);
+        savedAppsUnlockWhenSearch = null;
+        appsListComplete = true;
+
+        if (pbTorApp != null && mAdapter != null) {
+            pbTorApp.setIndeterminate(false);
+            pbTorApp.setVisibility(View.GONE);
+            syncAppsWithSelectedChips();
+            if (searchText != null && !searchText.isEmpty()) {
+                searchApps(searchText);
+            }
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     private void syncAppsWithSelectedChips() {
