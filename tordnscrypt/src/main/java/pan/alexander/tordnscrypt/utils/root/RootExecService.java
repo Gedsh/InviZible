@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.root;
@@ -39,9 +39,11 @@ import android.content.SharedPreferences;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.IntentCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.List;
@@ -109,24 +111,25 @@ public class RootExecService extends Service
         super.onDestroy();
     }
 
-    public static void performAction(Context context, Intent intent) {
+    public static boolean performAction(Context context, Intent intent) {
         final PreferenceRepository preferences = App.getInstance().getDaggerComponent().getPreferenceRepository().get();
 
         boolean rootIsAvailable = preferences.getBoolPreference(ROOT_IS_AVAILABLE);
 
-        if ((intent == null) || Objects.equals(intent.getAction(), "") || !rootIsAvailable) return;
+        if ((intent == null) || Objects.equals(intent.getAction(), "") || !rootIsAvailable) return false;
 
 
         logi("RootExecService Root = " + true + " performAction");
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent);
+                return context.startForegroundService(intent) != null;
             } else {
-                context.startService(intent);
+                return context.startService(intent) != null;
             }
         } catch (Exception e) {
             loge("RootExecService performAction", e, true);
+            return false;
         }
     }
 
@@ -155,7 +158,9 @@ public class RootExecService extends Service
             if (rootCommands != null && rootCommands.getCommands() != null) {
                 rootExecutor.execute(
                         rootCommands.getCommands(),
-                        mark
+                        mark,
+                        IntentCompat.getParcelableExtra(intent, RootCommands.RESULT_RECEIVER,
+                                ResultReceiver.class)
                 );
             }
         }

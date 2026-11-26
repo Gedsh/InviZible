@@ -14,15 +14,17 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils.root
 
 import android.content.SharedPreferences
+import android.os.ResultReceiver
 import com.jrummyapps.android.shell.Shell
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import pan.alexander.tordnscrypt.di.CoroutinesModule
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
@@ -42,6 +44,7 @@ import java.lang.Exception
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val ATTEMPTS_TO_OPEN_ROOT_CONSOLE = 5
 private const val ATTEMPTS_TO_EXECUTE_COMMAND = 3
@@ -77,14 +80,16 @@ class RootExecutor @Inject constructor(
     @Volatile
     private var console: Shell.Console? = null
 
-    private val commandsInProgress = MutableSharedFlow<CommandsWithMark>(
-        10,
-        0,
-        BufferOverflow.DROP_OLDEST
-    ).apply {
-        onEach {
+    private val commandsInProgress = Channel<CommandsWithMark>(
+        capacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        onUndeliveredElement = { it.receiver?.send(1, null) }
+    )
+
+    init {
+        commandsInProgress.receiveAsFlow().onEach {
             try {
-                withTimeout(MAX_EXECUTION_TIME_SEC * 1000L) {
+                withTimeout((MAX_EXECUTION_TIME_SEC * 1000L).milliseconds) {
                     executeCommands(it.commands, it.mark)
                 }
             } catch (e: CancellationException) {
@@ -102,6 +107,8 @@ class RootExecutor @Inject constructor(
                 if (e is RootExecService.RootConsoleClosedException) {
                     preferenceRepository.get().setBoolPreference(ROOT_IS_AVAILABLE, false)
                 }
+            } finally {
+                it.receiver?.send(0, null)
             }
         }.catch {
             loge("RootExecutor collect exception", it, true)
@@ -110,14 +117,21 @@ class RootExecutor @Inject constructor(
 
     fun execute(
         commands: List<String>,
-        @RootCommandsMark mark: Int
+        @RootCommandsMark mark: Int,
+        receiver: ResultReceiver?
     ) {
-        commandsInProgress.tryEmit(CommandsWithMark(commands, mark))
+        if (commandsInProgress.trySend(CommandsWithMark(commands, mark, receiver)).isFailure) {
+            receiver?.send(1, null)
+        }
     }
 
-    fun stopExecutor() = coroutineScope.launch {
-        closeRootCommandShell()
-        coroutineScope.cancel()
+    fun stopExecutor() {
+        // Cancellation releases queued receivers as well as the in-progress receiver's finally block.
+        commandsInProgress.cancel()
+        coroutineScope.launch {
+            closeRootCommandShell()
+            coroutineScope.cancel()
+        }
     }
 
     private suspend fun executeCommands(
@@ -145,7 +159,7 @@ class RootExecutor @Inject constructor(
                 }
 
                 if (attempts > 0) {
-                    delay(attempts * 100L)
+                    delay((attempts * 100L).milliseconds)
                 }
 
                 result = executeCommand(command)?.let {
@@ -175,7 +189,7 @@ class RootExecutor @Inject constructor(
 
         updateNotificationProgress(100)
 
-        delay(NOTIFICATION_UPDATE_INTERVAL_MSEC)
+        delay(NOTIFICATION_UPDATE_INTERVAL_MSEC.milliseconds)
 
         if (preferenceRepository.get().getBoolPreference(SAVE_ROOT_LOGS)) {
             saveToFile(commandsFiltered, results)
@@ -199,10 +213,10 @@ class RootExecutor @Inject constructor(
             val delay = defaultPreferences.get().getString(AUTO_START_DELAY, "0")
             delay?.let {
                 if (it != "0") {
-                    delay(it.toLong() * 1000)
+                    delay((it.toLong() * 1000).milliseconds)
                 }
             }
-        } catch (ignored: CancellationException) {
+        } catch (_: CancellationException) {
         } catch (e: Exception) {
             loge("RootExecutor makeAutostartDelay", e)
         }
@@ -243,7 +257,7 @@ class RootExecutor @Inject constructor(
             runCatching {
 
                 if (attempts > 0) {
-                    delay(attempts * 1000L)
+                    delay((attempts * 1000L).milliseconds)
                 }
 
                 attempts++
@@ -356,7 +370,8 @@ class RootExecutor @Inject constructor(
 
     data class CommandsWithMark(
         val commands: List<String>,
-        val mark: Int
+        val mark: Int,
+        val receiver: ResultReceiver?
     )
 
     data class ExecutionResult(
