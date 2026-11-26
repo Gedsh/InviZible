@@ -32,11 +32,11 @@ import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
 import pan.alexander.tordnscrypt.di.SharedPreferencesModule
-import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData
 import pan.alexander.tordnscrypt.utils.Utils.allowInteractAcrossUsersPermissionIfRequired
 import pan.alexander.tordnscrypt.utils.Utils.getUidForName
+import pan.alexander.tordnscrypt.utils.Utils.isInteractAcrossUsersPermissionGranted
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
 import pan.alexander.tordnscrypt.utils.logger.Logger.logw
@@ -49,6 +49,9 @@ import javax.inject.Inject
 import javax.inject.Named
 
 private const val ON_APP_ADDED_REFRESH_PERIOD_MSEC = 250
+private const val UIDS_PER_USER = 100_000
+// System query flag, unavailable in the public SDK. Requires INTERACT_ACROSS_USERS.
+private const val MATCH_ANY_USER = 0x00400000
 private val pattern: Pattern = Pattern.compile("UserHandle\\{(\\d+)\\}")
 private val captivePortalPattern = Pattern.compile("^com\\.(\\s+\\.)?android.captiveportallogin$")
 private val reentrantLock = ReentrantLock()
@@ -57,7 +60,7 @@ class InstalledApplicationsManager private constructor(
     private var onAppAddListener: OnAppAddListener?,
     private val activeApps: Set<String>,
     private val showSpecialApps: Boolean,
-    private var iconIsRequired: Boolean
+    private val iconIsRequired: Boolean
 ) {
 
     @Inject
@@ -81,26 +84,28 @@ class InstalledApplicationsManager private constructor(
     }
 
     private val ownUID = pathVars.appUid
-    private var multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, true)
+    private val multiUserSupport = defaultPreferences.getBoolean(MULTI_USER_SUPPORT, true)
     private var savedTime = 0L
+    var isInventoryComplete = false
+        private set
+    private var crossUserQueriesAllowed = false
 
     @Suppress("UNNECESSARY_SAFE_CALL", "USELESS_ELVIS")
     fun getInstalledApps(): List<ApplicationData> {
 
+        isInventoryComplete = false
         try {
 
-            if (multiUserSupport && ModulesStatus.getInstance().isRootAvailable) {
-                allowInteractAcrossUsersPermissionIfRequired(context, pathVars)
-            }
+            val permissionRequested = multiUserSupport
+                    && allowInteractAcrossUsersPermissionIfRequired(context, pathVars)
 
             reentrantLock.lockInterruptibly()
+            crossUserQueriesAllowed = multiUserSupport && isInteractAcrossUsersPermissionGranted(context)
 
-            val userUids = arrayListOf<Int>()
+            val userIds = arrayListOf<Int>()
             val packageManager: PackageManager = context.packageManager
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
-                && multiUserSupport
-            ) {
+            if (multiUserSupport) {
                 val userService = context.getSystemService(Context.USER_SERVICE) as UserManager
                 val list = userService.userProfiles
 
@@ -110,36 +115,22 @@ class InstalledApplicationsManager private constructor(
                         if (m.find()) {
                             val id = m.group(1)?.toLong()
                             if (id != null && id <= Int.MAX_VALUE) {
-                                userUids.add(id.toInt())
+                                userIds.add(id.toInt())
                             }
                         }
                     }
                 }
 
-                if (userUids.size > 1) {
-                    sessionStore.save(MULTIPLE_USERS_EXISTS, true)
-                } else {
-                    sessionStore.save(MULTIPLE_USERS_EXISTS, false)
-                }
+                sessionStore.save(MULTIPLE_USERS_EXISTS, userIds.size > 1)
 
-                logi("Devise Users: ${userUids.joinToString()}")
+                logi("Device users: ${userIds.joinToString()}")
             }
 
-            var pkgManagerFlags = PackageManager.GET_META_DATA
-
-            pkgManagerFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                pkgManagerFlags or PackageManager.MATCH_UNINSTALLED_PACKAGES or PackageManager.MATCH_DISABLED_COMPONENTS
-            } else {
-                @Suppress("DEPRECATION")
-                pkgManagerFlags or PackageManager.GET_UNINSTALLED_PACKAGES
-            }
-
-            val installedApps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                packageManager.getInstalledApplications(
-                    PackageManager.ApplicationInfoFlags.of(pkgManagerFlags.toLong())
-                )
-            } else {
-                packageManager.getInstalledApplications(pkgManagerFlags)
+            val hasOtherProfiles = userIds.any { it != ownUID / UIDS_PER_USER }
+            val installedApps = loadApplications(packageManager, crossUserQueriesAllowed && hasOtherProfiles)
+            // RootCommands is asynchronous: a pre-grant snapshot is not a complete cross-user scan.
+            if (hasOtherProfiles && permissionRequested && !crossUserQueriesAllowed) {
+                isInventoryComplete = false
             }
 
             val userAppsMap = hashMapOf<Int, ApplicationData>()
@@ -249,12 +240,12 @@ class InstalledApplicationsManager private constructor(
                     }
                 }
 
-                if (userUids.size > 1 || userUids.getOrElse(0) { 0 } != 0) {
+                if (userIds.size > 1 || userIds.getOrElse(0) { 0 } != 0) {
                     val singleAppMultiUserAppsMap: Map<Int, ApplicationData> = checkPartOfMultiUser(
                         applicationInfo,
                         name,
                         icon,
-                        userUids,
+                        userIds,
                         packageManager,
                         multiUserAppsMap
                     )
@@ -328,6 +319,7 @@ class InstalledApplicationsManager private constructor(
 
             return applications.sorted()
         } catch (e: Exception) {
+            isInventoryComplete = false
             loge("InstalledApplications getInstalledApps", e)
         } finally {
             onAppAddListener = null
@@ -337,6 +329,37 @@ class InstalledApplicationsManager private constructor(
         }
         return emptyList()
     }
+
+    private fun loadApplications(
+        packageManager: PackageManager,
+        acrossProfiles: Boolean
+    ): List<ApplicationInfo> {
+        var flags = PackageManager.GET_META_DATA
+        flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            flags or PackageManager.MATCH_UNINSTALLED_PACKAGES or PackageManager.MATCH_DISABLED_COMPONENTS
+        } else {
+            @Suppress("DEPRECATION")
+            flags or PackageManager.GET_UNINSTALLED_PACKAGES
+        }
+        isInventoryComplete = true
+        if (acrossProfiles) {
+            try {
+                return queryApplications(packageManager, flags or MATCH_ANY_USER)
+            } catch (e: SecurityException) {
+                // The permission may have changed, or the device may impose additional restrictions.
+                isInventoryComplete = false
+                logw("InstalledApplications cross-profile query", e)
+            }
+        }
+        return queryApplications(packageManager, flags)
+    }
+
+    private fun queryApplications(packageManager: PackageManager, flags: Int): List<ApplicationInfo> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(flags.toLong()))
+        } else {
+            packageManager.getInstalledApplications(flags)
+        }
 
     private fun isAppUseInternet(
         packageManager: PackageManager,
@@ -365,7 +388,7 @@ class InstalledApplicationsManager private constructor(
                     }
                 }
             }
-        } catch (ignored: PackageManager.NameNotFoundException) {
+        } catch (_: PackageManager.NameNotFoundException) {
             useInternet = true
         } catch (e: Exception) {
             useInternet = true
@@ -391,16 +414,16 @@ class InstalledApplicationsManager private constructor(
         applicationInfo: ApplicationInfo,
         name: String,
         icon: Drawable?,
-        userUids: List<Int>,
+        userIds: List<Int>,
         packageManager: PackageManager,
         multiUserAppsMap: Map<Int, ApplicationData>
     ): Map<Int, ApplicationData> {
 
         val singleAppMultiUserAppsMap = hashMapOf<Int, ApplicationData>()
 
-        for (userUid in userUids) {
+        for (userId in userIds) {
 
-            if (userUid == 0) {
+            if (userId == ownUID / UIDS_PER_USER) {
                 continue
             }
 
@@ -409,13 +432,15 @@ class InstalledApplicationsManager private constructor(
                     appInfo = applicationInfo,
                     name = name,
                     icon = icon,
-                    userUid = userUid,
+                    userId = userId,
                     packageManager = packageManager,
                     multiUserAppsMap = multiUserAppsMap,
                     singleAppMultiUserAppsMap = singleAppMultiUserAppsMap
                 )
-            } catch (ignored: SecurityException) {
+            } catch (_: SecurityException) {
+                if (crossUserQueriesAllowed) isInventoryComplete = false
             } catch (e: Exception) {
+                isInventoryComplete = false
                 loge("InstalledApplications checkPartOfMultiUser", e)
             }
         }
@@ -427,16 +452,20 @@ class InstalledApplicationsManager private constructor(
         appInfo: ApplicationInfo,
         name: String,
         icon: Drawable?,
-        userUid: Int,
+        userId: Int,
         packageManager: PackageManager,
         multiUserAppsMap: Map<Int, ApplicationData>,
         singleAppMultiUserAppsMap: HashMap<Int, ApplicationData>
     ) {
-        val applicationUIDLong = "$userUid${appInfo.uid}".toLong()
-        if (applicationUIDLong > Int.MAX_VALUE) return
+        val applicationUIDLong = userId.toLong() * UIDS_PER_USER + appInfo.uid % UIDS_PER_USER
+        if (applicationUIDLong < 0 || applicationUIDLong > Int.MAX_VALUE) {
+            isInventoryComplete = false
+            return
+        }
         val applicationUID = applicationUIDLong.toInt()
 
         val packages = packageManager.getPackagesForUid(applicationUID) ?: return
+        if (packages.isEmpty()) return
 
         val system = isAppSystem(appInfo)
         val useInternet = isAppUseInternet(packageManager, appInfo)
@@ -452,7 +481,7 @@ class InstalledApplicationsManager private constructor(
             hasInternetPermission = useInternet,
             active = activeApps.contains(applicationUID.toString()),
             archived = archived,
-            user = userUid
+            user = userId
         )
         singleAppMultiUserAppsMap[applicationUID] = appData
         if (!multiUserAppsMap.containsKey(applicationUID)) {
@@ -462,18 +491,18 @@ class InstalledApplicationsManager private constructor(
 
     private fun getKnownApplications(): ArrayList<ApplicationData> {
         val defaultIcon = ContextCompat.getDrawable(context, android.R.drawable.sym_def_app_icon)
-        val userId = ownUID / 100_000
-        val adb = getUidForName("adb", 1011 + userId * 100_000)
-        val media = getUidForName("media", 1013 + userId * 100_000)
-        val vpn = getUidForName("vpn", 1016 + userId * 100_000)
-        val drm = getUidForName("drm", 1019 + userId * 100_000)
-        val mdns = getUidForName("mdnsr", 1020 + userId * 100_000)
-        val gps = getUidForName("gps", 1021 + userId * 100_000)
-        val dns = getUidForName("dns", 1051 + userId * 100_000)
-        val dnsTether = getUidForName("dns_tether", 1052 + userId * 100_000)
-        val shell = getUidForName("shell", 2000 + userId * 100_000)
-        val clat = getUidForName("clat", 1029 + userId * 100_000)
-        val nobody = getUidForName("nobody", 9999 + userId * 100_000)
+        val userId = ownUID / UIDS_PER_USER
+        val adb = getUidForName("adb", 1011 + userId * UIDS_PER_USER)
+        val media = getUidForName("media", 1013 + userId * UIDS_PER_USER)
+        val vpn = getUidForName("vpn", 1016 + userId * UIDS_PER_USER)
+        val drm = getUidForName("drm", 1019 + userId * UIDS_PER_USER)
+        val mdns = getUidForName("mdnsr", 1020 + userId * UIDS_PER_USER)
+        val gps = getUidForName("gps", 1021 + userId * UIDS_PER_USER)
+        val dns = getUidForName("dns", 1051 + userId * UIDS_PER_USER)
+        val dnsTether = getUidForName("dns_tether", 1052 + userId * UIDS_PER_USER)
+        val shell = getUidForName("shell", 2000 + userId * UIDS_PER_USER)
+        val clat = getUidForName("clat", 1029 + userId * UIDS_PER_USER)
+        val nobody = getUidForName("nobody", 9999 + userId * UIDS_PER_USER)
 
         val specialDataApps = arrayListOf(
             ApplicationData(

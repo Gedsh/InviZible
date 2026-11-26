@@ -98,6 +98,7 @@ public class ServiceVPNHandler extends Handler {
     public Lazy<Handler> handler;
 
     private final List<Rule> listRule = new CopyOnWriteArrayList<>();
+    private final Rule.Inventory appInventory = new Rule.Inventory();
     @NonNull
     private final ServiceVPN serviceVPN;
     private ServiceVPN.Builder last_builder = null;
@@ -233,7 +234,7 @@ public class ServiceVPNHandler extends Handler {
 
     void startPrepared(VpnPreferenceHolder preferences) {
         listRule.clear();
-        listRule.addAll(Rule.getRules(serviceVPN));
+        listRule.addAll(appInventory.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
 
         last_builder = vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule);
@@ -324,7 +325,7 @@ public class ServiceVPNHandler extends Handler {
 
     ReloadPlan prepareReload(VpnPreferenceHolder preferences) {
         listRule.clear();
-        listRule.addAll(Rule.getRules(serviceVPN));
+        listRule.addAll(appInventory.getRules(serviceVPN));
         List<String> listAllowed = getAllowedRules();
         return new ReloadPlan(vpnBuilder.get().getBuilder(serviceVPN, listAllowed, listRule), listAllowed);
     }
