@@ -1138,6 +1138,16 @@ Both app build files register `tests/handler/src/androidTest/java` as an
 These app tests are separate from the `:native-tests` suite above. Select the
 appropriate app build/signing configuration for your checkout when running them.
 
+`pan.alexander.tordnscrypt.modules.ModulesReceiverPackageTest` exercises package
+change handling and records the real VPN helper's service requests. In VPN mode,
+`PACKAGE_REMOVED` and `PACKAGE_ADDED` events with `EXTRA_REPLACING=true` do not
+reload the VPN. Ordinary installs and uninstalls retain their immediate reload
+requests; root-mode handling is unchanged. Six cases cover both replacement
+events, replacement addition without a preceding removal, ordinary installs and
+uninstalls, absent replacement extras and overlapping updates mixed with other
+package changes. The tests do not broadcast package changes or start a VPN. No timer,
+pending-package collection or additional work on packet processing is introduced.
+
 The same app instrumentation source directory also contains fifteen boot-recovery
 regressions. `BootCompleteManagerTest` records service requests without launching
 them and verifies that VPN/TTL recovery targets the manifest-declared `ServiceVPN`,
@@ -1151,5 +1161,5 @@ intents must also preserve an accepted START or RELOAD, while bootstrap and reco
 after STOP remain available. Terminal startup failures release the recovery guard
 when no worker remains; a running tunnel or a newer command keeps its protection.
 The handler tests also check terminal failure notification and distinguish it from
-cleanup retries. The complete app instrumentation suite has twenty tests;
-omit the class filter above to run all of them.
+cleanup retries. Omit the class filter above to run the complete app
+instrumentation suite.

@@ -1150,6 +1150,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         logi("ModulesReceiver packageChanged " + intent);
 
         if (isVpnMode()) {
+            if (intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
+                return;
+            }
             if (Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction())) {
                 reload("Package added", context);
             } else if (Intent.ACTION_PACKAGE_REMOVED.equals(intent.getAction())) {
