@@ -148,6 +148,7 @@ void test_udp_proxy_round_trip(const struct arguments *args, int kind);
 void test_udp_proxy_handshake(const struct arguments *args, int version);
 void test_proxy_mtu(const struct arguments *args);
 void test_tcp_syn_ack_mss(const struct arguments *args);
+void test_tcp_proxy_families(const struct arguments *args);
 bool limit_proxy_control_send(int fd, size_t *length);
 void test_udp_proxy_failures(const struct arguments *args, int kind);
 void test_udp_proxy_capacity(const struct arguments *args, int kind);

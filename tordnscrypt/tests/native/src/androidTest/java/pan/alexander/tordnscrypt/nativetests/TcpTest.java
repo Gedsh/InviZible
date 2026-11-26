@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 /** Regressions for tcp.c. */
 @RunWith(AndroidJUnit4.class)
 public final class TcpTest extends NativeTestSupport {
+    @Test public void externalProxyTransportFamilyIsIndependentOfDestination() { check("tcpProxyFamilies"); }
     @Test public void validatedConfirmedTrafficRefreshesEvidenceWithThrottle() { check("tcpUidActivity"); }
     @Test public void synAckAdvertisesNetworkOrderMssForBothProxyModes() { check("tcpSynAckMss"); }
     @Test public void socketErrorsSendResetWithoutUnquotedIcmp() { check("tcpSocketErrorReset"); }

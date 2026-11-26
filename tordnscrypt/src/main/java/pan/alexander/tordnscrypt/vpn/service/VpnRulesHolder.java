@@ -210,8 +210,7 @@ public class VpnRulesHolder {
                 !vpnPreferences.getUseIPv6Tor()
                 || fixTTLForPacket
                 || (vpnPreferences.getUseProxy()
-                && (!vpnPreferences.getProxyAddress().equals(LOOPBACK_ADDRESS)
-                || vpnPreferences.getBlockIPv6DnsCrypt())))
+                && vpnPreferences.getBlockIPv6DnsCrypt()))
                 && (packet.saddr.contains(":") || packet.daddr.contains(":"))) {
             logi("Block ipv6 " + packet);
         } else if (vpnPreferences.getBlockHttp() && packet.dport == 80

@@ -27,6 +27,8 @@ static const char *run_case(const char *id) {
     struct arguments args = {.ctx = &ctx, .tun = -1, .fwd53 = 1, .rcode = 3};
     if (strcmp(id, "tcpSynAckMss") == 0)
         test_tcp_syn_ack_mss(&args);
+    else if (strcmp(id, "tcpProxyFamilies") == 0)
+        test_tcp_proxy_families(&args);
     else if (strcmp(id, "proxyMtu") == 0)
         test_proxy_mtu(&args);
     else if (strcmp(id, "jniUdpProxy") == 0)

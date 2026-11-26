@@ -38,6 +38,28 @@ routes, so negotiation failures never fall back to direct traffic. ICMP proxying
 is still unsupported. DNS replies received through the relay use the existing
 filtering and mapping-cache parser without additional DNS lookups.
 
+External SOCKS5 proxy endpoints may use a different address family from the app
+destination. TCP selects the proxy transport family from its numeric address,
+while SOCKS requests retain the original destination family. CONNECT replies
+are validated using their own IPv4/IPv6 bound-address type, independently of the
+destination. Existing mapped
+loopback behavior for `127.0.0.1` is preserved. Invalid proxy addresses fail
+without attempting a connection or falling back to direct traffic. UID recovery
+checks the actual proxy endpoint family and port; matching routes remain open,
+while changed endpoints require reconnecting. UDP independently selects the
+control and negotiated relay families. A remote proxy address no longer blocks
+IPv6 app traffic by itself; explicit IPv6-blocking settings still apply.
+Reaching an IPv6 destination over an IPv4 proxy transport requires the proxy to
+provide IPv6 egress; UDP also requires a reachable relay and UDP ASSOCIATE support.
+These changes add no timers, owner lookups or per-packet allocations.
+The TCP regression uses real local IPv4/IPv6 listeners for all destination/proxy
+family combinations, verifies destination encoding, differing CONNECT reply
+families, stream data and invalid-address cleanup, and extends UID recovery
+coverage with matching/mismatching remote proxy ports. App policy cases
+cover both transports/families, remote/local proxies, explicit IPv6 blocks,
+DNSCrypt forwarding and bypassed apps. These fixtures do not establish remote
+proxy connectivity or IPv6 egress on an external network.
+
 The VPN interface MTU is always 1500, including with Tor or an external SOCKS5
 proxy enabled. The builder and native TCP MSS calculations use the same constant;
 proxy toggles do not change the MTU or require interface replacement for that reason.
@@ -880,7 +902,7 @@ The IP, DNS, TCP/UDP activity and session regressions cover:
 - Unchanged packet bytes, policy and resource balance, and absence of temporary
   UID/capacity diagnostic output.
 
-The full run contains 367 tests plus the optional comparison test. Inference
+The full run contains 368 tests plus the optional comparison test. Inference
 failures retain the existing `Packet uid can not be restored` message.
 
 Locally generated ICMP errors share a per-context token bucket across IPv4/IPv6

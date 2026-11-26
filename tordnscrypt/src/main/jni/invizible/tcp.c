@@ -810,10 +810,9 @@ void check_tcp_socket_with_capacity(const struct arguments *args,
                             }
 
                         } else if (s->tcp.socks5 == SOCKS5_CONNECT &&
-                                   (bytes == 6 + (s->tcp.version == 4 ? 4 : 16) ||
-                                    //for IPv4-mapped IPv6 address proxy
-                                    (s->tcp.version == 6 && bytes == 6 + 4)) &&
-                                   buffer[0] == 5) {
+                                   ((bytes == 10 && buffer[3] == 1) ||
+                                    (bytes == 22 && buffer[3] == 4)) &&
+                                   buffer[0] == 5 && buffer[2] == 0) {
                             if (buffer[1] == 0) {
                                 s->tcp.socks5 = SOCKS5_CONNECTED;
                                 log_android(ANDROID_LOG_INFO, "%s SOCKS5 connected", tcp_socket_text(&diagnostic));
@@ -1138,6 +1137,8 @@ static bool tcp_uid_route_matches(const struct arguments *args, const struct ng_
         }
         if (target != NULL && version == 6 && strcmp(target, LOOPBACK_ADDRESS) == 0)
             target = route == TCP_ROUTE_TOR ? LOOPBACK_ADDRESS_IPv6 : LOOPBACK_ADDRESS_MAPPED_IPv6;
+        if (route == TCP_ROUTE_PROXY)
+            version = strchr(target, ':') == NULL ? 4 : 6;
     }
     if (route != tcp->route || (route == TCP_ROUTE_TOR && tor_isolate_uid))
         return false; // An established stream cannot change transport or isolation credentials.
@@ -1822,6 +1823,24 @@ static int open_tcp_socket_with_error(const struct arguments *args,
         version = (strstr(redirect->raddr, ":") == NULL ? 4 : 6);
     }
 
+    char dest[INET6_ADDRSTRLEN + 1];
+    if (cur->version == 4)
+        inet_ntop(AF_INET, &cur->daddr.ip4, dest, sizeof(dest));
+    else
+        inet_ntop(AF_INET6, &cur->daddr.ip6, dest, sizeof(dest));
+
+    bool redirect_to_tor = false, redirect_to_proxy = false;
+    if (redirect == NULL && tcp_socks_eligible(cur, dest)) {
+        if (*tor_socks5_addr && tor_socks5_port)
+            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest, ntohs(cur->dest));
+        if (*proxy_socks5_addr && proxy_socks5_port)
+            redirect_to_proxy = is_redirect_to_proxy(args, cur->uid, dest, ntohs(cur->dest));
+    }
+    // The SOCKS destination retains cur->version. Only the connection to the
+    // external proxy uses its endpoint family; preserve mapped local loopback.
+    if (redirect_to_proxy && !redirect_to_tor && strcmp(proxy_socks5_addr, LOOPBACK_ADDRESS) != 0)
+        version = strchr(proxy_socks5_addr, ':') == NULL ? 4 : 6;
+
     // Get TCP socket
     int sock = socket(version == 4 ? PF_INET : PF_INET6, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (sock < 0) {
@@ -1850,31 +1869,12 @@ static int open_tcp_socket_with_error(const struct arguments *args,
         return -1;
     }
 
-    char dest[INET6_ADDRSTRLEN + 1];
-    if (cur->version == 4) {
-        inet_ntop(AF_INET, &cur->daddr.ip4, dest, sizeof(dest));
-    } else {
-        inet_ntop(AF_INET6, &cur->daddr.ip6, dest, sizeof(dest));
-    }
-
     // Build target address
     struct sockaddr_in addr4 = {0};
     struct sockaddr_in6 addr6 = {0};
     const char *route = (redirect == NULL ? "direct" : "redirect");
     uint8_t selected_route = redirect == NULL ? TCP_ROUTE_DIRECT : TCP_ROUTE_REDIRECT;
     if (redirect == NULL) {
-
-        bool socks_eligible = tcp_socks_eligible(cur, dest);
-
-        bool redirect_to_tor = false;
-        if (socks_eligible && *tor_socks5_addr && tor_socks5_port) {
-            redirect_to_tor = is_redirect_to_tor(args, cur->uid, dest, ntohs(cur->dest));
-        }
-
-        bool redirect_to_proxy = false;
-        if (socks_eligible && *proxy_socks5_addr && proxy_socks5_port) {
-            redirect_to_proxy = is_redirect_to_proxy(args, cur->uid, dest, ntohs(cur->dest));
-        }
 
         if (redirect_to_tor) {
             route = "tor";
@@ -1901,18 +1901,24 @@ static int open_tcp_socket_with_error(const struct arguments *args,
             log_android(ANDROID_LOG_INFO, "TCP%d SOCKS5 to %s/%u",
                         version, proxy_socks5_addr, proxy_socks5_port);
 
+            int parsed;
             if (version == 4) {
                 addr4.sin_family = AF_INET;
-                inet_pton(AF_INET, proxy_socks5_addr, &addr4.sin_addr);
+                parsed = inet_pton(AF_INET, proxy_socks5_addr, &addr4.sin_addr);
                 addr4.sin_port = htons(proxy_socks5_port);
-            } else if (strcmp(proxy_socks5_addr, LOOPBACK_ADDRESS) == 0) {
-                addr6.sin6_family = AF_INET6;
-                inet_pton(AF_INET6, LOOPBACK_ADDRESS_MAPPED_IPv6, &addr6.sin6_addr);
-                addr6.sin6_port = htons(proxy_socks5_port);
             } else {
                 addr6.sin6_family = AF_INET6;
-                inet_pton(AF_INET6, proxy_socks5_addr, &addr6.sin6_addr);
+                const char *target = strcmp(proxy_socks5_addr, LOOPBACK_ADDRESS) == 0
+                                     ? LOOPBACK_ADDRESS_MAPPED_IPv6 : proxy_socks5_addr;
+                parsed = inet_pton(AF_INET6, target, &addr6.sin6_addr);
                 addr6.sin6_port = htons(proxy_socks5_port);
+            }
+            if (parsed != 1) {
+                log_android(ANDROID_LOG_ERROR, "TCP invalid SOCKS5 proxy address");
+                close(sock);
+                *connect_error_out = EINVAL;
+                errno = EINVAL;
+                return -1;
             }
         } else {
             if (version == 4) {

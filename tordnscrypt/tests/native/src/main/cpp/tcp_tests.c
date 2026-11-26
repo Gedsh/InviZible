@@ -1,5 +1,93 @@
 #include "test_support.h"
 
+void test_tcp_proxy_families(const struct arguments *args) {
+#ifndef INVIZIBLE_BASELINE_TESTS
+    extern char proxy_socks5_addr[];
+    extern int proxy_socks5_port;
+    real_network = 1;
+    mock_uid_routes = uid_route_proxy = true;
+    for (int version = 4; version <= 6; version += 2)
+        for (int family = AF_INET; family <= AF_INET6; family += AF_INET6 - AF_INET) {
+            struct sockaddr_storage address = {0};
+            socklen_t length;
+            const char *target = family == AF_INET ? "127.0.0.2" : "::1";
+            if (family == AF_INET) {
+                struct sockaddr_in *a = (void *) &address;
+                a->sin_family = AF_INET;
+                assert(inet_pton(AF_INET, target, &a->sin_addr) == 1);
+                length = sizeof(*a);
+            } else {
+                struct sockaddr_in6 *a = (void *) &address;
+                a->sin6_family = AF_INET6;
+                assert(inet_pton(AF_INET6, target, &a->sin6_addr) == 1);
+                length = sizeof(*a);
+            }
+            int listener = socket(family, SOCK_STREAM | SOCK_CLOEXEC, 0);
+            assert(listener >= 0 && bind(listener, (struct sockaddr *) &address, length) == 0);
+            assert(getsockname(listener, (struct sockaddr *) &address, &length) == 0);
+            assert(listen(listener, 1) == 0);
+            strcpy(proxy_socks5_addr, target);
+            proxy_socks5_port = ntohs(family == AF_INET ? ((struct sockaddr_in *) &address)->sin_port
+                                                       : ((struct sockaddr_in6 *) &address)->sin6_port);
+            struct tcp_session tcp = {.version = version, .uid = own_uid + 1, .dest = htons(443)};
+            assert(inet_pton(version == 4 ? AF_INET : AF_INET6,
+                             version == 4 ? "192.0.2.1" : "2001:db8::1", &tcp.daddr) == 1);
+            int fd = open_tcp_socket(args, &tcp, NULL);
+            assert(fd >= 0);
+            readable(listener);
+            int peer = accept(listener, NULL, NULL);
+            assert(peer >= 0);
+            struct sockaddr_storage connected = {0}; socklen_t connected_length = sizeof(connected);
+            assert(getpeername(fd, (struct sockaddr *) &connected, &connected_length) == 0);
+            assert(connected.ss_family == family);
+            int tunnel[2]; assert(pipe(tunnel) == 0);
+            struct arguments running = *args; running.tun = tunnel[1];
+            struct ng_session s = {.protocol = IPPROTO_TCP, .socket = fd};
+            s.tcp = tcp;
+            s.tcp.state = TCP_LISTEN; s.tcp.socks5 = SOCKS5_HELLO;
+            s.tcp.local_seq = 2000; s.tcp.remote_seq = 1001;
+            s.tcp.source = htons(12345); s.tcp.recv_window = 65535;
+            s.tcp.mss = 1200;
+            struct epoll_event event = {.events = EPOLLIN, .data.ptr = &s};
+            const uint8_t hello[] = {5, 0};
+            assert(send(peer, hello, sizeof(hello), 0) == sizeof(hello));
+            readable(fd);
+            check_tcp_socket(&running, &event, -1);
+            uint8_t wire[22]; size_t request_length = version == 4 ? 10 : 22;
+            readable(peer);
+            assert(recv(peer, wire, request_length, MSG_WAITALL) == (ssize_t) request_length);
+            assert(wire[0] == 5 && wire[1] == 1 && wire[3] == (version == 4 ? 1 : 4));
+            assert(memcmp(wire + 4, &tcp.daddr, version == 4 ? 4 : 16) == 0);
+            assert(load16(wire + request_length - 2) == 443);
+            // The server's bound-address family need not match the destination.
+            uint8_t reply[22] = {5, 0, 0, family == AF_INET ? 1 : 4};
+            size_t reply_length = family == AF_INET ? 10 : 22;
+            assert(send(peer, reply, reply_length, 0) == (ssize_t) reply_length);
+            readable(fd);
+            check_tcp_socket(&running, &event, -1);
+            assert(s.tcp.socks5 == SOCKS5_CONNECTED && s.tcp.state == TCP_SYN_RECV);
+            _Alignas(8) uint8_t output[128];
+            tun_packet(tunnel[0], output, version, IPPROTO_TCP);
+            const uint8_t byte = 42; uint8_t received = 0;
+            assert(send(fd, &byte, 1, MSG_NOSIGNAL) == 1);
+            readable(peer);
+            assert(recv(peer, &received, 1, 0) == 1 && received == byte);
+            close(peer); close(fd); close(listener); close(tunnel[0]); close(tunnel[1]);
+            assert(sockets == 0 && allocations == 0 && string_refs == 0);
+        }
+    // Invalid numeric proxy addresses must fail before attempting a connection.
+    for (int version = 4; version <= 6; version += 2) {
+        struct tcp_session tcp = {.version = version, .uid = own_uid + 1, .dest = htons(443)};
+        strcpy(proxy_socks5_addr, "invalid"); proxy_socks5_port = 1080;
+        int previous_connect = connect_fd;
+        assert(open_tcp_socket(args, &tcp, NULL) == -1 && errno == EINVAL);
+        assert(connect_fd == previous_connect && sockets == 0 && allocations == 0);
+    }
+    mock_uid_routes = uid_route_proxy = false;
+    *proxy_socks5_addr = 0; proxy_socks5_port = 0;
+#endif
+}
+
 void test_tcp_syn_ack_mss(const struct arguments *args) {
 #ifndef INVIZIBLE_BASELINE_TESTS
     extern char proxy_socks5_addr[];
@@ -2381,7 +2469,7 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 assert(allocations == 0 && sockets == 0);
             }
         }
-        int scenarios = kind == 0 ? 4 : kind == 1 ? 14 : kind == 2 ? 24 : kind == 3 ? 19 : kind == 4 ? 6 : 84;
+        int scenarios = kind == 0 ? 4 : kind == 1 ? 18 : kind == 2 ? 24 : kind == 3 ? 19 : kind == 4 ? 6 : 84;
         for (int case_index = 0; case_index < scenarios; case_index++) {
             int scenario = kind == 5 ? case_index % 14 : case_index;
             int stream[2], tunnel[2];
@@ -2461,10 +2549,11 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                 // Direct, denied, new Tor/proxy route, retained Tor/proxy, isolation,
                 // route-kind change, retained/changed redirect, and peer-query failure.
                 reset = scenario == 2 || scenario == 3 || scenario == 4 ||
-                        scenario == 6 || scenario == 7 || scenario == 10 || scenario == 11;
+                        scenario == 6 || scenario == 7 || scenario == 10 || scenario == 11 ||
+                        scenario == 15 || scenario == 17;
                 deny_address = scenario == 2;
                 uid_route_tor = scenario == 3 || scenario == 5 || scenario == 6;
-                uid_route_proxy = scenario == 4 || scenario == 7 || scenario == 8;
+                uid_route_proxy = scenario == 4 || scenario == 7 || scenario == 8 || scenario >= 14;
                 if (scenario == 5 || scenario == 6 || scenario == 7)
                     s.tcp.route = TCP_ROUTE_TOR;
                 if (scenario == 8) s.tcp.route = TCP_ROUTE_PROXY;
@@ -2484,6 +2573,13 @@ void test_tcp_uid_retry(struct arguments *args, int kind) {
                         strcpy(policy_redirect.raddr, "::1");
                         uid_peer_address = "::1"; // Explicit IPv4 flow redirected to IPv6.
                     }
+                }
+                if (scenario >= 14) {
+                    // Proxy transport family is independent of the app destination.
+                    s.tcp.route = TCP_ROUTE_PROXY;
+                    strcpy(proxy_socks5_addr, scenario < 16 ? "192.0.2.10" : "2001:db8::10");
+                    uid_peer_address = proxy_socks5_addr;
+                    uid_peer_port = (uint16_t) (1080 + scenario % 2);
                 }
                 if (reset) {
                     const uint8_t queued[] = {1, 2, 3};

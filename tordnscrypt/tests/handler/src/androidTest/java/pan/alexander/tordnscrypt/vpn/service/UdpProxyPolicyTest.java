@@ -76,10 +76,21 @@ public final class UdpProxyPolicyTest {
             return packet(protocol, port, 12345);
         }
         Allowed packet(int protocol, int port, int uid) {
-            Packet packet = new Packet(); packet.version = 4; packet.protocol = protocol;
-            packet.uid = uid; packet.saddr = "10.1.10.1"; packet.daddr = "93.184.216.34";
+            return packet(protocol, port, uid, 4);
+        }
+        Allowed packet(int protocol, int port, int uid, int version) {
+            Packet packet = new Packet(); packet.version = version; packet.protocol = protocol;
+            packet.uid = uid;
+            packet.saddr = version == 4 ? "10.1.10.1" : "fd00::1";
+            packet.daddr = version == 4 ? "93.184.216.34" : "2001:db8::1";
             packet.sport = 40000; packet.dport = port; packet.flags = "";
             return rules.isAddressAllowed(service, packet);
+        }
+        void configureProxy(String address, boolean blockIPv6) {
+            assertTrue(preferences.edit().putString(PROXY_ADDRESS, address)
+                    .putBoolean(DNSCRYPT_BLOCK_IPv6, blockIPv6).commit());
+            service.vpnPreferences = new VpnPreferenceHolder(preferences, repository,
+                    App.getInstance().getDaggerComponent().getPathVars().get());
         }
         @Override public void close() {
             VpnBuilder.vpnDnsSet = dnsSet;
@@ -134,6 +145,44 @@ public final class UdpProxyPolicyTest {
                     f.repository,
                     App.getInstance().getDaggerComponent().getPathVars().get());
             Allowed udp = f.packet(17, 443); assertNotNull(udp); assertFalse(udp.udpProxy);
+        }
+    }
+    @Test public void remoteProxyAllowsBothDestinationFamiliesUnlessExplicitlyBlocked() {
+        try (Fixture f = new Fixture()) {
+            for (String proxy : new String[]{"192.0.2.10", "2001:db8::10", "127.0.0.1"}) {
+                for (boolean blocked : new boolean[]{false, true}) {
+                    f.configureProxy(proxy, blocked);
+                    for (int version : new int[]{4, 6}) {
+                        for (int protocol : new int[]{6, 17}) {
+                            Allowed allowed = f.packet(protocol, 443, 12345, version);
+                            if (blocked && version == 6) {
+                                assertNull(allowed);
+                            } else {
+                                assertNotNull(allowed);
+                                assertEquals(protocol == 17, allowed.udpProxy);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @Test public void remoteProxyPreservesIpv6DnsForwardingAndBypassedApps() {
+        try (Fixture f = new Fixture()) {
+            f.configureProxy("192.0.2.10", false);
+            f.modules.setDnsCryptState(ModuleState.RUNNING);
+            Forward forward = new Forward(); forward.raddr = "127.0.0.1"; forward.rport = 5354;
+            f.rules.mapForwardPort.put(53, forward);
+            for (int protocol : new int[]{6, 17}) {
+                Allowed dns = f.packet(protocol, 53, 12345, 6);
+                assertNotNull(dns); assertFalse(dns.udpProxy);
+                assertEquals("127.0.0.1", dns.raddr); assertEquals(5354, dns.rport);
+            }
+            f.service.proxy = false;
+            Allowed bypass = f.packet(17, 443, 12345, 6);
+            assertNotNull(bypass); assertFalse(bypass.udpProxy);
+            f.configureProxy("192.0.2.10", true);
+            assertNull(f.packet(17, 443, 12345, 6));
         }
     }
 }
