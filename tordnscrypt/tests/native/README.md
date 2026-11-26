@@ -1240,11 +1240,19 @@ the run to remove its permission. Without the opt-in argument, this case is skip
 change handling and records the real VPN helper's service requests. In VPN mode,
 `PACKAGE_REMOVED` and `PACKAGE_ADDED` events with `EXTRA_REPLACING=true` do not
 reload the VPN. Ordinary installs and uninstalls retain their immediate reload
-requests; root-mode handling is unchanged. Six cases cover both replacement
+requests. Six cases cover both replacement
 events, replacement addition without a preceding removal, ordinary installs and
 uninstalls, absent replacement extras and overlapping updates mixed with other
 package changes. The tests do not broadcast package changes or start a VPN. No timer,
 pending-package collection or additional work on packet processing is introduced.
+
+`ModulesReceiverRootPackageTest` covers root-mode package events with paused
+dispatchers: replacements invalidate the installed-app inventory and retain name
+refresh, but do not schedule an iptables update. Actual installs and uninstalls,
+including events without the replacement extra, still force an update when the
+optional refresh setting is disabled. Replacement events do not suppress a
+subsequent real uninstall. These tests run no root commands or discovery tasks;
+they verify scheduling, not application of rules to the device's firewall.
 
 The same app instrumentation source directory also contains fifteen boot-recovery
 regressions. `BootCompleteManagerTest` records service requests without launching

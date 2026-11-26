@@ -1177,7 +1177,9 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
             }
         } else if (isRootMode()) {
 
-            updateIptablesRules(true);
+            if (!intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
+                updateIptablesRules(true);
+            }
 
             if (!modulesStatus.isFixTTL()) {
                 installedAppNamesStorage.get().updateAppUidToNames();
