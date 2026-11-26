@@ -169,6 +169,7 @@ android {
         }
         androidTest {
             java.srcDir 'tests/handler/src/androidTest/java'
+            manifest.srcFile 'tests/handler/src/androidTest/AndroidManifest.xml'
         }
     }
 
@@ -227,6 +228,11 @@ dependencies {
     google_playImplementation 'com.android.billingclient:billing:8.0.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+    androidTestCompileOnly files(providers.provider {
+        android.bootClasspath.collect {
+            new File(it.parentFile, 'optional/android.test.mock.jar')
+        }.findAll { it.isFile() }
+    })
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
     implementation 'eu.chainfire:libsuperuser:1.1.1'
     implementation 'com.jrummyapps:android-shell:1.0.1'
