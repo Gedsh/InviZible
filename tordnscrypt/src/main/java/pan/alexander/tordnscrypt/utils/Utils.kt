@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.utils
@@ -42,7 +42,6 @@ import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository
 import pan.alexander.tordnscrypt.modules.ModulesService
-import pan.alexander.tordnscrypt.modules.ModulesStatus
 import pan.alexander.tordnscrypt.settings.PathVars
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_CONNECTIVITY_CHECK
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData.Companion.SPECIAL_UID_NTP
@@ -52,6 +51,7 @@ import pan.alexander.tordnscrypt.utils.Constants.HOST_NAME_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.IPv4_REGEX
 import pan.alexander.tordnscrypt.utils.Constants.NETWORK_STACK_DEFAULT_UID
 import pan.alexander.tordnscrypt.utils.appexit.AppExitDetectService
+import pan.alexander.tordnscrypt.utils.apps.CrossUserPermission
 import pan.alexander.tordnscrypt.utils.filemanager.FileShortener
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.logger.Logger.logi
@@ -60,8 +60,6 @@ import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.ALWAYS_SHOW_HE
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.CHILD_LOCK_PASSWORD
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.DEFAULT_BRIDGES_OBFS
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.OWN_BRIDGES_OBFS
-import pan.alexander.tordnscrypt.utils.root.RootCommands
-import pan.alexander.tordnscrypt.utils.root.RootCommandsMark.NULL_MARK
 import java.io.File
 import java.io.PrintWriter
 import java.net.Inet4Address
@@ -207,7 +205,7 @@ object Utils {
             if (result) {
                 val testFilePath = "$saveDirPath/testFile"
                 val testFile = File(testFilePath)
-                PrintWriter(testFile).print("")
+                PrintWriter(testFile).use { it.print("") }
                 if (!testFile.isFile || !testFile.delete()) {
                     result = false
                     logw("Root Dir is not write accessible!")
@@ -345,22 +343,12 @@ object Utils {
     fun getDnsTetherUid(ownUid: Int) =
         getUidForName("dns_tether", 1052 + ownUid / 100_000 * 100_000)
 
+    /** Returns true when an asynchronous grant request was accepted or is already pending. */
     @JvmStatic
     fun allowInteractAcrossUsersPermissionIfRequired(
         context: Context,
         pathVars: PathVars
-    ) {
-        if (!pathVars.appVersion.endsWith("p")
-            && ModulesStatus.getInstance().isRootAvailable
-            && !isInteractAcrossUsersPermissionGranted(context)
-        ) {
-            val allowAccessToWorkProfileApps = listOf(
-                "pm grant ${context.packageName} android.permission.INTERACT_ACROSS_USERS"
-            )
-            RootCommands.execute(context, allowAccessToWorkProfileApps, NULL_MARK)
-            logi("Grant INTERACT_ACROSS_USERS permission to access applications in work profile")
-        }
-    }
+    ): Boolean = CrossUserPermission.request(context, pathVars)
 
     @JvmStatic
     public fun isInteractAcrossUsersPermissionGranted(context: Context) =
