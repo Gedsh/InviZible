@@ -184,9 +184,6 @@ public class ServiceVPNHandler extends Handler {
                     !hasMessages(VPNCommand.RELOAD.ordinal()) &&
                     !prefs.getBoolean(VPN_SERVICE_ENABLED, false))
                 stopServiceVPN();
-
-            // Request garbage collection
-            System.gc();
         } catch (Throwable ex) {
             serviceVPN.reloading = false;
 

@@ -1125,8 +1125,9 @@ and root operations avoid establishing a VPN or changing iptables. The cases
 cover START after previous-owner cleanup, RELOAD after timeout with exactly one
 tethering block/unblock, cancellation as soon as a delayed STOP is queued, and
 a newer START superseding a waiting RELOAD, and terminal startup failure
-notification. Run them with the app's matching
-debug variant, for example:
+notification. VPN command completion leaves garbage-collection scheduling to
+Android; descriptor and native worker cleanup remain explicit. Run them with
+the app's matching debug variant, for example:
 
 ```sh
 ./gradlew :tordnscrypt:connectedFdroidArmv7aDebugAndroidTest \
