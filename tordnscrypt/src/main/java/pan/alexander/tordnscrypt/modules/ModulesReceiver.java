@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.modules;
@@ -73,7 +73,6 @@ import android.os.PowerManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -100,6 +99,7 @@ import pan.alexander.tordnscrypt.domain.connection_checker.ConnectionCheckerInte
 import pan.alexander.tordnscrypt.domain.connection_checker.OnInternetConnectionCheckedListener;
 import pan.alexander.tordnscrypt.domain.preferences.PreferenceRepository;
 import pan.alexander.tordnscrypt.settings.PathVars;
+import pan.alexander.tordnscrypt.vpn.Rule;
 import pan.alexander.tordnscrypt.settings.firewall.FirewallNotification;
 import pan.alexander.tordnscrypt.utils.ap.InternetSharingChecker;
 import pan.alexander.tordnscrypt.utils.apps.InstalledAppNamesStorage;
@@ -245,6 +245,12 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
         } else if (action.equalsIgnoreCase(Intent.ACTION_PACKAGE_ADDED)
                 || action.equalsIgnoreCase(Intent.ACTION_PACKAGE_REMOVED)) {
             packageChanged(intent);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                && (action.equals(Intent.ACTION_MANAGED_PROFILE_AVAILABLE)
+                || action.equals(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE)
+                || action.equals(Intent.ACTION_MANAGED_PROFILE_UNLOCKED)
+                || action.equals(Intent.ACTION_USER_UNLOCKED))) {
+            Rule.invalidateInstalledApps();
         } else if (action.equalsIgnoreCase(SCREEN_ON_ACTION)
                 || action.equalsIgnoreCase(SCREEN_OFF_ACTION)) {
             interactiveStateChanged(intent);
@@ -385,11 +391,21 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
     }
 
     private void registerPackageChanged() {
+        // Events may have been missed while this receiver was not registered.
+        Rule.invalidateInstalledApps();
         IntentFilter ifPackage = new IntentFilter();
         ifPackage.addAction(Intent.ACTION_PACKAGE_ADDED);
         ifPackage.addAction(Intent.ACTION_PACKAGE_REMOVED);
         ifPackage.addDataScheme("package");
         context.registerReceiver(this, ifPackage);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            IntentFilter ifProfile = new IntentFilter();
+            ifProfile.addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE);
+            ifProfile.addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE);
+            ifProfile.addAction(Intent.ACTION_MANAGED_PROFILE_UNLOCKED);
+            ifProfile.addAction(Intent.ACTION_USER_UNLOCKED);
+            context.registerReceiver(this, ifProfile);
+        }
         commonReceiversRegistered = true;
     }
 
@@ -1149,6 +1165,7 @@ public class ModulesReceiver extends BroadcastReceiver implements OnInternetConn
 
         logi("ModulesReceiver packageChanged " + intent);
 
+        Rule.invalidateInstalledApps();
         if (isVpnMode()) {
             if (intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
                 return;

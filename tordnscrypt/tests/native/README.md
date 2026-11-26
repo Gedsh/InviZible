@@ -1139,6 +1139,103 @@ Both app build files register `tests/handler/src/androidTest/java` as an
 These app tests are separate from the `:native-tests` suite above. Select the
 appropriate app build/signing configuration for your checkout when running them.
 
+`pan.alexander.tordnscrypt.vpn.RuleInventoryTest` covers inventory reuse across
+VPN reloads. Each handler caches only UID/package/display-name identities, without
+icons or a Context, and creates fresh rules from current Tor/proxy preferences.
+Firewall allowlists are still selected from current preferences on every reload.
+Package events, including updates that do not reload the VPN, and receiver
+registration invalidate the inventory. On API 24 and later, profile
+availability/unlock events also invalidate without restarting the VPN; those
+actions are neither registered nor handled on API 23. Profile membership, multi-user support,
+root availability, cross-profile permission and locale are checked on each read.
+An asynchronous cross-profile permission grant therefore refreshes the next read.
+Complete local-only inventories are cached even with multiple profiles and a
+granted cross-user permission. A profile contributes to the caching decision only
+when discovery actually returns application UIDs from it. This also allows reuse
+in Google Play builds without the permission. Synthetic kernel/root/native-system
+identities do not count as cross-profile applications. Inventories containing
+actual foreign application UIDs keep fresh enumeration because this profile's
+package broadcasts cannot invalidate the others reliably. If no foreign apps are
+visible, newly accessible apps are discovered on the next normal invalidation,
+profile/permission change, or handler recreation; no polling is added.
+Partial discovery results remain usable for the current reload but are not cached.
+Only the declared `INTERACT_ACROSS_USERS` permission is checked; no new permission
+is requested. Invalidation during a scan
+leaves that scan's version stale for the next read; failures and empty manager
+results are retried. The cache lives with the handler and adds no packet work,
+timer or periodic scan. Cases cover preference changes, mutable result isolation,
+cache lifetime, lazy invalidation, scan races/failures, scope changes, local-only
+multi-profile reuse (including a work-profile context), cross-profile fallback
+and recovery, incomplete snapshots, package/profile
+dispatch and scope-dependent reuse of a real installed-app enumeration. Device package-manager
+broadcast delivery and actual profile creation/unlock are not simulated by these tests.
+The real-inventory case reports visible profiles, cross-user permission, scan
+completeness and application counts per user under the `InventoryDeviceTest` tag.
+It expects incomplete snapshots to be scanned again even if no foreign UID was
+returned. Optional runner arguments `inventoryProbeUser` and
+`inventoryProbePackage` probe UID-to-package visibility for a package known in
+the current profile; results are diagnostic because private-profile access can
+be denied by the device. These probes do not change permissions or profile state.
+Inventory fixtures and per-user counters use API 23-compatible map lookups,
+without Java collection APIs that require a newer Android runtime.
+
+`pan.alexander.tordnscrypt.utils.apps.InstalledAppsTest` exercises
+the production package-query and profile-mapping helpers with Android framework
+package-manager mocks. Authorized discovery explicitly requests `MATCH_ANY_USER`
+(a system flag passed through the public query API), instead of relying on older
+Android's implicit expansion of `MATCH_UNINSTALLED_PACKAGES`. A rejected query
+falls back to local candidates and marks the scan incomplete; authorized owner
+lookup exceptions also prevent caching. UID mapping uses the target user and the
+source UID's app ID, skips the current profile and includes the parent profile
+when called from a work profile. Cases cover work-only candidates, denied-query
+recovery, system/secondary-profile UIDs, overflow, null/empty owners and partial
+lookup failures. Framework mock stubs are compile-only test inputs from the SDK;
+the test APK requests the optional framework mock library. Newer-Android query
+behavior is modeled on older devices; modern-device validation remains necessary.
+Root permission requests target the app's own user. One request may be pending
+per process; dispatch failure, queue eviction and shutdown release it for retry.
+A private completion receiver checks the actual permission instead of trusting
+command output. A verified grant invalidates the inventory, requests a rules
+refresh if modules are running, and refreshes open app lists while preserving
+unsaved selections. Receivers use the application context or unregister with
+their UI owner. No polling or additional permission is introduced. A scan that
+runs before a requested grant completes is not cached when other profiles exist.
+
+`CrossUserPermissionTest` covers concurrent requests, rejected/exceptional
+dispatch, completion without a grant, retry, stale/duplicate callbacks and refresh
+failure. `RootCommandsDispatchTest` checks dispatch feedback and completion
+receiver parcel delivery without starting a service. `RootExecutorQueueTest`
+checks bounded queue overflow and shutdown release, including sends after closure,
+without opening a root shell. `FirewallPermissionRefreshTest` exercises a real
+inventory refresh and preservation of unsaved selections, followed by ViewModel
+cleanup. `AppsRefreshTest` checks that Tor/proxy list refresh preserves edits
+held in a filtered list's backing collection. Refresh keeps the current list
+editable and saveable until a complete replacement is published on the main
+thread; failed, empty or incomplete refresh scans keep the previous snapshot.
+Both app-list regressions interrupt real discovery at its scan lock to check
+failure recovery. Firewall retains its save prompt during discovery, and Tor's
+`onStop()` saves edited routing/direct-UDP/bypass selections during the blocked
+scan and preserves them after failure. Firewall baseline loading, progress
+callbacks and list publication run on the main thread; only discovery runs on
+the worker. Refresh does not reread or mutate the saved permission baseline.
+Tests check baseline/progress thread ownership and preservation of that baseline
+while save checks overlap a blocked refresh. These controlled tests do not establish
+that a particular device's su manager will authorize the automatic grant; that
+requires a rooted-device check.
+
+`CrossUserPermissionDeviceTest` is an opt-in integration check for a rooted phone
+with a running, accessible secondary profile. Use an isolated app whose application
+ID ends in `.profilescopetest`, begin with `INTERACT_ACROSS_USERS` denied, and pass
+`-Pandroid.testInstrumentationRunnerArguments.crossUserGrantProbe=true` together
+with its class filter. Approve the isolated app's su request if prompted. The test
+uses the production root service to grant only the declared permission, verifies
+inventory invalidation and exactly one refresh notification, checks foreign UIDs
+in the refreshed UI and VPN rules, and preserves an unsaved selection. It does
+not start a VPN or the modules service. Older Android versions may already expose
+foreign apps before the grant, so an increased app count is not required. The test
+restores preferences and closes its root service; uninstall the isolated app after
+the run to remove its permission. Without the opt-in argument, this case is skipped.
+
 `pan.alexander.tordnscrypt.modules.ModulesReceiverPackageTest` exercises package
 change handling and records the real VPN helper's service requests. In VPN mode,
 `PACKAGE_REMOVED` and `PACKAGE_ADDED` events with `EXTRA_REPLACING=true` do not
