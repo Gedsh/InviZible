@@ -8,6 +8,8 @@ import android.content.ContextWrapper;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Parcel;
+import android.os.UserHandle;
 import android.test.mock.MockPackageManager;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -27,8 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 import kotlinx.coroutines.Dispatchers;
+import kotlin.jvm.functions.Function1;
 
 import pan.alexander.tordnscrypt.settings.tor_apps.ApplicationData;
 import pan.alexander.tordnscrypt.settings.tor_apps.TorAppData;
@@ -54,6 +58,7 @@ public final class InstalledAppsTest {
         final List<Integer> flagsSeen = new ArrayList<>();
         final List<Integer> uidsSeen = new ArrayList<>();
         final Map<Integer, String[]> owners = new HashMap<>();
+        final List<String> permissionsSeen = new ArrayList<>();
         boolean rejectCrossUser;
         boolean rejectOwner;
         List<ApplicationInfo> candidates;
@@ -76,6 +81,7 @@ public final class InstalledAppsTest {
         }
 
         @Override public PackageInfo getPackageInfo(String name, int flags) {
+            permissionsSeen.add(name);
             PackageInfo info = new PackageInfo();
             info.requestedPermissions = new String[]{Manifest.permission.INTERNET};
             return info;
@@ -257,6 +263,147 @@ public final class InstalledAppsTest {
         packages.owners.put(1010001, new String[]{"example.foreign"});
         assertNotNull(discover(manager, packages, app(10001, "example.foreign"), 10).get(1010001));
         assertFalse("Fallback must preserve earlier enumeration failure", manager.isInventoryComplete());
+    }
+
+    private static UserHandle user(int id) {
+        // Public parcel API also works on API 23, before getUserHandleForUid was public.
+        Parcel parcel = Parcel.obtain();
+        try {
+            parcel.writeInt(id);
+            parcel.setDataPosition(0);
+            return UserHandle.CREATOR.createFromParcel(parcel);
+        } finally {
+            parcel.recycle();
+        }
+    }
+
+    private static void addProfiles(InstalledApplicationsManager manager, Packages packages,
+                                    Map<Integer, UserHandle> profiles, Map<Integer, ApplicationData> rows,
+                                    Function1<UserHandle, List<ApplicationInfo>> query) throws Exception {
+        Method method = InstalledApplicationsManager.class.getDeclaredMethod("addProfileApplications",
+                Map.class, PackageManager.class, Map.class, Function1.class);
+        method.setAccessible(true);
+        method.invoke(manager, profiles, packages, rows, query);
+    }
+
+    @Test public void launcherFindsWorkOnlyPackageWithoutCrossUserPermission() throws Exception {
+        InstalledApplicationsManager manager = manager();
+        field(manager, "ownUID", 10000);
+        Packages packages = packages();
+        assertEquals(Collections.singletonList(packages.local), load(manager, packages, false));
+        field(manager, "crossUserQueriesAllowed", false);
+        field(manager, "activeApps", Collections.singleton("1018888"));
+        Map<Integer, ApplicationData> rows = new HashMap<>();
+        rows.put(10001, new ApplicationData("Local", "example.local", 10001));
+        List<UserHandle> queried = new ArrayList<>();
+        addProfiles(manager, packages, Collections.singletonMap(10, user(10)), rows, profile -> {
+            queried.add(profile);
+            return Collections.singletonList(app(1018888, "example.work.only"));
+        });
+        assertEquals(Collections.singletonList(user(10)), queried);
+        assertEquals(2, rows.size());
+        assertEquals("example.work.only", rows.get(1018888).getPack());
+        assertEquals(10, rows.get(1018888).getUser());
+        assertTrue(rows.get(1018888).getActive());
+        assertTrue("Direct enumeration must not need a guessed UID owner", packages.uidsSeen.isEmpty());
+        assertTrue(manager.isInventoryComplete());
+    }
+
+    @Test public void launcherDeduplicatesActivitiesAndMergesSharedUidPackages() throws Exception {
+        InstalledApplicationsManager manager = manager();
+        field(manager, "ownUID", 10000);
+        Packages packages = packages();
+        load(manager, packages, false);
+        ApplicationInfo disabled = app(1010001, "example.long.disabled");
+        disabled.enabled = false;
+        ApplicationInfo enabled = app(1010001, "example.a");
+        enabled.flags |= ApplicationInfo.FLAG_SYSTEM;
+        Map<Integer, ApplicationData> rows = new HashMap<>();
+        rows.put(1010001, new ApplicationData("Existing", "example.existing", 1010001));
+        addProfiles(manager, packages, Collections.singletonMap(10, user(10)), rows,
+                profile -> Arrays.asList(disabled, disabled, enabled, enabled));
+        assertEquals(1, rows.size());
+        ApplicationData row = rows.get(1010001);
+        assertEquals("example.a", row.getPack());
+        assertEquals(new HashSet<>(Arrays.asList("Existing", disabled.packageName, enabled.packageName)), row.getNames());
+        assertTrue(row.getSystem());
+        assertFalse(row.getDisabled());
+        assertEquals(Arrays.asList(disabled.packageName, enabled.packageName), packages.permissionsSeen);
+    }
+
+    @Test public void launcherSkipsOwnProfileWrongUidsAndUninstalledRecords() throws Exception {
+        InstalledApplicationsManager manager = manager();
+        field(manager, "ownUID", 10000);
+        Packages packages = packages();
+        load(manager, packages, false);
+        ApplicationInfo removed = app(1010002, "example.removed");
+        removed.flags = ApplicationInfo.FLAG_HAS_CODE | ApplicationInfo.FLAG_STOPPED;
+        ApplicationInfo disabled = app(1010003, "example.disabled");
+        disabled.enabled = false;
+        Map<Integer, UserHandle> profiles = new LinkedHashMap<>();
+        profiles.put(0, user(0));
+        profiles.put(10, user(10));
+        List<UserHandle> queried = new ArrayList<>();
+        Map<Integer, ApplicationData> rows = new HashMap<>();
+        addProfiles(manager, packages, profiles, rows, profile -> {
+            queried.add(profile);
+            return Arrays.asList(app(10001, "example.wrong.profile"), app(-1, "example.invalid"), removed, disabled);
+        });
+        assertEquals(Collections.singletonList(user(10)), queried);
+        assertEquals(Collections.singleton(1010003), rows.keySet());
+        assertTrue(rows.get(1010003).getDisabled());
+        assertEquals(Collections.singletonList(disabled.packageName), packages.permissionsSeen);
+    }
+
+    @Test public void launcherFailureKeepsOtherProfilesAndExistingRows() throws Exception {
+        for (boolean denied : Arrays.asList(true, false)) {
+            InstalledApplicationsManager manager = manager();
+            field(manager, "ownUID", 10000);
+            field(manager, "crossUserQueriesAllowed", true);
+            Packages packages = packages();
+            load(manager, packages, false);
+            Map<Integer, UserHandle> profiles = new LinkedHashMap<>();
+            profiles.put(10, user(10));
+            profiles.put(11, user(11));
+            Map<Integer, ApplicationData> rows = new HashMap<>();
+            ApplicationData existing = new ApplicationData("Existing", "example.existing", 1010001);
+            rows.put(existing.getUid(), existing);
+            addProfiles(manager, packages, profiles, rows, profile -> {
+                if (profile.equals(user(10))) {
+                    if (denied) throw new SecurityException("Injected launcher denial");
+                    throw new IllegalStateException("Injected launcher service failure");
+                }
+                return Collections.singletonList(app(1118888, "example.other.profile"));
+            });
+            assertSame(existing, rows.get(existing.getUid()));
+            assertNotNull(rows.get(1118888));
+            assertEquals("Only unexpected launcher failure makes the scan incomplete",
+                    denied, manager.isInventoryComplete());
+        }
+    }
+
+    @Test public void launcherSuccessDoesNotRepairEarlierEnumerationFailure() throws Exception {
+        InstalledApplicationsManager manager = manager();
+        field(manager, "ownUID", 10000);
+        Packages packages = packages();
+        packages.rejectCrossUser = true;
+        load(manager, packages, true);
+        Map<Integer, ApplicationData> rows = new HashMap<>();
+        addProfiles(manager, packages, Collections.singletonMap(10, user(10)), rows,
+                profile -> Collections.singletonList(app(1018888, "example.work.only")));
+        assertNotNull(rows.get(1018888));
+        assertFalse(manager.isInventoryComplete());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test public void realLauncherQueryWorksForCurrentProfile() throws Exception {
+        InstalledApplicationsManager manager = new InstalledApplicationsManager.Builder().build();
+        Method query = InstalledApplicationsManager.class.getDeclaredMethod("queryProfileApplications", UserHandle.class);
+        query.setAccessible(true);
+        List<ApplicationInfo> rows = (List<ApplicationInfo>) query.invoke(manager, android.os.Process.myUserHandle());
+        assertFalse("The device should expose at least its launcher", rows.isEmpty());
+        int ownUser = android.os.Process.myUid() / 100000;
+        for (ApplicationInfo info : rows) assertEquals(ownUser, info.uid / 100000);
     }
 
     @SuppressWarnings("unchecked")

@@ -104,7 +104,7 @@ class InstalledApplicationsManager private constructor(
             reentrantLock.lockInterruptibly()
             crossUserQueriesAllowed = multiUserSupport && isInteractAcrossUsersPermissionGranted(context)
 
-            val userIds = arrayListOf<Int>()
+            val userProfiles = linkedMapOf<Int, UserHandle>()
             val packageManager: PackageManager = context.packageManager
 
             if (multiUserSupport) {
@@ -117,17 +117,18 @@ class InstalledApplicationsManager private constructor(
                         if (m.find()) {
                             val id = m.group(1)?.toLong()
                             if (id != null && id <= Int.MAX_VALUE) {
-                                userIds.add(id.toInt())
+                                userProfiles[id.toInt()] = user
                             }
                         }
                     }
                 }
 
-                sessionStore.save(MULTIPLE_USERS_EXISTS, userIds.size > 1)
+                sessionStore.save(MULTIPLE_USERS_EXISTS, userProfiles.size > 1)
 
-                logi("Device users: ${userIds.joinToString()}")
+                logi("Device users: ${userProfiles.keys.joinToString()}")
             }
 
+            val userIds = userProfiles.keys.toList()
             val hasOtherProfiles = userIds.any { it != ownUID / UIDS_PER_USER }
             val installedApps = loadApplications(packageManager, crossUserQueriesAllowed && hasOtherProfiles)
             // RootCommands is asynchronous: a pre-grant snapshot is not a complete cross-user scan.
@@ -143,25 +144,8 @@ class InstalledApplicationsManager private constructor(
                 // Uninstalled local candidates may still identify an installed app in another profile.
                 if (!isAppIncluded(applicationInfo) && !hasOtherProfiles) return@forEach
 
-                //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
-                val name = try {
-                    applicationInfo.loadLabel(packageManager)?.toString()
-                        ?: applicationInfo.packageName
-                } catch (e: Exception) {
-                    logw("InstalledApplications get name", e)
-                    applicationInfo.packageName
-                }
-                val icon = if (iconIsRequired) {
-                    //packageManager.getApplicationIcon(applicationInfo)
-                    try {
-                        applicationInfo.loadIcon(packageManager)
-                    } catch (e: Exception) {
-                        logw("InstalledApplications get icon", e)
-                        null
-                    }
-                } else {
-                    null
-                }
+                val name = loadAppName(applicationInfo, packageManager)
+                val icon = loadAppIcon(applicationInfo, packageManager)
 
                 if (applicationInfo.uid / UIDS_PER_USER == ownUID / UIDS_PER_USER) {
                     createApplicationData(applicationInfo, packageManager, name, icon)?.let { app ->
@@ -176,6 +160,9 @@ class InstalledApplicationsManager private constructor(
                 }
             }
 
+            if (hasOtherProfiles) {
+                addProfileApplications(userProfiles, packageManager, multiUserAppsMap)
+            }
             multiUserAppsMap.values.forEach { mergeApplication(userAppsMap, it) }
 
             val applications = userAppsMap.values.toMutableList()
@@ -281,6 +268,67 @@ class InstalledApplicationsManager private constructor(
 
     private fun isAppIncluded(applicationInfo: ApplicationInfo) =
         isAppInstalled(applicationInfo) || isAppArchived(applicationInfo)
+
+    private fun loadAppName(info: ApplicationInfo, packageManager: PackageManager): String = try {
+        //val name = packageManager.getApplicationLabel(info)?.toString() ?: "Undefined"
+        info.loadLabel(packageManager)?.toString() ?: info.packageName
+    } catch (e: Exception) {
+        logw("InstalledApplications get name", e)
+        info.packageName
+    }
+
+    private fun loadAppIcon(info: ApplicationInfo, packageManager: PackageManager): Drawable? =
+        if (iconIsRequired) {
+            //packageManager.getApplicationIcon(info)
+            try {
+                info.loadIcon(packageManager)
+            } catch (e: Exception) {
+                logw("InstalledApplications get icon", e)
+                null
+            }
+        } else {
+            null
+        }
+
+    private fun queryProfileApplications(profile: UserHandle): List<ApplicationInfo> {
+        val launcher = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps
+            ?: return emptyList()
+        return launcher.getActivityList(null, profile).map { it.applicationInfo }
+    }
+
+    private fun addProfileApplications(
+        profiles: Map<Int, UserHandle>,
+        packageManager: PackageManager,
+        apps: MutableMap<Int, ApplicationData>,
+        query: (UserHandle) -> List<ApplicationInfo> = ::queryProfileApplications
+    ) {
+        for ((userId, profile) in profiles) {
+            if (userId == ownUID / UIDS_PER_USER) continue
+            try {
+                // Enumerate independently of main-profile candidates; one app can have several activities.
+                val packages = hashSetOf<String>()
+                for (info in query(profile)) {
+                    if (info.uid < 0
+                        || info.uid / UIDS_PER_USER != userId
+                        || !isAppIncluded(info)
+                        || !packages.add(info.packageName)) continue
+                    val app = createApplicationData(
+                        info,
+                        packageManager,
+                        loadAppName(info, packageManager),
+                        loadAppIcon(info, packageManager)) ?: continue
+                    val first = !apps.containsKey(app.uid)
+                    mergeApplication(apps, app)
+                    if (first) updateDisplayedList(app)
+                }
+            } catch (_: SecurityException) {
+                // Launcher visibility is optional; keep results from the existing ownership queries.
+            } catch (e: Exception) {
+                isInventoryComplete = false
+                logw("InstalledApplications profile enumeration", e)
+            }
+        }
+    }
 
     private fun createApplicationData(
         info: ApplicationInfo,

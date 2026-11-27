@@ -1210,6 +1210,17 @@ not invalidate a successful ownership fallback, including confirmed absence;
 ownership-query failures and earlier enumeration failures still leave the scan
 incomplete. Older archive stubs without a
 public archive marker cannot reliably receive an Archived label.
+Each other profile is also queried once per scan with
+`LauncherApps.getActivityList(null, profile)`. This supplements the candidates
+with launchable work-only apps even without cross-user permission or a matching
+main-profile installation. The returned application UID is used directly.
+Multiple activities for one package are deduplicated, while different packages
+sharing a UID still merge their names and state. Own-profile entries and records
+with a UID belonging to a different profile are excluded. Launcher access denial
+keeps the existing discovery results usable; unexpected service failures leave
+the scan incomplete. No polling, additional permission or retained inventory is
+introduced. Launcher enumeration does not guarantee coverage of disabled,
+non-launchable or hidden apps, so the existing candidate/ownership path remains.
 `InstalledAppsTest` covers real discovery with controlled package-manager inputs:
 uninstalled stopped records, disabled and force-stopped installed apps, shared-UID
 merging in either order, profile ownership/state isolation, and API 35+ explicit
@@ -1217,6 +1228,12 @@ archive state. Metadata-denial regressions cover successful/absent ownership,
 ownership-query denial and preservation of an earlier incomplete scan; these
 cases require API 26+. Archive-specific cases skip on older devices. Refresh preserves
 user selections while replacing rows whose archive/disabled state changed.
+Direct-profile cases cover work-only packages with no cross-user grant, actual
+UID/selection preservation, activity deduplication, shared UIDs, profile and
+installation filtering, independent profile failures and earlier incomplete
+scans. A real current-profile launcher query checks the public API path on the
+connected device; controlled profile sources do not establish visibility into
+an actual work profile or Secure Folder.
 Name sorting in discovery and both app lists puts selected apps first regardless
 of state, followed by unselected regular apps, disabled apps and archived apps.
 Selected apps retain their existing flag priorities, followed by alphabetical
