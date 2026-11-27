@@ -1553,3 +1553,10 @@
 * Updated Tor lyrebird obfuscating proxy to version 0.10.0.
 * Multiple fixes and optimizations for VPN mode.
 * Fixes and optimizations.
+
+**InviZible Pro beta 2.7.8**
+* Updated DNSCrypt to version 2.1.21.
+* Added UDP support for socks5 proxy.
+* Multiple fixes and optimizations for VPN mode.
+* Fixed the display of apps from the work profile.
+* Fixes and optimizations.
