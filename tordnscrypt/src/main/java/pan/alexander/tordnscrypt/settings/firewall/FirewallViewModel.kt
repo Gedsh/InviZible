@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.firewall
@@ -144,7 +144,15 @@ class FirewallViewModel @Inject constructor(
             criticalSystemUids.addAll(Utils.getCriticalSystemUids(pathVars.get().appUid))
 
             val replacement = installedApps.map { applicationData ->
-                previous[applicationData.uid] ?: createFirewallAppModel(applicationData)
+                val existing = previous[applicationData.uid]
+                if (existing == null) {
+                    createFirewallAppModel(applicationData)
+                } else if (existing.applicationData.archived != applicationData.archived
+                    || existing.applicationData.disabled != applicationData.disabled) {
+                    existing.copy(applicationData = applicationData)
+                } else {
+                    existing
+                }
             }
             // Publish together with UI edits and saving, never an empty/partially rebuilt list.
             appsCompleteSet.clear()

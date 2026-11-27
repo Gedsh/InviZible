@@ -60,7 +60,7 @@ class AppsRefreshTest {
             saved[args[0] as String] = (args[1] as Set<String>).toSet()
             null
         } as PreferenceRepository
-        val edited = ApplicationData("Edited", "example.edited", 12345, null, false, true, false, false, 0)
+        val edited = ApplicationData("Edited", "example.edited", 12345, null, false, true, false, false, false, 0)
             .mapToTorAppData().apply { torifyApp = true; directUdp = true; excludeFromAll = true }
         BlockedInventory().use { scan ->
             val scope = CoroutineScope(SupervisorJob() + scan.dispatcher)
@@ -117,11 +117,20 @@ class AppsRefreshTest {
     }
 
     @Test fun refreshKeepsFilteredEdits() {
+        checkRefresh(false)
+    }
+
+    @Test fun refreshUpdatesAppStateAndKeepsFilteredEdits() {
+        checkRefresh(true)
+    }
+
+    private fun checkRefresh(staleState: Boolean) {
         val app = App.instance
         val component = app.daggerComponent
         val data = InstalledApplicationsManager.Builder().build().getInstalledApps()
             .first { it.hasInternetPermission && it.uid >= android.os.Process.FIRST_APPLICATION_UID }
-        val edited = data.mapToTorAppData().apply {
+        val edited = (if (staleState) data.copy(archived = !data.archived, disabled = !data.disabled) else data)
+            .mapToTorAppData().apply {
             torifyApp = true
             directUdp = true
             excludeFromAll = true
@@ -144,8 +153,11 @@ class AppsRefreshTest {
             }
             runBlocking { withTimeout(30_000) { (task.get(fragment) as Job).join() } }
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-            assertSame(edited, fragment.appsUnlock.first { it.uid == data.uid })
-            assertTrue(edited.torifyApp && edited.directUdp && edited.excludeFromAll)
+            val refreshed = fragment.appsUnlock.first { it.uid == data.uid }
+            if (staleState) assertNotSame(edited, refreshed) else assertSame(edited, refreshed)
+            assertEquals(data.archived, refreshed.archived)
+            assertEquals(data.disabled, refreshed.disabled)
+            assertTrue(refreshed.torifyApp && refreshed.directUdp && refreshed.excludeFromAll)
         } finally {
             (task.get(fragment) as? Job)?.cancel()
         }

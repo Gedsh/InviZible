@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_apps
@@ -32,6 +32,7 @@ data class TorAppData(
     val uid: Int,
     val icon: Drawable?,
     val system: Boolean,
+    val disabled: Boolean = false,
     val archived: Boolean,
     val user: Int,
     val hasInternetPermission: Boolean,
@@ -56,24 +57,22 @@ data class TorAppData(
     companion object {
 
         @JvmStatic
-        fun CopyOnWriteArrayList<TorAppData>.sortByName() = sortListBy(this) { o1, o2 ->
-            if (!o1.excludeFromAll && o2.excludeFromAll && !isRootMode()) {
-                1
-            } else if (o1.excludeFromAll && !o2.excludeFromAll && !isRootMode()) {
-                -1
-            } else if (!o1.torifyApp && o2.torifyApp) {
-                1
-            } else if (o1.torifyApp && !o2.torifyApp) {
-                -1
-            } else if (!o1.directUdp && o2.directUdp) {
-                1
-            } else if (o1.directUdp && !o2.directUdp) {
-                -1
-            } else {
-                o1.names.first().lowercase(Locale.getDefault()).compareTo(
-                    o2.names.first().lowercase(Locale.getDefault())
-                )
-            }
+        fun CopyOnWriteArrayList<TorAppData>.sortByName() {
+            val rootMode = isRootMode()
+            sortListBy(this, compareBy(
+                { !it.excludeFromAll || rootMode },
+                { !it.torifyApp },
+                { !it.directUdp },
+                { it.unselectedStateOrder(rootMode) },
+                { it.names.first().lowercase(Locale.getDefault()) }
+            ))
+        }
+
+        private fun TorAppData.unselectedStateOrder(rootMode: Boolean) = when {
+            torifyApp || directUdp || (excludeFromAll && !rootMode) -> 0
+            archived -> 2
+            disabled -> 1
+            else -> 0
         }
 
         @JvmStatic
@@ -104,6 +103,7 @@ data class TorAppData(
                 icon = icon,
                 system = system,
                 archived = archived,
+                disabled = disabled,
                 user = user,
                 hasInternetPermission = hasInternetPermission,
                 torifyApp = active,

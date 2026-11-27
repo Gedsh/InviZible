@@ -74,7 +74,7 @@ class FirewallPermissionRefreshTest {
                 assertTrue(preferences.reads.get() >= 5)
                 assertFalse("Initial baseline loading belongs to the main thread", preferences.offMain.get())
                 val callback = Thread {
-                    model.onAppAdded(ApplicationData("Progress", "example.progress", 67890, null, false, true, false, false, 0))
+                    model.onAppAdded(ApplicationData("Progress", "example.progress", 67890, null, false, true, false, false, false, 0))
                 }
                 callback.start()
                 callback.join(5000)
@@ -104,7 +104,7 @@ class FirewallPermissionRefreshTest {
             val preferences = Preferences()
             val model = FirewallViewModel(dagger.Lazy { preferences.repository }, scan.dispatcher, component.getPathVars())
             val original = FirewallAppModel(
-                ApplicationData("Edited", "example.edited", 12345, null, false, true, false, false, 0),
+                ApplicationData("Edited", "example.edited", 12345, null, false, true, false, false, false, 0),
                 true, true, true, true, true, false
             )
             val finished = CountDownLatch(1)
@@ -149,6 +149,14 @@ class FirewallPermissionRefreshTest {
     }
 
     @Test fun refreshKeepsEdits() {
+        checkRefresh(false)
+    }
+
+    @Test fun refreshUpdatesAppStateAndKeepsEdits() {
+        checkRefresh(true)
+    }
+
+    private fun checkRefresh(staleState: Boolean) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val app = App.instance
         val component = app.daggerComponent
@@ -160,7 +168,7 @@ class FirewallPermissionRefreshTest {
             .getInstalledApps().first { it.uid >= android.os.Process.FIRST_APPLICATION_UID }
         val uid = data.uid
         val original = FirewallAppModel(
-            data,
+            if (staleState) data.copy(archived = !data.archived, disabled = !data.disabled) else data,
             true, true, true, true, true, false
         )
         try {
@@ -171,8 +179,11 @@ class FirewallPermissionRefreshTest {
                 LocalBroadcastManager.getInstance(app).sendBroadcastSync(Intent(CrossUserPermission.APPS_CHANGED))
             }
             assertTrue("Discovery must finish", ready.await(30, TimeUnit.SECONDS))
-            assertSame(original, model.appsCompleteSet.first { it.applicationData.uid == uid })
-            assertTrue(original.allowLan && original.allowWifi && original.allowGsm && original.allowRoaming && original.allowVPN)
+            val refreshed = model.appsCompleteSet.first { it.applicationData.uid == uid }
+            if (staleState) assertNotSame(original, refreshed) else assertSame(original, refreshed)
+            assertEquals(data.archived, refreshed.applicationData.archived)
+            assertEquals(data.disabled, refreshed.applicationData.disabled)
+            assertTrue(refreshed.allowLan && refreshed.allowWifi && refreshed.allowGsm && refreshed.allowRoaming && refreshed.allowVPN)
             instrumentation.runOnMainSync {
                 model.firewallStateLiveData.removeObserver(observer)
                 store.clear()

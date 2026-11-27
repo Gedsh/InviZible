@@ -23,7 +23,7 @@ import android.graphics.drawable.Drawable
 import java.util.*
 import java.util.concurrent.ConcurrentSkipListSet
 
-data class ApplicationData(
+data class ApplicationData @JvmOverloads constructor(
     private val name: String = "",
     val pack: String = "",
     val uid: Int = -1000,
@@ -31,6 +31,7 @@ data class ApplicationData(
     val system: Boolean = false,
     val hasInternetPermission: Boolean = false,
     var active: Boolean = false,
+    val disabled: Boolean = false,
     val archived: Boolean = false,
     val user: Int = 0
 ) : Comparable<ApplicationData> {
@@ -56,16 +57,14 @@ data class ApplicationData(
     }
 
     override fun compareTo(other: ApplicationData): Int {
-        return if (!active && other.active) {
-            1
-        } else if (active && !other.active) {
-            -1
-        } else {
-            names.first().lowercase(Locale.getDefault()).compareTo(
-                other.names.first()
-                    .lowercase(Locale.getDefault())
-            )
+        if (active != other.active) return other.active.compareTo(active)
+        if (!active) {
+            if (archived != other.archived) return archived.compareTo(other.archived)
+            if (!archived && disabled != other.disabled) return disabled.compareTo(other.disabled)
         }
+        return names.first().lowercase(Locale.getDefault()).compareTo(
+            other.names.first().lowercase(Locale.getDefault())
+        )
     }
 
     override fun equals(other: Any?): Boolean {

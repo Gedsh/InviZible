@@ -50,7 +50,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode;
 @RunWith(AndroidJUnit4.class)
 public final class RuleInventoryTest {
     private static ApplicationData app(String name, String pack, int uid) {
-        return new ApplicationData(name, pack, uid, null, false, true, false, false, 0);
+        return new ApplicationData(name, pack, uid, null, false, true, false, false, false, 0);
     }
 
     private static final class Fixture implements AutoCloseable {

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.firewall.adapter
@@ -46,6 +46,7 @@ import pan.alexander.tordnscrypt.utils.enums.OperationMode
 import pan.alexander.tordnscrypt.utils.logger.Logger.loge
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.APPS_NEWLY_INSTALLED
 import pan.alexander.tordnscrypt.utils.preferences.PreferenceKeys.FIREWALL_SHOWS_ALL_APPS
+import java.util.Locale
 
 class FirewallAdapter(
     context: Context,
@@ -65,25 +66,38 @@ class FirewallAdapter(
         }
     }
 
-    private val rootMode = ModulesStatus.getInstance().mode == OperationMode.ROOT_MODE
     private val appsNewlyInstalledSavedSet =
         preferences.getStringSetPreference(APPS_NEWLY_INSTALLED).toIntSet()
             .also { preferences.setStringSetPreference(APPS_NEWLY_INSTALLED, setOf()) }
     private val showAllApps = defaultPreferences.getBoolean(FIREWALL_SHOWS_ALL_APPS, false)
 
     private val comparatorByName: Comparator<AdapterItem> = compareBy(
-        { !it.bypassed },
+        { !it.bypassed || isRootMode() },
         { !it.newlyInstalled },
-        { !(it.lan || it.wifi || it.gsm || it.roaming || it.vpn && rootMode) },
-        { it.label }
+        { !it.hasAllowedTraffic() },
+        { it.unselectedStateOrder() },
+        { it.label.lowercase(Locale.getDefault()) }
     )
 
     private val comparatorByUid: Comparator<AdapterItem> = compareBy(
-        { !it.bypassed },
+        { !it.bypassed || isRootMode() },
         { !it.newlyInstalled },
-        { !(it.lan || it.wifi || it.gsm || it.roaming || it.vpn && rootMode) },
+        { !it.hasAllowedTraffic() },
+        { it.unselectedStateOrder() },
         { it.uid }
     )
+
+    private fun isRootMode() = ModulesStatus.getInstance().mode == OperationMode.ROOT_MODE
+
+    private fun AdapterItem.hasAllowedTraffic() =
+        lan || wifi || gsm || roaming || (vpn && isRootMode())
+
+    private fun AdapterItem.unselectedStateOrder() = when {
+        (bypassed && !isRootMode()) || newlyInstalled || hasAllowedTraffic() -> 0
+        archived -> 2
+        disabled -> 1
+        else -> 0
+    }
 
     @UiThread
     fun updateItems(firewallApps: Set<FirewallAppModel>, sortMethod: SortMethod) {
@@ -95,6 +109,7 @@ class FirewallAdapter(
                     icon = it.applicationData.icon,
                     system = it.applicationData.system,
                     archived = it.applicationData.archived,
+                    disabled = it.applicationData.disabled,
                     user = it.applicationData.user,
                     hasInternetPermission = it.applicationData.hasInternetPermission,
                     lan = it.allowLan,
@@ -106,11 +121,7 @@ class FirewallAdapter(
                     bypassed = it.bypassVPN
                 )
             }.filter {
-                if (showAllApps) {
-                    true
-                } else {
-                    it.hasInternetPermission || it.system
-                }
+                showAllApps || it.hasInternetPermission || it.system
             }.sortedWith(
                 when (sortMethod) {
                     SortMethod.BY_NAME -> comparatorByName
@@ -214,7 +225,9 @@ class FirewallAdapter(
                     append("UID").append(" ").append(appFirewall.uid)
                 }
                 if (appFirewall.archived) {
-                    append(" ").append("\u00B7").append(" Archived")
+                    append(" · ").append(context.getString(R.string.app_state_archived))
+                } else if (appFirewall.disabled) {
+                    append(" · ").append(context.getString(R.string.app_state_disabled))
                 }
             }
             if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.M) {
@@ -373,6 +386,7 @@ class FirewallAdapter(
         val icon: Drawable?,
         val system: Boolean,
         val archived: Boolean,
+        val disabled: Boolean,
         val user: Int,
         val hasInternetPermission: Boolean,
         var lan: Boolean,

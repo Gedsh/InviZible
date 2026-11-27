@@ -1192,6 +1192,46 @@ recovery, system/secondary-profile UIDs, overflow, null/empty owners and partial
 lookup failures. Framework mock stubs are compile-only test inputs from the SDK;
 the test APK requests the optional framework mock library. Newer-Android query
 behavior is modeled on older devices; modern-device validation remains necessary.
+
+Discovery retains installed apps (including disabled and force-stopped apps) and,
+on API 35+, packages explicitly marked archived. Retained uninstall data is not
+treated as an archive merely because `FLAG_STOPPED` is set. Broad package queries
+remain useful for identifying other-profile candidates, but excluded records do
+not contribute local names, UI rows or VPN rules. Disabled and archived states
+reach both app-list adapters through string resources. A shared UID is archived
+only when all included members are archived; any enabled member prevents a
+disabled label. Synthetic system identities remain available.
+Other-profile metadata uses the profile-specific `LauncherApps` query on API 26+
+when accessible. Its result is filtered by installation/archive state. If metadata
+is unavailable, UID ownership must confirm the exact package before inclusion;
+local archive/disabled flags are not copied to that profile. Such fallback rows
+have no state label because the state is unknown. Optional metadata denial does
+not invalidate a successful ownership fallback, including confirmed absence;
+ownership-query failures and earlier enumeration failures still leave the scan
+incomplete. Older archive stubs without a
+public archive marker cannot reliably receive an Archived label.
+`InstalledAppsTest` covers real discovery with controlled package-manager inputs:
+uninstalled stopped records, disabled and force-stopped installed apps, shared-UID
+merging in either order, profile ownership/state isolation, and API 35+ explicit
+archive state. Metadata-denial regressions cover successful/absent ownership,
+ownership-query denial and preservation of an earlier incomplete scan; these
+cases require API 26+. Archive-specific cases skip on older devices. Refresh preserves
+user selections while replacing rows whose archive/disabled state changed.
+Name sorting in discovery and both app lists puts selected apps first regardless
+of state, followed by unselected regular apps, disabled apps and archived apps.
+Selected apps retain their existing flag priorities, followed by alphabetical
+order without state subgroups. Unselected groups are alphabetical.
+Discovery prioritizes active apps;
+Tor/proxy lists prioritize VPN bypass (outside root mode), Tor selection and
+direct UDP; the firewall prioritizes bypass outside root mode, newly installed apps and allowed
+traffic. Firewall UID sorting uses the same selection and unselected-state
+priorities, then orders by UID. Tor/proxy UID sorting retains its existing behavior.
+`AppSortingTest` covers these groups, selection priorities, case-insensitive names
+with equal selections, archived-state precedence, firewall UID state grouping
+and unchanged Tor/proxy UID sorting. Both firewall comparators ignore bypass
+flags in root mode, including for state grouping; VPN allowance counts as
+selected only in root mode. Mode-specific tests cover both sorting methods.
+
 Root permission requests target the app's own user. One request may be pending
 per process; dispatch failure, queue eviction and shutdown release it for retry.
 A private completion receiver checks the actual permission instead of trusting

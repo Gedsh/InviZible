@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with InviZible Pro.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2019-2025 by Garmatin Oleksandr invizible.soft@gmail.com
+    Copyright 2019-2026 by Garmatin Oleksandr invizible.soft@gmail.com
  */
 
 package pan.alexander.tordnscrypt.settings.tor_apps;
@@ -175,7 +175,9 @@ class TorAppsAdapter extends RecyclerView.Adapter<TorAppsAdapter.TorAppsViewHold
 
             StringBuilder description = new StringBuilder();
             if (app.getArchived()) {
-                description.append("Archived").append("\n");
+                description.append(context.getString(R.string.app_state_archived)).append("\n");
+            } else if (app.getDisabled()) {
+                description.append(context.getString(R.string.app_state_disabled)).append("\n");
             }
             if (app.getUser() > 0) {
                 description.append("User ").append(app.getUser());

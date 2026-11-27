@@ -25,9 +25,11 @@ import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.pm.LauncherApps
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.UserManager
+import android.os.UserHandle
 import androidx.core.content.ContextCompat
 import pan.alexander.tordnscrypt.App
 import pan.alexander.tordnscrypt.R
@@ -137,17 +139,9 @@ class InstalledApplicationsManager private constructor(
             val multiUserAppsMap = hashMapOf<Int, ApplicationData>()
 
             installedApps.forEach { applicationInfo ->
-
-                val hasInternetPermission = isAppUseInternet(packageManager, applicationInfo)
-                val installed = isAppInstalled(applicationInfo)
-                val stopped = isAppStopped(applicationInfo)
-                val archived = !installed && stopped
-
-                if (isAppContainsResourcesOnly(applicationInfo) && !hasInternetPermission) {
-                    return@forEach
-                }
-
-                var appDataSaved = userAppsMap[applicationInfo.uid]
+                if (applicationInfo.uid == ownUID) return@forEach
+                // Uninstalled local candidates may still identify an installed app in another profile.
+                if (!isAppIncluded(applicationInfo) && !hasOtherProfiles) return@forEach
 
                 //val name = packageManager.getApplicationLabel(applicationInfo)?.toString() ?: "Undefined"
                 val name = try {
@@ -169,141 +163,20 @@ class InstalledApplicationsManager private constructor(
                     null
                 }
 
-                val uid = applicationInfo.uid
-                val packageName = applicationInfo.packageName
-                if (!captivePortalUidSearchingFinished
-                    && captivePortalPattern.matcher(packageName.lowercase()).matches()) {
-                    portalUids.add(uid)
-                }
-
-                if (appDataSaved == null) {
-
-                    if (uid == ownUID) {
-                        return@forEach
-                    }
-
-                    val system = isAppSystem(applicationInfo)
-                    val useInternet = hasInternetPermission
-
-                    appDataSaved = ApplicationData(
-                        name = name,
-                        pack = packageName,
-                        uid = uid,
-                        icon = icon,
-                        system = system,
-                        hasInternetPermission = useInternet,
-                        active = activeApps.contains(uid.toString()),
-                        archived = archived
-                    )
-
-                    if (installed || stopped) {
-                        appDataSaved.let {
-                            userAppsMap[uid] = it
-                            updateDisplayedList(it)
-                        }
-                    }
-                } else {
-
-                    val system = isAppSystem(applicationInfo) || appDataSaved.system
-                    val useInternet = hasInternetPermission || appDataSaved.hasInternetPermission
-                    val pack = if (packageName.length < appDataSaved.pack.length) {
-                        packageName
-                    } else {
-                        appDataSaved.pack
-                    }
-
-                    if (system != appDataSaved.system
-                        || useInternet != appDataSaved.hasInternetPermission
-                        || pack != appDataSaved.pack
-                    ) {
-
-                        val namesSaved = appDataSaved.names
-                        val iconSaved = appDataSaved.icon
-
-                        appDataSaved = ApplicationData(
-                            name = name,
-                            pack = pack,
-                            uid = uid,
-                            icon = icon ?: iconSaved,
-                            system =system,
-                            hasInternetPermission =useInternet,
-                            active = activeApps.contains(uid.toString()),
-                            archived = appDataSaved.archived,
-                            user = appDataSaved.user
-                        )
-
-                        appDataSaved.addAllNames(namesSaved)
-
-                        userAppsMap[uid] = appDataSaved
-                    } else {
-                        appDataSaved.addName(name)
+                if (applicationInfo.uid / UIDS_PER_USER == ownUID / UIDS_PER_USER) {
+                    createApplicationData(applicationInfo, packageManager, name, icon)?.let { app ->
+                        val first = !userAppsMap.containsKey(app.uid)
+                        mergeApplication(userAppsMap, app)
+                        if (first) updateDisplayedList(app)
                     }
                 }
-
-                if (userIds.size > 1 || userIds.getOrElse(0) { 0 } != 0) {
-                    val singleAppMultiUserAppsMap: Map<Int, ApplicationData> = checkPartOfMultiUser(
-                        applicationInfo,
-                        name,
-                        icon,
-                        userIds,
-                        packageManager,
-                        multiUserAppsMap
-                    )
-                    singleAppMultiUserAppsMap.forEach { (uid, applicationData) ->
-                        val applicationDataSaved = multiUserAppsMap[uid]
-
-                        if (applicationDataSaved != null) {
-                            val system = applicationDataSaved.system || applicationData.system
-                            val useInternet = applicationDataSaved.hasInternetPermission
-                                    || applicationData.hasInternetPermission
-                            val pack =
-                                if (applicationData.pack.length < applicationDataSaved.pack.length) {
-                                    applicationData.pack
-                                } else {
-                                    applicationDataSaved.pack
-                                }
-
-                            if (system != applicationDataSaved.system
-                                || useInternet != applicationDataSaved.hasInternetPermission
-                                || pack != applicationDataSaved.pack
-                            ) {
-                                val appData = ApplicationData(
-                                    applicationData.names.firstOrNull() ?: name,
-                                    pack,
-                                    applicationData.uid,
-                                    applicationData.icon ?: applicationDataSaved.icon,
-                                    system,
-                                    useInternet,
-                                    activeApps.contains(uid.toString()),
-                                    archived = appDataSaved.archived,
-                                    user = appDataSaved.user
-                                )
-
-                                appData.addAllNames(applicationData.names)
-                                appData.addAllNames(applicationDataSaved.names)
-
-                                multiUserAppsMap[uid] = appData
-                            } else {
-                                multiUserAppsMap[uid]?.addAllNames(applicationData.names)
-                            }
-                        } else {
-                            multiUserAppsMap[uid] = applicationData
-                        }
-                    }
-
-                }
-
-            }
-
-            if (multiUserAppsMap.isNotEmpty()) {
-                multiUserAppsMap.forEach { (uid, applicationData) ->
-                    userAppsMap[uid] = applicationData
-                    if (!captivePortalUidSearchingFinished
-                        && captivePortalPattern.matcher(applicationData.pack.lowercase()).matches()) {
-                        portalUids.add(uid)
-                    }
+                if (hasOtherProfiles) {
+                    checkPartOfMultiUser(applicationInfo, name, icon, userIds, packageManager,
+                        multiUserAppsMap).values.forEach { mergeApplication(multiUserAppsMap, it) }
                 }
             }
+
+            multiUserAppsMap.values.forEach { mergeApplication(userAppsMap, it) }
 
             val applications = userAppsMap.values.toMutableList()
 
@@ -403,9 +276,63 @@ class InstalledApplicationsManager private constructor(
     private fun isAppInstalled(applicationInfo: ApplicationInfo) =
         applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED != 0
 
-    //For archived apps
-    private fun isAppStopped(applicationInfo: ApplicationInfo) =
-        applicationInfo.flags and ApplicationInfo.FLAG_STOPPED != 0
+    private fun isAppArchived(applicationInfo: ApplicationInfo) =
+        Build.VERSION.SDK_INT >= 35 && applicationInfo.isArchived
+
+    private fun isAppIncluded(applicationInfo: ApplicationInfo) =
+        isAppInstalled(applicationInfo) || isAppArchived(applicationInfo)
+
+    private fun createApplicationData(
+        info: ApplicationInfo,
+        packageManager: PackageManager,
+        name: String,
+        icon: Drawable?
+    ): ApplicationData? {
+        if (!isAppIncluded(info)) return null
+        val internet = isAppUseInternet(packageManager, info)
+        if (isAppContainsResourcesOnly(info) && !internet) return null
+        if (!captivePortalUidSearchingFinished
+            && captivePortalPattern.matcher(info.packageName.lowercase()).matches()) {
+            portalUids.add(info.uid)
+        }
+        val archived = isAppArchived(info)
+        return ApplicationData(
+            name = name, pack = info.packageName, uid = info.uid, icon = icon,
+            system = isAppSystem(info), hasInternetPermission = internet,
+            active = activeApps.contains(info.uid.toString()), archived = archived,
+            user = info.uid / UIDS_PER_USER, disabled = !archived && !info.enabled
+        )
+    }
+
+    private fun mergeApplication(apps: MutableMap<Int, ApplicationData>, app: ApplicationData) {
+        val previous = apps[app.uid]
+        if (previous == null) {
+            apps[app.uid] = app
+            return
+        }
+        // A UID is archived only when every member is archived; an enabled member wins.
+        val archived = previous.archived && app.archived
+        val disabled = !archived && (previous.archived || previous.disabled) && (app.archived || app.disabled)
+        val pack = if (app.pack.length < previous.pack.length) app.pack else previous.pack
+        val system = previous.system || app.system
+        val internet = previous.hasInternetPermission || app.hasInternetPermission
+        if (pack == previous.pack && system == previous.system
+            && internet == previous.hasInternetPermission && archived == previous.archived
+            && disabled == previous.disabled) {
+            previous.addAllNames(app.names)
+            return
+        }
+        val merged = app.copy(
+            pack = pack,
+            icon = app.icon ?: previous.icon,
+            system = system,
+            hasInternetPermission = internet,
+            archived = archived, disabled = disabled
+        )
+        merged.addAllNames(previous.names)
+        merged.addAllNames(app.names)
+        apps[app.uid] = merged
+    }
 
     private fun isAppContainsResourcesOnly(applicationInfo: ApplicationInfo) =
         applicationInfo.flags and ApplicationInfo.FLAG_HAS_CODE == 0
@@ -464,28 +391,40 @@ class InstalledApplicationsManager private constructor(
         }
         val applicationUID = applicationUIDLong.toInt()
 
-        val packages = packageManager.getPackagesForUid(applicationUID) ?: return
-        if (packages.isEmpty()) return
-
-        val system = isAppSystem(appInfo)
-        val useInternet = isAppUseInternet(packageManager, appInfo)
-        val pack = packages.minByOrNull { it.length } ?: ""
-        val archived = !isAppInstalled(appInfo) && isAppStopped(appInfo)
-
-        val appData = ApplicationData(
-            name = name,
-            pack = pack,
-            uid = applicationUID,
-            icon = icon,
-            system = system,
-            hasInternetPermission = useInternet,
-            active = activeApps.contains(applicationUID.toString()),
-            archived = archived,
-            user = userId
-        )
+        val profileInfo = loadProfileApplication(packageManager, appInfo, applicationUID) ?: return
+        val appData = createApplicationData(profileInfo, packageManager, name, icon) ?: return
         singleAppMultiUserAppsMap[applicationUID] = appData
         if (!multiUserAppsMap.containsKey(applicationUID)) {
             updateDisplayedList(appData)
+        }
+    }
+
+    private fun loadProfileApplication(
+        packageManager: PackageManager, source: ApplicationInfo, uid: Int
+    ): ApplicationInfo? {
+        if (source.uid == uid) return source
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                val launcher = context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as? LauncherApps
+                // LauncherApps has only int flags; UNINSTALLED also includes archived candidates.
+                val info = launcher?.getApplicationInfo(source.packageName,
+                    PackageManager.MATCH_UNINSTALLED_PACKAGES or PackageManager.MATCH_DISABLED_COMPONENTS,
+                    UserHandle.getUserHandleForUid(uid))
+                if (info != null) return if (info.uid == uid) info else null
+            } catch (_: PackageManager.NameNotFoundException) {
+                // Some devices expose UID ownership but restrict profile metadata.
+            } catch (_: SecurityException) {
+                // Metadata is optional; the owner query below determines profile membership.
+            }
+        }
+        val owners = packageManager.getPackagesForUid(uid) ?: return null
+        // Never borrow a shared-UID sibling's identity or another profile's state flags.
+        if (!owners.contains(source.packageName)) return null
+        return ApplicationInfo(source).apply {
+            this.uid = uid
+            flags = flags or ApplicationInfo.FLAG_INSTALLED
+            enabled = true // State is unknown; do not label it disabled based on another profile.
+            if (Build.VERSION.SDK_INT >= 35) isArchived = false
         }
     }
 

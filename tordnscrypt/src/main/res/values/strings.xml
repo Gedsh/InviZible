@@ -417,6 +417,8 @@
     <string name="pref_tor_clearnet">Host or IP for bypass</string>
     <string name="pref_tor_unlock_edit">Edit Host or IP</string>
     <string name="pref_tor_unlock_disabled">Disabled</string>
+    <string name="app_state_archived" translatable="false">Archived</string>
+    <string name="app_state_disabled" translatable="false">Disabled</string>
     <string name="pref_tor_snowflake_categ" translatable="false">Snowflake</string>
     <string name="pref_tor_snowflake_select_rendezvous">Select rendezvous</string>
     <string name="pref_tor_snowflake_select_rendezvous_summ">Hides the broker\'s domain name from the Internet provider. The broker is used to establish a connection.</string>

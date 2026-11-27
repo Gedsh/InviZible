@@ -652,6 +652,12 @@ public class UnlockTorAppsFragment extends Fragment
             TorAppData app = previous.get(data.getUid());
             if (app == null) {
                 app = createTorAppData(data);
+            } else if (app.getArchived() != data.getArchived() || app.getDisabled() != data.getDisabled()) {
+                TorAppData updated = createTorAppData(data);
+                updated.setTorifyApp(app.getTorifyApp());
+                updated.setDirectUdp(app.getDirectUdp());
+                updated.setExcludeFromAll(app.getExcludeFromAll());
+                app = updated;
             }
             replacement.add(app);
         }
